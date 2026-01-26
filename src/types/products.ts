@@ -2,10 +2,8 @@
  * Tipos de productos con separación estricta entre B2B y B2C
  */
 
-import { Tables } from "@/integrations/supabase/types";
-
-// Tipo base del producto desde Supabase
-export type Product = Tables<"products">;
+// Tipo base del producto (definido localmente para evitar depender de tipos generados por Supabase)
+export type Product = ProductFull;
 
 export interface ProductB2B {
   id: string;
