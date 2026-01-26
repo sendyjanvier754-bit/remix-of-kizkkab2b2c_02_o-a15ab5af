@@ -1,0 +1,109 @@
+{
+  "products": [
+    {
+      "id": "52a4c342-6d14-4765-8bb9-a1bbc7eec3f5",
+      "sku_interno": "924221472",
+      "nombre": "Camiseta Premium de Verano con Cuello Redondo para Hombre",
+      "descripcion_corta": "Esta camiseta de manga corta para hombre presenta un diseño de cuello redondo y estilo juvenil perfecto para el verano 2025 fabricada con materiales ligeros que ofrecen frescura y durabilidad en un corte moderno versátil para cualquier ocasión casual",
+      "categoria_id": "53855a0d-d33e-4ad0-837d-f9bf42259876",
+      "categoria_nombre": "Hombre",
+      "costo_base_excel": 3.93,
+      "precio_mayorista": 5.11,
+      "moq": 3,
+      "stock_fisico": 239281,
+      "imagen_principal": "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/924221472274-Blanco-M.jpg",
+      "galeria_imagenes": [
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/924221472274-Blanco-M.jpg",
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/924221472274-Negro-M.jpg",
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/924221472274-Rosa-M.jpg",
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/924221472274-Verde_Fruta-M.jpg"
+      ],
+      "origin_country": "China",
+      "url_origen": "https://detail.1688.com/offer/924221472274.html",
+      "is_active": true,
+      "shipping_mode": "standard",
+      "variantes": [
+        {"sku": "924221472274-Blanco-M", "color": "Blanco", "talla": "M", "stock": 9963, "precio": 5.11},
+        {"sku": "924221472274-Blanco-L", "color": "Blanco", "talla": "L", "stock": 9951, "precio": 5.11},
+        {"sku": "924221472274-Blanco-XL", "color": "Blanco", "talla": "XL", "stock": 9943, "precio": 5.11},
+        {"sku": "924221472274-Blanco-2XL", "color": "Blanco", "talla": "2XL", "stock": 9958, "precio": 5.11},
+        {"sku": "924221472274-Blanco-3XL", "color": "Blanco", "talla": "3XL", "stock": 9969, "precio": 5.11},
+        {"sku": "924221472274-Blanco-4XL", "color": "Blanco", "talla": "4XL", "stock": 9982, "precio": 5.11},
+        {"sku": "924221472274-Negro-M", "color": "Negro", "talla": "M", "stock": 9978, "precio": 5.11},
+        {"sku": "924221472274-Negro-L", "color": "Negro", "talla": "L", "stock": 9964, "precio": 5.11},
+        {"sku": "924221472274-Negro-XL", "color": "Negro", "talla": "XL", "stock": 9965, "precio": 5.11},
+        {"sku": "924221472274-Rosa-M", "color": "Rosa", "talla": "M", "stock": 9960, "precio": 5.11},
+        {"sku": "924221472274-Rosa-L", "color": "Rosa", "talla": "L", "stock": 9955, "precio": 5.11},
+        {"sku": "924221472274-VerdeFruta-M", "color": "Verde Fruta", "talla": "M", "stock": 9950, "precio": 5.11},
+        {"sku": "924221472274-VerdeFruta-L", "color": "Verde Fruta", "talla": "L", "stock": 9945, "precio": 5.11}
+      ]
+    },
+    {
+      "id": "caf64d69-b9bb-4b49-9b3a-553227487d7a",
+      "sku_interno": "777795007",
+      "nombre": "Zapatillas Deportivas Transpirables de Otoño Casuales para Hombre",
+      "descripcion_corta": "Zapatillas casuales de estilo coreano ideales para el otoño con suela suave y diseño transpirable perfectas para correr o uso diario juvenil",
+      "categoria_id": "4021d9a9-f910-41cb-8682-b5badee48659",
+      "categoria_nombre": "Zapatos",
+      "costo_base_excel": 4.11,
+      "precio_mayorista": 5.34,
+      "moq": 3,
+      "stock_fisico": 179544,
+      "imagen_principal": "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/777795007250-Azul-39.jpg",
+      "galeria_imagenes": [
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/777795007250-Azul-39.jpg",
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/777795007250-Blanco-39.jpg",
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/777795007250-Negro-39.jpg"
+      ],
+      "origin_country": "China",
+      "url_origen": "https://detail.1688.com/offer/777795007250.html",
+      "is_active": true,
+      "shipping_mode": "standard",
+      "variantes": [
+        {"sku": "777795007250-Azul-39", "color": "Azul", "talla": "39", "stock": 9980, "precio": 5.34},
+        {"sku": "777795007250-Azul-40", "color": "Azul", "talla": "40", "stock": 9975, "precio": 5.34},
+        {"sku": "777795007250-Azul-41", "color": "Azul", "talla": "41", "stock": 9970, "precio": 5.34},
+        {"sku": "777795007250-Azul-42", "color": "Azul", "talla": "42", "stock": 9965, "precio": 5.34},
+        {"sku": "777795007250-Azul-43", "color": "Azul", "talla": "43", "stock": 9960, "precio": 5.34},
+        {"sku": "777795007250-Azul-44", "color": "Azul", "talla": "44", "stock": 9955, "precio": 5.34},
+        {"sku": "777795007250-Blanco-39", "color": "Blanco", "talla": "39", "stock": 9950, "precio": 5.34},
+        {"sku": "777795007250-Blanco-40", "color": "Blanco", "talla": "40", "stock": 9945, "precio": 5.34},
+        {"sku": "777795007250-Negro-39", "color": "Negro", "talla": "39", "stock": 9940, "precio": 5.34},
+        {"sku": "777795007250-Negro-40", "color": "Negro", "talla": "40", "stock": 9935, "precio": 5.34}
+      ]
+    },
+    {
+      "id": "3f61c5dc-ed1c-491a-894e-44ae6d1e380c",
+      "sku_interno": "758708899",
+      "nombre": "Tanga de Encaje con Lazo Estilo Europeo para Mujer",
+      "descripcion_corta": "Ropa interior sexy de encaje con diseño de lazo elegante y seductor perfecta para el comercio exterior con acabados de alta calidad y ajuste cómodo",
+      "categoria_id": "cc065a8d-c16c-40dc-ac6a-e3e4e9d935b6",
+      "categoria_nombre": "Ropa Interior y Pijamas",
+      "costo_base_excel": 0.88,
+      "precio_mayorista": 1.14,
+      "moq": 12,
+      "stock_fisico": 565267,
+      "imagen_principal": "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/758708899816-Negro-S.jpg",
+      "galeria_imagenes": [
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/758708899816-Negro-S.jpg",
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/758708899816-Blanco-S.jpg",
+        "https://iqpkfxkqxoodlwvnrpki.supabase.co/storage/v1/object/public/product-images/products/758708899816-Rojo-M.jpg"
+      ],
+      "origin_country": "China",
+      "url_origen": "https://detail.1688.com/offer/758708899816.html",
+      "is_active": true,
+      "shipping_mode": "standard",
+      "variantes": [
+        {"sku": "758708899816-Negro-S", "color": "Negro", "talla": "S", "stock": 47105, "precio": 1.14},
+        {"sku": "758708899816-Negro-M", "color": "Negro", "talla": "M", "stock": 47100, "precio": 1.14},
+        {"sku": "758708899816-Negro-L", "color": "Negro", "talla": "L", "stock": 47095, "precio": 1.14},
+        {"sku": "758708899816-Blanco-S", "color": "Blanco", "talla": "S", "stock": 47090, "precio": 1.14},
+        {"sku": "758708899816-Blanco-M", "color": "Blanco", "talla": "M", "stock": 47085, "precio": 1.14},
+        {"sku": "758708899816-Blanco-L", "color": "Blanco", "talla": "L", "stock": 47080, "precio": 1.14},
+        {"sku": "758708899816-Rojo-S", "color": "Rojo", "talla": "S", "stock": 47075, "precio": 1.14},
+        {"sku": "758708899816-Rojo-M", "color": "Rojo", "talla": "M", "stock": 47070, "precio": 1.14},
+        {"sku": "758708899816-Rojo-L", "color": "Rojo", "talla": "L", "stock": 47065, "precio": 1.14}
+      ]
+    }
+  ]
+}
