@@ -208,8 +208,8 @@ const SellerCatalogo = () => {
                   <TableHeader>
                     <TableRow className="border-border">
                       <TableHead className="text-muted-foreground">Producto</TableHead>
-                      <TableHead className="text-muted-foreground text-right">Precio Costo</TableHead>
-                      <TableHead className="text-muted-foreground text-right">Precio Venta</TableHead>
+                      <TableHead className="text-muted-foreground text-right">Costo Base</TableHead>
+                      <TableHead className="text-muted-foreground text-right">Precio B2B*</TableHead>
                       <TableHead className="text-muted-foreground text-right">Margen</TableHead>
                       <TableHead className="text-muted-foreground text-center">Stock</TableHead>
                       <TableHead className="text-muted-foreground text-center">Estado</TableHead>
@@ -284,6 +284,11 @@ const SellerCatalogo = () => {
                   })}
                 </TableBody>
                 </Table>
+              </div>
+              <div className="p-3 bg-muted/50 border-t border-border">
+                <p className="text-[11px] text-muted-foreground">
+                  * Los precios B2B se calculan dinámicamente según los rangos de margen configurados en el módulo de Configuración de Precios.
+                </p>
               </div>
             </Card>
           )}

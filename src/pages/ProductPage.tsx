@@ -117,7 +117,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
       const {
         data: b2bProduct,
         error: b2bError
-      } = await supabase.from("products").select(`
+      } = await supabase.from("v_productos_con_precio_b2b").select(`
           *,
           category:categories!products_categoria_id_fkey(id, name, slug)
         `).eq("sku_interno", cleanSku).eq("is_active", true).maybeSingle();
@@ -128,16 +128,16 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
           sku: b2bProduct.sku_interno,
           nombre: b2bProduct.nombre,
           descripcion: b2bProduct.descripcion_larga || b2bProduct.descripcion_corta,
-          precio_venta: b2bProduct.precio_sugerido_venta || b2bProduct.precio_mayorista * 1.3,
-          precio_costo: b2bProduct.precio_mayorista,
+          precio_venta: b2bProduct.precio_b2b,
+          precio_costo: b2bProduct.costo_base_excel,
           stock: b2bProduct.stock_fisico,
           images: b2bProduct.galeria_imagenes || (b2bProduct.imagen_principal ? [b2bProduct.imagen_principal] : []),
           store: null,
           source_product: {
             id: b2bProduct.id,
             categoria_id: b2bProduct.categoria_id,
-            precio_mayorista: b2bProduct.precio_mayorista,
-            precio_sugerido_venta: b2bProduct.precio_sugerido_venta,
+            precio_mayorista: b2bProduct.costo_base_excel,
+            precio_sugerido_venta: b2bProduct.precio_b2b,
             moq: b2bProduct.moq,
             stock_fisico: b2bProduct.stock_fisico,
             category: b2bProduct.category
@@ -431,11 +431,13 @@ const ProductPage = () => {
   // Business Logic for B2B
   const businessSummary = useMemo(() => {
     if (!isB2BUser || !product) return null;
+    // Usar precio de la vista v_productos_con_precio_b2b
+    const priceToUse = product.precio_venta || pvp;
     const investment = costB2B * quantity;
-    const estimatedRevenue = pvp * quantity;
+    const estimatedRevenue = priceToUse * quantity;
     const estimatedProfit = estimatedRevenue - investment;
-    const profitPercentage = costB2B > 0 ? (pvp - costB2B) / costB2B * 100 : 0;
-    const profitPerUnit = pvp - costB2B;
+    const profitPercentage = costB2B > 0 ? (priceToUse - costB2B) / costB2B * 100 : 0;
+    const profitPerUnit = priceToUse - costB2B;
     return {
       investment,
       estimatedRevenue,
@@ -482,16 +484,17 @@ const ProductPage = () => {
     
     // Desktop only: add directly to cart
     if (isB2BUser) {
+      const priceToAdd = product.precio_venta || costB2B;
       addItemB2B({
         productId: product.source_product?.id || product.id,
         nombre: product.nombre,
-        precio_b2b: costB2B,
+        precio_b2b: priceToAdd,
         moq: moq,
         stock_fisico: stockB2B,
         sku: product.sku,
         imagen_principal: images[0] || '',
         cantidad: quantity,
-        subtotal: costB2B * quantity
+        subtotal: priceToAdd * quantity
       });
       toast({
         title: "Agregado al pedido B2B",
@@ -537,16 +540,17 @@ const ProductPage = () => {
         const qty = v.quantity || 0;
         if (qty <= 0) return;
         if (isB2BUser) {
+          const priceToAdd = product.precio_venta || costB2B;
           addItemB2B({
             productId: product.source_product?.id || product.id,
             nombre: product.nombre,
-            precio_b2b: costB2B,
+            precio_b2b: priceToAdd,
             moq: moq,
             stock_fisico: stockB2B,
             sku: product.sku,
             imagen_principal: images[0] || '',
             cantidad: qty,
-            subtotal: costB2B * qty
+            subtotal: priceToAdd * qty
           });
         } else {
           for (let i = 0; i < qty; i++) {
@@ -596,7 +600,8 @@ const ProductPage = () => {
         <Button onClick={() => navigate("/")} className="mt-4">Volver al inicio</Button>
       </div>;
   }
-  const displayPrice = isB2BUser ? costB2B : product.precio_venta;
+  // Usar precio de v_productos_con_precio_b2b (ya viene en product.precio_venta)
+  const displayPrice = isB2BUser ? product.precio_venta : product.precio_venta;
   return <div className="min-h-screen bg-gray-50 font-sans">
       {/* Mobile Header Hide - Apply to body via style */}
       {isMobile && showCompactHeader && (
@@ -889,6 +894,9 @@ const ProductPage = () => {
                 {isB2BUser && <span className="text-xs font-medium text-white bg-[#94111f] px-2 py-0.5 rounded animate-bounce">
                     B2B
                   </span>}
+                {isB2BUser && dynamicPrice !== null && <span className="text-xs font-medium text-white bg-blue-600 px-2 py-0.5 rounded">
+                    Motor Dinámico ⚡
+                  </span>}
               </div>
 
               {isB2BUser && <div className="mt-2 flex items-center gap-3 text-xs text-gray-600">
@@ -963,7 +971,7 @@ const ProductPage = () => {
                           sku: product.sku,
                           nombre: product.nombre,
                           images: images,
-                          price: isB2BUser ? costB2B : product.precio_venta,
+                          price: product.precio_venta,
                           costB2B: costB2B,
                           moq: moq,
                           stock: isB2BUser ? stockB2B : product.stock,

@@ -19,6 +19,8 @@ const VariantDrawer: React.FC = () => {
   const [totalQty, setTotalQty] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [variantImage, setVariantImage] = useState<string | null>(null);
+  const [basePriceFromDb, setBasePriceFromDb] = useState<number | null>(null);
+  const [variantPrices, setVariantPrices] = useState<Record<string, number>>({});
 
   const { user, role } = useAuth();
   const { toast } = useToast();
@@ -30,6 +32,45 @@ const VariantDrawer: React.FC = () => {
   
   // Fetch product variants to get attribute_combination for each variant
   const { data: productVariants } = useProductVariants(product?.source_product_id || product?.id);
+
+  // Obtener precios base del producto y todas sus variantes de v_productos_con_precio_b2b
+  useEffect(() => {
+    const fetchPricesFromDb = async () => {
+      if (!isB2BUser || !product?.source_product_id) return;
+
+      try {
+        // 1. Fetch product price
+        const { data: productData, error: productError } = await supabase
+          .from('v_productos_con_precio_b2b')
+          .select('precio_b2b')
+          .eq('id', product.source_product_id)
+          .single();
+        
+        if (!productError && productData) {
+          setBasePriceFromDb(productData.precio_b2b);
+        }
+
+        // 2. Fetch all variant prices from the complete view
+        const { data: variantData, error: variantError } = await supabase
+          .from('v_variantes_con_precio_b2b')
+          .select('id, precio_b2b_final')
+          .eq('product_id', product.source_product_id);
+        
+        if (!variantError && variantData) {
+          const priceMap = variantData.reduce((acc: Record<string, number>, item: any) => {
+            acc[item.id] = item.precio_b2b_final;
+            return acc;
+          }, {});
+          setVariantPrices(priceMap);
+        } else if (variantError) {
+          console.error('Error fetching variant prices:', variantError);
+        }
+      } catch (err) {
+        console.error('Error fetching prices from DB:', err);
+      }
+    };
+    fetchPricesFromDb();
+  }, [isOpen, product?.source_product_id, isB2BUser]);
 
   // Prevent body scroll when drawer open
   useEffect(() => {
@@ -174,7 +215,7 @@ const VariantDrawer: React.FC = () => {
 
   if (!isOpen || !product) return null;
 
-  const displayPrice = isB2BUser ? (product.costB2B || 0) : (product.price || 0);
+  const displayPrice = isB2BUser ? (basePriceFromDb !== null ? basePriceFromDb : (product.costB2B || 0)) : (product.price || 0);
   const pvpPrice = product.pvp || product.price || 0;
 
   // Render NOTHING on mobile - only desktop
@@ -244,7 +285,8 @@ const VariantDrawer: React.FC = () => {
             productId={product.source_product_id || product.id} 
             basePrice={displayPrice}
             baseImage={product.images?.[0]}
-            isB2B={isB2BUser} 
+            isB2B={isB2BUser}
+            variantPrices={variantPrices}
             onSelectionChange={(list, qty, price) => {
               setSelections(list);
               setTotalQty(qty);

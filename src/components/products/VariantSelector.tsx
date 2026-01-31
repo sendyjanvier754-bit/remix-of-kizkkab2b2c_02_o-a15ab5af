@@ -15,6 +15,7 @@ interface VariantSelectorProps {
   basePrice: number;
   baseImage?: string;
   isB2B?: boolean;
+  variantPrices?: Record<string, number>;
   onSelectionChange?: (selections: VariantSelection[], totalQty: number, totalPrice: number, selectedVariant?: ProductVariant | null, isValid?: boolean, validationErrors?: string[]) => void;
   onVariantImageChange?: (imageUrl: string | null) => void;
 }
@@ -65,6 +66,7 @@ const VariantSelector = ({
   basePrice,
   baseImage,
   isB2B = false,
+  variantPrices = {},
   onSelectionChange,
   onVariantImageChange,
 }: VariantSelectorProps) => {
@@ -310,7 +312,8 @@ const VariantSelector = ({
   const totalQty = Object.values(selections).reduce((sum, qty) => sum + qty, 0);
   const totalPrice = variants?.reduce((sum, v) => {
     const qty = selections[v.id] || 0;
-    const price = v.price ?? basePrice;
+    // Use B2B dynamic price if available, otherwise use variant price or base price
+    const price = (isB2B && variantPrices[v.id]) ? variantPrices[v.id] : (v.price ?? basePrice);
     return sum + price * qty;
   }, 0) || 0;
 
@@ -684,11 +687,11 @@ const VariantSelector = ({
                 </div>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                   <span className="text-lg font-bold text-primary whitespace-nowrap">
-                    ${(matchingVariant.price ?? basePrice).toFixed(2)}
+                    ${((isB2B && variantPrices[matchingVariant.id]) ? variantPrices[matchingVariant.id] : (matchingVariant.price ?? basePrice)).toFixed(2)}
                   </span>
-                  {matchingVariant.precio_promocional && matchingVariant.precio_promocional < (matchingVariant.price ?? basePrice) && (
+                  {matchingVariant.precio_promocional && matchingVariant.precio_promocional < ((isB2B && variantPrices[matchingVariant.id]) ? variantPrices[matchingVariant.id] : (matchingVariant.price ?? basePrice)) && (
                     <span className="text-sm text-muted-foreground line-through whitespace-nowrap">
-                      ${(matchingVariant.price ?? basePrice).toFixed(2)}
+                      ${((isB2B && variantPrices[matchingVariant.id]) ? variantPrices[matchingVariant.id] : (matchingVariant.price ?? basePrice)).toFixed(2)}
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -754,7 +757,7 @@ const VariantSelector = ({
           <div className="space-y-1.5 sm:space-y-2">
             {grouped[type].map((variant) => {
               const qty = selections[variant.id] || 0;
-              const price = variant.price ?? basePrice;
+              const price = isB2B && variantPrices[variant.id] ? variantPrices[variant.id] : (variant.price ?? basePrice);
               const hasPromo = variant.precio_promocional && variant.precio_promocional < price;
               const displayPrice = hasPromo ? variant.precio_promocional : price;
               const outOfStock = variant.stock === 0;

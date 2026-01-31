@@ -92,6 +92,81 @@ export function useB2BPricing() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper: Calcular precio B2B SIN logística
+  // = precio_aterrizado - (tramo_a + tramo_b)
+  // = costo_base + recargo_sensible + recargo_oversize + recargo_zona + platform_fee
+  const calculatePriceB2BNoShipping = useCallback(
+    async (
+      productId: UUID,
+      addressId: UUID,
+      quantity: number = 1
+    ): Promise<{ 
+      precio_b2b: number;
+      costo_base: number;
+      recargo_sensible: number;
+      recargo_oversize: number;
+      recargo_zona: number;
+      platform_fee: number;
+      logistica_restada: number;
+    } | null> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error: rpcError } = await supabase.rpc(
+          'calculate_b2b_price_multitramo',
+          {
+            p_product_id: productId,
+            p_address_id: addressId,
+            p_tier_type: 'standard',
+            p_quantity: quantity,
+          }
+        );
+
+        if (rpcError) {
+          setError(rpcError.message);
+          return null;
+        }
+
+        if (!data.valid) {
+          setError(data.error || 'Error calculating price');
+          return null;
+        }
+
+        // Extraer componentes del desglose
+        const costoBase = data.desglose.costo_fabrica;
+        const tramoA = data.desglose.tramo_a_china_usa_kg;
+        const tramoB = data.desglose.tramo_b_usa_destino_lb;
+        const recargoSensible = data.desglose.recargo_sensible;
+        const recargoOversize = data.desglose.recargo_oversize;
+        const recargoZona = data.desglose.recargo_zona;
+        const platformFee = data.desglose.platform_fee_12pct;
+
+        // LOGÍSTICA = Tramo A + Tramo B (LO QUE SE RESTA)
+        const logisticaCosto = tramoA + tramoB;
+
+        // PRECIO SIN LOGÍSTICA = precio_aterrizado - logística
+        const precioB2BSinLogistica = data.precio_aterrizado - logisticaCosto;
+
+        return {
+          precio_b2b: Math.round(precioB2BSinLogistica * 100) / 100,
+          costo_base: Math.round(costoBase * 100) / 100,
+          recargo_sensible: Math.round(recargoSensible * 100) / 100,
+          recargo_oversize: Math.round(recargoOversize * 100) / 100,
+          recargo_zona: Math.round(recargoZona * 100) / 100,
+          platform_fee: Math.round(platformFee * 100) / 100,
+          logistica_restada: Math.round(logisticaCosto * 100) / 100,
+        };
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        setError(errorMsg);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   const calculatePrice = useCallback(
     async (
       productId: UUID,
@@ -163,6 +238,7 @@ export function useB2BPricing() {
 
   return {
     calculatePrice,
+    calculatePriceB2BNoShipping,
     validateProductForShipping,
     loading,
     error,

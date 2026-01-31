@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import ProductEditDialog from '@/components/catalog/ProductEditDialog';
 import ProductEmbeddingsManager from '@/components/admin/ProductEmbeddingsManager';
 import BulkPriceUpdateDialog from '@/components/catalog/BulkPriceUpdateDialog';
 import { ProductNormalizationTool } from '@/components/admin/ProductNormalizationTool';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminCatalogo = () => {
   const { useProducts, useCategories, useSuppliers, useCatalogKPIs } = useCatalog();
@@ -24,11 +25,37 @@ const AdminCatalogo = () => {
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
+  const [dynamicPrices, setDynamicPrices] = useState<Record<string, number>>({});
 
   const { data: products, isLoading: loadingProducts } = useProducts({ ...filters, search: searchTerm });
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
   const { data: kpis, isLoading: loadingKPIs } = useCatalogKPIs();
+
+  // Fetch dynamic prices from v_productos_con_precio_b2b
+  useEffect(() => {
+    const fetchDynamicPrices = async () => {
+      if (!products || products.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('v_productos_con_precio_b2b')
+          .select('id, precio_b2b');
+
+        if (!error && data) {
+          const priceMap = data.reduce((acc: Record<string, number>, item: { id: string; precio_b2b: number }) => {
+            acc[item.id] = item.precio_b2b;
+            return acc;
+          }, {});
+          setDynamicPrices(priceMap);
+        }
+      } catch (err) {
+        console.error('Error fetching dynamic prices:', err);
+      }
+    };
+
+    fetchDynamicPrices();
+  }, [products]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -37,11 +64,11 @@ const AdminCatalogo = () => {
   const exportToCSV = () => {
     if (!products) return;
     
-    const headers = ['SKU Interno', 'Nombre', 'Precio Mayorista', 'MOQ', 'Stock', 'Estado', 'Categoría', 'Proveedor'];
+    const headers = ['SKU Interno', 'Nombre', 'Precio B2B', 'MOQ', 'Stock', 'Estado', 'Categoría', 'Proveedor'];
     const rows = products.map(p => [
       p.sku_interno,
       p.nombre,
-      p.precio_mayorista,
+      dynamicPrices[p.id] ?? 0,
       p.moq,
       p.stock_fisico,
       p.stock_status,
@@ -226,7 +253,7 @@ const AdminCatalogo = () => {
                   <TableRow className="border-border hover:bg-muted/50">
                     <TableHead className="text-muted-foreground">SKU Interno</TableHead>
                     <TableHead className="text-muted-foreground">Producto</TableHead>
-                    <TableHead className="text-muted-foreground text-right">Precio Mayorista</TableHead>
+                    <TableHead className="text-muted-foreground text-right">Precio B2B</TableHead>
                     <TableHead className="text-muted-foreground text-center">MOQ</TableHead>
                     <TableHead className="text-muted-foreground text-center">Stock</TableHead>
                     <TableHead className="text-muted-foreground text-center">Estado</TableHead>
@@ -267,7 +294,7 @@ const AdminCatalogo = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-semibold text-foreground">
-                          ${product.precio_mayorista.toFixed(2)}
+                          ${(dynamicPrices[product.id] ?? 0).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-center text-foreground">{product.moq}</TableCell>
                         <TableCell className="text-center text-foreground">{product.stock_fisico}</TableCell>
