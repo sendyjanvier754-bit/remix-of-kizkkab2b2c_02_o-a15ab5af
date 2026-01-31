@@ -353,6 +353,9 @@ export const importGroupedProducts = async (
     const group = groups[i];
     onProgress?.(i + 1, total, `Importando: ${group.parentName}`);
 
+    let productCreated = false;
+    let groupErrors: string[] = [];
+
     try {
       // 1. Create parent product
       const representativeVariant = group.variants[0];
@@ -394,6 +397,8 @@ export const importGroupedProducts = async (
       if (productError) {
         throw new Error(`Error creating product: ${productError.message}`);
       }
+
+      productCreated = true;
 
       // 2. Create/get attributes and options
       const attributeCache: Record<string, string> = {}; // name -> id
@@ -509,6 +514,7 @@ export const importGroupedProducts = async (
 
         if (variantError) {
           console.error('Variant error:', variantError);
+          groupErrors.push(`Variante ${variant.sku}: ${variantError.message}`);
           continue;
         }
 
@@ -547,11 +553,18 @@ export const importGroupedProducts = async (
 
         if (marketError) {
           console.error('Error assigning markets:', marketError);
+          groupErrors.push(`Mercados: ${marketError.message}`);
           // Don't fail the whole import for market assignment issues
         }
       }
 
-      success++;
+      // Count as success if product was created, regardless of variant/market errors
+      if (productCreated) {
+        success++;
+        if (groupErrors.length > 0) {
+          errors.push(`${group.parentName}: Producto importado con avisos - ${groupErrors.join('; ')}`);
+        }
+      }
     } catch (err) {
       failed++;
       errors.push(`${group.parentName}: ${err instanceof Error ? err.message : 'Unknown error'}`);

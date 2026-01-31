@@ -116,7 +116,7 @@ export function B2BCatalogImportDialog({
         precio_costo: product.precio_mayorista,
         precio_venta: product.precio_sugerido_venta || Math.ceil(product.precio_mayorista * 1.3), // 30% markup default
         stock: 0, // No physical stock - marketing only
-        images: product.imagen_principal ? [product.imagen_principal] : [],
+        images: product.imagen_principal ? JSON.stringify([product.imagen_principal]) : JSON.stringify([]),
         is_active: true,
         metadata: { import_type: 'b2b_catalog_direct', marketing_only: true },
       }));
