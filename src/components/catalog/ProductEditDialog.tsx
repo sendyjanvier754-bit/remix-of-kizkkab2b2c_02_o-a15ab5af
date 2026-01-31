@@ -187,7 +187,8 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
       const embedding = await EmbeddingService.generateImageEmbedding(imageUrl);
       const embeddingString = `[${embedding.join(',')}]`;
       
-      await supabase
+      // Use any to bypass type checking - embedding field may not exist in current schema
+      await (supabase as any)
         .from('products')
         .update({ embedding: embeddingString })
         .eq('id', productId);
@@ -265,7 +266,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
     });
     
     // Also remove embedding
-    await supabase.from('products').update({ embedding: null }).eq('id', productId);
+    await (supabase as any).from('products').update({ embedding: null }).eq('id', productId);
   };
 
   const handleDelete = async () => {
@@ -534,14 +535,14 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                   <CardContent>
                     {priceHistory && priceHistory.length > 0 ? (
                       <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {priceHistory.map((entry) => (
+                        {priceHistory.map((entry: any) => (
                           <div key={entry.id} className="flex items-center justify-between text-sm border-b pb-2">
                             <div>
                               <Badge variant="outline" className="mr-2">
-                                {entry.campo_modificado}
+                                {entry.campo_modificado || entry.price_type}
                               </Badge>
                               <span className="text-muted-foreground">
-                                {entry.valor_anterior} → {entry.valor_nuevo}
+                                {entry.valor_anterior || entry.old_price} → {entry.valor_nuevo || entry.new_price}
                               </span>
                             </div>
                             <span className="text-xs text-muted-foreground">

@@ -1,7 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import EmbeddingService from "@/services/ai/embeddingService";
+import type { Product } from "@/types/products";
 
-export const searchProductsByImage = async (file: File) => {
+interface SearchResult {
+  id: string;
+  nombre: string;
+  imagen_principal: string | null;
+  precio_mayorista: number | null;
+  similarity?: number;
+}
+
+export const searchProductsByImage = async (file: File): Promise<Product[]> => {
   try {
     console.log("Processing image for search...");
     
@@ -33,7 +42,8 @@ export const searchProductsByImage = async (file: File) => {
       return mockSearch();
     }
 
-    return products || [];
+    // Return products as-is, caller should handle partial data
+    return (products as any[] || []) as Product[];
   } catch (err) {
     console.error("Client-side AI error:", err);
     // Fallback to mock for demo purposes if model fails
@@ -42,12 +52,12 @@ export const searchProductsByImage = async (file: File) => {
 };
 
 // Fallback mock function
-const mockSearch = async () => {
+const mockSearch = async (): Promise<Product[]> => {
   const { data: products } = await supabase
     .from('products')
     .select('*')
     .eq('is_active', true)
     .limit(8);
     
-  return products?.sort(() => 0.5 - Math.random()) || [];
+  return (products?.sort(() => 0.5 - Math.random()) || []) as Product[];
 };

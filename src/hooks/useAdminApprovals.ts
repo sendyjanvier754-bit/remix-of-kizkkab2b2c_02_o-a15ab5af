@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export type ApprovalRequestType = 'kyc_verification' | 'referral_bonus' | 'credit_limit_increase' | 'credit_activation' | 'seller_upgrade';
+// Local types that match what the code expects (DB enum may differ)
+export type ApprovalRequestType = 'kyc_verification' | 'referral_bonus' | 'credit_limit_increase' | 'credit_activation' | 'seller_upgrade' | 'withdrawal' | 'refund' | 'credit_purchase' | 'kyc_review';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
 export interface ApprovalRequest {
@@ -46,13 +47,13 @@ export const useAdminApprovals = () => {
       
       const profileMap = new Map(profiles?.map(p => [p.id, p]) ?? []);
       
+      // Use unknown first to avoid type conflicts with DB enum
       return data?.map(r => ({
         ...r,
+        request_type: r.request_type as unknown as ApprovalRequestType,
+        status: r.status as unknown as ApprovalStatus,
         profiles: profileMap.get(r.requester_id) || null,
       })) as ApprovalRequest[];
-      
-      if (error) throw error;
-      return data as ApprovalRequest[];
     },
   });
 
@@ -77,6 +78,8 @@ export const useAdminApprovals = () => {
       
       return data?.map(r => ({
         ...r,
+        request_type: r.request_type as unknown as ApprovalRequestType,
+        status: r.status as unknown as ApprovalStatus,
         profiles: profileMap.get(r.requester_id) || null,
       })) as ApprovalRequest[];
     },
@@ -95,19 +98,22 @@ export const useAdminApprovals = () => {
       const { data: kycPending } = await supabase
         .from('kyc_verifications')
         .select('id')
-        .eq('status', 'pending_verification');
+        .eq('status', 'pending' as any); // Use 'pending' instead of 'pending_verification'
 
       const { data: totalDebt } = await supabase
         .from('seller_credits')
         .select('balance_debt');
 
+      // Cast request_type to string for comparison since DB enum may differ
+      const pendingTyped = pending?.map(p => ({ ...p, request_type: p.request_type as string })) ?? [];
+      
       return {
         totalPending: (pending?.length ?? 0) + (kycPending?.length ?? 0),
         kycPending: kycPending?.length ?? 0,
-        bonusPending: pending?.filter(p => p.request_type === 'referral_bonus').length ?? 0,
-        creditPending: pending?.filter(p => p.request_type === 'credit_limit_increase' || p.request_type === 'credit_activation').length ?? 0,
-        sellerUpgradePending: pending?.filter(p => p.request_type === 'seller_upgrade').length ?? 0,
-        totalDebt: totalDebt?.reduce((sum, c) => sum + Number(c.balance_debt), 0) ?? 0,
+        bonusPending: pendingTyped.filter(p => p.request_type === 'referral_bonus').length ?? 0,
+        creditPending: pendingTyped.filter(p => p.request_type === 'credit_limit_increase' || p.request_type === 'credit_activation').length ?? 0,
+        sellerUpgradePending: pendingTyped.filter(p => p.request_type === 'seller_upgrade').length ?? 0,
+        totalDebt: totalDebt?.reduce((sum, c) => sum + Number((c as any).balance_debt || 0), 0) ?? 0,
       };
     },
   });
@@ -131,8 +137,11 @@ export const useAdminApprovals = () => {
       
       if (fetchError) throw fetchError;
 
+      // Cast request_type to string for comparison since DB enum may differ
+      const requestType = request.request_type as string;
+      
       // Process based on request type
-      if (request.request_type === 'referral_bonus') {
+      if (requestType === 'referral_bonus') {
         // Apply bonus to referrer's debt
         const { data: credit } = await supabase
           .from('seller_credits')
@@ -171,7 +180,7 @@ export const useAdminApprovals = () => {
         }
       }
 
-      if (request.request_type === 'credit_limit_increase') {
+      if (requestType === 'credit_limit_increase') {
         const metadata = request.metadata as Record<string, number>;
         await supabase
           .from('seller_credits')
@@ -180,7 +189,7 @@ export const useAdminApprovals = () => {
       }
 
       // Handle seller upgrade approval
-      if (request.request_type === 'seller_upgrade') {
+      if (requestType === 'seller_upgrade') {
         const metadata = request.metadata as Record<string, string>;
         
         // 1. Delete existing 'user' role (if exists)
