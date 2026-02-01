@@ -251,6 +251,8 @@ const ProductPage = () => {
   const [showTitleToggle, setShowTitleToggle] = useState(false);
   // Image zoom
   const [zoomOpen, setZoomOpen] = useState(false);
+  // Dynamic pricing for B2B
+  const [dynamicPrice, setDynamicPrice] = useState<number | null>(null);
 
   // Determine if title is long enough to show toggle
   useEffect(() => {

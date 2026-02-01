@@ -3,6 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
+export interface SellerCatalogStats {
+  totalProducts: number;
+  activeProducts: number;
+  totalStock: number;
+  totalValue: number;
+  avgMargin: number;
+}
+
 export interface SellerCatalogItem {
   id: string;
   sku: string;
@@ -23,6 +31,26 @@ export const useSellerCatalog = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<SellerCatalogItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [storeId, setStoreId] = useState<string | null>(null);
+
+  // Fetch store ID for the current user
+  useEffect(() => {
+    const fetchStoreId = async () => {
+      if (!user?.id) return;
+      
+      const { data: store, error } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+      
+      if (store && !error) {
+        setStoreId(store.id);
+      }
+    };
+    
+    fetchStoreId();
+  }, [user?.id]);
 
   // Fetch catalog from dynamic pricing views
   const fetchCatalog = useCallback(async () => {
@@ -131,7 +159,7 @@ export const useSellerCatalog = () => {
     }
   }, [items]);
 
-  const updateStock = useCallback(async (itemId: string, newStock: number) => {
+  const updateStock = useCallback(async (itemId: string, newStock: number, reason?: string) => {
     if (newStock < 0) {
       toast.error('El stock no puede ser negativo');
       return false;
@@ -144,6 +172,20 @@ export const useSellerCatalog = () => {
         .eq('id', itemId);
 
       if (error) throw error;
+
+      // Optionally log inventory movement with reason
+      if (reason) {
+        const item = items.find(i => i.id === itemId);
+        const previousStock = item?.stock || 0;
+        await supabase.from('inventory_movements').insert({
+          product_id: itemId,
+          change_amount: newStock - previousStock,
+          previous_stock: previousStock,
+          new_stock: newStock,
+          reason: reason,
+          created_by: user?.id
+        });
+      }
 
       setItems(prev =>
         prev.map(item =>
@@ -158,19 +200,28 @@ export const useSellerCatalog = () => {
       toast.error('Error al actualizar stock');
       return false;
     }
-  }, []);
+  }, [items, user?.id]);
 
   const getMargin = useCallback((item: SellerCatalogItem) => {
     if (item.precioCosto <= 0) return 0;
     return ((item.precioVenta - item.precioCosto) / item.precioCosto) * 100;
   }, []);
 
-  const getStats = useCallback(() => {
-    const total = items.length;
-    const active = items.filter(i => i.isActive).length;
+  const getStats = useCallback((): SellerCatalogStats => {
+    const totalProducts = items.length;
+    const activeProducts = items.filter(i => i.isActive).length;
+    const totalStock = items.reduce((sum, i) => sum + (i.stock || 0), 0);
     const totalValue = items.reduce((sum, i) => sum + (i.precioVenta * (i.stock || 1)), 0);
+    
+    // Calculate average margin
+    const margins = items
+      .filter(i => i.precioCosto > 0)
+      .map(i => ((i.precioVenta - i.precioCosto) / i.precioCosto) * 100);
+    const avgMargin = margins.length > 0 
+      ? margins.reduce((a, b) => a + b, 0) / margins.length 
+      : 0;
 
-    return { total, active, totalValue };
+    return { totalProducts, activeProducts, totalStock, totalValue, avgMargin };
   }, [items]);
 
   const refetch = useCallback(async () => {
@@ -180,6 +231,7 @@ export const useSellerCatalog = () => {
   return {
     items,
     isLoading,
+    storeId,
     updatePrecioVenta,
     toggleActive,
     updateStock,
