@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { UUID } from 'crypto';
 
 // ============================================================================
@@ -392,7 +392,7 @@ export function useB2BCheckout() {
 
     return {
       items: cart,
-      addressId: selectedAddress?.id || '',
+      addressId: (selectedAddress?.id ?? '00000000-0000-0000-0000-000000000000') as `${string}-${string}-${string}-${string}-${string}`,
       shippingType: selectedTier,
       subtotalProducts: Math.round(subtotalProducts * 100) / 100,
       subtotalShipping: Math.round(subtotalShipping * 100) / 100,
