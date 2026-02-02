@@ -8,9 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import useRefundManagement, { RefundStatus, RefundRequest } from '@/hooks/useRefundManagement';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   RefreshCw, 
   Search, 
@@ -21,240 +21,232 @@ import {
   XCircle,
   Clock,
   AlertCircle,
-  Ban
+  Ban,
+  FileText,
+  TrendingUp,
+  Archive
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-type RefundStatus = 'requested' | 'processing' | 'completed' | 'rejected';
-
-interface RefundOrder {
-  id: string;
-  seller_id: string;
-  total_amount: number;
-  status: string;
-  metadata: Record<string, any>;
-  created_at: string;
-  profiles?: { full_name: string | null; email: string | null } | null;
-}
-
-const refundStatusConfig: Record<RefundStatus, { label: string; color: string; icon: React.ElementType }> = {
-  requested: { label: 'Solicitado', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: Clock },
-  processing: { label: 'Procesando', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: RefreshCw },
-  completed: { label: 'Completado', color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: CheckCircle },
-  rejected: { label: 'Rechazado', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle },
+const refundStatusConfig: Record<RefundStatus, { label: string; color: string; bgColor: string; icon: React.ElementType }> = {
+  pending: { 
+    label: 'Pendiente', 
+    color: 'text-yellow-700', 
+    bgColor: 'bg-yellow-500/20 border-yellow-500/30',
+    icon: Clock 
+  },
+  under_review: { 
+    label: 'En Revisión', 
+    color: 'text-blue-700', 
+    bgColor: 'bg-blue-500/20 border-blue-500/30',
+    icon: Eye 
+  },
+  approved: { 
+    label: 'Aprobado', 
+    color: 'text-green-700', 
+    bgColor: 'bg-green-500/20 border-green-500/30',
+    icon: CheckCircle 
+  },
+  processing: { 
+    label: 'Procesando', 
+    color: 'text-purple-700', 
+    bgColor: 'bg-purple-500/20 border-purple-500/30',
+    icon: RefreshCw 
+  },
+  completed: { 
+    label: 'Completado', 
+    color: 'text-emerald-700', 
+    bgColor: 'bg-emerald-500/20 border-emerald-500/30',
+    icon: DollarSign 
+  },
+  rejected: { 
+    label: 'Rechazado', 
+    color: 'text-red-700', 
+    bgColor: 'bg-red-500/20 border-red-500/30',
+    icon: XCircle 
+  },
+  cancelled: { 
+    label: 'Cancelado', 
+    color: 'text-gray-700', 
+    bgColor: 'bg-gray-500/20 border-gray-500/30',
+    icon: Ban 
+  },
 };
 
 const AdminReembolsos = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const refundManagement = useRefundManagement();
   
   const [statusFilter, setStatusFilter] = useState<RefundStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState<RefundOrder | null>(null);
-  const [adminNotes, setAdminNotes] = useState('');
-  const [refundAmount, setRefundAmount] = useState('');
+  const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(null);
+  const [dialogType, setDialogType] = useState<'review' | 'approve' | 'reject' | 'process' | 'complete' | null>(null);
+  
+  // Form states
+  const [notes, setNotes] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [approvedAmount, setApprovedAmount] = useState('');
+  const [refundMethod, setRefundMethod] = useState('');
+  const [refundReference, setRefundReference] = useState('');
 
-  // Fetch orders with refund requests
-  const { data: refundOrders, isLoading } = useQuery({
-    queryKey: ['refund-orders', statusFilter],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('orders_b2b')
-        .select(`
-          *,
-          profiles!orders_b2b_seller_id_fkey (full_name, email)
-        `)
-        .eq('status', 'cancelled')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Filter only orders with refund requests
-      return (data as RefundOrder[]).filter(order => {
-        const metadata = order.metadata || {};
-        return metadata.refund_status && metadata.refund_status !== 'none';
-      });
-    },
-  });
+  // Fetch refunds with filters
+  const statusFilters = statusFilter === 'all' ? undefined : statusFilter;
+  const { data: refunds, isLoading } = refundManagement.useRefunds({ status: statusFilters });
+  const { data: stats } = refundManagement.useRefundStats();
 
-  // Update refund status mutation
-  const updateRefundStatus = useMutation({
-    mutationFn: async ({ 
-      orderId, 
-      refundStatus, 
-      notes,
-      amount 
-    }: { 
-      orderId: string; 
-      refundStatus: RefundStatus; 
-      notes?: string;
-      amount?: number;
-    }) => {
-      // Get current metadata first
-      const { data: currentOrder } = await supabase
-        .from('orders_b2b')
-        .select('metadata')
-        .eq('id', orderId)
-        .single();
-
-      const currentMetadata = (currentOrder?.metadata as Record<string, any>) || {};
-
-      const updatedMetadata = {
-        ...currentMetadata,
-        refund_status: refundStatus,
-        refund_admin_notes: notes || currentMetadata.refund_admin_notes,
-        refund_amount: amount || currentMetadata.refund_amount,
-        ...(refundStatus === 'completed' ? { refund_completed_at: new Date().toISOString() } : {}),
-        ...(refundStatus === 'rejected' ? { refund_rejected_at: new Date().toISOString() } : {}),
-      };
-
-      const { data, error } = await supabase
-        .from('orders_b2b')
-        .update({ 
-          metadata: updatedMetadata,
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', orderId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['refund-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['all-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['buyer-orders'] });
-      toast({ title: 'Estado del reembolso actualizado' });
-      setSelectedOrder(null);
-      setAdminNotes('');
-      setRefundAmount('');
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Error al actualizar reembolso', description: error.message, variant: 'destructive' });
-    },
-  });
-
-  const filteredOrders = refundOrders?.filter(order => {
-    const metadata = order.metadata || {};
-    const matchesStatus = statusFilter === 'all' || metadata.refund_status === statusFilter;
-    
-    if (!searchTerm) return matchesStatus;
+  // Filter by search term
+  const filteredRefunds = refunds?.filter(refund => {
+    if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
-    return matchesStatus && (
-      order.id.toLowerCase().includes(search) ||
-      order.profiles?.full_name?.toLowerCase().includes(search) ||
-      order.profiles?.email?.toLowerCase().includes(search)
+    return (
+      refund.order_number.toLowerCase().includes(search) ||
+      refund.buyer_name.toLowerCase().includes(search) ||
+      refund.buyer_email.toLowerCase().includes(search) ||
+      refund.id.toLowerCase().includes(search)
     );
   });
 
-  const handleOpenOrder = (order: RefundOrder) => {
-    setSelectedOrder(order);
-    const metadata = order.metadata || {};
-    setAdminNotes(metadata.refund_admin_notes || '');
-    setRefundAmount(metadata.refund_amount?.toString() || order.total_amount.toString());
+  const openDialog = (refund: RefundRequest, type: typeof dialogType) => {
+    setSelectedRefund(refund);
+    setDialogType(type);
+    setNotes(refund.notes || '');
+    setApprovedAmount(refund.amount.toString());
+    setRejectionReason('');
+    setRefundMethod('transfer');
+    setRefundReference('');
   };
 
-  const handleApprove = () => {
-    if (selectedOrder) {
-      updateRefundStatus.mutate({
-        orderId: selectedOrder.id,
-        refundStatus: 'processing',
-        notes: adminNotes,
-        amount: parseFloat(refundAmount) || selectedOrder.total_amount,
-      });
-    }
+  const closeDialog = () => {
+    setSelectedRefund(null);
+    setDialogType(null);
+    setNotes('');
+    setRejectionReason('');
+    setApprovedAmount('');
+    setRefundMethod('');
+    setRefundReference('');
   };
 
-  const handleComplete = () => {
-    if (selectedOrder) {
-      updateRefundStatus.mutate({
-        orderId: selectedOrder.id,
-        refundStatus: 'completed',
-        notes: adminNotes,
-        amount: parseFloat(refundAmount) || selectedOrder.total_amount,
-      });
-    }
-  };
+  const handleAction = async () => {
+    if (!selectedRefund || !user?.id) return;
 
-  const handleReject = () => {
-    if (selectedOrder && adminNotes.trim()) {
-      updateRefundStatus.mutate({
-        orderId: selectedOrder.id,
-        refundStatus: 'rejected',
-        notes: adminNotes,
-      });
-    } else {
-      toast({ title: 'Debe proporcionar una razón para rechazar', variant: 'destructive' });
+    try {
+      switch (dialogType) {
+        case 'review':
+          await refundManagement.moveToReview(selectedRefund.id, user.id, notes);
+          break;
+        case 'approve':
+          await refundManagement.approve(
+            selectedRefund.id,
+            user.id,
+            parseFloat(approvedAmount),
+            notes
+          );
+          break;
+        case 'reject':
+          if (!rejectionReason.trim()) {
+            toast({ title: 'Debe proporcionar una razón de rechazo', variant: 'destructive' });
+            return;
+          }
+          await refundManagement.reject(selectedRefund.id, user.id, rejectionReason, notes);
+          break;
+        case 'process':
+          if (!refundMethod) {
+            toast({ title: 'Debe seleccionar un método de reembolso', variant: 'destructive' });
+            return;
+          }
+          await refundManagement.startProcessing(
+            selectedRefund.id,
+            user.id,
+            refundMethod,
+            refundReference,
+            notes
+          );
+          break;
+        case 'complete':
+          await refundManagement.complete(selectedRefund.id, user.id, notes);
+          break;
+      }
+      closeDialog();
+    } catch (error) {
+      // Error handled by hook
     }
   };
 
   const getRefundStatusBadge = (status: RefundStatus) => {
     const config = refundStatusConfig[status];
-    if (!config) return null;
     const Icon = config.icon;
     return (
-      <Badge className={`${config.color} gap-1`}>
+      <Badge className={`${config.bgColor} ${config.color} gap-1`}>
         <Icon className="h-3 w-3" />
         {config.label}
       </Badge>
     );
   };
 
-  // Stats calculation
-  const stats = {
-    total: refundOrders?.length || 0,
-    requested: refundOrders?.filter(o => o.metadata?.refund_status === 'requested').length || 0,
-    processing: refundOrders?.filter(o => o.metadata?.refund_status === 'processing').length || 0,
-    completed: refundOrders?.filter(o => o.metadata?.refund_status === 'completed').length || 0,
-    rejected: refundOrders?.filter(o => o.metadata?.refund_status === 'rejected').length || 0,
-    totalAmount: refundOrders?.filter(o => o.metadata?.refund_status === 'completed')
-      .reduce((sum, o) => sum + (o.metadata?.refund_amount || o.total_amount), 0) || 0,
-  };
-
   return (
-    <AdminLayout title="Gestión de Reembolsos" subtitle="Administra las solicitudes de reembolso">
+    <AdminLayout title="Gestión de Reembolsos" subtitle="Sistema de estados: pending → under_review → approved → processing → completed">
       <div className="space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">Total</CardTitle>
-              <RefreshCw className="h-4 w-4 text-primary" />
+              <FileText className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-foreground">{stats.total}</div>
+              <div className="text-2xl font-bold text-foreground">{stats?.total || 0}</div>
             </CardContent>
           </Card>
           
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Solicitados</CardTitle>
+              <CardTitle className="text-xs font-medium text-muted-foreground">Pendientes</CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-yellow-500">{stats.requested}</div>
+              <div className="text-2xl font-bold text-yellow-500">{stats?.pending || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground">En Revisión</CardTitle>
+              <Eye className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-500">{stats?.under_review || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Aprobados</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-500">{stats?.approved || 0}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">Procesando</CardTitle>
-              <RefreshCw className="h-4 w-4 text-blue-500" />
+              <RefreshCw className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-blue-500">{stats.processing}</div>
+              <div className="text-2xl font-bold text-purple-500">{stats?.processing || 0}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">Completados</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <DollarSign className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-green-500">{stats.completed}</div>
+              <div className="text-2xl font-bold text-emerald-500">{stats?.completed || 0}</div>
             </CardContent>
           </Card>
 
@@ -264,17 +256,17 @@ const AdminReembolsos = () => {
               <XCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-red-500">{stats.rejected}</div>
+              <div className="text-2xl font-bold text-red-500">{stats?.rejected || 0}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">Reembolsado</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-500" />
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-green-500">${stats.totalAmount.toFixed(2)}</div>
+              <div className="text-xl font-bold text-emerald-500">${(stats?.completed_amount || 0).toFixed(2)}</div>
             </CardContent>
           </Card>
         </div>
@@ -286,7 +278,7 @@ const AdminReembolsos = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por ID, cliente o email..."
+                  placeholder="Buscar por ID, orden, cliente o email..."
                   className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -298,10 +290,13 @@ const AdminReembolsos = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="requested">Solicitados</SelectItem>
+                  <SelectItem value="pending">Pendiente</SelectItem>
+                  <SelectItem value="under_review">En Revisión</SelectItem>
+                  <SelectItem value="approved">Aprobado</SelectItem>
                   <SelectItem value="processing">Procesando</SelectItem>
-                  <SelectItem value="completed">Completados</SelectItem>
-                  <SelectItem value="rejected">Rechazados</SelectItem>
+                  <SelectItem value="completed">Completado</SelectItem>
+                  <SelectItem value="rejected">Rechazado</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -315,10 +310,10 @@ const AdminReembolsos = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border">
-                    <TableHead className="text-muted-foreground">ID Pedido</TableHead>
+                    <TableHead className="text-muted-foreground">Orden</TableHead>
                     <TableHead className="text-muted-foreground">Cliente</TableHead>
-                    <TableHead className="text-muted-foreground">Fecha Solicitud</TableHead>
-                    <TableHead className="text-muted-foreground text-right">Monto</TableHead>
+                    <TableHead className="text-muted-foreground">Fecha</TableHead>
+                    <TableHead className="text-muted-foreground">Monto</TableHead>
                     <TableHead className="text-muted-foreground">Razón</TableHead>
                     <TableHead className="text-muted-foreground text-center">Estado</TableHead>
                     <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
@@ -331,54 +326,102 @@ const AdminReembolsos = () => {
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                       </TableCell>
                     </TableRow>
-                  ) : filteredOrders?.length === 0 ? (
+                  ) : filteredRefunds?.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-10">
-                        <RefreshCw className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                        <Archive className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
                         <p className="text-muted-foreground">No hay solicitudes de reembolso</p>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredOrders?.map((order) => {
-                      const metadata = order.metadata || {};
-                      return (
-                        <TableRow key={order.id} className="border-border hover:bg-muted/50">
-                          <TableCell className="font-mono text-sm text-foreground">
-                            {order.id.substring(0, 8)}...
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium text-foreground">{order.profiles?.full_name || 'Sin nombre'}</p>
-                              <p className="text-xs text-muted-foreground">{order.profiles?.email}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {metadata.refund_requested_at 
-                              ? format(new Date(metadata.refund_requested_at), "dd MMM yyyy", { locale: es })
-                              : format(new Date(order.created_at), "dd MMM yyyy", { locale: es })
-                            }
-                          </TableCell>
-                          <TableCell className="text-right font-semibold text-foreground">
-                            ${(metadata.refund_amount || order.total_amount).toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                            {metadata.cancellation_reason || 'Sin razón'}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {getRefundStatusBadge(metadata.refund_status)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleOpenOrder(order)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
+                    filteredRefunds?.map((refund) => (
+                      <TableRow key={refund.id} className="border-border hover:bg-muted/50">
+                        <TableCell className="font-mono text-sm text-foreground">
+                          {refund.order_number}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-foreground">{refund.buyer_name}</p>
+                            <p className="text-xs text-muted-foreground">{refund.buyer_email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(refund.created_at), "dd MMM yyyy", { locale: es })}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-semibold text-foreground">${refund.amount.toFixed(2)}</p>
+                            {refund.approved_amount && refund.approved_amount !== refund.amount && (
+                              <p className="text-xs text-green-600">Aprobado: ${refund.approved_amount.toFixed(2)}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground max-w-[200px]">
+                          <p className="truncate">{refund.reason}</p>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {getRefundStatusBadge(refund.status)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-1 justify-end">
+                            {refund.status === 'pending' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openDialog(refund, 'review')}
+                                title="Mover a revisión"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {refund.status === 'under_review' && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openDialog(refund, 'approve')}
+                                  title="Aprobar"
+                                  className="text-green-600 hover:text-green-700"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openDialog(refund, 'reject')}
+                                  title="Rechazar"
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            {refund.status === 'approved' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openDialog(refund, 'process')}
+                                title="Iniciar procesamiento"
+                                className="text-purple-600 hover:text-purple-700"
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {refund.status === 'processing' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openDialog(refund, 'complete')}
+                                title="Completar"
+                                className="text-emerald-600 hover:text-emerald-700"
+                              >
+                                <DollarSign className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>
@@ -387,140 +430,179 @@ const AdminReembolsos = () => {
         </Card>
       </div>
 
-      {/* Refund Detail Dialog */}
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-lg">
+      {/* Action Dialog */}
+      <Dialog open={!!selectedRefund && !!dialogType} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <RefreshCw className="h-5 w-5" />
-              Gestión de Reembolso
+              {dialogType === 'review' && <><Eye className="h-5 w-5" />Mover a Revisión</>}
+              {dialogType === 'approve' && <><CheckCircle className="h-5 w-5 text-green-600" />Aprobar Reembolso</>}
+              {dialogType === 'reject' && <><XCircle className="h-5 w-5 text-red-600" />Rechazar Reembolso</>}
+              {dialogType === 'process' && <><RefreshCw className="h-5 w-5 text-purple-600" />Procesar Reembolso</>}
+              {dialogType === 'complete' && <><DollarSign className="h-5 w-5 text-emerald-600" />Completar Reembolso</>}
             </DialogTitle>
             <DialogDescription>
-              Revisa y gestiona la solicitud de reembolso
+              {dialogType === 'review' && 'Iniciar revisión del reembolso solicitado'}
+              {dialogType === 'approve' && 'Aprobar y preparar el reembolso para procesamiento'}
+              {dialogType === 'reject' && 'Rechazar la solicitud de reembolso'}
+              {dialogType === 'process' && 'Iniciar transacción de reembolso'}
+              {dialogType === 'complete' && 'Marcar reembolso como completado'}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedOrder && (
+          {selectedRefund && (
             <div className="space-y-4">
-              {/* Order Info */}
+              {/* Refund Info */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <p className="text-xs text-muted-foreground">ID Pedido</p>
-                  <p className="font-mono text-sm">{selectedOrder.id.substring(0, 12)}...</p>
+                  <p className="text-xs text-muted-foreground">Orden</p>
+                  <p className="font-mono text-sm font-medium">{selectedRefund.order_number}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Estado Actual</p>
-                  {getRefundStatusBadge(selectedOrder.metadata?.refund_status)}
+                  {getRefundStatusBadge(selectedRefund.status)}
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Cliente</p>
-                  <p className="text-sm font-medium">{selectedOrder.profiles?.full_name || 'Sin nombre'}</p>
+                  <p className="text-sm font-medium">{selectedRefund.buyer_name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="text-sm">{selectedOrder.profiles?.email}</p>
+                  <p className="text-xs text-muted-foreground">Monto Original</p>
+                  <p className="text-sm font-bold">${selectedRefund.amount.toFixed(2)}</p>
                 </div>
               </div>
 
-              {/* Cancellation Reason */}
-              <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+              {/* Reason */}
+              <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
                 <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="h-4 w-4 text-red-500" />
-                  <p className="text-sm font-medium text-red-500">Razón de cancelación</p>
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <p className="text-sm font-medium text-yellow-700">Razón del reembolso</p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {selectedOrder.metadata?.cancellation_reason || 'No se proporcionó razón'}
-                </p>
+                <p className="text-sm text-muted-foreground">{selectedRefund.reason}</p>
               </div>
 
-              {/* Refund Amount */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Monto a Reembolsar</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    className="pl-10"
-                    value={refundAmount}
-                    onChange={(e) => setRefundAmount(e.target.value)}
-                    placeholder={selectedOrder.total_amount.toString()}
+              {/* Status History */}
+              {selectedRefund.status_history && selectedRefund.status_history.length > 0 && (
+                <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                  <p className="text-sm font-medium text-blue-700 mb-2">Historial de Estados</p>
+                  <div className="space-y-2">
+                    {selectedRefund.status_history.slice(0, 3).map((h, i) => (
+                      <div key={i} className="text-xs">
+                        <span className="text-muted-foreground">{format(new Date(h.changed_at), "dd/MM/yyyy HH:mm", { locale: es })}</span>
+                        {' → '}
+                        <span className="font-medium">{refundStatusConfig[h.new_status].label}</span>
+                        {h.notes && <span className="text-muted-foreground italic"> - {h.notes}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Approved Amount (for approve dialog) */}
+              {dialogType === 'approve' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Monto Aprobado</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      className="pl-10"
+                      value={approvedAmount}
+                      onChange={(e) => setApprovedAmount(e.target.value)}
+                      placeholder={selectedRefund.amount.toString()}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Puede modificar el monto si es necesario
+                  </p>
+                </div>
+              )}
+
+              {/* Rejection Reason (for reject dialog) */}
+              {dialogType === 'reject' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-red-600">Razón de Rechazo *</label>
+                  <Textarea
+                    placeholder="Explique por qué se rechaza este reembolso..."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    rows={3}
+                    className="border-red-500/50"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Monto original del pedido: ${selectedOrder.total_amount.toFixed(2)}
-                </p>
-              </div>
+              )}
 
-              {/* Admin Notes */}
+              {/* Refund Method (for process dialog) */}
+              {dialogType === 'process' && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Método de Reembolso *</label>
+                    <Select value={refundMethod} onValueChange={setRefundMethod}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar método" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="transfer">Transferencia Bancaria</SelectItem>
+                        <SelectItem value="paypal">PayPal</SelectItem>
+                        <SelectItem value="stripe">Stripe</SelectItem>
+                        <SelectItem value="cash">Efectivo</SelectItem>
+                        <SelectItem value="other">Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Referencia de Transacción</label>
+                    <Input
+                      placeholder="ID de transacción, número de referencia..."
+                      value={refundReference}
+                      onChange={(e) => setRefundReference(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Notes */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Notas del Admin</label>
+                <label className="text-sm font-medium">Notas</label>
                 <Textarea
-                  placeholder="Agregar notas sobre el reembolso..."
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  rows={3}
+                  placeholder="Notas adicionales (opcional)..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
                 />
               </div>
-
-              {/* Action Buttons */}
-              {selectedOrder.metadata?.refund_status === 'requested' && (
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    onClick={handleApprove}
-                    disabled={updateRefundStatus.isPending}
-                  >
-                    {updateRefundStatus.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                    )}
-                    Aprobar y Procesar
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleReject}
-                    disabled={updateRefundStatus.isPending}
-                  >
-                    <Ban className="h-4 w-4 mr-2" />
-                    Rechazar
-                  </Button>
-                </div>
-              )}
-
-              {selectedOrder.metadata?.refund_status === 'processing' && (
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={handleComplete}
-                    disabled={updateRefundStatus.isPending}
-                  >
-                    {updateRefundStatus.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                    )}
-                    Marcar como Completado
-                  </Button>
-                </div>
-              )}
-
-              {(selectedOrder.metadata?.refund_status === 'completed' || 
-                selectedOrder.metadata?.refund_status === 'rejected') && (
-                <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground text-center">
-                    Este reembolso ya fue {selectedOrder.metadata?.refund_status === 'completed' ? 'completado' : 'rechazado'}
-                  </p>
-                  {selectedOrder.metadata?.refund_admin_notes && (
-                    <p className="text-sm text-center mt-2">
-                      <span className="font-medium">Notas:</span> {selectedOrder.metadata?.refund_admin_notes}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDialog}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleAction} 
+              disabled={refundManagement.isChangingStatus}
+              className={
+                dialogType === 'reject' ? 'bg-red-600 hover:bg-red-700' :
+                dialogType === 'approve' ? 'bg-green-600 hover:bg-green-700' :
+                dialogType === 'process' ? 'bg-purple-600 hover:bg-purple-700' :
+                dialogType === 'complete' ? 'bg-emerald-600 hover:bg-emerald-700' :
+                ''
+              }
+            >
+              {refundManagement.isChangingStatus ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Procesando...</>
+              ) : (
+                <>
+                  {dialogType === 'review' && 'Mover a Revisión'}
+                  {dialogType === 'approve' && 'Aprobar Reembolso'}
+                  {dialogType === 'reject' && 'Rechazar'}
+                  {dialogType === 'process' && 'Iniciar Procesamiento'}
+                  {dialogType === 'complete' && 'Completar Reembolso'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AdminLayout>

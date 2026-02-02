@@ -15,7 +15,8 @@ export interface Product {
   moq: number;
   stock_fisico: number;
   stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
-  peso_kg: number | null;
+  peso_kg: number | null; // DEPRECATED: Usar peso_g
+  peso_g: number | null; // Peso en gramos (nuevo)
   dimensiones_cm: { largo?: number; ancho?: number; alto?: number } | null;
   imagen_principal: string | null;
   galeria_imagenes: string[] | null;

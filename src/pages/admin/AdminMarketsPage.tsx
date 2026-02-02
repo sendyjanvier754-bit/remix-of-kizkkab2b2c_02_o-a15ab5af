@@ -35,6 +35,7 @@ import {
   Route,
   Package,
   Link2,
+  Users,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,7 @@ export default function AdminMarketsPage() {
   // Dialog states
   const [showMarketDialog, setShowMarketDialog] = useState(false);
   const [showAssignPaymentsDialog, setShowAssignPaymentsDialog] = useState(false);
+  const [showAssignProductsDialog, setShowAssignProductsDialog] = useState(false);
   const [selectedMarket, setSelectedMarket] = useState<MarketDashboard | null>(null);
   const [editingMarket, setEditingMarket] = useState<MarketDashboard | null>(null);
 
@@ -70,6 +72,12 @@ export default function AdminMarketsPage() {
   // Payment assignment state
   const [selectedPaymentIds, setSelectedPaymentIds] = useState<string[]>([]);
   const [assigningPayments, setAssigningPayments] = useState(false);
+
+  // Product assignment state
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [assignedProductIds, setAssignedProductIds] = useState<string[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [assigningProducts, setAssigningProducts] = useState(false);
 
   // Fetch payment methods for selected market
   const { paymentMethods, createPaymentMethod, deletePaymentMethod } = 
@@ -247,6 +255,89 @@ export default function AdminMarketsPage() {
     }
   };
 
+  // Load products for assignment
+  const loadProductsForMarket = async (market: MarketDashboard) => {
+    setSelectedMarket(market);
+    setLoadingProducts(true);
+    try {
+      // Fetch all active products
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('id, sku_interno, nombre, costo_base_excel, is_active')
+        .eq('is_active', true)
+        .order('nombre');
+      
+      if (productsError) throw productsError;
+      setAllProducts(products || []);
+
+      // Fetch assigned products for this market
+      const { data: assigned, error: assignedError } = await supabase
+        .from('product_markets')
+        .select('product_id')
+        .eq('market_id', market.id)
+        .eq('is_active', true);
+      
+      if (assignedError) throw assignedError;
+      setAssignedProductIds(assigned?.map(a => a.product_id) || []);
+      
+      setShowAssignProductsDialog(true);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      toast.error('Error al cargar productos');
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  // Toggle product assignment
+  const toggleProductAssignment = (productId: string) => {
+    setAssignedProductIds(prev => 
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  // Save product assignments
+  const handleAssignProducts = async () => {
+    if (!selectedMarket) return;
+    
+    setAssigningProducts(true);
+    try {
+      // Delete all current assignments
+      const { error: deleteError } = await supabase
+        .from('product_markets')
+        .delete()
+        .eq('market_id', selectedMarket.id);
+      
+      if (deleteError) throw deleteError;
+
+      // Insert new assignments
+      if (assignedProductIds.length > 0) {
+        const inserts = assignedProductIds.map(productId => ({
+          product_id: productId,
+          market_id: selectedMarket.id,
+          is_active: true
+        }));
+
+        const { error: insertError } = await supabase
+          .from('product_markets')
+          .insert(inserts);
+        
+        if (insertError) throw insertError;
+      }
+
+      toast.success(`${assignedProductIds.length} producto(s) asignados al mercado`);
+      setShowAssignProductsDialog(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error assigning products:', error);
+      toast.error('Error al asignar productos');
+    } finally {
+      setAssigningProducts(false);
+    }
+  };
+
   const paymentMethodTypes: Record<string, string> = {
     bank_transfer: "Transferencia Bancaria",
     bank: "Transferencia Bancaria",
@@ -370,6 +461,14 @@ export default function AdminMarketsPage() {
                         />
                       </TableCell>
                       <TableCell className="text-right space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          title="Gestionar productos del mercado"
+                          onClick={() => loadProductsForMarket(market)}
+                        >
+                          <Package className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="sm"
@@ -828,6 +927,103 @@ export default function AdminMarketsPage() {
                 disabled={assigningPayments}
               >
                 {assigningPayments && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Guardar Asignación
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========== ASSIGN PRODUCTS DIALOG ========== */}
+      <Dialog open={showAssignProductsDialog} onOpenChange={setShowAssignProductsDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Gestionar Productos - {selectedMarket?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Selecciona los productos que estarán disponibles en este mercado
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center justify-between border-b pb-3 mb-2">
+            <span className="text-sm text-muted-foreground">
+              {assignedProductIds.length} de {allProducts.length} seleccionado(s)
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAssignedProductIds(allProducts.map(p => p.id))}
+                disabled={loadingProducts || allProducts.length === 0}
+              >
+                Seleccionar Todos
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAssignedProductIds([])}
+                disabled={loadingProducts || assignedProductIds.length === 0}
+              >
+                Deseleccionar Todos
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+            {loadingProducts ? (
+              <div className="space-y-2">
+                {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+              </div>
+            ) : allProducts.length > 0 ? (
+              allProducts.map(product => (
+                <div 
+                  key={product.id}
+                  className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => toggleProductAssignment(product.id)}
+                >
+                  <Checkbox
+                    checked={assignedProductIds.includes(product.id)}
+                    onCheckedChange={() => toggleProductAssignment(product.id)}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium truncate">{product.nombre}</p>
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {product.sku_interno}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Costo: ${product.costo_base_excel?.toFixed(2) || '0.00'}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>No hay productos disponibles</AlertTitle>
+                <AlertDescription>
+                  No se encontraron productos activos en el sistema.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between border-t pt-4 mt-4">
+            <span className="text-sm text-muted-foreground">
+              {assignedProductIds.length} producto(s) seleccionado(s)
+            </span>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowAssignProductsDialog(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleAssignProducts}
+                disabled={assigningProducts}
+              >
+                {assigningProducts && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Guardar Asignación
               </Button>
             </div>

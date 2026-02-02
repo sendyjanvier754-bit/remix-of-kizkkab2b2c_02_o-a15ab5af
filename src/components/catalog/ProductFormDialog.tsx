@@ -28,7 +28,7 @@ const productSchema = z.object({
   precio_sugerido_venta: z.coerce.number().min(0).optional(),
   moq: z.coerce.number().min(1, 'MOQ debe ser >= 1'),
   stock_fisico: z.coerce.number().min(0, 'Stock debe ser >= 0'),
-  peso_kg: z.coerce.number().min(0).optional(),
+  peso_g: z.coerce.number().min(1, 'Peso debe ser >= 1g').optional(),
   url_origen: z.string().url().optional().or(z.literal('')),
 });
 
@@ -67,7 +67,7 @@ const ProductFormDialog = ({ open, onOpenChange }: ProductFormDialogProps) => {
       precio_sugerido_venta: data.precio_sugerido_venta || null,
       moq: data.moq,
       stock_fisico: data.stock_fisico,
-      peso_kg: data.peso_kg || null,
+      peso_g: data.peso_g || null,
       url_origen: data.url_origen || null,
     });
     form.reset();
@@ -285,13 +285,14 @@ const ProductFormDialog = ({ open, onOpenChange }: ProductFormDialogProps) => {
 
               <FormField
                 control={form.control}
-                name="peso_kg"
+                name="peso_g"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Peso (kg)</FormLabel>
+                    <FormLabel>Peso (gramos) *</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.001" min="0" {...field} />
+                      <Input type="number" step="1" min="1" placeholder="500" {...field} />
                     </FormControl>
+                    <p className="text-xs text-muted-foreground">Requerido para cálculo de envío B2B</p>
                     <FormMessage />
                   </FormItem>
                 )}

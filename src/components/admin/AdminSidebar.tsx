@@ -65,6 +65,7 @@ const analyticsItems = [
 ];
 
 const settingsItems = [
+  { title: "Markets", url: "/admin/markets", icon: Store },
   { title: "Logística Global", url: "/admin/global-logistics", icon: Globe },
   { title: "Secciones Marketplace", url: "/admin/marketplace-sections", icon: LayoutGrid },
   { title: "Logística Local", url: "/admin/logistics", icon: Truck },

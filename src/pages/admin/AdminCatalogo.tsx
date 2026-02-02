@@ -15,6 +15,7 @@ import ProductEditDialog from '@/components/catalog/ProductEditDialog';
 import ProductEmbeddingsManager from '@/components/admin/ProductEmbeddingsManager';
 import BulkPriceUpdateDialog from '@/components/catalog/BulkPriceUpdateDialog';
 import { ProductNormalizationTool } from '@/components/admin/ProductNormalizationTool';
+import ProductsWithoutWeightAlert from '@/components/admin/ProductsWithoutWeightAlert';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminCatalogo = () => {
@@ -116,6 +117,9 @@ const AdminCatalogo = () => {
         </TabsList>
 
         <TabsContent value="productos" className="space-y-6">
+        {/* Alerta de productos sin peso */}
+        <ProductsWithoutWeightAlert compact maxItems={5} />
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-4">
           <div className="flex flex-wrap gap-2">
             <Button variant="default" onClick={() => setSmartImportOpen(true)}>

@@ -24,6 +24,7 @@ import EmbeddingService from '@/services/ai/embeddingService';
 import VariantMatrixManager from './VariantMatrixManager';
 import MarketSelector from './MarketSelector';
 import { useProductMarkets } from '@/hooks/useMarkets';
+import { useProductDeletion } from '@/hooks/useProductDeletion';
 
 interface ProductEditDialogProps {
   productId: string;
@@ -42,7 +43,15 @@ const productSchema = z.object({
   precio_sugerido_venta: z.coerce.number().min(0).optional().nullable(),
   moq: z.coerce.number().min(1, 'MOQ debe ser >= 1'),
   stock_fisico: z.coerce.number().min(0, 'Stock debe ser >= 0'),
-  peso_kg: z.coerce.number().min(0).optional().nullable(),
+  peso_g: z.preprocess(
+    (val) => {
+      // Convertir strings vacíos y valores falsy a null
+      if (val === '' || val === null || val === undefined) return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
+    },
+    z.number().min(1, 'Peso debe ser >= 1g').nullable().optional()
+  ),
   dimensiones_largo: z.coerce.number().min(0).optional(),
   dimensiones_ancho: z.coerce.number().min(0).optional(),
   dimensiones_alto: z.coerce.number().min(0).optional(),
@@ -53,13 +62,14 @@ const productSchema = z.object({
 type ProductFormData = z.infer<typeof productSchema>;
 
 const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogProps) => {
-  const { useProduct, updateProduct, useCategories, useSuppliers, uploadImage, deleteProduct } = useCatalog();
+  const { useProduct, updateProduct, useCategories, useSuppliers, uploadImage } = useCatalog();
   const { user } = useAuth();
   const { toast } = useToast();
   const { data: product, isLoading } = useProduct(productId);
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
   const { productMarkets, assignProductToMarkets } = useProductMarkets(productId);
+  const { confirmDelete, isDeleting } = useProductDeletion();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [generatingEmbedding, setGeneratingEmbedding] = useState(false);
@@ -128,7 +138,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
         precio_sugerido_venta: product.precio_sugerido_venta || undefined,
         moq: product.moq,
         stock_fisico: product.stock_fisico,
-        peso_kg: product.peso_kg || undefined,
+        peso_g: product.peso_g || undefined,
         dimensiones_largo: dims?.largo || undefined,
         dimensiones_ancho: dims?.ancho || undefined,
         dimensiones_alto: dims?.alto || undefined,
@@ -144,39 +154,57 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
   }, [product, form]);
 
   const onSubmit = async (data: ProductFormData) => {
-    const dimensiones = (data.dimensiones_largo || data.dimensiones_ancho || data.dimensiones_alto)
-      ? { largo: data.dimensiones_largo, ancho: data.dimensiones_ancho, alto: data.dimensiones_alto }
-      : null;
+    console.log('🔍 onSubmit triggered - Form data:', data);
+    console.log('👤 User ID:', user?.id);
+    console.log('📦 Product ID:', productId);
 
-    await updateProduct.mutateAsync({
-      id: productId,
-      updates: {
-        sku_interno: data.sku_interno,
-        nombre: data.nombre,
-        descripcion_corta: data.descripcion_corta || null,
-        descripcion_larga: data.descripcion_larga || null,
-        categoria_id: data.categoria_id || null,
-        proveedor_id: data.proveedor_id || null,
-        precio_mayorista: data.precio_mayorista,
-        precio_sugerido_venta: data.precio_sugerido_venta || null,
-        moq: data.moq,
-        stock_fisico: data.stock_fisico,
-        peso_kg: data.peso_kg || null,
-        dimensiones_cm: dimensiones,
-        url_origen: data.url_origen || null,
-        is_active: data.is_active,
-        galeria_imagenes: localImages,
-      },
-      userId: user?.id,
-    });
-    
-    // Update market assignments
-    await assignProductToMarkets.mutateAsync({
-      productId,
-      marketIds: selectedMarketIds,
-    });
-    
-    onOpenChange(false);
+    try {
+      const dimensiones = (data.dimensiones_largo || data.dimensiones_ancho || data.dimensiones_alto)
+        ? { largo: data.dimensiones_largo, ancho: data.dimensiones_ancho, alto: data.dimensiones_alto }
+        : null;
+
+      console.log('💾 Saving updates...');
+      await updateProduct.mutateAsync({
+        id: productId,
+        updates: {
+          sku_interno: data.sku_interno,
+          nombre: data.nombre,
+          descripcion_corta: data.descripcion_corta || null,
+          descripcion_larga: data.descripcion_larga || null,
+          categoria_id: data.categoria_id || null,
+          proveedor_id: data.proveedor_id || null,
+          precio_mayorista: data.precio_mayorista,
+          precio_sugerido_venta: data.precio_sugerido_venta || null,
+          moq: data.moq,
+          stock_fisico: data.stock_fisico,
+          peso_g: data.peso_g || null,
+          dimensiones_cm: dimensiones,
+          url_origen: data.url_origen || null,
+          is_active: data.is_active,
+          galeria_imagenes: localImages,
+        },
+        userId: user?.id,
+      });
+      
+      console.log('✅ Product saved successfully');
+      
+      // Update market assignments
+      console.log('🌍 Updating market assignments...');
+      await assignProductToMarkets.mutateAsync({
+        productId,
+        marketIds: selectedMarketIds,
+      });
+      
+      console.log('✅ Markets updated successfully');
+      onOpenChange(false);
+    } catch (error) {
+      console.error('❌ Error saving product:', error);
+      toast({ 
+        title: 'Error al guardar', 
+        description: error instanceof Error ? error.message : 'Error desconocido',
+        variant: 'destructive' 
+      });
+    }
   };
 
   // Generate embedding for an image URL
@@ -270,10 +298,13 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
   };
 
   const handleDelete = async () => {
-    if (confirm('¿Está seguro de eliminar este producto?')) {
-      await deleteProduct.mutateAsync(productId);
-      onOpenChange(false);
-    }
+    await confirmDelete(
+      product?.nombre || 'este producto',
+      () => {
+        onOpenChange(false);
+      },
+      productId
+    );
   };
 
   if (isLoading) {
@@ -291,31 +322,30 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Editar Producto: {product?.sku_interno}</span>
-            <div className="flex items-center gap-2">
-              <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                    <Label className="text-sm">
-                      {field.value ? 'Activo' : 'Inactivo'}
-                    </Label>
-                  </div>
-                )}
-              />
-            </div>
-          </DialogTitle>
-        </DialogHeader>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                <span>Editar Producto: {product?.sku_interno}</span>
+                <div className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <Label className="text-sm">
+                          {field.value ? 'Activo' : 'Inactivo'}
+                        </Label>
+                      </div>
+                    )}
+                  />
+                </div>
+              </DialogTitle>
+            </DialogHeader>
             <Tabs defaultValue="general" className="w-full">
               <TabsList className="w-full grid grid-cols-6">
                 <TabsTrigger value="general" className="gap-1">
@@ -587,13 +617,14 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                   <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="peso_kg"
+                      name="peso_g"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Peso (kg)</FormLabel>
+                          <FormLabel>Peso (gramos) *</FormLabel>
                           <FormControl>
-                            <Input type="number" step="0.001" min="0" {...field} value={field.value || ''} />
+                            <Input type="number" step="1" min="1" placeholder="500" {...field} value={field.value || ''} />
                           </FormControl>
+                          <p className="text-xs text-muted-foreground">Requerido para cálculo de envío B2B</p>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -767,7 +798,17 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={updateProduct.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={updateProduct.isPending}
+                  onClick={(e) => {
+                    console.log('🔘 Botón Guardar clickeado');
+                    console.log('📋 Form state:', form.formState);
+                    console.log('❌ Errores:', form.formState.errors);
+                    const values = form.getValues();
+                    console.log('📦 Valores actuales:', values);
+                  }}
+                >
                   {updateProduct.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
