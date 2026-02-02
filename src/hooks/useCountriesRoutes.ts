@@ -200,6 +200,7 @@ export function useCountriesRoutes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-routes"] });
+      queryClient.invalidateQueries({ queryKey: ["shipping_tiers_all"] });
       toast({ title: "Ruta creada exitosamente" });
     },
     onError: (error: Error) => {
@@ -218,6 +219,7 @@ export function useCountriesRoutes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-routes"] });
+      queryClient.invalidateQueries({ queryKey: ["shipping_tiers_all"] });
       toast({ title: "Ruta actualizada exitosamente" });
     },
     onError: (error: Error) => {
@@ -238,6 +240,7 @@ export function useCountriesRoutes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["route-logistics-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["shipping_tiers_all"] });
       toast({ title: "Costo de logística creado exitosamente" });
     },
     onError: (error: Error) => {
@@ -256,6 +259,7 @@ export function useCountriesRoutes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["route-logistics-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["shipping_tiers_all"] });
       toast({ title: "Costo actualizado exitosamente" });
     },
     onError: (error: Error) => {
@@ -274,6 +278,7 @@ export function useCountriesRoutes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["route-logistics-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["shipping_tiers_all"] });
       toast({ title: "Costo eliminado exitosamente" });
     },
     onError: (error: Error) => {

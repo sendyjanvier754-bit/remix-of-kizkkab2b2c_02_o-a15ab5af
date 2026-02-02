@@ -12,9 +12,11 @@ import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
 import { validateB2BCheckout, getFieldError, hasFieldError, type CheckoutValidationError } from '@/services/checkoutValidation';
 import { useApplyDiscount, AppliedDiscount } from '@/hooks/useApplyDiscount';
 import { useAdminPaymentMethods } from '@/hooks/usePaymentMethods';
+import { useB2BPricingEngineV2 } from '@/hooks/useB2BPricingEngineV2';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { B2BShippingSelector } from '@/components/checkout/B2BShippingSelector';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -87,6 +89,9 @@ const SellerCheckout = () => {
     setAppliedDiscount 
   } = useApplyDiscount();
 
+  // B2B Pricing Engine for shipping options
+  const pricingEngine = useB2BPricingEngineV2();
+
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('address');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -103,6 +108,11 @@ const SellerCheckout = () => {
   const [expandedAddressId, setExpandedAddressId] = useState<string | null>(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
   const [expandedPickupId, setExpandedPickupId] = useState<string | null>(null);
+  
+  // B2B Shipping tier selection
+  const [selectedTier, setSelectedTier] = useState<'standard' | 'express'>('standard');
+  const [shippingOptions, setShippingOptions] = useState<any[]>([]);
+  const [loadingShipping, setLoadingShipping] = useState(false);
   
   // Calcular totales desde items de BD
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
@@ -259,6 +269,43 @@ const SellerCheckout = () => {
       setSelectedAddressId(defaultAddress.id);
     }
   });
+
+  // Load shipping options when address is selected
+  useEffect(() => {
+    const loadShippingOptions = async () => {
+      if (!selectedAddressId || deliveryMethod !== 'address') {
+        console.log('🔍 No se carga selector:', { selectedAddressId, deliveryMethod });
+        setShippingOptions([]);
+        return;
+      }
+
+      console.log('🚀 Cargando opciones de envío para dirección:', selectedAddressId);
+      setLoadingShipping(true);
+      try {
+        const response = await pricingEngine.getShippingOptions(selectedAddressId);
+        console.log('📦 Respuesta de shipping options:', response);
+        
+        if (response && response.valid && response.options) {
+          console.log('✅ Opciones cargadas:', response.options);
+          setShippingOptions(response.options);
+          // Si solo hay una opción, seleccionarla automáticamente
+          if (response.options.length === 1) {
+            setSelectedTier(response.options[0].tier_type as 'standard' | 'express');
+          }
+        } else {
+          console.log('⚠️ Sin opciones o respuesta inválida:', response?.error);
+          setShippingOptions([]);
+        }
+      } catch (error) {
+        console.error('❌ Error loading shipping options:', error);
+        setShippingOptions([]);
+      } finally {
+        setLoadingShipping(false);
+      }
+    };
+
+    loadShippingOptions();
+  }, [selectedAddressId, deliveryMethod]);
 
   // Calculate max credit for current cart (never 100% - max is what admin configured, typically less)
   const maxCreditAmount = calculateMaxCreditForCart(subtotal);
@@ -735,6 +782,55 @@ const SellerCheckout = () => {
                 </RadioGroup>
                 </div>
               </Card>
+
+              {/* B2B Shipping Type Selector - Only for address delivery */}
+              {deliveryMethod === 'address' && selectedAddressId && (
+                <>
+                  {shippingOptions.length > 0 ? (
+                    <Card className="p-6">
+                      <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+                        <Truck className="h-5 w-5" />
+                        Tipo de Envío
+                      </h2>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Selecciona el tipo de envío para tu pedido
+                      </p>
+                      <B2BShippingSelector
+                        options={shippingOptions}
+                        selectedTier={selectedTier}
+                        onTierChange={setSelectedTier}
+                        hasOversizeProducts={false}
+                        loading={loadingShipping}
+                      />
+                    </Card>
+                  ) : loadingShipping ? (
+                    <Card className="p-6">
+                      <div className="flex items-center justify-center gap-2 py-4">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <p className="text-muted-foreground">Cargando opciones de envío...</p>
+                      </div>
+                    </Card>
+                  ) : (
+                    <Card className="p-6 bg-orange-50 dark:bg-orange-950/20 border-orange-200">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h3 className="font-semibold text-orange-900 dark:text-orange-100 mb-1">
+                            Sin opciones de envío configuradas
+                          </h3>
+                          <p className="text-sm text-orange-800 dark:text-orange-200 mb-2">
+                            No hay tipos de envío (Standard/Express) disponibles para esta dirección.
+                          </p>
+                          <p className="text-xs text-orange-700 dark:text-orange-300">
+                            <strong>Para solucionar:</strong> El administrador debe configurar rutas y tipos de envío en 
+                            <code className="mx-1 px-1 py-0.5 bg-orange-100 dark:bg-orange-900 rounded">/admin/logistica/rutas</code>
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </>
+              )}
 
               {/* Products Section - Max 4 visible with scroll */}
               <Card className="p-6">

@@ -1,4 +1,7 @@
 import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +40,8 @@ import {
   Route,
   Layers,
   Settings,
+  Ship,
+  Zap,
 } from 'lucide-react';
 import { useCountriesRoutes, TransitHub, DestinationCountry, ShippingRoute, RouteLogisticsCost } from '@/hooks/useCountriesRoutes';
 import { useShippingOrigins, ShippingOrigin } from '@/hooks/useShippingOrigins';
@@ -47,6 +52,28 @@ import { useRoutePricing } from '@/hooks/useRoutePricing';
 import { RouteSegmentTimeline } from '@/components/admin/pricing/RouteSegmentTimeline';
 import { cn } from '@/lib/utils';
 
+// ============ INTERFACES ============
+interface ShippingTier {
+  id: string;
+  route_id: string;
+  tier_type: 'standard' | 'express';
+  tier_name: string;
+  transport_type: 'maritimo' | 'aereo';
+  tramo_a_cost_per_kg: number;
+  tramo_a_min_cost: number;
+  tramo_a_eta_min: number;
+  tramo_a_eta_max: number;
+  tramo_b_cost_per_lb: number;
+  tramo_b_min_cost: number;
+  tramo_b_eta_min: number;
+  tramo_b_eta_max: number;
+  allows_oversize: boolean;
+  allows_sensitive: boolean;
+  is_active: boolean;
+  priority_order: number;
+  created_at: string;
+}
+
 // ============ SEGMENT LABELS ============
 const SEGMENT_LABELS: Record<string, string> = {
   china_to_transit: 'Tramo A (Origen → Hub)',
@@ -56,6 +83,8 @@ const SEGMENT_LABELS: Record<string, string> = {
 
 export default function AdminGlobalLogisticsPage() {
   const [activeTab, setActiveTab] = useState('routes');
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // ========== HOOKS ==========
   const {
@@ -94,6 +123,19 @@ export default function AdminGlobalLogisticsPage() {
   const { data: categories } = useCategories();
   const { routes: formattedRoutes, calculateRouteCost } = useRoutePricing();
 
+  // Shipping Tiers Query
+  const { data: shippingTiers, isLoading: loadingTiers, refetch: refetchTiers } = useQuery({
+    queryKey: ['shipping_tiers_all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('shipping_tiers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as ShippingTier[];
+    },
+  });
+
   // ========== DIALOG STATES ==========
   const [showHubDialog, setShowHubDialog] = useState(false);
   const [showCountryDialog, setShowCountryDialog] = useState(false);
@@ -101,6 +143,7 @@ export default function AdminGlobalLogisticsPage() {
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [showOriginDialog, setShowOriginDialog] = useState(false);
   const [showCategoryRateDialog, setShowCategoryRateDialog] = useState(false);
+  const [showTierDialog, setShowTierDialog] = useState(false);
 
   // ========== EDITING STATES ==========
   const [editingHub, setEditingHub] = useState<TransitHub | null>(null);
@@ -109,6 +152,7 @@ export default function AdminGlobalLogisticsPage() {
   const [editingCost, setEditingCost] = useState<RouteLogisticsCost | null>(null);
   const [editingOrigin, setEditingOrigin] = useState<ShippingOrigin | null>(null);
   const [editingCategoryRate, setEditingCategoryRate] = useState<CategoryShippingRate | null>(null);
+  const [editingTier, setEditingTier] = useState<ShippingTier | null>(null);
 
   // ========== FORM STATES ==========
   const [hubForm, setHubForm] = useState({ name: '', code: '', description: '', is_active: true });
@@ -132,6 +176,27 @@ export default function AdminGlobalLogisticsPage() {
     percentage_fee: 0,
     description: '',
   });
+  const [tierForm, setTierForm] = useState({
+    route_id: '',
+    tier_type: 'standard' as 'standard' | 'express',
+    tier_name: '',
+    transport_type: 'maritimo' as 'maritimo' | 'aereo',
+    tramo_a_cost_per_kg: 8.0,
+    tramo_a_min_cost: 5.0,
+    tramo_a_eta_min: 15,
+    tramo_a_eta_max: 25,
+    tramo_b_cost_per_lb: 5.0,
+    tramo_b_min_cost: 3.0,
+    tramo_b_eta_min: 3,
+    tramo_b_eta_max: 7,
+    allows_oversize: true,
+    allows_sensitive: true,
+    is_active: true,
+    priority_order: 1,
+  });
+
+  // ========== TIERS STATE ==========
+  const [selectedTierRoute, setSelectedTierRoute] = useState<string>('');
 
   // ========== CALCULATOR STATE ==========
   const [calcOrigin, setCalcOrigin] = useState('');
@@ -308,6 +373,118 @@ export default function AdminGlobalLogisticsPage() {
     setShowCategoryRateDialog(false);
   };
 
+  // Tier handlers
+  const saveTierMutation = useMutation({
+    mutationFn: async (tier: Partial<ShippingTier>) => {
+      if (tier.id) {
+        const { data, error } = await supabase
+          .from('shipping_tiers')
+          .update(tier)
+          .eq('id', tier.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } else {
+        const { data, error } = await supabase
+          .from('shipping_tiers')
+          .insert([tier])
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shipping_tiers_all'] });
+      toast({ title: 'Tipo de envío guardado exitosamente' });
+      setShowTierDialog(false);
+      setEditingTier(null);
+      refetchTiers();
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error al guardar tipo de envío', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const openTierDialog = (tier?: ShippingTier) => {
+    if (tier) {
+      setEditingTier(tier);
+      setSelectedTierRoute(tier.route_id);
+      setTierForm({
+        route_id: tier.route_id,
+        tier_type: tier.tier_type,
+        tier_name: tier.tier_name,
+        transport_type: tier.transport_type,
+        tramo_a_cost_per_kg: tier.tramo_a_cost_per_kg,
+        tramo_a_min_cost: tier.tramo_a_min_cost,
+        tramo_a_eta_min: tier.tramo_a_eta_min,
+        tramo_a_eta_max: tier.tramo_a_eta_max,
+        tramo_b_cost_per_lb: tier.tramo_b_cost_per_lb,
+        tramo_b_min_cost: tier.tramo_b_min_cost,
+        tramo_b_eta_min: tier.tramo_b_eta_min,
+        tramo_b_eta_max: tier.tramo_b_eta_max,
+        allows_oversize: tier.allows_oversize,
+        allows_sensitive: tier.allows_sensitive,
+        is_active: tier.is_active,
+        priority_order: tier.priority_order,
+      });
+    } else {
+      setEditingTier(null);
+      setSelectedTierRoute('');
+      setTierForm({
+        route_id: '',
+        tier_type: 'standard',
+        tier_name: '',
+        transport_type: 'maritimo',
+        tramo_a_cost_per_kg: 8.0,
+        tramo_a_min_cost: 5.0,
+        tramo_a_eta_min: 15,
+        tramo_a_eta_max: 25,
+        tramo_b_cost_per_lb: 5.0,
+        tramo_b_min_cost: 3.0,
+        tramo_b_eta_min: 3,
+        tramo_b_eta_max: 7,
+        allows_oversize: true,
+        allows_sensitive: true,
+        is_active: true,
+        priority_order: 1,
+      });
+    }
+    setShowTierDialog(true);
+  };
+
+  const handleTierSubmit = () => {
+    if (!tierForm.route_id) {
+      toast({ title: 'Error', description: 'Debes seleccionar una ruta', variant: 'destructive' });
+      return;
+    }
+    if (!tierForm.tier_name) {
+      toast({ title: 'Error', description: 'Debes ingresar un nombre', variant: 'destructive' });
+      return;
+    }
+    const data = editingTier ? { id: editingTier.id, ...tierForm } : tierForm;
+    saveTierMutation.mutate(data);
+  };
+
+  const deleteTierMutation = useMutation({
+    mutationFn: async (tierId: string) => {
+      const { error } = await supabase
+        .from('shipping_tiers')
+        .delete()
+        .eq('id', tierId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shipping_tiers_all'] });
+      toast({ title: 'Tipo de envío eliminado' });
+      refetchTiers();
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error al eliminar', description: error.message, variant: 'destructive' });
+    },
+  });
+
   // ========== CALCULATOR LOGIC ==========
   const calculatorResult = useMemo(() => {
     if (!calcDestination) return null;
@@ -358,10 +535,14 @@ export default function AdminGlobalLogisticsPage() {
     >
       <TooltipProvider>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="routes" className="gap-2">
               <Plane className="h-4 w-4" />
               <span className="hidden sm:inline">Rutas y Tramos</span>
+            </TabsTrigger>
+            <TabsTrigger value="tiers" className="gap-2">
+              <Package className="h-4 w-4" />
+              <span className="hidden sm:inline">Tipos de Envío</span>
             </TabsTrigger>
             <TabsTrigger value="hubs" className="gap-2">
               <Building2 className="h-4 w-4" />
@@ -576,6 +757,175 @@ export default function AdminGlobalLogisticsPage() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* ========== TIPOS DE ENVÍO TAB ========== */}
+          <TabsContent value="tiers">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Tipos de Envío (Standard / Express)
+                    </CardTitle>
+                    <CardDescription>
+                      Gestiona los diferentes tipos de envío con sus costos y tiempos por tramo
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => openTierDialog()}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nuevo Tipo
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loadingTiers ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-24 w-full" />
+                    ))}
+                  </div>
+                ) : !shippingTiers || shippingTiers.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium mb-2">No hay tipos de envío configurados</p>
+                    <p className="text-sm">Haz clic en "Nuevo Tipo" para agregar el primer tipo de envío</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {shippingTiers.map((tier) => {
+                      const route = routes?.find(r => r.id === tier.route_id);
+                      return (
+                        <Card key={tier.id} className="overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-semibold text-lg">{tier.tier_name}</h4>
+                                  <Badge variant={tier.tier_type === 'express' ? 'default' : 'secondary'}>
+                                    {tier.tier_type === 'express' ? (
+                                      <><Zap className="h-3 w-3 mr-1" />Express</>
+                                    ) : (
+                                      <><Package className="h-3 w-3 mr-1" />Standard</>
+                                    )}
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    {tier.transport_type === 'aereo' ? (
+                                      <><Plane className="h-3 w-3 mr-1" />Aéreo</>
+                                    ) : (
+                                      <><Ship className="h-3 w-3 mr-1" />Marítimo</>
+                                    )}
+                                  </Badge>
+                                  {!tier.is_active && (
+                                    <Badge variant="destructive">Inactivo</Badge>
+                                  )}
+                                </div>
+                                {route && (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <MapPin className="h-3 w-3" />
+                                    <span>
+                                      {route.is_direct 
+                                        ? `China → ${route.destination_country?.name || 'Destino'}` 
+                                        : `China → ${route.transit_hub?.name || 'Hub'} → ${route.destination_country?.name || 'Destino'}`}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => openTierDialog(tier)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    if (confirm('¿Eliminar este tipo de envío?')) {
+                                      deleteTierMutation.mutate(tier.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                              {/* Tramo A */}
+                              <div className="space-y-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="p-1 rounded bg-blue-100 dark:bg-blue-900">
+                                    <Ship className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                                  </div>
+                                  <span className="font-medium text-sm">Tramo A (Origen → Hub)</span>
+                                </div>
+                                <div className="space-y-1 text-xs">
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Costo por kg:</span>
+                                    <span className="font-mono">${tier.tramo_a_cost_per_kg}/kg</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Mínimo:</span>
+                                    <span className="font-mono">${tier.tramo_a_min_cost}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">ETA:</span>
+                                    <span className="font-mono">{tier.tramo_a_eta_min}-{tier.tramo_a_eta_max} días</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Tramo B */}
+                              <div className="space-y-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="p-1 rounded bg-green-100 dark:bg-green-900">
+                                    <Plane className="h-3 w-3 text-green-600 dark:text-green-400" />
+                                  </div>
+                                  <span className="font-medium text-sm">Tramo B (Hub → Destino)</span>
+                                </div>
+                                <div className="space-y-1 text-xs">
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Costo por lb:</span>
+                                    <span className="font-mono">${tier.tramo_b_cost_per_lb}/lb</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Mínimo:</span>
+                                    <span className="font-mono">${tier.tramo_b_min_cost}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">ETA:</span>
+                                    <span className="font-mono">{tier.tramo_b_eta_min}-{tier.tramo_b_eta_max} días</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Capacidades */}
+                            <div className="flex gap-2 mt-3">
+                              {tier.allows_oversize && (
+                                <Badge variant="outline" className="text-xs">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Oversize
+                                </Badge>
+                              )}
+                              {tier.allows_sensitive && (
+                                <Badge variant="outline" className="text-xs">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Sensibles
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs">
+                                Prioridad: {tier.priority_order}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ========== HUBS TAB ========== */}
@@ -1344,6 +1694,216 @@ export default function AdminGlobalLogisticsPage() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowCategoryRateDialog(false)}>Cancelar</Button>
               <Button onClick={handleCategoryRateSubmit}>Guardar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Tier Dialog */}
+        <Dialog open={showTierDialog} onOpenChange={setShowTierDialog}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingTier ? 'Editar' : 'Nuevo'} Tipo de Envío</DialogTitle>
+              <DialogDescription>
+                Configura el tipo de envío (Standard/Express) con sus costos y tiempos por tramo
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {/* Ruta */}
+              <div className="grid gap-2">
+                <Label>Ruta Logística *</Label>
+                <Select 
+                  value={tierForm.route_id} 
+                  onValueChange={(v) => {
+                    setTierForm(prev => ({ ...prev, route_id: v }));
+                    setSelectedTierRoute(v);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una ruta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {routes?.filter(r => r.is_active).map(route => (
+                      <SelectItem key={route.id} value={route.id}>
+                        {route.is_direct 
+                          ? `China → ${route.destination_country?.name || 'Destino'}` 
+                          : `China → ${route.transit_hub?.name || 'Hub'} → ${route.destination_country?.name || 'Destino'}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Selecciona la ruta para ver los tramos involucrados
+                </p>
+              </div>
+
+              {/* Información de Tramos de la Ruta Seleccionada */}
+              {selectedTierRoute && (() => {
+                const selectedRoute = routes?.find(r => r.id === selectedTierRoute);
+                const routeCosts = logisticsCosts?.filter(c => c.shipping_route_id === selectedTierRoute) || [];
+                
+                if (!selectedRoute) return null;
+
+                return (
+                  <Alert className="bg-blue-50 dark:bg-blue-950/20 border-blue-200">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Tramos de esta Ruta</AlertTitle>
+                    <AlertDescription>
+                      <div className="mt-2 space-y-2">
+                        <p className="text-sm font-medium">
+                          Ruta: {selectedRoute.is_direct 
+                            ? `China → ${selectedRoute.destination_country?.name}` 
+                            : `China → ${selectedRoute.transit_hub?.name} → ${selectedRoute.destination_country?.name}`}
+                        </p>
+                        
+                        {routeCosts.length > 0 ? (
+                          <div className="space-y-2 mt-3">
+                            <p className="text-xs font-semibold">Costos Logísticos Base:</p>
+                            {routeCosts.map((cost) => (
+                              <div key={cost.id} className="text-xs p-2 bg-white dark:bg-slate-900 rounded border">
+                                <div className="font-medium mb-1">
+                                  {SEGMENT_LABELS[cost.segment] || cost.segment}
+                                </div>
+                                <div className="grid grid-cols-2 gap-1 text-muted-foreground">
+                                  <span>$/kg: ${cost.cost_per_kg}</span>
+                                  <span>Min: ${cost.min_cost}</span>
+                                  <span>ETA: {cost.estimated_days_min}-{cost.estimated_days_max} días</span>
+                                </div>
+                              </div>
+                            ))}
+                            <p className="text-xs text-muted-foreground italic mt-2">
+                              ⚠️ Estos son los costos base de logística. Abajo configura los costos específicos para este tipo de envío (Standard/Express).
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-amber-600 mt-2">
+                            ⚠️ Esta ruta no tiene costos logísticos configurados. Deberás configurar primero los costos en el tab "Rutas y Tramos".
+                          </p>
+                        )}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                );
+              })()}
+
+              {/* Tipo y Transporte */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Tipo de Envío *</Label>
+                  <Select 
+                    value={tierForm.tier_type} 
+                    onValueChange={(v: 'standard' | 'express') => setTierForm(prev => ({ 
+                      ...prev, 
+                      tier_type: v,
+                      tier_name: v === 'standard' ? 'Standard - Consolidado' : 'Express - Prioritario'
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          Standard (Económico)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="express">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4" />
+                          Express (Rápido)
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Tipo de Transporte *</Label>
+                  <Select 
+                    value={tierForm.transport_type} 
+                    onValueChange={(v: 'maritimo' | 'aereo') => setTierForm(prev => ({ ...prev, transport_type: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="maritimo">
+                        <div className="flex items-center gap-2">
+                          <Ship className="h-4 w-4" />
+                          Marítimo
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="aereo">
+                        <div className="flex items-center gap-2">
+                          <Plane className="h-4 w-4" />
+                          Aéreo
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Nombre */}
+              <div className="grid gap-2">
+                <Label>Nombre del Servicio *</Label>
+                <Input
+                  value={tierForm.tier_name}
+                  onChange={e => setTierForm(prev => ({ ...prev, tier_name: e.target.value }))}
+                  placeholder="Ej: Standard - Consolidado Marítimo"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Este nombre aparecerá en el checkout para que los clientes elijan el tipo de envío
+                </p>
+              </div>
+
+              <Separator />
+
+              {/* Capacidades */}
+              <div className="space-y-3">
+                <h4 className="font-medium">Capacidades y Estado</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={tierForm.allows_oversize}
+                      onCheckedChange={checked => setTierForm(prev => ({ ...prev, allows_oversize: checked }))}
+                    />
+                    <Label>Permite Oversize</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={tierForm.allows_sensitive}
+                      onCheckedChange={checked => setTierForm(prev => ({ ...prev, allows_sensitive: checked }))}
+                    />
+                    <Label>Permite Sensibles</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={tierForm.is_active}
+                      onCheckedChange={checked => setTierForm(prev => ({ ...prev, is_active: checked }))}
+                    />
+                    <Label>Activo</Label>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Orden de Prioridad</Label>
+                    <Input
+                      type="number"
+                      value={tierForm.priority_order}
+                      onChange={e => setTierForm(prev => ({ ...prev, priority_order: parseInt(e.target.value) || 1 }))}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowTierDialog(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleTierSubmit}
+                disabled={!tierForm.route_id || !tierForm.tier_name || saveTierMutation.isPending}
+              >
+                {saveTierMutation.isPending ? 'Guardando...' : 'Guardar'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
