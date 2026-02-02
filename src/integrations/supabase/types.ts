@@ -1096,6 +1096,7 @@ export type Database = {
           name: string
           operational_fee: number
           rate_per_lb: number
+          shipping_zone_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1109,6 +1110,7 @@ export type Database = {
           name: string
           operational_fee?: number
           rate_per_lb?: number
+          shipping_zone_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1122,6 +1124,7 @@ export type Database = {
           name?: string
           operational_fee?: number
           rate_per_lb?: number
+          shipping_zone_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1130,6 +1133,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communes_shipping_zone_id_fkey"
+            columns: ["shipping_zone_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -1878,9 +1888,15 @@ export type Database = {
           china_tracking: string | null
           close_reason: string | null
           closed_at: string | null
+          country_code: string | null
           created_at: string
           cycle_end_at: string | null
           cycle_start_at: string | null
+          department_code: string | null
+          has_express_orders: boolean | null
+          has_oversize_orders: boolean | null
+          has_sensitive_orders: boolean | null
+          hub_code: string | null
           id: string
           metadata: Json | null
           notes: string | null
@@ -1898,9 +1914,15 @@ export type Database = {
           china_tracking?: string | null
           close_reason?: string | null
           closed_at?: string | null
+          country_code?: string | null
           created_at?: string
           cycle_end_at?: string | null
           cycle_start_at?: string | null
+          department_code?: string | null
+          has_express_orders?: boolean | null
+          has_oversize_orders?: boolean | null
+          has_sensitive_orders?: boolean | null
+          hub_code?: string | null
           id?: string
           metadata?: Json | null
           notes?: string | null
@@ -1918,9 +1940,15 @@ export type Database = {
           china_tracking?: string | null
           close_reason?: string | null
           closed_at?: string | null
+          country_code?: string | null
           created_at?: string
           cycle_end_at?: string | null
           cycle_start_at?: string | null
+          department_code?: string | null
+          has_express_orders?: boolean | null
+          has_oversize_orders?: boolean | null
+          has_sensitive_orders?: boolean | null
+          hub_code?: string | null
           id?: string
           metadata?: Json | null
           notes?: string | null
@@ -2203,16 +2231,24 @@ export type Database = {
       orders_b2b: {
         Row: {
           admin_notes: string | null
+          billable_weight_kg: number | null
+          billable_weight_lb: number | null
           billing_address: Json | null
           buyer_id: string | null
           consolidation_status: string | null
           created_at: string
           currency: string | null
           discount_amount: number | null
+          hybrid_tracking_id: string | null
           id: string
+          is_express: boolean | null
+          is_oversize: boolean | null
+          is_sensitive: boolean | null
+          master_po_id: string | null
           metadata: Json | null
           notes: string | null
           order_number: string | null
+          packing_instructions: string | null
           payment_confirmed_at: string | null
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
@@ -2221,27 +2257,38 @@ export type Database = {
           reservation_expires_at: string | null
           seller_id: string
           shipping_address: Json | null
+          shipping_address_id: string | null
           shipping_cost: number | null
+          shipping_tier_type: string | null
           status: string | null
           stock_reserved: boolean | null
           subtotal: number | null
           tax_amount: number | null
           total_amount: number | null
           total_quantity: number | null
+          total_weight_g: number | null
           updated_at: string
         }
         Insert: {
           admin_notes?: string | null
+          billable_weight_kg?: number | null
+          billable_weight_lb?: number | null
           billing_address?: Json | null
           buyer_id?: string | null
           consolidation_status?: string | null
           created_at?: string
           currency?: string | null
           discount_amount?: number | null
+          hybrid_tracking_id?: string | null
           id?: string
+          is_express?: boolean | null
+          is_oversize?: boolean | null
+          is_sensitive?: boolean | null
+          master_po_id?: string | null
           metadata?: Json | null
           notes?: string | null
           order_number?: string | null
+          packing_instructions?: string | null
           payment_confirmed_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
@@ -2250,27 +2297,38 @@ export type Database = {
           reservation_expires_at?: string | null
           seller_id: string
           shipping_address?: Json | null
+          shipping_address_id?: string | null
           shipping_cost?: number | null
+          shipping_tier_type?: string | null
           status?: string | null
           stock_reserved?: boolean | null
           subtotal?: number | null
           tax_amount?: number | null
           total_amount?: number | null
           total_quantity?: number | null
+          total_weight_g?: number | null
           updated_at?: string
         }
         Update: {
           admin_notes?: string | null
+          billable_weight_kg?: number | null
+          billable_weight_lb?: number | null
           billing_address?: Json | null
           buyer_id?: string | null
           consolidation_status?: string | null
           created_at?: string
           currency?: string | null
           discount_amount?: number | null
+          hybrid_tracking_id?: string | null
           id?: string
+          is_express?: boolean | null
+          is_oversize?: boolean | null
+          is_sensitive?: boolean | null
+          master_po_id?: string | null
           metadata?: Json | null
           notes?: string | null
           order_number?: string | null
+          packing_instructions?: string | null
           payment_confirmed_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
@@ -2279,16 +2337,34 @@ export type Database = {
           reservation_expires_at?: string | null
           seller_id?: string
           shipping_address?: Json | null
+          shipping_address_id?: string | null
           shipping_cost?: number | null
+          shipping_tier_type?: string | null
           status?: string | null
           stock_reserved?: boolean | null
           subtotal?: number | null
           tax_amount?: number | null
           total_amount?: number | null
           total_quantity?: number | null
+          total_weight_g?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_b2b_master_po_id_fkey"
+            columns: ["master_po_id"]
+            isOneToOne: false
+            referencedRelation: "master_purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_b2b_shipping_address_id_fkey"
+            columns: ["shipping_address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders_b2c: {
         Row: {
@@ -2955,6 +3031,83 @@ export type Database = {
           },
         ]
       }
+      product_shipping_classes: {
+        Row: {
+          allows_express: boolean | null
+          created_at: string | null
+          id: string
+          is_oversize: boolean | null
+          is_sensitive: boolean | null
+          oversize_surcharge_percent: number | null
+          packing_instructions: string | null
+          product_id: string | null
+          requires_special_packing: boolean | null
+          sensitive_surcharge_per_gram: number | null
+          sensitivity_type: string | null
+          updated_at: string | null
+          volume_factor: number | null
+        }
+        Insert: {
+          allows_express?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_oversize?: boolean | null
+          is_sensitive?: boolean | null
+          oversize_surcharge_percent?: number | null
+          packing_instructions?: string | null
+          product_id?: string | null
+          requires_special_packing?: boolean | null
+          sensitive_surcharge_per_gram?: number | null
+          sensitivity_type?: string | null
+          updated_at?: string | null
+          volume_factor?: number | null
+        }
+        Update: {
+          allows_express?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_oversize?: boolean | null
+          is_sensitive?: boolean | null
+          oversize_surcharge_percent?: number | null
+          packing_instructions?: string | null
+          product_id?: string | null
+          requires_special_packing?: boolean | null
+          sensitive_surcharge_per_gram?: number | null
+          sensitivity_type?: string | null
+          updated_at?: string | null
+          volume_factor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_shipping_classes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_shipping_classes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "v_pricing_breakdown"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_shipping_classes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "v_productos_con_precio_b2b"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_shipping_classes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           attribute_combination: Json | null
@@ -3164,6 +3317,7 @@ export type Database = {
           stock_status: Database["public"]["Enums"]["stock_status"] | null
           updated_at: string
           url_origen: string | null
+          weight_g: number | null
           weight_kg: number | null
           width_cm: number | null
         }
@@ -3205,6 +3359,7 @@ export type Database = {
           stock_status?: Database["public"]["Enums"]["stock_status"] | null
           updated_at?: string
           url_origen?: string | null
+          weight_g?: number | null
           weight_kg?: number | null
           width_cm?: number | null
         }
@@ -3246,6 +3401,7 @@ export type Database = {
           stock_status?: Database["public"]["Enums"]["stock_status"] | null
           updated_at?: string
           url_origen?: string | null
+          weight_g?: number | null
           weight_kg?: number | null
           width_cm?: number | null
         }
@@ -4061,6 +4217,150 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "transit_hubs"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_tiers: {
+        Row: {
+          allows_oversize: boolean | null
+          allows_sensitive: boolean | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          priority_order: number | null
+          route_id: string | null
+          tier_description: string | null
+          tier_name: string
+          tier_type: string
+          tramo_a_cost_per_kg: number
+          tramo_a_eta_max: number | null
+          tramo_a_eta_min: number | null
+          tramo_a_min_cost: number
+          tramo_b_cost_per_lb: number
+          tramo_b_eta_max: number | null
+          tramo_b_eta_min: number | null
+          tramo_b_min_cost: number
+          updated_at: string | null
+        }
+        Insert: {
+          allows_oversize?: boolean | null
+          allows_sensitive?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          priority_order?: number | null
+          route_id?: string | null
+          tier_description?: string | null
+          tier_name: string
+          tier_type?: string
+          tramo_a_cost_per_kg?: number
+          tramo_a_eta_max?: number | null
+          tramo_a_eta_min?: number | null
+          tramo_a_min_cost?: number
+          tramo_b_cost_per_lb?: number
+          tramo_b_eta_max?: number | null
+          tramo_b_eta_min?: number | null
+          tramo_b_min_cost?: number
+          updated_at?: string | null
+        }
+        Update: {
+          allows_oversize?: boolean | null
+          allows_sensitive?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          priority_order?: number | null
+          route_id?: string | null
+          tier_description?: string | null
+          tier_name?: string
+          tier_type?: string
+          tramo_a_cost_per_kg?: number
+          tramo_a_eta_max?: number | null
+          tramo_a_eta_min?: number | null
+          tramo_a_min_cost?: number
+          tramo_b_cost_per_lb?: number
+          tramo_b_eta_max?: number | null
+          tramo_b_eta_min?: number | null
+          tramo_b_min_cost?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_tiers_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_tiers_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "v_rutas_logistica"
+            referencedColumns: ["route_id"]
+          },
+        ]
+      }
+      shipping_zones: {
+        Row: {
+          country_id: string | null
+          coverage_active: boolean | null
+          created_at: string | null
+          id: string
+          is_capital: boolean | null
+          is_remote: boolean | null
+          max_delivery_days: number | null
+          min_delivery_days: number | null
+          surcharge_percent: number
+          updated_at: string | null
+          zone_code: string
+          zone_level: number
+          zone_name: string
+        }
+        Insert: {
+          country_id?: string | null
+          coverage_active?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_capital?: boolean | null
+          is_remote?: boolean | null
+          max_delivery_days?: number | null
+          min_delivery_days?: number | null
+          surcharge_percent?: number
+          updated_at?: string | null
+          zone_code: string
+          zone_level?: number
+          zone_name: string
+        }
+        Update: {
+          country_id?: string | null
+          coverage_active?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_capital?: boolean | null
+          is_remote?: boolean | null
+          max_delivery_days?: number | null
+          min_delivery_days?: number | null
+          surcharge_percent?: number
+          updated_at?: string | null
+          zone_code?: string
+          zone_level?: number
+          zone_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_zones_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "destination_countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_zones_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["destination_country_id"]
           },
         ]
       }
@@ -5145,12 +5445,33 @@ export type Database = {
         }
         Returns: number
       }
+      calculate_b2b_price_multitramo: {
+        Args: {
+          p_address_id: string
+          p_product_id: string
+          p_quantity?: number
+          p_tier_type?: string
+        }
+        Returns: Json
+      }
       calculate_base_price_only: {
         Args: { p_margin_percent?: number; p_product_id: string }
         Returns: number
       }
       calculate_route_cost: {
         Args: { p_route_id: string; p_weight_cbm?: number; p_weight_kg: number }
+        Returns: Json
+      }
+      close_po_and_open_new: {
+        Args: { p_close_reason?: string; p_po_id: string }
+        Returns: Json
+      }
+      generate_hybrid_tracking_id: {
+        Args: { p_order_id: string }
+        Returns: string
+      }
+      get_shipping_options_for_address: {
+        Args: { p_address_id: string }
         Returns: Json
       }
       has_role: {
@@ -5162,6 +5483,10 @@ export type Database = {
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       sync_missing_profiles_and_roles: { Args: never; Returns: Json }
+      validate_product_for_shipping: {
+        Args: { p_product_id: string; p_tier_type?: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "seller" | "user" | "gestor" | "investor"
