@@ -2,10 +2,15 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Re-export V2 engine for new implementations
+export { useB2BPricingEngineV2 } from './useB2BPricingEngineV2';
+
 /**
- * MOTOR DE PRECIO: Independiente de logística
+ * MOTOR DE PRECIO V1: Independiente de logística (LEGACY)
  * 
- * Responsabilidades:
+ * Para cálculos multitramo con conversión de unidades, usar useB2BPricingEngineV2
+ * 
+ * Responsabilidades V1:
  * - Calcular precio base (costo + margen + fees)
  * - NO depende de rutas ni logística
  * - Retorna objeto limpio con breakdown de precios
@@ -24,6 +29,7 @@ export interface ProductBasePrice {
   margin_value: number;
   platform_fee: number;
   weight_kg: number;
+  weight_g?: number;
   market_id: string;
   market_name: string;
 }
