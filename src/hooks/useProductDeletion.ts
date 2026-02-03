@@ -138,9 +138,10 @@ export function useProductDeletion() {
   /**
    * Confirmar eliminación con dialog
    */
-  const confirmDelete = useCallback((
+  const confirmDelete = useCallback(async (
     productName: string,
-    callback: () => void
+    callback: () => void,
+    productId?: string
   ) => {
     const confirmed = window.confirm(
       `¿Estás seguro de eliminar "${productName}"?\n\n` +
@@ -153,9 +154,17 @@ export function useProductDeletion() {
     );
 
     if (confirmed) {
-      callback();
+      if (productId) {
+        await deleteProduct({
+          productId,
+          productName,
+          onSuccess: callback,
+        });
+      } else {
+        callback();
+      }
     }
-  }, []);
+  }, [deleteProduct]);
 
   return {
     deleteProduct,
