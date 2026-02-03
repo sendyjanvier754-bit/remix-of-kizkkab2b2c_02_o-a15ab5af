@@ -487,6 +487,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "b2b_cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "b2b_cart_items_variant_id_fkey"
             columns: ["variant_id"]
             isOneToOne: false
@@ -928,6 +935,66 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      category_markets: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          market_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          market_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          market_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_markets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "v_pricing_breakdown"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "category_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["market_id"]
           },
         ]
       }
@@ -1607,6 +1674,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inventory_movements_seller_catalog_id_fkey"
             columns: ["seller_catalog_id"]
             isOneToOne: false
@@ -1748,6 +1822,13 @@ export type Database = {
             foreignKeyName: "market_payment_methods_market_id_fkey"
             columns: ["market_id"]
             isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "market_payment_methods_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
             referencedRelation: "v_pricing_breakdown"
             referencedColumns: ["market_id"]
           },
@@ -1865,6 +1946,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_productos_mercado_precio"
             referencedColumns: ["destination_country_id"]
+          },
+          {
+            foreignKeyName: "markets_shipping_route_id_fkey"
+            columns: ["shipping_route_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["route_id"]
           },
           {
             foreignKeyName: "markets_shipping_route_id_fkey"
@@ -2153,6 +2241,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_b2b_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
           {
@@ -2879,6 +2974,97 @@ export type Database = {
         }
         Relationships: []
       }
+      product_markets: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          market_id: string
+          price_override: number | null
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          market_id: string
+          price_override?: number | null
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          market_id?: string
+          price_override?: number | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "v_pricing_breakdown"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "product_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "product_markets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_markets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_pricing_breakdown"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_markets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_con_precio_b2b"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_markets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_markets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_price_history: {
         Row: {
           changed_by: string | null
@@ -2937,6 +3123,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
         ]
@@ -3023,6 +3216,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "product_reviews_seller_catalog_id_fkey"
             columns: ["seller_catalog_id"]
             isOneToOne: false
@@ -3104,6 +3304,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: true
             referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_shipping_classes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
         ]
@@ -3207,6 +3414,13 @@ export type Database = {
             referencedRelation: "v_productos_mercado_precio"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
         ]
       }
       product_views: {
@@ -3270,6 +3484,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "product_views_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "product_views_seller_catalog_id_fkey"
             columns: ["seller_catalog_id"]
             isOneToOne: false
@@ -3301,6 +3522,7 @@ export type Database = {
           nombre: string
           origin_country_id: string | null
           parent_product_id: string | null
+          peso_g: number | null
           peso_kg: number | null
           precio_mayorista_base: number | null
           precio_promocional: number | null
@@ -3343,6 +3565,7 @@ export type Database = {
           nombre: string
           origin_country_id?: string | null
           parent_product_id?: string | null
+          peso_g?: number | null
           peso_kg?: number | null
           precio_mayorista_base?: number | null
           precio_promocional?: number | null
@@ -3385,6 +3608,7 @@ export type Database = {
           nombre?: string
           origin_country_id?: string | null
           parent_product_id?: string | null
+          peso_g?: number | null
           peso_kg?: number | null
           precio_mayorista_base?: number | null
           precio_promocional?: number | null
@@ -3446,6 +3670,13 @@ export type Database = {
             columns: ["parent_product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_parent_product_id_fkey"
+            columns: ["parent_product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
           {
@@ -3609,6 +3840,132 @@ export type Database = {
           },
         ]
       }
+      refund_requests: {
+        Row: {
+          amount: number
+          approved_amount: number | null
+          buyer_user_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string
+          reason: string
+          refund_method: string | null
+          refund_reference: string | null
+          rejection_reason: string | null
+          request_type: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          seller_id: string | null
+          status: Database["public"]["Enums"]["refund_status_enum"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_amount?: number | null
+          buyer_user_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          reason: string
+          refund_method?: string | null
+          refund_reference?: string | null
+          rejection_reason?: string | null
+          request_type?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seller_id?: string | null
+          status?: Database["public"]["Enums"]["refund_status_enum"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_amount?: number | null
+          buyer_user_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          reason?: string
+          refund_method?: string | null
+          refund_reference?: string | null
+          rejection_reason?: string | null
+          request_type?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seller_id?: string | null
+          status?: Database["public"]["Enums"]["refund_status_enum"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_b2b"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refund_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          metadata: Json | null
+          new_status: Database["public"]["Enums"]["refund_status_enum"]
+          notes: string | null
+          old_status: Database["public"]["Enums"]["refund_status_enum"] | null
+          refund_request_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          metadata?: Json | null
+          new_status: Database["public"]["Enums"]["refund_status_enum"]
+          notes?: string | null
+          old_status?: Database["public"]["Enums"]["refund_status_enum"] | null
+          refund_request_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          metadata?: Json | null
+          new_status?: Database["public"]["Enums"]["refund_status_enum"]
+          notes?: string | null
+          old_status?: Database["public"]["Enums"]["refund_status_enum"] | null
+          refund_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_status_history_refund_request_id_fkey"
+            columns: ["refund_request_id"]
+            isOneToOne: false
+            referencedRelation: "refund_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_status_history_refund_request_id_fkey"
+            columns: ["refund_request_id"]
+            isOneToOne: false
+            referencedRelation: "v_refunds_management"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       route_logistics_costs: {
         Row: {
           cost_per_cbm: number | null
@@ -3653,6 +4010,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "route_logistics_costs_shipping_route_id_fkey"
+            columns: ["shipping_route_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["route_id"]
+          },
           {
             foreignKeyName: "route_logistics_costs_shipping_route_id_fkey"
             columns: ["shipping_route_id"]
@@ -3758,6 +4122,13 @@ export type Database = {
             columns: ["source_product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["source_product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
         ]
@@ -3904,6 +4275,73 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_markets: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          market_id: string
+          seller_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          market_id: string
+          seller_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          market_id?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "v_pricing_breakdown"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "seller_markets_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "seller_markets_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -4240,6 +4678,7 @@ export type Database = {
           tramo_b_eta_max: number | null
           tramo_b_eta_min: number | null
           tramo_b_min_cost: number
+          transport_type: string | null
           updated_at: string | null
         }
         Insert: {
@@ -4261,6 +4700,7 @@ export type Database = {
           tramo_b_eta_max?: number | null
           tramo_b_eta_min?: number | null
           tramo_b_min_cost?: number
+          transport_type?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -4282,9 +4722,17 @@ export type Database = {
           tramo_b_eta_max?: number | null
           tramo_b_eta_min?: number | null
           tramo_b_min_cost?: number
+          transport_type?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "shipping_tiers_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["route_id"]
+          },
           {
             foreignKeyName: "shipping_tiers_route_id_fkey"
             columns: ["route_id"]
@@ -4651,6 +5099,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "siver_match_sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "siver_match_sales_variant_id_fkey"
             columns: ["variant_id"]
             isOneToOne: false
@@ -4986,6 +5441,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_favorites_seller_catalog_id_fkey"
             columns: ["seller_catalog_id"]
             isOneToOne: false
@@ -5228,6 +5690,68 @@ export type Database = {
       }
     }
     Views: {
+      markets_dashboard: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          destination_country_code: string | null
+          destination_country_id: string | null
+          destination_country_name: string | null
+          id: string | null
+          is_active: boolean | null
+          metadata: Json | null
+          name: string | null
+          payment_method_count: number | null
+          product_count: number | null
+          route_id: string | null
+          seller_count: number | null
+          shipping_route_id: string | null
+          sort_order: number | null
+          timezone: string | null
+          transit_hub_code: string | null
+          transit_hub_name: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "markets_destination_country_id_fkey"
+            columns: ["destination_country_id"]
+            isOneToOne: false
+            referencedRelation: "destination_countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "markets_destination_country_id_fkey"
+            columns: ["destination_country_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["destination_country_id"]
+          },
+          {
+            foreignKeyName: "markets_shipping_route_id_fkey"
+            columns: ["shipping_route_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["route_id"]
+          },
+          {
+            foreignKeyName: "markets_shipping_route_id_fkey"
+            columns: ["shipping_route_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "markets_shipping_route_id_fkey"
+            columns: ["shipping_route_id"]
+            isOneToOne: false
+            referencedRelation: "v_rutas_logistica"
+            referencedColumns: ["route_id"]
+          },
+        ]
+      }
       user_roles_with_email: {
         Row: {
           created_at: string | null
@@ -5344,6 +5868,80 @@ export type Database = {
           },
         ]
       }
+      v_products_without_weight: {
+        Row: {
+          categoria_id: string | null
+          categoria_nombre: string | null
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          nombre: string | null
+          proveedor_id: string | null
+          proveedor_nombre: string | null
+          sku_interno: string | null
+          stock_fisico: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_refunds_management: {
+        Row: {
+          amount: number | null
+          approved_amount: number | null
+          buyer_email: string | null
+          buyer_name: string | null
+          buyer_user_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string | null
+          notes: string | null
+          order_id: string | null
+          order_number: string | null
+          reason: string | null
+          refund_method: string | null
+          refund_reference: string | null
+          rejection_reason: string | null
+          request_type: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_email: string | null
+          seller_id: string | null
+          status: Database["public"]["Enums"]["refund_status_enum"] | null
+          status_history: Json | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_b2b"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_rutas_logistica: {
         Row: {
           country_code: string | null
@@ -5433,6 +6031,13 @@ export type Database = {
             referencedRelation: "v_productos_mercado_precio"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -5447,10 +6052,10 @@ export type Database = {
       }
       calculate_b2b_price_multitramo: {
         Args: {
-          p_address_id: string
+          p_destination_country_code: string
           p_product_id: string
-          p_quantity?: number
-          p_tier_type?: string
+          p_quantity: number
+          p_shipping_zone_id?: string
         }
         Returns: Json
       }
@@ -5462,8 +6067,26 @@ export type Database = {
         Args: { p_route_id: string; p_weight_cbm?: number; p_weight_kg: number }
         Returns: Json
       }
+      change_refund_status: {
+        Args: {
+          p_approved_amount?: number
+          p_new_status: Database["public"]["Enums"]["refund_status_enum"]
+          p_notes?: string
+          p_refund_id: string
+          p_refund_method?: string
+          p_refund_reference?: string
+          p_rejection_reason?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      cleanup_deleted_product_images: { Args: never; Returns: Json }
       close_po_and_open_new: {
         Args: { p_close_reason?: string; p_po_id: string }
+        Returns: Json
+      }
+      delete_product_cascade: {
+        Args: { p_delete_reason?: string; p_product_id: string }
         Returns: Json
       }
       generate_hybrid_tracking_id: {
@@ -5487,6 +6110,7 @@ export type Database = {
         Args: { p_product_id: string; p_tier_type?: string }
         Returns: Json
       }
+      validate_product_weight: { Args: { p_product_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "seller" | "user" | "gestor" | "investor"
@@ -5514,6 +6138,14 @@ export type Database = {
         | "failed"
         | "expired"
         | "refunded"
+        | "cancelled"
+      refund_status_enum:
+        | "pending"
+        | "under_review"
+        | "approved"
+        | "processing"
+        | "completed"
+        | "rejected"
         | "cancelled"
       stock_status: "in_stock" | "low_stock" | "out_of_stock" | "discontinued"
       user_role: "admin" | "seller" | "buyer" | "gestor" | "investor"
@@ -5677,6 +6309,15 @@ export const Constants = {
         "failed",
         "expired",
         "refunded",
+        "cancelled",
+      ],
+      refund_status_enum: [
+        "pending",
+        "under_review",
+        "approved",
+        "processing",
+        "completed",
+        "rejected",
         "cancelled",
       ],
       stock_status: ["in_stock", "low_stock", "out_of_stock", "discontinued"],
