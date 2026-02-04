@@ -140,7 +140,7 @@ const TrendsPage = () => {
       id: p.id,
       sku: p.sku_interno,
       nombre: p.nombre,
-      precio: p.precio_sugerido_venta || p.precio_mayorista,
+      precio: p.precio_sugerido_venta || p.precio_b2b,
       imagen_principal: p.imagen_principal || '/placeholder.svg',
       stock: p.stock_status === 'out_of_stock' ? 0 : 1,
       moq: 1

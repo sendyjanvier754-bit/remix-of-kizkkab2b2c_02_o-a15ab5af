@@ -6,7 +6,7 @@ interface SearchResult {
   id: string;
   nombre: string;
   imagen_principal: string | null;
-  precio_mayorista: number | null;
+  precio_b2b: number | null;
   similarity?: number;
 }
 

@@ -40,8 +40,8 @@ export const useTrendingCategories = (limit = 6) => {
         categories.map(async (cat) => {
           // Get products in this category
           const { data: products, error: prodError } = await supabase
-            .from("products")
-            .select("id, sku_interno, nombre, imagen_principal, precio_sugerido_venta, precio_mayorista")
+            .from("v_productos_con_precio_b2b")
+            .select("id, sku_interno, nombre, imagen_principal, precio_sugerido_venta, precio_b2b")
             .eq("categoria_id", cat.id)
             .eq("is_active", true)
             .order("created_at", { ascending: false })
@@ -70,7 +70,7 @@ export const useTrendingCategories = (limit = 6) => {
               sku: p.sku_interno,
               nombre: p.nombre,
               imagen: p.imagen_principal,
-              precio: p.precio_sugerido_venta || p.precio_mayorista,
+              precio: p.precio_sugerido_venta || p.precio_b2b,
             })),
           };
         })
