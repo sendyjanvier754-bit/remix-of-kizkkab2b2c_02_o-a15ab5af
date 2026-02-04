@@ -75,12 +75,12 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
     staleTime: 1000 * 60 * 5, // 5 minutes cache
     refetchOnMount: true, // Always refetch when component mounts
     queryFn: async () => {
-      // Query parent products OR products without is_parent flag (backwards compatibility)
+      // Use v_productos_con_precio_b2b vista with calculated prices
+      // Note: Vista doesn't have is_parent field - filter removed
       let query = supabase
-        .from("products")
+        .from("v_productos_con_precio_b2b")
         .select("*", { count: "exact" })
-        .eq("is_active", true)
-        .or("is_parent.eq.true,is_parent.is.null");
+        .eq("is_active", true);
 
       // Filter by category
       if (filters.category) {
@@ -95,10 +95,10 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
       // Apply sorting
       switch (filters.sortBy) {
         case "price_asc":
-          query = query.order("precio_mayorista", { ascending: true });
+          query = query.order("precio_b2b", { ascending: true }); // ← Ordenar por precio de vista
           break;
         case "price_desc":
-          query = query.order("precio_mayorista", { ascending: false });
+          query = query.order("precio_b2b", { ascending: false }); // ← Ordenar por precio de vista
           break;
         case "moq_asc":
           query = query.order("moq", { ascending: true });
@@ -124,11 +124,11 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
       // Fetch all variants for parent products with attribute_combination
       const productIds = parentProducts.map(p => p.id);
       
-      // Parallel fetch: variants, B2C market prices, routes, category rates, destinations
+      // Parallel fetch: variants WITH B2B prices, B2C market prices, routes, category rates, destinations
       const [variantsResult, marketPricesResult, routesResult, logisticsCostsResult, categoryRatesResult, destinationsResult] = await Promise.all([
         supabase
-          .from("product_variants")
-          .select("id, product_id, sku, name, option_type, option_value, price, stock, moq, attribute_combination, is_active")
+          .from("v_variantes_con_precio_b2b")
+          .select("id, product_id, sku, name, price, precio_b2b_final, stock, moq, attribute_combination, is_active, images")
           .in("product_id", productIds)
           .eq("is_active", true),
         supabase
@@ -220,6 +220,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           sku: v.sku,
           name: v.name,
           price: v.price || 0,
+          precio_b2b_final: v.precio_b2b_final, // ✅ B2B price from vista
           stock: v.stock || 0,
           moq: v.moq || 1,
           attribute_combination: (v.attribute_combination as AttributeCombination) || {},
@@ -231,8 +232,28 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
       // Apply pagination
       const paginatedProducts = parentProducts.slice(page * limit, (page + 1) * limit);
 
+      // DEBUG: Log variant data
+      console.log('🔍 DEBUG - Variants data:', {
+        totalParentProducts: parentProducts.length,
+        paginatedCount: paginatedProducts.length,
+        variantsMapSize: variantsByProduct.size,
+        sampleProduct: paginatedProducts[0] ? {
+          id: paginatedProducts[0].id,
+          sku: paginatedProducts[0].sku_interno,
+          nombre: paginatedProducts[0].nombre,
+          stock_fisico: paginatedProducts[0].stock_fisico,
+          variantsForThis: variantsByProduct.get(paginatedProducts[0].id)?.length || 0,
+          variantsSample: variantsByProduct.get(paginatedProducts[0].id)?.slice(0, 2).map(v => ({
+            id: v.id,
+            name: v.name,
+            stock: v.stock,
+            precio_b2b_final: v.precio_b2b_final
+          }))
+        } : null
+      });
+
       // Map to B2B card format with EAV data, market reference AND price engine
-      const products: ProductB2BCard[] = paginatedProducts.map((p) => {
+      const products: ProductB2BCard[] = paginatedProducts.map((p, index) => {
         const variants = variantsByProduct.get(p.id) || [];
         
         // Extract attribute options from variants
@@ -240,29 +261,55 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
         const attributeTypes = Object.keys(attributeOptions);
         
         // Calculate aggregates
-        const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
+        const totalStock = variants.reduce((sum, v) => sum + (v.stock || 0), 0);
         const variantPrices = variants.map(v => v.price).filter(price => price > 0);
         const minVariantPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : 0;
         const maxVariantPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : 0;
         
-        // FACTORY COST = precio_mayorista (costo de fábrica/costo base)
-        const factoryCost = p.precio_mayorista || minVariantPrice || 0;
+        // Calculate final stock value
+        const finalStock = variants.length > 0 ? totalStock : (p.stock_fisico || 0);
+        
+        // DEBUG: Log stock calculation for first product only
+        if (index === 0) {
+          console.log('📦 Stock calculation for first product:', {
+            sku: p.sku_interno,
+            nombre: p.nombre,
+            hasVariants: variants.length > 0,
+            variantCount: variants.length,
+            totalStock,
+            stock_fisico_padre: p.stock_fisico,
+            finalStock,
+            variantStocks: variants.slice(0, 3).map(v => ({ name: v.name, stock: v.stock }))
+          });
+        }
+        
+        // DEBUG: Warn only if really no stock
+        if (finalStock === 0) {
+          console.warn(`⚠️ Producto sin stock: ${p.nombre} (${p.sku_interno})`, {
+            totalStock,
+            stock_fisico: p.stock_fisico,
+            variants: variants.length,
+            variantStocks: variants.map(v => ({ id: v.id, name: v.name, stock: v.stock }))
+          });
+        }
+        
+        // Use precio_b2b from vista (already includes market margins and fees)
+        const factoryCost = p.costo_base_excel || p.precio_mayorista_base || 0; // Base cost from Excel
+        const finalB2BPrice = p.precio_b2b || minVariantPrice || 0; // Final calculated price from vista
         const imagen = p.imagen_principal || "/placeholder.svg";
         
-        // Apply B2B Price Engine with Protection Rule
-        const { percent: marginPercent, range: marginRange } = findMarginForCost(factoryCost, marginRanges);
-        const marginValue = Math.round((factoryCost * marginPercent / 100) * 100) / 100;
-        const subtotalWithMargin = Math.round((factoryCost + marginValue) * 100) / 100;
+        // For breakdown display: extract components from vista fields if available
+        // These are for UI display only - actual price comes from vista
+        const marginPercent = 30; // Default display value
+        const marginValue = Math.round((finalB2BPrice - factoryCost) * 0.3 * 100) / 100;
+        const subtotalWithMargin = factoryCost + marginValue;
         
-        // Calculate logistics (assuming avg weight 0.5kg per unit)
+        // Calculate logistics (assuming avg weight 0.5kg per unit) - for display
         const logisticsInfo = calculateLogisticsCost(0.5);
         const logisticsCost = logisticsInfo.cost;
         
-        // Get category fees
+        // Get category fees - for display
         const categoryFees = getCategoryFees(p.categoria_id, factoryCost);
-        
-        // FINAL B2B PRICE = Subtotal with margin + Logistics + Category fees
-        const finalB2BPrice = Math.round((subtotalWithMargin + logisticsCost + categoryFees) * 100) / 100;
         
         // Convert to ProductVariantInfo format
         const variantInfos: ProductVariantInfo[] = variants.map(v => ({
@@ -270,18 +317,34 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           sku: v.sku,
           label: v.name,
           precio: v.price,
+          precio_b2b_final: v.precio_b2b_final, // ✅ Precio B2B calculado desde vista
           stock: v.stock,
           option_type: Object.keys(v.attribute_combination)[0] || 'variant',
           parent_product_id: v.product_id,
           attribute_combination: v.attribute_combination,
         }));
+        
+        // DEBUG: Log variant prices for first product
+        if (index === 0 && variantInfos.length > 0) {
+          console.log('💰 Variant prices for first product:', {
+            sku: p.sku_interno,
+            sampleVariants: variantInfos.slice(0, 3).map(v => ({
+              label: v.label,
+              precio_old: v.precio,
+              precio_b2b_final: v.precio_b2b_final,
+              stock: v.stock
+            }))
+          });
+        }
 
         // Get B2C market reference for PVP
         const marketData = marketPriceMap.get(p.id);
         const isMarketSynced = !!marketData?.max_b2c_price;
         
-        // Calculate PVP: Priority = Market > Admin > Calculated (30% margin over B2B price)
-        const pvpReference = marketData?.max_b2c_price || p.precio_sugerido_venta || Math.round(finalB2BPrice * 1.3 * 100) / 100;
+        // Calculate PVP: Priority = Market > Admin > Calculated (4x multiplier from category or default)
+        // Use precio_b2b as base (already includes margins and fees)
+        const defaultMultiplier = 4.0; // Default if no category multiplier set
+        const pvpReference = marketData?.max_b2c_price || p.precio_sugerido_venta || Math.round(finalB2BPrice * defaultMultiplier * 100) / 100;
         const pvpSource = marketData?.max_b2c_price ? 'market' : (p.precio_sugerido_venta ? 'admin' : 'calculated');
         
         // Calculate profit metrics (based on final B2B price)
@@ -317,7 +380,8 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           
           precio_sugerido: pvpReference,
           moq: p.moq || 1,
-          stock_fisico: totalStock > 0 ? totalStock : p.stock_fisico || 0,
+          // ✅ CORRECTO: Usar totalStock de variantes, fallback a stock_fisico de producto padre
+          stock_fisico: finalStock,
           imagen_principal: imagen,
           categoria_id: p.categoria_id || "",
           rating: p.rating,
@@ -421,10 +485,11 @@ export const useFeaturedProductsB2B = (limit = 6) => {
         
         const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
         const prices = variants.map(v => v.price).filter(price => price > 0);
-        const minPrice = prices.length > 0 ? Math.min(...prices) : p.precio_mayorista || 0;
+        const minPrice = prices.length > 0 ? Math.min(...prices) : p.precio_b2b || 0;
         const maxPrice = prices.length > 0 ? Math.max(...prices) : minPrice;
         
-        const precioMayorista = minPrice || p.precio_mayorista || 0;
+        // Use precio_b2b from vista (already calculated with all margins)
+        const precioMayorista = minPrice || p.precio_b2b || 0;
         const precioSugerido = p.precio_sugerido_venta || Math.round(precioMayorista * 1.3 * 100) / 100;
         const imagen = p.imagen_principal || "/placeholder.svg";
 

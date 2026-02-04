@@ -1,11 +1,11 @@
-import { useState, MouseEvent } from 'react';
+import { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, MessageCircle, ShieldCheck, TrendingUp, ArrowUpRight, Truck, Clock, Package } from 'lucide-react';
 import { ProductB2BCard, CartItemB2B } from '@/types/b2b';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ProductBottomSheet } from "@/components/products/ProductBottomSheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';
 
@@ -19,7 +19,6 @@ interface ProductCardB2BProps {
 const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "50312345678" }: ProductCardB2BProps) => {
   const { role } = useAuth();
   const isAdmin = role === UserRole.ADMIN;
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const isOutOfStock = product.stock_fisico === 0;
   const hasMultipleVariants = (product.variant_count || 1) > 1;
@@ -36,12 +35,6 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const logisticsCost = product.logistics_cost ?? product.logistics?.logisticsCost ?? 0;
   const estimatedDays = product.estimated_delivery_days ?? product.logistics?.estimatedDays ?? { min: 0, max: 0 };
   const hasDeliveryEstimate = estimatedDays.min > 0 || estimatedDays.max > 0;
-
-  const handleAddToCart = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsSheetOpen(true);
-  };
 
   const handleWhatsApp = (e: MouseEvent) => {
     e.preventDefault();
@@ -290,7 +283,21 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
           <Button
             size="sm"
             className="h-8 flex-1 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
-            onClick={handleAddToCart}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              useVariantDrawerStore.getState().open({
+                id: product.id,
+                sku: product.sku,
+                nombre: product.nombre,
+                images: product.imagen_principal ? [product.imagen_principal] : [],
+                price: product.precio_b2b,
+                costB2B: product.precio_b2b,
+                moq: product.moq,
+                stock: product.stock_fisico,
+                source_product_id: product.id,
+              });
+            }}
             disabled={isOutOfStock}
           >
             <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
@@ -298,32 +305,6 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
           </Button>
         </div>
       </div>
-
-      {/* Product Bottom Sheet for variant selection */}
-      <ProductBottomSheet 
-        product={{
-          id: product.id,
-          name: product.nombre,
-          price: product.precio_b2b,
-          image: product.imagen_principal || '/placeholder.svg',
-          sku: product.sku,
-          priceB2B: product.precio_b2b,
-          pvp: product.precio_sugerido,
-          moq: product.moq,
-          stock: product.stock_fisico,
-          // Pass variant info for the selector
-          variants: product.variants,
-          variantIds: product.variant_ids,
-          // Pass unified variant options with type
-          variantOptions: product.variant_options,
-          variantType: product.variant_type,
-          // Backwards compatibility
-          colorOptions: product.color_options,
-          hasColorVariants: product.has_color_variants,
-        }}
-        isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-      />
     </div>
   );
 };

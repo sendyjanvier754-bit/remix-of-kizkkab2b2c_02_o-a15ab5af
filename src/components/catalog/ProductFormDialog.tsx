@@ -24,7 +24,7 @@ const productSchema = z.object({
   descripcion_corta: z.string().max(500).optional(),
   categoria_id: z.string().optional(),
   proveedor_id: z.string().optional(),
-  precio_mayorista: z.coerce.number().min(0, 'Precio debe ser >= 0'),
+  precio_mayorista_base: z.coerce.number().min(0, 'Precio debe ser >= 0'),
   precio_sugerido_venta: z.coerce.number().min(0).optional(),
   moq: z.coerce.number().min(1, 'MOQ debe ser >= 1'),
   stock_fisico: z.coerce.number().min(0, 'Stock debe ser >= 0'),
@@ -50,7 +50,7 @@ const ProductFormDialog = ({ open, onOpenChange }: ProductFormDialogProps) => {
       sku_interno: '',
       nombre: '',
       descripcion_corta: '',
-      precio_mayorista: 0,
+      precio_mayorista_base: 0,
       moq: 1,
       stock_fisico: 0,
     }
@@ -63,7 +63,7 @@ const ProductFormDialog = ({ open, onOpenChange }: ProductFormDialogProps) => {
       descripcion_corta: data.descripcion_corta || null,
       categoria_id: data.categoria_id || null,
       proveedor_id: data.proveedor_id || null,
-      precio_mayorista: data.precio_mayorista,
+      precio_mayorista_base: data.precio_mayorista_base,
       precio_sugerido_venta: data.precio_sugerido_venta || null,
       moq: data.moq,
       stock_fisico: data.stock_fisico,
@@ -227,7 +227,7 @@ const ProductFormDialog = ({ open, onOpenChange }: ProductFormDialogProps) => {
             <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
-                name="precio_mayorista"
+                name="precio_mayorista_base"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Precio Mayorista (USD) *</FormLabel>

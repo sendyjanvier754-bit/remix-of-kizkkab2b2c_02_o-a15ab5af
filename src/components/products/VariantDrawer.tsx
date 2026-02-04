@@ -218,12 +218,9 @@ const VariantDrawer: React.FC = () => {
   const displayPrice = isB2BUser ? (basePriceFromDb !== null ? basePriceFromDb : (product.costB2B || 0)) : (product.price || 0);
   const pvpPrice = product.pvp || product.price || 0;
 
-  // Render NOTHING on mobile - only desktop
-  if (isMobile) return null;
-
-  // Desktop Drawer (332px x 945px, slide-in from right)
+  // Mobile: Bottom Sheet | Desktop: Side Drawer
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" style={{ pointerEvents: 'auto' }}>
+    <div className="fixed inset-0 z-50 flex items-end md:justify-end md:items-stretch" style={{ pointerEvents: 'auto' }}>
       {/* Overlay */}
       <div 
         className="absolute inset-0 bg-black/50 transition-opacity duration-300"
@@ -231,10 +228,18 @@ const VariantDrawer: React.FC = () => {
         style={{ animation: 'fadeIn 0.3s ease-out' }}
       />
       
-      {/* Drawer Panel - exact dimensions 332x945 */}
+      {/* Drawer Panel - Mobile: Bottom Sheet | Desktop: Side Drawer */}
       <aside
-        className="relative bg-background shadow-2xl border-l flex flex-col"
-        style={{ 
+        className={`
+          relative bg-background shadow-2xl flex flex-col
+          ${isMobile 
+            ? 'w-full max-h-[85vh] rounded-t-2xl border-t' 
+            : 'border-l'
+          }
+        `}
+        style={isMobile ? { 
+          animation: 'slideInUp 0.3s ease-out'
+        } : { 
           width: '332px', 
           height: '945px',
           maxHeight: '100vh',
@@ -388,6 +393,16 @@ const VariantDrawer: React.FC = () => {
           }
           to {
             transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes slideInUp {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
             opacity: 1;
           }
         }

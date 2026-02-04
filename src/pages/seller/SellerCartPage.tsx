@@ -275,21 +275,21 @@ const SellerCartPage = () => {
       // Try to find product by productId first, then by SKU/variant SKU
       let productId: string | undefined = item.productId || item.product_id || undefined;
 
-      // 1) If cart SKU looks like a variant SKU, resolve product_id from product_variants
+      // 1) If cart SKU looks like a variant SKU, resolve product_id from v_variantes_con_precio_b2b
       if (!productId && item.sku) {
         try {
           const pvResult = await (supabase as any)
-            .from('product_variants')
-            .select('product_id')
+            .from('v_variantes_con_precio_b2b')
+            .select('product_id, precio_b2b_final')
             .eq('sku', item.sku)
             .maybeSingle();
 
           if (pvResult?.data?.product_id) {
             productId = pvResult.data.product_id;
-            console.log('Resolved productId from variant SKU:', productId);
+            console.log('✅ Resolved productId from variant SKU:', productId, 'precio_b2b:', pvResult.data.precio_b2b_final);
           }
         } catch (e) {
-          console.log('Error searching product_variants by SKU:', e);
+          console.log('Error searching v_variantes_con_precio_b2b by SKU:', e);
         }
       }
 
@@ -301,7 +301,7 @@ const SellerCartPage = () => {
 
         try {
           const result = await (supabase as any)
-            .from('products')
+            .from('v_productos_con_precio_b2b')
             .select('id')
             .eq('sku_interno', baseSku)
             .maybeSingle();
@@ -311,7 +311,7 @@ const SellerCartPage = () => {
             console.log('Found product by sku_interno:', productId);
           } else {
             const result2 = await (supabase as any)
-              .from('products')
+              .from('v_productos_con_precio_b2b')
               .select('id')
               .ilike('sku_interno', `%${baseSku}%`)
               .limit(1)
@@ -337,9 +337,9 @@ const SellerCartPage = () => {
 
       // Fetch minimal product data for variant UI
       const productResult = await (supabase as any)
-        .from('products')
+        .from('v_productos_con_precio_b2b')
         .select(
-          'id, sku_interno, nombre, imagen_principal, precio_sugerido_venta, precio_mayorista, descripcion_larga, descripcion_corta'
+          'id, sku_interno, nombre, imagen_principal, precio_sugerido_venta, precio_b2b, descripcion_larga, descripcion_corta'
         )
         .eq('id', productId)
         .maybeSingle();
@@ -366,7 +366,7 @@ const SellerCartPage = () => {
         nombre: (productData as any).nombre,
         images: (productData as any).imagen_principal ? [(productData as any).imagen_principal] : [],
         price: (productData as any).precio_sugerido_venta || 0,
-        costB2B: (productData as any).precio_mayorista || 0,
+        costB2B: (productData as any).precio_b2b || 0, // ← Precio con márgenes
         description,
       };
 

@@ -14,7 +14,7 @@ interface B2BProduct {
   sku_interno: string;
   nombre: string;
   descripcion_corta: string | null;
-  precio_mayorista: number;
+  precio_b2b: number;
   precio_sugerido_venta: number | null;
   imagen_principal: string | null;
   stock?: number;
@@ -46,8 +46,8 @@ export function B2BCatalogImportDialog({
     setIsLoading(true);
     try {
       let query = supabase
-        .from('products')
-        .select('id, sku_interno, nombre, descripcion_corta, precio_mayorista, precio_sugerido_venta, imagen_principal')
+        .from('v_productos_con_precio_b2b')
+        .select('id, sku_interno, nombre, descripcion_corta, precio_b2b, precio_sugerido_venta, imagen_principal')
         .eq('is_active', true)
         .order('nombre');
 
@@ -105,21 +105,35 @@ export function B2BCatalogImportDialog({
     try {
       const selectedProductsList = products.filter(p => selectedProducts.has(p.id));
       
-      // Prepare catalog items - using precio_sugerido_venta or a markup on precio_mayorista
-      const catalogItems = selectedProductsList.map(product => ({
-        seller_store_id: storeId,
-        source_product_id: product.id,
-        source_order_id: null, // No order - direct import for marketing
-        sku: product.sku_interno,
-        nombre: product.nombre,
-        descripcion: product.descripcion_corta,
-        precio_costo: product.precio_mayorista,
-        precio_venta: product.precio_sugerido_venta || Math.ceil(product.precio_mayorista * 1.3), // 30% markup default
-        stock: 0, // No physical stock - marketing only
-        images: product.imagen_principal ? JSON.stringify([product.imagen_principal]) : JSON.stringify([]),
-        is_active: true,
-        metadata: { import_type: 'b2b_catalog_direct', marketing_only: true },
-      }));
+      // Prepare catalog items - using precio_b2b (with market margins) and calculate_suggested_pvp()
+      const catalogItems = await Promise.all(
+        selectedProductsList.map(async (product) => {
+          // Get suggested PVP from database function
+          let suggestedPvp = product.precio_sugerido_venta;
+          
+          if (!suggestedPvp) {
+            const { data: pvpData } = await supabase.rpc('calculate_suggested_pvp', {
+              p_product_id: product.id
+            });
+            suggestedPvp = pvpData || product.precio_b2b * 4; // Fallback to 4x markup
+          }
+          
+          return {
+            seller_store_id: storeId,
+            source_product_id: product.id,
+            source_order_id: null, // No order - direct import for marketing
+            sku: product.sku_interno,
+            nombre: product.nombre,
+            descripcion: product.descripcion_corta,
+            precio_costo: product.precio_b2b, // ← Precio con márgenes de mercado
+            precio_venta: suggestedPvp, // ← PVP calculado o sugerido
+            stock: 0, // No physical stock - marketing only
+            images: product.imagen_principal ? JSON.stringify([product.imagen_principal]) : JSON.stringify([]),
+            is_active: true,
+            metadata: { import_type: 'b2b_catalog_direct', marketing_only: true },
+          };
+        })
+      );
 
       const { error } = await supabase
         .from('seller_catalog')
@@ -222,7 +236,7 @@ export function B2BCatalogImportDialog({
 
                     {/* Price & Status */}
                     <div className="text-right flex-shrink-0">
-                      <p className="font-semibold text-sm">${product.precio_mayorista.toFixed(2)}</p>
+                      <p className="font-semibold text-sm">${product.precio_b2b.toFixed(2)}</p>
                       {alreadyImported && (
                         <Badge variant="secondary" className="text-xs">
                           <Check className="h-3 w-3 mr-1" />

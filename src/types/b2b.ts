@@ -20,6 +20,7 @@ export interface ProductVariantEAV {
   sku: string;
   name: string;
   price: number;
+  precio_b2b_final?: number; // ✅ Calculated B2B price from v_variantes_con_precio_b2b
   stock: number;
   moq: number;
   attribute_combination: AttributeCombination;
@@ -34,6 +35,7 @@ export interface ProductVariantInfo {
   sku: string;
   label: string;
   precio: number;
+  precio_b2b_final?: number; // ✅ Precio B2B calculado desde vista (con márgenes y fees)
   stock: number;
   option_type?: string; // 'color', 'size', 'material', etc.
   parent_product_id?: string; // Which product this variant belongs to

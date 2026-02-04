@@ -9,7 +9,8 @@ interface VariantInfo {
   id: string;
   sku: string;
   label: string;
-  precio: number;
+  precio: number; // Deprecado - usar precio_b2b_final
+  precio_b2b_final?: number; // ✅ Precio correcto desde vista
   stock: number;
   option_type?: string;
   parent_product_id?: string;
@@ -281,7 +282,8 @@ const VariantSelectorB2B = ({
     return Object.entries(quantities).reduce((sum, [variantId, qty]) => {
       if (qty <= 0) return sum;
       const variant = variants.find(v => v.id === variantId);
-      return sum + (variant?.precio || basePrice) * qty;
+      // ✅ Usar precio_b2b_final (desde vista) en lugar de precio
+      return sum + (variant?.precio_b2b_final || variant?.precio || basePrice) * qty;
     }, 0);
   }, [quantities, variants, basePrice]);
 
@@ -305,7 +307,8 @@ const VariantSelectorB2B = ({
             sku: variant.sku,
             label: variant.label,
             quantity,
-            price: variant.precio || basePrice,
+            // ✅ Usar precio_b2b_final (desde vista) en lugar de precio
+            price: variant.precio_b2b_final || variant.precio || basePrice,
           };
         })
         .filter(Boolean) as VariantSelection[];

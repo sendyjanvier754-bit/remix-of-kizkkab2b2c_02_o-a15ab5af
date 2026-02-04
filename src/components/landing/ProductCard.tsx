@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
-import { ProductBottomSheet } from "@/components/products/ProductBottomSheet";
+import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Product {
@@ -50,7 +50,6 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, b2bData }: ProductCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
@@ -105,8 +104,17 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Use ProductBottomSheet for both mobile and desktop
-    setIsSheetOpen(true);
+    useVariantDrawerStore.getState().open({
+      id: product.id,
+      sku: product.sku,
+      nombre: product.name,
+      images: product.image ? [product.image] : [],
+      price: displayPrice,
+      costB2B: costB2B,
+      moq: moq,
+      stock: b2bData?.stock || product.stock || 0,
+      source_product_id: product.source_product_id,
+    });
   };
 
   return (
@@ -264,18 +272,6 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
         </div>
       </div>
     </div>
-    <ProductBottomSheet 
-      product={{
-        ...product,
-        priceB2B: costB2B,
-        pvp: pvp,
-        moq: moq,
-        stock: product.stock,
-        source_product_id: product.source_product_id,
-      }} 
-      isOpen={isSheetOpen} 
-      onClose={() => setIsSheetOpen(false)}
-    />
     </>
   );
 };

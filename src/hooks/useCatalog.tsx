@@ -10,7 +10,7 @@ export interface Product {
   descripcion_larga: string | null;
   categoria_id: string | null;
   proveedor_id: string | null;
-  precio_mayorista: number;
+  precio_mayorista_base: number;
   precio_sugerido_venta: number | null;
   moq: number;
   stock_fisico: number;
@@ -192,18 +192,18 @@ export const useCatalog = () => {
       // Get current product for history
       const { data: current } = await supabase
         .from('products')
-        .select('precio_mayorista, moq')
+        .select('precio_mayorista_base, moq')
         .eq('id', id)
         .single();
 
       // Track price/MOQ changes
       const historyEntries = [];
-      if (current && updates.precio_mayorista !== undefined && updates.precio_mayorista !== current.precio_mayorista) {
+      if (current && updates.precio_mayorista_base !== undefined && updates.precio_mayorista_base !== current.precio_mayorista_base) {
         historyEntries.push({
           product_id: id,
-          campo_modificado: 'precio_mayorista',
-          valor_anterior: String(current.precio_mayorista),
-          valor_nuevo: String(updates.precio_mayorista),
+          campo_modificado: 'precio_mayorista_base',
+          valor_anterior: String(current.precio_mayorista_base),
+          valor_nuevo: String(updates.precio_mayorista_base),
           modificado_por: userId,
         });
       }

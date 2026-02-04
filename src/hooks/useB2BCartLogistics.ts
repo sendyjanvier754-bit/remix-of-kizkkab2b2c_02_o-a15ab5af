@@ -69,8 +69,8 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       if (productIds.length === 0) return [];
       
       const { data, error } = await supabase
-        .from('products')
-        .select('id, precio_mayorista, categoria_id, peso_kg')
+        .from('v_productos_con_precio_b2b')
+        .select('id, precio_b2b, categoria_id, peso_kg')
         .in('id', productIds);
       
       if (error) throw error;
@@ -139,7 +139,7 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     
     for (const item of items) {
       const product = products.find(p => p.id === item.productId);
-      const factoryCost = product?.precio_mayorista || item.precioB2B;
+      const factoryCost = product?.precio_b2b || item.precioB2B;
       const weight = product?.peso_kg || 0.5;
       const categoryId = product?.categoria_id;
       

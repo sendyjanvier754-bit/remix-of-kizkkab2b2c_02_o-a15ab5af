@@ -77,8 +77,8 @@ export const useB2BCartSupabase = () => {
             
             if (item.product_id) {
               const { data: product } = await supabase
-                .from('products')
-                .select('moq, stock_fisico, imagen_principal')
+                .from('v_productos_con_precio_b2b')
+                .select('moq, stock_fisico, imagen_principal, precio_b2b')
                 .eq('id', item.product_id)
                 .maybeSingle();
               

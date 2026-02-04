@@ -32,10 +32,10 @@ export const useCartMigration = () => {
         if (role === UserRole.SELLER) {
           // Migration to B2B Cart
           for (const item of itemsToMigrate) {
-            // Fetch B2B details
+            // Fetch B2B details from vista with market margins
             const { data: productData } = await supabase
-              .from('products')
-              .select('id, sku_interno, nombre, precio_mayorista, moq, stock_fisico, imagen_principal')
+              .from('v_productos_con_precio_b2b')
+              .select('id, sku_interno, nombre, precio_b2b, moq, stock_fisico, imagen_principal')
               .eq('id', item.id)
               .maybeSingle();
 
@@ -70,9 +70,9 @@ export const useCartMigration = () => {
                   product_id: productData.id,
                   sku: productData.sku_interno,
                   nombre: productData.nombre,
-                  unit_price: productData.precio_mayorista,
+                  unit_price: productData.precio_b2b, // ← Precio con márgenes
                   quantity: quantity,
-                  total_price: quantity * productData.precio_mayorista,
+                  total_price: quantity * productData.precio_b2b,
                   moq: moq,
                   stock_disponible: productData.stock_fisico
                 }, { onConflict: 'cart_id, product_id' });

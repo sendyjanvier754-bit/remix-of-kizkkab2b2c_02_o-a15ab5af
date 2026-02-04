@@ -4,9 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Plus, X, Upload, Trash2, Image as ImageIcon, 
-  Palette, Ruler, Package, Zap, RefreshCw, Eye, Save, Loader2
+  Palette, Ruler, Package, Zap, RefreshCw, Eye, Save, Loader2, Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -359,6 +360,17 @@ const VariantMatrixManager = ({
 
   return (
     <div className="space-y-6">
+      {/* Alerta informativa */}
+      {isEditMode && (
+        <Alert className="bg-blue-50 dark:bg-blue-950/20 border-blue-200">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Las variantes se guardan de forma independiente. Después de configurar tus variantes, 
+            presiona el botón <strong>"Guardar"</strong> en la sección de "Configurar Variantes" (paso 3).
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Step 1: Define Attributes */}
       <Card>
         <CardHeader className="pb-3">

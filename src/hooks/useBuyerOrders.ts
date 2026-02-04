@@ -153,8 +153,9 @@ export const useBuyerB2BOrders = (statusFilter?: BuyerOrderStatus | 'all') => {
       // Fetch product images by sku_interno if needed
       let productImageMap: Record<string, string> = {};
       if (skuBasesNeeded.length > 0) {
+        // For order details, use vista to get correct product info with B2B prices
         const { data: productsData } = await supabase
-          .from('products')
+          .from('v_productos_con_precio_b2b')
           .select('sku_interno, imagen_principal')
           .in('sku_interno', skuBasesNeeded);
         

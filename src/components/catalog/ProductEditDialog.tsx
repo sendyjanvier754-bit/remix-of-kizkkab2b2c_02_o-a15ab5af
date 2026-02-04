@@ -39,7 +39,7 @@ const productSchema = z.object({
   descripcion_larga: z.string().max(5000).optional().nullable(),
   categoria_id: z.string().optional().nullable(),
   proveedor_id: z.string().optional().nullable(),
-  precio_mayorista: z.coerce.number().min(0, 'Precio debe ser >= 0'),
+  precio_mayorista_base: z.coerce.number().min(0, 'Precio debe ser >= 0'),
   precio_sugerido_venta: z.coerce.number().min(0).optional().nullable(),
   moq: z.coerce.number().min(1, 'MOQ debe ser >= 1'),
   stock_fisico: z.coerce.number().min(0, 'Stock debe ser >= 0'),
@@ -116,7 +116,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
       nombre: '',
       descripcion_corta: '',
       descripcion_larga: '',
-      precio_mayorista: 0,
+      precio_mayorista_base: 0,
       moq: 1,
       stock_fisico: 0,
       is_active: true,
@@ -134,7 +134,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
         descripcion_larga: product.descripcion_larga || '',
         categoria_id: product.categoria_id || undefined,
         proveedor_id: product.proveedor_id || undefined,
-        precio_mayorista: product.precio_mayorista,
+        precio_mayorista_base: product.precio_mayorista_base,
         precio_sugerido_venta: product.precio_sugerido_venta || undefined,
         moq: product.moq,
         stock_fisico: product.stock_fisico,
@@ -173,7 +173,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
           descripcion_larga: data.descripcion_larga || null,
           categoria_id: data.categoria_id || null,
           proveedor_id: data.proveedor_id || null,
-          precio_mayorista: data.precio_mayorista,
+          precio_mayorista_base: data.precio_mayorista_base,
           precio_sugerido_venta: data.precio_sugerido_venta || null,
           moq: data.moq,
           stock_fisico: data.stock_fisico,
@@ -494,7 +494,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                   <VariantMatrixManager 
                     productId={productId} 
                     productSku={product.sku_interno}
-                    basePrice={product.precio_mayorista}
+                    basePrice={product.precio_mayorista_base}
                     productImage={product.imagen_principal}
                   />
                 )}
@@ -512,7 +512,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="precio_mayorista"
+                        name="precio_mayorista_base"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Precio Mayorista (USD) *</FormLabel>

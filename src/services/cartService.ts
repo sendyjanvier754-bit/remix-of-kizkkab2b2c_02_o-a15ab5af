@@ -172,10 +172,11 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
     if (!productId && params.sku) {
       const skuBase = params.sku.split('-')[0];
       // Use RPC-style call to avoid TS2589 deep type instantiation error
+      // B2B context: use v_productos_con_precio_b2b vista
       const { data: productData } = await (supabase as any)
-        .from('products')
+        .from('v_productos_con_precio_b2b')
         .select('id')
-        .eq('sku', skuBase)
+        .eq('sku_interno', skuBase)
         .limit(1);
       
       if (productData?.[0]?.id) {

@@ -7,9 +7,19 @@
 -- ============================================
 -- 1. ALTER EXISTING TABLE
 -- ============================================
--- Renombrar la columna estática para referencia histórica
-ALTER TABLE public.products 
-RENAME COLUMN precio_mayorista TO precio_mayorista_base;
+-- Renombrar la columna estática para referencia histórica (SOLO si existe)
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'products' 
+      AND column_name = 'precio_mayorista'
+  ) THEN
+    ALTER TABLE public.products 
+    RENAME COLUMN precio_mayorista TO precio_mayorista_base;
+  END IF;
+END $$;
 
 -- Agregar columna para almacenar último cálculo de fees (opcional, para auditoría)
 ALTER TABLE public.products 
@@ -119,7 +129,11 @@ $$;
 -- ============================================
 -- Esta vista reemplaza consultas directas a productos
 -- Todos los campos siguen siendo iguales, pero precio_b2b ahora es dinámico
-CREATE OR REPLACE VIEW public.v_productos_con_precio_b2b AS
+
+-- Eliminar vista existente si hay conflictos de estructura
+DROP VIEW IF EXISTS public.v_productos_con_precio_b2b CASCADE;
+
+CREATE VIEW public.v_productos_con_precio_b2b AS
 SELECT
   p.id,
   p.sku_interno,
@@ -186,7 +200,11 @@ WHERE p.is_active = true;
 -- 4. VISTA CON INFORMACIÓN DE MERCADO
 -- ============================================
 -- Para consultas que necesitan información del mercado
-CREATE OR REPLACE VIEW public.v_productos_mercado_precio AS
+
+-- Eliminar vista existente si hay conflictos
+DROP VIEW IF EXISTS public.v_productos_mercado_precio CASCADE;
+
+CREATE VIEW public.v_productos_mercado_precio AS
 SELECT
   p.id,
   p.sku_interno,
@@ -226,7 +244,11 @@ WHERE p.is_active = true AND m.is_active = true;
 -- 5. VISTA PARA ADMIN - DESGLOSE DE COSTOS
 -- ============================================
 -- Para que el admin vea el desglose completo del cálculo
-CREATE OR REPLACE VIEW public.v_pricing_breakdown AS
+
+-- Eliminar vista existente si hay conflictos
+DROP VIEW IF EXISTS public.v_pricing_breakdown CASCADE;
+
+CREATE VIEW public.v_pricing_breakdown AS
 SELECT
   p.id AS product_id,
   p.sku_interno,

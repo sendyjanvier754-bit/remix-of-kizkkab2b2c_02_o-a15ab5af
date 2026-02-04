@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Store, Search, Package, Grid3X3, X, SlidersHorizontal } from "lucide-react";
-import { ProductBottomSheet } from "@/components/products/ProductBottomSheet";
+import VariantDrawer from "@/components/products/VariantDrawer";
+import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
 
 const MarketplacePage = () => {
   const isMobile = useIsMobile();
@@ -25,8 +26,6 @@ const MarketplacePage = () => {
   } = usePublicCategories();
   const { addToCart, isB2BUser } = useSmartCart();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<typeof products[0] | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
@@ -83,9 +82,17 @@ const MarketplacePage = () => {
     });
   }, [products, searchQuery, selectedStore, selectedCategory, sortBy, categories, minPrice, maxPrice, showOnlyStock, showOnlyPromos, minRating]);
   const handleAddToCart = (product: typeof products[0]) => {
-    // Use ProductBottomSheet for both mobile and desktop
-    setSelectedProduct(product);
-    setIsSheetOpen(true);
+    useVariantDrawerStore.getState().open({
+      id: product.id,
+      sku: product.sku,
+      nombre: product.nombre,
+      images: product.imagen_principal ? [product.imagen_principal] : [],
+      price: product.precio_venta,
+      costB2B: product.source_product?.precio_b2b || product.precio_venta,
+      moq: product.source_product?.moq || 1,
+      stock: product.stock || 0,
+      source_product_id: product.source_product?.id,
+    });
   };
   const clearFilters = () => {
     setSearchQuery("");
@@ -340,27 +347,8 @@ const MarketplacePage = () => {
         )}
       </main>
 
-      {/* Mobile Product Sheet */}
-      {isMobile && selectedProduct && (
-        <ProductBottomSheet 
-          isOpen={isSheetOpen} 
-          onClose={() => setIsSheetOpen(false)}
-          product={{
-            id: selectedProduct.id,
-            name: selectedProduct.nombre,
-            price: selectedProduct.precio_venta,
-            image: Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0 
-              ? selectedProduct.images[0] as string 
-              : '',
-            sku: selectedProduct.sku,
-            stock: selectedProduct.stock,
-            priceB2B: selectedProduct.precio_costo,
-            pvp: selectedProduct.precio_venta,
-            moq: 1,
-            source_product_id: selectedProduct.source_product?.id,
-          }}
-        />
-      )}
+      {/* Variant Drawer */}
+      <VariantDrawer />
 
       {!isMobile && <Footer />}
     </div>

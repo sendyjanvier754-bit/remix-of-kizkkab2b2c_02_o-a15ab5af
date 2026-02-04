@@ -16,7 +16,6 @@ import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
 import VariantDrawer from '@/components/products/VariantDrawer';
-import { ProductBottomSheet } from '@/components/products/ProductBottomSheet';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import ProductReviews from "@/components/products/ProductReviews";
 import ProductCarousel from "@/components/landing/ProductCarousel";
@@ -153,7 +152,6 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
 const ProductPage = () => {
   // Sticky nav state
   const [showStickyNav, setShowStickyNav] = useState(false);
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [showCompactHeader, setShowCompactHeader] = useState(false);
   const [showFloatingCart, setShowFloatingCart] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
@@ -241,6 +239,9 @@ const ProductPage = () => {
     categoryId,
     8
   );
+
+  // ✅ Fetch product variants with B2B prices if user is seller
+  const { data: variants = [] } = useProductVariants(product?.source_product?.id, isB2BUser);
 
   // Local state
   const [selectedImage, setSelectedImage] = useState(0);
@@ -478,13 +479,7 @@ const ProductPage = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
-    // On mobile, open ProductBottomSheet instead of adding directly
-    if (isMobile) {
-      setIsBottomSheetOpen(true);
-      return;
-    }
-    
-    // Desktop only: add directly to cart
+    // Add directly to cart
     if (isB2BUser) {
       const priceToAdd = product.precio_venta || costB2B;
       addItemB2B({
@@ -949,7 +944,7 @@ const ProductPage = () => {
 
               {/* Variant Selector - Uses database variants */}
               <div className="mt-3" ref={buySection}>
-                {/* Open ProductBottomSheet on mobile, VariantDrawer on desktop */}
+                {/* Open VariantDrawer for both mobile and desktop */}
                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="mt-3 flex items-center gap-3">
                     <button onClick={() => {
@@ -964,10 +959,8 @@ const ProductPage = () => {
                     }} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
                       <Heart className={`w-5 h-5 transition-all duration-300 ${product && (isB2BUser ? isInWishlist(product.id) : isInWishlist(undefined, product.id)) ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
                     </button>
-                    <Button onClick={() => {
-                      if (isMobile) {
-                        setIsBottomSheetOpen(true);
-                      } else {
+                    <Button 
+                      onClick={() => {
                         useVariantDrawerStore.getState().open({
                           id: product.id,
                           sku: product.sku,
@@ -986,9 +979,10 @@ const ProductPage = () => {
                             window.scrollTo({ top, behavior: 'smooth' });
                           }
                         });
-                      }
-                    }} className="w-auto px-3 h-10 text-sm font-semibold flex items-center gap-2"
-                    ref={buyButtonRef}>
+                      }}
+                      className="w-auto px-3 h-10 text-sm font-semibold flex items-center gap-2"
+                      ref={buyButtonRef}
+                    >
                       <ShoppingCart className="w-4 h-4" />
                       {isB2BUser ? 'Comprar B2B' : 'Comprar'}
                     </Button>
@@ -1163,9 +1157,21 @@ const ProductPage = () => {
       <VariantDrawer />
 
       {/* Floating Cart Icon - appears when buy button is not visible */}
-      {isMobile && showFloatingCart && (
+      {isMobile && showFloatingCart && product && (
         <button
-          onClick={() => setIsBottomSheetOpen(true)}
+          onClick={() => {
+            useVariantDrawerStore.getState().open({
+              id: product.id,
+              sku: product.sku,
+              nombre: product.nombre,
+              images: images,
+              price: product.precio_venta,
+              costB2B: costB2B,
+              moq: moq,
+              stock: isB2BUser ? stockB2B : product.stock,
+              source_product_id: product.source_product?.id,
+            });
+          }}
           className="fixed bottom-32 right-6 z-40 bg-transparent border border-[#94111f] p-1 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 active:scale-95"
         >
           <svg className="w-8 h-8" viewBox="0 0 24 24" fill="#29892a" xmlns="http://www.w3.org/2000/svg">
@@ -1174,28 +1180,7 @@ const ProductPage = () => {
         </button>
       )}
 
-      {/* ProductBottomSheet for mobile */}
-      {isMobile && product && (
-        <ProductBottomSheet
-          product={{
-            id: product.id,
-            name: product.nombre,
-            price: product.precio_venta,
-            image: images[0] || '',
-            sku: product.sku,
-            storeId: product.store?.id,
-            storeName: product.store?.name,
-            storeWhatsapp: product.store?.whatsapp,
-            priceB2B: product.source_product?.precio_mayorista,
-            pvp: product.source_product?.precio_sugerido_venta,
-            moq: product.source_product?.moq,
-            stock: product.stock,
-            source_product_id: product.source_product?.id,
-          }}
-          isOpen={isBottomSheetOpen}
-          onClose={() => setIsBottomSheetOpen(false)}
-        />
-      )}
+
 
       {/* Image Zoom Modal */}
       <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
@@ -1243,6 +1228,7 @@ const ProductPage = () => {
       </Dialog>
 
       {!isMobile && <Footer />}
-    </div>;
+    </div>
+  );
 };
 export default ProductPage;

@@ -21,6 +21,7 @@ export interface ProductVariant {
   option_type: string;
   option_value: string;
   price: number | null;
+  precio_b2b_final?: number; // ✅ Precio B2B calculado desde vista (para sellers)
   precio_promocional: number | null;
   cost_price?: number | null;
   stock: number;
@@ -34,30 +35,39 @@ export interface ProductVariant {
   updated_at?: string;
 }
 
-export const useProductVariants = (productId: string | undefined) => {
+export const useProductVariants = (productId: string | undefined, isB2B: boolean = false) => {
   return useQuery({
-    queryKey: ["product-variants", productId],
+    queryKey: ["product-variants", productId, isB2B],
     queryFn: async (): Promise<ProductVariant[]> => {
       if (!productId) return [];
 
+      // ✅ Si es B2B, usar vista con precio_b2b_final calculado
+      const table = isB2B ? "v_variantes_con_precio_b2b" : "product_variants";
+      
+      const selectFields = isB2B 
+        ? "id, product_id, sku, name, price, precio_b2b_final, stock, moq, images, is_active, attribute_combination"
+        : "*";
+
       const { data, error } = await supabase
-        .from("product_variants")
-        .select("*")
+        .from(table)
+        .select(selectFields)
         .eq("product_id", productId)
         .eq("is_active", true)
-        .order("option_type", { ascending: true })
-        .order("sort_order", { ascending: true });
+        .order("sku", { ascending: true });
 
       if (error) {
-        console.error("Error fetching product variants:", error);
+        console.error(`Error fetching product variants from ${table}:`, error);
         throw error;
       }
 
-      return (data || []).map((v) => ({
+      return (data || []).map((v: any) => ({
         ...v,
+        option_type: v.attribute_combination ? Object.keys(v.attribute_combination)[0] : 'variant',
+        option_value: v.attribute_combination ? Object.values(v.attribute_combination)[0] : '',
         images: Array.isArray(v.images) ? (v.images as string[]) : [],
         attribute_combination: v.attribute_combination as AttributeCombination | null,
         metadata: v.metadata as Record<string, any> || {},
+        sort_order: 0,
       })) as ProductVariant[];
     },
     enabled: !!productId,
