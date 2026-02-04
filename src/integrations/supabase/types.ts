@@ -462,6 +462,13 @@ export type Database = {
             foreignKeyName: "b2b_cart_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "b2b_cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -844,6 +851,7 @@ export type Database = {
       categories: {
         Row: {
           created_at: string
+          default_markup_multiplier: number | null
           description: string | null
           icon: string | null
           id: string
@@ -856,6 +864,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_markup_multiplier?: number | null
           description?: string | null
           icon?: string | null
           id?: string
@@ -868,6 +877,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_markup_multiplier?: number | null
           description?: string | null
           icon?: string | null
           id?: string
@@ -1649,6 +1659,13 @@ export type Database = {
             foreignKeyName: "inventory_movements_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -2214,6 +2231,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orders_b2b"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_b2b_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "order_items_b2b_product_id_fkey"
@@ -3032,6 +3056,13 @@ export type Database = {
             foreignKeyName: "product_markets_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_markets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -3097,6 +3128,13 @@ export type Database = {
           reason?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "product_price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
           {
             foreignKeyName: "product_price_history_product_id_fkey"
             columns: ["product_id"]
@@ -3191,6 +3229,13 @@ export type Database = {
             foreignKeyName: "product_reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -3278,6 +3323,13 @@ export type Database = {
           volume_factor?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "product_shipping_classes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
           {
             foreignKeyName: "product_shipping_classes_product_id_fkey"
             columns: ["product_id"]
@@ -3390,6 +3442,13 @@ export type Database = {
             foreignKeyName: "product_variants_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -3455,6 +3514,13 @@ export type Database = {
           view_source?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "product_views_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
           {
             foreignKeyName: "product_views_product_id_fkey"
             columns: ["product_id"]
@@ -3643,6 +3709,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shipping_origins"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_parent_product_id_fkey"
+            columns: ["parent_product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "products_parent_product_id_fkey"
@@ -4100,6 +4173,13 @@ export type Database = {
             foreignKeyName: "seller_catalog_source_product_id_fkey"
             columns: ["source_product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["source_product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -4249,6 +4329,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "seller_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
           {
             foreignKeyName: "seller_favorites_product_id_fkey"
             columns: ["product_id"]
@@ -5074,6 +5161,13 @@ export type Database = {
             foreignKeyName: "siver_match_sales_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "siver_match_sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -5416,6 +5510,13 @@ export type Database = {
             foreignKeyName: "user_favorites_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "user_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -5752,6 +5853,20 @@ export type Database = {
           },
         ]
       }
+      mv_suggested_pvp_cache: {
+        Row: {
+          admin_suggested_pvp: number | null
+          last_updated: string | null
+          market_max_pvp: number | null
+          precio_b2b: number | null
+          product_id: string | null
+          product_name: string | null
+          pvp_source: string | null
+          sku_interno: string | null
+          suggested_pvp: number | null
+        }
+        Relationships: []
+      }
       user_roles_with_email: {
         Row: {
           created_at: string | null
@@ -5779,6 +5894,64 @@ export type Database = {
           sku_interno: string | null
         }
         Relationships: []
+      }
+      v_product_max_pvp: {
+        Row: {
+          avg_pvp: number | null
+          last_price_update: string | null
+          max_pvp: number | null
+          median_pvp: number | null
+          min_pvp: number | null
+          price_range: number | null
+          price_stddev: number | null
+          product_id: string | null
+          seller_count: number | null
+          total_listings: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_pricing_breakdown"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_con_precio_b2b"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_mercado_precio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       v_productos_con_precio_b2b: {
         Row: {
@@ -6007,6 +6180,13 @@ export type Database = {
             foreignKeyName: "product_variants_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_suggested_pvp_cache"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -6067,6 +6247,23 @@ export type Database = {
         Args: { p_route_id: string; p_weight_cbm?: number; p_weight_kg: number }
         Returns: Json
       }
+      calculate_suggested_pvp: {
+        Args: { p_market_id?: string; p_product_id: string }
+        Returns: number
+      }
+      calculate_suggested_pvp_with_details: {
+        Args: { p_market_id?: string; p_product_id: string }
+        Returns: {
+          calculated_value: number
+          explanation: string
+          markup_multiplier: number
+          max_pvp_market: number
+          precio_admin: number
+          precio_b2b: number
+          source: string
+          suggested_pvp: number
+        }[]
+      }
       change_refund_status: {
         Args: {
           p_approved_amount?: number
@@ -6093,6 +6290,22 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: string
       }
+      get_product_market_analysis: {
+        Args: { p_product_id: string }
+        Returns: {
+          avg_market_pvp: number
+          expected_margin_pct: number
+          max_market_pvp: number
+          min_market_pvp: number
+          num_competitors: number
+          precio_b2b: number
+          price_dispersion: number
+          product_id: string
+          product_name: string
+          recommended_pvp: number
+          suggested_pvp_by_market: number
+        }[]
+      }
       get_shipping_options_for_address: {
         Args: { p_address_id: string }
         Returns: Json
@@ -6105,6 +6318,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      refresh_suggested_pvp_cache: { Args: never; Returns: undefined }
       sync_missing_profiles_and_roles: { Args: never; Returns: Json }
       validate_product_for_shipping: {
         Args: { p_product_id: string; p_tier_type?: string }
