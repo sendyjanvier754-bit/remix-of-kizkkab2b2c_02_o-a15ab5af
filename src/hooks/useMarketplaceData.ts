@@ -239,8 +239,7 @@ export const useTopStores = (defaultLimit = 6) => {
       const { data, error } = await supabase
         .from("stores")
         .select(`
-          id, name, logo, banner, slug, description, is_active,
-          seller:sellers!stores_owner_id_fkey(is_verified)
+          id, name, logo, banner, slug, description, is_active
         `)
         .eq("is_active", true)
         .limit(limit);

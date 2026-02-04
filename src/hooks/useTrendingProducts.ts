@@ -26,8 +26,8 @@ export const useTrendingProducts = (daysBack: number = 7, limit: number = 20) =>
         console.error("Error fetching trending products:", error);
         // Fallback to recent products if no trending data
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from("products")
-          .select("id, nombre, precio_mayorista, precio_sugerido_venta, imagen_principal, categoria_id, sku_interno, stock_status")
+          .from("v_productos_con_precio_b2b")
+          .select("id, nombre, precio_b2b, precio_sugerido_venta, imagen_principal, categoria_id, sku_interno, stock_status")
           .eq("is_active", true)
           .order("created_at", { ascending: false })
           .limit(limit);
@@ -39,8 +39,8 @@ export const useTrendingProducts = (daysBack: number = 7, limit: number = 20) =>
       // If no trending data, fallback to recent products
       if (!data || data.length === 0) {
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from("products")
-          .select("id, nombre, precio_mayorista, precio_sugerido_venta, imagen_principal, categoria_id, sku_interno, stock_status")
+          .from("v_productos_con_precio_b2b")
+          .select("id, nombre, precio_b2b, precio_sugerido_venta, imagen_principal, categoria_id, sku_interno, stock_status")
           .eq("is_active", true)
           .order("created_at", { ascending: false })
           .limit(limit);

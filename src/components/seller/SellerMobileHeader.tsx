@@ -139,8 +139,8 @@ const SellerMobileHeader = ({
       setIsSearching(true);
       try {
         const { data, error } = await supabase
-          .from("products")
-          .select("id, nombre, sku_interno, imagen_principal, precio_mayorista, descripcion_corta")
+          .from("v_productos_con_precio_b2b")
+          .select("id, nombre, sku_interno, imagen_principal, precio_b2b, descripcion_corta")
           .eq("is_active", true)
           .or(`nombre.ilike.%${searchQuery}%,sku_interno.ilike.%${searchQuery}%,descripcion_corta.ilike.%${searchQuery}%`)
           .limit(8);
