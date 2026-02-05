@@ -116,10 +116,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
       const {
         data: b2bProduct,
         error: b2bError
-      } = await supabase.from("v_productos_con_precio_b2b").select(`
-          *,
-          category:categories!products_categoria_id_fkey(id, name, slug)
-        `).eq("sku_interno", cleanSku).eq("is_active", true).maybeSingle();
+      } = await supabase.from("v_productos_con_precio_b2b").select("*").eq("sku_interno", cleanSku).eq("is_active", true).maybeSingle();
       if (b2bProduct) {
         return {
           type: 'products' as const,
