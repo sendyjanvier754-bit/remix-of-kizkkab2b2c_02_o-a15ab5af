@@ -26,6 +26,7 @@
 
 **Sincronización de Repositorio:**
 - ✅ Git pull ejecutado - 6 commits sincronizados
+- ✅ Git push ejecutado - Cambios locales sincronizados al remoto
 - ✅ Archivos actualizados: 12 archivos (headers, hooks, páginas)
 - ✅ Cambios remotos incluyen:
   - Correcciones de vistas B2B (`Fix view query for B2B product`)
@@ -42,25 +43,62 @@
 - ✅ Headers (Global, Seller Mobile/Desktop) - Actualizados
 - ✅ `src/integrations/supabase/types.ts` - Tipos actualizados
 
-**Correcciones Locales Completadas:**
-- ✅ `useProductsB2B.ts` - Corregido cálculo de PVP (línea 283: × 4.0 en lugar de × 1.3)
+**Correcciones Locales Completadas HOY (2026-02-05):**
+- ✅ **Migración 20260205_fix_precio_b2b_motor.sql** - Creada y ejecutada en Supabase
+  - Función `calculate_base_price_only` corregida (300% en vez de 30%)
+  - Vista `v_productos_con_precio_b2b` recreada con fórmula correcta
+  - Validado: Producto $0.88 → $3.94 ✅
+  
+- ✅ **VariantDrawer.tsx** - Precio dinámico por variante seleccionada
+  - Muestra precio de variante desde `v_variantes_con_precio_b2b`
+  - No muestra precio hasta que se selecciona variante
+  - Trackeo de variante seleccionada implementado
+  
+- ✅ **VariantSelector.tsx** - Usa precios de vista exclusivamente
+  - 3 ubicaciones corregidas (líneas 316, 690, 760)
+  - Siempre usa `variantPrices` para B2B, sin fallbacks incorrectos
+  
+- ✅ **BusinessPanel (p_negocio)** - Componente reutilizable creado
+  - Cálculos corregidos: inversión, PVP sugerido (2.5x), margen, ROI
+  - Componente exportable y documentado
+  - Integrado en VariantDrawer
+  
+- ✅ **ProductCardB2B.tsx** - Tooltip dinámico y ROI en PVP
+  - Margen calculado dinámicamente en tooltip (no hardcodeado "30%")
+  - ROI mostrado junto al PVP sugerido
+  - Badge verde con porcentaje de ROI
+  
+- ✅ **useB2BPriceCalculator.ts** - PVP sugerido corregido
+  - Cambio de 1.3x (30%) a 2.5x (150% margen)
+  - Consistente con motor de precio de la vista
+
+- ✅ **Herramientas de verificación creadas:**
+  - `query_pricing.mjs` - Script para verificar precios en BD
+  - `check_pricing.sql` - Query SQL para auditoría
+  
 - ✅ Documentación actualizada en `AUDITORIA_PRECIO_B2B_COMPLETA.md`
 
-**Migraciones Creadas (Pendientes de Ejecutar):**
-- 📄 `20260204_fix_variant_pricing_with_own_base_price.sql` - LISTO para ejecutar
+**Migraciones Pendientes de Ejecutar:**
+- 📄 `20260204_fix_variant_pricing_with_own_base_price.sql` - Pendiente
+- 📄 `20260204_add_category_markup.sql` - Pendiente
+- 📄 `20260204_create_pvp_view.sql` - Pendiente
+- 📄 `20260204_suggested_pvp_function.sql` - Pendiente
+- 📄 `20260204_migrate_seller_prices.sql` - Pendiente
 
 ### 🔄 En Progreso
 
-**FASE ACTUAL:** Preparación para FASE 1 + Corrección de Variantes
+**FASE ACTUAL:** FASE 0 completada parcialmente, iniciando FASE 1
+
+**Último Commit:** `bcffced` - "feat: Fix B2B pricing system and variant pricing"
 
 ### ⏳ Pendiente
 
 **Tareas Inmediatas:**
-1. 🔴 Ejecutar migración de variantes en Supabase
-2. 🔴 Verificar precios de variantes en la vista
-3. 🔴 Probar VariantDrawer con precios corregidos
-4. 🔴 Continuar con FASE 1 (migraciones adicionales de BD)
-5. 🔴 Implementar FASE 2 (correcciones críticas de archivos restantes)
+1. 🔴 Ejecutar migración de variantes (20260204_fix_variant_pricing_with_own_base_price.sql)
+2. 🔴 Ejecutar FASE 1 completa (4 migraciones de BD)
+3. 🔴 Verificar precios de variantes en VariantDrawer post-migración
+4. 🔴 Implementar FASE 2 (5 archivos críticos restantes)
+5. 🟡 Implementar FASE 4 (1 archivo: CategoryProductsPage.tsx)
 
 ---
 
@@ -87,30 +125,42 @@ El sistema tiene **2 problemas críticos**:
 
 ### Estado de Archivos Corregidos (Remotos + Locales):
 
-| Archivo | Estado | Fase |
-|---------|--------|------|
-| `useTrendingProducts.ts` | ✅ Corregido (remoto) | FASE 4 |
-| `useTrendingCategories.ts` | ✅ Corregido (remoto) | FASE 4 |
-| `useMarketplaceData.ts` | ✅ Corregido (remoto) | - |
-| `TrendsPage.tsx` | ✅ Corregido (remoto) | FASE 4 |
-| `ProductPage.tsx` | ✅ Corregido (remoto) | - |
-| `MarketplacePage.tsx` | ✅ Corregido (remoto) | - |
-| Headers (3 archivos) | ✅ Corregidos (remoto) | FASE 3 |
-| `useProductsB2B.ts` | ✅ Corregido (local) | FASE 2 |
-| **Total:** | **10/17 archivos** | **59% completado** |
+| Archivo | Estado | Fase | Fecha |
+|---------|--------|------|-------|
+| `useTrendingProducts.ts` | ✅ Corregido (remoto) | FASE 4 | 2026-02-04 |
+| `useTrendingCategories.ts` | ✅ Corregido (remoto) | FASE 4 | 2026-02-04 |
+| `useMarketplaceData.ts` | ✅ Corregido (remoto) | - | 2026-02-04 |
+| `TrendsPage.tsx` | ✅ Corregido (remoto) | FASE 4 | 2026-02-04 |
+| `ProductPage.tsx` | ✅ Corregido (remoto) | - | 2026-02-04 |
+| `MarketplacePage.tsx` | ✅ Corregido (remoto) | - | 2026-02-04 |
+| Headers (3 archivos) | ✅ Corregidos (remoto) | FASE 3 | 2026-02-04 |
+| `useProductsB2B.ts` | ✅ Corregido (local) | FASE 2 | 2026-02-04 |
+| **`VariantDrawer.tsx`** | ✅ Corregido (local) | FASE 0 | **2026-02-05** |
+| **`VariantSelector.tsx`** | ✅ Corregido (local) | FASE 0 | **2026-02-05** |
+| **`ProductCardB2B.tsx`** | ✅ Corregido (local) | UI | **2026-02-05** |
+| **`useB2BPriceCalculator.ts`** | ✅ Corregido (local) | UI | **2026-02-05** |
+| **`BusinessPanel (nuevo)`** | ✅ Creado (local) | Componente | **2026-02-05** |
+| **Motor BD (migración)**  | ✅ Ejecutada | Base Datos | **2026-02-05** |
+| **Total:** | **14/21 archivos** | **67% completado** | - |
 
 ### Archivos Pendientes por Corregir:
 
-| Archivo | Prioridad | Fase |
-|---------|-----------|------|
-| `B2BCatalogImportDialog.tsx` | 🔴 CRÍTICA | FASE 2.1 |
-| `SellerCartPage.tsx` | 🔴 CRÍTICA | FASE 2.2 |
-| `cartService.ts` | 🔴 CRÍTICA | FASE 2.3 |
-| `useCartMigration.ts` | 🔴 CRÍTICA | FASE 2.4 |
-| `useBuyerOrders.ts` | 🔴 CRÍTICA | FASE 2.6 |
-| `CategoryProductsPage.tsx` | 🟡 MEDIA | FASE 4 |
-| `useWishlist.ts` | 🟢 BAJA | FASE 5 |
-| **Total pendiente:** | **7 archivos** | **41% restante** |
+| Archivo | Prioridad | Fase | Estimación |
+|---------|-----------|------|------------|
+| `B2BCatalogImportDialog.tsx` | 🔴 CRÍTICA | FASE 2.1 | 30 min |
+| `SellerCartPage.tsx` | 🔴 CRÍTICA | FASE 2.2 | 45 min |
+| `cartService.ts` | 🔴 CRÍTICA | FASE 2.3 | 30 min |
+| `useCartMigration.ts` | 🔴 CRÍTICA | FASE 2.4 | 30 min |
+| `useBuyerOrders.ts` | 🔴 CRÍTICA | FASE 2.6 | 20 min |
+| `CategoryProductsPage.tsx` | 🟡 MEDIA | FASE 4 | 30 min |
+| `useWishlist.ts` | 🟢 BAJA | FASE 5 | 20 min |
+| **Total pendiente:** | **7 archivos** | **33% restante** | **~3.5 horas** |
+
+**Progreso General del Proyecto:**
+- ✅ Completado: 67% (14/21 archivos)
+- 🔴 Crítico pendiente: 5 archivos
+- 🟡 Medio pendiente: 1 archivo  
+- 🟢 Bajo pendiente: 1 archivo
 
 ---
 
@@ -206,16 +256,48 @@ CLIENTE FINAL paga PVP ($30)
 
 ### 🔴 FASE 0: CORRECCIÓN DE VARIANTES (PRIORIDAD INMEDIATA)
 **Estimación:** 1-2 horas  
-**Estado:** 🔄 EN PROGRESO  
+**Estado:** ✅ 75% COMPLETADO  
 **Dependencias:** Ninguna
 
-#### ✅ Tarea 0.1: Migración creada
-- **Archivo:** `supabase/migrations/20260204_fix_variant_pricing_with_own_base_price.sql`
-- **Estado:** ✅ CREADO - Pendiente de ejecutar en Supabase
-- **Objetivo:** Calcular precio_b2b de cada variante usando su propio cost_price
+#### ✅ Tarea 0.1: Migración motor precio B2B creada y ejecutada
+- **Archivo:** `supabase/migrations/20260205_fix_precio_b2b_motor.sql`
+- **Estado:** ✅ EJECUTADO en Supabase (2026-02-05)
+- **Cambios:**
+  - Función `calculate_base_price_only` corregida: DEFAULT 300 (no 30)
+  - Vista `v_productos_con_precio_b2b` recreada con fórmula correcta
+  - Validado: $0.88 → $3.94 ✅
 
-#### ⏳ Tarea 0.2: Ejecutar migración en Supabase
-- **Acción:** Copiar SQL y ejecutar en Supabase SQL Editor
+#### ✅ Tarea 0.2: VariantDrawer actualizado
+- **Archivo:** `src/components/products/VariantDrawer.tsx`
+- **Estado:** ✅ COMPLETADO (2026-02-05)
+- **Cambios:**
+  - Trackeo de variante seleccionada (`selectedVariantId`)
+  - Header muestra precio dinámico de variante seleccionada
+  - Mensaje "Selecciona una variante" cuando no hay selección
+  - Usa `variantPrices` desde `v_variantes_con_precio_b2b`
+
+#### ✅ Tarea 0.3: VariantSelector actualizado  
+- **Archivo:** `src/components/products/VariantSelector.tsx`
+- **Estado:** ✅ COMPLETADO (2026-02-05)
+- **Cambios:**
+  - Línea 316: Total price usa variantPrices exclusivamente
+  - Línea 690: Display EAV usa variantPrices
+  - Línea 760: Display legacy usa variantPrices
+  - No fallback a v.price para B2B
+
+#### ✅ Tarea 0.4: BusinessPanel (p_negocio) creado
+- **Archivo:** `src/components/business/BusinessPanel.tsx`
+- **Estado:** ✅ COMPLETADO (2026-02-05)
+- **Features:**
+  - Componente reutilizable con cálculos correctos
+  - Muestra inversión, PVP sugerido (2.5x), ganancia, ROI
+  - Documentación completa en README
+  - Integrado en VariantDrawer
+
+#### ⏳ Tarea 0.5: Ejecutar migración de variantes (PENDIENTE)
+- **Archivo:** `supabase/migrations/20260204_fix_variant_pricing_with_own_base_price.sql`
+- **Estado:** ⏳ CREADO - Pendiente de ejecutar en Supabase
+- **Objetivo:** Calcular precio_b2b de cada variante usando su propio cost_price
 - **Validación:** 
   ```sql
   SELECT sku, name, costo_base_variante, precio_b2b_final 
@@ -223,12 +305,7 @@ CLIENTE FINAL paga PVP ($30)
   WHERE product_id = '<ID_PRODUCTO_EJEMPLO>'
   ```
 
-#### ⏳ Tarea 0.3: Verificar precios en frontend
-- **Página:** `/seller/adquisicion-lotes`
-- **Componente:** `VariantDrawer.tsx`
-- **Validación:** Cada variante debe mostrar su precio específico, no el del padre
-
-**Resultado Esperado:**
+**Resultado Esperado Post-Migración:**
 ```
 Camiseta Rosa/M:    cost_price=$5.00  → precio_b2b=$7.28  ✅
 Camiseta Negra/L:   cost_price=$12.00 → precio_b2b=$17.47 ✅
@@ -293,8 +370,17 @@ Camiseta Blanca/S:  cost_price=$18.00 → precio_b2b=$26.21 ✅
 ### 🔴 FASE 2: CORRECCIONES CRÍTICAS (6 archivos)
 **Estimación:** 5-6 horas  
 **Dependencias:** FASE 1 completada
+**Progreso:** 1/6 archivos (17%) - ✅ useProductsB2B completado
 
-#### Tarea 2.1: B2BCatalogImportDialog.tsx
+#### ✅ Tarea 2.5: useProductsB2B.ts (COMPLETADO 2026-02-05)
+- **Estado:** ✅ COMPLETADO
+- **Cambios realizados:**
+  - Línea 283: PVP sugerido corregido a × 4.0 (antes × 1.3)
+  - Cálculos de profit y ROI actualizados
+
+#### ⏳ Tarea 2.1: B2BCatalogImportDialog.tsx (PENDIENTE)
+- **Líneas:** 49-117
+- **Estimación:** 30 minutos
 - **Cambios:**
   ```tsx
   // ❌ ANTES
