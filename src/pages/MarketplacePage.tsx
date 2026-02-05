@@ -82,13 +82,14 @@ const MarketplacePage = () => {
     });
   }, [products, searchQuery, selectedStore, selectedCategory, sortBy, categories, minPrice, maxPrice, showOnlyStock, showOnlyPromos, minRating]);
   const handleAddToCart = (product: typeof products[0]) => {
+    const mainImage = Array.isArray(product.images) ? product.images[0] : (product.images || '');
     useVariantDrawerStore.getState().open({
       id: product.id,
       sku: product.sku,
       nombre: product.nombre,
-      images: product.imagen_principal ? [product.imagen_principal] : [],
+      images: mainImage ? [mainImage] : [],
       price: product.precio_venta,
-      costB2B: product.source_product?.precio_b2b || product.precio_venta,
+      costB2B: product.source_product?.precio_mayorista || product.precio_venta,
       moq: product.source_product?.moq || 1,
       stock: product.stock || 0,
       source_product_id: product.source_product?.id,

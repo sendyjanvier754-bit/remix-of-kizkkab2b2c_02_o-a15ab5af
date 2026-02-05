@@ -14,7 +14,8 @@ interface SearchResult {
   nombre: string;
   sku_interno: string;
   imagen_principal: string | null;
-  precio_mayorista: number;
+  precio_b2b: number;
+  descripcion_corta?: string;
 }
 
 // Web Speech API types
@@ -403,7 +404,7 @@ const SellerMobileHeader = ({
                       </div>
                       <div className="flex-1 text-left">
                         <p className="text-sm font-medium text-gray-900 line-clamp-1">{product.nombre}</p>
-                        <p className="text-sm font-bold text-green-600">${product.precio_mayorista.toFixed(2)}</p>
+                        <p className="text-sm font-bold text-green-600">${product.precio_b2b?.toFixed(2) || '0.00'}</p>
                       </div>
                     </button>
                   ))}

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface TrendingProduct {
   id: string;
   nombre: string;
-  precio_mayorista: number;
+  precio_b2b: number;
   precio_sugerido_venta: number | null;
   imagen_principal: string | null;
   categoria_id: string | null;
