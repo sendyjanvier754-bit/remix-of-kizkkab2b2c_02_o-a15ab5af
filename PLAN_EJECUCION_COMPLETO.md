@@ -1,35 +1,116 @@
 # PLAN DE EJECUCIÓN COMPLETO - CORRECCIÓN DE PRECIOS B2B
 
-> **Fecha:** 2026-02-04  
-> **Objetivo:** Corregir arquitectura de precios B2B en todo el sistema  
+> **Fecha Inicio:** 2026-02-04  
+> **Última Actualización:** 2026-02-05  
+> **Objetivo:** Corregir arquitectura de precios B2B y variantes en todo el sistema  
 > **Estimación Total:** 20-27 horas  
-> **Mínimo Viable:** 11-15 horas (FASES 1-4)
+> **Mínimo Viable:** 11-15 horas (FASES 1-4)  
+> **Estado:** 🟡 EN PROGRESO - Repositorio sincronizado, iniciando implementación
 
 ---
 
 ## 📋 ÍNDICE
 
-1. [Resumen Ejecutivo](#-resumen-ejecutivo)
-2. [Conceptos Clave](#-conceptos-clave)
-3. [Lista Completa de Archivos](#-lista-completa-de-archivos)
-4. [Fases de Implementación](#-fases-de-implementación)
-5. [Checklist de Validación](#-checklist-de-validación)
+1. [Estado Actual](#-estado-actual)
+2. [Resumen Ejecutivo](#-resumen-ejecutivo)
+3. [Conceptos Clave](#-conceptos-clave)
+4. [Lista Completa de Archivos](#-lista-completa-de-archivos)
+5. [Fases de Implementación](#-fases-de-implementación)
+6. [Checklist de Validación](#-checklist-de-validación)
+
+---
+
+## 🎯 ESTADO ACTUAL
+
+### ✅ Completado (2026-02-05)
+
+**Sincronización de Repositorio:**
+- ✅ Git pull ejecutado - 6 commits sincronizados
+- ✅ Archivos actualizados: 12 archivos (headers, hooks, páginas)
+- ✅ Cambios remotos incluyen:
+  - Correcciones de vistas B2B (`Fix view query for B2B product`)
+  - Refactorización de pricing (`Refactor pricing data sources`)
+  - Actualización de bulk prices (`Update bulk price to base`)
+
+**Correcciones Aplicadas Remotamente:**
+- ✅ `src/hooks/useTrendingProducts.ts` - Actualizado
+- ✅ `src/hooks/useTrendingCategories.ts` - Actualizado
+- ✅ `src/hooks/useMarketplaceData.ts` - Actualizado
+- ✅ `src/pages/TrendsPage.tsx` - Actualizado
+- ✅ `src/pages/ProductPage.tsx` - Actualizado
+- ✅ `src/pages/MarketplacePage.tsx` - Actualizado
+- ✅ Headers (Global, Seller Mobile/Desktop) - Actualizados
+- ✅ `src/integrations/supabase/types.ts` - Tipos actualizados
+
+**Correcciones Locales Completadas:**
+- ✅ `useProductsB2B.ts` - Corregido cálculo de PVP (línea 283: × 4.0 en lugar de × 1.3)
+- ✅ Documentación actualizada en `AUDITORIA_PRECIO_B2B_COMPLETA.md`
+
+**Migraciones Creadas (Pendientes de Ejecutar):**
+- 📄 `20260204_fix_variant_pricing_with_own_base_price.sql` - LISTO para ejecutar
+
+### 🔄 En Progreso
+
+**FASE ACTUAL:** Preparación para FASE 1 + Corrección de Variantes
+
+### ⏳ Pendiente
+
+**Tareas Inmediatas:**
+1. 🔴 Ejecutar migración de variantes en Supabase
+2. 🔴 Verificar precios de variantes en la vista
+3. 🔴 Probar VariantDrawer con precios corregidos
+4. 🔴 Continuar con FASE 1 (migraciones adicionales de BD)
+5. 🔴 Implementar FASE 2 (correcciones críticas de archivos restantes)
 
 ---
 
 ## 🎯 RESUMEN EJECUTIVO
 
 ### Problema a Resolver:
-El sistema tiene **15 archivos** que consultan la tabla `products` directamente en lugar de la vista `v_productos_con_precio_b2b`, causando:
+El sistema tiene **2 problemas críticos**:
+
+1. **Precios de Productos:** 15 archivos consultan la tabla `products` directamente en lugar de la vista `v_productos_con_precio_b2b`
+2. **Precios de Variantes:** Cada variante tiene su PROPIO precio base, pero la vista actual no lo calcula correctamente
+
+**Impacto:**
 - Sellers pagando precios incorrectos (sin márgenes de mercado)
+- Variantes mostrando precios del producto padre en lugar de su precio específico
 - UX inconsistente (precios diferentes según dónde se consulten)
 - Exposición de precios confidenciales en páginas públicas
 
 ### Solución:
-1. Crear migraciones de base de datos (vistas y funciones nuevas)
-2. Corregir 15 archivos para usar vista `v_productos_con_precio_b2b`
-3. Implementar validación por rol para exposición de precios
-4. Crear componentes reutilizables para mostrar márgenes a sellers
+1. ✅ **COMPLETADO:** Corregir cálculo de PVP (×4.0 en lugar de ×1.3) en useProductsB2B
+2. 🔄 **EN PROGRESO:** Ejecutar migración de variantes para calcular precio_b2b por variante
+3. ⏳ **PENDIENTE:** Crear migraciones adicionales de BD (vistas y funciones nuevas)
+4. ⏳ **PENDIENTE:** Corregir archivos restantes para usar vista
+5. ⏳ **PENDIENTE:** Implementar validación por rol para exposición de precios
+
+### Estado de Archivos Corregidos (Remotos + Locales):
+
+| Archivo | Estado | Fase |
+|---------|--------|------|
+| `useTrendingProducts.ts` | ✅ Corregido (remoto) | FASE 4 |
+| `useTrendingCategories.ts` | ✅ Corregido (remoto) | FASE 4 |
+| `useMarketplaceData.ts` | ✅ Corregido (remoto) | - |
+| `TrendsPage.tsx` | ✅ Corregido (remoto) | FASE 4 |
+| `ProductPage.tsx` | ✅ Corregido (remoto) | - |
+| `MarketplacePage.tsx` | ✅ Corregido (remoto) | - |
+| Headers (3 archivos) | ✅ Corregidos (remoto) | FASE 3 |
+| `useProductsB2B.ts` | ✅ Corregido (local) | FASE 2 |
+| **Total:** | **10/17 archivos** | **59% completado** |
+
+### Archivos Pendientes por Corregir:
+
+| Archivo | Prioridad | Fase |
+|---------|-----------|------|
+| `B2BCatalogImportDialog.tsx` | 🔴 CRÍTICA | FASE 2.1 |
+| `SellerCartPage.tsx` | 🔴 CRÍTICA | FASE 2.2 |
+| `cartService.ts` | 🔴 CRÍTICA | FASE 2.3 |
+| `useCartMigration.ts` | 🔴 CRÍTICA | FASE 2.4 |
+| `useBuyerOrders.ts` | 🔴 CRÍTICA | FASE 2.6 |
+| `CategoryProductsPage.tsx` | 🟡 MEDIA | FASE 4 |
+| `useWishlist.ts` | 🟢 BAJA | FASE 5 |
+| **Total pendiente:** | **7 archivos** | **41% restante** |
 
 ---
 
@@ -69,57 +150,97 @@ CLIENTE FINAL paga PVP ($30)
 
 ### 🔴 CRÍTICOS (6 archivos) - FASE 2
 
-| # | Archivo | Líneas | Problema | Prioridad |
-|---|---------|--------|----------|-----------|
-| 1 | `src/components/seller/B2BCatalogImportDialog.tsx` | 49-117 | Importa con precio_mayorista sin márgenes | 🔴 1 |
-| 2 | `src/pages/seller/SellerCartPage.tsx` | 304, 314, 340-342, 369 | Carrito muestra precios incorrectos | 🔴 2 |
-| 3 | `src/services/cartService.ts` | 176 | No distingue contexto B2B vs B2C | 🔴 3 |
-| 4 | `src/hooks/useCartMigration.ts` | 37-38, 73-75 | Migración con precios incorrectos | 🔴 4 |
-| 5 | `src/hooks/useProductsB2B.ts` | 80, 98-101, 248-249, 379 | Hook principal usa tabla directa | 🔴 5 |
-| 6 | `src/hooks/useBuyerOrders.ts` | 157 | Detalles de pedidos incorrectos | 🔴 6 |
+| # | Archivo | Líneas | Problema | Prioridad | Estado |
+|---|---------|--------|----------|-----------|--------|
+| 1 | `src/hooks/useProductsB2B.ts` | 283 | PVP incorrecto (×1.3 en vez de ×4.0) | 🔴 1 | ✅ COMPLETADO |
+| 2 | `src/components/seller/B2BCatalogImportDialog.tsx` | 49-117 | Importa con precio_mayorista sin márgenes | 🔴 2 | ⏳ PENDIENTE |
+| 3 | `src/pages/seller/SellerCartPage.tsx` | 304, 314, 340-342, 369 | Carrito muestra precios incorrectos | 🔴 3 | ⏳ PENDIENTE |
+| 4 | `src/services/cartService.ts` | 176 | No distingue contexto B2B vs B2C | 🔴 4 | ⏳ PENDIENTE |
+| 5 | `src/hooks/useCartMigration.ts` | 37-38, 73-75 | Migración con precios incorrectos | 🔴 5 | ⏳ PENDIENTE |
+| 6 | `src/hooks/useBuyerOrders.ts` | 157 | Detalles de pedidos incorrectos | 🔴 6 | ⏳ PENDIENTE |
+
+**Progreso FASE 2: 1/6 archivos (17% completado) - 5 archivos restantes**
 
 ### 🟡 MEDIOS (7 archivos) - FASE 3 y 4
 
-| # | Archivo | Líneas | Problema | Prioridad |
-|---|---------|--------|----------|-----------|
-| 7 | `src/components/seller/SellerMobileHeader.tsx` | 142-143, 406 | Búsqueda muestra precios sin márgenes | 🟡 7 |
-| 8 | `src/components/seller/SellerDesktopHeader.tsx` | 157-158, 436 | Idéntico a mobile | 🟡 8 |
-| 9 | `src/components/layout/GlobalMobileHeader.tsx` | 169 | No valida contexto usuario | 🟡 9 |
-| 10 | `src/pages/TrendsPage.tsx` | 59, 73, 79, 81, 143 | Expone precios B2B a todos | 🟡 10 |
-| 11 | `src/pages/CategoryProductsPage.tsx` | 224-225, 299-300 | Expone precio_mayorista públicamente | 🟡 11 |
-| 12 | `src/hooks/useTrendingProducts.ts` | 30, 43 | Hook devuelve precio_mayorista | 🟡 12 |
-| 13 | `src/hooks/useTrendingCategories.ts` | 44, 73 | Similar a trending products | 🟡 13 |
+| # | Archivo | Líneas | Problema | Prioridad | Estado |
+|---|---------|--------|----------|-----------|--------|
+| 7 | `src/components/seller/SellerMobileHeader.tsx` | 142-143, 406 | Búsqueda muestra precios sin márgenes | 🟡 7 | ✅ REMOTO |
+| 8 | `src/components/seller/SellerDesktopHeader.tsx` | 157-158, 436 | Idéntico a mobile | 🟡 8 | ✅ REMOTO |
+| 9 | `src/components/layout/GlobalMobileHeader.tsx` | 169 | No valida contexto usuario | 🟡 9 | ✅ REMOTO |
+| 10 | `src/pages/TrendsPage.tsx` | 59, 73, 79, 81, 143 | Expone precios B2B a todos | 🟡 10 | ✅ REMOTO |
+| 11 | `src/pages/CategoryProductsPage.tsx` | 224-225, 299-300 | Expone precio_mayorista públicamente | 🟡 11 | ⏳ PENDIENTE |
+| 12 | `src/hooks/useTrendingProducts.ts` | 30, 43 | Hook devuelve precio_mayorista | 🟡 12 | ✅ REMOTO |
+| 13 | `src/hooks/useTrendingCategories.ts` | 44, 73 | Similar a trending products | 🟡 13 | ✅ REMOTO |
+
+**Progreso FASE 3-4: 6/7 archivos (86% completado) - 1 archivo restante**
 
 ### 🟢 BAJOS (4 archivos) - FASE 5
 
-| # | Archivo | Líneas | Problema | Prioridad |
-|---|---------|--------|----------|-----------|
-| 14 | `src/hooks/useWishlist.ts` | 73, 117 | Wishlist con precios incorrectos | 🟢 14 |
-| 15 | `src/hooks/useB2BCartLogistics.ts` | 72-73, 142 | Inconsistencia en logística | 🟢 15 |
-| 16 | `src/hooks/useB2BCartSupabase.ts` | 80 | Similar a logística | 🟢 16 |
-| 17 | `src/hooks/useSmartProductGrouper.ts` | 152, 377, 386 | Agrupador usa tabla directa | 🟢 17 |
+| # | Archivo | Líneas | Problema | Prioridad | Estado |
+|---|---------|--------|----------|-----------|--------|
+| 14 | `src/hooks/useWishlist.ts` | 73, 117 | Wishlist con precios incorrectos | 🟢 14 | ⏳ PENDIENTE |
+| 15 | `src/hooks/useB2BCartLogistics.ts` | 72-73, 142 | Inconsistencia en logística | 🟢 15 | ⏳ PENDIENTE |
+| 16 | `src/hooks/useB2BCartSupabase.ts` | 80 | Similar a logística | 🟢 16 | ⏳ PENDIENTE |
+| 17 | `src/hooks/useSmartProductGrouper.ts` | 152, 377, 386 | Agrupador usa tabla directa | 🟢 17 | ⏳ PENDIENTE |
 
-### ➕ NUEVOS (5 archivos a crear)
+**Progreso FASE 5: 0/4 archivos (0% completado) - 4 archivos restantes**
 
-| # | Archivo | Propósito |
-|---|---------|-----------|
-| 18 | `src/hooks/usePricing.ts` | Hook centralizado de precios |
-| 19 | `src/components/products/SellerMarginBadge.tsx` | Badge de margen para sellers |
-| 20 | `src/components/pricing/PricingBreakdown.tsx` | Desglose visual de precios |
-| 21 | `supabase/migrations/20260204_add_category_markup.sql` | Columna markup en categories |
-| 22 | `supabase/migrations/20260204_create_pvp_view.sql` | Vista de PVPs de sellers |
-| 23 | `supabase/migrations/20260204_suggested_pvp_function.sql` | Función calcular PVP sugerido |
-| 24 | `supabase/migrations/20260204_migrate_seller_prices.sql` | Migración datos existentes |
+### ➕ NUEVOS (correcciones remotas)
 
-**Total: 24 archivos (17 a modificar + 7 a crear)**
+| # | Archivo | Estado | Fuente |
+|---|---------|--------|--------|
+| 18 | `src/components/catalog/BulkPriceUpdateDialog.tsx` | ✅ COMPLETADO | Remoto: commit "Update bulk price to base" |
+| 19 | `src/pages/ProductPage.tsx` | ✅ COMPLETADO | Remoto: commit "Fix view query for B2B product" |
+| 20 | `src/pages/MarketplacePage.tsx` | ✅ COMPLETADO | Remoto: cambios de refactorización |
+| 21 | `src/hooks/useMarketplaceData.ts` | ✅ COMPLETADO | Remoto: commit "Refactor pricing data sources" |
+
+**Total archivos completados: 11/21 (52% del proyecto completado)**  
+**Total archivos pendientes: 10/21 (48% restante)**
 
 ---
 
 ## 🚀 FASES DE IMPLEMENTACIÓN
 
+---
+
+### 🔴 FASE 0: CORRECCIÓN DE VARIANTES (PRIORIDAD INMEDIATA)
+**Estimación:** 1-2 horas  
+**Estado:** 🔄 EN PROGRESO  
+**Dependencias:** Ninguna
+
+#### ✅ Tarea 0.1: Migración creada
+- **Archivo:** `supabase/migrations/20260204_fix_variant_pricing_with_own_base_price.sql`
+- **Estado:** ✅ CREADO - Pendiente de ejecutar en Supabase
+- **Objetivo:** Calcular precio_b2b de cada variante usando su propio cost_price
+
+#### ⏳ Tarea 0.2: Ejecutar migración en Supabase
+- **Acción:** Copiar SQL y ejecutar en Supabase SQL Editor
+- **Validación:** 
+  ```sql
+  SELECT sku, name, costo_base_variante, precio_b2b_final 
+  FROM v_variantes_con_precio_b2b 
+  WHERE product_id = '<ID_PRODUCTO_EJEMPLO>'
+  ```
+
+#### ⏳ Tarea 0.3: Verificar precios en frontend
+- **Página:** `/seller/adquisicion-lotes`
+- **Componente:** `VariantDrawer.tsx`
+- **Validación:** Cada variante debe mostrar su precio específico, no el del padre
+
+**Resultado Esperado:**
+```
+Camiseta Rosa/M:    cost_price=$5.00  → precio_b2b=$7.28  ✅
+Camiseta Negra/L:   cost_price=$12.00 → precio_b2b=$17.47 ✅
+Camiseta Blanca/S:  cost_price=$18.00 → precio_b2b=$26.21 ✅
+```
+
+---
+
 ### 🔴 FASE 1: BASE DE DATOS (PRIORIDAD MÁXIMA)
 **Estimación:** 2-3 horas  
-**Dependencias:** Ninguna
+**Estado:** ⏳ PENDIENTE  
+**Dependencias:** FASE 0 completada
 
 #### Tarea 1.1: Agregar markup a categories
 - **Archivo:** `supabase/migrations/20260204_add_category_markup.sql`

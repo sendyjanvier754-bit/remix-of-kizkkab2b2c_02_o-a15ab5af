@@ -29,6 +29,11 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const roiPercent = product.roi_percent ?? (product.precio_b2b > 0 ? (profit / product.precio_b2b) * 100 : 0);
   const isMarketSynced = product.is_market_synced ?? false;
   const pvpSource = product.pvp_source ?? 'calculated';
+  
+  // Calculate actual margin percentage for tooltip
+  const actualMarginPercent = product.precio_b2b > 0 
+    ? Math.round(((product.precio_sugerido - product.precio_b2b) / product.precio_b2b) * 100)
+    : 0;
 
   // Logistics info
   const hasLogistics = !!product.logistics || (product.logistics_cost !== undefined && product.logistics_cost > 0);
@@ -146,12 +151,17 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex items-center gap-0.5 text-[10px] text-green-600 font-semibold cursor-help">
-                      {isMarketSynced && (
-                        <ArrowUpRight className="w-3 h-3 text-green-500" />
-                      )}
-                      PVP: ${product.precio_sugerido.toFixed(2)}
-                    </span>
+                    <div className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-green-600 font-semibold cursor-help">
+                        {isMarketSynced && (
+                          <ArrowUpRight className="w-3 h-3 text-green-500" />
+                        )}
+                        PVP: ${product.precio_sugerido.toFixed(2)}
+                      </span>
+                      <span className="text-[9px] text-green-700 font-bold bg-green-50 px-1 py-0.5 rounded">
+                        ROI {roiPercent.toFixed(0)}%
+                      </span>
+                    </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
                     {isMarketSynced ? (
@@ -161,7 +171,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
                     ) : pvpSource === 'admin' ? (
                       <span>Precio sugerido por administrador</span>
                     ) : (
-                      <span>Precio calculado (+30% margen)</span>
+                      <span>Precio calculado (+{actualMarginPercent}% margen)</span>
                     )}
                   </TooltipContent>
                 </Tooltip>

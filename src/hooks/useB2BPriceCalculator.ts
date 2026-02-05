@@ -189,8 +189,8 @@ export function useB2BPriceCalculator(destinationCountryCode?: string) {
     // 5. Calculate final B2B price
     const finalB2BPrice = Math.round((subtotalWithMargin + logisticsCost + categoryFees) * 100) / 100;
     
-    // 6. Calculate suggested PVP (30% margin over B2B price by default)
-    const suggestedPVP = Math.round(finalB2BPrice * 1.3 * 100) / 100;
+    // 6. Calculate suggested PVP (150% margin over B2B price - 2.5x multiplier)
+    const suggestedPVP = Math.round(finalB2BPrice * 2.5 * 100) / 100;
     const profitAmount = Math.round((suggestedPVP - finalB2BPrice) * 100) / 100;
     const roiPercent = finalB2BPrice > 0 ? Math.round((profitAmount / finalB2BPrice) * 100 * 10) / 10 : 0;
     

@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { X, TrendingUp, ImageIcon, Info } from 'lucide-react';
 import { useB2BCartProductTotals } from '@/hooks/useB2BCartProductTotals';
+import { BusinessPanel } from '@/components/business/BusinessPanel';
 import { useProductVariants } from '@/hooks/useProductVariants';
 
 const VariantDrawer: React.FC = () => {
@@ -21,6 +22,7 @@ const VariantDrawer: React.FC = () => {
   const [variantImage, setVariantImage] = useState<string | null>(null);
   const [basePriceFromDb, setBasePriceFromDb] = useState<number | null>(null);
   const [variantPrices, setVariantPrices] = useState<Record<string, number>>({});
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
   const { user, role } = useAuth();
   const { toast } = useToast();
@@ -88,6 +90,7 @@ const VariantDrawer: React.FC = () => {
       setTotalQty(0);
       setTotalPrice(0);
       setVariantImage(null);
+      setSelectedVariantId(null);
     }
   }, [isOpen]);
 
@@ -96,16 +99,23 @@ const VariantDrawer: React.FC = () => {
 
   // Business calculator for B2B users
   const businessSummary = useMemo(() => {
-    if (!isB2BUser || !product || totalQty === 0) return null;
-    const costB2B = product.costB2B || 0;
-    const pvp = product.pvp || product.price || 0;
-    const investment = costB2B * totalQty;
-    const estimatedRevenue = pvp * totalQty;
-    const estimatedProfit = estimatedRevenue - investment;
-    const profitPercentage = costB2B > 0 ? ((pvp - costB2B) / costB2B * 100).toFixed(1) : '0.0';
-    const profitPerUnit = pvp - costB2B;
-    return { investment, estimatedRevenue, estimatedProfit, profitPercentage, profitPerUnit };
-  }, [isB2BUser, product, totalQty]);
+    if (!isB2BUser || !product || totalQty === 0 || totalPrice === 0) return null;
+    
+    // Investment = totalPrice (sum of variant prices from vista × quantities)
+    const investment = totalPrice;
+    
+    // Calculate average cost per unit from selected variants
+    const avgCostPerUnit = investment / totalQty;
+    
+    // PVP suggestion: Apply 2.5x markup on B2B cost for retail
+    const suggestedPvpPerUnit = avgCostPerUnit * 2.5;
+    
+    return {
+      investment,
+      suggestedPvpPerUnit,
+      quantity: totalQty
+    };
+  }, [isB2BUser, product, totalQty, totalPrice]);
 
   // Calculate product-level MOQ validation (cart + new selection)
   const productId = product?.source_product_id || product?.id || '';
@@ -220,7 +230,10 @@ const VariantDrawer: React.FC = () => {
 
   // Mobile: Bottom Sheet | Desktop: Side Drawer
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:justify-end md:items-stretch" style={{ pointerEvents: 'auto' }}>
+    <div 
+      className={`fixed z-[60] flex ${isMobile ? 'inset-0 items-end' : 'top-[160px] right-0 bottom-0 left-0 justify-end items-stretch'}`}
+      style={{ pointerEvents: 'auto' }}
+    >
       {/* Overlay */}
       <div 
         className="absolute inset-0 bg-black/50 transition-opacity duration-300"
@@ -241,8 +254,8 @@ const VariantDrawer: React.FC = () => {
           animation: 'slideInUp 0.3s ease-out'
         } : { 
           width: '332px', 
-          height: '945px',
-          maxHeight: '100vh',
+          height: 'calc(100vh - 160px)',
+          maxHeight: 'calc(100vh - 160px)',
           animation: 'slideInRight 0.3s ease-out'
         }}
       >
@@ -273,11 +286,16 @@ const VariantDrawer: React.FC = () => {
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold text-foreground line-clamp-2">{product.nombre}</h4>
               {isB2BUser ? (
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-lg font-bold text-primary">${displayPrice.toFixed(2)}</span>
-                  <span className="text-xs text-muted-foreground line-through">${pvpPrice.toFixed(2)}</span>
-                  <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">B2B</span>
-                </div>
+                selectedVariantId && variantPrices[selectedVariantId] ? (
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-lg font-bold text-primary">${variantPrices[selectedVariantId].toFixed(2)}</span>
+                    <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">B2B</span>
+                  </div>
+                ) : (
+                  <div className="mt-1 text-xs text-muted-foreground italic">
+                    Selecciona una variante para ver el precio
+                  </div>
+                )
               ) : (
                 <div className="mt-1 text-lg font-bold text-foreground">${displayPrice.toFixed(2)}</div>
               )}
@@ -296,37 +314,20 @@ const VariantDrawer: React.FC = () => {
               setSelections(list);
               setTotalQty(qty);
               setTotalPrice(price);
+              // Track the first selected variant for price display
+              const firstSelected = list.find((s: any) => s.quantity > 0);
+              setSelectedVariantId(firstSelected ? firstSelected.variantId : null);
             }}
             onVariantImageChange={(img) => setVariantImage(img)}
           />
 
-          {/* B2B Investment Calculator */}
-          {isB2BUser && businessSummary && totalQty > 0 && (
-            <div className="p-3 bg-muted/50 rounded-lg border border-border">
-              <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                Panel de Negocio
-              </h5>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Inversión:</span>
-                  <span className="font-bold text-foreground">${businessSummary.investment.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Venta (PVP):</span>
-                  <span className="font-bold text-foreground">${businessSummary.estimatedRevenue.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-border">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    Ganancia:
-                  </span>
-                  <div className="text-right">
-                    <span className="font-bold text-green-600">+${businessSummary.estimatedProfit.toFixed(2)}</span>
-                    <div className="text-[10px] text-muted-foreground">{businessSummary.profitPercentage}% margen</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* B2B Business Panel */}
+          {isB2BUser && businessSummary && (
+            <BusinessPanel
+              investment={businessSummary.investment}
+              suggestedPricePerUnit={businessSummary.suggestedPvpPerUnit}
+              quantity={businessSummary.quantity}
+            />
           )}
         </div>
 
