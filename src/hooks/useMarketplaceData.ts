@@ -269,7 +269,7 @@ export const useTopStores = (defaultLimit = 6) => {
             salesCount: 0, // Can be updated when we have sales data
             rating: 0, // Can be updated when we have reviews
             reviewCount: 0,
-            isVerified: (store.seller as any)?.is_verified || false,
+            isVerified: false, // No seller relationship in current query
           };
         })
       );

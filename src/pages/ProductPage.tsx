@@ -572,7 +572,8 @@ const ProductPage = () => {
     handleAddToCart();
   };
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50">
+    return (
+      <div className="min-h-screen bg-gray-50">
         {!isMobile && <GlobalHeader />}
         <main className={`container mx-auto px-4 py-8 ${isMobile ? 'pb-32' : 'pb-8'}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -585,18 +586,25 @@ const ProductPage = () => {
             </div>
           </div>
         </main>
-      </div>;
+      </div>
+    );
   }
+
   if (!product) {
-    return <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <Package className="h-16 w-16 text-gray-300 mb-4" />
         <h2 className="text-2xl font-bold text-gray-900">Producto no encontrado</h2>
         <Button onClick={() => navigate("/")} className="mt-4">Volver al inicio</Button>
-      </div>;
+      </div>
+    );
   }
+
   // Usar precio de v_productos_con_precio_b2b (ya viene en product.precio_venta)
   const displayPrice = isB2BUser ? product.precio_venta : product.precio_venta;
-  return <div className="min-h-screen bg-gray-50 font-sans">
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans">
       {/* Mobile Header Hide - Apply to body via style */}
       {isMobile && showCompactHeader && (
         <style>{`header { display: none !important; }`}</style>

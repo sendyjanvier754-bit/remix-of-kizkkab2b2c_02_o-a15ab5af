@@ -79,8 +79,8 @@ export default function BulkPriceUpdateDialog({ open, onOpenChange }: BulkPriceU
   const previewData = useMemo(() => {
     if (affectedProducts.length === 0 || !adjustmentValue) return null;
     
-    const totalBefore = affectedProducts.reduce((sum, p) => sum + p.precio_mayorista, 0);
-    const totalAfter = affectedProducts.reduce((sum, p) => sum + calculateNewPrice(p.precio_mayorista), 0);
+    const totalBefore = affectedProducts.reduce((sum, p) => sum + p.precio_mayorista_base, 0);
+    const totalAfter = affectedProducts.reduce((sum, p) => sum + calculateNewPrice(p.precio_mayorista_base), 0);
     
     return {
       productCount: affectedProducts.length,
@@ -103,11 +103,11 @@ export default function BulkPriceUpdateDialog({ open, onOpenChange }: BulkPriceU
       let updateExpression: string;
       if (adjustmentType === 'percentage') {
         const factor = adjustmentOperation === 'increase' ? (1 + value / 100) : (1 - value / 100);
-        updateExpression = `precio_mayorista * ${factor}`;
+        updateExpression = `precio_mayorista_base * ${factor}`;
       } else {
         updateExpression = adjustmentOperation === 'increase' 
-          ? `precio_mayorista + ${value}` 
-          : `GREATEST(0, precio_mayorista - ${value})`;
+          ? `precio_mayorista_base + ${value}` 
+          : `GREATEST(0, precio_mayorista_base - ${value})`;
       }
       
       // Build the update for all affected products
@@ -116,14 +116,14 @@ export default function BulkPriceUpdateDialog({ open, onOpenChange }: BulkPriceU
       // Update each product's price
       const updates = affectedProducts.map(p => ({
         id: p.id,
-        precio_mayorista: Math.round(calculateNewPrice(p.precio_mayorista) * 100) / 100,
+        precio_mayorista_base: Math.round(calculateNewPrice(p.precio_mayorista_base) * 100) / 100,
       }));
       
       // Batch update
       for (const update of updates) {
         const { error } = await supabase
           .from('products')
-          .update({ precio_mayorista: update.precio_mayorista })
+          .update({ precio_mayorista_base: update.precio_mayorista_base })
           .eq('id', update.id);
         
         if (error) throw error;
@@ -295,7 +295,7 @@ export default function BulkPriceUpdateDialog({ open, onOpenChange }: BulkPriceU
                           <span className="font-mono text-xs text-muted-foreground mr-2">{product.sku_interno}</span>
                           {product.nombre}
                         </Label>
-                        <span className="text-sm font-medium">${product.precio_mayorista.toFixed(2)}</span>
+                        <span className="text-sm font-medium">${product.precio_mayorista_base.toFixed(2)}</span>
                       </div>
                     ))
                   )}
@@ -402,9 +402,9 @@ export default function BulkPriceUpdateDialog({ open, onOpenChange }: BulkPriceU
                   <div key={product.id} className="flex justify-between items-center py-1 text-sm">
                     <span className="truncate flex-1">{product.nombre}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">${product.precio_mayorista.toFixed(2)}</span>
+                      <span className="text-muted-foreground">${product.precio_mayorista_base.toFixed(2)}</span>
                       <span>→</span>
-                      <span className="font-medium">${calculateNewPrice(product.precio_mayorista).toFixed(2)}</span>
+                      <span className="font-medium">${calculateNewPrice(product.precio_mayorista_base).toFixed(2)}</span>
                     </div>
                   </div>
                 ))}

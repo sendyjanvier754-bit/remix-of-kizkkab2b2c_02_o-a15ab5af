@@ -56,7 +56,7 @@ const TrendsPage = () => {
   // Calculate max price from trending products
   const maxPrice = useMemo(() => {
     if (!trendingProducts) return 1000;
-    return Math.max(...trendingProducts.map(p => p.precio_sugerido_venta || p.precio_mayorista || 0), 1000);
+    return Math.max(...trendingProducts.map(p => p.precio_sugerido_venta || p.precio_b2b || 0), 1000);
   }, [trendingProducts]);
 
   // Get filtered and sorted trending products
@@ -70,15 +70,15 @@ const TrendsPage = () => {
 
     // Filter by price range
     products = products.filter(p => {
-      const price = p.precio_sugerido_venta || p.precio_mayorista;
+      const price = p.precio_sugerido_venta || p.precio_b2b;
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
     // Sort
     if (sortBy === "price-low") {
-      products = [...products].sort((a, b) => (a.precio_sugerido_venta || a.precio_mayorista) - (b.precio_sugerido_venta || b.precio_mayorista));
+      products = [...products].sort((a, b) => (a.precio_sugerido_venta || a.precio_b2b) - (b.precio_sugerido_venta || b.precio_b2b));
     } else if (sortBy === "price-high") {
-      products = [...products].sort((a, b) => (b.precio_sugerido_venta || b.precio_mayorista) - (a.precio_sugerido_venta || a.precio_mayorista));
+      products = [...products].sort((a, b) => (b.precio_sugerido_venta || b.precio_b2b) - (a.precio_sugerido_venta || a.precio_b2b));
     }
 
     return products;
