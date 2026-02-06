@@ -584,10 +584,12 @@ const SellerCartPage = () => {
               </Button>
             </div>
           ) : !isMobile ? (
-            // PC LAYOUT - Two columns
-            <div className="grid grid-cols-3 gap-6">
-              {/* Left Column - Items (2/3) */}
-              <div className="lg:col-span-2 space-y-4">
+            // PC LAYOUT - Two columns inside a shared container
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mt-1">
+              <div className="pt-6 px-6 pb-6">
+                <div className="grid grid-cols-3 gap-6">
+                  {/* Left Column - Items (2/3) */}
+                  <div className="lg:col-span-2 space-y-4">
                 {/* MOQ Warning Banner */}
                 {!isCartValid && productsNotMeetingMOQ.length > 0 && (
                   <Alert variant="destructive" className="bg-amber-50 border-amber-200">
@@ -761,14 +763,14 @@ const SellerCartPage = () => {
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="text-sm font-bold cursor-help" style={{ color: '#071d7f' }}>
-                                      ${(cartLogistics.itemsLogistics.get(item.id)?.finalTotalPrice || item.subtotal).toFixed(2)}
+                                      ${item.subtotal.toFixed(2)}
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent side="left" className="text-xs">
                                     <div className="space-y-0.5">
-                                      <p>Producto: ${item.subtotal.toFixed(2)}</p>
+                                      <p>Producto (sin envío): ${item.subtotal.toFixed(2)}</p>
                                       {cartLogistics.itemsLogistics.get(item.id) && (
-                                        <p>Envío: +${(cartLogistics.itemsLogistics.get(item.id)!.logisticsCost * item.cantidad).toFixed(2)}</p>
+                                        <p>Envío estimado aparte: +${(cartLogistics.itemsLogistics.get(item.id)!.logisticsCost * item.cantidad).toFixed(2)}</p>
                                       )}
                                     </div>
                                   </TooltipContent>
@@ -784,8 +786,8 @@ const SellerCartPage = () => {
                 </div>
               </div>
 
-              {/* Right Column - Order Summary (1/3) */}
-              <div className="lg:col-span-1">
+                  {/* Right Column - Order Summary (1/3) */}
+                  <div className="lg:col-span-1">
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden sticky top-20">
                   {/* Summary Header */}
                   <div className="bg-gray-50 border-b border-gray-200 p-3">
@@ -859,34 +861,6 @@ const SellerCartPage = () => {
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">Incluye productos + envío a destino</p>
-                  </div>
-
-                  {/* Business Analysis Panel */}
-                  <div className="p-2 bg-white border-b border-gray-200">
-                    <p className="text-xs font-bold text-gray-900 mb-2">PANEL DE NEGOCIO</p>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-600">Inversión:</span>
-                        <span className="font-semibold text-gray-900">${profitAnalysis.inversion.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-600">Venta (PVP):</span>
-                        <span className="font-semibold text-gray-900">${profitAnalysis.venta.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs border-t pt-1.5 mt-1.5">
-                        <span className="text-gray-600 font-medium">
-                          {profitAnalysis.ganancia >= 0 ? '📈 Ganancia:' : '📉 Pérdida:'}
-                        </span>
-                        <div className="text-right">
-                          <div className="font-bold text-xs" style={{ color: profitAnalysis.ganancia >= 0 ? '#29892a' : '#dc2626' }}>
-                            {profitAnalysis.ganancia >= 0 ? '+' : ''}{profitAnalysis.ganancia.toFixed(2)}
-                          </div>
-                          <div className="text-[9px] font-semibold" style={{ color: profitAnalysis.margen >= 0 ? '#29892a' : '#dc2626' }}>
-                            {profitAnalysis.margen.toFixed(0)}% margen
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Payment Methods */}
@@ -1008,6 +982,8 @@ const SellerCartPage = () => {
                         </button>
                       )}
                     </div>
+                  </div>
+                </div>
                   </div>
                 </div>
               </div>
@@ -1327,32 +1303,6 @@ const SellerCartPage = () => {
               <div className="border-t border-blue-200 pt-2 mt-2 flex justify-between">
                 <span className="font-bold text-sm">Total</span>
                 <span className="font-bold text-lg text-[#071d7f]">${subtotal.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Advanced Info - Ganancia y ROI */}
-            <div className="space-y-2 bg-green-50 p-3 rounded-lg border border-green-200">
-              <p className="text-xs font-semibold text-green-900 flex items-center gap-1.5 uppercase tracking-wide">
-                <TrendingUp className="w-4 h-4" />
-                Análisis de Ganancia
-              </p>
-              <div className="space-y-2 pt-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700">Ganancia Total</span>
-                  <span className="font-bold text-lg text-green-600">
-                    +${profitAnalysis.ganancia.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700">ROI</span>
-                  <span className="font-bold text-lg text-green-600">
-                    {profitAnalysis.margen.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="text-xs text-gray-600 pt-2 border-t border-green-200 mt-2">
-                  <p>Inversión: <span className="font-semibold">${profitAnalysis.inversion.toFixed(2)}</span></p>
-                  <p>Venta esperada: <span className="font-semibold">${profitAnalysis.venta.toFixed(2)}</span></p>
-                </div>
               </div>
             </div>
           </div>
