@@ -12,6 +12,7 @@ import { X, TrendingUp, ImageIcon, Info } from 'lucide-react';
 import { useB2BCartProductTotals } from '@/hooks/useB2BCartProductTotals';
 import { BusinessPanel } from '@/components/business/BusinessPanel';
 import { useProductVariants } from '@/hooks/useProductVariants';
+import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 
 const VariantDrawer: React.FC = () => {
   const isMobile = useIsMobile();
@@ -99,25 +100,49 @@ const VariantDrawer: React.FC = () => {
     ? (basePriceFromDb !== null ? basePriceFromDb : (product?.costB2B || 0))
     : (product?.price || 0);
 
-  // Business calculator for B2B users
+  // Fetch BusinessPanel data for selected variant or product
+  const { data: businessPanelData } = useBusinessPanelData(
+    product?.source_product_id || product?.id,
+    selectedVariantId || undefined
+  );
+
+  // Business calculator for B2B users using BusinessPanel view data
   const businessSummary = useMemo(() => {
-    if (!isB2BUser || !product || totalQty === 0 || totalPrice === 0) return null;
+    if (!isB2BUser || !product || totalQty === 0) return null;
     
-    // Investment = totalPrice (sum of variant prices from vista × quantities)
-    const investment = totalPrice;
+    // Get suggested PVP from BusinessPanel view
+    const suggestedPvpPerUnit = businessPanelData?.suggested_pvp_per_unit || 
+      (basePriceFromDb !== null ? basePriceFromDb * 2.5 : 0);
     
-    // Calculate average cost per unit from selected variants
-    const avgCostPerUnit = investment / totalQty;
-    
-    // PVP suggestion: Apply 2.5x markup on B2B cost for retail
-    const suggestedPvpPerUnit = avgCostPerUnit * 2.5;
+    // Calculate investment based on total price (sum of variant prices × quantities)
+    const investment = totalPrice > 0 ? totalPrice : (basePriceFromDb || 0) * totalQty;
     
     return {
       investment,
       suggestedPvpPerUnit,
       quantity: totalQty
     };
-  }, [isB2BUser, product, totalQty, totalPrice]);
+  }, [isB2BUser, product, totalQty, totalPrice, basePriceFromDb, businessPanelData]);
+
+  // --- DEPRECATED: Old business calculator ---
+  // const businessSummary = useMemo(() => {
+  //   if (!isB2BUser || !product || totalQty === 0 || totalPrice === 0) return null;
+  //   
+  //   // Investment = totalPrice (sum of variant prices from vista × quantities)
+  //   const investment = totalPrice;
+  //   
+  //   // Calculate average cost per unit from selected variants
+  //   const avgCostPerUnit = investment / totalQty;
+  //   
+  //   // PVP suggestion: Apply 2.5x markup on B2B cost for retail
+  //   const suggestedPvpPerUnit = avgCostPerUnit * 2.5;
+  //   
+  //   return {
+  //     investment,
+  //     suggestedPvpPerUnit,
+  //     quantity: totalQty
+  //   };
+  // }, [isB2BUser, product, totalQty, totalPrice]);
 
   // Calculate product-level MOQ validation (cart + new selection)
   const productId = product?.source_product_id || product?.id || '';

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { SellerLayout } from "@/components/seller/SellerLayout";
+import { BusinessPanel } from "@/components/business/BusinessPanel";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -47,6 +48,7 @@ import { VariantBadges } from "@/components/seller/cart/VariantBadges";
 import { addItemB2B } from "@/services/cartService";
 import { useB2BCartLogistics } from "@/hooks/useB2BCartLogistics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useBusinessPanelDataBatch } from "@/hooks/useBusinessPanelData";
 
 const SellerCartPage = () => {
   const navigate = useNavigate();
@@ -54,6 +56,16 @@ const SellerCartPage = () => {
   const { items, isLoading, refetch } = useB2BCartItems();
   const { productsNotMeetingMOQ, isCartValid, productTotals } = useB2BCartProductTotals();
   const isMobile = useIsMobile();
+  
+  // Get BusinessPanel data for all items in cart
+  const itemsForBatch = useMemo(() => 
+    items.map(item => ({
+      productId: item.productId,
+      variantId: item.variantId || undefined
+    })),
+    [items]
+  );
+  const { dataMap: businessPanelDataMap } = useBusinessPanelDataBatch(itemsForBatch);
   
   // Calculate logistics for all cart items
   const cartLogistics = useB2BCartLogistics(items);
@@ -110,7 +122,7 @@ const SellerCartPage = () => {
   const allSelected = items.length > 0 && items.every(item => b2bSelectedIds.has(item.id));
   const someSelected = selectedItems.length > 0;
 
-  // Calculate profit analysis for SELECTED items only
+  // Calculate profit analysis for SELECTED items only using BusinessPanel view data
   const profitAnalysis = useMemo(() => {
     let totalInversion = 0; // Total cost (precio B2B * cantidad)
     let totalVenta = 0;      // Total retail (precio de venta * cantidad)
@@ -119,9 +131,15 @@ const SellerCartPage = () => {
 
     selectedItems.forEach(item => {
       const costoItem = item.precioB2B * item.cantidad;
-      // Use precioVenta (retail price) if available, otherwise default to cost price
-      const precioVenta = item.precioVenta || item.precioB2B;
-      const ventaItem = precioVenta * item.cantidad;
+      
+      // Get suggested PVP from BusinessPanel view
+      const key = item.variantId 
+        ? `${item.productId}-${item.variantId}`
+        : item.productId;
+      const businessPanelData = businessPanelDataMap.get(key);
+      const suggestedPVP = businessPanelData?.suggested_pvp_per_unit || (item.precioB2B * 2.5);
+      
+      const ventaItem = suggestedPVP * item.cantidad;
       
       totalInversion += costoItem;
       totalVenta += ventaItem;
@@ -136,7 +154,7 @@ const SellerCartPage = () => {
       ganancia: ganancia,
       margen: margen
     };
-  }, [selectedItems]);
+  }, [selectedItems, businessPanelDataMap]);
 
   // Get unique payment methods - Default to Tarjetas, Transferencia, MonCash, NatCash
   const paymentMethods = useMemo(() => {
@@ -862,6 +880,18 @@ const SellerCartPage = () => {
                     </div>
                     <p className="text-xs text-gray-500 mt-1">Incluye productos + envío a destino</p>
                   </div>
+
+                  {/* Business Panel */}
+                  {selectedItems.length > 0 && (
+                    <div className="px-2 py-3 border-b border-gray-200">
+                      <BusinessPanel
+                        investment={profitAnalysis.inversion}
+                        suggestedPricePerUnit={totalQuantity > 0 ? profitAnalysis.venta / totalQuantity : 0}
+                        quantity={totalQuantity}
+                        className="bg-blue-50 border-blue-200"
+                      />
+                    </div>
+                  )}
 
                   {/* Payment Methods */}
                   <div className="p-2 bg-gray-50 border-t border-gray-200">
