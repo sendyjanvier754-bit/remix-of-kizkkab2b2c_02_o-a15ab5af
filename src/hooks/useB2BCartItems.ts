@@ -81,31 +81,79 @@ export const useB2BCartItems = () => {
       console.log('B2B Cart items loaded:', cartItems?.length || 0, 'items');
       console.log('🔍 Datos brutos de la DB (incluyendo variantes):', cartItems);
 
-      const formattedItems: B2BCartItem[] = (cartItems || []).map(item => {
-        return {
-          id: item.id,
-          productId: item.product_id,
-          sku: item.sku,
-          name: item.nombre,
-          precioB2B: typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price,
-          precioVenta: 0, // Will be loaded from product if needed
-          cantidad: item.quantity,
-          subtotal: typeof item.total_price === 'string' ? parseFloat(item.total_price) : item.total_price,
-          image: (item as any).image || null,
-          moq: 1,
-          // Variant fields - CRITICAL FOR UI DISPLAY
-          variantId: item.variant_id || null,
-          color: item.color || (item.variant_attributes as any)?.color || null,
-          size: item.size || (item.variant_attributes as any)?.size || (item.variant_attributes as any)?.talla || null,
-          variantAttributes: item.variant_attributes as Record<string, any> | null,
-        };
-      });
+      // Fetch fresh prices from vistas for each item
+      const formattedItems: B2BCartItem[] = await Promise.all(
+        (cartItems || []).map(async (item) => {
+          let freshPrice: number = typeof item.unit_price === 'string' 
+            ? parseFloat(item.unit_price) 
+            : item.unit_price;
+          let moq = 1;
+          let image = (item as any).image || null;
+
+          // ✅ PRIORITY 1: Get price from v_variantes_con_precio_b2b if variant exists
+          if (item.variant_id) {
+            const { data: variantData } = await (supabase as any)
+              .from('v_variantes_con_precio_b2b')
+              .select('precio_b2b_final, moq, images')
+              .eq('id', item.variant_id)
+              .maybeSingle();
+
+            if (variantData?.precio_b2b_final != null) {
+              freshPrice = variantData.precio_b2b_final;
+              moq = variantData.moq || 1;
+              if (variantData.images?.[0]) {
+                image = variantData.images[0];
+              }
+              console.log(`✅ Variant ${item.variant_id} price from vista:`, freshPrice);
+            }
+          }
+          
+          // ✅ PRIORITY 2: Fallback to v_productos_con_precio_b2b if no variant or variant has no price
+          if (!item.variant_id || freshPrice === 0) {
+            if (item.product_id) {
+              const { data: productData } = await (supabase as any)
+                .from('v_productos_con_precio_b2b')
+                .select('precio_b2b, moq, imagen_principal')
+                .eq('id', item.product_id)
+                .maybeSingle();
+
+              if (productData?.precio_b2b != null) {
+                freshPrice = productData.precio_b2b;
+                moq = productData.moq || 1;
+                if (!image && productData.imagen_principal) {
+                  image = productData.imagen_principal;
+                }
+                console.log(`✅ Product ${item.product_id} price from vista:`, freshPrice);
+              }
+            }
+          }
+
+          return {
+            id: item.id,
+            productId: item.product_id,
+            sku: item.sku,
+            name: item.nombre,
+            precioB2B: freshPrice,
+            precioVenta: 0, // Will be loaded from product if needed
+            cantidad: item.quantity,
+            subtotal: freshPrice * item.quantity,
+            image,
+            moq,
+            // Variant fields - CRITICAL FOR UI DISPLAY
+            variantId: item.variant_id || null,
+            color: item.color || (item.variant_attributes as any)?.color || null,
+            size: item.size || (item.variant_attributes as any)?.size || (item.variant_attributes as any)?.talla || null,
+            variantAttributes: item.variant_attributes as Record<string, any> | null,
+          };
+        })
+      );
 
       console.log('✅ Variantes después del map:', formattedItems.map(item => ({ 
         name: item.name,
         color: item.color,
         size: item.size,
-        variantId: item.variantId
+        variantId: item.variantId,
+        precioB2B: item.precioB2B
       })));
 
       setItems(formattedItems);
