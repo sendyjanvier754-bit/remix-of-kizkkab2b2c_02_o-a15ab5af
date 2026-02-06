@@ -96,8 +96,8 @@ const VariantDrawer: React.FC = () => {
   const displayImage = variantImage || product?.images?.[0] || '/placeholder.svg';
   
   const displayPrice = isB2BUser 
-    ? (basePriceFromDb !== null ? basePriceFromDb : (product.costB2B || 0))
-    : (product.price || 0);
+    ? (basePriceFromDb !== null ? basePriceFromDb : (product?.costB2B || 0))
+    : (product?.price || 0);
 
   // Business calculator for B2B users
   const businessSummary = useMemo(() => {
@@ -227,7 +227,6 @@ const VariantDrawer: React.FC = () => {
 
   if (!isOpen || !product) return null;
 
-  const displayPrice = isB2BUser ? (basePriceFromDb !== null ? basePriceFromDb : (product.costB2B || 0)) : (product.price || 0);
   const pvpPrice = product.pvp || product.price || 0;
 
   // Mobile: Bottom Sheet | Desktop: Side Drawer
