@@ -107,7 +107,7 @@ export const useB2BCartItems = () => {
               if (variantData.images?.[0]) {
                 image = variantData.images[0];
               }
-              console.log(`✅ Variant ${item.variant_id} price from v_variantes_con_precio_b2b:`, freshPrice);
+              console.log(`✅ Variant ${item.variant_id} price from v_variantes_con_precio_b2b:`, freshPrice, 'MOQ:', moq);
             }
           }
           
@@ -125,7 +125,7 @@ export const useB2BCartItems = () => {
               if (!image && productData.imagen_principal) {
                 image = productData.imagen_principal;
               }
-              console.log(`✅ Product ${item.product_id} price from v_productos_con_precio_b2b:`, freshPrice);
+              console.log(`✅ Product ${item.product_id} price from v_productos_con_precio_b2b:`, freshPrice, 'MOQ:', moq);
             }
           }
 
