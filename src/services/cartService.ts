@@ -167,10 +167,12 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
     // Insert/merge item
     console.log('B2B: Adding/merging item:', params.sku, 'to cart:', cart.id, 'with variant:', params.variant);
     
-    // ✅ CRITICAL: Get price from correct vista (NO FALLBACK)
+    // ✅ Obtener precio de las vistas según si tiene variante o no
     let finalPrice = params.priceB2B;
     const variantId = params.variant?.variantId || null;
+    let priceFromVariant = false;
     
+    // Si tiene variante: obtener precio de v_variantes_con_precio_b2b
     if (variantId) {
       console.log('B2B: Fetching variant price from v_variantes_con_precio_b2b for variant:', variantId);
       const { data: variantData } = await (supabase as any)
@@ -179,10 +181,10 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
         .eq('id', variantId)
         .single();
       
-      if (variantData?.precio_b2b_final) {
-        // ✅ Usar SOLO precio_b2b_final de variante (sin fallback al producto padre)
+      if (variantData?.precio_b2b_final != null && variantData.precio_b2b_final > 0) {
         finalPrice = variantData.precio_b2b_final;
-        console.log('B2B: Using variant price from vista:', finalPrice);
+        priceFromVariant = true;
+        console.log('B2B: Using variant price from v_variantes_con_precio_b2b:', finalPrice);
       }
     }
     
@@ -190,16 +192,35 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
     let productId: string | undefined = params.productId;
     if (!productId && params.sku) {
       const skuBase = params.sku.split('-')[0];
-      // B2B context: use v_productos_con_precio_b2b vista
       const { data: productData } = await (supabase as any)
         .from('v_productos_con_precio_b2b')
-        .select('id')
+        .select('id, precio_b2b')
         .eq('sku_interno', skuBase)
         .limit(1);
       
       if (productData?.[0]?.id) {
         productId = productData[0].id as string;
         console.log('B2B: Found productId by SKU:', productId);
+        
+        // Si NO tiene variante O la variante no tiene precio: usar precio del producto
+        if (!priceFromVariant && productData[0].precio_b2b != null) {
+          finalPrice = productData[0].precio_b2b;
+          console.log('B2B: Using product price from v_productos_con_precio_b2b:', finalPrice);
+        }
+      }
+    }
+    
+    // Si tenemos productId pero aún no tenemos precio del producto (no vino del SKU search)
+    if (!priceFromVariant && productId && finalPrice === params.priceB2B) {
+      const { data: productData } = await (supabase as any)
+        .from('v_productos_con_precio_b2b')
+        .select('precio_b2b')
+        .eq('id', productId)
+        .single();
+      
+      if (productData?.precio_b2b != null) {
+        finalPrice = productData.precio_b2b;
+        console.log('B2B: Using product price from v_productos_con_precio_b2b (by id):', finalPrice);
       }
     }
 

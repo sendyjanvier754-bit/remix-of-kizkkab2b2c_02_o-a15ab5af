@@ -90,7 +90,9 @@ export const useB2BCartItems = () => {
           let moq = 1;
           let image = (item as any).image || null;
 
-          // ✅ PRIORITY 1: Get price from v_variantes_con_precio_b2b if variant exists
+          let priceFromVariant = false;
+
+          // ✅ Si tiene variante: obtener precio de v_variantes_con_precio_b2b
           if (item.variant_id) {
             const { data: variantData } = await (supabase as any)
               .from('v_variantes_con_precio_b2b')
@@ -98,33 +100,32 @@ export const useB2BCartItems = () => {
               .eq('id', item.variant_id)
               .maybeSingle();
 
-            if (variantData?.precio_b2b_final != null) {
+            if (variantData?.precio_b2b_final != null && variantData.precio_b2b_final > 0) {
               freshPrice = variantData.precio_b2b_final;
               moq = variantData.moq || 1;
+              priceFromVariant = true;
               if (variantData.images?.[0]) {
                 image = variantData.images[0];
               }
-              console.log(`✅ Variant ${item.variant_id} price from vista:`, freshPrice);
+              console.log(`✅ Variant ${item.variant_id} price from v_variantes_con_precio_b2b:`, freshPrice);
             }
           }
           
-          // ✅ PRIORITY 2: Fallback to v_productos_con_precio_b2b if no variant or variant has no price
-          if (!item.variant_id || freshPrice === 0) {
-            if (item.product_id) {
-              const { data: productData } = await (supabase as any)
-                .from('v_productos_con_precio_b2b')
-                .select('precio_b2b, moq, imagen_principal')
-                .eq('id', item.product_id)
-                .maybeSingle();
+          // ✅ Si NO tiene variante O la variante no tiene precio: obtener de v_productos_con_precio_b2b
+          if (!priceFromVariant && item.product_id) {
+            const { data: productData } = await (supabase as any)
+              .from('v_productos_con_precio_b2b')
+              .select('precio_b2b, moq, imagen_principal')
+              .eq('id', item.product_id)
+              .maybeSingle();
 
-              if (productData?.precio_b2b != null) {
-                freshPrice = productData.precio_b2b;
-                moq = productData.moq || 1;
-                if (!image && productData.imagen_principal) {
-                  image = productData.imagen_principal;
-                }
-                console.log(`✅ Product ${item.product_id} price from vista:`, freshPrice);
+            if (productData?.precio_b2b != null) {
+              freshPrice = productData.precio_b2b;
+              moq = productData.moq || 1;
+              if (!image && productData.imagen_principal) {
+                image = productData.imagen_principal;
               }
+              console.log(`✅ Product ${item.product_id} price from v_productos_con_precio_b2b:`, freshPrice);
             }
           }
 
