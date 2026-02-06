@@ -167,11 +167,29 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
     // Insert/merge item
     console.log('B2B: Adding/merging item:', params.sku, 'to cart:', cart.id, 'with variant:', params.variant);
     
-    // If no productId provided, try to find it by SKU
+    // ✅ CRITICAL: Get price from correct vista (NO FALLBACK)
+    let finalPrice = params.priceB2B;
+    const variantId = params.variant?.variantId || null;
+    
+    if (variantId) {
+      console.log('B2B: Fetching variant price from v_variantes_con_precio_b2b for variant:', variantId);
+      const { data: variantData } = await (supabase as any)
+        .from('v_variantes_con_precio_b2b')
+        .select('precio_b2b_final, product_id')
+        .eq('id', variantId)
+        .single();
+      
+      if (variantData?.precio_b2b_final) {
+        // ✅ Usar SOLO precio_b2b_final de variante (sin fallback al producto padre)
+        finalPrice = variantData.precio_b2b_final;
+        console.log('B2B: Using variant price from vista:', finalPrice);
+      }
+    }
+    
+    // If no productId provided, try to find it by SKU or variant
     let productId: string | undefined = params.productId;
     if (!productId && params.sku) {
       const skuBase = params.sku.split('-')[0];
-      // Use RPC-style call to avoid TS2589 deep type instantiation error
       // B2B context: use v_productos_con_precio_b2b vista
       const { data: productData } = await (supabase as any)
         .from('v_productos_con_precio_b2b')
@@ -184,8 +202,6 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
         console.log('B2B: Found productId by SKU:', productId);
       }
     }
-    
-    const variantId = params.variant?.variantId || null;
 
     // Prefer merging by variant_id when present (source of truth)
     const existingQuery = supabase
@@ -207,7 +223,7 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
     const basePayload = {
       sku: params.sku,
       nombre: params.name,
-      unit_price: params.priceB2B,
+      unit_price: finalPrice, // Use price from vista if variant
       image: params.image || null,
       // Variant columns
       variant_id: variantId,
@@ -228,7 +244,7 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
           // Keep product_id stable (if we were able to resolve it)
           ...(productId ? { product_id: productId } : {}),
           quantity: newQty,
-          total_price: params.priceB2B * newQty,
+          total_price: finalPrice * newQty, // ✅ Use finalPrice from vista
         })
         .eq('id', primary.id);
 
@@ -258,7 +274,7 @@ export const addItemB2B = async (params: B2BAddItemParams) => {
           cart_id: cart.id,
           product_id: productId || null,
           ...basePayload,
-          total_price: params.priceB2B * params.quantity,
+          total_price: finalPrice * params.quantity, // ✅ Use finalPrice from vista
           quantity: params.quantity,
         },
       ])

@@ -33,46 +33,44 @@ const VariantDrawer: React.FC = () => {
   const { getProductTotal } = useB2BCartProductTotals();
   
   // Fetch product variants to get attribute_combination for each variant
-  const { data: productVariants } = useProductVariants(product?.source_product_id || product?.id);
+  // ✅ CRÍTICO: Pasar isB2BUser para que cargue desde v_variantes_con_precio_b2b cuando sea B2B
+  const { data: productVariants } = useProductVariants(product?.source_product_id || product?.id, isB2BUser);
 
-  // Obtener precios base del producto y todas sus variantes de v_productos_con_precio_b2b
+  // 1. Fetch base price from DB for B2B users
   useEffect(() => {
     const fetchPricesFromDb = async () => {
       if (!isB2BUser || !product?.source_product_id) return;
-
-      try {
-        // 1. Fetch product price
-        const { data: productData, error: productError } = await supabase
-          .from('v_productos_con_precio_b2b')
-          .select('precio_b2b')
-          .eq('id', product.source_product_id)
-          .single();
-        
-        if (!productError && productData) {
-          setBasePriceFromDb(productData.precio_b2b);
-        }
-
-        // 2. Fetch all variant prices from the complete view
-        const { data: variantData, error: variantError } = await supabase
-          .from('v_variantes_con_precio_b2b')
-          .select('id, precio_b2b_final')
-          .eq('product_id', product.source_product_id);
-        
-        if (!variantError && variantData) {
-          const priceMap = variantData.reduce((acc: Record<string, number>, item: any) => {
-            acc[item.id] = item.precio_b2b_final;
-            return acc;
-          }, {});
-          setVariantPrices(priceMap);
-        } else if (variantError) {
-          console.error('Error fetching variant prices:', variantError);
-        }
-      } catch (err) {
-        console.error('Error fetching prices from DB:', err);
+      
+      const { data: productData } = await supabase
+        .from('v_productos_con_precio_b2b')
+        .select('precio_b2b')
+        .eq('id', product.source_product_id)
+        .single();
+      
+      if (productData) {
+        setBasePriceFromDb(productData.precio_b2b);
       }
     };
+    
     fetchPricesFromDb();
-  }, [isOpen, product?.source_product_id, isB2BUser]);
+  }, [isB2BUser, product?.source_product_id]);
+
+  // 2. Extract variant prices from productVariants
+  useEffect(() => {
+    if (!isB2BUser || !productVariants || productVariants.length === 0) {
+      setVariantPrices({});
+      return;
+    }
+
+    const priceMap = productVariants.reduce((acc: Record<string, number>, variant: any) => {
+      if (variant.precio_b2b_final) {
+        acc[variant.id] = variant.precio_b2b_final;
+      }
+      return acc;
+    }, {});
+
+    setVariantPrices(priceMap);
+  }, [productVariants, isB2BUser]);
 
   // Prevent body scroll when drawer open
   useEffect(() => {
@@ -96,6 +94,10 @@ const VariantDrawer: React.FC = () => {
 
   // Get the current display image (variant image or product image)
   const displayImage = variantImage || product?.images?.[0] || '/placeholder.svg';
+  
+  const displayPrice = isB2BUser 
+    ? (basePriceFromDb !== null ? basePriceFromDb : (product.costB2B || 0))
+    : (product.price || 0);
 
   // Business calculator for B2B users
   const businessSummary = useMemo(() => {

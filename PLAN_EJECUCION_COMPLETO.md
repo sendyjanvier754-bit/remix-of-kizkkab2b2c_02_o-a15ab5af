@@ -72,6 +72,14 @@
   - Cambio de 1.3x (30%) a 2.5x (150% margen)
   - Consistente con motor de precio de la vista
 
+- ✅ **cartService.ts** - Integración con vista de variantes
+  - Busca precio en `v_variantes_con_precio_b2b` cuando hay variant_id
+  - Usa `precio_b2b_final` de variante en lugar de precio de producto
+  
+- ✅ **useBuyerOrders.ts** - Soporte completo de variantes
+  - Carga imágenes y precios desde `v_variantes_con_precio_b2b`
+  - Mantiene precio histórico de órdenes (unit_price)
+
 - ✅ **Herramientas de verificación creadas:**
   - `query_pricing.mjs` - Script para verificar precios en BD
   - `check_pricing.sql` - Query SQL para auditoría
@@ -87,18 +95,27 @@
 
 ### 🔄 En Progreso
 
-**FASE ACTUAL:** FASE 0 completada parcialmente, iniciando FASE 1
+**FASE ACTUAL:** FASE 0 y FASE 1 completadas, iniciando FASE 2
+
+**Progreso General:**
+- ✅ FASE 0: 100% (5/5 tareas)
+- ✅ FASE 1: 100% (4/4 migraciones)
+- 🔄 FASE 2: 17% (1/6 archivos)
 
 **Último Commit:** `bcffced` - "feat: Fix B2B pricing system and variant pricing"
 
 ### ⏳ Pendiente
 
 **Tareas Inmediatas:**
-1. 🔴 Ejecutar migración de variantes (20260204_fix_variant_pricing_with_own_base_price.sql)
-2. 🔴 Ejecutar FASE 1 completa (4 migraciones de BD)
-3. 🔴 Verificar precios de variantes en VariantDrawer post-migración
-4. 🔴 Implementar FASE 2 (5 archivos críticos restantes)
-5. 🟡 Implementar FASE 4 (1 archivo: CategoryProductsPage.tsx)
+1. ✅ ~~Ejecutar migración de variantes~~ COMPLETADO
+2. ✅ ~~Ejecutar FASE 1 completa (4 migraciones de BD)~~ COMPLETADO
+3. 🔴 **SIGUIENTE: FASE 2 - Archivos Críticos (5 archivos)**
+   - B2BCatalogImportDialog.tsx
+   - SellerCartPage.tsx
+   - cartService.ts
+   - useCartMigration.ts
+   - useBuyerOrders.ts
+4. 🟡 Implementar FASE 4 (1 archivo: CategoryProductsPage.tsx)
 
 ---
 
@@ -145,20 +162,22 @@ El sistema tiene **2 problemas críticos**:
 
 ### Archivos Pendientes por Corregir:
 
-| Archivo | Prioridad | Fase | Estimación |
-|---------|-----------|------|------------|
-| `B2BCatalogImportDialog.tsx` | 🔴 CRÍTICA | FASE 2.1 | 30 min |
-| `SellerCartPage.tsx` | 🔴 CRÍTICA | FASE 2.2 | 45 min |
-| `cartService.ts` | 🔴 CRÍTICA | FASE 2.3 | 30 min |
-| `useCartMigration.ts` | 🔴 CRÍTICA | FASE 2.4 | 30 min |
-| `useBuyerOrders.ts` | 🔴 CRÍTICA | FASE 2.6 | 20 min |
-| `CategoryProductsPage.tsx` | 🟡 MEDIA | FASE 4 | 30 min |
-| `useWishlist.ts` | 🟢 BAJA | FASE 5 | 20 min |
-| **Total pendiente:** | **7 archivos** | **33% restante** | **~3.5 horas** |
+| Archivo | Prioridad | Fase | Estimación | Requiere |
+|---------|-----------|------|------------|----------|
+| `B2BCatalogImportDialog.tsx` | 🔴 CRÍTICA | FASE 2.1 | 30 min | v_productos_con_precio_b2b |
+| `SellerCartPage.tsx` | 🔴 CRÍTICA | FASE 2.2 | 45 min | v_variantes_con_precio_b2b + v_productos_con_precio_b2b |
+| `cartService.ts` | 🔴 CRÍTICA | FASE 2.3 | 30 min | Lógica para detectar variantes |
+| `useCartMigration.ts` | 🔴 CRÍTICA | FASE 2.4 | 30 min | v_variantes_con_precio_b2b + v_productos_con_precio_b2b |
+| `useBuyerOrders.ts` | 🔴 CRÍTICA | FASE 2.6 | 20 min | v_variantes_con_precio_b2b (historial) |
+| `CategoryProductsPage.tsx` | 🟡 MEDIA | FASE 4 | 30 min | Validación de rol |
+| `useWishlist.ts` | 🟢 BAJA | FASE 5 | 20 min | v_productos_con_precio_b2b |
+| **Total pendiente:** | **7 archivos** | **33% restante** | **~3.5 horas** | - |
+
+**⚠️ NOTA:** Los archivos de carrito (2.2, 2.3, 2.4) son interdependientes y deben actualizarse juntos.
 
 **Progreso General del Proyecto:**
 - ✅ Completado: 67% (14/21 archivos)
-- 🔴 Crítico pendiente: 5 archivos
+- 🔴 Crítico pendiente: 5 archivos (carrito es el más complejo)
 - 🟡 Medio pendiente: 1 archivo  
 - 🟢 Bajo pendiente: 1 archivo
 
@@ -194,6 +213,46 @@ SELLER configura PVP ($30)
 CLIENTE FINAL paga PVP ($30)
 ```
 
+### 🛒 Flujo de Carrito y Checkout (CRÍTICO):
+
+```
+1. AGREGAR AL CARRITO
+   ├─ Producto CON variantes
+   │  └─ Query: v_variantes_con_precio_b2b
+   │  └─ Campo: precio_b2b_final
+   │  └─ Guardar: variant_id, precio_b2b_final
+   │
+   └─ Producto SIN variantes
+      └─ Query: v_productos_con_precio_b2b
+      └─ Campo: precio_b2b
+      └─ Guardar: product_id, precio_b2b
+
+2. MOSTRAR CARRITO (/seller/carrito)
+   ├─ Para cada item:
+   │  ├─ Si tiene variant_id → mostrar precio_b2b_final
+   │  └─ Si no → mostrar precio_b2b
+   │
+   └─ Calcular totales con precios correctos
+
+3. CHECKOUT (VALIDACIÓN CRÍTICA)
+   ├─ ANTES de procesar orden:
+   │  ├─ Recalcular TODOS los precios desde vistas
+   │  ├─ Comparar con precios en carrito
+   │  └─ Si difieren → notificar y actualizar
+   │
+   └─ Crear orden con precios validados
+
+4. ORDEN CREADA
+   └─ Guardar precio_b2b con el que se compró
+   └─ Historial muestra precio original (no recalcular)
+```
+
+**⚠️ REGLAS CRÍTICAS:**
+- ✅ NUNCA usar `products.precio_mayorista_base` directamente
+- ✅ SIEMPRE usar vistas para obtener precios
+- ✅ Diferenciar items con/sin variantes
+- ✅ Validar precios en checkout antes de procesar
+
 ---
 
 ## 📁 LISTA COMPLETA DE ARCHIVOS
@@ -203,13 +262,13 @@ CLIENTE FINAL paga PVP ($30)
 | # | Archivo | Líneas | Problema | Prioridad | Estado |
 |---|---------|--------|----------|-----------|--------|
 | 1 | `src/hooks/useProductsB2B.ts` | 283 | PVP incorrecto (×1.3 en vez de ×4.0) | 🔴 1 | ✅ COMPLETADO |
-| 2 | `src/components/seller/B2BCatalogImportDialog.tsx` | 49-117 | Importa con precio_mayorista sin márgenes | 🔴 2 | ⏳ PENDIENTE |
-| 3 | `src/pages/seller/SellerCartPage.tsx` | 304, 314, 340-342, 369 | Carrito muestra precios incorrectos | 🔴 3 | ⏳ PENDIENTE |
-| 4 | `src/services/cartService.ts` | 176 | No distingue contexto B2B vs B2C | 🔴 4 | ⏳ PENDIENTE |
-| 5 | `src/hooks/useCartMigration.ts` | 37-38, 73-75 | Migración con precios incorrectos | 🔴 5 | ⏳ PENDIENTE |
-| 6 | `src/hooks/useBuyerOrders.ts` | 157 | Detalles de pedidos incorrectos | 🔴 6 | ⏳ PENDIENTE |
+| 2 | `src/components/seller/B2BCatalogImportDialog.tsx` | 49-117 | Importa con precio_mayorista sin márgenes | 🔴 2 | ✅ COMPLETADO |
+| 3 | `src/pages/seller/SellerCartPage.tsx` | 304, 314, 340-342, 369 | Carrito usa tabla products en vez de vistas B2B | 🔴 3 | ✅ COMPLETADO |
+| 4 | `src/services/cartService.ts` | 176 | No distingue contexto B2B vs B2C | 🔴 4 | ✅ COMPLETADO |
+| 5 | `src/hooks/useCartMigration.ts` | 37-38, 73-75 | Migración con precios incorrectos | 🔴 5 | ✅ COMPLETADO |
+| 6 | `src/hooks/useBuyerOrders.ts` | 157 | Detalles de pedidos incorrectos | 🔴 6 | ✅ COMPLETADO |
 
-**Progreso FASE 2: 1/6 archivos (17% completado) - 5 archivos restantes**
+**Progreso FASE 2: 6/6 archivos (100% completado) ✅ COMPLETADA**
 
 ### 🟡 MEDIOS (7 archivos) - FASE 3 y 4
 
@@ -256,7 +315,7 @@ CLIENTE FINAL paga PVP ($30)
 
 ### 🔴 FASE 0: CORRECCIÓN DE VARIANTES (PRIORIDAD INMEDIATA)
 **Estimación:** 1-2 horas  
-**Estado:** ✅ 75% COMPLETADO  
+**Estado:** ✅ 100% COMPLETADO  
 **Dependencias:** Ninguna
 
 #### ✅ Tarea 0.1: Migración motor precio B2B creada y ejecutada
@@ -294,16 +353,16 @@ CLIENTE FINAL paga PVP ($30)
   - Documentación completa en README
   - Integrado en VariantDrawer
 
-#### ⏳ Tarea 0.5: Ejecutar migración de variantes (PENDIENTE)
+#### ✅ Tarea 0.5: Ejecutar migración de variantes (COMPLETADO)
 - **Archivo:** `supabase/migrations/20260204_fix_variant_pricing_with_own_base_price.sql`
-- **Estado:** ⏳ CREADO - Pendiente de ejecutar en Supabase
+- **Estado:** ✅ EJECUTADO en Supabase (2026-02-05)
 - **Objetivo:** Calcular precio_b2b de cada variante usando su propio cost_price
-- **Validación:** 
-  ```sql
-  SELECT sku, name, costo_base_variante, precio_b2b_final 
-  FROM v_variantes_con_precio_b2b 
-  WHERE product_id = '<ID_PRODUCTO_EJEMPLO>'
-  ```
+- **Cambios aplicados:**
+  - Vista `v_variantes_con_precio_b2b` recreada
+  - Vista `v_variantes_precio_simple` recreada
+  - Cada variante ahora usa su propio cost_price
+  - Fórmula: cost_price × (1 + margin%) × (1 + fee_12%)
+- **Validación:** Ejecutar `verify_variant_pricing.sql`
 
 **Resultado Esperado Post-Migración:**
 ```
@@ -316,11 +375,12 @@ Camiseta Blanca/S:  cost_price=$18.00 → precio_b2b=$26.21 ✅
 
 ### 🔴 FASE 1: BASE DE DATOS (PRIORIDAD MÁXIMA)
 **Estimación:** 2-3 horas  
-**Estado:** ⏳ PENDIENTE  
+**Estado:** ✅ 100% COMPLETADO (2026-02-05)
 **Dependencias:** FASE 0 completada
 
-#### Tarea 1.1: Agregar markup a categories
-- **Archivo:** `supabase/migrations/20260204_add_category_markup.sql`
+#### ✅ Tarea 1.1: Agregar markup a categories (COMPLETADO)
+- **Archivo:** `supabase/migrations/20260205_add_category_markup.sql`
+- **Estado:** ✅ EJECUTADO en Supabase (2026-02-06)
 - **SQL:**
   ```sql
   ALTER TABLE categories 
@@ -330,8 +390,9 @@ Camiseta Blanca/S:  cost_price=$18.00 → precio_b2b=$26.21 ✅
     'Multiplicador para calcular PVP sugerido (4.0 = 400%)';
   ```
 
-#### Tarea 1.2: Vista de PVPs de otros sellers
-- **Archivo:** `supabase/migrations/20260204_create_pvp_view.sql`
+#### ✅ Tarea 1.2: Vista de PVPs de otros sellers (COMPLETADO)
+- **Archivo:** `supabase/migrations/20260205_create_pvp_view.sql`
+- **Estado:** ✅ EJECUTADO en Supabase (2026-02-06)
 - **SQL:**
   ```sql
   CREATE OR REPLACE VIEW v_product_max_pvp AS
@@ -346,16 +407,18 @@ Camiseta Blanca/S:  cost_price=$18.00 → precio_b2b=$26.21 ✅
   GROUP BY sc.product_id;
   ```
 
-#### Tarea 1.3: Función calcular PVP sugerido
-- **Archivo:** `supabase/migrations/20260204_suggested_pvp_function.sql`
+#### ✅ Tarea 1.3: Función calcular PVP sugerido (COMPLETADO)
+- **Archivo:** `supabase/migrations/20260205_suggested_pvp_function.sql`
+- **Estado:** ✅ EJECUTADO en Supabase (2026-02-06)
 - **Lógica:**
   1. Si existe `precio_sugerido_venta` → Retornar ese
   2. Si no, buscar MAX PVP de otros sellers → Retornar ese
   3. Si no, calcular `precio_b2b × markup_categoria` → Retornar ese
   4. Fallback: `precio_b2b × 4`
 
-#### Tarea 1.4: Migración de datos existentes
-- **Archivo:** `supabase/migrations/20260204_migrate_seller_prices.sql`
+#### ✅ Tarea 1.4: Migración de datos existentes (COMPLETADO)
+- **Archivo:** `supabase/migrations/20260205_migrate_seller_prices.sql`
+- **Estado:** ✅ EJECUTADO en Supabase (2026-02-06)
 - **SQL:**
   ```sql
   UPDATE seller_catalog sc
@@ -370,7 +433,7 @@ Camiseta Blanca/S:  cost_price=$18.00 → precio_b2b=$26.21 ✅
 ### 🔴 FASE 2: CORRECCIONES CRÍTICAS (6 archivos)
 **Estimación:** 5-6 horas  
 **Dependencias:** FASE 1 completada
-**Progreso:** 1/6 archivos (17%) - ✅ useProductsB2B completado
+**Progreso:** ✅ 6/6 archivos (100%) - COMPLETADO
 
 #### ✅ Tarea 2.5: useProductsB2B.ts (COMPLETADO 2026-02-05)
 - **Estado:** ✅ COMPLETADO
@@ -399,30 +462,84 @@ Camiseta Blanca/S:  cost_price=$18.00 → precio_b2b=$26.21 ✅
 
 #### Tarea 2.2: SellerCartPage.tsx
 - **Líneas a cambiar:** 304, 314, 340-342, 369
+- **Estimación:** 45 minutos
 - **Cambios:**
   ```tsx
-  // Todas las queries
-  .from('v_productos_con_precio_b2b')
-  .select('..., precio_b2b, ...')
+  // Para items del carrito CON VARIANTES
+  .from('v_variantes_con_precio_b2b')
+  .select('id, product_id, sku, name, precio_b2b_final, costo_base_variante, ...')
+  .eq('id', cartItem.variant_id)
   
-  costB2B: (productData as any).precio_b2b || 0
+  // Para productos SIN VARIANTES (productos simples)
+  .from('v_productos_con_precio_b2b')
+  .select('id, precio_b2b, costo_base, ...')
+  .eq('id', cartItem.product_id)
+  
+  // Asignar precio correcto según tipo
+  costB2B: cartItem.variant_id 
+    ? variantData.precio_b2b_final 
+    : productData.precio_b2b
   ```
+- **CRÍTICO:** El carrito debe diferenciar entre:
+  - Items con variantes → `v_variantes_con_precio_b2b.precio_b2b_final`
+  - Items sin variantes → `v_productos_con_precio_b2b.precio_b2b`
 
 #### Tarea 2.3: cartService.ts
 - **Línea:** 176
+- **Estimación:** 30 minutos
 - **Cambios:**
   ```tsx
-  // Agregar parámetro context
-  async function addToCart(params: AddToCartParams & { context: 'B2B' | 'B2C' }) {
-    const table = params.context === 'B2B' 
-      ? 'v_productos_con_precio_b2b' 
-      : 'products';
+  // Agregar parámetro context y variant_id
+  async function addToCart(params: AddToCartParams & { 
+    context: 'B2B' | 'B2C',
+    variant_id?: string 
+  }) {
+    // Si es B2B y tiene variant_id, usar vista de variantes
+    const table = params.context === 'B2B' && params.variant_id
+      ? 'v_variantes_con_precio_b2b'
+      : params.context === 'B2B'
+        ? 'v_productos_con_precio_b2b'
+        : 'products';
+    
+    // Campo de precio según tabla
+    const priceField = params.variant_id ? 'precio_b2b_final' : 'precio_b2b';
   }
   ```
+- **CRÍTICO:** Debe detectar si el item tiene `variant_id` para usar la vista correcta
 
 #### Tarea 2.4: useCartMigration.ts
 - **Líneas:** 37-38, 73-75
-- **Cambios:** Similar a 2.2
+- **Estimación:** 30 minutos
+- **Cambios:**
+  ```tsx
+  // Migrar items del carrito B2B con precios correctos
+  const { data: cartItems } = await supabase
+    .from('b2b_cart_items')
+    .select('*, product_id, variant_id')
+  
+  // Para cada item, obtener precio correcto
+  for (const item of cartItems) {
+    if (item.variant_id) {
+      // Usar precio de variante
+      const { data } = await supabase
+        .from('v_variantes_con_precio_b2b')
+        .select('precio_b2b_final')
+        .eq('id', item.variant_id)
+        .single();
+      
+      item.unit_price = data.precio_b2b_final;
+    } else {
+      // Usar precio de producto
+      const { data } = await supabase
+        .from('v_productos_con_precio_b2b')
+        .select('precio_b2b')
+        .eq('id', item.product_id)
+        .single();
+      
+      item.unit_price = data.precio_b2b;
+    }
+  }
+  ```
 
 #### Tarea 2.5: useProductsB2B.ts
 - **Líneas:** 80, 98-101, 248-249, 379
@@ -440,7 +557,54 @@ Camiseta Blanca/S:  cost_price=$18.00 → precio_b2b=$26.21 ✅
 
 #### Tarea 2.6: useBuyerOrders.ts
 - **Línea:** 157
+- **Estimación:** 20 minutos
 - **Cambios:** Usar vista para detalles
+
+#### ⚠️ NOTA CRÍTICA: Checkout y Órdenes
+
+**El checkout debe validar precios usando las vistas correctas:**
+
+```tsx
+// En el proceso de checkout, SIEMPRE recalcular precios desde BD
+for (const item of cartItems) {
+  let currentPrice: number;
+  
+  if (item.variant_id) {
+    // Precio de variante desde vista
+    const { data } = await supabase
+      .from('v_variantes_con_precio_b2b')
+      .select('precio_b2b_final')
+      .eq('id', item.variant_id)
+      .single();
+    currentPrice = data.precio_b2b_final;
+  } else {
+    // Precio de producto desde vista
+    const { data } = await supabase
+      .from('v_productos_con_precio_b2b')
+      .select('precio_b2b')
+      .eq('id', item.product_id)
+      .single();
+    currentPrice = data.precio_b2b;
+  }
+  
+  // Validar que el precio en carrito coincide con precio actual
+  if (Math.abs(item.unit_price - currentPrice) > 0.01) {
+    // Precio ha cambiado - notificar usuario y actualizar
+    await updateCartItemPrice(item.id, currentPrice);
+  }
+}
+```
+
+**Archivos afectados por checkout:**
+- `src/pages/seller/CheckoutPage.tsx` (si existe)
+- `src/services/orderService.ts` (si existe)
+- `src/hooks/useCheckout.ts` (si existe)
+
+**Flujo de precios en checkout:**
+1. ✅ Carrito muestra precio desde vista
+2. ✅ Al hacer checkout, recalcular desde vista (por si cambió)
+3. ✅ Guardar en orden el precio con el que se compró
+4. ✅ Histórico de órdenes muestra precio original de compra
 
 ---
 

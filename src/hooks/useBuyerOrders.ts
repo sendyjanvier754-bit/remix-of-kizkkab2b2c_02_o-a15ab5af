@@ -136,12 +136,17 @@ export const useBuyerB2BOrders = (statusFilter?: BuyerOrderStatus | 'all') => {
 
       if (error) throw error;
 
-      // Collect all unique SKU bases from items that don't have product_id
+      // Collect all unique SKU bases and variant IDs for bulk fetch
       const skuBasesNeeded: string[] = [];
+      const variantIdsNeeded: string[] = [];
       (data || []).forEach(order => {
         (order.order_items_b2b || []).forEach((item: any) => {
+          // If item has variant_id, collect it
+          if (item.variant_id && !variantIdsNeeded.includes(item.variant_id)) {
+            variantIdsNeeded.push(item.variant_id);
+          }
+          // Collect SKU bases for items without product_id
           if (!item.product_id && item.sku) {
-            // Extract base SKU (first part before variant info)
             const skuBase = item.sku.split('-')[0];
             if (skuBase && !skuBasesNeeded.includes(skuBase)) {
               skuBasesNeeded.push(skuBase);
@@ -168,12 +173,41 @@ export const useBuyerB2BOrders = (statusFilter?: BuyerOrderStatus | 'all') => {
         }
       }
 
-      // Map items to include image from product or from SKU lookup
+      // Fetch variant info (images, prices) if needed
+      let variantInfoMap: Record<string, { image: string | null; precio_b2b_final: number }> = {};
+      if (variantIdsNeeded.length > 0) {
+        const { data: variantsData } = await supabase
+          .from('v_variantes_con_precio_b2b')
+          .select('id, images, precio_b2b_final')
+          .in('id', variantIdsNeeded);
+        
+        if (variantsData) {
+          variantsData.forEach(v => {
+            if (v.id) {
+              const imageArray = v.images ? (Array.isArray(v.images) ? v.images : [v.images]) : [];
+              variantInfoMap[v.id] = {
+                image: imageArray[0] || null,
+                precio_b2b_final: v.precio_b2b_final || 0
+              };
+            }
+          });
+        }
+      }
+
+      // Map items to include image and correct price from variant or product
       const ordersWithImages = (data || []).map(order => ({
         ...order,
         order_items_b2b: (order.order_items_b2b || []).map((item: any) => {
-          // First try from product_id join
           let image = item.products?.imagen_principal || null;
+          let precio_b2b = item.unit_price || 0; // Original price from order
+          
+          // If item has variant_id, try to get variant info
+          if (item.variant_id && variantInfoMap[item.variant_id]) {
+            const variantInfo = variantInfoMap[item.variant_id];
+            if (!image) image = variantInfo.image;
+            // Note: For historical orders, we keep the price that was paid (unit_price)
+            // but we can show the current variant price for reference if needed
+          }
           
           // If no image and we have SKU, try from SKU lookup
           if (!image && item.sku) {
