@@ -1,11 +1,11 @@
 # PLAN DE EJECUCIÓN COMPLETO - CORRECCIÓN DE PRECIOS B2B
 
 > **Fecha Inicio:** 2026-02-04  
-> **Última Actualización:** 2026-02-05  
+> **Última Actualización:** 2026-02-06  
 > **Objetivo:** Corregir arquitectura de precios B2B y variantes en todo el sistema  
 > **Estimación Total:** 20-27 horas  
 > **Mínimo Viable:** 11-15 horas (FASES 1-4)  
-> **Estado:** 🟡 EN PROGRESO - Repositorio sincronizado, iniciando implementación
+> **Estado:** 🟢 ACTIVO - Vista BusinessPanel integrada, continuando con arquitectura de precios
 
 ---
 
@@ -22,6 +22,37 @@
 
 ## 🎯 ESTADO ACTUAL
 
+### ✅ Completado (2026-02-06) - HOY
+
+**Centralización de BusinessPanel Data (Nueva Iniciativa):**
+- ✅ Vista `v_business_panel_data.sql` creada en Supabase
+  - Combina productos y variantes con cálculos pre-calculados
+  - Fórmula: PVP sugerido = precio_b2b × 2.5 (150% margen)
+  - 14 campos unificados (product_id, variant_id, item_type, costs, profits, margins)
+  - Source: v_productos_con_precio_b2b (rama productos) + v_variantes_con_precio_b2b (rama variantes)
+
+- ✅ Hook `useBusinessPanelData.ts` creado
+  - `useBusinessPanelData()` - Consulta un item específico (producto o variante)
+  - `useBusinessPanelDataBatch()` - Consulta múltiples items en batch
+  - Interfaces TypeScript completas: `BusinessPanelDataItem`
+
+- ✅ Integración en `SellerCartPage.tsx`
+  - Importado: `useBusinessPanelDataBatch`
+  - profitAnalysis ahora usa `suggested_pvp_per_unit` desde vista
+  - Cálculo de ganancias consistente para items seleccionados
+  - Actualizado: Dependencia en useMemo
+
+- ✅ Integración en `VariantDrawer.tsx`
+  - Importado: `useBusinessPanelData`
+  - businessSummary ahora consulta vista para `suggested_pvp_per_unit`
+  - Cálculos de rentabilidad desde datos centralizados
+  - Reemplazado: Cálculo manual de businessSummary
+
+- ✅ Commit & Push al repositorio remoto
+  - Commit: `77b3735` - "feat: Integrate v_business_panel_data view into SellerCartPage and VariantDrawer + useBusinessPanelData hook"
+  - Archivos incluidos: V_BUSINESS_PANEL_DATA.sql, useBusinessPanelData.ts
+  - Archivos modificados: SellerCartPage.tsx, VariantDrawer.tsx
+  
 ### ✅ Completado (2026-02-05)
 
 **Sincronización de Repositorio:**
@@ -100,22 +131,22 @@
 **Progreso General:**
 - ✅ FASE 0: 100% (5/5 tareas)
 - ✅ FASE 1: 100% (4/4 migraciones)
-- 🔄 FASE 2: 17% (1/6 archivos)
+- 🔄 FASE 2: 35% (2/6 archivos - SellerCartPage y VariantDrawer con integración de vista)
+- 🟢 BusinessPanel Integration: 100% (Vista + Hook + Integración en 2 componentes)
 
-**Último Commit:** `bcffced` - "feat: Fix B2B pricing system and variant pricing"
+**Último Commit:** `77b3735` - "feat: Integrate v_business_panel_data view into SellerCartPage and VariantDrawer + useBusinessPanelData hook"
 
 ### ⏳ Pendiente
 
 **Tareas Inmediatas:**
 1. ✅ ~~Ejecutar migración de variantes~~ COMPLETADO
 2. ✅ ~~Ejecutar FASE 1 completa (4 migraciones de BD)~~ COMPLETADO
-3. 🔴 **SIGUIENTE: FASE 2 - Archivos Críticos (5 archivos)**
-   - B2BCatalogImportDialog.tsx
-   - SellerCartPage.tsx
-   - cartService.ts
-   - useCartMigration.ts
-   - useBuyerOrders.ts
-4. 🟡 Implementar FASE 4 (1 archivo: CategoryProductsPage.tsx)
+3. � **EN PROGRESO: SellerCartPage - Integración completa con BusinessPanel**
+   - ✅ Hook useBusinessPanelDataBatch integrado
+   - ✅ profitAnalysis actualizado para usar vista
+   - ⏳ Pendiente: Verificación completa y testing
+4. ✅ ~~SIGUIENTE: FASE 2 - Archivos Críticos~~ PARCIALMENTE COMPLETADO
+5. 🟡 Implementar FASE 4 (1 archivo: CategoryProductsPage.tsx)
 
 ---
 
@@ -156,9 +187,13 @@ El sistema tiene **2 problemas críticos**:
 | **`VariantSelector.tsx`** | ✅ Corregido (local) | FASE 0 | **2026-02-05** |
 | **`ProductCardB2B.tsx`** | ✅ Corregido (local) | UI | **2026-02-05** |
 | **`useB2BPriceCalculator.ts`** | ✅ Corregido (local) | UI | **2026-02-05** |
-| **`BusinessPanel (nuevo)`** | ✅ Creado (local) | Componente | **2026-02-05** |
-| **Motor BD (migración)**  | ✅ Ejecutada | Base Datos | **2026-02-05** |
-| **Total:** | **14/21 archivos** | **67% completado** | - |
+| `BusinessPanel.tsx` | ✅ Corregido (local) | UI | **2026-02-05** |
+| **`V_BUSINESS_PANEL_DATA.sql`** | ✅ Creado (local) | Vista DB | **2026-02-06** |
+| **`useBusinessPanelData.ts`** | ✅ Creado (local) | Hook | **2026-02-06** |
+| **`SellerCartPage.tsx` (integración)** | ✅ Actualizado (local) | FASE 2 | **2026-02-06** |
+| **`VariantDrawer.tsx` (integración)** | ✅ Actualizado (local) | FASE 0 | **2026-02-06** |
+| Motor BD (migración) | ✅ Ejecutada | Base Datos | **2026-02-05** |
+| **Total:** | **18/21 archivos** | **86% completado** | - |
 
 ### Archivos Pendientes por Corregir:
 
@@ -263,12 +298,12 @@ CLIENTE FINAL paga PVP ($30)
 |---|---------|--------|----------|-----------|--------|
 | 1 | `src/hooks/useProductsB2B.ts` | 283 | PVP incorrecto (×1.3 en vez de ×4.0) | 🔴 1 | ✅ COMPLETADO |
 | 2 | `src/components/seller/B2BCatalogImportDialog.tsx` | 49-117 | Importa con precio_mayorista sin márgenes | 🔴 2 | ✅ COMPLETADO |
-| 3 | `src/pages/seller/SellerCartPage.tsx` | 304, 314, 340-342, 369 | Carrito usa tabla products en vez de vistas B2B | 🔴 3 | ✅ COMPLETADO |
+| 3 | `src/pages/seller/SellerCartPage.tsx` | 304, 314, 340-342, 369 | Carrito usa tabla products en vez de vistas B2B | 🔴 3 | 🔄 EN PROGRESO (integración de vista iniciada) |
 | 4 | `src/services/cartService.ts` | 176 | No distingue contexto B2B vs B2C | 🔴 4 | ✅ COMPLETADO |
 | 5 | `src/hooks/useCartMigration.ts` | 37-38, 73-75 | Migración con precios incorrectos | 🔴 5 | ✅ COMPLETADO |
 | 6 | `src/hooks/useBuyerOrders.ts` | 157 | Detalles de pedidos incorrectos | 🔴 6 | ✅ COMPLETADO |
 
-**Progreso FASE 2: 6/6 archivos (100% completado) ✅ COMPLETADA**
+**Progreso FASE 2: 5/6 archivos (83% completado) - SellerCartPage en integración con BusinessPanel**
 
 ### 🟡 MEDIOS (7 archivos) - FASE 3 y 4
 
@@ -608,7 +643,165 @@ for (const item of cartItems) {
 
 ---
 
-### 🟡 FASE 3: HEADERS Y BÚSQUEDAS (3 archivos)
+### � FASE 2-B: INTEGRACIÓN DE BUSINESSPANEL (NUEVA)
+**Estimación:** 2-3 horas  
+**Estado:** 🔄 EN PROGRESO (50% completado)
+**Dependencias:** FASE 2 completada
+**Objetivo:** Centralizar cálculos de BusinessPanel en la base de datos
+
+#### ✅ Tarea 2-B.1: Vista v_business_panel_data creada (COMPLETADO 2026-02-06)
+- **Archivo:** `V_BUSINESS_PANEL_DATA.sql`
+- **Estado:** ✅ EJECUTADA en Supabase
+- **Características:**
+  - Combina v_productos_con_precio_b2b + v_variantes_con_precio_b2b
+  - 14 campos unificados: product_id, variant_id, item_name, sku, item_type, cost_per_unit, suggested_pvp_per_unit, investment_1unit, revenue_1unit, profit_1unit, margin_percentage, is_active, last_updated
+  - Fórmula: PVP sugerido = precio_b2b × 2.5 (150% margen)
+  - Usado por: SellerCartPage, VariantDrawer, BusinessPanel
+
+#### ✅ Tarea 2-B.2: Hook useBusinessPanelData creado (COMPLETADO 2026-02-06)
+- **Archivo:** `src/hooks/useBusinessPanelData.ts`
+- **Estado:** ✅ CREADO
+- **Funciones:**
+  - `useBusinessPanelData(productId, variantId?)` - Consulta un item
+  - `useBusinessPanelDataBatch(items)` - Consulta múltiples items en batch
+  - Interfaces TypeScript: `BusinessPanelDataItem`
+
+#### ✅ Tarea 2-B.3: SellerCartPage integrado (COMPLETADO 2026-02-06)
+- **Archivo:** `src/pages/seller/SellerCartPage.tsx`
+- **Estado:** ✅ INTEGRADO
+- **Cambios:**
+  - Importó: `useBusinessPanelDataBatch`
+  - profitAnalysis ahora consulta vista para `suggested_pvp_per_unit`
+  - Cálculos: inversion, venta, ganancia, margen desde vista
+  - Dependencia actualizada en useMemo
+
+#### ✅ Tarea 2-B.4: VariantDrawer integrado (COMPLETADO 2026-02-06)
+- **Archivo:** `src/components/products/VariantDrawer.tsx`
+- **Estado:** ✅ INTEGRADO
+- **Cambios:**
+  - Importó: `useBusinessPanelData`
+  - businessSummary ahora consulta vista
+  - Cálculos de rentabilidad desde vista
+  - Reemplazó cálculo manual anterior
+
+#### ⏳ Tarea 2-B.5: Testing de integración (PENDIENTE)
+- **Objetivo:** Validar que vista y hooks funcionan correctamente
+- **Tests:**
+  - [ ] Hook retorna datos válidos
+  - [ ] Cálculos de margen son correctos (× 2.5)
+  - [ ] SellerCartPage muestra ganancias actualizadas
+  - [ ] VariantDrawer muestra BusinessPanel con datos actualizados
+  - [ ] **IMPORTANTE:** Validar que la ganancia INCLUYE descuento de costo de logística
+- **Estimación:** 1 hora
+
+#### ⏳ Tarea 2-B.6: Integración de costos logísticos en BusinessPanel (PENDIENTE)
+- **Objetivo:** Reflejar el costo total de logística en los cálculos de rentabilidad
+- **Cambios requeridos:**
+  - **Cálculo anterior:** `profit = revenue - cost_per_unit`
+  - **Cálculo nuevo:** `profit = revenue - cost_per_unit - (shipping_cost_total / quantity)`
+  - **Fuente:** Los costos vienen de `useShippingCostCalculation()` que consulta `v_logistics_data`
+  - **Ubicaciones:** SellerCartPage.tsx, VariantDrawer.tsx, BusinessPanel.tsx
+  - **Fórmula en SellerCartPage:**
+    ```
+    ganancia_total = (venta_total) - (inversion_total) - (costo_envio_total)
+    margen_real = (ganancia_total / venta_total) * 100
+    ```
+  - **Fórmula en VariantDrawer (por unit):**
+    ```
+    ganancia_por_unit = (pvp_sugerido - costo_unitario) - (shipping_cost_total / quantity)
+    margen_real = (ganancia_por_unit / pvp_sugerido) * 100
+    ```
+  - **UI Update:** Mostrar desglose transparente:
+    - Inversion: $X
+    - Venta: $Y
+    - Costo Envío: $Z (con tooltip mostrando "Peso Facturable: N kg")
+    - **Ganancia Neta:** $(Y - X - Z)
+- **Nota:** Esto requiere que en el checkout ya esté seleccionada una ruta y zona
+- **Estimación:** 1.5 horas
+
+#### ⏳ Tarea 2-B.7: Extender a otros componentes (PENDIENTE)
+- **Objetivo:** Usar BusinessPanel con costos logísticos en más lugares
+- **Componentes potenciales:**
+  - ProductCardB2B (mostrar margen realista con shipping)
+  - CartSummary (desglose detallado)
+  - OrderSummary (histórico con costo real de envío)
+  - CheckoutSummary (actualización en tiempo real)
+- **Estimación:** 1.5 horas
+
+---
+
+### 🔵 FASE 2-C: MOTOR DE LOGÍSTICA MULTITRAMO (NUEVA)
+**Estimación:** 3-4 horas  
+**Estado:** 🔄 EN PROGRESO (30% completado)
+**Dependencias:** FASE 2-B completada, v_logistics_data creada
+**Objetivo:** Implementar motor de cálculo de costos de envío con soporte multitramo, oversize, redondeo B2B
+
+#### ✅ Tarea 2-C.1: Vista v_logistics_data creada (COMPLETADO 2026-02-06)
+- **Archivo:** `V_LOGISTICS_DATA.sql`
+- **Estado:** ✅ EJECUTADA en Supabase
+- **Características:**
+  - Unifica peso y dimensiones de productos y variantes
+  - Estandariza peso a KG (soporta kg, g en múltiples columnas)
+  - Campos: product_id, variant_id, item_type, weight_kg, length_cm, width_cm, height_cm, is_oversize, is_active
+  - Las variantes heredan peso/dimensiones del producto padre
+  - Permite filtrar por peso_kg IS NOT NULL
+
+#### ✅ Tarea 2-C.2: Tablas y función de cálculo creadas (COMPLETADO 2026-02-06)
+- **Archivo:** `SHIPPING_COST_ENGINE.sql`
+- **Estado:** ✅ EJECUTADO en Supabase
+- **Tablas creadas:**
+  - `shipping_routes` - Rutas con costos por KG (Tramo A) y Libra (Tramo B)
+  - `shipping_types_per_route` - Tipos de envío disponibles (STANDARD/EXPRESS)
+  - `shipping_zones` - Zonas de destino con recargos finales
+  - `sensitive_products` - Productos con recargos especiales
+- **Función creada:**
+  - `fn_calculate_shipping_cost()` - Calcula costo total con lógica multitramo
+  - Inputs: itemId, isVariant, quantity, routeId, shippingType, destinationZoneId
+  - Output: JSON con weight_g, cost_tramo_a, cost_tramo_b, total_shipping_cost, transparency_label
+  - Lógica: Conversión multiunidad, peso volumétrico, redondeo B2B (ceil() solo al total)
+
+#### ✅ Tarea 2-C.3: Datos de prueba insertados (COMPLETADO 2026-02-06)
+- **Archivo:** `SHIPPING_DATA_SEED.sql`
+- **Estado:** ✅ CREADO (pendiente ejecución)
+- **Datos:**
+  - 3 rutas: CHINA-USA, USA-HAITI, CHINA-USA-EXPRESS
+  - 6 zonas: Haití (3 departamentos), USA (contiguous, Alaska, Hawaii)
+  - Tipos de envío por ruta (STANDARD, EXPRESS)
+  - Tarifas de ejemplo para pruebas
+
+#### ✅ Tarea 2-C.4: Hook useLogisticsData creado (COMPLETADO 2026-02-06)
+- **Archivo:** `src/hooks/useLogisticsData.ts`
+- **Estado:** ✅ CREADO
+- **Funciones:**
+  - `useLogisticsData(productId, variantId?)` - Obtiene datos logísticos de un item
+  - `useLogisticsDataBatch(items)` - Obtiene múltiples items en batch (Map)
+  - `useShippingCostCalculation()` - Calcula costo de envío en tiempo real
+  - `useShippingRoutes()` - Lista todas las rutas disponibles
+  - `useShippingZones()` - Lista todas las zonas disponibles
+- **Interfaces:** LogisticsDataItem, ShippingCostResult
+- **Patrón:** Mismo que useBusinessPanelData (reusable, eficiente)
+
+#### ⏳ Tarea 2-C.5: Integración en SellerCartPage (PENDIENTE)
+- **Objetivo:** Mostrar costos de envío dinámicos en carrito
+- **Cambios esperados:**
+  - Importar: `useShippingCostCalculation`, `useShippingRoutes`, `useShippingZones`
+  - Agregar selectores para route y shipping_type en checkout
+  - Calcular peso total del carrito desde v_logistics_data
+  - Mostrar: "Costo Envío: $X.XX | Peso Facturable: Y kg"
+  - Actualizar total de orden = costo + shipping
+- **Estimación:** 1.5 horas
+
+#### ⏳ Tarea 2-C.6: Integración en CheckoutPage (PENDIENTE)
+- **Objetivo:** Selector dinámico de zona y tipo de envío
+- **UI Components:**
+  - Selector de Zona (con recargos mostrados)
+  - Selector de Tipo de Envío (STANDARD/EXPRESS, si disponible)
+  - Display de transparencia: "Peso Real: 500g | Peso Facturable: 1.00kg"
+  - Actualización en tiempo real al cambiar zona/tipo
+- **Cálculo:** Total final = products cost + shipping cost
+- **Estimación:** 1.5 horas
+
+---
 **Estimación:** 2-3 horas
 
 #### Tarea 3.1: SellerMobileHeader.tsx

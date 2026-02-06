@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useB2BMarginRanges } from './useB2BMarginRanges';
-import { useRoutePricing } from './useRoutePricing';
 import { B2BCartItem } from './useB2BCartItems';
+import { useShippingCostCalculationForCart, useShippingRoutes, useShippingZones } from './useLogisticsData';
 
 export interface CartItemLogistics {
   itemId: string;
@@ -46,30 +46,46 @@ export interface CartLogisticsSummary {
   // Meta
   itemsCount: number;
   totalQuantity: number;
+  
+  // New fields for weight handling
+  hasWeight?: boolean;
+  shippingCostLabel?: string; // "-" if no weight configured
 }
 
 /**
  * Hook to calculate logistics and pricing for B2B cart items
- * Uses the Protection Rule: Margin applied to factory cost before logistics
+ * NOW: Uses the new V_LOGISTICS_DATA and fn_calculate_shipping_cost system
+ * Shows "-" when products don't have weight configured
  */
 export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode?: string) {
   const { useActiveMarginRanges, findMarginRangeForCost } = useB2BMarginRanges();
   const { data: marginRanges = [] } = useActiveMarginRanges();
-  const { routes, calculateRouteCost, getRouteSummary } = useRoutePricing();
   
-  // Fetch product details for factory costs
+  // Get available routes and zones for defaults
+  const { routes } = useShippingRoutes();
+  const { zones } = useShippingZones();
+  
+  // Get first active route as default
+  const defaultRouteId = useMemo(() => routes?.[0]?.id || null, [routes]);
+  
+  // Get first active zone as default (prefer Haiti if available)
+  const defaultZoneId = useMemo(() => {
+    const haitiZone = zones?.find(z => z.country?.toUpperCase() === 'HT');
+    return haitiZone?.id || zones?.[0]?.id || null;
+  }, [zones]);
+  
+  // Fetch product details for factory costs and margins
   const productIds = useMemo(() => 
     [...new Set(items.map(item => item.productId).filter(Boolean))],
     [items]
   );
   
-  // Fetch variant IDs to get prices from v_variantes_con_precio_b2b
   const variantIds = useMemo(() => 
     [...new Set(items.map(item => item.variantId).filter(Boolean))],
     [items]
   );
   
-  // ✅ Fetch variant prices from v_variantes_con_precio_b2b
+  // Fetch variant prices from v_variantes_con_precio_b2b
   const { data: variants = [] } = useQuery({
     queryKey: ['cart-variants-details', variantIds],
     queryFn: async () => {
@@ -86,7 +102,7 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     enabled: variantIds.length > 0,
   });
   
-  // ✅ Fetch product prices from v_productos_con_precio_b2b (fallback for non-variant items)
+  // Fetch product prices from v_productos_con_precio_b2b (fallback for non-variant items)
   const { data: products = [] } = useQuery({
     queryKey: ['cart-products-details', productIds],
     queryFn: async () => {
@@ -94,7 +110,7 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       
       const { data, error } = await (supabase as any)
         .from('v_productos_con_precio_b2b')
-        .select('id, precio_b2b, categoria_id, weight_kg')
+        .select('id, precio_b2b, categoria_id')
         .in('id', productIds);
       
       if (error) throw error;
@@ -115,29 +131,29 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       return data || [];
     },
   });
+
+  // Get shipping costs using the new V_LOGISTICS_DATA system
+  const cartItemsForShipping = useMemo(() => 
+    items.map(item => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.cantidad || 1
+    })),
+    [items]
+  );
   
-  // Fetch default destination
-  const { data: defaultDestination } = useQuery({
-    queryKey: ['default-destination-cart', destinationCountryCode],
-    queryFn: async () => {
-      if (destinationCountryCode) {
-        const { data } = await supabase
-          .from('destination_countries')
-          .select('*')
-          .eq('code', destinationCountryCode)
-          .eq('is_active', true)
-          .single();
-        return data;
-      }
-      const { data } = await supabase
-        .from('destination_countries')
-        .select('*')
-        .eq('is_active', true)
-        .limit(1)
-        .single();
-      return data;
-    },
-  });
+  const { 
+    result: shippingCostResult, 
+    isLoading: shippingLoading, 
+    error: shippingError,
+    weightBreakdown,
+    itemCosts 
+  } = useShippingCostCalculationForCart(
+    cartItemsForShipping,
+    defaultRouteId || undefined,
+    'STANDARD',
+    defaultZoneId || undefined
+  );
 
   // Calculate logistics for all cart items
   const cartLogistics = useMemo((): CartLogisticsSummary => {
@@ -150,22 +166,16 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     let totalQuantity = 0;
     let maxDeliveryMin = 0;
     let maxDeliveryMax = 0;
-    let routeName = '';
+    let routeName = 'Envío Estándar';
     
-    // Find default route
-    const destCode = destinationCountryCode || defaultDestination?.code || 'HT';
-    const route = routes.find(r => 
-      r.countryCode?.toUpperCase() === destCode.toUpperCase() && r.isActive
-    );
-    const routeId = route?.id || null;
-    const summary = routeId ? getRouteSummary(routeId) : null;
-    routeName = summary?.name || 'Ruta estándar';
+    // Check if we have shipping cost data
+    const hasShippingCost = itemCosts && itemCosts.length === items.length;
     
     for (const item of items) {
       const product = products.find(p => p.id === item.productId);
       const variant = item.variantId ? variants.find((v: any) => v.id === item.variantId) : null;
       
-      // ✅ PRIORITY: variant price > product price > item.precioB2B
+      // PRIORITY: variant price > product price > item.precioB2B
       let factoryCost = item.precioB2B;
       if (variant?.precio_b2b_final != null) {
         factoryCost = variant.precio_b2b_final;
@@ -173,23 +183,23 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
         factoryCost = product.precio_b2b;
       }
       
-      const weight = product?.weight_kg || 0.5;
       const categoryId = product?.categoria_id;
       
-      // 1. Find margin range
+      // 1. Calculate margin
       const marginRange = findMarginRangeForCost(factoryCost, marginRanges);
       const marginPercent = marginRange?.margin_percent ?? 30;
       const marginValue = (factoryCost * marginPercent) / 100;
       const subtotalWithMargin = factoryCost + marginValue;
       
-      // 2. Calculate logistics per item
+      // 2. Get logistics cost - Use individual item cost from itemCosts
       let logisticsCost = 0;
-      let estimatedDays = { min: 7, max: 21 };
-      
-      if (routeId) {
-        const costInfo = calculateRouteCost(routeId, weight);
-        logisticsCost = Math.round(costInfo.cost * 100) / 100;
-        estimatedDays = costInfo.days;
+      if (hasShippingCost && itemCosts) {
+        const itemCost = itemCosts.find(
+          ic => ic.productId === item.productId && ic.variantId === (item.variantId || undefined)
+        );
+        if (itemCost) {
+          logisticsCost = itemCost.shippingCost;
+        }
       }
       
       // 3. Category fees
@@ -217,7 +227,7 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
         categoryFees,
         finalUnitPrice,
         finalTotalPrice,
-        estimatedDays,
+        estimatedDays: { min: 7, max: 14 }, // Default estimate
         routeName,
       });
       
@@ -229,27 +239,31 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       totalFinalPrice += finalTotalPrice;
       totalQuantity += item.cantidad;
       
-      // Track max delivery time
-      maxDeliveryMin = Math.max(maxDeliveryMin, estimatedDays.min);
-      maxDeliveryMax = Math.max(maxDeliveryMax, estimatedDays.max);
+      maxDeliveryMin = 7;
+      maxDeliveryMax = 14;
     }
+    
+    // Calculate actual total shipping cost from itemCosts
+    const actualTotalShippingCost = itemCosts?.reduce((sum, ic) => sum + ic.shippingCost, 0) || 0;
     
     return {
       itemsLogistics,
       totalFactoryCost: Math.round(totalFactoryCost * 100) / 100,
       totalMarginValue: Math.round(totalMarginValue * 100) / 100,
-      totalLogisticsCost: Math.round(totalLogisticsCost * 100) / 100,
+      totalLogisticsCost: Math.round(actualTotalShippingCost * 100) / 100,
       totalCategoryFees: Math.round(totalCategoryFees * 100) / 100,
       totalFinalPrice: Math.round(totalFinalPrice * 100) / 100,
-      estimatedDeliveryDays: { min: maxDeliveryMin || 7, max: maxDeliveryMax || 21 },
+      estimatedDeliveryDays: { min: maxDeliveryMin, max: maxDeliveryMax },
       routeName,
       itemsCount: items.length,
       totalQuantity,
+      hasWeight: hasShippingCost || false,
+      shippingCostLabel: undefined // Always show cost, never "-"
     };
-  }, [items, products, marginRanges, categoryRates, routes, destinationCountryCode, defaultDestination, findMarginRangeForCost, calculateRouteCost, getRouteSummary]);
+  }, [items, products, marginRanges, categoryRates, itemCosts, findMarginRangeForCost]);
   
   return {
     ...cartLogistics,
-    isCalculating: products.length === 0 && productIds.length > 0,
+    isCalculating: products.length === 0 && productIds.length > 0 || shippingLoading,
   };
 }

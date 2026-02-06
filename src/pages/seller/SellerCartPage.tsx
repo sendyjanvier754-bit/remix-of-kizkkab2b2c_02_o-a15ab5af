@@ -738,11 +738,14 @@ const SellerCartPage = () => {
                               {(() => {
                                 const itemLogistics = cartLogistics.itemsLogistics.get(item.id);
                                 if (!itemLogistics) return null;
+                                const logisticsLabel = cartLogistics.shippingCostLabel === '-' 
+                                  ? '-' 
+                                  : `+$${(itemLogistics.logisticsCost * item.cantidad).toFixed(2)}`;
                                 return (
                                   <div className="flex items-center gap-3 mt-1 text-[10px]">
                                     <span className="text-blue-600 flex items-center gap-0.5">
                                       <Truck className="w-2.5 h-2.5" />
-                                      +${itemLogistics.logisticsCost.toFixed(2)}
+                                      {logisticsLabel}
                                     </span>
                                     <span className="text-amber-600 flex items-center gap-0.5">
                                       <Clock className="w-2.5 h-2.5" />
@@ -788,7 +791,11 @@ const SellerCartPage = () => {
                                     <div className="space-y-0.5">
                                       <p>Producto (sin envío): ${item.subtotal.toFixed(2)}</p>
                                       {cartLogistics.itemsLogistics.get(item.id) && (
-                                        <p>Envío estimado aparte: +${(cartLogistics.itemsLogistics.get(item.id)!.logisticsCost * item.cantidad).toFixed(2)}</p>
+                                        <p>
+                                          Envío estimado aparte: {cartLogistics.shippingCostLabel === '-' 
+                                            ? '-' 
+                                            : `+$${(cartLogistics.itemsLogistics.get(item.id)!.logisticsCost * item.cantidad).toFixed(2)}`}
+                                        </p>
                                       )}
                                     </div>
                                   </TooltipContent>
@@ -830,21 +837,31 @@ const SellerCartPage = () => {
                               Logística Total:
                             </span>
                             <span className="font-semibold text-blue-600">
-                              +${cartLogistics.totalLogisticsCost.toFixed(2)}
+                              {cartLogistics.shippingCostLabel === '-' 
+                                ? '-' 
+                                : `+$${cartLogistics.totalLogisticsCost.toFixed(2)}`}
                             </span>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="left" className="text-xs max-w-[200px]">
-                          <p className="font-medium mb-1">Desglose de Logística</p>
-                          <div className="space-y-0.5 text-muted-foreground">
-                            <p>Envío total: ${cartLogistics.totalLogisticsCost.toFixed(2)}</p>
-                            {cartLogistics.totalCategoryFees > 0 && (
-                              <p>Tarifas categoría: ${cartLogistics.totalCategoryFees.toFixed(2)}</p>
-                            )}
-                            <p className="pt-1 border-t text-foreground">
-                              {cartLogistics.routeName}
+                          {cartLogistics.shippingCostLabel === '-' ? (
+                            <p className="text-amber-600">
+                              Algunos productos no tienen peso configurado. Configure el peso en la ficha técnica del producto.
                             </p>
-                          </div>
+                          ) : (
+                            <>
+                              <p className="font-medium mb-1">Desglose de Logística</p>
+                              <div className="space-y-0.5 text-muted-foreground">
+                                <p>Envío total: ${cartLogistics.totalLogisticsCost.toFixed(2)}</p>
+                                {cartLogistics.totalCategoryFees > 0 && (
+                                  <p>Tarifas categoría: ${cartLogistics.totalCategoryFees.toFixed(2)}</p>
+                                )}
+                                <p className="pt-1 border-t text-foreground">
+                                  {cartLogistics.routeName}
+                                </p>
+                              </div>
+                            </>
+                          )}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
