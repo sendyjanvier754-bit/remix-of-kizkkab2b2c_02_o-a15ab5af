@@ -63,14 +63,38 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     [items]
   );
   
+  // Fetch variant IDs to get prices from v_variantes_con_precio_b2b
+  const variantIds = useMemo(() => 
+    [...new Set(items.map(item => item.variantId).filter(Boolean))],
+    [items]
+  );
+  
+  // ✅ Fetch variant prices from v_variantes_con_precio_b2b
+  const { data: variants = [] } = useQuery({
+    queryKey: ['cart-variants-details', variantIds],
+    queryFn: async () => {
+      if (variantIds.length === 0) return [];
+      
+      const { data, error } = await (supabase as any)
+        .from('v_variantes_con_precio_b2b')
+        .select('id, product_id, precio_b2b_final, moq')
+        .in('id', variantIds);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: variantIds.length > 0,
+  });
+  
+  // ✅ Fetch product prices from v_productos_con_precio_b2b (fallback for non-variant items)
   const { data: products = [] } = useQuery({
     queryKey: ['cart-products-details', productIds],
     queryFn: async () => {
       if (productIds.length === 0) return [];
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('v_productos_con_precio_b2b')
-        .select('id, precio_b2b, categoria_id, peso_kg')
+        .select('id, precio_b2b, categoria_id, weight_kg')
         .in('id', productIds);
       
       if (error) throw error;
@@ -139,8 +163,17 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     
     for (const item of items) {
       const product = products.find(p => p.id === item.productId);
-      const factoryCost = product?.precio_b2b || item.precioB2B;
-      const weight = product?.peso_kg || 0.5;
+      const variant = item.variantId ? variants.find((v: any) => v.id === item.variantId) : null;
+      
+      // ✅ PRIORITY: variant price > product price > item.precioB2B
+      let factoryCost = item.precioB2B;
+      if (variant?.precio_b2b_final != null) {
+        factoryCost = variant.precio_b2b_final;
+      } else if (product?.precio_b2b != null) {
+        factoryCost = product.precio_b2b;
+      }
+      
+      const weight = product?.weight_kg || 0.5;
       const categoryId = product?.categoria_id;
       
       // 1. Find margin range
