@@ -5854,12 +5854,10 @@ export type Database = {
       v_product_max_pvp: {
         Row: {
           avg_pvp: number | null
-          last_price_update: string | null
           max_pvp: number | null
           median_pvp: number | null
           min_pvp: number | null
-          price_range: number | null
-          price_stddev: number | null
+          price_spread_percent: number | null
           product_id: string | null
           seller_count: number | null
           total_listings: number | null
@@ -5905,7 +5903,8 @@ export type Database = {
       v_productos_con_precio_b2b: {
         Row: {
           categoria_id: string | null
-          costo_base_excel: number | null
+          categoria_nombre: string | null
+          costo_base: number | null
           created_at: string | null
           currency_code: string | null
           descripcion_corta: string | null
@@ -5924,7 +5923,9 @@ export type Database = {
           nombre: string | null
           origin_country_id: string | null
           peso_kg: number | null
+          platform_fee: number | null
           precio_b2b: number | null
+          precio_con_margen_300: number | null
           precio_mayorista_base: number | null
           precio_promocional: number | null
           precio_sugerido_venta: number | null
@@ -5940,82 +5941,6 @@ export type Database = {
           url_origen: string | null
           weight_kg: number | null
           width_cm: number | null
-        }
-        Insert: {
-          categoria_id?: string | null
-          costo_base_excel?: number | null
-          created_at?: string | null
-          currency_code?: string | null
-          descripcion_corta?: string | null
-          descripcion_larga?: string | null
-          dimensiones_cm?: string | null
-          galeria_imagenes?: string[] | null
-          height_cm?: number | null
-          id?: string | null
-          imagen_principal?: string | null
-          is_active?: boolean | null
-          is_oversize?: boolean | null
-          is_parent?: boolean | null
-          last_calculated_at?: string | null
-          length_cm?: number | null
-          moq?: number | null
-          nombre?: string | null
-          origin_country_id?: string | null
-          peso_kg?: number | null
-          precio_b2b?: never
-          precio_mayorista_base?: number | null
-          precio_promocional?: number | null
-          precio_sugerido_venta?: number | null
-          promo_active?: boolean | null
-          promo_ends_at?: string | null
-          promo_starts_at?: string | null
-          proveedor_id?: string | null
-          shipping_mode?: string | null
-          sku_interno?: string | null
-          stock_fisico?: number | null
-          stock_status?: Database["public"]["Enums"]["stock_status"] | null
-          updated_at?: string | null
-          url_origen?: string | null
-          weight_kg?: number | null
-          width_cm?: number | null
-        }
-        Update: {
-          categoria_id?: string | null
-          costo_base_excel?: number | null
-          created_at?: string | null
-          currency_code?: string | null
-          descripcion_corta?: string | null
-          descripcion_larga?: string | null
-          dimensiones_cm?: string | null
-          galeria_imagenes?: string[] | null
-          height_cm?: number | null
-          id?: string | null
-          imagen_principal?: string | null
-          is_active?: boolean | null
-          is_oversize?: boolean | null
-          is_parent?: boolean | null
-          last_calculated_at?: string | null
-          length_cm?: number | null
-          moq?: number | null
-          nombre?: string | null
-          origin_country_id?: string | null
-          peso_kg?: number | null
-          precio_b2b?: never
-          precio_mayorista_base?: number | null
-          precio_promocional?: number | null
-          precio_sugerido_venta?: number | null
-          promo_active?: boolean | null
-          promo_ends_at?: string | null
-          promo_starts_at?: string | null
-          proveedor_id?: string | null
-          shipping_mode?: string | null
-          sku_interno?: string | null
-          stock_fisico?: number | null
-          stock_status?: Database["public"]["Enums"]["stock_status"] | null
-          updated_at?: string | null
-          url_origen?: string | null
-          weight_kg?: number | null
-          width_cm?: number | null
         }
         Relationships: [
           {
@@ -6317,10 +6242,12 @@ export type Database = {
         Args: { p_route_id: string; p_weight_cbm?: number; p_weight_kg: number }
         Returns: Json
       }
-      calculate_suggested_pvp: {
-        Args: { p_market_id?: string; p_product_id: string }
-        Returns: number
-      }
+      calculate_suggested_pvp:
+        | { Args: { p_product_id: string }; Returns: number }
+        | {
+            Args: { p_market_id?: string; p_product_id: string }
+            Returns: number
+          }
       calculate_suggested_pvp_with_details: {
         Args: { p_market_id?: string; p_product_id: string }
         Returns: {
