@@ -60,11 +60,9 @@ interface ShippingTier {
   tier_name: string;
   transport_type: 'maritimo' | 'aereo';
   tramo_a_cost_per_kg: number;
-  tramo_a_min_cost: number;
   tramo_a_eta_min: number;
   tramo_a_eta_max: number;
   tramo_b_cost_per_lb: number;
-  tramo_b_min_cost: number;
   tramo_b_eta_min: number;
   tramo_b_eta_max: number;
   allows_oversize: boolean;
@@ -163,8 +161,6 @@ export default function AdminGlobalLogisticsPage() {
     shipping_route_id: '',
     segment: 'china_to_transit',
     cost_per_kg: 0,
-    cost_per_cbm: 0,
-    min_cost: 0,
     estimated_days_min: 7,
     estimated_days_max: 21,
     notes: '',
@@ -182,11 +178,9 @@ export default function AdminGlobalLogisticsPage() {
     tier_name: '',
     transport_type: 'maritimo' as 'maritimo' | 'aereo',
     tramo_a_cost_per_kg: 8.0,
-    tramo_a_min_cost: 5.0,
     tramo_a_eta_min: 15,
     tramo_a_eta_max: 25,
     tramo_b_cost_per_lb: 5.0,
-    tramo_b_min_cost: 3.0,
     tramo_b_eta_min: 3,
     tramo_b_eta_max: 7,
     allows_oversize: true,
@@ -700,7 +694,6 @@ export default function AdminGlobalLogisticsPage() {
                                   <TableRow>
                                     <TableHead>Tramo</TableHead>
                                     <TableHead className="text-right">$/kg</TableHead>
-                                    <TableHead className="text-right">Costo Mín.</TableHead>
                                     <TableHead className="text-right">Días Est.</TableHead>
                                     <TableHead>Estado</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>
@@ -716,7 +709,6 @@ export default function AdminGlobalLogisticsPage() {
                                         </div>
                                       </TableCell>
                                       <TableCell className="text-right font-mono">${cost.cost_per_kg.toFixed(2)}</TableCell>
-                                      <TableCell className="text-right font-mono">${cost.min_cost.toFixed(2)}</TableCell>
                                       <TableCell className="text-right">
                                         <span className="flex items-center justify-end gap-1">
                                           <Clock className="h-3 w-3" />
@@ -865,10 +857,6 @@ export default function AdminGlobalLogisticsPage() {
                                     <span className="font-mono">${tier.tramo_a_cost_per_kg}/kg</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Mínimo:</span>
-                                    <span className="font-mono">${tier.tramo_a_min_cost}</span>
-                                  </div>
-                                  <div className="flex justify-between">
                                     <span className="text-muted-foreground">ETA:</span>
                                     <span className="font-mono">{tier.tramo_a_eta_min}-{tier.tramo_a_eta_max} días</span>
                                   </div>
@@ -887,10 +875,6 @@ export default function AdminGlobalLogisticsPage() {
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">Costo por lb:</span>
                                     <span className="font-mono">${tier.tramo_b_cost_per_lb}/lb</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Mínimo:</span>
-                                    <span className="font-mono">${tier.tramo_b_min_cost}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">ETA:</span>

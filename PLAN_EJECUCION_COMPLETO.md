@@ -2,10 +2,10 @@
 
 > **Fecha Inicio:** 2026-02-04  
 > **Última Actualización:** 2026-02-06  
-> **Objetivo:** Corregir arquitectura de precios B2B y variantes en todo el sistema  
+> **Objetivo:** Corregir arquitectura de precios B2B, variantes y logística global en todo el sistema  
 > **Estimación Total:** 20-27 horas  
 > **Mínimo Viable:** 11-15 horas (FASES 1-4)  
-> **Estado:** 🟢 ACTIVO - Vista BusinessPanel integrada, continuando con arquitectura de precios
+> **Estado:** 🟢 ACTIVO - Vista BusinessPanel integrada, logística global sin costos mínimos, push al remoto completado
 
 ---
 
@@ -52,6 +52,43 @@
   - Commit: `77b3735` - "feat: Integrate v_business_panel_data view into SellerCartPage and VariantDrawer + useBusinessPanelData hook"
   - Archivos incluidos: V_BUSINESS_PANEL_DATA.sql, useBusinessPanelData.ts
   - Archivos modificados: SellerCartPage.tsx, VariantDrawer.tsx
+
+**Migración Logística Global - Nuevo Motor Sin Costos Mínimos:**
+- ✅ Refactorización de `useShippingCostCalculationForCart` hook
+  - **Problema:** Cada item redondeaba peso individual (0.3kg → 1kg, 0.6kg → 1kg = mismo costo)
+  - **Solución:** Suma pesos sin redondeo, redondea total una sola vez, distribuye costo proporcionalmente
+  - Ejemplo: Camiseta (600g) + Tanga (300g) = 900g total
+    - Peso facturable: CEIL(0.9) = 1 kg
+    - Costo total: 1kg × $3.50 + 1kg × 2.20462 × $1.80 + $5.00 = $12.47
+    - Distribución: Camiseta (600g/900g) = $8.31, Tanga (300g/900g) = $4.16
+  - ✅ Compilación TypeScript sin errores
+
+- ✅ Creación de nueva arquitectura de logística en Supabase
+  - **6 nuevas tablas:** transit_hubs, destination_countries, shipping_routes, route_logistics_costs, shipping_tiers, shipping_zones
+  - **Eliminación de costos mínimos:** Removido cost_per_cbm, min_cost, tramo_a_min_cost, tramo_b_min_cost
+  - **Nueva fórmula de precio:** cost = (weight_kg × cost_per_kg) + (weight_kg × 2.20462 × cost_per_lb) + surcharge_zone
+  - **Datos iniciales:** 2 hubs (China, USA), 4 países (Haití, Jamaica, DOM, USA), 1 ruta (Haití←China), 2 tiers (STANDARD $3.50/kg + $1.80/lb, EXPRESS $5.50/kg + $2.80/lb), 3 zonas con surcharges
+
+- ✅ Correcciones iterativas de SQL
+  - Iteración 1: ERROR CROSS JOIN en CTE
+  - Iteración 2: Simplificado con subqueries
+  - Iteración 3: Final con tipado correcto (VALUES clauses) ✅ Ejecutada exitosamente
+
+- ✅ Actualización de Admin "Logística Global"
+  - Datos ahora visibles en AdminGlobalLogisticsPage
+  - Removido campo "Costo Mín." del esquema (user request: "solo $/KG O $/LB")
+
+- ✅ Script final: MIGRATE_TO_NEW_LOGISTICS_STRUCTURE.sql
+  - Línea 50-58: route_logistics_costs sin cost_per_cbm ni min_cost
+  - Línea 60-77: shipping_tiers sin tramo_a_min_cost ni tramo_b_min_cost
+  - Línea 128-162: INSERT statements actualizados (STANDARD: 3.50, 1.80; EXPRESS: 5.50, 2.80)
+  - **Estado:** Listo para ejecutar en Supabase SQL Editor
+
+- ✅ Git Commit & Push al repositorio remoto
+  - **Commit:** `d9ef88a` - "feat: migración completa a nueva estructura de logística global sin costos mínimos"
+  - **Archivos:** 12 SQL logistics scripts + 4 Node.js debugging scripts
+  - **Hook refactorizado:** src/hooks/useLogisticsData.ts (proportional cost distribution)
+  - **Push:** ✅ SUCCESS - 35 objects, deltas resolved to origin/main
   
 ### ✅ Completado (2026-02-05)
 

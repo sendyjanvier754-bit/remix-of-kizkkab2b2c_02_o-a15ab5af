@@ -64,8 +64,6 @@ export default function AdminCountriesRoutesPage() {
     shipping_route_id: "", 
     segment: "china_to_transit", 
     cost_per_kg: 0, 
-    cost_per_cbm: 0, 
-    min_cost: 0, 
     estimated_days_min: 7,
     estimated_days_max: 21,
     notes: "",
@@ -180,8 +178,6 @@ export default function AdminCountriesRoutesPage() {
         shipping_route_id: cost.shipping_route_id,
         segment: cost.segment,
         cost_per_kg: cost.cost_per_kg,
-        cost_per_cbm: cost.cost_per_cbm,
-        min_cost: cost.min_cost,
         estimated_days_min: cost.estimated_days_min,
         estimated_days_max: cost.estimated_days_max,
         notes: cost.notes || "",
@@ -193,8 +189,6 @@ export default function AdminCountriesRoutesPage() {
         shipping_route_id: routeId || "",
         segment: "china_to_transit",
         cost_per_kg: 0,
-        cost_per_cbm: 0,
-        min_cost: 0,
         estimated_days_min: 7,
         estimated_days_max: 21,
         notes: "",
@@ -482,8 +476,6 @@ export default function AdminCountriesRoutesPage() {
                         <TableRow>
                           <TableHead>Tramo</TableHead>
                           <TableHead>Costo/KG</TableHead>
-                          <TableHead>Costo/CBM</TableHead>
-                          <TableHead>Mínimo</TableHead>
                           <TableHead>Días Est.</TableHead>
                           <TableHead>Estado</TableHead>
                           <TableHead className="text-right">Acciones</TableHead>
@@ -494,8 +486,6 @@ export default function AdminCountriesRoutesPage() {
                           <TableRow key={cost.id}>
                             <TableCell className="font-medium">{segmentLabels[cost.segment] || cost.segment}</TableCell>
                             <TableCell>${cost.cost_per_kg.toFixed(2)}</TableCell>
-                            <TableCell>${cost.cost_per_cbm.toFixed(2)}</TableCell>
-                            <TableCell>${cost.min_cost.toFixed(2)}</TableCell>
                             <TableCell>{cost.estimated_days_min}-{cost.estimated_days_max} días</TableCell>
                             <TableCell>
                               <Badge variant={cost.is_active ? "default" : "secondary"}>
@@ -697,14 +687,6 @@ export default function AdminCountriesRoutesPage() {
               <div className="space-y-2">
                 <Label>Costo/KG ($)</Label>
                 <Input type="number" step="0.01" value={costForm.cost_per_kg} onChange={(e) => setCostForm({ ...costForm, cost_per_kg: parseFloat(e.target.value) || 0 })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Costo/CBM ($)</Label>
-                <Input type="number" step="0.01" value={costForm.cost_per_cbm} onChange={(e) => setCostForm({ ...costForm, cost_per_cbm: parseFloat(e.target.value) || 0 })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Mínimo ($)</Label>
-                <Input type="number" step="0.01" value={costForm.min_cost} onChange={(e) => setCostForm({ ...costForm, min_cost: parseFloat(e.target.value) || 0 })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

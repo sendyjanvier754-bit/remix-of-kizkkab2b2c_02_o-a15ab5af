@@ -36,12 +36,10 @@ export interface ShippingTier {
   tier_description?: string;
   // Tramo A: China → USA (USD/kg)
   tramo_a_cost_per_kg: number;
-  tramo_a_min_cost: number;
   tramo_a_eta_min: number;
   tramo_a_eta_max: number;
   // Tramo B: USA → Destino (USD/lb)
   tramo_b_cost_per_lb: number;
-  tramo_b_min_cost: number;
   tramo_b_eta_min: number;
   tramo_b_eta_max: number;
   // Config
