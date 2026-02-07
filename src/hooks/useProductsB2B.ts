@@ -438,9 +438,9 @@ export const useFeaturedProductsB2B = (limit = 6) => {
     queryKey: ["products-b2b-featured-eav", limit],
     staleTime: 1000 * 60 * 5,
     queryFn: async () => {
-      // Query only parent products
+      // Query only parent products from B2B pricing view
       const { data: parentProducts, error } = await supabase
-        .from("products")
+        .from("v_productos_con_precio_b2b")
         .select("*")
         .eq("is_active", true)
         .eq("is_parent", true)
@@ -450,11 +450,11 @@ export const useFeaturedProductsB2B = (limit = 6) => {
       if (error) throw new Error(error.message);
       if (!parentProducts || parentProducts.length === 0) return [];
 
-      // Fetch variants
+      // Fetch variants from B2B pricing view
       const productIds = parentProducts.map(p => p.id);
       const { data: variantsData } = await supabase
-        .from("product_variants")
-        .select("id, product_id, sku, name, option_type, option_value, price, stock, moq, attribute_combination, is_active")
+        .from("v_variantes_con_precio_b2b")
+        .select("id, product_id, sku, name, option_type, option_value, price, precio_b2b_final, stock, moq, attribute_combination, is_active")
         .in("product_id", productIds)
         .eq("is_active", true);
 
@@ -468,7 +468,7 @@ export const useFeaturedProductsB2B = (limit = 6) => {
           id: v.id,
           sku: v.sku,
           name: v.name,
-          price: v.price || 0,
+          price: v.precio_b2b_final || v.price || 0, // ✅ Use precio_b2b_final from vista
           stock: v.stock || 0,
           moq: v.moq || 1,
           attribute_combination: (v.attribute_combination as AttributeCombination) || {},
@@ -490,7 +490,7 @@ export const useFeaturedProductsB2B = (limit = 6) => {
         
         // Use precio_b2b from vista (already calculated with all margins)
         const precioMayorista = minPrice || p.precio_b2b || 0;
-        const precioSugerido = p.precio_sugerido_venta || Math.round(precioMayorista * 1.3 * 100) / 100;
+        const precioSugerido = p.precio_sugerido_venta || Math.round(precioMayorista * 2.5 * 100) / 100; // ✅ 2.5x for 150% margin
         const imagen = p.imagen_principal || "/placeholder.svg";
 
         const variantInfos: ProductVariantInfo[] = variants.map(v => ({

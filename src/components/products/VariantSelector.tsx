@@ -731,14 +731,13 @@ const VariantSelector = ({
         {/* Summary */}
         {totalQty > 0 && (
           <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <Package className="h-4 w-4 text-primary" />
-                <span className="font-medium">{totalQty} unidades</span>
-              </div>
-              <div className="text-xl font-bold text-primary">
+            <div className="flex items-center justify-between gap-2">
+              <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-xs sm:text-sm">
+                {totalQty} uds
+              </span>
+              <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-sm">
                 ${totalPrice.toFixed(2)}
-              </div>
+              </span>
             </div>
           </div>
         )}
@@ -846,14 +845,13 @@ const VariantSelector = ({
       {/* Summary */}
       {totalQty > 0 && (
         <div className="p-2 sm:p-3 bg-primary/5 rounded-lg border border-primary/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-              <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-              <span className="font-medium">{totalQty} uds</span>
-            </div>
-            <div className="text-base sm:text-lg font-bold text-primary">
+          <div className="flex items-center justify-between gap-2">
+            <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-xs sm:text-sm">
+              {totalQty} uds
+            </span>
+            <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-xs sm:text-sm">
               ${totalPrice.toFixed(2)}
-            </div>
+            </span>
           </div>
         </div>
       )}

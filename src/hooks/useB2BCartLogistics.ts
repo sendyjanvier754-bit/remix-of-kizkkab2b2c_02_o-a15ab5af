@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useB2BMarginRanges } from './useB2BMarginRanges';
 import { B2BCartItem } from './useB2BCartItems';
-import { useShippingCostCalculationForCart, useShippingRoutes, useShippingZones } from './useLogisticsData';
+import { useLogisticsDataForItems, useShippingRoutes, useShippingZones } from './useLogisticsDataForItems';
 
 export interface CartItemLogistics {
   itemId: string;
@@ -132,12 +132,11 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     },
   });
 
-  // Get shipping costs using the new V_LOGISTICS_DATA system
-  const cartItemsForShipping = useMemo(() => 
+  // Get shipping costs from unified v_logistics_data view
+  const itemsForLogistics = useMemo(() => 
     items.map(item => ({
       productId: item.productId,
-      variantId: item.variantId,
-      quantity: item.cantidad || 1
+      variantId: item.variantId
     })),
     [items]
   );
@@ -146,13 +145,12 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     result: shippingCostResult, 
     isLoading: shippingLoading, 
     error: shippingError,
-    weightBreakdown,
-    itemCosts 
-  } = useShippingCostCalculationForCart(
-    cartItemsForShipping,
-    defaultRouteId || undefined,
-    'STANDARD',
-    defaultZoneId || undefined
+  } = useLogisticsDataForItems(itemsForLogistics);
+  
+  // Extract itemCosts from the result
+  const itemCosts = useMemo(() => 
+    shippingCostResult?.itemCosts || [],
+    [shippingCostResult?.itemCosts]
   );
 
   // Calculate logistics for all cart items
@@ -243,8 +241,8 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       maxDeliveryMax = 14;
     }
     
-    // Calculate actual total shipping cost from itemCosts
-    const actualTotalShippingCost = itemCosts?.reduce((sum, ic) => sum + ic.shippingCost, 0) || 0;
+    // Get total shipping cost directly from v_logistics_data result
+    const actualTotalShippingCost = shippingCostResult?.totalCost || 0;
     
     return {
       itemsLogistics,
@@ -260,7 +258,7 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       hasWeight: hasShippingCost || false,
       shippingCostLabel: undefined // Always show cost, never "-"
     };
-  }, [items, products, marginRanges, categoryRates, itemCosts, findMarginRangeForCost]);
+  }, [items, products, marginRanges, categoryRates, shippingCostResult, itemCosts, findMarginRangeForCost]);
   
   return {
     ...cartLogistics,

@@ -154,3 +154,76 @@ export const useLogisticsDataForItems = (items: ItemForLogistics[]) => {
 
   return { result, isLoading, error };
 };
+
+/**
+ * Hook: Obtener todas las rutas de envío disponibles
+ */
+export function useShippingRoutes() {
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { data, error: err } = await supabase
+          .from('shipping_routes')
+          .select('*')
+          .eq('is_active', true);
+
+        if (err) throw err;
+        setRoutes(data || []);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        setError(errorMessage);
+        setRoutes([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoutes();
+  }, []);
+
+  return { routes, isLoading, error };
+}
+
+/**
+ * Hook: Obtener todas las zonas de envío disponibles
+ */
+export function useShippingZones() {
+  const [zones, setZones] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchZones = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { data, error: err } = await supabase
+          .from('shipping_zones')
+          .select('*')
+          .eq('is_active', true)
+          .order('country', { ascending: true })
+          .order('zone_name', { ascending: true });
+
+        if (err) throw err;
+        setZones(data || []);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        setError(errorMessage);
+        setZones([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchZones();
+  }, []);
+
+  return { zones, isLoading, error };
+}
+

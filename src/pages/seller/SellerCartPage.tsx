@@ -101,7 +101,8 @@ const SellerCartPage = () => {
 
   // Fetch variants for the selected product
   const { data: productVariants, isLoading: isLoadingVariants } = useProductVariants(
-    selectedProductForVariants?.id
+    selectedProductForVariants?.id,
+    true // ✅ isB2B = true para obtener precios B2B desde vista v_variantes_con_precio_b2b
   );
 
   // Cart selection store
@@ -174,6 +175,43 @@ const SellerCartPage = () => {
       totalShippingCost: totalShippingCost
     };
   }, [selectedItems, businessPanelDataMap, shippingCosts]);
+
+  // Consolidate BusinessPanel data from v_business_panel_data for all selected items
+  const consolidatedBusinessPanelData = useMemo(() => {
+    if (selectedItems.length === 0) return null;
+
+    let totalInvestment = 0;
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let totalShippingByView = 0;
+    let itemCount = 0;
+
+    selectedItems.forEach(item => {
+      const key = item.variantId 
+        ? `${item.productId}-${item.variantId}`
+        : item.productId;
+      const bpData = businessPanelDataMap.get(key);
+
+      if (bpData) {
+        // Accumulate totals from v_business_panel_data
+        totalInvestment += (bpData.investment_1unit * item.cantidad);
+        totalRevenue += (bpData.revenue_1unit * item.cantidad);
+        totalProfit += (bpData.profit_1unit * item.cantidad);
+        totalShippingByView += ((bpData.shipping_cost_per_unit || 0) * item.cantidad);
+        itemCount++;
+      }
+    });
+
+    // Return consolidated data that matches the view calculations
+    return {
+      investment_1unit: itemCount > 0 ? totalInvestment / totalQuantity : 0,
+      revenue_1unit: itemCount > 0 ? totalRevenue / totalQuantity : 0,
+      profit_1unit: itemCount > 0 ? totalProfit / totalQuantity : 0,
+      suggested_pvp_per_unit: itemCount > 0 ? totalRevenue / totalQuantity : 0,
+      shipping_cost_per_unit: itemCount > 0 ? totalShippingByView / totalQuantity : 0,
+      margin_percentage: itemCount > 0 ? (totalProfit / totalRevenue) * 100 : 0,
+    };
+  }, [selectedItems, businessPanelDataMap, totalQuantity]);
 
   // Prepare data for SuggestedPricesDetailModal
   const modalData = useMemo(() => {
@@ -950,12 +988,13 @@ const SellerCartPage = () => {
                   </div>
 
                   {/* Business Panel */}
-                  {selectedItems.length > 0 && (
+                  {selectedItems.length > 0 && consolidatedBusinessPanelData && (
                     <div className="px-2 py-3 border-b border-gray-200 space-y-2">
                       <BusinessPanel
                         investment={profitAnalysis.inversion}
-                        suggestedPricePerUnit={totalQuantity > 0 ? profitAnalysis.venta / totalQuantity : 0}
+                        suggestedPricePerUnit={consolidatedBusinessPanelData.suggested_pvp_per_unit}
                         quantity={totalQuantity}
+                        businessPanelData={consolidatedBusinessPanelData as any}
                         className="bg-blue-50 border-blue-200"
                       />
                       
@@ -968,13 +1007,13 @@ const SellerCartPage = () => {
                         Ver Precios de Venta Sugeridos
                       </button>
                       
-                      {profitAnalysis.totalShippingCost > 0 && (
+                      {consolidatedBusinessPanelData && consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity > 0 && (
                         <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
                           <p className="text-blue-900">
-                            <span className="font-semibold">Costo de logística incluido:</span> ${profitAnalysis.totalShippingCost.toFixed(2)}
+                            <span className="font-semibold">Costo de logística incluido:</span> ${(consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity).toFixed(2)}
                           </p>
                           <p className="text-blue-700 mt-1">
-                            Tu ganancia neta: <span className="font-bold text-green-700">${profitAnalysis.ganancia.toFixed(2)}</span>
+                            Tu ganancia neta: <span className="font-bold text-green-700">${(consolidatedBusinessPanelData.profit_1unit * totalQuantity).toFixed(2)}</span>
                           </p>
                         </div>
                       )}
@@ -1361,22 +1400,23 @@ const SellerCartPage = () => {
           }
         }}>
           <DrawerContent className="flex flex-col max-h-[90vh] p-0 gap-0">
-            {/* Header - Fixed */}
-            <DrawerHeader className="py-3 px-4 pb-2 border-b flex-shrink-0 bg-white">
-              <DrawerTitle className="text-base line-clamp-1">{selectedProductForVariants.nombre}</DrawerTitle>
-              <DrawerDescription className="text-xs">
-                Selecciona variantes para agregar al carrito
-              </DrawerDescription>
-            </DrawerHeader>
-            
-            {/* Product Image - Fixed Above Box */}
-            <div className="px-3 pt-2 pb-2 flex-shrink-0 bg-white">
-              <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
+            {/* Header with Image Left and Title Right - Fixed */}
+            <div className="py-3 px-4 border-b flex-shrink-0 bg-white flex items-start gap-3">
+              {/* Image Left */}
+              <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                 <img 
                   src={variantImage || selectedProductForVariants.images?.[0] || '/placeholder.svg'} 
                   alt={selectedProductForVariants.nombre}
                   className="w-full h-full object-contain"
                 />
+              </div>
+              
+              {/* Title and Description Right */}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-semibold line-clamp-2">{selectedProductForVariants.nombre}</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selecciona variantes para agregar al carrito
+                </p>
               </div>
             </div>
             
@@ -1396,9 +1436,9 @@ const SellerCartPage = () => {
                       {variantSelections.length > 0 && (
                         <div className="text-right">
                           <p className="text-[10px] text-muted-foreground">Seleccionado</p>
-                          <p className="font-bold text-primary text-sm">
+                          <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-sm inline-block">
                             {variantSelections.reduce((sum, s) => sum + s.quantity, 0)} uds
-                          </p>
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1424,7 +1464,8 @@ const SellerCartPage = () => {
                             id: v.id,
                             sku: v.sku,
                             label,
-                            precio: v.cost_price || v.price || selectedProductForVariants.costB2B || 0,
+                            precio: v.precio_b2b_final || v.cost_price || v.price || selectedProductForVariants.costB2B || 0,
+                            precio_b2b_final: v.precio_b2b_final, // ✅ Pasar precio_b2b_final explícitamente
                             stock: v.stock || 999,
                             attribute_combination: attrCombo,
                             images: v.images || [],
@@ -1559,12 +1600,13 @@ const SellerCartPage = () => {
               </div>
 
               {/* Business Panel */}
-              {selectedItems.length > 0 && (
+              {selectedItems.length > 0 && consolidatedBusinessPanelData && (
                 <div className="space-y-2">
                   <BusinessPanel
                     investment={profitAnalysis.inversion}
-                    suggestedPricePerUnit={totalQuantity > 0 ? profitAnalysis.venta / totalQuantity : 0}
+                    suggestedPricePerUnit={consolidatedBusinessPanelData.suggested_pvp_per_unit}
                     quantity={totalQuantity}
+                    businessPanelData={consolidatedBusinessPanelData as any}
                     className="bg-blue-50 border-blue-200"
                   />
                   
@@ -1580,13 +1622,13 @@ const SellerCartPage = () => {
                     Ver Precios de Venta Sugeridos
                   </button>
                   
-                  {profitAnalysis.totalShippingCost > 0 && (
+                  {consolidatedBusinessPanelData && consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity > 0 && (
                     <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
                       <p className="text-blue-900">
-                        <span className="font-semibold">Costo de logística incluido:</span> ${profitAnalysis.totalShippingCost.toFixed(2)}
+                        <span className="font-semibold">Costo de logística incluido:</span> ${(consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity).toFixed(2)}
                       </p>
                       <p className="text-blue-700 mt-1">
-                        Tu ganancia neta: <span className="font-bold text-green-700">${profitAnalysis.ganancia.toFixed(2)}</span>
+                        Tu ganancia neta: <span className="font-bold text-green-700">${(consolidatedBusinessPanelData.profit_1unit * totalQuantity).toFixed(2)}</span>
                       </p>
                     </div>
                   )}

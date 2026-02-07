@@ -359,15 +359,9 @@ const VariantDrawer: React.FC = () => {
 
         {/* Footer - sticky */}
         <div className="p-4 border-t bg-background">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="h-8 w-8" disabled>
-                <span className="text-sm font-medium">-</span>
-              </Button>
-              <span className="w-8 text-center font-semibold">{totalQty}</span>
-              <Button variant="outline" size="icon" className="h-8 w-8" disabled>
-                <span className="text-sm font-medium">+</span>
-              </Button>
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold text-sm">
+              {totalQty} uds
             </div>
             <div className="text-center px-4 py-1 bg-muted rounded-full">
               <span className="text-sm font-bold">${totalPrice.toFixed(2)}</span>
@@ -377,7 +371,7 @@ const VariantDrawer: React.FC = () => {
               className="h-10 px-4"
               disabled={totalQty === 0}
             >
-              🛒 Comprar
+              🛒 Agregar ({totalQty})
             </Button>
           </div>
           {/* Flexible MOQ messaging for B2B */}
