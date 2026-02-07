@@ -49,6 +49,8 @@ import { addItemB2B } from "@/services/cartService";
 import { useB2BCartLogistics } from "@/hooks/useB2BCartLogistics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBusinessPanelDataBatch } from "@/hooks/useBusinessPanelData";
+import { SuggestedPricesDetailModal } from "@/components/seller/SuggestedPricesDetailModal";
+import { useLogisticsDataForItems } from "@/hooks/useLogisticsDataForItems";
 
 const SellerCartPage = () => {
   const navigate = useNavigate();
@@ -67,12 +69,18 @@ const SellerCartPage = () => {
   );
   const { dataMap: businessPanelDataMap } = useBusinessPanelDataBatch(itemsForBatch);
   
-  // Calculate logistics for all cart items
+  // Get cart logistics info (routes, ETA, category fees, etc.)
   const cartLogistics = useB2BCartLogistics(items);
+  
+  // Fetch shipping costs from unified v_logistics_data view
+  const { result: shippingCosts } = useLogisticsDataForItems(itemsForBatch);
+  
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [showSuggestedPricesModal, setShowSuggestedPricesModal] = useState(false);
   const [showRemoveItemDialog, setShowRemoveItemDialog] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<{ id: string; name: string } | null>(null);
-  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [showOrderSummaryDrawer, setShowOrderSummaryDrawer] = useState(false);
+
   const [selectedProductForVariants, setSelectedProductForVariants] = useState<any>(null);
   const [variantSelections, setVariantSelections] = useState<any[]>([]);
   const [isAddingVariant, setIsAddingVariant] = useState(false);
@@ -123,16 +131,18 @@ const SellerCartPage = () => {
   const someSelected = selectedItems.length > 0;
 
   // Calculate profit analysis for SELECTED items only using BusinessPanel view data
+  // Shipping costs are ALREADY INCLUDED in suggestedPVP from the view
   const profitAnalysis = useMemo(() => {
-    let totalInversion = 0; // Total cost (precio B2B * cantidad)
-    let totalVenta = 0;      // Total retail (precio de venta * cantidad)
-    let ganancia = 0;        // Profit (totalVenta - totalInversion)
-    let margen = 0;          // Profit margin percentage
+    let totalInversion = 0;     // Total cost (precio B2B * cantidad)
+    let totalVenta = 0;         // Total retail (precio de venta * cantidad) [includes shipping]
+    let totalShippingCost = 0;  // Total shipping cost (for reference only)
+    let ganancia = 0;           // Profit (totalVenta - totalInversion) [shipping already in totalVenta]
+    let margen = 0;             // Profit margin percentage
 
     selectedItems.forEach(item => {
       const costoItem = item.precioB2B * item.cantidad;
       
-      // Get suggested PVP from BusinessPanel view
+      // Get suggested PVP from BusinessPanel view (already includes shipping cost)
       const key = item.variantId 
         ? `${item.productId}-${item.variantId}`
         : item.productId;
@@ -141,20 +151,61 @@ const SellerCartPage = () => {
       
       const ventaItem = suggestedPVP * item.cantidad;
       
+      // Get shipping cost for this item (already distributed by weight in the hook) - for tracking only
+      const itemShippingCost = shippingCosts?.itemCosts?.find(
+        sc => sc.productId === item.productId && sc.variantId === (item.variantId || undefined)
+      )?.shippingCost || 0;
+      
+      const totalItemShippingCost = itemShippingCost * item.cantidad;
+      
       totalInversion += costoItem;
       totalVenta += ventaItem;
+      totalShippingCost += totalItemShippingCost;
     });
 
     ganancia = totalVenta - totalInversion;
-    margen = totalInversion > 0 ? (ganancia / totalInversion) * 100 : 0;
+    margen = totalVenta > 0 ? (ganancia / totalVenta) * 100 : 0;
 
     return {
       inversion: totalInversion,
       venta: totalVenta,
       ganancia: ganancia,
-      margen: margen
+      margen: margen,
+      totalShippingCost: totalShippingCost
     };
-  }, [selectedItems, businessPanelDataMap]);
+  }, [selectedItems, businessPanelDataMap, shippingCosts]);
+
+  // Prepare data for SuggestedPricesDetailModal
+  const modalData = useMemo(() => {
+    const items_for_modal = selectedItems.map(item => {
+      const key = item.variantId 
+        ? `${item.productId}-${item.variantId}`
+        : item.productId;
+      const businessPanelData = businessPanelDataMap.get(key);
+      const costPerUnit = item.precioB2B;
+      
+      // Find shipping cost for this item
+      const shippingInfo = shippingCosts?.result?.itemCosts?.find(
+        sc => sc.productId === item.productId && sc.variantId === (item.variantId || undefined)
+      ) || { weight_kg: 0, shippingCost: 0 };
+      
+      return {
+        productId: item.productId,
+        variantId: item.variantId,
+        itemName: item.name,
+        quantity: item.cantidad,
+        costPerUnit: costPerUnit,
+        weight_kg: shippingInfo.weight_kg || 0,
+        shippingCostPerUnit: shippingInfo.shippingCost || 0,
+      };
+    });
+
+    return {
+      items: items_for_modal,
+      totalWeight_kg: shippingCosts?.result?.totalWeight_kg || 0,
+      totalShippingCost: shippingCosts?.result?.totalCost || 0,
+    };
+  }, [selectedItems, businessPanelDataMap, shippingCosts]);
 
   // Get unique payment methods - Default to Tarjetas, Transferencia, MonCash, NatCash
   const paymentMethods = useMemo(() => {
@@ -900,13 +951,33 @@ const SellerCartPage = () => {
 
                   {/* Business Panel */}
                   {selectedItems.length > 0 && (
-                    <div className="px-2 py-3 border-b border-gray-200">
+                    <div className="px-2 py-3 border-b border-gray-200 space-y-2">
                       <BusinessPanel
                         investment={profitAnalysis.inversion}
                         suggestedPricePerUnit={totalQuantity > 0 ? profitAnalysis.venta / totalQuantity : 0}
                         quantity={totalQuantity}
                         className="bg-blue-50 border-blue-200"
                       />
+                      
+                      {/* Button to open detailed prices modal */}
+                      <button
+                        onClick={() => setShowSuggestedPricesModal(true)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded font-medium text-sm transition"
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                        Ver Precios de Venta Sugeridos
+                      </button>
+                      
+                      {profitAnalysis.totalShippingCost > 0 && (
+                        <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
+                          <p className="text-blue-900">
+                            <span className="font-semibold">Costo de logística incluido:</span> ${profitAnalysis.totalShippingCost.toFixed(2)}
+                          </p>
+                          <p className="text-blue-700 mt-1">
+                            Tu ganancia neta: <span className="font-bold text-green-700">${profitAnalysis.ganancia.toFixed(2)}</span>
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1199,16 +1270,16 @@ const SellerCartPage = () => {
                 {/* Spacer */}
                 <div className="flex-1" />
 
-                {/* Total en el Medio - Clickeable */}
-                <button
-                  onClick={() => setShowSummaryModal(true)}
-                  className="transition-all hover:opacity-80"
+                {/* Total en el Medio - Clickeable para abrir resumen */}
+                <Badge 
+                  variant="outline" 
+                  className="text-sm border-2 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-green-50 transition" 
+                  style={{ borderColor: '#29892a', color: '#29892a' }}
+                  onClick={() => setShowOrderSummaryDrawer(true)}
                 >
-                  <Badge variant="outline" className="text-sm border-2 px-3 py-1.5 rounded-lg" style={{ borderColor: '#29892a', color: '#29892a' }}>
-                    <DollarSign className="w-3.5 h-3.5 mr-1.5" />
-                    ${subtotal.toFixed(2)}
-                  </Badge>
-                </button>
+                  <DollarSign className="w-3.5 h-3.5 mr-1.5" />
+                  ${subtotal.toFixed(2)}
+                </Badge>
 
                 {/* Botón Comprar B2B */}
                 {isCartValid && someSelected ? (
@@ -1275,105 +1346,7 @@ const SellerCartPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Summary Modal */}
-      <Dialog open={showSummaryModal} onOpenChange={setShowSummaryModal}>
-        <DialogContent className="max-w-sm w-full max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="pb-3 border-b">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-[#071d7f]" />
-                Resumen
-              </DialogTitle>
-              <span className="text-xs bg-[#071d7f]/10 text-[#071d7f] px-2 py-1 rounded-full font-semibold">
-                {selectedItems.length} producto{selectedItems.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-          </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Items List - Miniaturas con scroll horizontal */}
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Artículos ({selectedItems.length})</p>
-              <div className="flex gap-2 overflow-x-auto pb-1 bg-gray-50 p-2 rounded-lg border border-gray-200 scrollbar-hide">
-                {selectedItems.map((item) => {
-                  return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleOpenVariantDrawer(item)}
-                    className="flex-shrink-0 relative group cursor-pointer transition-transform hover:scale-105 border-none bg-transparent p-0"
-                    title="Ver variantes"
-                  >
-                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden border border-gray-300 flex items-center justify-center hover:border-[#071d7f]">
-                                      {item.image ? (
-                                        <img 
-                                          src={item.image} 
-                                          alt={item.name}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        <Package className="w-6 h-6 text-gray-400" />
-                                      )}
-                                      {/* Variant badges overlay */}
-                                      <VariantBadges
-                                        color={item.color}
-                                        size={item.size}
-                                        variantAttributes={item.variantAttributes}
-                                        maxChars={6}
-                                        compact
-                                        className="absolute bottom-0.5 left-0.5 right-0.5 flex gap-0.5 flex-wrap pointer-events-none"
-                                      />
-                                    </div>
-                    {/* Cantidad badge */}
-                    <div className="absolute -top-2 -right-2 bg-[#071d7f] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
-                      {item.cantidad}
-                    </div>
-                    {/* Tooltip en hover */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                      {item.name}
-                    </div>
-                  </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Pricing Breakdown */}
-            <div className="space-y-2 bg-blue-50 p-3 rounded-lg border border-blue-200">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-700">Total artículos:</span>
-                <span className="font-semibold">${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-700">Envío:</span>
-                <span className="font-medium text-green-600">Gratis</span>
-              </div>
-              <div className="border-t border-blue-200 pt-2 mt-2 flex justify-between">
-                <span className="font-bold text-sm">Total</span>
-                <span className="font-bold text-lg text-[#071d7f]">${subtotal.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t pt-4 flex gap-2">
-            <Button
-              onClick={() => setShowSummaryModal(false)}
-              variant="outline"
-              className="flex-1"
-            >
-              Cerrar
-            </Button>
-            <Button
-              asChild
-              className="flex-1 text-white"
-              style={{ backgroundColor: '#071d7f' }}
-            >
-              <Link to="/seller/checkout">
-                Continuar
-              </Link>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Variant Drawer */}
       <VariantDrawer />
@@ -1510,6 +1483,211 @@ const SellerCartPage = () => {
           </DrawerContent>
         </Drawer>
       )}
+
+      {/* Suggested Prices Detail Modal */}
+      <SuggestedPricesDetailModal
+        isOpen={showSuggestedPricesModal}
+        onClose={() => setShowSuggestedPricesModal(false)}
+        items={modalData.items}
+        totalWeight_kg={modalData.totalWeight_kg}
+        totalShippingCost={modalData.totalShippingCost}
+        markupMultiplier={2.5}
+      />
+
+      {/* Order Summary Drawer for Mobile */}
+      <Drawer open={showOrderSummaryDrawer} onOpenChange={setShowOrderSummaryDrawer}>
+        <DrawerContent className="max-h-[95vh]">
+          <DrawerHeader className="border-b">
+            <DrawerTitle>Resumen del Pedido</DrawerTitle>
+            <DrawerDescription>
+              Procesa descuentos y asientos luego confirmar precio final
+            </DrawerDescription>
+          </DrawerHeader>
+          
+          <ScrollArea className="flex-1 px-4">
+            <div className="space-y-3 py-4">
+              {/* Pricing Details */}
+              <div className="space-y-2 pb-3 border-b border-gray-200">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-600">Subtotal Productos:</span>
+                  <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
+                </div>
+                
+                {/* Logistics Cost */}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-blue-600 flex items-center gap-1">
+                    <Truck className="w-3 h-3" />
+                    Logística Total:
+                  </span>
+                  <span className="font-semibold text-blue-600">
+                    {cartLogistics.shippingCostLabel === '-' 
+                      ? '-' 
+                      : `+$${cartLogistics.totalLogisticsCost.toFixed(2)}`}
+                  </span>
+                </div>
+
+                {/* Delivery Time Estimate */}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-amber-600 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Tiempo de Entrega:
+                  </span>
+                  <span className="font-semibold text-amber-600">
+                    {cartLogistics.estimatedDeliveryDays.min}-{cartLogistics.estimatedDeliveryDays.max} días
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-600">Promociones:</span>
+                  <span className="font-semibold text-red-600">—</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-600">Cupón:</span>
+                  <span className="font-semibold text-blue-600">—</span>
+                </div>
+              </div>
+
+              {/* Total Price */}
+              <div className="p-3 bg-gradient-to-b from-gray-50 to-white rounded-lg border border-gray-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Total Estimado:</span>
+                  <span className="text-lg font-bold" style={{ color: '#071d7f' }}>
+                    ${(subtotal + cartLogistics.totalLogisticsCost + cartLogistics.totalCategoryFees).toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Incluye productos + envío a destino</p>
+              </div>
+
+              {/* Business Panel */}
+              {selectedItems.length > 0 && (
+                <div className="space-y-2">
+                  <BusinessPanel
+                    investment={profitAnalysis.inversion}
+                    suggestedPricePerUnit={totalQuantity > 0 ? profitAnalysis.venta / totalQuantity : 0}
+                    quantity={totalQuantity}
+                    className="bg-blue-50 border-blue-200"
+                  />
+                  
+                  {/* Button to open detailed prices modal */}
+                  <button
+                    onClick={() => {
+                      setShowOrderSummaryDrawer(false);
+                      setShowSuggestedPricesModal(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded font-medium text-sm transition"
+                  >
+                    <TrendingUp className="w-4 h-4" />
+                    Ver Precios de Venta Sugeridos
+                  </button>
+                  
+                  {profitAnalysis.totalShippingCost > 0 && (
+                    <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
+                      <p className="text-blue-900">
+                        <span className="font-semibold">Costo de logística incluido:</span> ${profitAnalysis.totalShippingCost.toFixed(2)}
+                      </p>
+                      <p className="text-blue-700 mt-1">
+                        Tu ganancia neta: <span className="font-bold text-green-700">${profitAnalysis.ganancia.toFixed(2)}</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Payment Methods */}
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-xs font-semibold text-gray-700 mb-2">Aceptamos:</p>
+                <div className="grid grid-cols-5 gap-1">
+                  {/* Credit Cards Section */}
+                  {paymentMethods.includes('Tarjetas') && (
+                    <>
+                      <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="VISA">
+                        <img src="/visa.png" alt="VISA" className="h-4 w-auto" />
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="Mastercard">
+                        <img src="/mastercard.png" alt="Mastercard" className="h-4 w-auto" />
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="American Express">
+                        <img src="/american express.png" alt="American Express" className="h-4 w-auto" />
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="Apple Pay">
+                        <img src="/apple pay.png" alt="Apple Pay" className="h-4 w-auto" />
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="Google Pay">
+                        <img src="/google pay.png" alt="Google Pay" className="h-4 w-auto" />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Transferencia */}
+                  {paymentMethods.includes('Transferencia') && (
+                    <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="Transferencia Bancaria">
+                      <Banknote className="h-4 w-4" style={{ color: '#071d7f' }} />
+                    </div>
+                  )}
+
+                  {/* MonCash */}
+                  {paymentMethods.includes('MonCash') && (
+                    <div className="bg-white border border-gray-200 rounded p-2 flex items-center justify-center" title="MonCash">
+                      <Banknote className="h-5 w-5" style={{ color: '#94111f' }} />
+                    </div>
+                  )}
+
+                  {/* NatCash */}
+                  {paymentMethods.includes('NatCash') && (
+                    <div className="bg-white border border-gray-200 rounded p-2 flex items-center justify-center" title="NatCash">
+                      <Banknote className="h-5 w-5" style={{ color: '#1e40af' }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Checkout Buttons */}
+              <div className="space-y-2 pb-4">
+                {!isCartValid && (
+                  <div className="text-xs text-amber-600 text-center bg-amber-50 p-2 rounded-lg border border-amber-200">
+                    <AlertTriangle className="w-3 h-3 inline mr-1" />
+                    Alcanza los mínimos para continuar
+                  </div>
+                )}
+                <div className="flex gap-2 justify-center">
+                  <button
+                    onClick={() => {
+                      setShowOrderSummaryDrawer(false);
+                      handleWhatsAppContact();
+                    }}
+                    className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-gray-300"
+                    style={{ color: '#29892a' }}
+                    title="Contactar por WhatsApp"
+                  >
+                    <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
+                    WhatsApp
+                  </button>
+                  {isCartValid && someSelected ? (
+                    <Link
+                      to="/seller/checkout"
+                      className="px-4 py-2 rounded-lg font-semibold text-xs text-white transition hover:opacity-90 flex items-center justify-center gap-2 shadow-lg"
+                      style={{ backgroundColor: '#071d7f' }}
+                      onClick={() => setShowOrderSummaryDrawer(false)}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Comprar ({totalQuantity})
+                    </Link>
+                  ) : (
+                    <button
+                      disabled
+                      className="px-4 py-2 rounded-lg font-semibold text-xs text-white flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
+                      style={{ backgroundColor: '#071d7f' }}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      {!someSelected ? 'Selecciona' : `Comprar (${totalQuantity})`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
     </SellerLayout>
   );
 };

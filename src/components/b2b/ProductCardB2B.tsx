@@ -1,6 +1,6 @@
-import { MouseEvent } from 'react';
+import { MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, MessageCircle, ShieldCheck, TrendingUp, ArrowUpRight, Truck, Clock, Package } from 'lucide-react';
+import { ShoppingCart, MessageCircle, ShieldCheck, TrendingUp, ArrowUpRight, Truck, Clock } from 'lucide-react';
 import { ProductB2BCard, CartItemB2B } from '@/types/b2b';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';
+import { SuggestedPricesDetailModal } from '@/components/seller/SuggestedPricesDetailModal';
 
 interface ProductCardB2BProps {
   product: ProductB2BCard;
@@ -19,6 +20,7 @@ interface ProductCardB2BProps {
 const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "50312345678" }: ProductCardB2BProps) => {
   const { role } = useAuth();
   const isAdmin = role === UserRole.ADMIN;
+  const [showPricingModal, setShowPricingModal] = useState(false);
 
   const isOutOfStock = product.stock_fisico === 0;
   const hasMultipleVariants = (product.variant_count || 1) > 1;
@@ -104,6 +106,23 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
             <ShieldCheck className="w-3 h-3 text-orange-500" />
             Verified
           </div>
+        </div>
+
+        {/* View Pricing Button - Bottom Right */}
+        <div className="absolute bottom-2 right-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-9 p-0 rounded-full bg-blue-600 hover:bg-blue-700 border-0 text-white shadow-lg transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowPricingModal(true);
+            }}
+            title="Ver desglose de precios"
+          >
+            <TrendingUp className="w-4 h-4" />
+          </Button>
         </div>
 
         {/* Out of Stock Overlay */}
@@ -193,86 +212,59 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
 
           {/* Logistics & Delivery Info */}
           {(hasLogistics || hasDeliveryEstimate) && (
-            <div className="mt-1.5 space-y-1">
-              {/* Shipping cost */}
-              {logisticsCost > 0 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-1 text-[10px] text-blue-600 cursor-help">
-                        <Truck className="w-3 h-3" />
-                        <span>Envío: +${logisticsCost.toFixed(2)}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs max-w-[200px]">
-                      <div className="space-y-1">
-                        <p className="font-medium">Costo de logística incluido</p>
-                        {product.logistics?.routeName && (
-                          <p className="text-muted-foreground">{product.logistics.routeName}</p>
+            <div className="mt-1.5">
+              {/* Shipping cost + Delivery time on same line */}
+              <div className="flex items-center justify-between text-[10px]">
+                {/* Shipping cost */}
+                {logisticsCost > 0 && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-blue-600 cursor-help">
+                          <Truck className="w-3 h-3" />
+                          <span>+${logisticsCost.toFixed(2)}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs max-w-[200px]">
+                        <div className="space-y-1">
+                          <p className="font-medium">Costo de logística incluido</p>
+                          {product.logistics?.routeName && (
+                            <p className="text-muted-foreground">{product.logistics.routeName}</p>
+                          )}
+                          {product.category_fees && product.category_fees > 0 && (
+                            <p className="text-muted-foreground">+ Tarifa categoría: ${product.category_fees.toFixed(2)}</p>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                
+                {/* Delivery time estimate */}
+                {hasDeliveryEstimate && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-amber-600 cursor-help">
+                          <Clock className="w-3 h-3" />
+                          <span>{formatDeliveryTime()}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        <p>Tiempo estimado de entrega desde origen</p>
+                        {product.logistics?.originCountry && product.logistics?.destinationCountry && (
+                          <p className="text-muted-foreground">
+                            {product.logistics.originCountry} → {product.logistics.destinationCountry}
+                          </p>
                         )}
-                        {product.category_fees && product.category_fees > 0 && (
-                          <p className="text-muted-foreground">+ Tarifa categoría: ${product.category_fees.toFixed(2)}</p>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              
-              {/* Delivery time estimate */}
-              {hasDeliveryEstimate && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-1 text-[10px] text-amber-600 cursor-help">
-                        <Clock className="w-3 h-3" />
-                        <span>Entrega: {formatDeliveryTime()}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      <p>Tiempo estimado de entrega desde origen</p>
-                      {product.logistics?.originCountry && product.logistics?.destinationCountry && (
-                        <p className="text-muted-foreground">
-                          {product.logistics.originCountry} → {product.logistics.destinationCountry}
-                        </p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
             </div>
           )}
         </div>
-
-        {/* Factory Cost Breakdown - ADMIN ONLY */}
-        {isAdmin && product.factory_cost && product.margin_percent && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="mt-1 flex items-center gap-1 text-[9px] text-muted-foreground cursor-help">
-                  <Package className="w-2.5 h-2.5" />
-                  <span>Fábrica: ${product.factory_cost.toFixed(2)} + {product.margin_percent}%</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs max-w-[220px]">
-                <div className="space-y-1">
-                  <p className="font-medium">Desglose de precio B2B</p>
-                  <div className="text-muted-foreground space-y-0.5">
-                    <p>Costo fábrica: ${product.factory_cost.toFixed(2)}</p>
-                    <p>Margen ({product.margin_percent}%): +${product.margin_value?.toFixed(2) || '0.00'}</p>
-                    {logisticsCost > 0 && <p>Logística: +${logisticsCost.toFixed(2)}</p>}
-                    {product.category_fees && product.category_fees > 0 && (
-                      <p>Tarifa categoría: +${product.category_fees.toFixed(2)}</p>
-                    )}
-                    <p className="font-medium text-foreground pt-1 border-t">
-                      Total B2B: ${product.precio_b2b.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
 
         {/* Spacer */}
         <div className="flex-1"></div>
@@ -315,6 +307,26 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
           </Button>
         </div>
       </div>
+
+      {/* Pricing Detail Modal */}
+      <SuggestedPricesDetailModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        items={[
+          {
+            productId: product.id,
+            variantId: undefined,
+            itemName: product.nombre,
+            quantity: 1,
+            costPerUnit: product.precio_b2b,
+            weight_kg: product.weight_kg || 0.3,
+            shippingCostPerUnit: product.logistics_cost || 0,
+          }
+        ]}
+        totalWeight_kg={product.weight_kg || 0.3}
+        totalShippingCost={product.logistics_cost || 0}
+        markupMultiplier={2.5}
+      />
     </div>
   );
 };
