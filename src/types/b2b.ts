@@ -137,6 +137,7 @@ export interface ProductB2BCard {
   logistics_cost?: number; // Costo de envío
   category_fees?: number; // Tarifas de categoría
   estimated_delivery_days?: { min: number; max: number }; // Tiempo estimado de entrega
+  weight_kg?: number; // Peso desde v_logistics_data
 }
 
 export interface CartItemB2B {
