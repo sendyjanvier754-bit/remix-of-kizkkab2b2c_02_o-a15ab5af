@@ -185,7 +185,7 @@ const SellerCartPage = () => {
       const costPerUnit = item.precioB2B;
       
       // Find shipping cost for this item
-      const shippingInfo = shippingCosts?.result?.itemCosts?.find(
+      const shippingInfo = shippingCosts?.itemCosts?.find(
         sc => sc.productId === item.productId && sc.variantId === (item.variantId || undefined)
       ) || { weight_kg: 0, shippingCost: 0 };
       
@@ -202,8 +202,8 @@ const SellerCartPage = () => {
 
     return {
       items: items_for_modal,
-      totalWeight_kg: shippingCosts?.result?.totalWeight_kg || 0,
-      totalShippingCost: shippingCosts?.result?.totalCost || 0,
+      totalWeight_kg: shippingCosts?.totalWeight_kg || 0,
+      totalShippingCost: shippingCosts?.totalCost || 0,
     };
   }, [selectedItems, businessPanelDataMap, shippingCosts]);
 

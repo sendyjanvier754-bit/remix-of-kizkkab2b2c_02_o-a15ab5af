@@ -60,9 +60,11 @@ interface ShippingTier {
   tier_name: string;
   transport_type: 'maritimo' | 'aereo';
   tramo_a_cost_per_kg: number;
+  tramo_a_min_cost?: number;
   tramo_a_eta_min: number;
   tramo_a_eta_max: number;
   tramo_b_cost_per_lb: number;
+  tramo_b_min_cost?: number;
   tramo_b_eta_min: number;
   tramo_b_eta_max: number;
   allows_oversize: boolean;
@@ -161,6 +163,8 @@ export default function AdminGlobalLogisticsPage() {
     shipping_route_id: '',
     segment: 'china_to_transit',
     cost_per_kg: 0,
+    cost_per_cbm: 0,
+    min_cost: 0,
     estimated_days_min: 7,
     estimated_days_max: 21,
     notes: '',
@@ -178,9 +182,11 @@ export default function AdminGlobalLogisticsPage() {
     tier_name: '',
     transport_type: 'maritimo' as 'maritimo' | 'aereo',
     tramo_a_cost_per_kg: 8.0,
+    tramo_a_min_cost: 5.0,
     tramo_a_eta_min: 15,
     tramo_a_eta_max: 25,
     tramo_b_cost_per_lb: 5.0,
+    tramo_b_min_cost: 3.0,
     tramo_b_eta_min: 3,
     tramo_b_eta_max: 7,
     allows_oversize: true,

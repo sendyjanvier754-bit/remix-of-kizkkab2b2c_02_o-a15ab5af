@@ -8,6 +8,8 @@ export interface BusinessPanelDataItem {
   sku: string;
   item_type: 'product' | 'variant';
   cost_per_unit: number;
+  weight_kg: number;
+  shipping_cost_per_unit: number;
   suggested_pvp_per_unit: number;
   investment_1unit: number;
   revenue_1unit: number;

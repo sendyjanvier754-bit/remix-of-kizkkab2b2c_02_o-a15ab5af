@@ -1,25 +1,9 @@
 -- =============================================================================
--- VISTA: v_business_panel_data
+-- VISTA ACTUALIZADA: v_business_panel_data
+-- Ahora incluye shipping_cost desde v_logistics_data
 -- =============================================================================
--- Descripción:
---   Vista unificada que combina PRODUCTOS y VARIANTES con todos los cálculos
---   del BusinessPanel (Panel de Negocio) en un solo lugar.
---   AHORA INCLUYE: peso y costo de envío desde v_logistics_data
---
--- Propósito:
---   Centralizar los datos de precios y márgenes para usar en:
---   - VariantDrawer (selección de variantes)
---   - SellerCartPage (resumen del pedido)
---   - SuggestedPricesDetailModal (desglose de precios)
---   - Cualquier otra vista que necesite BusinessPanel
---
--- Fórmula de Margen:
---   - PVP sugerido = (Precio B2B × 2.5) + Costo de Envío (desde v_logistics_data)
---   - Ganancia unitaria = PVP sugerido - Precio B2B - Costo de Envío
---   - Margen % = (Ganancia / Precio B2B) × 100
---
--- Última Actualización: 2026-02-07
--- =============================================================================
+
+DROP VIEW IF EXISTS v_business_panel_data CASCADE;
 
 CREATE OR REPLACE VIEW v_business_panel_data AS
 
@@ -78,24 +62,4 @@ FROM v_variantes_con_precio_b2b vv
 LEFT JOIN v_logistics_data ld ON ld.variant_id = vv.id
 WHERE vv.is_active = TRUE;
 
-COMMENT ON VIEW v_business_panel_data IS 'Vista unificada con BusinessPanel metrics. Incluye shipping_cost desde v_logistics_data para que el PVP sugerido cubra costos de envío.';
-
--- =============================================================================
--- CAMPOS DISPONIBLES
--- =============================================================================
--- product_id              UUID      - ID del producto
--- variant_id              UUID      - ID de la variante (NULL si es producto)
--- item_name               TEXT      - Nombre del producto o variante
--- sku                     TEXT      - SKU del item
--- item_type               TEXT      - Tipo: 'product' o 'variant'
--- cost_per_unit           NUMERIC   - Precio B2B unitario (lo que pagas)
--- weight_kg               NUMERIC   - Peso en KG desde v_logistics_data
--- shipping_cost_per_unit  NUMERIC   - Costo de envío unitario
--- suggested_pvp_per_unit  NUMERIC   - PVP sugerido = (cost × 2.5) + shipping
--- investment_1unit        NUMERIC   - Inversión para 1 unidad (= cost_per_unit)
--- revenue_1unit           NUMERIC   - Ingresos para 1 unidad (= suggested_pvp)
--- profit_1unit            NUMERIC   - Ganancia para 1 unidad
--- margin_percentage       NUMERIC   - Margen % (150% base)
--- is_active               BOOLEAN   - Activo en el sistema
--- last_updated            TIMESTAMP - Fecha de último cálculo
--- =============================================================================
+COMMENT ON VIEW v_business_panel_data IS 'Vista unificada con BusinessPanel metrics. Ahora incluye shipping_cost desde v_logistics_data para que el PVP sugerido cubra costos de envío.';
