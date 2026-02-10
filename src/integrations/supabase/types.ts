@@ -693,6 +693,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "b2c_cart_items_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "v_seller_inventory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "b2c_cart_items_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -1648,6 +1655,13 @@ export type Database = {
             referencedRelation: "seller_catalog"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "inventory_movements_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "v_seller_inventory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       kyc_verifications: {
@@ -2216,6 +2230,13 @@ export type Database = {
             columns: ["seller_catalog_id"]
             isOneToOne: false
             referencedRelation: "seller_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_b2c_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "v_seller_inventory"
             referencedColumns: ["id"]
           },
         ]
@@ -3063,6 +3084,13 @@ export type Database = {
             referencedRelation: "seller_catalog"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_reviews_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "v_seller_inventory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       product_shipping_classes: {
@@ -3299,6 +3327,13 @@ export type Database = {
             columns: ["seller_catalog_id"]
             isOneToOne: false
             referencedRelation: "seller_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_views_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "v_seller_inventory"
             referencedColumns: ["id"]
           },
         ]
@@ -3805,6 +3840,7 @@ export type Database = {
       }
       seller_catalog: {
         Row: {
+          costo_logistica: number | null
           created_at: string
           descripcion: string | null
           id: string
@@ -3813,9 +3849,8 @@ export type Database = {
           is_active: boolean | null
           metadata: Json | null
           nombre: string
-          precio_costo: number | null
           precio_b2b_base: number | null
-          costo_logistica: number | null
+          precio_costo: number | null
           precio_venta: number
           seller_store_id: string
           sku: string | null
@@ -3825,6 +3860,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          costo_logistica?: number | null
           created_at?: string
           descripcion?: string | null
           id?: string
@@ -3833,9 +3869,8 @@ export type Database = {
           is_active?: boolean | null
           metadata?: Json | null
           nombre: string
-          precio_costo?: number | null
           precio_b2b_base?: number | null
-          costo_logistica?: number | null
+          precio_costo?: number | null
           precio_venta: number
           seller_store_id: string
           sku?: string | null
@@ -3845,6 +3880,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          costo_logistica?: number | null
           created_at?: string
           descripcion?: string | null
           id?: string
@@ -3853,9 +3889,8 @@ export type Database = {
           is_active?: boolean | null
           metadata?: Json | null
           nombre?: string
-          precio_costo?: number | null
           precio_b2b_base?: number | null
-          costo_logistica?: number | null
+          precio_costo?: number | null
           precio_venta?: number
           seller_store_id?: string
           sku?: string | null
@@ -4474,10 +4509,13 @@ export type Database = {
           allows_oversize: boolean | null
           allows_sensitive: boolean | null
           created_at: string | null
+          extra_surcharge_fixed: number | null
+          extra_surcharge_percent: number | null
           id: string
           is_active: boolean | null
           priority_order: number | null
           shipping_route_id: string
+          surcharge_description: string | null
           tier_name: string
           tier_type: string
           tramo_a_cost_per_kg: number
@@ -4493,10 +4531,13 @@ export type Database = {
           allows_oversize?: boolean | null
           allows_sensitive?: boolean | null
           created_at?: string | null
+          extra_surcharge_fixed?: number | null
+          extra_surcharge_percent?: number | null
           id?: string
           is_active?: boolean | null
           priority_order?: number | null
           shipping_route_id: string
+          surcharge_description?: string | null
           tier_name: string
           tier_type: string
           tramo_a_cost_per_kg: number
@@ -4512,10 +4553,13 @@ export type Database = {
           allows_oversize?: boolean | null
           allows_sensitive?: boolean | null
           created_at?: string | null
+          extra_surcharge_fixed?: number | null
+          extra_surcharge_percent?: number | null
           id?: string
           is_active?: boolean | null
           priority_order?: number | null
           shipping_route_id?: string
+          surcharge_description?: string | null
           tier_name?: string
           tier_type?: string
           tramo_a_cost_per_kg?: number
@@ -4533,6 +4577,78 @@ export type Database = {
             columns: ["shipping_route_id"]
             isOneToOne: false
             referencedRelation: "shipping_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_type_configs: {
+        Row: {
+          allows_oversize: boolean | null
+          allows_sensitive: boolean | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          extra_cost_fixed: number | null
+          extra_cost_percent: number | null
+          id: string
+          is_active: boolean | null
+          max_weight_kg: number | null
+          min_weight_kg: number | null
+          priority_order: number | null
+          route_id: string
+          shipping_tier_id: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          allows_oversize?: boolean | null
+          allows_sensitive?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          extra_cost_fixed?: number | null
+          extra_cost_percent?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_weight_kg?: number | null
+          min_weight_kg?: number | null
+          priority_order?: number | null
+          route_id: string
+          shipping_tier_id: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          allows_oversize?: boolean | null
+          allows_sensitive?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          extra_cost_fixed?: number | null
+          extra_cost_percent?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_weight_kg?: number | null
+          min_weight_kg?: number | null
+          priority_order?: number | null
+          route_id?: string
+          shipping_tier_id?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_type_configs_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_type_configs_shipping_tier_id_fkey"
+            columns: ["shipping_tier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_tiers"
             referencedColumns: ["id"]
           },
         ]
@@ -5216,6 +5332,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_favorites_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "v_seller_inventory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_favorites_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -5681,6 +5804,64 @@ export type Database = {
           },
         ]
       }
+      v_seller_inventory: {
+        Row: {
+          costo_logistica: number | null
+          created_at: string | null
+          descripcion: string | null
+          ganancia_por_unidad: number | null
+          id: string | null
+          images: Json | null
+          imported_at: string | null
+          is_active: boolean | null
+          margen_porcentaje: number | null
+          metadata: Json | null
+          nombre: string | null
+          order_status: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
+          precio_b2b_base: number | null
+          precio_costo: number | null
+          precio_sugerido_venta: number | null
+          precio_venta: number | null
+          seller_store_id: string | null
+          sku: string | null
+          source_order_id: string | null
+          source_product_id: string | null
+          stock: number | null
+          updated_at: string | null
+          weight_kg: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_catalog_seller_store_id_fkey"
+            columns: ["seller_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["source_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["source_product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_con_precio_b2b"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_catalog_source_product_id_fkey"
+            columns: ["source_product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_variantes_con_precio_b2b: {
         Row: {
           applied_margin_percent: number | null
@@ -5785,6 +5966,20 @@ export type Database = {
       calculate_route_cost: {
         Args: { p_route_id: string; p_weight_cbm?: number; p_weight_kg: number }
         Returns: Json
+      }
+      calculate_shipping_cost_with_type: {
+        Args: {
+          p_shipping_tier_id: string
+          p_shipping_type_config_id?: string
+          p_weight_kg: number
+        }
+        Returns: {
+          base_cost: number
+          display_name: string
+          extra_cost: number
+          tier_type: string
+          total_cost: number
+        }[]
       }
       calculate_suggested_pvp:
         | { Args: { p_product_id: string }; Returns: number }
