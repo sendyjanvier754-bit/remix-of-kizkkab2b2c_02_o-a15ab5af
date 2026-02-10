@@ -58,7 +58,7 @@ const SellerOnboardingPage = () => {
         }
         
         if (data) {
-          setStoreId(data.id);
+          setStoreId(data.slug);
           setFormData({
             name: data.name || "",
             description: data.description || "",
@@ -154,7 +154,9 @@ const SellerOnboardingPage = () => {
         .replace(/(^-|-$)/g, "") + "-" + Math.floor(Math.random() * 1000);
 
       if (storeId) {
-        // Update existing store
+        // Update existing store AND ACTIVATE IT
+        console.log(`📝 Completing and activating store ${storeId}...`);
+        
         const { error } = await supabase
           .from("stores")
           .update({
@@ -165,13 +167,17 @@ const SellerOnboardingPage = () => {
             instagram: formData.instagram || null,
             facebook: formData.facebook || null,
             logo: logoUrl,
-            slug: slug,
+            is_active: true,  // ✅ ACTIVATE store after configuration
           })
           .eq("id", storeId);
 
         if (error) throw error;
+        
+        console.log(`✅ Store ${storeId} configured and activated!`);
       } else {
-        // Create new store
+        // Create new store (shouldn't happen - store should be created when role assigned)
+        console.log(`⚠️ Creating new store (placeholder didn't exist)...`);
+        
         const { error } = await supabase
           .from("stores")
           .insert({
@@ -188,6 +194,8 @@ const SellerOnboardingPage = () => {
           });
 
         if (error) throw error;
+        
+        console.log(`✅ New store created and activated!`);
       }
 
       toast.success("¡Tu tienda ha sido configurada exitosamente!");
@@ -274,6 +282,28 @@ const SellerOnboardingPage = () => {
                   <h2 className="text-2xl font-bold text-gray-900">Información de tu Tienda</h2>
                   <p className="text-gray-500 mt-1">Estos datos serán visibles para tus clientes</p>
                 </div>
+
+                {/* Store ID (Read-only) */}
+                {storeId && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                    <div className="flex items-center gap-3 justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-indigo-600 uppercase tracking-wide">ID de tu Tienda</p>
+                        <p className="text-sm font-mono text-indigo-900 mt-1">{storeId}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(storeId);
+                          toast.success("ID copiado al portapapeles");
+                        }}
+                        className="px-3 py-2 text-sm border border-indigo-300 rounded hover:bg-indigo-100 transition-colors"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Logo Upload */}
                 <div className="flex flex-col items-center">

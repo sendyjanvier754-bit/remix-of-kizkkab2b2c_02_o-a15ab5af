@@ -1,0 +1,332 @@
+=====================================================
+📦 CAMBIOS: CATÁLOGO vs INVENTARIO - Separación de Funcionalidades
+=====================================================
+Fecha: 2026-02-09
+
+## 🎯 OBJETIVO
+
+Separar claramente dos conceptos:
+1. **CATÁLOGO** (seller/catalogo): TODO lo que el seller ha comprado/importado
+2. **INVENTARIO** (seller/inventario): Solo productos CON STOCK de órdenes completadas
+
+=====================================================
+## 📋 CAMBIOS REALIZADOS
+=====================================================
+
+### 1. Hook useSellerCatalog Modificado
+─────────────────────────────────────────────────────
+Archivo: src/hooks/useSellerCatalog.ts
+
+**ANTES:**
+- Solo consultaba v_seller_inventory (con filtro de stock)
+- No había forma de ver productos sin stock
+
+**AHORA:**
+```typescript
+useSellerCatalog(showAll?: boolean)
+```
+
+**Parámetros:**
+- `showAll = true`: Consulta `seller_catalog` (TODO el catálogo)
+  - Incluye productos con stock = 0
+  - Incluye productos de órdenes pendientes
+  - Incluye importaciones manuales
+  
+- `showAll = false` (default): Consulta `v_seller_inventory`
+  - Solo productos con stock > 0
+  - Solo de órdenes completadas/entregadas
+  - Incluye importaciones manuales
+
+**Lógica interna:**
+```typescript
+if (showAll) {
+  // Query: seller_catalog completo
+  .from('seller_catalog')
+  .eq('seller_store_id', storeId)
+  .order('created_at', { ascending: false })
+} else {
+  // Query: Vista filtrada
+  .from('v_seller_inventory')
+  .eq('seller_store_id', storeId)
+  .order('created_at', { ascending: false })
+}
+```
+
+### 2. SellerCatalogo.tsx - Catálogo Completo
+─────────────────────────────────────────────────────
+Archivo: src/pages/seller/SellerCatalogo.tsx
+
+**CAMBIOS:**
+
+✅ **Hook actualizado:**
+```typescript
+useSellerCatalog(true) // showAll = true
+```
+
+✅ **Botón de Importar agregado:**
+- Icono: Download
+- Color: #071d7f (azul oscuro)
+- Ubicación: Header junto a RefreshCw
+- Abre: B2BCatalogImportDialog
+
+✅ **Badge "sin stock" agregado:**
+```typescript
+{item.stock > 0 ? (
+  <Badge variant="outline">{item.stock}</Badge>
+) : (
+  <Badge variant="secondary" className="bg-amber-50 text-amber-700">
+    sin stock
+  </Badge>
+)}
+```
+
+✅ **Estado agregado:**
+- `isImportDialogOpen`: Controla dialog de importar
+- `existingSkus`: Lista de SKUs existentes
+
+✅ **Import agregado:**
+```typescript
+import { B2BCatalogImportDialog } from '@/components/seller/B2BCatalogImportDialog';
+import { Download } from 'lucide-react';
+```
+
+✅ **Diálogo agregado al final:**
+```tsx
+<B2BCatalogImportDialog
+  isOpen={isImportDialogOpen}
+  onClose={() => setIsImportDialogOpen(false)}
+  onImportComplete={refetch}
+  existingSkus={existingSkus}
+  storeId={storeId}
+/>
+```
+
+### 3. SellerInventarioB2C.tsx - Inventario Filtrado
+─────────────────────────────────────────────────────
+Archivo: src/pages/seller/SellerInventarioB2C.tsx
+
+**CAMBIOS:**
+
+❌ **Botón de Importar ELIMINADO:**
+- Eliminado del header actions
+- Eliminado del empty state
+
+❌ **Imports ELIMINADOS:**
+```typescript
+// ELIMINADO: import { B2BCatalogImportDialog }
+// ELIMINADO: import { Download }
+```
+
+❌ **Estado ELIMINADO:**
+```typescript
+// ELIMINADO: const [isImportDialogOpen, setIsImportDialogOpen]
+// ELIMINADO: const existingSkus = items.map(...)
+```
+
+❌ **Componente ELIMINADO:**
+```tsx
+// ELIMINADO: <B2BCatalogImportDialog ... />
+```
+
+✅ **Empty State ACTUALIZADO:**
+```tsx
+<p className="text-muted-foreground mb-4">
+  Tu inventario aparecerá aquí cuando completes órdenes B2B.
+</p>
+<p className="text-sm text-muted-foreground">
+  Visita <a href="/seller/catalogo">Mi Catálogo</a> para importar productos manualmente.
+</p>
+```
+
+✅ **Hook sin cambios:**
+```typescript
+useSellerCatalog() // showAll = false (default)
+```
+
+=====================================================
+## 🔍 COMPORTAMIENTO RESULTANTE
+=====================================================
+
+### CATÁLOGO (seller/catalogo) - showAll = true
+─────────────────────────────────────────────────────
+**Muestra:**
+✅ Todos los productos importados (sin filtro de stock)
+✅ Productos con stock = 0 → Badge "sin stock" (amber)
+✅ Productos con stock > 0 → Badge con número (outline)
+✅ Productos de órdenes pendientes
+✅ Productos de órdenes completadas
+✅ Importaciones manuales
+
+**Acciones disponibles:**
+✅ Importar productos (botón Download)
+✅ Editar precio de venta
+✅ Ajustar stock
+✅ Activar/desactivar producto
+✅ Ver todo el historial de compras
+
+**Vista SQL:** `seller_catalog` (tabla completa)
+
+**Propósito:** 
+- Ver TODO lo que has comprado
+- Gestionar catálogo completo
+- Importar nuevos productos
+
+### INVENTARIO (seller/inventario) - showAll = false
+─────────────────────────────────────────────────────
+**Muestra:**
+✅ Solo productos con stock > 0
+✅ Solo de órdenes completadas/entregadas
+✅ Importaciones manuales con stock
+❌ NO muestra órdenes pendientes
+❌ NO muestra productos sin stock
+
+**Acciones disponibles:**
+✅ Publicar en B2C
+✅ Ajustar stock
+✅ Actualizar precios masivamente
+✅ Activar/desactivar
+❌ NO puede importar (debe ir a Catálogo)
+
+**Vista SQL:** `v_seller_inventory` (filtrada)
+
+**Propósito:**
+- Ver solo productos disponibles para venta
+- Gestionar stock activo
+- Publicar en tienda B2C
+
+=====================================================
+## 📊 COMPARACIÓN VISUAL
+=====================================================
+
+┌────────────────────────────────────────────────────┐
+│           CATÁLOGO vs INVENTARIO                   │
+├────────────────┬───────────────┬───────────────────┤
+│ Característica │ Catálogo      │ Inventario        │
+├────────────────┼───────────────┼───────────────────┤
+│ Ruta           │/seller/       │/seller/           │
+│                │catalogo       │inventario         │
+├────────────────┼───────────────┼───────────────────┤
+│ Hook param     │showAll=true   │showAll=false      │
+├────────────────┼───────────────┼───────────────────┤
+│ Fuente SQL     │seller_catalog │v_seller_inventory │
+├────────────────┼───────────────┼───────────────────┤
+│ Stock = 0      │ ✅ Muestra    │ ❌ Oculta         │
+│                │badge "sin     │                  │
+│                │stock"         │                  │
+├────────────────┼───────────────┼───────────────────┤
+│ Órdenes        │ ✅ Todas      │ ❌ Solo           │
+│ pendientes     │               │completadas       │
+├────────────────┼───────────────┼───────────────────┤
+│ Botón Importar │ ✅ Sí         │ ❌ No             │
+├────────────────┼───────────────┼───────────────────┤
+│ Propósito      │Ver TODO       │Gestionar stock    │
+│                │lo comprado    │disponible        │
+└────────────────┴───────────────┴───────────────────┘
+
+=====================================================
+## 🎨 EJEMPLO VISUAL - Badge Stock
+=====================================================
+
+CATÁLOGO:
+┌────────────────┬──────────────┐
+│ Producto       │ Stock Badge  │
+├────────────────┼──────────────┤
+│ Camisa A       │   [15]       │ ← Stock > 0
+│ Pantalón B     │ sin stock    │ ← Stock = 0 (amber)
+│ Zapatos C      │   [5]        │ ← Stock > 0
+│ Gorra D        │ sin stock    │ ← Stock = 0 (amber)
+└────────────────┴──────────────┘
+
+INVENTARIO:
+┌────────────────┬──────────────┐
+│ Producto       │ Stock Badge  │
+├────────────────┼──────────────┤
+│ Camisa A       │   [15]       │ ← Stock > 0
+│ Zapatos C      │   [5]        │ ← Stock > 0
+└────────────────┴──────────────┘
+(Pantalón B y Gorra D NO aparecen)
+
+=====================================================
+## 🔄 FLUJO DE TRABAJO
+=====================================================
+
+1. IMPORTAR PRODUCTOS
+   ↓
+   Seller va a: /seller/catalogo
+   ↓
+   Click botón Download (importar)
+   ↓
+   Selecciona productos del catálogo B2B
+   ↓
+   Se agregan a seller_catalog con stock = 0
+   ↓
+   Aparecen con badge "sin stock"
+
+2. COMPRAR LOTE B2B
+   ↓
+   Seller hace orden en /seller/adquisicion-lotes
+   ↓
+   Orden con status = 'pending'
+   ↓
+   NO aparece en inventario (solo catálogo)
+   ↓
+   Admin marca orden como 'completed'
+   ↓
+   TRIGGER actualiza seller_catalog (agrega stock)
+   ↓
+   Aparece en inventario con stock > 0
+
+3. VENDER EN B2C
+   ↓
+   Seller publica desde /seller/inventario
+   ↓
+   Cliente compra
+   ↓
+   Stock disminuye
+   ↓
+   Si llega a 0 → desaparece de inventario
+   ↓
+   Sigue visible en catálogo con badge "sin stock"
+
+=====================================================
+## ✅ VALIDACIÓN
+=====================================================
+
+Ejecutados sin errores:
+✅ TypeScript compilation: 0 errors
+✅ src/hooks/useSellerCatalog.ts: No errors
+✅ src/pages/seller/SellerCatalogo.tsx: No errors  
+✅ src/pages/seller/SellerInventarioB2C.tsx: No errors
+
+Funcionalidades verificadas:
+✅ Hook acepta parámetro showAll
+✅ Catálogo usa showAll=true
+✅ Inventario usa showAll=false (default)
+✅ Badge "sin stock" implementado
+✅ Botón importar movido a catálogo
+✅ Botón importar eliminado de inventario
+✅ Empty states actualizados
+
+=====================================================
+## 📝 NOTAS IMPORTANTES
+=====================================================
+
+1. **Compatibilidad hacia atrás:**
+   - useSellerCatalog() sin parámetro = showAll: false
+   - No rompe código existente que use el hook
+
+2. **Performance:**
+   - Catálogo: Query más pesada (todos los registros)
+   - Inventario: Query optimizada (vista pre-filtrada)
+
+3. **UX Mejorada:**
+   - Claro dónde importar productos
+   - Badge visual para distinguir sin stock
+   - Links entre catálogo e inventario
+
+4. **Próximos pasos sugeridos:**
+   - Agregar filtro en catálogo (con stock / sin stock)
+   - Mostrar órden status en catálogo
+   - Link desde catálogo a orden de compra
+
+=====================================================

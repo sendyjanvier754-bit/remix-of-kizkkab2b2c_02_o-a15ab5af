@@ -7,9 +7,8 @@ import { InventarioTable } from "@/components/seller/inventory/InventarioTable";
 import { PublicacionDialog } from "@/components/seller/inventory/PublicacionDialog";
 import { StockAdjustDialog } from "@/components/seller/inventory/StockAdjustDialog";
 import { SellerBulkPriceDialog } from "@/components/seller/inventory/SellerBulkPriceDialog";
-import { B2BCatalogImportDialog } from "@/components/seller/B2BCatalogImportDialog";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, AlertCircle, DollarSign, Download } from "lucide-react";
+import { RefreshCw, Package, AlertCircle, DollarSign } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function SellerInventarioB2C() {
   const { user, isLoading: authLoading } = useAuth();
@@ -29,11 +28,7 @@ export default function SellerInventarioB2C() {
   const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
   const [isStockDialogOpen, setIsStockDialogOpen] = useState(false);
   const [isBulkPriceOpen, setIsBulkPriceOpen] = useState(false);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Get existing SKUs to prevent duplicates
-  const existingSkus = items.map(item => item.sku);
 
   const stats = getStats();
 
@@ -101,10 +96,33 @@ export default function SellerInventarioB2C() {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              No tienes una tienda configurada. Los productos se crearán automáticamente 
-              cuando completes tu primera compra B2B.
+              Tu tienda se está configurando. Si el problema persiste, 
+              <a href="/seller/onboarding" className="underline font-semibold ml-1">
+                completa tu perfil de tienda aquí
+              </a>
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Store ID Info Card */}
+        {storeId && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-indigo-600 uppercase tracking-wide">ID de tu Tienda</p>
+                <p className="text-sm font-mono text-indigo-900 mt-1 break-all">{storeId}</p>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(storeId);
+                  // Optional: Show a toast here if you have access to toast
+                }}
+                className="px-3 py-2 text-sm border border-indigo-300 rounded hover:bg-indigo-100 transition-colors flex-shrink-0 ml-4"
+              >
+                Copiar
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Stats */}
@@ -112,15 +130,6 @@ export default function SellerInventarioB2C() {
           {...stats}
           actions={
             <>
-              <Button 
-                variant="default" 
-                onClick={() => setIsImportDialogOpen(true)}
-                style={{ backgroundColor: '#071d7f' }}
-                size="icon"
-                className="rounded-full"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
               {items.length > 0 && (
                 <Button 
                   variant="outline" 
@@ -148,19 +157,12 @@ export default function SellerInventarioB2C() {
           <div className="text-center py-12 bg-muted/50 rounded-lg">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Sin productos en inventario</h3>
-            <div className="flex flex-wrap justify-center gap-2 mt-4">
-              <Button 
-                onClick={() => setIsImportDialogOpen(true)}
-                style={{ backgroundColor: '#071d7f' }}
-                size="icon"
-                className="rounded-full"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" onClick={() => window.location.href = '/seller/adquisicion-lotes'}>
-                Ver Catálogo B2B
-              </Button>
-            </div>
+            <p className="text-muted-foreground mb-4">
+              Tu inventario aparecerá aquí cuando completes órdenes B2B.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Visita <a href="/seller/catalogo" className="underline font-semibold">Mi Catálogo</a> para importar productos manualmente.
+            </p>
           </div>
         ) : (
           /* Inventory Table */
@@ -194,16 +196,6 @@ export default function SellerInventarioB2C() {
           items={items}
           onSuccess={refetch}
         />
-
-        {storeId && (
-          <B2BCatalogImportDialog
-            open={isImportDialogOpen}
-            onOpenChange={setIsImportDialogOpen}
-            storeId={storeId}
-            existingSkus={existingSkus}
-            onSuccess={refetch}
-          />
-        )}
       </div>
     </SellerLayout>
   );

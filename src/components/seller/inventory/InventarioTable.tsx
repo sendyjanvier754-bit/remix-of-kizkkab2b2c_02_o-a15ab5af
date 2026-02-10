@@ -121,11 +121,16 @@ export function InventarioTable({
               <TableHead>
                 <SortButton field="stock">Stock</SortButton>
               </TableHead>
-              <TableHead>Costo</TableHead>
-              <TableHead>
+              <TableHead className="text-right">
+                <div className="flex flex-col items-end">
+                  <span>Costo Total</span>
+                  <span className="text-xs text-muted-foreground font-normal">(B2B + Logística)</span>
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
                 <SortButton field="precioVenta">Precio Venta</SortButton>
               </TableHead>
-              <TableHead>
+              <TableHead className="text-right">
                 <SortButton field="margin">Margen</SortButton>
               </TableHead>
               <TableHead>Estado</TableHead>
@@ -171,13 +176,18 @@ export function InventarioTable({
                         {item.stock}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      ${item.precioCosto.toFixed(2)}
+                    <TableCell className="text-right">
+                      <div className="space-y-0.5">
+                        <p className="font-medium text-sm">${item.precioCosto.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          ${item.precioB2B.toFixed(2)} + ${item.costoLogistica.toFixed(2)}
+                        </p>
+                      </div>
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-right">
                       ${item.precioVenta.toFixed(2)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <div className="flex items-center gap-1">
                         {isLoss ? (
                           <TrendingDown className="h-4 w-4 text-red-500" />

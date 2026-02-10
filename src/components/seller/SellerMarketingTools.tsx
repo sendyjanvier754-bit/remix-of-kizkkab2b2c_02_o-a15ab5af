@@ -177,9 +177,9 @@ export const SellerMarketingTools: React.FC = () => {
       <Card>
         <CardContent className="py-12 text-center">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground mb-4">Necesitas tener una tienda configurada</p>
+          <p className="text-muted-foreground mb-4">Tu tienda se está configurando...</p>
           <Button asChild variant="outline">
-            <a href="/seller/cuenta">Configurar tienda</a>
+            <a href="/seller/onboarding">Completar configuración</a>
           </Button>
         </CardContent>
       </Card>

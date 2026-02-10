@@ -1,0 +1,256 @@
+=====================================================
+📦 FLUJO COMPLETO: DE DÓNDE VIENE LA LOGÍSTICA EN SELLER_CATALOG
+=====================================================
+
+EJEMPLO DE TU IMAGEN:
+- Subtotal Productos: $11.82
+- Logística Total: +$12.47  ⬅️ Este valor viene de aquí
+- Total Estimado: $24.29
+
+=====================================================
+1️⃣ EN EL CARRITO B2B (Antes de confirmar)
+=====================================================
+
+Ubicación: SellerCartPage.tsx
+Vista SQL: v_business_panel_data
+
+CÁLCULO EN TIEMPO REAL:
+┌─────────────────────────────────────────────────┐
+│ Por cada producto en el carrito:               │
+│                                                 │
+│ 1. Obtener peso del producto (weight_kg)       │
+│ 2. Multiplicar por cantidad                    │
+│ 3. Sumar todos los pesos (SIN REDONDEAR)      │
+│                                                 │
+│ Total Peso = Product1(0.3kg × 2) +            │
+│              Product2(0.5kg × 3) +            │
+│              Product3(0.2kg × 1)              │
+│            = 0.6 + 1.5 + 0.2 = 2.3 kg        │
+│                                                 │
+│ 4. REDONDEAR HACIA ARRIBA (CEIL)              │
+│    CEIL(2.3kg) = 3kg  ⬅️ Acá se redondea       │
+│                                                 │
+│ 5. Calcular costo con peso redondeado:        │
+│                                                 │
+│    Tramo A (Turbo Express):                    │
+│    3kg × $2.50/kg = $7.50                     │
+│                                                 │
+│    Tramo B (Turbo Express + DHL):              │
+│    3kg × 2.20462 lb/kg × $0.50/lb = $3.31     │
+│                                                 │
+│    Surcharge (entrega final):                  │
+│    $5.00 (fijo por zona Haiti Centro)         │
+│                                                 │
+│    TOTAL LOGÍSTICA = $7.50 + $3.31 + $5.00    │
+│                    = $15.81                    │
+└─────────────────────────────────────────────────┘
+
+FÓRMULA SQL (en v_business_panel_data):
+```sql
+-- Peso total del carrito (sin redondear aún)
+SUM(COALESCE(weight_kg, 0) * cantidad) as peso_total_kg
+
+-- Luego en frontend o en cálculos:
+peso_redondeado = CEIL(peso_total_kg)
+
+-- Costo logística total:
+(peso_redondeado × tramo_a_cost_per_kg) +
+(peso_redondeado × 2.20462 × tramo_b_cost_per_lb) +
+final_delivery_surcharge
+```
+
+=====================================================
+2️⃣ AL COMPLETAR LA ORDEN (Trigger automático)
+=====================================================
+
+Ubicación: update_seller_inventory_from_b2b_order()
+Archivo: 20260209_add_seller_catalog_cost_breakdown.sql (líneas 118-248)
+
+SE DISPARA CUANDO:
+```sql
+UPDATE orders_b2b 
+SET status = 'completed' 
+WHERE id = 'orden-id';
+```
+
+PROCESO DEL TRIGGER:
+┌─────────────────────────────────────────────────┐
+│ PASO 1: Calcular logística total de la orden   │
+│                                                 │
+│ -- Sumar pesos sin redondear                   │
+│ SELECT SUM(weight_kg × cantidad)               │
+│ FROM order_items_b2b                           │
+│ WHERE order_id = NEW.id                        │
+│ → Resultado: 2.3 kg                            │
+│                                                 │
+│ -- Aplicar CEIL al total                       │
+│ v_peso_total_kg := CEIL(2.3) = 3 kg           │
+│                                                 │
+│ -- Calcular costo total (misma fórmula)        │
+│ v_costo_logistica_total :=                     │
+│   (3 × $2.50) +              ← Tramo A         │
+│   (3 × 2.20462 × $0.50) +    ← Tramo B         │
+│   $5.00                       ← Surcharge      │
+│ = $15.81                                       │
+└─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│ PASO 2: Distribuir logística proporcionalmente │
+│                                                 │
+│ Para cada item en la orden:                    │
+│                                                 │
+│ Product1 (0.3kg × 2 = 0.6kg):                 │
+│   Proporción: 0.6/2.3 = 26.09%               │
+│   Logística: $15.81 × 26.09% = $4.13         │
+│   Por unidad: $4.13 / 2 = $2.07              │
+│                                                 │
+│ Product2 (0.5kg × 3 = 1.5kg):                 │
+│   Proporción: 1.5/2.3 = 65.22%               │
+│   Logística: $15.81 × 65.22% = $10.31        │
+│   Por unidad: $10.31 / 3 = $3.44             │
+│                                                 │
+│ Product3 (0.2kg × 1 = 0.2kg):                 │
+│   Proporción: 0.2/2.3 = 8.70%                │
+│   Logística: $15.81 × 8.70% = $1.38          │
+│   Por unidad: $1.38 / 1 = $1.38              │
+│                                                 │
+│ TOTAL: $4.13 + $10.31 + $1.38 = $15.82       │
+│ (diferencia de $0.01 por redondeo decimal)    │
+└─────────────────────────────────────────────────┘
+
+CÓDIGO DEL TRIGGER:
+```sql
+-- Calcular costo logística proporcional al peso del item
+IF v_peso_total_kg > 0 THEN
+  v_costo_logistica_por_unidad := 
+    (v_costo_logistica_total * v_item.weight_kg) / v_peso_total_kg;
+ELSE
+  v_costo_logistica_por_unidad := 0;
+END IF;
+
+-- Insertar en seller_catalog con desglose
+INSERT INTO seller_catalog (
+  ...
+  precio_b2b_base,        ⬅️ Precio que pagó al admin
+  costo_logistica,        ⬅️ Logística distribuida proporcionalmente
+  precio_costo,           ⬅️ Total: B2B + logística
+  ...
+) VALUES (
+  ...
+  v_precio_b2b,                              -- ej: $5.00
+  v_costo_logistica_por_unidad,              -- ej: $2.07
+  v_precio_b2b + v_costo_logistica_por_unidad, -- ej: $7.07
+  ...
+);
+```
+
+=====================================================
+3️⃣ EN EL INVENTARIO (Después de completar)
+=====================================================
+
+Ubicación: useSellerCatalog.ts
+Fuente: seller_catalog (tabla, NO vista)
+
+DATOS HISTÓRICOS (No se recalculan):
+┌─────────────────────────────────────────────────┐
+│ seller_catalog contiene:                        │
+│                                                 │
+│ ┌─────────────────┬──────────────────────┐    │
+│ │ Campo            │ Valor (ejemplo)      │    │
+│ ├─────────────────┼──────────────────────┤    │
+│ │ precio_b2b_base │ $5.00               │    │
+│ │ costo_logistica │ $2.07               │    │
+│ │ precio_costo    │ $7.07               │    │
+│ │ precio_venta    │ $17.68 (margen 150%)│    │
+│ │ source_order_id │ uuid-de-la-orden    │    │
+│ └─────────────────┴──────────────────────┘    │
+│                                                 │
+│ Estos valores NO cambian aunque:               │
+│ ❌ Cambien las tarifas de envío               │
+│ ❌ Cambie el precio B2B del admin             │
+│ ❌ Cambie el peso del producto                │
+│                                                 │
+│ ✅ Son históricos: lo que REALMENTE pagó       │
+└─────────────────────────────────────────────────┘
+
+EN PublicacionDialog.tsx SE MUESTRA:
+```tsx
+Precio B2B (histórico): $5.00
+Logística (pagada: 0.3kg): $2.07
+─────────────────────────────
+Total Invertido: $7.07
+```
+
+=====================================================
+🔑 RESUMEN: De dónde viene la logística
+=====================================================
+
+1. ORIGEN DEL CÁLCULO:
+   ✅ Tarifas: shipping_tiers (tramo_a_cost_per_kg, tramo_b_cost_per_lb)
+   ✅ Surcharge: shipping_zones (final_delivery_surcharge)
+   ✅ Peso: products.weight_kg
+
+2. CÁLCULO:
+   ✅ Carrito: Suma pesos → CEIL → calcula total
+   ✅ Trigger: Repite cálculo → distribuye proporcionalmente
+   ✅ Inventario: Lee valor histórico guardado
+
+3. ALMACENAMIENTO:
+   ✅ seller_catalog.precio_b2b_base (precio producto)
+   ✅ seller_catalog.costo_logistica (logística distribuida)
+   ✅ seller_catalog.precio_costo (suma de ambos)
+
+4. FÓRMULA FINAL:
+   ```
+   Peso Redondeado = CEIL(SUM(peso × cantidad))
+   
+   Logística Total = 
+     (Peso × Tarifa Tramo A) +
+     (Peso × 2.20462 × Tarifa Tramo B) +
+     Surcharge Fijo
+   
+   Logística Por Item = 
+     (Logística Total × Peso Item) / Peso Total
+   ```
+
+=====================================================
+📊 EJEMPLO NUMÉRICO COMPLETO
+=====================================================
+
+ORDEN CON 2 PRODUCTOS:
+┌──────────┬─────────┬──────┬───────────┬──────────┐
+│ Producto │ Cantidad│ Peso │ Precio B2B│ Peso/Item│
+├──────────┼─────────┼──────┼───────────┼──────────┤
+│ Camisa   │    2    │ 0.3kg│   $8.00   │  0.6kg   │
+│ Pantalón │    1    │ 0.5kg│   $12.00  │  0.5kg   │
+└──────────┴─────────┴──────┴───────────┴──────────┘
+
+CÁLCULO:
+1. Peso total: 0.6 + 0.5 = 1.1 kg
+2. Peso redondeado: CEIL(1.1) = 2 kg
+3. Logística total:
+   - Tramo A: 2 × $2.50 = $5.00
+   - Tramo B: 2 × 2.20462 × $0.50 = $2.20
+   - Surcharge: $5.00
+   - TOTAL: $12.20
+
+4. Distribución:
+   Camisa (0.6kg / 1.1kg = 54.55%):
+   - Logística: $12.20 × 54.55% = $6.66
+   - Por unidad: $6.66 / 2 = $3.33
+   - Total por unidad: $8.00 + $3.33 = $11.33
+   
+   Pantalón (0.5kg / 1.1kg = 45.45%):
+   - Logística: $12.20 × 45.45% = $5.54
+   - Por unidad: $5.54 / 1 = $5.54
+   - Total por unidad: $12.00 + $5.54 = $17.54
+
+5. En seller_catalog:
+   ┌─────────┬──────────┬───────────┬────────────┐
+   │ Item    │ B2B Base │ Logística │ Costo Total│
+   ├─────────┼──────────┼───────────┼────────────┤
+   │ Camisa  │  $8.00   │   $3.33   │  $11.33    │
+   │ Pantalón│ $12.00   │   $5.54   │  $17.54    │
+   └─────────┴──────────┴───────────┴────────────┘
+
+=====================================================

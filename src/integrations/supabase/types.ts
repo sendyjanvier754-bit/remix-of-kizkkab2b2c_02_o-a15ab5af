@@ -3814,6 +3814,8 @@ export type Database = {
           metadata: Json | null
           nombre: string
           precio_costo: number | null
+          precio_b2b_base: number | null
+          costo_logistica: number | null
           precio_venta: number
           seller_store_id: string
           sku: string | null
@@ -3832,6 +3834,8 @@ export type Database = {
           metadata?: Json | null
           nombre: string
           precio_costo?: number | null
+          precio_b2b_base?: number | null
+          costo_logistica?: number | null
           precio_venta: number
           seller_store_id: string
           sku?: string | null
@@ -3850,6 +3854,8 @@ export type Database = {
           metadata?: Json | null
           nombre?: string
           precio_costo?: number | null
+          precio_b2b_base?: number | null
+          costo_logistica?: number | null
           precio_venta?: number
           seller_store_id?: string
           sku?: string | null

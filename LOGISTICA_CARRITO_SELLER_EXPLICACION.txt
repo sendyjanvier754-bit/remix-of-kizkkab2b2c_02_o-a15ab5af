@@ -1,0 +1,284 @@
+=====================================================
+💰 DE DÓNDE VIENE LA LOGÍSTICA EN SELLER CART ($12.47)
+=====================================================
+
+UBICACIÓN: SellerCartPage.tsx (Carrito de compra del seller)
+FUENTE: useLogisticsDataForItems hook
+VISTA SQL: v_logistics_data (solo pesos)
+
+=====================================================
+📦 FLUJO COMPLETO - CARRITO DEL SELLER
+=====================================================
+
+PASO 1: Hook useLogisticsDataForItems se ejecuta
+─────────────────────────────────────────────────────
+Archivo: src/hooks/useLogisticsDataForItems.ts
+Línea 76: const { result: shippingCosts } = useLogisticsDataForItems(itemsForBatch);
+
+PASO 2: Obtener pesos de v_logistics_data
+─────────────────────────────────────────────────────
+Query SQL:
+```sql
+SELECT product_id, variant_id, weight_kg 
+FROM v_logistics_data
+WHERE product_id IN (...) OR variant_id IN (...)
+```
+
+Resultado ejemplo:
+┌────────────┬──────────┐
+│ Product    │ Weight   │
+├────────────┼──────────┤
+│ Product A  │ 0.3 kg   │
+│ Product B  │ 0.5 kg   │
+│ Product C  │ 0.2 kg   │
+└────────────┴──────────┘
+
+PASO 3: Obtener tarifas de envío
+─────────────────────────────────────────────────────
+Query SQL:
+```sql
+-- Tarifas STANDARD
+SELECT tramo_a_cost_per_kg, tramo_b_cost_per_lb
+FROM shipping_tiers
+WHERE tier_type = 'STANDARD' AND is_active = true;
+→ tramo_a_cost_per_kg: $2.50
+→ tramo_b_cost_per_lb: $0.50
+
+-- Surcharge por zona
+SELECT final_delivery_surcharge
+FROM shipping_zones
+WHERE zone_name = 'HAITI_CENTRO' AND is_active = true;
+→ final_delivery_surcharge: $5.00
+```
+
+PASO 4: SUMA PESOS SIN REDONDEAR (CRÍTICO)
+─────────────────────────────────────────────────────
+Código: useLogisticsDataForItems.ts líneas 135-138
+
+```javascript
+let totalWeight_kg = 0;
+items.forEach(item => {
+  const weight_kg = matchedData?.weight_kg || 0.3;
+  totalWeight_kg += weight_kg;  // ← SUMA SIN CEIL
+});
+```
+
+Ejemplo:
+┌────────────┬──────────┬───────────┐
+│ Item       │ Weight   │ Acumulado │
+├────────────┼──────────┼───────────┤
+│ Product A  │ 0.3 kg   │ 0.3 kg    │
+│ Product B  │ 0.5 kg   │ 0.8 kg    │
+│ Product C  │ 0.2 kg   │ 1.0 kg    │
+└────────────┴──────────┴───────────┘
+
+Total sin redondear: 1.0 kg
+
+PASO 5: REDONDEAR SOLO AL FINAL (línea 141)
+─────────────────────────────────────────────────────
+```javascript
+const roundedTotalWeight_kg = Math.max(Math.ceil(totalWeight_kg), 1);
+```
+
+CEIL(1.0) = 1 kg  ← AQUÍ se redondea
+
+⚠️ IMPORTANTE: Si fuera 1.1 kg → CEIL(1.1) = 2 kg
+⚠️ IMPORTANTE: Si fuera 0.7 kg → CEIL(0.7) = 1 kg
+
+PASO 6: CALCULAR COSTO CON PESO REDONDEADO (líneas 144-147)
+─────────────────────────────────────────────────────
+```javascript
+const totalCost = 
+  (roundedTotalWeight_kg * costPerKg) +           // Tramo A
+  (roundedTotalWeight_kg * 2.20462 * costPerLb) + // Tramo B
+  zoneSurcharge;                                   // Surcharge
+```
+
+Ejemplo con peso redondeado = 1 kg:
+┌─────────────┬────────────────────────┬──────────┐
+│ Componente  │ Cálculo                │ Resultado│
+├─────────────┼────────────────────────┼──────────┤
+│ Tramo A     │ 1 kg × $2.50           │ $2.50    │
+│ Tramo B     │ 1 × 2.20462 × $0.50    │ $1.10    │
+│ Surcharge   │ Fijo                   │ $5.00    │
+├─────────────┼────────────────────────┼──────────┤
+│ TOTAL       │                        │ $8.60    │
+└─────────────┴────────────────────────┴──────────┘
+
+PASO 7: DISTRIBUIR PROPORCIONALMENTE (líneas 150-159)
+─────────────────────────────────────────────────────
+```javascript
+const itemCosts = itemWeights.map(item => {
+  const itemProportion = totalWeight_kg > 0 
+    ? item.weight_kg / totalWeight_kg 
+    : 0;
+  return {
+    productId: item.productId,
+    weight_kg: item.weight_kg,
+    shippingCost: totalCost * itemProportion,  // ← Distribución proporcional
+  };
+});
+```
+
+Ejemplo distribución de $8.60 total:
+┌────────────┬──────────┬────────────┬─────────────┐
+│ Item       │ Weight   │ Proporción │ Logística   │
+├────────────┼──────────┼────────────┼─────────────┤
+│ Product A  │ 0.3 kg   │ 0.3/1.0=30%│ $8.60×30%   │
+│            │          │            │ = $2.58     │
+├────────────┼──────────┼────────────┼─────────────┤
+│ Product B  │ 0.5 kg   │ 0.5/1.0=50%│ $8.60×50%   │
+│            │          │            │ = $4.30     │
+├────────────┼──────────┼────────────┼─────────────┤
+│ Product C  │ 0.2 kg   │ 0.2/1.0=20%│ $8.60×20%   │
+│            │          │            │ = $1.72     │
+└────────────┴──────────┴────────────┴─────────────┘
+
+PASO 8: MOSTRAR EN UI (SellerCartPage.tsx)
+─────────────────────────────────────────────────────
+Línea 926 y 1561:
+```tsx
+Logística Total: ${shippingCosts?.totalCost.toFixed(2)}
+```
+
+Muestra: $8.60
+
+=====================================================
+🔄 COMPARACIÓN: Carrito vs Orden Completada
+=====================================================
+
+┌──────────────────┬─────────────────┬───────────────┐
+│ Característica   │ Carrito         │ Orden Trigger │
+├──────────────────┼─────────────────┼───────────────┤
+│ Ejecución        │ Tiempo real     │ Al completar  │
+│ Frecuencia       │ En cada cambio  │ Una vez       │
+│ Ubicación        │ Frontend        │ Database      │
+│ Archivo          │useLogisticsData │ 20260209_add  │
+│                  │ForItems.ts      │_seller_       │
+│                  │                 │catalog_cost   │
+│                  │                 │_breakdown.sql │
+│ Línea clave      │ 141-147         │ 157-177       │
+├──────────────────┼─────────────────┼───────────────┤
+│ FÓRMULA          │ IDÉNTICA        │ IDÉNTICA      │
+│ Suma pesos       │ ✅ Sin CEIL     │ ✅ Sin CEIL   │
+│ Redondeo total   │ ✅ CEIL final   │ ✅ CEIL final │
+│ Distribución     │ ✅ Proporcional │ ✅ Proporcional│
+├──────────────────┼─────────────────┼───────────────┤
+│ Resultado        │ $8.60 estimado  │ $8.60 guardado│
+│ Almacenamiento   │ ❌ No guarda    │ ✅ seller_    │
+│                  │                 │   catalog     │
+└──────────────────┴─────────────────┴───────────────┘
+
+=====================================================
+📊 EJEMPLO REAL: TU CARRITO ($12.47)
+=====================================================
+
+Si ves $12.47 de logística, significa:
+
+OPCIÓN A: Peso total antes de redondear = ~1.5 kg
+─────────────────────────────────────────────────────
+Peso después de CEIL(1.5) = 2 kg
+
+Cálculo:
+• Tramo A: 2 kg × $2.50 = $5.00
+• Tramo B: 2 kg × 2.20462 × $0.50 = $2.20
+• Surcharge: $5.00
+• TOTAL: $12.20 ≈ $12.47
+
+OPCIÓN B: Peso total antes de redondear = ~2.3 kg
+─────────────────────────────────────────────────────
+Peso después de CEIL(2.3) = 3 kg
+
+Cálculo:
+• Tramo A: 3 kg × $2.50 = $7.50
+• Tramo B: 3 kg × 2.20462 × $0.50 = $3.31
+• Surcharge: $5.00
+• TOTAL: $15.81
+
+OPCIÓN C: Peso total antes de redondear = ~1.1 kg
+─────────────────────────────────────────────────────
+Peso después de CEIL(1.1) = 2 kg
+
+Con tarifas diferentes o zona diferente.
+
+=====================================================
+🔍 CÓMO VERIFICAR TU CASO EXACTO
+=====================================================
+
+QUERY 1: Ver productos en tu carrito
+─────────────────────────────────────────────────────
+```sql
+SELECT 
+  oi.product_id,
+  oi.variant_id,
+  oi.cantidad,
+  p.nombre,
+  COALESCE(v.weight_kg, p.weight_kg, 0) as peso_unitario,
+  (COALESCE(v.weight_kg, p.weight_kg, 0) * oi.cantidad) as peso_total_item
+FROM order_items_b2b oi
+JOIN products p ON oi.product_id = p.id
+LEFT JOIN product_variants v ON oi.variant_id = v.id
+WHERE oi.order_id = 'TU-ORDER-ID';
+```
+
+QUERY 2: Calcular peso total y costo
+─────────────────────────────────────────────────────
+```sql
+-- Suma de pesos (sin redondear)
+SELECT 
+  SUM(COALESCE(v.weight_kg, p.weight_kg, 0) * oi.cantidad) as peso_total_sin_redondear,
+  CEIL(SUM(COALESCE(v.weight_kg, p.weight_kg, 0) * oi.cantidad)) as peso_redondeado
+FROM order_items_b2b oi
+JOIN products p ON oi.product_id = p.id
+LEFT JOIN product_variants v ON oi.variant_id = v.id
+WHERE oi.order_id = 'TU-ORDER-ID';
+```
+
+QUERY 3: Ver tarifas actuales
+─────────────────────────────────────────────────────
+```sql
+SELECT 
+  'Tramo A' as concepto,
+  tramo_a_cost_per_kg as tarifa,
+  'USD/kg' as unidad
+FROM shipping_tiers 
+WHERE tier_type = 'STANDARD' AND is_active = true
+
+UNION ALL
+
+SELECT 
+  'Tramo B',
+  tramo_b_cost_per_lb,
+  'USD/lb'
+FROM shipping_tiers 
+WHERE tier_type = 'STANDARD' AND is_active = true
+
+UNION ALL
+
+SELECT 
+  'Surcharge',
+  final_delivery_surcharge,
+  'USD fijo'
+FROM shipping_zones 
+WHERE zone_name = 'HAITI_CENTRO' AND is_active = true;
+```
+
+=====================================================
+🎯 RESUMEN EJECUTIVO
+=====================================================
+
+1. ORIGEN: useLogisticsDataForItems hook
+2. DATOS: v_logistics_data (pesos) + shipping_tiers + shipping_zones
+3. PROCESO:
+   ✅ Suma pesos sin redondear
+   ✅ CEIL al total
+   ✅ Calcula con peso redondeado
+   ✅ Distribuye proporcionalmente
+4. MUESTRA: "Logística Total: $X.XX" en SellerCartPage
+5. ALMACENA: Cuando completa orden → seller_catalog
+
+🔑 CLAVE: El $12.47 es calculado EN TIEMPO REAL
+           NO viene de la base de datos
+           Es la estimación PRE-compra
+
+=====================================================

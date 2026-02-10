@@ -257,7 +257,52 @@
   - TypeScript compilation: ✨ Sin errores ✓
   - **Impacto:** Modal ahora muestra precios dinámicos correctos desde vista, no del producto padre
 
-### ✅ Completado (2026-02-07) - CORRECCIÓN HERO CAROUSEL MOBILE ✨ NUEVO
+### ✅ Completado (2026-02-09) - CORRECCIÓN CRÍTICA: CREACIÓN AUTOMÁTICA DE TIENDAS ⚠️ NUEVO
+
+**Identificación y Corrección del Problema Crítico en Onboarding:**
+- ✅ **Problema:** Las tiendas NO se creaban automáticamente cuando:
+  - Se creaba nueva cuenta seller
+  - Se cambiaba usuario a seller (seller_upgrade via admin)
+- ✅ **Root Cause:** Trigger SQL no tenía validación/fallback en flujo admin
+  
+**Soluciones Implementadas:**
+1. ✅ `supabase/migrations/20260209_fix_seller_store_auto_creation.sql` - Migration completa
+   - Trigger crea tienda **PLACEHOLDER VACÍA** (NOT NULL fields = NULL)
+   - is_active = FALSE (no visible hasta completar)
+   - slug = KZ + 6 dígitos aleatorios + año (Ej: KZ1234562026)
+   - Seller DEBE completar en SellerOnboardingPage antes de que sea activa
+   - **CRÍTICO:** Debe ejecutarse en Supabase SQL Editor manualmente
+   
+2. ✅ `src/hooks/useEnsureSellerStore.ts` - Hook con redirección automática
+   - Detecta tiendas incompletas (name = NULL)
+   - Redirige automáticamente a /seller/onboarding
+   - Si no hay tienda, crea placeholder vacío (fallback)
+   - Manejo robusto de errores
+   
+3. ✅ `src/hooks/useAdminApprovals.ts` (línea 190-260) - Admin approval mejorado
+   - Espera 1.5s a que trigger cree tienda vacía (5 retries)
+   - Si trigger falla, crea tienda vacía manualmente
+   - Seller será redirigido a onboarding automáticamente
+   - No bloquea flujo si tienda falla
+   
+4. ✅ `src/components/seller/SellerLayout.tsx` (línea 28) - Validación automática
+   - Integrado useEnsureSellerStore
+   - Redirige a onboarding si tienda incompleta
+   
+5. ✅ `src/pages/seller/SellerOnboardingPage.tsx` (línea 156-190) - Activación de tienda
+   - Al completar, actualiza la tienda: name, logo, description, etc.
+   - **IMPORTANTE:** Activa la tienda (is_active = TRUE)
+   - Después, tienda es visible públicamente
+
+**Impacto:**
+- ✅ Sellers nuevos: Tienda vacía se crea → validación redirige a onboarding → completa → se activa
+- ✅ Upgrade sellers: Tienda vacía se crea → validación redirige a onboarding → completa → se activa
+- ✅ Admin flow: Fallback manual si trigger falla (nunca queda sin tienda)
+- ✅ Consistencia: useEnsureSellerStore detecta cualquier inconsistencia en tiempo real
+- ✅ UX: Seller nunca ve error - automáticamente redirigido a completar configuración
+
+**Archivos relacionados:**
+- 📄 `DIAGNOSTICO_TIENDAS_SELLERS.md` - Diagnóstico completo y pasos de verificación (ACTUALIZADO)
 
 **Actualización de FeaturedProductsCarousel para usar vistas B2B:**
 - ✅ `useProductsB2B.ts` - Hook `useFeaturedProductsB2B` actualizado
@@ -268,7 +313,7 @@
   - Resultado: **Carousel hero en móvil ahora muestra precios B2B correctos desde vista** ✓
   - Impacto: Sección hero de `/seller/adquisicion-lotes` en móvil ahora obtiene precios dinámicos correctos
 
-### ⏳ Pendiente (FINAL)
+### ⏳ Pendiente (FINAL - PRIORIDAD CRÍTICA)
 
 **Tareas Finales:**
 1. ✅ ~~Ejecutar migración de variantes~~ COMPLETADO
@@ -276,9 +321,17 @@
 3. ✅ ~~Unificación de "Resumen del Pedido" con consolidatedBusinessPanelData~~ COMPLETADO (2026-02-07)
 4. ✅ ~~Corrección de precios B2B en modal de variantes~~ COMPLETADO (2026-02-07)
 5. ✅ ~~Corrección de precios en carousel hero mobile~~ COMPLETADO (2026-02-07)
-6. 📝 **PRÓXIMO PASO 1:** B2BCatalogImportDialog.tsx (última tarea crítica - 30 min)
-7. 📝 **PRÓXIMO PASO 2:** Testing real con carrito - Validar UI con números correctos
-8. 🚀 **PRÓXIMO PASO 3:** Git commit & push - "feat: Complete B2B pricing fixes - Modal + FeaturedCarousel"
+6. ✅ ~~Corrección de creación automática de tiendas para sellers~~ COMPLETADO (2026-02-09)
+7. 📋 **PRÓXIMO PASO 1:** Ejecutar migration SQL en Supabase (2 min)
+   - Archivo: `supabase/migrations/20260209_fix_seller_store_auto_creation.sql`
+   - Ir a: Supabase → SQL Editor → Copy & Execute
+8. 🧪 **PRÓXIMO PASO 2:** Probar flujos de creación (10 min)
+   - Crear admin approval para seller_upgrade
+   - Verificar logs de "Auto-created" o "Manually created"
+   - Ir a /seller/adquisicion-lotes y verificar console
+9. 📝 **PRÓXIMO PASO 3:** Git commit & push (5 min)
+   - "fix: Implement automatic seller store creation with trigger + fallback mechanism"
+10. 🎯 **PRÓXIMO PASO 4:** B2BCatalogImportDialog.tsx (última tarea original - 30 min)
 
 ---
 

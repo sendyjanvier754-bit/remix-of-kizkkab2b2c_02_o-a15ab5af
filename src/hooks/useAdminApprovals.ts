@@ -199,7 +199,7 @@ export const useAdminApprovals = () => {
           .eq('user_id', request.requester_id)
           .eq('role', 'user');
         
-        // 2. Assign 'seller' role
+        // 2. Assign 'seller' role (this should trigger auto-store creation via trigger)
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
@@ -211,7 +211,59 @@ export const useAdminApprovals = () => {
           throw roleError;
         }
         
-        // 3. Create seller record if not exists
+        // 3. Wait for trigger to create store (with retries)
+        let storeExists = false;
+        let autoCreatedStore = false;
+        
+        for (let i = 0; i < 5; i++) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          const { data: store } = await supabase
+            .from('stores')
+            .select('id')
+            .eq('owner_user_id', request.requester_id)
+            .maybeSingle();
+          
+          if (store) {
+            storeExists = true;
+            autoCreatedStore = true;
+            console.log(`✅ Auto-created store detected for seller ${request.requester_id}`);
+            break;
+          }
+        }
+        
+        // 4. If trigger didn't create store, create manually (fallback)
+        if (!storeExists) {
+          console.warn(`⚠️ Trigger didn't create store for ${request.requester_id}, creating manually...`);
+          
+          const storeName = metadata?.store_name || metadata?.user_name || 'Mi Tienda';
+          console.warn(`⚠️ Trigger didn't create store for ${request.requester_id}, creating manually...`);
+          
+          // Generate slug: KZ + 6 random numbers + year (no hyphen)
+          const randomNumbers = Math.floor(Math.random() * 900000) + 100000; // 100000-999999
+          const currentYear = new Date().getFullYear();
+          const slug = `KZ${randomNumbers}${currentYear}`;
+          
+          const { error: storeError } = await supabase.from('stores').insert({
+            owner_user_id: request.requester_id,
+            name: storeName || "Mi Tienda",
+            description: metadata?.store_description || `Tienda de ${storeName || 'vendedor'}`,
+            slug: slug,
+            is_active: true,
+            is_accepting_orders: true,
+            show_stock: true,
+            country: 'Haiti',
+          });
+          
+          if (storeError) {
+            console.error('Error creating store manually:', storeError);
+            // Don't throw - store creation is not critical
+          } else {
+            console.log(`✅ Manually created store for seller ${request.requester_id}`);
+          }
+        }
+        
+        // 5. Create seller record if not exists
         const { data: existingSeller } = await supabase
           .from('sellers')
           .select('id')
@@ -227,32 +279,6 @@ export const useAdminApprovals = () => {
             phone: metadata?.phone || null,
             is_verified: false,
           });
-        }
-        
-        // 4. Create store if metadata has store info and store doesn't exist
-        if (metadata?.store_name) {
-          const { data: existingStore } = await supabase
-            .from('stores')
-            .select('id')
-            .eq('owner_user_id', request.requester_id)
-            .maybeSingle();
-          
-          if (!existingStore) {
-            const slug = (metadata.store_name as string)
-              .toLowerCase()
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .replace(/[^a-z0-9]+/g, "-")
-              .replace(/(^-|-$)/g, "") + "-" + Math.floor(Math.random() * 1000);
-            
-            await supabase.from('stores').insert({
-              owner_user_id: request.requester_id,
-              name: metadata.store_name,
-              description: metadata.store_description || null,
-              slug: slug,
-              is_active: true,
-            });
-          }
         }
       }
 

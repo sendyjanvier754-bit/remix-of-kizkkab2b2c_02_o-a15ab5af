@@ -20,20 +20,19 @@ export function MarginAlert({ precioVenta, precioCosto, className }: MarginAlert
       className={className}
     >
       {isLoss ? (
-        <TrendingDown className="h-4 w-4" />
+        <TrendingDown className="h-3 w-3" />
       ) : (
-        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+        <AlertTriangle className="h-3 w-3 text-yellow-600" />
       )}
-      <AlertDescription className={isLoss ? "" : "text-yellow-700"}>
+      <AlertDescription className={`text-[10px] ${isLoss ? "" : "text-yellow-700"}`}>
         {isLoss ? (
           <>
-            <strong>Alerta de pérdida:</strong> El precio de venta (${precioVenta.toFixed(2)}) es menor 
-            que el costo (${precioCosto.toFixed(2)}). Perderás ${(precioCosto - precioVenta).toFixed(2)} por unidad.
+            <strong>Pérdida:</strong> Precio ${precioVenta.toFixed(2)} &lt; Costo ${precioCosto.toFixed(2)}. 
+            Perderás ${(precioCosto - precioVenta).toFixed(2)}/unidad.
           </>
         ) : (
           <>
-            <strong>Margen bajo:</strong> Tu margen actual es solo del {margin.toFixed(1)}%. 
-            Considera aumentar el precio para mayor rentabilidad.
+            <strong>Margen bajo:</strong> {margin.toFixed(1)}%. Considera aumentar el precio.
           </>
         )}
       </AlertDescription>

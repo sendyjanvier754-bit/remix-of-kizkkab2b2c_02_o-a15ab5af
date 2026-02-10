@@ -1109,6 +1109,34 @@ const SellerAccountPage = () => {
                       </AccordionTrigger>
                       <AccordionContent className="px-6 pb-6">
                         <div className="space-y-4 bg-blue-50 p-4 rounded-lg">
+                          {/* Store ID (Read-only) */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">ID de la Tienda</Label>
+                            <div className="flex items-center gap-2">
+                              <Input 
+                                value={store?.slug || ""}
+                                readOnly
+                                disabled
+                                className="bg-gray-100 border-gray-300 cursor-not-allowed" 
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  if (store?.slug) {
+                                    navigator.clipboard.writeText(store.slug);
+                                    toast({
+                                      title: "Copiado",
+                                      description: "ID de la tienda copiado al portapapeles"
+                                    });
+                                  }
+                                }}
+                              >
+                                Copiar
+                              </Button>
+                            </div>
+                          </div>
+                          
                           <div className="space-y-2">
                             <Label htmlFor="store-name" className="text-sm font-medium">Nombre de la Tienda</Label>
                             <Input 

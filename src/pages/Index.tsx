@@ -13,9 +13,7 @@ import {
   useTopStores,
   useProductsByCategory,
 } from "@/hooks/useMarketplaceData";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Store, Star, Package, CheckCircle } from "lucide-react";
+import { Store } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -60,6 +58,16 @@ const Index = () => {
           />
         )}
 
+        {/* Nuevos Productos */}
+        {newArrivals.length > 0 && (
+          <ProductCarousel
+            title="Recién llegados"
+            products={newArrivals}
+            itemsPerView={5}
+            isLoading={loadingNewArrivals}
+          />
+        )}
+
         {/* Top Tiendas */}
         {topStores.length > 0 && (
           <section className="py-6 px-4">
@@ -70,55 +78,31 @@ const Index = () => {
                   Ver todas
                 </Link>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                 {topStores.map((store) => (
-                  <Link key={store.id} to={`/tienda/${store.slug}`}>
-                    <Card className="hover:shadow-lg transition-shadow h-full">
-                      <CardContent className="p-3 flex flex-col items-center text-center">
-                        <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-2 overflow-hidden">
-                          {store.logo ? (
-                            <img 
-                              src={store.logo} 
-                              alt={store.name} 
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Store className="w-6 h-6 text-muted-foreground" />
-                          )}
+                  <Link 
+                    key={store.id} 
+                    to={`/tienda/${store.slug}`}
+                    className="flex-shrink-0 transition-transform hover:scale-105"
+                  >
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-muted overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                      {store.logo ? (
+                        <img 
+                          src={store.logo} 
+                          alt={store.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Store className="w-8 h-8 text-muted-foreground" />
                         </div>
-                        <h3 className="font-medium text-sm line-clamp-1 flex items-center gap-1">
-                          {store.name}
-                          {store.isVerified && (
-                            <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
-                          )}
-                        </h3>
-                        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                          <Package className="w-3 h-3" />
-                          <span>{store.productCount} productos</span>
-                        </div>
-                        {store.rating > 0 && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs">{store.rating.toFixed(1)}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                      )}
+                    </div>
                   </Link>
                 ))}
               </div>
             </div>
           </section>
-        )}
-
-        {/* Nuevos Productos */}
-        {newArrivals.length > 0 && (
-          <ProductCarousel
-            title="Recién llegados"
-            products={newArrivals}
-            itemsPerView={5}
-            isLoading={loadingNewArrivals}
-          />
         )}
 
         {/* Products by Category */}

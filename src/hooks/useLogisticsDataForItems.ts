@@ -64,11 +64,11 @@ export const useLogisticsDataForItems = (items: ItemForLogistics[]) => {
 
         let logisticsData: any[] = [];
 
-        // Fetch product-level logistics data
+        // Fetch product-level logistics data (only weight_kg, no cost yet)
         if (productIds.length > 0) {
           const { data, error: err } = await supabase
             .from('v_logistics_data')
-            .select('product_id, variant_id, weight_kg, shipping_cost_per_unit')
+            .select('product_id, variant_id, weight_kg')
             .in('product_id', productIds)
             .is('variant_id', null);
 
@@ -76,21 +76,40 @@ export const useLogisticsDataForItems = (items: ItemForLogistics[]) => {
           if (data) logisticsData = logisticsData.concat(data);
         }
 
-        // Fetch variant-level logistics data
+        // Fetch variant-level logistics data (only weight_kg, no cost yet)
         if (variantIds.length > 0) {
           const { data, error: err } = await supabase
             .from('v_logistics_data')
-            .select('product_id, variant_id, weight_kg, shipping_cost_per_unit')
+            .select('product_id, variant_id, weight_kg')
             .in('variant_id', variantIds);
 
           if (err) throw err;
           if (data) logisticsData = logisticsData.concat(data);
         }
 
-        // Calculate totals
+        // Fetch shipping rates (STANDARD tier)
+        const { data: shippingTier } = await supabase
+          .from('shipping_tiers')
+          .select('tramo_a_cost_per_kg, tramo_b_cost_per_lb')
+          .eq('tier_type', 'STANDARD')
+          .eq('is_active', true)
+          .single();
+
+        // Fetch zone surcharge (HAITI_CENTRO)
+        const { data: zone } = await supabase
+          .from('shipping_zones')
+          .select('final_delivery_surcharge')
+          .eq('zone_name', 'HAITI_CENTRO')
+          .eq('is_active', true)
+          .single();
+
+        const costPerKg = shippingTier?.tramo_a_cost_per_kg || 0;
+        const costPerLb = shippingTier?.tramo_b_cost_per_lb || 0;
+        const zoneSurcharge = zone?.final_delivery_surcharge || 0;
+
+        // NUEVA LÓGICA: Sumar pesos SIN redondear primero
         let totalWeight_kg = 0;
-        let totalCost = 0;
-        const itemCosts: LogisticsItemResult[] = [];
+        const itemWeights: Array<{productId: string, variantId: string | null, weight_kg: number}> = [];
 
         // Map the results to match the items requested
         items.forEach(item => {
@@ -102,33 +121,41 @@ export const useLogisticsDataForItems = (items: ItemForLogistics[]) => {
             }
           });
 
-          // If no match found, use defaults (should not happen if DB is in sync)
-          if (!matchedData) {
-            matchedData = {
-              product_id: item.productId,
-              variant_id: item.variantId || null,
-              weight_kg: 0.3, // Default fallback weight
-              shipping_cost_per_unit: 0,
-            };
-          }
-
-          const weight_kg = matchedData.weight_kg || 0.3;
-          const shipping_cost = matchedData.shipping_cost_per_unit || 0;
-
-          itemCosts.push({
-            productId: matchedData.product_id,
-            variantId: matchedData.variant_id,
+          const weight_kg = matchedData?.weight_kg || 0.3; // Default fallback weight
+          
+          itemWeights.push({
+            productId: item.productId,
+            variantId: item.variantId || null,
             weight_kg: weight_kg,
-            shippingCost: shipping_cost,
           });
 
+          // Sumar peso SIN redondear
           totalWeight_kg += weight_kg;
-          totalCost += shipping_cost;
+        });
+
+        // REDONDEAR EL PESO TOTAL (no individual)
+        const roundedTotalWeight_kg = Math.max(Math.ceil(totalWeight_kg), 1);
+
+        // Calcular costo SOLO UNA VEZ con el peso total redondeado
+        const totalCost = 
+          (roundedTotalWeight_kg * costPerKg) +
+          (roundedTotalWeight_kg * 2.20462 * costPerLb) +
+          zoneSurcharge;
+
+        // Para compatibilidad, distribuir el costo proporcionalmente
+        const itemCosts: LogisticsItemResult[] = itemWeights.map(item => {
+          const itemProportion = totalWeight_kg > 0 ? item.weight_kg / totalWeight_kg : 0;
+          return {
+            productId: item.productId,
+            variantId: item.variantId,
+            weight_kg: item.weight_kg,
+            shippingCost: totalCost * itemProportion,
+          };
         });
 
         setResult({
-          totalWeight_kg: totalWeight_kg,
-          totalCost: totalCost,
+          totalWeight_kg: totalWeight_kg, // Peso total sin redondear (para referencia)
+          totalCost: Math.round(totalCost * 100) / 100, // Costo total con peso redondeado
           itemCosts: itemCosts,
           isEmpty: false,
         });

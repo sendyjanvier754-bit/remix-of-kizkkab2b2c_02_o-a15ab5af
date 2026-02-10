@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import SellerMobileHeader from "@/components/seller/SellerMobileHeader";
 import SellerDesktopHeader from "@/components/seller/SellerDesktopHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEnsureSellerStore } from "@/hooks/useEnsureSellerStore";
 
 interface SellerLayoutProps {
   children: ReactNode;
@@ -24,6 +25,8 @@ export function SellerLayout({
   onSearch 
 }: SellerLayoutProps) {
   const isMobile = useIsMobile();
+  // Automatically validate and create store if missing
+  const { storeStatus, isValidating, shouldRedirectToOnboarding } = useEnsureSellerStore();
 
   return (
     <SidebarProvider>

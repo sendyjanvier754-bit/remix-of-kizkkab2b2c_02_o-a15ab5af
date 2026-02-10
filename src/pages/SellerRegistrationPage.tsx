@@ -250,12 +250,10 @@ const SellerRegistrationPage = () => {
       }
 
       // 4. Create store record with name and description
-      const slug = formData.storeName
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "") + "-" + Math.floor(Math.random() * 1000);
+      // Generate slug: KZ + 6 random numbers + year (no hyphen)
+      const randomNumbers = Math.floor(Math.random() * 900000) + 100000; // 100000-999999
+      const currentYear = new Date().getFullYear();
+      const slug = `KZ${randomNumbers}${currentYear}`;
 
       const { error: storeError } = await supabase.from("stores").insert({
         owner_user_id: authData.user.id,
