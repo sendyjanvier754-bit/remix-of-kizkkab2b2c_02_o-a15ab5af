@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { BusinessPanel } from "@/components/business/BusinessPanel";
+import { ShippingTypeSelector } from "@/components/seller/ShippingTypeSelector";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -86,6 +87,11 @@ const SellerCartPage = () => {
   const [isAddingVariant, setIsAddingVariant] = useState(false);
   const [variantImage, setVariantImage] = useState<string | null>(null);
 
+  // Shipping state
+  const [selectedShippingTypeId, setSelectedShippingTypeId] = useState<string | null>(null);
+  const [shippingSummary, setShippingSummary] = useState<any>(null);
+  const defaultRouteId = '21420dcb-9d8a-4947-8530-aaf3519c9047'; // China → Haití
+
   // Prefill variant quantities in the selector with what's already in the cart
   const initialVariantQuantities = useMemo(() => {
     if (!selectedProductForVariants?.id) return {} as Record<string, number>;
@@ -130,6 +136,21 @@ const SellerCartPage = () => {
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.cantidad, 0);
   const allSelected = items.length > 0 && items.every(item => b2bSelectedIds.has(item.id));
   const someSelected = selectedItems.length > 0;
+
+  // Prepare cart items for ShippingTypeSelector
+  const cartItemsForShipping = useMemo(() => {
+    return selectedItems.map(item => {
+      const shippingInfo = shippingCosts?.itemCosts?.find(
+        sc => sc.productId === item.productId && sc.variantId === (item.variantId || undefined)
+      );
+      return {
+        product_id: item.productId,
+        variant_id: item.variantId || undefined,
+        weight_kg: shippingInfo?.weight_kg || 0,
+        quantity: item.cantidad,
+      };
+    });
+  }, [selectedItems, shippingCosts]);
 
   // Calculate profit analysis for SELECTED items only using BusinessPanel view data
   // Shipping costs are ALREADY INCLUDED in suggestedPVP from the view
@@ -1017,6 +1038,21 @@ const SellerCartPage = () => {
                           </p>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Shipping Type Selection */}
+                  {someSelected && (
+                    <div className="p-3 bg-gradient-to-b from-slate-50 to-white border-t border-slate-200">
+                      <ShippingTypeSelector
+                        routeId={defaultRouteId}
+                        cartItems={cartItemsForShipping}
+                        onShippingTypeChange={(typeId, summary) => {
+                          setSelectedShippingTypeId(typeId);
+                          setShippingSummary(summary);
+                        }}
+                        compact={true}
+                      />
                     </div>
                   )}
 

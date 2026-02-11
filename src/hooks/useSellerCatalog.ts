@@ -20,6 +20,7 @@ export interface SellerCatalogItem {
   precioCosto: number; // Total: precio_b2b_base + costo_logistica
   precioB2B: number; // Precio B2B histórico (lo que pagó al admin)
   costoLogistica: number; // Costo logística histórico (lo que pagó en la orden)
+  costoLogisticaCalculado?: number; // Costo logística actual desde v_product_shipping_costs
   weightKg: number; // Peso del producto original
   precioSugeridoVenta: number | null; // Precio sugerido por el admin
   stock: number;
@@ -60,22 +61,41 @@ export interface ProductoConVariantes {
 export const useSellerCatalog = (showAll: boolean = false) => {
   const { user } = useAuth();
   const [items, setItems] = useState<SellerCatalogItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [storeId, setStoreId] = useState<string | null>(null);
 
   // Fetch store ID for the current user
   useEffect(() => {
     const fetchStoreId = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.log('useSellerCatalog: No user ID');
+        setStoreId(null);
+        return;
+      }
       
-      const { data: store, error } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('owner_user_id', user.id)
-        .maybeSingle();
-      
-      if (store && !error) {
-        setStoreId(store.id);
+      try {
+        const { data: store, error } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('owner_user_id', user.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('useSellerCatalog: Error fetching store:', error);
+          setStoreId(null);
+          return;
+        }
+
+        if (store) {
+          console.log('useSellerCatalog: Store found:', store.id);
+          setStoreId(store.id);
+        } else {
+          console.log('useSellerCatalog: No store found for user');
+          setStoreId(null);
+        }
+      } catch (err) {
+        console.error('useSellerCatalog: Exception fetching store:', err);
+        setStoreId(null);
       }
     };
     
@@ -114,6 +134,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
             source_product_id,
             source_order_id,
             source_product:products(
+              id,
               weight_kg,
               precio_sugerido_venta
             )
@@ -128,6 +149,25 @@ export const useSellerCatalog = (showAll: boolean = false) => {
 
         console.log('useSellerCatalog: Catalog data fetched:', catalogData?.length);
 
+        // Get shipping costs for all source products
+        const sourceProductIds = (catalogData || [])
+          .map(item => item.source_product_id)
+          .filter(Boolean);
+
+        let shippingCosts: Record<string, number> = {};
+        if (sourceProductIds.length > 0) {
+          const { data: shippingData } = await supabase
+            .from('v_product_shipping_costs')
+            .select('product_id, base_cost')
+            .in('product_id', sourceProductIds);
+
+          if (shippingData) {
+            shippingCosts = Object.fromEntries(
+              shippingData.map(item => [item.product_id, item.base_cost || 0])
+            );
+          }
+        }
+
         // Map to SellerCatalogItem interface
         const mappedItems: SellerCatalogItem[] = (catalogData || []).map(item => {
           const precioB2B = Number(item.precio_b2b_base) || 0;
@@ -141,6 +181,11 @@ export const useSellerCatalog = (showAll: boolean = false) => {
           const precioSugerido = sourceProduct?.precio_sugerido_venta 
             ? Number(sourceProduct.precio_sugerido_venta)
             : null;
+
+          // Get calculated shipping cost from view
+          const costoLogisticaCalculado = sourceProduct?.id 
+            ? shippingCosts[sourceProduct.id] || costoLogistica
+            : costoLogistica;
 
           // Parse images
           const images = Array.isArray(item.images) 
@@ -162,6 +207,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
             precioCosto,
             precioB2B,
             costoLogistica,
+            costoLogisticaCalculado,
             weightKg,
             precioSugeridoVenta: precioSugerido,
             stock: item.stock || 0,
@@ -251,6 +297,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
           precioCosto,
           precioB2B,
           costoLogistica,
+          costoLogisticaCalculado: costoLogistica, // For inventory view, use historical value
           weightKg,
           precioSugeridoVenta: precioSugerido,
           stock: item.stock || 0,
@@ -280,6 +327,10 @@ export const useSellerCatalog = (showAll: boolean = false) => {
   useEffect(() => {
     if (storeId) {
       fetchCatalog();
+    } else {
+      // No store ID, so can't fetch catalog
+      setItems([]);
+      setIsLoading(false);
     }
   }, [fetchCatalog, storeId]);
 

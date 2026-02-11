@@ -83,7 +83,6 @@ const AdminGlobalLogisticsPage = lazy(() => import("./pages/admin/AdminGlobalLog
 // Lazy loaded - Seller Pages
 const SellerAcquisicionLotes = lazy(() => import("./pages/seller/SellerAcquisicionLotes"));
 const SellerCheckout = lazy(() => import("./pages/seller/SellerCheckout"));
-const SellerCatalogo = lazy(() => import("./pages/seller/SellerCatalogo"));
 const SellerAccountPage = lazy(() => import("./pages/seller/SellerAccountPage"));
 const SellerWalletPage = lazy(() => import("./pages/seller/SellerWalletPage"));
 const SellerDashboard = lazy(() => import("./pages/seller/SellerDashboard"));
@@ -98,6 +97,7 @@ const SellerDiscountCodes = lazy(() => import("./pages/seller/SellerDiscountCode
 const SellerCustomerDiscounts = lazy(() => import("./pages/seller/SellerCustomerDiscounts"));
 const SellerMarketingPage = lazy(() => import("./pages/seller/SellerMarketingPage"));
 const SellerAnalyticsPage = lazy(() => import("./pages/seller/SellerAnalyticsPage"));
+const SellerMiCatalogoPage = lazy(() => import("./pages/seller/SellerMiCatalogoPage"));
 
 const AppContent = () => {
   const { toasts, removeToast } = useToast();
@@ -372,14 +372,6 @@ const AppContent = () => {
               } 
             />
             <Route 
-              path="/seller/catalogo" 
-              element={
-                <ProtectedRoute requiredRoles={[UserRole.SELLER, UserRole.ADMIN]}>
-                  <LazyRoute><SellerCatalogo /></LazyRoute>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
               path="/seller/inventario" 
               element={
                 <ProtectedRoute requiredRoles={[UserRole.SELLER, UserRole.ADMIN]}>
@@ -488,6 +480,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.SELLER, UserRole.ADMIN]}>
                   <LazyRoute><SellerAnalyticsPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/seller/catalogo" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                  <LazyRoute><SellerMiCatalogoPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
