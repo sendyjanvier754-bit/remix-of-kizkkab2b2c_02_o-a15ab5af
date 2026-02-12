@@ -156,16 +156,28 @@ export const useSellerCatalog = (showAll: boolean = false) => {
 
         let shippingCosts: Record<string, number> = {};
         if (sourceProductIds.length > 0) {
-          const { data: shippingData } = await supabase
+          console.log('[SHIPPING] Fetching shipping costs for products:', sourceProductIds);
+          
+          const { data: shippingData, error: shippingError } = await supabase
             .from('v_product_shipping_costs')
-            .select('product_id, base_cost')
+            .select('product_id, total_cost')
             .in('product_id', sourceProductIds);
 
-          if (shippingData) {
-            shippingCosts = Object.fromEntries(
-              shippingData.map(item => [item.product_id, item.base_cost || 0])
-            );
+          if (shippingError) {
+            console.error('[SHIPPING ERROR] Error fetching shipping costs:', shippingError);
           }
+
+          if (shippingData) {
+            console.log('[SHIPPING] Shipping data received:', shippingData);
+            shippingCosts = Object.fromEntries(
+              shippingData.map(item => [item.product_id, item.total_cost || 0])
+            );
+            console.log('[SHIPPING] Shipping costs mapped:', shippingCosts);
+          } else {
+            console.warn('[SHIPPING] No shipping data returned from view');
+          }
+        } else {
+          console.warn('[SHIPPING] No source product IDs found in catalog');
         }
 
         // Map to SellerCatalogItem interface
@@ -183,9 +195,17 @@ export const useSellerCatalog = (showAll: boolean = false) => {
             : null;
 
           // Get calculated shipping cost from view
-          const costoLogisticaCalculado = sourceProduct?.id 
-            ? shippingCosts[sourceProduct.id] || costoLogistica
+          const sourceProductId = item.source_product_id || sourceProduct?.id;
+          const costoLogisticaCalculado = sourceProductId 
+            ? (shippingCosts[sourceProductId] ?? costoLogistica)
             : costoLogistica;
+          
+          // Debug logging (remove in production)
+          if (sourceProductId && shippingCosts[sourceProductId] !== undefined) {
+            console.log(`[${item.nombre}] source_id=${sourceProductId}, historico=$${costoLogistica}, calculado=$${shippingCosts[sourceProductId]}`);
+          } else if (sourceProductId) {
+            console.warn(`[${item.nombre}] sin costo en vista (source_id=${sourceProductId})`);
+          }
 
           // Parse images
           const images = Array.isArray(item.images) 
@@ -458,7 +478,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
       const totalStock = variantes.reduce((sum, v) => sum + v.stock, 0);
       const preciosVenta = variantes.map(v => v.precioVenta);
       const preciosCosto = variantes.map(v => v.precioCosto);
-      const preciosLogistica = variantes.map(v => v.costoLogistica);
+      const preciosLogistica = variantes.map(v => v.costoLogisticaCalculado || v.costoLogistica);
 
       productosConVariantes.push({
         productId,

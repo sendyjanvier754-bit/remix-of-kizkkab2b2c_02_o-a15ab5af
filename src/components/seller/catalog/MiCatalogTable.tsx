@@ -185,11 +185,10 @@ export function MiCatalogTable({
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                        ${variante.costoLogistica.toFixed(2)}
+                        ${(variante.costoLogisticaCalculado || variante.costoLogistica).toFixed(2)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <p className="font-medium text-green-600">${variante.precioVenta.toFixed(2)}</p>
+                    <TableCell className="text-right">\n                      <p className="font-medium text-green-600">${variante.precioVenta.toFixed(2)}</p>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge

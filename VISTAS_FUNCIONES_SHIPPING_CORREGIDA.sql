@@ -1,8 +1,9 @@
 -- =============================================================================
 -- VISTAS QUE CONSULTAN LAS FUNCIONES RPC DE CÁLCULO DE ENVÍO (CORREGIDA)
--- Fecha: 2026-02-11
+-- Fecha: 2026-02-12
 -- Propósito: Exponer los datos calculados por las funciones RPC
--- Cambio: Removidas window functions que causaban error
+-- Cambio: Usa peso_kg y peso_g después de sincronización
+-- NOTA: Ejecutar SINCRONIZAR_PESO_PRODUCTOS.sql primero
 -- =============================================================================
 
 -- ============================================================================
@@ -34,8 +35,8 @@ SELECT
   p.nombre as product_name,
   p.sku_interno as sku,
   
-  -- Peso (prioridad: weight_kg > peso_kg > weight_g > peso_g)
-  COALESCE(p.weight_kg, p.peso_kg, p.weight_g / 1000.0, p.peso_g / 1000.0, 0) as weight_kg,
+  -- Peso simplificado (usa peso_kg y peso_g después de sincronización)
+  COALESCE(p.peso_kg, p.peso_g / 1000.0, 0) as weight_kg,
   
   -- Datos dimensional
   p.is_oversize,
@@ -46,10 +47,10 @@ SELECT
   -- Datos de la ruta
   (SELECT route_id FROM default_route_id LIMIT 1) as route_id,
   
-  -- ✅ Llamar función calculate_shipping_cost y expandir resultados
+  -- Llamar funcion calculate_shipping_cost y expandir resultados
   (SELECT weight_kg FROM public.calculate_shipping_cost(
     (SELECT route_id FROM default_route_id LIMIT 1),
-    COALESCE(p.weight_kg, p.peso_kg, p.weight_g / 1000.0, p.peso_g / 1000.0, 0),
+    COALESCE(p.peso_kg, p.peso_g / 1000.0, 0),
     COALESCE(p.is_oversize, FALSE),
     p.length_cm,
     p.width_cm,
@@ -58,7 +59,7 @@ SELECT
   
   (SELECT base_cost FROM public.calculate_shipping_cost(
     (SELECT route_id FROM default_route_id LIMIT 1),
-    COALESCE(p.weight_kg, p.peso_kg, p.weight_g / 1000.0, p.peso_g / 1000.0, 0),
+    COALESCE(p.peso_kg, p.peso_g / 1000.0, 0),
     COALESCE(p.is_oversize, FALSE),
     p.length_cm,
     p.width_cm,
@@ -67,7 +68,7 @@ SELECT
   
   (SELECT oversize_surcharge FROM public.calculate_shipping_cost(
     (SELECT route_id FROM default_route_id LIMIT 1),
-    COALESCE(p.weight_kg, p.peso_kg, p.weight_g / 1000.0, p.peso_g / 1000.0, 0),
+    COALESCE(p.peso_kg, p.peso_g / 1000.0, 0),
     COALESCE(p.is_oversize, FALSE),
     p.length_cm,
     p.width_cm,
@@ -76,7 +77,7 @@ SELECT
   
   (SELECT dimensional_surcharge FROM public.calculate_shipping_cost(
     (SELECT route_id FROM default_route_id LIMIT 1),
-    COALESCE(p.weight_kg, p.peso_kg, p.weight_g / 1000.0, p.peso_g / 1000.0, 0),
+    COALESCE(p.peso_kg, p.peso_g / 1000.0, 0),
     COALESCE(p.is_oversize, FALSE),
     p.length_cm,
     p.width_cm,
@@ -85,7 +86,7 @@ SELECT
   
   (SELECT volume_m3 FROM public.calculate_shipping_cost(
     (SELECT route_id FROM default_route_id LIMIT 1),
-    COALESCE(p.weight_kg, p.peso_kg, p.weight_g / 1000.0, p.peso_g / 1000.0, 0),
+    COALESCE(p.peso_kg, p.peso_g / 1000.0, 0),
     COALESCE(p.is_oversize, FALSE),
     p.length_cm,
     p.width_cm,
@@ -94,7 +95,7 @@ SELECT
   
   (SELECT total_cost FROM public.calculate_shipping_cost(
     (SELECT route_id FROM default_route_id LIMIT 1),
-    COALESCE(p.weight_kg, p.peso_kg, p.weight_g / 1000.0, p.peso_g / 1000.0, 0),
+    COALESCE(p.peso_kg, p.peso_g / 1000.0, 0),
     COALESCE(p.is_oversize, FALSE),
     p.length_cm,
     p.width_cm,
@@ -108,7 +109,7 @@ FROM public.products p
 WHERE p.is_active = TRUE;
 
 COMMENT ON VIEW v_product_shipping_costs IS 
-  'Costos de envío para productos individuales, incluyendo costo base, surcharges por oversize y dimensiones. Consulta: calculate_shipping_cost()';
+  'Costos de envío para productos individuales. Usa peso_kg y peso_g (sincronizados). Ejecutar SINCRONIZAR_PESO_PRODUCTOS.sql primero. Consulta: calculate_shipping_cost()';
 
 ---
 
@@ -175,7 +176,7 @@ SELECT
     NULL
   ) as shipping_type_id,
   
-  -- ✅ Llamar función calculate_shipping_cost_cart con totales calculados
+  -- Llamar funcion calculate_shipping_cost_cart con totales calculados
   (SELECT weight_rounded_kg FROM public.calculate_shipping_cost_cart(
     (SELECT route_id FROM default_route_id LIMIT 1),
     ct.total_weight_kg,
