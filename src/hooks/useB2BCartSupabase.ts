@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export interface B2BCartItem {
   id: string;
   productId: string;
+  variantId?: string | null;
   sku: string;
   nombre: string;
   unitPrice: number;
@@ -92,6 +93,7 @@ export const useB2BCartSupabase = () => {
             return {
               id: item.id,
               productId: item.product_id || '',
+              variantId: item.variant_id || null,
               sku: item.sku,
               nombre: item.nombre,
               unitPrice: Number(item.unit_price),
@@ -144,6 +146,7 @@ export const useB2BCartSupabase = () => {
   // Add item to cart
   const addItem = useCallback(async (item: {
     productId: string;
+    variantId?: string | null;
     sku: string;
     nombre: string;
     unitPrice: number;
@@ -171,8 +174,11 @@ export const useB2BCartSupabase = () => {
     }
 
     try {
-      // Check if item already exists in cart
-      const existingItem = cart.items.find(i => i.productId === item.productId);
+      // Check if item already exists in cart (match by product AND variant)
+      const existingItem = cart.items.find(i => 
+        i.productId === item.productId && 
+        (i.variantId || null) === (item.variantId || null)
+      );
 
       if (existingItem) {
         const newQuantity = existingItem.quantity + item.quantity;
@@ -192,16 +198,31 @@ export const useB2BCartSupabase = () => {
 
         if (error) throw error;
       } else {
+        // Get weight for this specific product/variant
+        const { data: weightData, error: weightError } = await supabase
+          .rpc('get_product_weight', {
+            p_product_id: item.productId,
+            p_variant_id: item.variantId || null
+          });
+
+        if (weightError) {
+          console.error('Error getting product weight:', weightError);
+        }
+
+        const peso_kg = weightData || 0;
+
         const { error } = await supabase
           .from('b2b_cart_items')
           .insert({
             cart_id: cart.id,
             product_id: item.productId,
+            variant_id: item.variantId || null,
             sku: item.sku,
             nombre: item.nombre,
             unit_price: item.unitPrice,
             quantity: item.quantity,
             total_price: item.quantity * item.unitPrice,
+            peso_kg: peso_kg,
             color: item.color || null,
             size: item.size || null,
           });

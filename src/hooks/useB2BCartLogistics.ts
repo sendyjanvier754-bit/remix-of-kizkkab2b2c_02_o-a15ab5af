@@ -132,7 +132,7 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     },
   });
 
-  // Get shipping costs from unified v_logistics_data view
+  // Get shipping costs from unified v_logistics_data view (for individual items - fallback)
   const itemsForLogistics = useMemo(() => 
     items.map(item => ({
       productId: item.productId,
@@ -152,6 +152,26 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     shippingCostResult?.itemCosts || [],
     [shippingCostResult?.itemCosts]
   );
+
+  // ✨ NEW: Calculate cart shipping cost from DYNAMIC VIEW (per-user)
+  // Uses v_cart_shipping_costs which queries auth.uid() automatically
+  const { data: cartShippingCost, isLoading: cartShippingLoading } = useQuery({
+    queryKey: ['cart-shipping-cost'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_cart_shipping_costs')
+        .select('*')
+        .single();
+      
+      if (error) {
+        console.error('Error fetching cart shipping cost:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: items.length > 0,
+  });
 
   // Calculate logistics for all cart items
   const cartLogistics = useMemo((): CartLogisticsSummary => {
@@ -241,8 +261,9 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       maxDeliveryMax = 14;
     }
     
-    // Get total shipping cost directly from v_logistics_data result
-    const actualTotalShippingCost = shippingCostResult?.totalCost || 0;
+    // ✨ Use DYNAMIC total shipping cost from v_cart_shipping_costs VIEW
+    // This automatically calculates based on ACTUAL cart items of current user (auth.uid())
+    const actualTotalShippingCost = cartShippingCost?.total_cost_with_type || shippingCostResult?.totalCost || 0;
     
     return {
       itemsLogistics,
@@ -258,10 +279,10 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       hasWeight: hasShippingCost || false,
       shippingCostLabel: undefined // Always show cost, never "-"
     };
-  }, [items, products, marginRanges, categoryRates, shippingCostResult, itemCosts, findMarginRangeForCost]);
+  }, [items, products, marginRanges, categoryRates, shippingCostResult, itemCosts, cartShippingCost, findMarginRangeForCost]);
   
   return {
     ...cartLogistics,
-    isCalculating: products.length === 0 && productIds.length > 0 || shippingLoading,
+    isCalculating: products.length === 0 && productIds.length > 0 || shippingLoading || cartShippingLoading,
   };
 }

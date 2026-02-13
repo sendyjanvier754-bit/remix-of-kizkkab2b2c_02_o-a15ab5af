@@ -52,6 +52,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useBusinessPanelDataBatch } from "@/hooks/useBusinessPanelData";
 import { SuggestedPricesDetailModal } from "@/components/seller/SuggestedPricesDetailModal";
 import { useLogisticsDataForItems } from "@/hooks/useLogisticsDataForItems";
+import { useCartShippingCostView } from "@/hooks/useCartShippingCostView";
 
 const SellerCartPage = () => {
   const navigate = useNavigate();
@@ -91,6 +92,7 @@ const SellerCartPage = () => {
   const [selectedShippingTypeId, setSelectedShippingTypeId] = useState<string | null>(null);
   const [shippingSummary, setShippingSummary] = useState<any>(null);
   const defaultRouteId = '21420dcb-9d8a-4947-8530-aaf3519c9047'; // China → Haití
+  const [includeShippingInTotal, setIncludeShippingInTotal] = useState(false);
 
   // Prefill variant quantities in the selector with what's already in the cart
   const initialVariantQuantities = useMemo(() => {
@@ -120,6 +122,10 @@ const SellerCartPage = () => {
     isB2BItemSelected 
   } = useCartSelectionStore();
 
+  // Cart shipping cost - SOLO para items seleccionados (con checkbox marcado)
+  // IMPORTANTE: Debe estar DESPUÉS de b2bSelectedIds para evitar ReferenceError
+  const { data: cartShippingCost, isLoading: isLoadingShippingCost } = useCartShippingCostView(b2bSelectedIds);
+
   // Auto-select all items when cart loads for the first time
   useEffect(() => {
     if (items.length > 0 && b2bSelectedIds.size === 0) {
@@ -136,6 +142,10 @@ const SellerCartPage = () => {
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.cantidad, 0);
   const allSelected = items.length > 0 && items.every(item => b2bSelectedIds.has(item.id));
   const someSelected = selectedItems.length > 0;
+  
+  // Calculate total estimado (subtotal + shipping if included)
+  const shippingCostAmount = cartShippingCost?.shipping_cost_usd || 0;
+  const totalEstimado = subtotal + (includeShippingInTotal ? shippingCostAmount : 0);
 
   // Prepare cart items for ShippingTypeSelector
   const cartItemsForShipping = useMemo(() => {
@@ -899,14 +909,10 @@ const SellerCartPage = () => {
                                   </TooltipTrigger>
                                   <TooltipContent side="left" className="text-xs">
                                     <div className="space-y-0.5">
-                                      <p>Producto (sin envío): ${item.subtotal.toFixed(2)}</p>
-                                      {cartLogistics.itemsLogistics.get(item.id) && (
-                                        <p>
-                                          Envío estimado aparte: {cartLogistics.shippingCostLabel === '-' 
-                                            ? '-' 
-                                            : `+$${(cartLogistics.itemsLogistics.get(item.id)!.logisticsCost * item.cantidad).toFixed(2)}`}
-                                        </p>
-                                      )}
+                                      <p>Subtotal: ${item.subtotal.toFixed(2)}</p>
+                                      <p className="text-muted-foreground">
+                                        {item.cantidad} × ${(item.subtotal / item.cantidad).toFixed(2)}
+                                      </p>
                                     </div>
                                   </TooltipContent>
                                 </Tooltip>
@@ -936,45 +942,38 @@ const SellerCartPage = () => {
                       <span className="text-gray-600">Subtotal Productos:</span>
                       <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
                     </div>
-                    
-                    {/* Logistics Cost */}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex justify-between items-center text-xs cursor-help">
-                            <span className="text-blue-600 flex items-center gap-1">
-                              <Truck className="w-3 h-3" />
-                              Logística Total:
+
+                    {/* Shipping Cost Checkbox */}
+                    {cartShippingCost && !isLoadingShippingCost && (
+                      <div className="flex items-start gap-2 p-2 bg-blue-50 rounded border border-blue-200">
+                        <Checkbox
+                          id="include-shipping"
+                          checked={includeShippingInTotal}
+                          onCheckedChange={(checked) => setIncludeShippingInTotal(!!checked)}
+                          className="mt-0.5"
+                        />
+                        <div className="flex-1">
+                          <label
+                            htmlFor="include-shipping"
+                            className="text-xs font-medium text-blue-900 cursor-pointer flex items-center gap-1"
+                          >
+                            <Truck className="w-3 h-3" />
+                            Incluir Costo de Envío
+                          </label>
+                          <div className="flex justify-between items-center mt-1">
+                            <span className="text-xs text-blue-700">
+                              {cartShippingCost.weight_rounded_kg.toFixed(2)} kg
+                              {cartShippingCost.shipping_type_name && (
+                                <span className="ml-1">- {cartShippingCost.shipping_type_name}</span>
+                              )}
                             </span>
-                            <span className="font-semibold text-blue-600">
-                              {cartLogistics.shippingCostLabel === '-' 
-                                ? '-' 
-                                : `+$${cartLogistics.totalLogisticsCost.toFixed(2)}`}
+                            <span className="text-xs font-bold text-blue-900">
+                              ${shippingCostAmount.toFixed(2)}
                             </span>
                           </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="text-xs max-w-[200px]">
-                          {cartLogistics.shippingCostLabel === '-' ? (
-                            <p className="text-amber-600">
-                              Algunos productos no tienen peso configurado. Configure el peso en la ficha técnica del producto.
-                            </p>
-                          ) : (
-                            <>
-                              <p className="font-medium mb-1">Desglose de Logística</p>
-                              <div className="space-y-0.5 text-muted-foreground">
-                                <p>Envío total: ${cartLogistics.totalLogisticsCost.toFixed(2)}</p>
-                                {cartLogistics.totalCategoryFees > 0 && (
-                                  <p>Tarifas categoría: ${cartLogistics.totalCategoryFees.toFixed(2)}</p>
-                                )}
-                                <p className="pt-1 border-t text-foreground">
-                                  {cartLogistics.routeName}
-                                </p>
-                              </div>
-                            </>
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Delivery Time Estimate */}
                     <div className="flex justify-between items-center text-xs">
@@ -1002,10 +1001,15 @@ const SellerCartPage = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-700">Total Estimado:</span>
                       <span className="text-lg font-bold" style={{ color: '#071d7f' }}>
-                        ${(subtotal + cartLogistics.totalLogisticsCost + cartLogistics.totalCategoryFees).toFixed(2)}
+                        ${totalEstimado.toFixed(2)}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Incluye productos + envío a destino</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {includeShippingInTotal 
+                        ? `Productos + Envío (${selectedItems.length} items)` 
+                        : 'Total de productos seleccionados'
+                      }
+                    </p>
                   </div>
 
                   {/* Business Panel */}
@@ -1589,19 +1593,38 @@ const SellerCartPage = () => {
                   <span className="text-gray-600">Subtotal Productos:</span>
                   <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
                 </div>
-                
-                {/* Logistics Cost */}
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-blue-600 flex items-center gap-1">
-                    <Truck className="w-3 h-3" />
-                    Logística Total:
-                  </span>
-                  <span className="font-semibold text-blue-600">
-                    {cartLogistics.shippingCostLabel === '-' 
-                      ? '-' 
-                      : `+$${cartLogistics.totalLogisticsCost.toFixed(2)}`}
-                  </span>
-                </div>
+
+                {/* Shipping Cost Checkbox */}
+                {cartShippingCost && !isLoadingShippingCost && (
+                  <div className="flex items-start gap-2 p-2 bg-blue-50 rounded border border-blue-200">
+                    <Checkbox
+                      id="include-shipping-mobile"
+                      checked={includeShippingInTotal}
+                      onCheckedChange={(checked) => setIncludeShippingInTotal(!!checked)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <label
+                        htmlFor="include-shipping-mobile"
+                        className="text-xs font-medium text-blue-900 cursor-pointer flex items-center gap-1"
+                      >
+                        <Truck className="w-3 h-3" />
+                        Incluir Costo de Envío
+                      </label>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-xs text-blue-700">
+                          {cartShippingCost.weight_rounded_kg.toFixed(2)} kg
+                          {cartShippingCost.shipping_type_name && (
+                            <span className="ml-1">- {cartShippingCost.shipping_type_name}</span>
+                          )}
+                        </span>
+                        <span className="text-xs font-bold text-blue-900">
+                          ${shippingCostAmount.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Delivery Time Estimate */}
                 <div className="flex justify-between items-center text-xs">
@@ -1629,10 +1652,15 @@ const SellerCartPage = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">Total Estimado:</span>
                   <span className="text-lg font-bold" style={{ color: '#071d7f' }}>
-                    ${(subtotal + cartLogistics.totalLogisticsCost + cartLogistics.totalCategoryFees).toFixed(2)}
+                    ${totalEstimado.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Incluye productos + envío a destino</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {includeShippingInTotal 
+                    ? `Productos + Envío (${selectedItems.length} items)` 
+                    : 'Total de productos seleccionados'
+                  }
+                </p>
               </div>
 
               {/* Business Panel */}

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from '@/types/auth';
 import { useCart } from "@/hooks/useCart";
-import { useCartB2B } from "@/hooks/useCartB2B";
+import { useB2BCartSupabase } from "@/hooks/useB2BCartSupabase";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/hooks/useStore';
@@ -400,7 +400,7 @@ const ProductPage = () => {
   } = useCart();
   const {
     addItem: addItemB2B
-  } = useCartB2B();
+  } = useB2BCartSupabase();
 
   // Derived data
   const images = useMemo(() => {
@@ -481,14 +481,11 @@ const ProductPage = () => {
       const priceToAdd = product.precio_venta || costB2B;
       addItemB2B({
         productId: product.source_product?.id || product.id,
-        nombre: product.nombre,
-        precio_b2b: priceToAdd,
+        variantId: null,
+        quantity: quantity,
+        unitPrice: priceToAdd,
         moq: moq,
-        stock_fisico: stockB2B,
-        sku: product.sku,
-        imagen_principal: images[0] || '',
-        cantidad: quantity,
-        subtotal: priceToAdd * quantity
+        stockDisponible: stockB2B
       });
       toast({
         title: "Agregado al pedido B2B",
@@ -537,14 +534,11 @@ const ProductPage = () => {
           const priceToAdd = product.precio_venta || costB2B;
           addItemB2B({
             productId: product.source_product?.id || product.id,
-            nombre: product.nombre,
-            precio_b2b: priceToAdd,
+            variantId: null,
+            quantity: qty,
+            unitPrice: priceToAdd,
             moq: moq,
-            stock_fisico: stockB2B,
-            sku: product.sku,
-            imagen_principal: images[0] || '',
-            cantidad: qty,
-            subtotal: priceToAdd * qty
+            stockDisponible: stockB2B
           });
         } else {
           for (let i = 0; i < qty; i++) {

@@ -10,7 +10,7 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
-import { useCartB2B } from "@/hooks/useCartB2B";
+import { useB2BCartSupabase } from "@/hooks/useB2BCartSupabase";
 import { UserRole } from "@/types/auth";
 import { toast } from "sonner";
 
@@ -40,7 +40,7 @@ interface BusinessSummary {
 export const useSmartCart = () => {
   const { user, role } = useAuth();
   const b2cCart = useCart();
-  const b2bCart = useCartB2B();
+  const b2bCart = useB2BCartSupabase();
 
   // User is B2B only if authenticated AND has SELLER or ADMIN role
   const isB2BUser = user && (role === UserRole.SELLER || role === UserRole.ADMIN);
@@ -89,14 +89,11 @@ export const useSmartCart = () => {
 
       b2bCart.addItem({
         productId: product.id,
-        sku: product.sku,
-        nombre: product.name,
-        precio_b2b: priceB2B,
+        variantId: null,
+        quantity: moq,
+        unitPrice: priceB2B,
         moq: moq,
-        stock_fisico: stock,
-        cantidad: moq, // Start with MOQ
-        subtotal: priceB2B * moq,
-        imagen_principal: product.image,
+        stockDisponible: stock
       });
 
       toast.success(`Agregado al carrito B2B`, {
@@ -138,9 +135,9 @@ export const useSmartCart = () => {
     
     // B2B user
     return {
-      totalItems: b2bCart.cart.totalItems,
-      totalQuantity: b2bCart.cart.totalQuantity,
-      subtotal: b2bCart.cart.subtotal,
+      totalItems: b2bCart.cart.items.length,
+      totalQuantity: b2bCart.cart.items.reduce((sum, item) => sum + item.quantity, 0),
+      subtotal: b2bCart.cart.items.reduce((sum, item) => sum + item.totalPrice, 0),
       items: b2bCart.cart.items,
       cartType: "b2b" as const,
       cartLink: "/seller/carrito",

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useCartB2B } from "@/hooks/useCartB2B";
+import { useB2BCartSupabase } from "@/hooks/useB2BCartSupabase";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import Footer from "@/components/layout/Footer";
 import ProductCardB2B from "@/components/b2b/ProductCardB2B";
@@ -89,7 +89,7 @@ interface ContentWithFiltersProps {
 
 const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: ContentWithFiltersProps) => {
   const { user, isLoading: authLoading } = useAuth();
-  const { cart, addItem, updateQuantity, removeItem } = useCartB2B();
+  const { cart, addItem: addItemToCart, updateQuantity, removeItem } = useB2BCartSupabase();
   const isMobile = useIsMobile();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -157,7 +157,14 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
   }, []);
 
   const handleAddToCart = (item: CartItemB2B) => {
-    addItem(item);
+    addItemToCart({
+      productId: item.productId,
+      variantId: item.variantId || null,
+      quantity: item.cantidad,
+      unitPrice: item.precio_b2b,
+      moq: item.moq,
+      stockDisponible: item.stock_fisico
+    });
   };
 
   const handleSortChange = (value: string) => {
@@ -294,7 +301,17 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
                     key={product.id}
                     product={product}
                     onAddToCart={handleAddToCart}
-                    cartItem={cart.items.find(item => item.productId === product.id)}
+                    cartItem={cart.items.find(item => item.productId === product.id) ? {
+                      productId: cart.items.find(item => item.productId === product.id)!.productId,
+                      sku: cart.items.find(item => item.productId === product.id)!.sku,
+                      nombre: cart.items.find(item => item.productId === product.id)!.nombre,
+                      precio_b2b: cart.items.find(item => item.productId === product.id)!.unitPrice,
+                      moq: cart.items.find(item => item.productId === product.id)!.moq,
+                      stock_fisico: cart.items.find(item => item.productId === product.id)!.stockDisponible,
+                      cantidad: cart.items.find(item => item.productId === product.id)!.quantity,
+                      subtotal: cart.items.find(item => item.productId === product.id)!.totalPrice,
+                      imagen_principal: cart.items.find(item => item.productId === product.id)!.imagen
+                    } : undefined}
                     whatsappNumber={whatsappNumber}
                   />
                 ))}
@@ -313,7 +330,23 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
 
       {/* Carrito Flotante */}
       <CartSidebarB2B
-        cart={cart}
+        cart={{
+          items: cart.items.map(item => ({
+            productId: item.productId,
+            sku: item.sku,
+            nombre: item.nombre,
+            precio_b2b: item.unitPrice,
+            moq: item.moq,
+            stock_fisico: item.stockDisponible,
+            cantidad: item.quantity,
+            subtotal: item.totalPrice,
+            imagen_principal: item.imagen,
+            variantId: item.variantId || undefined
+          })),
+          totalItems: cart.items.length,
+          totalQuantity: cart.items.reduce((sum, item) => sum + item.quantity, 0),
+          subtotal: cart.items.reduce((sum, item) => sum + item.totalPrice, 0)
+        }}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
         isOpen={isCartOpen}

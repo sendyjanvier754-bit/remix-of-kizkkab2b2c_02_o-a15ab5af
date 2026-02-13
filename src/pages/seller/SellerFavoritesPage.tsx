@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, ShoppingCart, Trash2, Loader2, Package } from "lucide-react";
 import { useB2BWishlist } from "@/hooks/useWishlist";
-import { useCartB2B } from "@/hooks/useCartB2B";
+import { useB2BCartSupabase } from "@/hooks/useB2BCartSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 const SellerFavoritesPage = () => {
   const { items, isLoading, removeFromWishlist, isRemoving } = useB2BWishlist();
-  const { addItem } = useCartB2B();
+  const { addItem } = useB2BCartSupabase();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [addingItemId, setAddingItemId] = useState<string | null>(null);
@@ -23,13 +23,13 @@ const SellerFavoritesPage = () => {
     try {
       await addItem({
         productId: item.product_id,
+        variantId: null, // No variant for wishlist items
         sku: item.sku || '',
         nombre: item.name || 'Producto',
-        precio_b2b: item.price || 0,
-        cantidad: item.moq || 1,
+        unitPrice: item.price || 0,
+        quantity: item.moq || 1,
         moq: item.moq || 1,
-        stock_fisico: 999,
-        subtotal: (item.price || 0) * (item.moq || 1),
+        stockDisponible: 999,
       });
       toast.success('Producto agregado al carrito');
     } finally {
