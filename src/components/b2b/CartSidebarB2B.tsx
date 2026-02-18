@@ -343,11 +343,19 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                         <TooltipTrigger asChild>
                           <div className="flex justify-between text-sm cursor-help">
                             <span className="text-blue-600 flex items-center gap-1">
-                              <Truck className="w-4 h-4" />
+                              {cartLogistics.isCalculating ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Truck className="w-4 h-4" />
+                              )}
                               Logística Total:
                             </span>
                             <span className="font-semibold text-blue-600">
-                              +${cartLogistics.totalLogisticsCost.toFixed(2)}
+                              {cartLogistics.isCalculating ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                `+$${cartLogistics.totalLogisticsCost.toFixed(2)}`
+                              )}
                             </span>
                           </div>
                         </TooltipTrigger>

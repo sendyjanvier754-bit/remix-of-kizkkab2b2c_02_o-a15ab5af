@@ -167,7 +167,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
       );
 
       // Calculate logistics cost from route segments
-      const routeLogistics = route ? (logisticsCostsResult.data || []).filter(c => c.shipping_route_id === route.id) : [];
+      const routeLogistics = route ? (logisticsCostsResult.data || []).filter(c => c.route_id === route.id) : [];
       
       const calculateLogisticsCost = (weight: number = 0.5): { cost: number; days: { min: number; max: number } } => {
         if (!routeLogistics.length) return { cost: 0, days: { min: 0, max: 0 } };

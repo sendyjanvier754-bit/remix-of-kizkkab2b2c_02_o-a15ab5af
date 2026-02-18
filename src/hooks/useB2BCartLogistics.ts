@@ -54,10 +54,14 @@ export interface CartLogisticsSummary {
 
 /**
  * Hook to calculate logistics and pricing for B2B cart items
- * NOW: Uses the new V_LOGISTICS_DATA and fn_calculate_shipping_cost system
+ * NOW: Uses calculate_shipping_cost_for_selected_items with selected tier
  * Shows "-" when products don't have weight configured
  */
-export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode?: string) {
+export function useB2BCartLogistics(
+  items: B2BCartItem[], 
+  selectedShippingTypeId?: string | null,
+  destinationCountryCode?: string
+) {
   const { useActiveMarginRanges, findMarginRangeForCost } = useB2BMarginRanges();
   const { data: marginRanges = [] } = useActiveMarginRanges();
   
@@ -153,24 +157,65 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
     [shippingCostResult?.itemCosts]
   );
 
-  // ✨ NEW: Calculate cart shipping cost from DYNAMIC VIEW (per-user)
-  // Uses v_cart_shipping_costs which queries auth.uid() automatically
-  const { data: cartShippingCost, isLoading: cartShippingLoading } = useQuery({
-    queryKey: ['cart-shipping-cost'],
+  // Create item IDs array for RPC call
+  const itemIds = useMemo(() => 
+    items.map(item => item.id),
+    [items]
+  );
+
+  // Get selected shipping tier details for ETAs
+  const { data: selectedTier } = useQuery({
+    queryKey: ['shipping-tier-details', selectedShippingTypeId],
     queryFn: async () => {
+      if (!selectedShippingTypeId) return null;
+      
       const { data, error } = await supabase
-        .from('v_cart_shipping_costs')
-        .select('*')
+        .from('shipping_tiers')
+        .select('tramo_a_eta_min, tramo_a_eta_max, tramo_b_eta_min, tramo_b_eta_max, tier_name, custom_tier_name')
+        .eq('id', selectedShippingTypeId)
         .single();
       
       if (error) {
-        console.error('Error fetching cart shipping cost:', error);
+        console.error('Error fetching tier details:', error);
         return null;
       }
       
       return data;
     },
-    enabled: items.length > 0,
+    enabled: !!selectedShippingTypeId,
+  });
+
+  // ✨ NEW: Calculate cart shipping cost using selected tier
+  // Uses calculate_shipping_cost_for_selected_items RPC with actual tier from UI
+  const { data: cartShippingCost, isLoading: cartShippingLoading } = useQuery({
+    queryKey: ['cart-shipping-cost-logistics', itemIds, selectedShippingTypeId],
+    queryFn: async () => {
+      if (itemIds.length === 0) return null;
+      if (!selectedShippingTypeId) return null; // No tier selected yet
+      
+      const { data, error } = await supabase
+        .rpc('calculate_shipping_cost_for_selected_items', {
+          p_item_ids: itemIds,
+          p_shipping_type_id: selectedShippingTypeId
+        });
+      
+      if (error) {
+        console.error('Error calculating shipping cost:', error);
+        return null;
+      }
+      
+      // Parse if it's a string
+      const result = typeof data === 'string' ? JSON.parse(data) : data;
+      
+      return {
+        total_cost_with_type: result.shipping_cost,
+        base_cost: result.base_cost,
+        extra_cost: result.extra_cost,
+        weight_rounded_kg: result.weight_rounded_kg,
+        total_weight_kg: result.total_weight_kg
+      };
+    },
+    enabled: items.length > 0 && !!selectedShippingTypeId,
   });
 
   // Calculate logistics for all cart items
@@ -257,12 +302,19 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       totalFinalPrice += finalTotalPrice;
       totalQuantity += item.cantidad;
       
-      maxDeliveryMin = 7;
-      maxDeliveryMax = 14;
+      // Use ETAs from selected tier if available, otherwise defaults
+      if (selectedTier) {
+        maxDeliveryMin = selectedTier.tramo_a_eta_min + selectedTier.tramo_b_eta_min;
+        maxDeliveryMax = selectedTier.tramo_a_eta_max + selectedTier.tramo_b_eta_max;
+        routeName = selectedTier.custom_tier_name || selectedTier.tier_name || 'Envío Estándar';
+      } else {
+        maxDeliveryMin = 7;
+        maxDeliveryMax = 14;
+      }
     }
     
-    // ✨ Use DYNAMIC total shipping cost from v_cart_shipping_costs VIEW
-    // This automatically calculates based on ACTUAL cart items of current user (auth.uid())
+    // ✅ Use DYNAMIC total shipping cost from calculate_shipping_cost_for_selected_items
+    // with the selected tier from UI
     const actualTotalShippingCost = cartShippingCost?.total_cost_with_type || shippingCostResult?.totalCost || 0;
     
     return {
@@ -279,7 +331,7 @@ export function useB2BCartLogistics(items: B2BCartItem[], destinationCountryCode
       hasWeight: hasShippingCost || false,
       shippingCostLabel: undefined // Always show cost, never "-"
     };
-  }, [items, products, marginRanges, categoryRates, shippingCostResult, itemCosts, cartShippingCost, findMarginRangeForCost]);
+  }, [items, products, marginRanges, categoryRates, shippingCostResult, itemCosts, cartShippingCost, selectedTier, findMarginRangeForCost]);
   
   return {
     ...cartLogistics,

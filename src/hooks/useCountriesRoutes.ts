@@ -28,9 +28,12 @@ export interface ShippingRoute {
   transit_hub_id: string | null;
   is_direct: boolean;
   is_active: boolean;
+  route_name: string | null;
+  origin_country: string | null;
+  destination_country: string | null;
   created_at: string;
   updated_at: string;
-  destination_country?: DestinationCountry;
+  destination_country_info?: DestinationCountry;
   transit_hub?: TransitHub;
 }
 
@@ -38,6 +41,7 @@ export interface RouteLogisticsCost {
   id: string;
   shipping_route_id: string;
   segment: string;
+  transport_type: 'maritimo' | 'aereo' | 'terrestre';
   cost_per_kg: number;
   cost_per_cbm: number;
   min_cost: number;
@@ -87,7 +91,7 @@ export function useCountriesRoutes() {
         .from("shipping_routes")
         .select(`
           *,
-          destination_country:destination_countries(*),
+          destination_country_info:destination_countries(*),
           transit_hub:transit_hubs(*)
         `)
         .order("created_at", { ascending: false });
@@ -229,7 +233,7 @@ export function useCountriesRoutes() {
 
   // Create logistics cost
   const createCost = useMutation({
-    mutationFn: async (cost: { shipping_route_id: string; segment: string; cost_per_kg: number; cost_per_cbm: number; min_cost: number; estimated_days_min?: number; estimated_days_max?: number; notes?: string | null; is_active: boolean }) => {
+    mutationFn: async (cost: { shipping_route_id: string; segment: string; transport_type: string; cost_per_kg: number; cost_per_cbm: number; min_cost: number; estimated_days_min?: number; estimated_days_max?: number; notes?: string | null; is_active: boolean }) => {
       const { data, error } = await supabase
         .from("route_logistics_costs")
         .insert([cost])
@@ -250,7 +254,7 @@ export function useCountriesRoutes() {
 
   // Update logistics cost
   const updateCost = useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; segment?: string; cost_per_kg?: number; cost_per_cbm?: number; min_cost?: number; estimated_days_min?: number; estimated_days_max?: number; notes?: string | null; is_active?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: string; segment?: string; transport_type?: string; cost_per_kg?: number; cost_per_cbm?: number; min_cost?: number; estimated_days_min?: number; estimated_days_max?: number; notes?: string | null; is_active?: boolean }) => {
       const { error } = await supabase
         .from("route_logistics_costs")
         .update(data)

@@ -87,20 +87,22 @@ export const useLogisticsDataForItems = (items: ItemForLogistics[]) => {
           if (data) logisticsData = logisticsData.concat(data);
         }
 
-        // Fetch shipping rates (STANDARD tier)
+        // Fetch shipping rates (standard tier)
         const { data: shippingTier } = await supabase
           .from('shipping_tiers')
           .select('tramo_a_cost_per_kg, tramo_b_cost_per_lb')
-          .eq('tier_type', 'STANDARD')
+          .eq('tier_type', 'standard')
           .eq('is_active', true)
           .single();
 
-        // Fetch zone surcharge (HAITI_CENTRO)
+        // Fetch zone surcharge (Haiti zone - with fallback)
         const { data: zone } = await supabase
           .from('shipping_zones')
           .select('final_delivery_surcharge')
-          .eq('zone_name', 'HAITI_CENTRO')
+          .or('zone_name.eq.HAITI_CENTRO,zone_name.ilike.%HAITI%')
           .eq('is_active', true)
+          .order('final_delivery_surcharge', { ascending: true })
+          .limit(1)
           .single();
 
         const costPerKg = shippingTier?.tramo_a_cost_per_kg || 0;

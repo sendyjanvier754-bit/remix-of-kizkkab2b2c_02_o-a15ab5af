@@ -27,13 +27,11 @@ interface ShippingTier {
   route_id: string;
   tier_type: 'standard' | 'express';
   tier_name: string;
-  transport_type: 'maritimo' | 'aereo';
+  transport_type: 'maritimo' | 'aereo' | 'terrestre';
   tramo_a_cost_per_kg: number;
-  tramo_a_min_cost: number;
   tramo_a_eta_min: number;
   tramo_a_eta_max: number;
   tramo_b_cost_per_lb: number;
-  tramo_b_min_cost: number;
   tramo_b_eta_min: number;
   tramo_b_eta_max: number;
   allows_oversize: boolean;
@@ -326,6 +324,7 @@ export default function AdminLogisticaRutas() {
                   <TierForm
                     tier={editingTier}
                     routes={routes || []}
+                    allTiers={allTiers || []}
                     onSave={(data) => saveTierMutation.mutate(data)}
                     isSaving={saveTierMutation.isPending}
                   />
@@ -451,20 +450,30 @@ function RouteForm({
 }) {
   const [formData, setFormData] = useState({
     route_name: route?.route_name || '',
-    origin_country: route?.origin_country || 'CN',
-    destination_country: route?.destination_country || 'HT',
+    origin_country: route?.origin_country || 'China',
+    destination_country: route?.destination_country || '',
     is_active: route?.is_active ?? true,
   });
 
   return (
     <div className="space-y-4">
+      {/* Advertencia sobre restricción */}
+      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg p-3">
+        <p className="text-sm text-blue-800 dark:text-blue-200">
+          ℹ️ <strong>Nota:</strong> Cada ruta solo puede tener un tipo de envío (Standard O Express, no ambos).
+        </p>
+      </div>
+
       <div>
         <Label>Nombre de la Ruta *</Label>
         <Input
           value={formData.route_name}
           onChange={(e) => setFormData({ ...formData, route_name: e.target.value })}
-          placeholder="China → Haití"
+          placeholder="Ej: Envío Express a Haití, Marítimo a RD, etc."
         />
+        <p className="text-xs text-muted-foreground mt-1">
+          Dale un nombre descriptivo que identifique esta ruta
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -473,16 +482,22 @@ function RouteForm({
           <Input
             value={formData.origin_country}
             onChange={(e) => setFormData({ ...formData, origin_country: e.target.value })}
-            placeholder="CN"
+            placeholder="China"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Ej: China, USA, etc.
+          </p>
         </div>
         <div>
           <Label>País de Destino *</Label>
           <Input
             value={formData.destination_country}
             onChange={(e) => setFormData({ ...formData, destination_country: e.target.value })}
-            placeholder="HT"
+            placeholder="Haití"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Ej: Haití, República Dominicana, Brasil, etc.
+          </p>
         </div>
       </div>
 
@@ -509,11 +524,13 @@ function RouteForm({
 function TierForm({
   tier,
   routes,
+  allTiers,
   onSave,
   isSaving,
 }: {
   tier: ShippingTier | null;
   routes: ShippingRoute[];
+  allTiers: ShippingTier[];
   onSave: (data: Partial<ShippingTier>) => void;
   isSaving: boolean;
 }) {
@@ -521,13 +538,14 @@ function TierForm({
     route_id: tier?.route_id || '',
     tier_type: tier?.tier_type || ('standard' as 'standard' | 'express'),
     tier_name: tier?.tier_name || '',
-    transport_type: tier?.transport_type || ('maritimo' as 'maritimo' | 'aereo'),
+    custom_tier_name: tier?.custom_tier_name || '',
+    tier_origin_country: tier?.tier_origin_country || 'China',
+    tier_destination_country: tier?.tier_destination_country || '',
+    transport_type: tier?.transport_type || ('aereo' as 'maritimo' | 'aereo' | 'terrestre'),
     tramo_a_cost_per_kg: tier?.tramo_a_cost_per_kg || 8.0,
-    tramo_a_min_cost: tier?.tramo_a_min_cost || 5.0,
     tramo_a_eta_min: tier?.tramo_a_eta_min || 15,
     tramo_a_eta_max: tier?.tramo_a_eta_max || 25,
     tramo_b_cost_per_lb: tier?.tramo_b_cost_per_lb || 5.0,
-    tramo_b_min_cost: tier?.tramo_b_min_cost || 3.0,
     tramo_b_eta_min: tier?.tramo_b_eta_min || 3,
     tramo_b_eta_max: tier?.tramo_b_eta_max || 7,
     allows_oversize: tier?.allows_oversize ?? true,
@@ -535,6 +553,19 @@ function TierForm({
     is_active: tier?.is_active ?? true,
     priority_order: tier?.priority_order || 1,
   });
+
+  // Verificar si la ruta seleccionada ya tiene un tier asignado
+  const routeHasTier = formData.route_id && allTiers.some(
+    t => t.route_id === formData.route_id && t.id !== tier?.id
+  );
+  const existingTier = allTiers.find(
+    t => t.route_id === formData.route_id && t.id !== tier?.id
+  );
+
+  // Filtrar rutas: si estamos creando nuevo, solo mostrar rutas sin tier
+  const availableRoutes = tier 
+    ? routes // Si estamos editando, mostrar todas
+    : routes.filter(route => !allTiers.some(t => t.route_id === route.id)); // Si es nuevo, solo sin tier
 
   return (
     <div className="space-y-6">
@@ -560,24 +591,54 @@ function TierForm({
             <SelectValue placeholder="Selecciona una ruta" />
           </SelectTrigger>
           <SelectContent>
-            {routes.map((route) => (
-              <SelectItem key={route.id} value={route.id}>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <div>
-                    <div className="font-medium">{route.route_name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {route.origin_country} → {route.destination_country}
+            {availableRoutes.length === 0 ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                {tier 
+                  ? "No hay rutas disponibles"
+                  : "Todas las rutas ya tienen tipo de envío. Crea una nueva ruta primero."}
+              </div>
+            ) : (
+              availableRoutes.map((route) => (
+                <SelectItem key={route.id} value={route.id}>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <div>
+                      <div className="font-medium">{route.route_name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {route.origin_country} → {route.destination_country}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </SelectItem>
-            ))}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground mt-1">
-          Selecciona la ruta logística a la que pertenece este tipo de envío
-        </p>
+        {tier && routeHasTier && (
+          <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded-md">
+            <p className="text-sm text-orange-800">
+              <strong>⚠️ Advertencia:</strong> Esta ruta ya tiene un tipo de envío configurado:
+              <span className="font-semibold ml-1">
+                {existingTier?.tier_name || existingTier?.tier_type}
+              </span>
+            </p>
+            <p className="text-xs text-orange-700 mt-1">
+              Solo se permite un tipo de envío por ruta. Si guardas, reemplazarás el anterior.
+            </p>
+          </div>
+        )}
+        {!routeHasTier && formData.route_id && (
+          <p className="text-xs text-green-600 mt-1">
+            ✓ Esta ruta está disponible para configurar
+          </p>
+        )}
+        {!formData.route_id && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {tier 
+              ? "Selecciona la ruta logística a la que pertenece este tipo de envío"
+              : "Solo se muestran rutas sin tipo de envío configurado"}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -631,7 +692,7 @@ function TierForm({
           <Label>Tipo de Transporte *</Label>
           <Select
             value={formData.transport_type}
-            onValueChange={(value: 'maritimo' | 'aereo') => setFormData({ ...formData, transport_type: value })}
+            onValueChange={(value: 'maritimo' | 'aereo' | 'terrestre') => setFormData({ ...formData, transport_type: value })}
           >
             <SelectTrigger>
               <SelectValue />
@@ -655,12 +716,23 @@ function TierForm({
                   </div>
                 </div>
               </SelectItem>
+              <SelectItem value="terrestre">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  <div>
+                    <div className="font-medium">Terrestre</div>
+                    <div className="text-xs text-muted-foreground">Por tierra - 7-15 días típicamente</div>
+                  </div>
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground mt-1">
             {formData.transport_type === 'maritimo' 
               ? '🚢 Transporte por barco, permite productos grandes (oversize)' 
-              : '✈️ Transporte aéreo, solo productos estándar, más rápido'}
+              : formData.transport_type === 'aereo' 
+                ? '✈️ Transporte aéreo, solo productos estándar, más rápido'
+                : '🚛 Transporte terrestre, flexible y económico'}
           </p>
         </div>
       </div>
@@ -675,6 +747,42 @@ function TierForm({
         <p className="text-xs text-muted-foreground mt-1">
           Este nombre aparecerá en el checkout para que usuarios elijan el tipo de envío
         </p>
+      </div>
+
+      {/* Campos de personalización adicionales */}
+      <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
+        <h4 className="font-medium text-sm">Personalización del Nombre (Opcional)</h4>
+        
+        <div>
+          <Label>Nombre Completo Personalizado</Label>
+          <Input
+            value={formData.custom_tier_name}
+            onChange={(e) => setFormData({ ...formData, custom_tier_name: e.target.value })}
+            placeholder="Ej: Express Aéreo China - Haití"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Nombre descriptivo completo que incluye origen y destino
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>País Origen</Label>
+            <Input
+              value={formData.tier_origin_country}
+              onChange={(e) => setFormData({ ...formData, tier_origin_country: e.target.value })}
+              placeholder="China"
+            />
+          </div>
+          <div>
+            <Label>País Destino</Label>
+            <Input
+              value={formData.tier_destination_country}
+              onChange={(e) => setFormData({ ...formData, tier_destination_country: e.target.value })}
+              placeholder="Ej: Haití"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Separador visual */}
@@ -707,18 +815,6 @@ function TierForm({
               placeholder="8.00"
             />
             <p className="text-xs text-muted-foreground mt-1">Ej: $8.00/kg para marítimo, $15/kg para aéreo</p>
-          </div>
-          <div>
-            <Label>Costo mínimo (USD) *</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.tramo_a_min_cost}
-              onChange={(e) => setFormData({ ...formData, tramo_a_min_cost: parseFloat(e.target.value) || 0 })}
-              placeholder="5.00"
-            />
-            <p className="text-xs text-muted-foreground mt-1">Cobro mínimo por envío pequeño</p>
           </div>
           <div>
             <Label>ETA mínimo (días) *</Label>
@@ -765,18 +861,6 @@ function TierForm({
               placeholder="5.00"
             />
             <p className="text-xs text-muted-foreground mt-1">Ej: $5.00/lb para marítimo, $10/lb para aéreo</p>
-          </div>
-          <div>
-            <Label>Costo mínimo (USD) *</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.tramo_b_min_cost}
-              onChange={(e) => setFormData({ ...formData, tramo_b_min_cost: parseFloat(e.target.value) || 0 })}
-              placeholder="3.00"
-            />
-            <p className="text-xs text-muted-foreground mt-1">Cobro mínimo por envío pequeño</p>
           </div>
           <div>
             <Label>ETA mínimo (días) *</Label>

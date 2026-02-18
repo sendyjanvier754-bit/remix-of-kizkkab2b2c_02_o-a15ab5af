@@ -163,12 +163,12 @@ export const useShippingCostCalculationForCart = (items: CartItem[]) => {
             .single();
 
           if (routeData) {
-            // Get STANDARD tier costs for this route
+            // Get standard tier costs for this route
             const { data: tierData } = await supabase
               .from('shipping_tiers')
               .select('tramo_a_cost_per_kg, tramo_b_cost_per_lb')
               .eq('shipping_route_id', routeData.id)
-              .eq('tier_type', 'STANDARD')
+              .eq('tier_type', 'standard')
               .single();
 
             if (tierData) {
@@ -177,11 +177,14 @@ export const useShippingCostCalculationForCart = (items: CartItem[]) => {
             }
           }
 
-          // Get the default zone surcharge (Haiti Centro)
+          // Get the default zone surcharge (Haiti - with fallback)
           const { data: zoneData } = await supabase
             .from('shipping_zones')
             .select('final_delivery_surcharge')
-            .eq('zone_name', 'HAITI_CENTRO')
+            .or('zone_name.eq.HAITI_CENTRO,zone_name.ilike.%HAITI%')
+            .eq('is_active', true)
+            .order('final_delivery_surcharge', { ascending: true })
+            .limit(1)
             .single();
 
           if (zoneData) {

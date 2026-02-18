@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CartShippingSummary {
@@ -8,6 +8,8 @@ export interface CartShippingSummary {
   total_cost_with_type: number;
   shipping_type_name?: string | null;
   shipping_type_display?: string | null;
+  eta_min?: number;
+  eta_max?: number;
 }
 
 export interface CartItem {
@@ -28,20 +30,41 @@ export interface CartItem {
  * @param cartItems - Items del carrito con peso real
  * @param routeId - ID de la ruta (ej: '21420dcb-9d8a-4947-8530-aaf3519c9047')
  * @param shippingTypeId - ID del tipo de envío seleccionado (opcional)
+ * @param selectedTier - Tier seleccionado para obtener ETA (opcional)
  * @returns Resumen de costos con pesos y detalles de surcharge
  */
 export const useCartShippingCost = (
   cartItems: CartItem[],
   routeId?: string,
-  shippingTypeId?: string | null
+  shippingTypeId?: string | null,
+  selectedTier?: { tramo_a_eta_min: number; tramo_a_eta_max: number; tramo_b_eta_min: number; tramo_b_eta_max: number } | null
 ) => {
   const [summary, setSummary] = useState<CartShippingSummary | null>(null);
   const [totalWeight, setTotalWeight] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Create a serializable key for cart items to ensure React detects changes
+  const cartItemsKey = useMemo(() => 
+    JSON.stringify(cartItems.map(item => ({
+      product_id: item.product_id,
+      variant_id: item.variant_id || null,
+      weight_kg: item.weight_kg,
+      quantity: item.quantity
+    }))),
+    [cartItems]
+  );
+
   useEffect(() => {
-    if (!routeId || !cartItems || cartItems.length === 0) {
+    // Allow calculation even without routeId if we have a shippingTypeId
+    if (!cartItems || cartItems.length === 0) {
+      setSummary(null);
+      setTotalWeight(0);
+      return;
+    }
+
+    // Skip calculation if no shipping type selected
+    if (!shippingTypeId) {
       setSummary(null);
       setTotalWeight(0);
       return;
@@ -60,11 +83,11 @@ export const useCartShippingCost = (
         setTotalWeight(totalWeightKg);
 
         // Step 2: Llamar a la función RPC con el peso total
+        // ✅ NUEVO: Solo requiere shipping_type_id (no route_id)
         const { data, error: rpcError } = await supabase
           .rpc('calculate_shipping_cost_cart', {
-            route_id: routeId,
-            total_weight_kg: totalWeightKg,
-            shipping_type_id: shippingTypeId || null,
+            p_total_weight_kg: totalWeightKg,
+            p_shipping_type_id: shippingTypeId,
           });
 
         if (rpcError) {
@@ -83,6 +106,8 @@ export const useCartShippingCost = (
           total_cost_with_type: parseFloat(data[0].total_cost_with_type),
           shipping_type_name: data[0].shipping_type_name,
           shipping_type_display: data[0].shipping_type_display,
+          eta_min: selectedTier ? selectedTier.tramo_a_eta_min + selectedTier.tramo_b_eta_min : undefined,
+          eta_max: selectedTier ? selectedTier.tramo_a_eta_max + selectedTier.tramo_b_eta_max : undefined,
         });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Error calculating shipping';
@@ -95,7 +120,7 @@ export const useCartShippingCost = (
     };
 
     calculateCost();
-  }, [cartItems, routeId, shippingTypeId]);
+  }, [cartItemsKey, shippingTypeId, selectedTier]); // routeId removed - no longer needed
 
   /**
    * Método para recalcular con otro tipo de envío
@@ -103,7 +128,11 @@ export const useCartShippingCost = (
    */
   const updateShippingType = useCallback(
     async (newShippingTypeId?: string | null): Promise<CartShippingSummary | null> => {
-      if (!routeId || !cartItems || cartItems.length === 0) {
+      if (!cartItems || cartItems.length === 0) {
+        return null;
+      }
+
+      if (!newShippingTypeId) {
         return null;
       }
 
@@ -116,11 +145,11 @@ export const useCartShippingCost = (
           totalWeightKg += item.weight_kg * (item.quantity || 1);
         });
 
+        // ✅ NUEVO: Solo requiere shipping_type_id (no route_id)
         const { data, error: rpcError } = await supabase
           .rpc('calculate_shipping_cost_cart', {
-            route_id: routeId,
-            total_weight_kg: totalWeightKg,
-            shipping_type_id: newShippingTypeId || null,
+            p_total_weight_kg: totalWeightKg,
+            p_shipping_type_id: newShippingTypeId,
           });
 
         if (rpcError) {
@@ -150,7 +179,7 @@ export const useCartShippingCost = (
         setIsLoading(false);
       }
     },
-    [cartItems, routeId]
+    [cartItemsKey] // Use cartItemsKey for better change detection
   );
 
   return {
@@ -169,13 +198,22 @@ export const useCartShippingCost = (
 export const useCartTotalWeight = (cartItems: CartItem[]): number => {
   const [totalWeight, setTotalWeight] = useState(0);
 
+  // Create a serializable key for cart items
+  const cartItemsKey = useMemo(() => 
+    JSON.stringify(cartItems.map(item => ({
+      weight_kg: item.weight_kg,
+      quantity: item.quantity
+    }))),
+    [cartItems]
+  );
+
   useEffect(() => {
     let weight = 0;
     cartItems.forEach(item => {
       weight += item.weight_kg * (item.quantity || 1);
     });
     setTotalWeight(weight);
-  }, [cartItems]);
+  }, [cartItemsKey]); // Use cartItemsKey for better change detection
 
   return totalWeight;
 };

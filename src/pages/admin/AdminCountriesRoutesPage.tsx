@@ -454,7 +454,7 @@ export default function AdminCountriesRoutesPage() {
                             <ArrowRight className="h-4 w-4 text-muted-foreground" />
                           </>
                         )}
-                        <span className="text-primary font-bold">{route.destination_country?.name}</span>
+                        <span className="text-primary font-bold">{route.destination_country_info?.name}</span>
                       </div>
                       <Badge variant={route.is_direct ? "secondary" : "default"}>
                         {route.is_direct ? "Directo" : "Con Tránsito"}

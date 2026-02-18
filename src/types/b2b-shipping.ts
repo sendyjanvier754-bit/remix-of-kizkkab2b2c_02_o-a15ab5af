@@ -34,6 +34,10 @@ export interface ShippingTier {
   tier_type: 'standard' | 'express';
   tier_name: string;
   tier_description?: string;
+  transport_type: 'maritimo' | 'aereo' | 'terrestre';
+  custom_tier_name?: string | null;
+  tier_origin_country?: string | null;
+  tier_destination_country?: string | null;
   // Tramo A: China → USA (USD/kg)
   tramo_a_cost_per_kg: number;
   tramo_a_eta_min: number;

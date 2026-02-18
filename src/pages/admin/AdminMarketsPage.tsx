@@ -759,10 +759,10 @@ export default function AdminMarketsPage() {
                         <SelectItem key={route.id} value={route.id}>
                           <div className="flex items-center gap-2">
                             {route.is_direct ? (
-                              <span>Directo → {route.destination_country?.name}</span>
+                              <span>Directo → {route.destination_country_info?.name}</span>
                             ) : (
                               <span>
-                                Vía {route.transit_hub?.name} → {route.destination_country?.name}
+                                Vía {route.transit_hub?.name} → {route.destination_country_info?.name}
                               </span>
                             )}
                           </div>

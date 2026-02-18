@@ -3,13 +3,25 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface ShippingType {
   id: string;
-  shipping_route_id: string;
-  type: string; // 'STANDARD', 'EXPRESS', 'PRIORITY'
+  route_id: string;
+  tier_type: 'standard' | 'express'; // 'standard', 'express'
+  tier_name: string;
+  custom_tier_name?: string | null;
+  transport_type: 'maritimo' | 'aereo' | 'terrestre';
+  // Tramo A: China → USA
+  tramo_a_cost_per_kg: number;
+  tramo_a_eta_min: number;
+  tramo_a_eta_max: number;
+  // Tramo B: USA → Destino
+  tramo_b_cost_per_lb: number;
+  tramo_b_eta_min: number;
+  tramo_b_eta_max: number;
+  is_active: boolean;
+  priority_order: number;
+  // Campos calculados/legacy para compatibilidad
   display_name: string;
   extra_cost_fixed: number;
   extra_cost_percent: number;
-  is_active: boolean;
-  priority_order: number;
 }
 
 export interface ShippingCostResult {
@@ -19,6 +31,8 @@ export interface ShippingCostResult {
   total_cost_with_type: number;
   shipping_type_name?: string | null;
   shipping_type_display?: string | null;
+  eta_min?: number;
+  eta_max?: number;
 }
 
 export interface ShippingProductCostResult {
@@ -42,35 +56,45 @@ export const useShippingTypes = (routeId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch available shipping types for the route
+  // Fetch available shipping types for the route (or all if no route specified)
   useEffect(() => {
-    if (!routeId) {
-      setShippingTypes([]);
-      return;
-    }
-
     const fetchShippingTypes = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const { data, error: queryError } = await supabase
-          .from('shipping_type_configs')
+        // Build query - if routeId provided, filter by it; otherwise get all active tiers
+        let query = supabase
+          .from('shipping_tiers')
           .select('*')
-          .eq('shipping_route_id', routeId)
           .eq('is_active', true)
           .order('priority_order', { ascending: true });
+
+        // Only filter by route_id if provided
+        if (routeId) {
+          query = query.eq('route_id', routeId);
+        }
+
+        const { data, error: queryError } = await query;
 
         if (queryError) {
           throw queryError;
         }
 
-        setShippingTypes(data || []);
+        // Map shipping_tiers to ShippingType format
+        const mappedTypes: ShippingType[] = (data || []).map(tier => ({
+          ...tier,
+          display_name: tier.custom_tier_name || tier.tier_name,
+          extra_cost_fixed: 0, // Legacy - no longer used
+          extra_cost_percent: 0, // Legacy - no longer used
+        }));
+
+        setShippingTypes(mappedTypes);
 
         // Set first type as default if available
-        if (data && data.length > 0 && !selectedTypeId) {
-          setSelectedTypeId(data[0].id);
-          setSelectedType(data[0]);
+        if (mappedTypes.length > 0 && !selectedTypeId) {
+          setSelectedTypeId(mappedTypes[0].id);
+          setSelectedType(mappedTypes[0]);
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Error fetching shipping types';
@@ -97,39 +121,14 @@ export const useShippingTypes = (routeId?: string) => {
   /**
    * Calculate shipping cost for a single product
    * Uses actual weight (no rounding)
+   * @deprecated This functionality may not be supported without a route
    */
   const calculateProductCost = useCallback(
     async (weightKg: number): Promise<ShippingProductCostResult | null> => {
-      if (!routeId) {
-        console.warn('Route ID not provided');
-        return null;
-      }
-
-      try {
-        const { data, error: rpcError } = await supabase
-          .rpc('calculate_shipping_cost', {
-            route_id: routeId,
-            weight_kg: weightKg,
-          });
-
-        if (rpcError) {
-          throw rpcError;
-        }
-
-        if (!data || data.length === 0) {
-          return null;
-        }
-
-        return {
-          weight_kg: data[0].weight_kg,
-          base_cost: parseFloat(data[0].base_cost),
-        };
-      } catch (err) {
-        console.error('Error calculating product shipping cost:', err);
-        return null;
-      }
+      console.warn('calculateProductCost is deprecated - use calculateCartCost with a shipping tier instead');
+      return null;
     },
-    [routeId]
+    []
   );
 
   /**
@@ -138,17 +137,17 @@ export const useShippingTypes = (routeId?: string) => {
    */
   const calculateCartCost = useCallback(
     async (totalWeightKg: number, shippingTypeId?: string): Promise<ShippingCostResult | null> => {
-      if (!routeId) {
-        console.warn('Route ID not provided');
+      if (!shippingTypeId) {
+        console.warn('Shipping type ID required for cost calculation');
         return null;
       }
 
       try {
+        // ✅ NUEVO: Solo requiere shipping_type_id (no route_id)
         const { data, error: rpcError } = await supabase
           .rpc('calculate_shipping_cost_cart', {
-            route_id: routeId,
-            total_weight_kg: totalWeightKg,
-            shipping_type_id: shippingTypeId || null,
+            p_total_weight_kg: totalWeightKg,
+            p_shipping_type_id: shippingTypeId,
           });
 
         if (rpcError) {
@@ -172,7 +171,7 @@ export const useShippingTypes = (routeId?: string) => {
         return null;
       }
     },
-    [routeId]
+    [] // No dependencies - shipping type ID passed as parameter
   );
 
   return {

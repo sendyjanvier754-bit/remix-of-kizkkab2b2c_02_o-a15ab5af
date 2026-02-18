@@ -42,6 +42,7 @@ import {
   Settings,
   Ship,
   Zap,
+  Download,
 } from 'lucide-react';
 import { useCountriesRoutes, TransitHub, DestinationCountry, ShippingRoute, RouteLogisticsCost } from '@/hooks/useCountriesRoutes';
 import { useShippingOrigins, ShippingOrigin } from '@/hooks/useShippingOrigins';
@@ -58,19 +59,23 @@ interface ShippingTier {
   route_id: string;
   tier_type: 'standard' | 'express';
   tier_name: string;
-  transport_type: 'maritimo' | 'aereo';
+  custom_tier_name?: string | null;
+  tier_origin_country?: string | null;
+  tier_destination_country?: string | null;
+  transport_type: 'maritimo' | 'aereo' | 'terrestre';
   tramo_a_cost_per_kg: number;
-  tramo_a_min_cost?: number;
   tramo_a_eta_min: number;
   tramo_a_eta_max: number;
   tramo_b_cost_per_lb: number;
-  tramo_b_min_cost?: number;
   tramo_b_eta_min: number;
   tramo_b_eta_max: number;
   allows_oversize: boolean;
   allows_sensitive: boolean;
   is_active: boolean;
   priority_order: number;
+  extra_surcharge_fixed?: number | null;
+  extra_surcharge_percent?: number | null;
+  surcharge_description?: string | null;
   created_at: string;
 }
 
@@ -157,11 +162,20 @@ export default function AdminGlobalLogisticsPage() {
   // ========== FORM STATES ==========
   const [hubForm, setHubForm] = useState({ name: '', code: '', description: '', is_active: true });
   const [countryForm, setCountryForm] = useState({ name: '', code: '', currency: 'USD', is_active: true });
-  const [routeForm, setRouteForm] = useState({ destination_country_id: '', transit_hub_id: '', is_direct: false, is_active: true });
+  const [routeForm, setRouteForm] = useState({ 
+    destination_country_id: '', 
+    transit_hub_id: '', 
+    is_direct: false, 
+    is_active: true,
+    route_name: '',
+    origin_country: 'China',
+    destination_country: ''
+  });
   const [originForm, setOriginForm] = useState({ name: '', code: '', description: '', is_active: true });
   const [costForm, setCostForm] = useState({
     shipping_route_id: '',
     segment: 'china_to_transit',
+    transport_type: 'maritimo' as 'maritimo' | 'aereo' | 'terrestre',
     cost_per_kg: 0,
     cost_per_cbm: 0,
     min_cost: 0,
@@ -180,19 +194,23 @@ export default function AdminGlobalLogisticsPage() {
     route_id: '',
     tier_type: 'standard' as 'standard' | 'express',
     tier_name: '',
-    transport_type: 'maritimo' as 'maritimo' | 'aereo',
+    custom_tier_name: '',
+    tier_origin_country: '',
+    tier_destination_country: '',
+    transport_type: 'aereo' as 'maritimo' | 'aereo' | 'terrestre',
     tramo_a_cost_per_kg: 8.0,
-    tramo_a_min_cost: 5.0,
     tramo_a_eta_min: 15,
     tramo_a_eta_max: 25,
     tramo_b_cost_per_lb: 5.0,
-    tramo_b_min_cost: 3.0,
     tramo_b_eta_min: 3,
     tramo_b_eta_max: 7,
     allows_oversize: true,
     allows_sensitive: true,
     is_active: true,
     priority_order: 1,
+    extra_surcharge_fixed: 0,
+    extra_surcharge_percent: 0,
+    surcharge_description: '',
   });
 
   // ========== TIERS STATE ==========
@@ -284,10 +302,21 @@ export default function AdminGlobalLogisticsPage() {
         transit_hub_id: route.transit_hub_id || '',
         is_direct: route.is_direct,
         is_active: route.is_active,
+        route_name: route.route_name || '',
+        origin_country: route.origin_country || 'China',
+        destination_country: route.destination_country || '',
       });
     } else {
       setEditingRoute(null);
-      setRouteForm({ destination_country_id: '', transit_hub_id: '', is_direct: false, is_active: true });
+      setRouteForm({ 
+        destination_country_id: '', 
+        transit_hub_id: '', 
+        is_direct: false, 
+        is_active: true,
+        route_name: '',
+        origin_country: 'China',
+        destination_country: ''
+      });
     }
     setShowRouteDialog(true);
   };
@@ -298,6 +327,9 @@ export default function AdminGlobalLogisticsPage() {
       transit_hub_id: routeForm.is_direct ? null : routeForm.transit_hub_id || null,
       is_direct: routeForm.is_direct,
       is_active: routeForm.is_active,
+      route_name: routeForm.route_name || null,
+      origin_country: routeForm.origin_country || null,
+      destination_country: routeForm.destination_country || null,
     };
     if (editingRoute) {
       updateRoute.mutate({ id: editingRoute.id, ...routeData }, { onSuccess: () => setShowRouteDialog(false) });
@@ -313,6 +345,7 @@ export default function AdminGlobalLogisticsPage() {
       setCostForm({
         shipping_route_id: cost.shipping_route_id,
         segment: cost.segment,
+        transport_type: cost.transport_type,
         cost_per_kg: cost.cost_per_kg,
         cost_per_cbm: cost.cost_per_cbm,
         min_cost: cost.min_cost,
@@ -326,6 +359,7 @@ export default function AdminGlobalLogisticsPage() {
       setCostForm({
         shipping_route_id: routeId || '',
         segment: 'china_to_transit',
+        transport_type: 'maritimo',
         cost_per_kg: 0,
         cost_per_cbm: 0,
         min_cost: 0,
@@ -411,23 +445,32 @@ export default function AdminGlobalLogisticsPage() {
     if (tier) {
       setEditingTier(tier);
       setSelectedTierRoute(tier.route_id);
+      
+      // Obtener datos de la ruta para auto-completar países
+      const tierRoute = routes?.find(r => r.id === tier.route_id);
+      
       setTierForm({
         route_id: tier.route_id,
         tier_type: tier.tier_type,
         tier_name: tier.tier_name,
+        custom_tier_name: tier.custom_tier_name || '',
+        // Auto-completar desde la ruta, no desde el tier guardado
+        tier_origin_country: tierRoute?.origin_country || tier.tier_origin_country || 'China',
+        tier_destination_country: tierRoute?.destination_country || tierRoute?.destination_country_info?.name || tier.tier_destination_country || '',
         transport_type: tier.transport_type,
         tramo_a_cost_per_kg: tier.tramo_a_cost_per_kg,
-        tramo_a_min_cost: tier.tramo_a_min_cost,
         tramo_a_eta_min: tier.tramo_a_eta_min,
         tramo_a_eta_max: tier.tramo_a_eta_max,
         tramo_b_cost_per_lb: tier.tramo_b_cost_per_lb,
-        tramo_b_min_cost: tier.tramo_b_min_cost,
         tramo_b_eta_min: tier.tramo_b_eta_min,
         tramo_b_eta_max: tier.tramo_b_eta_max,
         allows_oversize: tier.allows_oversize,
         allows_sensitive: tier.allows_sensitive,
         is_active: tier.is_active,
         priority_order: tier.priority_order,
+        extra_surcharge_fixed: tier.extra_surcharge_fixed || 0,
+        extra_surcharge_percent: tier.extra_surcharge_percent || 0,
+        surcharge_description: tier.surcharge_description || '',
       });
     } else {
       setEditingTier(null);
@@ -436,22 +479,63 @@ export default function AdminGlobalLogisticsPage() {
         route_id: '',
         tier_type: 'standard',
         tier_name: '',
-        transport_type: 'maritimo',
+        custom_tier_name: '',
+        tier_origin_country: '',
+        tier_destination_country: '',
+        transport_type: 'aereo',
         tramo_a_cost_per_kg: 8.0,
-        tramo_a_min_cost: 5.0,
         tramo_a_eta_min: 15,
         tramo_a_eta_max: 25,
         tramo_b_cost_per_lb: 5.0,
-        tramo_b_min_cost: 3.0,
         tramo_b_eta_min: 3,
         tramo_b_eta_max: 7,
         allows_oversize: true,
         allows_sensitive: true,
         is_active: true,
         priority_order: 1,
+        extra_surcharge_fixed: 0,
+        extra_surcharge_percent: 0,
+        surcharge_description: '',
       });
     }
     setShowTierDialog(true);
+  };
+
+  // Auto-populate tier costs from route segments
+  const loadCostsFromSegments = () => {
+    if (!tierForm.route_id) {
+      toast({ title: 'Error', description: 'Selecciona una ruta primero', variant: 'destructive' });
+      return;
+    }
+    
+    const routeCosts = logisticsCosts?.filter(
+      c => c.shipping_route_id === tierForm.route_id && c.transport_type === tierForm.transport_type
+    ) || [];
+    
+    const tramoA = routeCosts.find(c => c.segment === 'china_to_transit');
+    const tramoB = routeCosts.find(c => c.segment === 'transit_to_destination');
+    
+    if (!tramoA || !tramoB) {
+      toast({ 
+        title: 'No se encontraron segmentos', 
+        description: `No hay costos configurados para ruta con transporte ${tierForm.transport_type}. Configúralos en la pestaña "Rutas y Tramos".`,
+        variant: 'destructive' 
+      });
+      return;
+    }
+    
+    setTierForm(prev => ({
+      ...prev,
+      tramo_a_cost_per_kg: tramoA.cost_per_kg,
+      tramo_a_eta_min: tramoA.estimated_days_min,
+      tramo_a_eta_max: tramoA.estimated_days_max,
+      // Convert kg to lb for Tramo B: 1 kg = 2.20462 lb
+      tramo_b_cost_per_lb: tramoB.cost_per_kg * 2.20462,
+      tramo_b_eta_min: tramoB.estimated_days_min,
+      tramo_b_eta_max: tramoB.estimated_days_max,
+    }));
+    
+    toast({ title: 'Costos cargados', description: 'Los costos se cargaron desde los segmentos de la ruta' });
   };
 
   const handleTierSubmit = () => {
@@ -491,7 +575,7 @@ export default function AdminGlobalLogisticsPage() {
     
     const route = formattedRoutes.find(r => {
       const matchingRoute = routes?.find(sr => sr.id === r.id);
-      return matchingRoute?.destination_country?.code === calcDestination;
+      return matchingRoute?.destination_country_info?.code === calcDestination;
     });
     
     if (!route) return null;
@@ -655,7 +739,7 @@ export default function AdminGlobalLogisticsPage() {
                   <div className="space-y-6">
                     {routes?.map(route => {
                       const routeCosts = getRouteCosts(route.id);
-                      const countryName = route.destination_country?.name || 'Desconocido';
+                      const countryName = route.destination_country_info?.name || 'Desconocido';
                       const hubName = route.transit_hub?.name;
                       
                       return (
@@ -678,6 +762,12 @@ export default function AdminGlobalLogisticsPage() {
                                     </span>
                                   )}
                                 </CardTitle>
+                                {route.route_name && (
+                                  <Badge variant="outline" className="font-normal">
+                                    <Tag className="h-3 w-3 mr-1" />
+                                    {route.route_name}
+                                  </Badge>
+                                )}
                                 <Badge variant={route.is_active ? "default" : "secondary"}>
                                   {route.is_active ? 'Activo' : 'Inactivo'}
                                 </Badge>
@@ -699,6 +789,7 @@ export default function AdminGlobalLogisticsPage() {
                                 <TableHeader>
                                   <TableRow>
                                     <TableHead>Tramo</TableHead>
+                                    <TableHead>Transporte</TableHead>
                                     <TableHead className="text-right">$/kg</TableHead>
                                     <TableHead className="text-right">Días Est.</TableHead>
                                     <TableHead>Estado</TableHead>
@@ -713,6 +804,13 @@ export default function AdminGlobalLogisticsPage() {
                                           <Plane className="h-4 w-4 text-muted-foreground" />
                                           {SEGMENT_LABELS[cost.segment] || cost.segment}
                                         </div>
+                                      </TableCell>
+                                      <TableCell>
+                                        <span className="text-xs">
+                                          {cost.transport_type === 'maritimo' && '🚢 Marítimo'}
+                                          {cost.transport_type === 'aereo' && '✈️ Aéreo'}
+                                          {cost.transport_type === 'terrestre' && '🚛 Terrestre'}
+                                        </span>
                                       </TableCell>
                                       <TableCell className="text-right font-mono">${cost.cost_per_kg.toFixed(2)}</TableCell>
                                       <TableCell className="text-right">
@@ -824,8 +922,8 @@ export default function AdminGlobalLogisticsPage() {
                                     <MapPin className="h-3 w-3" />
                                     <span>
                                       {route.is_direct 
-                                        ? `China → ${route.destination_country?.name || 'Destino'}` 
-                                        : `China → ${route.transit_hub?.name || 'Hub'} → ${route.destination_country?.name || 'Destino'}`}
+                                        ? `China → ${route.destination_country_info?.name || 'Destino'}` 
+                                        : `China → ${route.transit_hub?.name || 'Hub'} → ${route.destination_country_info?.name || 'Destino'}`}
                                     </span>
                                   </div>
                                 )}
@@ -1476,6 +1574,32 @@ export default function AdminGlobalLogisticsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
+                <Label>Nombre de la Ruta</Label>
+                <Input
+                  placeholder="Ej: China - Haití Directo"
+                  value={routeForm.route_name}
+                  onChange={e => setRouteForm(prev => ({ ...prev, route_name: e.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>País Origen</Label>
+                  <Input
+                    placeholder="China"
+                    value={routeForm.origin_country}
+                    onChange={e => setRouteForm(prev => ({ ...prev, origin_country: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>País Destino (Texto)</Label>
+                  <Input
+                    placeholder="Ej: Haití"
+                    value={routeForm.destination_country}
+                    onChange={e => setRouteForm(prev => ({ ...prev, destination_country: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
                 <Label>País Destino</Label>
                 <Select 
                   value={routeForm.destination_country_id} 
@@ -1543,21 +1667,39 @@ export default function AdminGlobalLogisticsPage() {
               <DialogDescription>Configura costos y tiempos para este segmento</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label>Tipo de Tramo</Label>
-                <Select 
-                  value={costForm.segment} 
-                  onValueChange={v => setCostForm(prev => ({ ...prev, segment: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="china_to_transit">Tramo A: Origen → Hub</SelectItem>
-                    <SelectItem value="transit_to_destination">Tramo B: Hub → Destino</SelectItem>
-                    <SelectItem value="china_to_destination">Directo: Origen → Destino</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Tipo de Tramo</Label>
+                  <Select 
+                    value={costForm.segment} 
+                    onValueChange={v => setCostForm(prev => ({ ...prev, segment: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="china_to_transit">Tramo A: Origen → Hub</SelectItem>
+                      <SelectItem value="transit_to_destination">Tramo B: Hub → Destino</SelectItem>
+                      <SelectItem value="china_to_destination">Directo: Origen → Destino</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Tipo de Transporte</Label>
+                  <Select 
+                    value={costForm.transport_type} 
+                    onValueChange={v => setCostForm(prev => ({ ...prev, transport_type: v as 'maritimo' | 'aereo' | 'terrestre' }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="maritimo">🚢 Marítimo</SelectItem>
+                      <SelectItem value="aereo">✈️ Aéreo</SelectItem>
+                      <SelectItem value="terrestre">🚛 Terrestre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -1704,7 +1846,13 @@ export default function AdminGlobalLogisticsPage() {
                 <Select 
                   value={tierForm.route_id} 
                   onValueChange={(v) => {
-                    setTierForm(prev => ({ ...prev, route_id: v }));
+                    const selectedRoute = routes?.find(r => r.id === v);
+                    setTierForm(prev => ({ 
+                      ...prev, 
+                      route_id: v,
+                      tier_origin_country: selectedRoute?.origin_country || 'China',
+                      tier_destination_country: selectedRoute?.destination_country || selectedRoute?.destination_country_info?.name || '',
+                    }));
                     setSelectedTierRoute(v);
                   }}
                 >
@@ -1712,68 +1860,50 @@ export default function AdminGlobalLogisticsPage() {
                     <SelectValue placeholder="Selecciona una ruta" />
                   </SelectTrigger>
                   <SelectContent>
-                    {routes?.filter(r => r.is_active).map(route => (
-                      <SelectItem key={route.id} value={route.id}>
-                        {route.is_direct 
-                          ? `China → ${route.destination_country?.name || 'Destino'}` 
-                          : `China → ${route.transit_hub?.name || 'Hub'} → ${route.destination_country?.name || 'Destino'}`}
-                      </SelectItem>
-                    ))}
+                    {(() => {
+                      // Filtrar rutas: si es nuevo, solo mostrar rutas sin tier asignado
+                      const availableRoutes = editingTier 
+                        ? routes?.filter(r => r.is_active) // Si editando, mostrar todas las activas
+                        : routes?.filter(r => r.is_active && !shippingTiers?.some(tier => tier.route_id === r.id)); // Si nuevo, solo sin tier
+                      
+                      if (!availableRoutes || availableRoutes.length === 0) {
+                        return (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            {editingTier 
+                              ? "No hay rutas activas disponibles"
+                              : "Todas las rutas ya tienen tipo de envío asignado. Crea una nueva ruta primero."}
+                          </div>
+                        );
+                      }
+                      
+                      return availableRoutes.map(route => (
+                        <SelectItem key={route.id} value={route.id}>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="font-medium flex items-center gap-2">
+                              {route.route_name && (
+                                <>
+                                  <Tag className="h-3 w-3" />
+                                  {route.route_name}
+                                </>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {route.is_direct 
+                                ? `China → ${route.destination_country_info?.name || 'Destino'}` 
+                                : `China → ${route.transit_hub?.name || 'Hub'} → ${route.destination_country_info?.name || 'Destino'}`}
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ));
+                    })()}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Selecciona la ruta para ver los tramos involucrados
+                  {editingTier 
+                    ? "Selecciona la ruta para este tipo de envío" 
+                    : "Solo se muestran rutas sin tipo de envío asignado (una ruta = un tipo de envío)"}
                 </p>
               </div>
-
-              {/* Información de Tramos de la Ruta Seleccionada */}
-              {selectedTierRoute && (() => {
-                const selectedRoute = routes?.find(r => r.id === selectedTierRoute);
-                const routeCosts = logisticsCosts?.filter(c => c.shipping_route_id === selectedTierRoute) || [];
-                
-                if (!selectedRoute) return null;
-
-                return (
-                  <Alert className="bg-blue-50 dark:bg-blue-950/20 border-blue-200">
-                    <Info className="h-4 w-4" />
-                    <AlertTitle>Tramos de esta Ruta</AlertTitle>
-                    <AlertDescription>
-                      <div className="mt-2 space-y-2">
-                        <p className="text-sm font-medium">
-                          Ruta: {selectedRoute.is_direct 
-                            ? `China → ${selectedRoute.destination_country?.name}` 
-                            : `China → ${selectedRoute.transit_hub?.name} → ${selectedRoute.destination_country?.name}`}
-                        </p>
-                        
-                        {routeCosts.length > 0 ? (
-                          <div className="space-y-2 mt-3">
-                            <p className="text-xs font-semibold">Costos Logísticos Base:</p>
-                            {routeCosts.map((cost) => (
-                              <div key={cost.id} className="text-xs p-2 bg-white dark:bg-slate-900 rounded border">
-                                <div className="font-medium mb-1">
-                                  {SEGMENT_LABELS[cost.segment] || cost.segment}
-                                </div>
-                                <div className="grid grid-cols-2 gap-1 text-muted-foreground">
-                                  <span>$/kg: ${cost.cost_per_kg}</span>
-                                  <span>Min: ${cost.min_cost}</span>
-                                  <span>ETA: {cost.estimated_days_min}-{cost.estimated_days_max} días</span>
-                                </div>
-                              </div>
-                            ))}
-                            <p className="text-xs text-muted-foreground italic mt-2">
-                              ⚠️ Estos son los costos base de logística. Abajo configura los costos específicos para este tipo de envío (Standard/Express).
-                            </p>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-amber-600 mt-2">
-                            ⚠️ Esta ruta no tiene costos logísticos configurados. Deberás configurar primero los costos en el tab "Rutas y Tramos".
-                          </p>
-                        )}
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                );
-              })()}
 
               {/* Tipo y Transporte */}
               <div className="grid grid-cols-2 gap-4">
@@ -1810,7 +1940,7 @@ export default function AdminGlobalLogisticsPage() {
                   <Label>Tipo de Transporte *</Label>
                   <Select 
                     value={tierForm.transport_type} 
-                    onValueChange={(v: 'maritimo' | 'aereo') => setTierForm(prev => ({ ...prev, transport_type: v }))}
+                    onValueChange={(v: 'maritimo' | 'aereo' | 'terrestre') => setTierForm(prev => ({ ...prev, transport_type: v }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -1826,6 +1956,12 @@ export default function AdminGlobalLogisticsPage() {
                         <div className="flex items-center gap-2">
                           <Plane className="h-4 w-4" />
                           Aéreo
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="terrestre">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          Terrestre
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -1844,6 +1980,178 @@ export default function AdminGlobalLogisticsPage() {
                 <p className="text-xs text-muted-foreground">
                   Este nombre aparecerá en el checkout para que los clientes elijan el tipo de envío
                 </p>
+              </div>
+
+              {/* Nombre Personalizado */}
+              <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
+                <h4 className="font-medium text-sm">Personalización del Nombre (Opcional)</h4>
+                
+                <div className="grid gap-2">
+                  <Label>Nombre Completo Personalizado</Label>
+                  <Input
+                    value={tierForm.custom_tier_name}
+                    onChange={e => setTierForm(prev => ({ ...prev, custom_tier_name: e.target.value }))}
+                    placeholder="Ej: Express Aéreo - China → Haití"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Nombre descriptivo completo que incluye origen y destino
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>País Origen</Label>
+                    <Input
+                      value={tierForm.tier_origin_country}
+                      disabled
+                      className="bg-muted"
+                      placeholder="Selecciona una ruta primero"
+                    />
+                    <p className="text-xs text-muted-foreground">Auto-completado desde la ruta</p>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>País Destino</Label>
+                    <Input
+                      value={tierForm.tier_destination_country}
+                      disabled
+                      className="bg-muted"
+                      placeholder="Selecciona una ruta primero"
+                    />
+                    <p className="text-xs text-muted-foreground">Auto-completado desde la ruta</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Costos y Tiempos por Tramo */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium mb-1">Configuración de Costos y Tiempos por Tramo</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Define los costos y tiempos estimados de entrega para cada segmento del envío
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadCostsFromSegments}
+                    disabled={!tierForm.route_id}
+                    className="ml-2"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Cargar desde Segmentos
+                  </Button>
+                </div>
+
+                {/* Tramo A */}
+                <div className="space-y-3 bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900">
+                      <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h5 className="font-medium">Tramo A: China → Hub (Origen → Tránsito)</h5>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="grid gap-2">
+                      <Label>Costo por kg (USD) *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={tierForm.tramo_a_cost_per_kg}
+                        onChange={e => setTierForm(prev => ({ ...prev, tramo_a_cost_per_kg: parseFloat(e.target.value) || 0 }))}
+                        placeholder="8.00"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>ETA Min (días) *</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={tierForm.tramo_a_eta_min}
+                        onChange={e => setTierForm(prev => ({ ...prev, tramo_a_eta_min: parseInt(e.target.value) || 0 }))}
+                        placeholder="15"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>ETA Max (días) *</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={tierForm.tramo_a_eta_max}
+                        onChange={e => setTierForm(prev => ({ ...prev, tramo_a_eta_max: parseInt(e.target.value) || 0 }))}
+                        placeholder="25"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Costos y tiempos desde el origen hasta el hub de tránsito
+                  </p>
+                </div>
+
+                {/* Tramo B */}
+                <div className="space-y-3 bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 rounded-full bg-green-100 dark:bg-green-900">
+                      <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <h5 className="font-medium">Tramo B: Hub → Destino (Tránsito → Destino Final)</h5>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="grid gap-2">
+                      <Label>Costo por lb (USD) *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={tierForm.tramo_b_cost_per_lb}
+                        onChange={e => setTierForm(prev => ({ ...prev, tramo_b_cost_per_lb: parseFloat(e.target.value) || 0 }))}
+                        placeholder="5.00"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>ETA Min (días) *</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={tierForm.tramo_b_eta_min}
+                        onChange={e => setTierForm(prev => ({ ...prev, tramo_b_eta_min: parseInt(e.target.value) || 0 }))}
+                        placeholder="3"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>ETA Max (días) *</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={tierForm.tramo_b_eta_max}
+                        onChange={e => setTierForm(prev => ({ ...prev, tramo_b_eta_max: parseInt(e.target.value) || 0 }))}
+                        placeholder="7"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Costos y tiempos desde el hub de tránsito hasta el destino final
+                  </p>
+                </div>
+
+                {/* Resumen ETA Total */}
+                <Alert>
+                  <Clock className="h-4 w-4" />
+                  <AlertTitle>Tiempo Total Estimado</AlertTitle>
+                  <AlertDescription>
+                    <div className="font-semibold text-lg">
+                      {tierForm.tramo_a_eta_min + tierForm.tramo_b_eta_min} - {tierForm.tramo_a_eta_max + tierForm.tramo_b_eta_max} días
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Este es el tiempo total de entrega que verán los clientes en el checkout
+                    </p>
+                  </AlertDescription>
+                </Alert>
               </div>
 
               <Separator />
