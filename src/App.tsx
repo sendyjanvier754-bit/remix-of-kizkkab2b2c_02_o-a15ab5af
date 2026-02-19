@@ -11,6 +11,7 @@ import { ToastContainer } from "@/components/ToastContainer";
 import { useToast } from "@/hooks/useToastNotification";
 import { ViewModeProvider } from "@/contexts/ViewModeContext";
 import { useCartMigration } from "@/hooks/useCartMigration";
+import { ShippingTiersRealtimeProvider } from "@/hooks/useShippingTiersRealtimeSync";
 import VariantDrawer from "@/components/products/VariantDrawer";
 import { PageLoader } from "./components/ui/PageLoader";
 import { NavigationLoader } from "./components/ui/NavigationLoader";
@@ -506,6 +507,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ViewModeProvider>
+            <ShippingTiersRealtimeProvider />
             <AppContent />
           </ViewModeProvider>
         </AuthProvider>

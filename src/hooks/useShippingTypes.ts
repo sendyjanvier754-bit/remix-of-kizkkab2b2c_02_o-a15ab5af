@@ -8,12 +8,14 @@ export interface ShippingType {
   tier_name: string;
   custom_tier_name?: string | null;
   transport_type: 'maritimo' | 'aereo' | 'terrestre';
-  // Tramo A: China → USA
+  // Tramo A: China → Puerto
   tramo_a_cost_per_kg: number;
+  tramo_a_cost_per_lb: number; // Calculado: kg × 2.20462
   tramo_a_eta_min: number;
   tramo_a_eta_max: number;
-  // Tramo B: USA → Destino
-  tramo_b_cost_per_lb: number;
+  // Tramo B: Puerto → Destino
+  tramo_b_cost_per_kg: number;
+  tramo_b_cost_per_lb: number; // Calculado: kg × 2.20462
   tramo_b_eta_min: number;
   tramo_b_eta_max: number;
   is_active: boolean;
@@ -81,13 +83,20 @@ export const useShippingTypes = (routeId?: string) => {
           throw queryError;
         }
 
+        console.log('🔄 Shipping tiers fetched from DB:', data);  // Debug log
+
         // Map shipping_tiers to ShippingType format
         const mappedTypes: ShippingType[] = (data || []).map(tier => ({
           ...tier,
           display_name: tier.custom_tier_name || tier.tier_name,
           extra_cost_fixed: 0, // Legacy - no longer used
           extra_cost_percent: 0, // Legacy - no longer used
+          // Calcular costos en ambas unidades para mostrar en UI
+          tramo_a_cost_per_lb: Number((tier.tramo_a_cost_per_kg * 2.20462).toFixed(4)),
+          tramo_b_cost_per_lb: Number((tier.tramo_b_cost_per_kg * 2.20462).toFixed(4)),
         }));
+
+        console.log('✅ Mapped shipping types with both units:', mappedTypes);  // Debug log
 
         setShippingTypes(mappedTypes);
 
@@ -106,7 +115,84 @@ export const useShippingTypes = (routeId?: string) => {
     };
 
     fetchShippingTypes();
-  }, [routeId]);
+  }, [routeId]); // ✅ Re-ejecuta cuando cambia routeId
+
+  // ============================================================================
+  // 🔴 REALTIME SUBSCRIPTION - Auto-actualización cuando cambian los tiers
+  // ============================================================================
+  useEffect(() => {
+    console.log('🔴 Setting up realtime subscription for shipping_tiers');
+    
+    // Create channel for shipping_tiers updates
+    const channel = supabase
+      .channel('shipping_tiers_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'shipping_tiers',
+          // Opcional: filtrar solo por routeId si está presente
+          ...(routeId ? { filter: `route_id=eq.${routeId}` } : {}),
+        },
+        (payload) => {
+          console.log('🔴 Shipping tier changed:', payload);
+          
+          // Re-fetch shipping types when any tier changes
+          const refetchTypes = async () => {
+            try {
+              let query = supabase
+                .from('shipping_tiers')
+                .select('*')
+                .eq('is_active', true)
+                .order('priority_order', { ascending: true });
+
+              if (routeId) {
+                query = query.eq('route_id', routeId);
+              }
+
+              const { data, error: queryError } = await query;
+
+              if (queryError) {
+                console.error('Error refetching shipping types:', queryError);
+                return;
+              }
+
+              const mappedTypes: ShippingType[] = (data || []).map(tier => ({
+                ...tier,
+                display_name: tier.custom_tier_name || tier.tier_name,
+                extra_cost_fixed: 0,
+                extra_cost_percent: 0,
+                tramo_a_cost_per_lb: Number((tier.tramo_a_cost_per_kg * 2.20462).toFixed(4)),
+                tramo_b_cost_per_lb: Number((tier.tramo_b_cost_per_kg * 2.20462).toFixed(4)),
+              }));
+
+              console.log('✅ Shipping types auto-updated from realtime:', mappedTypes);
+              setShippingTypes(mappedTypes);
+              
+              // Actualizar selectedType si está seleccionado
+              if (selectedTypeId) {
+                const updatedType = mappedTypes.find(t => t.id === selectedTypeId);
+                if (updatedType) {
+                  setSelectedType(updatedType);
+                }
+              }
+            } catch (err) {
+              console.error('Error in realtime refetch:', err);
+            }
+          };
+
+          refetchTypes();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      console.log('🔴 Cleaning up realtime subscription for shipping_tiers');
+      supabase.removeChannel(channel);
+    };
+  }, [routeId, selectedTypeId]); // Re-subscribe if routeId or selectedTypeId changes
 
   // Update selected type when selectedTypeId changes
   useEffect(() => {

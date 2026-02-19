@@ -42,8 +42,9 @@ export interface ShippingTier {
   tramo_a_cost_per_kg: number;
   tramo_a_eta_min: number;
   tramo_a_eta_max: number;
-  // Tramo B: USA → Destino (USD/lb)
-  tramo_b_cost_per_lb: number;
+  // Tramo B: USA → Destino (USD/kg y USD/lb)
+  tramo_b_cost_per_kg: number;  // Fuente de verdad para cálculos
+  tramo_b_cost_per_lb: number;  // Para display en UI
   tramo_b_eta_min: number;
   tramo_b_eta_max: number;
   // Config

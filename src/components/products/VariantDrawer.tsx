@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import VariantSelector from './VariantSelector';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
@@ -15,8 +16,15 @@ import { useProductVariants } from '@/hooks/useProductVariants';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 
 const VariantDrawer: React.FC = () => {
+  const location = useLocation();
   const isMobile = useIsMobile();
   const { isOpen, product, close, onComplete } = useVariantDrawerStore();
+  
+  // No renderizar en SellerCartPage
+  if (location.pathname === '/seller/carrito') {
+    return null;
+  }
+  
   const [selections, setSelections] = useState<any[]>([]);
   const [totalQty, setTotalQty] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);

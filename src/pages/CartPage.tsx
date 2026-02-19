@@ -436,31 +436,15 @@ const CartPage = () => {
                               </span>
                             </div>
                             
-                            {/* Quantity Controls */}
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateQuantity(item.id, Math.max(1, item.quantity - 1));
-                                  }}
-                                  className="p-0.5 hover:bg-gray-200 rounded text-xs font-medium transition"
-                                >
-                                  −
-                                </button>
-                                <span className="w-6 text-center text-xs font-medium">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateQuantity(item.id, item.quantity + 1);
-                                  }}
-                                  className="p-0.5 hover:bg-gray-200 rounded text-xs font-medium transition"
-                                >
-                                  +
-                                </button>
-                              </div>
+                            {/* Quantity Info (Mobile) - removed auto-save selector */}
+                            <div className="mt-2">
+                              <span className="text-xs text-gray-600">
+                                Cantidad: {item.quantity}
+                              </span>
+                            </div>
+                            
+                            {/* Subtotal */
+                            <div className="flex items-center justify-end mt-2">
                               <span className="text-sm font-bold" style={{ color: '#071d7f' }}>
                                 ${(item.price * item.quantity).toFixed(2)}
                               </span>
@@ -628,47 +612,24 @@ const CartPage = () => {
                                   </span>
                                 </div>
 
-                                {/* Price and Controls Row */}
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-4">
-                                    <span className="text-lg font-bold" style={{ color: '#29892a' }}>
-                                      ${item.price.toFixed(2)}
-                                    </span>
-                                    <span className="text-sm text-gray-500">
-                                      x{item.quantity}
-                                    </span>
-                                  </div>
+                                {/* Price */}
+                                <div className="mt-2">
+                                  <span className="text-lg font-bold" style={{ color: '#29892a' }}>
+                                    ${item.price.toFixed(2)}
+                                  </span>
+                                </div>
+
+                                {/* Quantity Info and Subtotal Row */}
+                                <div className="flex items-center justify-between mt-3">
+                                  <span className="text-sm text-gray-600">
+                                    Cantidad: {item.quantity}
+                                  </span>
                                   <span className="text-lg font-bold" style={{ color: '#071d7f' }}>
                                     ${(item.price * item.quantity).toFixed(2)}
                                   </span>
                                 </div>
 
-                                {/* Quantity Controls */}
-                                <div className="flex items-center gap-3 mt-3">
-                                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        updateQuantity(item.id, Math.max(1, item.quantity - 1));
-                                      }}
-                                      className="p-1 hover:bg-gray-200 rounded text-xs font-medium transition"
-                                    >
-                                      −
-                                    </button>
-                                    <span className="w-6 text-center text-xs font-semibold">
-                                      {item.quantity}
-                                    </span>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        updateQuantity(item.id, item.quantity + 1);
-                                      }}
-                                      className="p-1 hover:bg-gray-200 rounded text-xs font-medium transition"
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                </div>
+
                               </div>
                             </div>
                           ))}

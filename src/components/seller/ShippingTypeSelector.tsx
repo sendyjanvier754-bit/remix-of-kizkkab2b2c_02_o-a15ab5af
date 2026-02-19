@@ -272,9 +272,6 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         {type.tramo_a_eta_min + type.tramo_b_eta_min}-{type.tramo_a_eta_max + type.tramo_b_eta_max} días
-                        <span className="ml-auto">
-                          Tramo A: ${type.tramo_a_cost_per_kg}/kg | Tramo B: ${type.tramo_b_cost_per_lb}/lb
-                        </span>
                       </div>
                     </div>
                   </SelectItem>

@@ -43,7 +43,6 @@ export function useAutoSaveCartWithShipping(
   const [isSaving, setIsSaving] = useState(false);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
   const [shippingCost, setShippingCost] = useState<ShippingCost | null>(null);
-  const [error, setError] = useState<string | null>(null);
   
   // Queue de updates pendientes
   const updateQueue = useRef<Record<string, number>>({});
@@ -85,7 +84,6 @@ export function useAutoSaveCartWithShipping(
         }
       } catch (err) {
         console.error('Error initializing cart:', err);
-        setError('Error al inicializar carrito');
       } finally {
         setIsLoading(false);
       }
@@ -105,7 +103,6 @@ export function useAutoSaveCartWithShipping(
     }
 
     setIsCalculatingShipping(true);
-    setError(null);
 
     try {
       const { data, error } = await supabase.rpc('get_user_cart_shipping_cost', {
@@ -113,12 +110,16 @@ export function useAutoSaveCartWithShipping(
         p_shipping_type_id: selectedShippingTypeId
       });
 
-      if (error) throw error;
+      if (error) {
+        // Log error en backend - no mostrar al usuario
+        console.error('Backend shipping calculation error:', error);
+        throw error;
+      }
 
       setShippingCost(data);
     } catch (err) {
+      // Solo log en consola - no mensaje visible al usuario
       console.error('Error calculating shipping:', err);
-      setError('Error calculando costo de envío');
       setShippingCost(null);
     } finally {
       setIsCalculatingShipping(false);
@@ -192,7 +193,6 @@ export function useAutoSaveCartWithShipping(
 
     } catch (err) {
       console.error('Error saving cart changes:', err);
-      setError('Error guardando cambios');
       toast.error('Error guardando cambios en el carrito');
     } finally {
       setIsSaving(false);
@@ -272,7 +272,6 @@ export function useAutoSaveCartWithShipping(
     isSaving,
     isCalculatingShipping,
     shippingCost,
-    error,
     updateQuantity,
     forceSave,
     refetchShipping: calculateShippingCost

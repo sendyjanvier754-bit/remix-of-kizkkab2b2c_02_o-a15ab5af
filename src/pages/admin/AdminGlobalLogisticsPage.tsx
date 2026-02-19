@@ -66,7 +66,8 @@ interface ShippingTier {
   tramo_a_cost_per_kg: number;
   tramo_a_eta_min: number;
   tramo_a_eta_max: number;
-  tramo_b_cost_per_lb: number;
+  tramo_b_cost_per_kg: number;  // Fuente de verdad (kg)
+  tramo_b_cost_per_lb: number;  // Display UI (lb)
   tramo_b_eta_min: number;
   tramo_b_eta_max: number;
   allows_oversize: boolean;
@@ -201,7 +202,8 @@ export default function AdminGlobalLogisticsPage() {
     tramo_a_cost_per_kg: 8.0,
     tramo_a_eta_min: 15,
     tramo_a_eta_max: 25,
-    tramo_b_cost_per_lb: 5.0,
+    tramo_b_cost_per_kg: 5.0,  // Fuente de verdad
+    tramo_b_cost_per_lb: 11.0231,  // Display (5.0 × 2.20462)
     tramo_b_eta_min: 3,
     tramo_b_eta_max: 7,
     allows_oversize: true,
@@ -461,6 +463,7 @@ export default function AdminGlobalLogisticsPage() {
         tramo_a_cost_per_kg: tier.tramo_a_cost_per_kg,
         tramo_a_eta_min: tier.tramo_a_eta_min,
         tramo_a_eta_max: tier.tramo_a_eta_max,
+        tramo_b_cost_per_kg: tier.tramo_b_cost_per_kg || (tier.tramo_b_cost_per_lb / 2.20462),  // Fallback si no existe
         tramo_b_cost_per_lb: tier.tramo_b_cost_per_lb,
         tramo_b_eta_min: tier.tramo_b_eta_min,
         tramo_b_eta_max: tier.tramo_b_eta_max,
@@ -486,7 +489,8 @@ export default function AdminGlobalLogisticsPage() {
         tramo_a_cost_per_kg: 8.0,
         tramo_a_eta_min: 15,
         tramo_a_eta_max: 25,
-        tramo_b_cost_per_lb: 5.0,
+        tramo_b_cost_per_kg: 5.0,  // Fuente de verdad
+        tramo_b_cost_per_lb: 11.0231,  // Display (5.0 × 2.20462)
         tramo_b_eta_min: 3,
         tramo_b_eta_max: 7,
         allows_oversize: true,
@@ -529,8 +533,9 @@ export default function AdminGlobalLogisticsPage() {
       tramo_a_cost_per_kg: tramoA.cost_per_kg,
       tramo_a_eta_min: tramoA.estimated_days_min,
       tramo_a_eta_max: tramoA.estimated_days_max,
-      // Convert kg to lb for Tramo B: 1 kg = 2.20462 lb
-      tramo_b_cost_per_lb: tramoB.cost_per_kg * 2.20462,
+      // ✅ ACTUALIZAR AMBAS COLUMNAS para Tramo B
+      tramo_b_cost_per_kg: tramoB.cost_per_kg,  // Fuente de verdad (kg)
+      tramo_b_cost_per_lb: tramoB.cost_per_kg * 2.20462,  // UI display (lb)
       tramo_b_eta_min: tramoB.estimated_days_min,
       tramo_b_eta_max: tramoB.estimated_days_max,
     }));
@@ -2101,18 +2106,53 @@ export default function AdminGlobalLogisticsPage() {
                     <h5 className="font-medium">Tramo B: Hub → Destino (Tránsito → Destino Final)</h5>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="grid gap-2">
-                      <Label>Costo por lb (USD) *</Label>
+                      <Label className="flex items-center gap-2">
+                        Costo por kg (USD) *
+                        <span className="text-xs text-muted-foreground">(fuente de verdad)</span>
+                      </Label>
                       <Input
                         type="number"
                         step="0.01"
                         min="0"
-                        value={tierForm.tramo_b_cost_per_lb}
-                        onChange={e => setTierForm(prev => ({ ...prev, tramo_b_cost_per_lb: parseFloat(e.target.value) || 0 }))}
+                        value={tierForm.tramo_b_cost_per_kg}
+                        onChange={e => {
+                          const kg = parseFloat(e.target.value) || 0;
+                          setTierForm(prev => ({ 
+                            ...prev, 
+                            tramo_b_cost_per_kg: kg,
+                            tramo_b_cost_per_lb: Number((kg * 2.20462).toFixed(4))  // Auto-sincronizar
+                          }));
+                        }}
                         placeholder="5.00"
                       />
                     </div>
+                    <div className="grid gap-2">
+                      <Label className="flex items-center gap-2">
+                        Costo por lb (USD)
+                        <span className="text-xs text-green-600">(auto-calculado)</span>
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        min="0"
+                        value={tierForm.tramo_b_cost_per_lb}
+                        onChange={e => {
+                          const lb = parseFloat(e.target.value) || 0;
+                          setTierForm(prev => ({ 
+                            ...prev, 
+                            tramo_b_cost_per_lb: lb,
+                            tramo_b_cost_per_kg: Number((lb / 2.20462).toFixed(4))  // Sincronizar inverso
+                          }));
+                        }}
+                        placeholder="11.0231"
+                        className="bg-green-50/50"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="grid gap-2">
                       <Label>ETA Min (días) *</Label>
                       <Input
@@ -2135,7 +2175,9 @@ export default function AdminGlobalLogisticsPage() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Costos y tiempos desde el hub de tránsito hasta el destino final
+                    Costos y tiempos desde el hub de tránsito hasta el destino final.
+                    <br />
+                    💡 Tip: Editar kg actualiza lb automáticamente (y viceversa)
                   </p>
                 </div>
 

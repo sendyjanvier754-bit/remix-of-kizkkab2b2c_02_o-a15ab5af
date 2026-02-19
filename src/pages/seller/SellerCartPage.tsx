@@ -41,8 +41,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
-import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
-import VariantDrawer from "@/components/products/VariantDrawer";
 import VariantSelectorB2B from "@/components/products/VariantSelectorB2B";
 import { useProductVariants } from "@/hooks/useProductVariants";
 import { VariantBadges } from "@/components/seller/cart/VariantBadges";
@@ -142,8 +140,7 @@ const SellerCartPage = () => {
     shippingCost: autoSaveShippingCost,
     isSaving: isAutoSaving,
     isCalculatingShipping: isCalculatingAutoShipping,
-    updateQuantity: autoSaveUpdateQuantity,
-    error: autoSaveError
+    updateQuantity: autoSaveUpdateQuantity
   } = useAutoSaveCartWithShipping(selectedShippingTypeId, refetch);
 
   // ⚠️ DEPRECADO: Hook antiguo (mantener temporalmente para compatibilidad)
@@ -562,15 +559,10 @@ const SellerCartPage = () => {
 
       console.log('Loaded product:', uiProduct);
 
-      // If mobile, open a modal with variant selection
-      if (isMobile) {
-        setSelectedProductForVariants(uiProduct);
-      } else {
-        // Desktop: use VariantDrawer
-        useVariantDrawerStore.getState().open(uiProduct);
-      }
+      // Open responsive variant drawer (works for mobile, tablet, and desktop)
+      setSelectedProductForVariants(uiProduct);
 
-      console.log('Variant drawer/modal opened successfully');
+      console.log('Variant drawer opened successfully');
     } catch (err) {
       console.error('Error opening variant drawer:', err);
       toast.error('Error al abrir variantes');
@@ -837,9 +829,6 @@ const SellerCartPage = () => {
                     </div>
                     <p className="text-xs text-gray-600 mt-1 ml-7">
                       Cantidad seleccionada: {totalQuantity}
-                      {autoSaveError && (
-                        <span className="ml-2 text-red-600">• Error: {autoSaveError}</span>
-                      )}
                     </p>
                   </div>
 
@@ -918,6 +907,13 @@ const SellerCartPage = () => {
                                 </span>
                               </div>
                               
+                              {/* Quantity Selector */}
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-xs text-gray-600">
+                                  Cantidad: {item.cantidad}
+                                </span>
+                              </div>
+                              
                               {/* Logistics info per item */}
                               {(() => {
                                 const itemLogistics = cartLogistics.itemsLogistics.get(item.id);
@@ -939,31 +935,8 @@ const SellerCartPage = () => {
                                 );
                               })()}
                             </div>
-                            {/* Quantity Controls + Subtotal */}
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateQuantity(item.id, Math.max(1, item.cantidad - 1));
-                                  }}
-                                  className="p-0.5 hover:bg-gray-200 rounded text-xs font-medium transition"
-                                >
-                                  −
-                                </button>
-                                <span className="w-6 text-center text-xs font-medium">
-                                  {item.cantidad}
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateQuantity(item.id, item.cantidad + 1);
-                                  }}
-                                  className="p-0.5 hover:bg-gray-200 rounded text-xs font-medium transition"
-                                >
-                                  +
-                                </button>
-                              </div>
+                            {/* Subtotal */}
+                            <div className="flex items-center justify-end mt-2">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1371,32 +1344,16 @@ const SellerCartPage = () => {
                                 ${item.precioB2B.toFixed(2)}
                               </span>
                             </div>
-                          </div>
-                          {/* Quantity Controls + Subtotal */}
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateQuantity(item.id, Math.max(1, item.cantidad - 1));
-                                }}
-                                className="p-0.5 hover:bg-gray-200 rounded text-xs font-medium transition"
-                              >
-                                −
-                              </button>
-                              <span className="w-6 text-center text-xs font-medium">
-                                {item.cantidad}
+                            
+                            {/* Quantity Info (Mobile) */}
+                            <div className="mt-2">
+                              <span className="text-xs text-gray-600">
+                                Cantidad: {item.cantidad}
                               </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateQuantity(item.id, item.cantidad + 1);
-                                }}
-                                className="p-0.5 hover:bg-gray-200 rounded text-xs font-medium transition"
-                              >
-                                +
-                              </button>
                             </div>
+                          </div>
+                          {/* Subtotal */}
+                          <div className="flex items-center justify-end mt-2">
                             <span className="text-sm font-bold" style={{ color: '#071d7f' }}>
                               ${item.subtotal.toFixed(2)}
                             </span>
@@ -1514,23 +1471,47 @@ const SellerCartPage = () => {
       </AlertDialog>
 
 
-
-      {/* Variant Drawer */}
-      <VariantDrawer />
-
-      {/* Mobile Variant Selection Drawer */}
+      {/* Variant Selection Drawer - Responsive: Mobile/Tablet: Bottom | Desktop: Right Side */}
       {selectedProductForVariants && (
-        <Drawer open={true} onOpenChange={(open) => {
-          if (!open) {
-            setSelectedProductForVariants(null);
-            setVariantSelections([]);
-            setVariantImage(null);
-          }
-        }}>
-          <DrawerContent className="flex flex-col max-h-[90vh] p-0 gap-0">
-            {/* Header with Image Left and Title Right - Fixed */}
+        <>
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-[60]"
+            style={{ animation: 'fadeIn 0.3s ease-out' }}
+            onClick={() => {
+              setSelectedProductForVariants(null);
+              setVariantSelections([]);
+              setVariantImage(null);
+            }}
+          />
+          
+          {/* Responsive Panel - Bottom on mobile, Right side on desktop */}
+          <aside
+            onClick={(e) => e.stopPropagation()}
+            className="fixed bg-background shadow-2xl flex flex-col z-[61]
+                       bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl
+                       md:top-0 md:bottom-auto md:left-auto md:right-0 md:rounded-none md:border-l md:w-[400px] md:h-screen md:max-h-screen"
+            style={{ 
+              animation: 'slideInRight 0.3s ease-out'
+            }}
+          >
+            {/* Header - Desktop only shows close button */}
+            <div className="hidden md:flex items-center justify-between p-4 border-b flex-shrink-0">
+              <h3 className="text-lg font-bold text-foreground">Seleccionar variantes</h3>
+              <button 
+                onClick={() => {
+                  setSelectedProductForVariants(null);
+                  setVariantSelections([]);
+                  setVariantImage(null);
+                }}
+                className="p-1 hover:bg-muted rounded-full transition"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Product Info - Shows on both mobile and desktop */}
             <div className="py-3 px-4 border-b flex-shrink-0 bg-white flex items-start gap-3">
-              {/* Image Left */}
               <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                 <img 
                   src={variantImage || selectedProductForVariants.images?.[0] || '/placeholder.svg'} 
@@ -1538,87 +1519,78 @@ const SellerCartPage = () => {
                   className="w-full h-full object-contain"
                 />
               </div>
-              
-              {/* Title and Description Right */}
               <div className="flex-1 min-w-0">
-                <h2 className="text-base font-semibold line-clamp-2">{selectedProductForVariants.nombre}</h2>
+                <h2 className="text-sm md:text-base font-semibold line-clamp-2">{selectedProductForVariants.nombre}</h2>
                 <p className="text-xs text-muted-foreground mt-1">
                   Selecciona variantes para agregar al carrito
                 </p>
               </div>
             </div>
-            
-            {/* Main Content Box with Scroll */}
-            <div className="flex-1 min-h-0 px-3 py-2 overflow-hidden">
-              <div className="w-full h-full border border-gray-200 rounded-lg bg-white overflow-hidden flex flex-col">
-                <ScrollArea className="flex-1">
-                  <div className="p-3 space-y-2">
-                    {/* Price Info */}
-                    <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg text-sm">
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">Precio B2B</p>
-                        <p className="font-bold" style={{ color: '#29892a' }}>
-                          ${selectedProductForVariants.costB2B?.toFixed(2) || '0.00'}
-                        </p>
-                      </div>
-                      {variantSelections.length > 0 && (
-                        <div className="text-right">
-                          <p className="text-[10px] text-muted-foreground">Seleccionado</p>
-                          <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-sm inline-block">
-                            {variantSelections.reduce((sum, s) => sum + s.quantity, 0)} uds
-                          </span>
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Variant Selector */}
-                    {isLoadingVariants ? (
-                      <div className="flex items-center justify-center py-4">
-                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                        <span className="ml-2 text-xs text-muted-foreground">Cargando variantes...</span>
-                      </div>
-                    ) : productVariants && productVariants.length > 0 ? (
-                      <VariantSelectorB2B
-                        productId={selectedProductForVariants.id}
-                        variants={productVariants.map(v => {
-                          // Extract color and size from attribute_combination
-                          const attrCombo = v.attribute_combination || {};
-                          const colorVal = attrCombo.color || v.option_value || '';
-                          const sizeVal = attrCombo.size || '';
-                          const labelParts = [colorVal, sizeVal].filter(Boolean);
-                          const label = v.name || labelParts.join(' / ') || v.sku;
-                          
-                          return {
-                            id: v.id,
-                            sku: v.sku,
-                            label,
-                            precio: v.precio_b2b_final || v.cost_price || v.price || selectedProductForVariants.costB2B || 0,
-                            precio_b2b_final: v.precio_b2b_final, // ✅ Pasar precio_b2b_final explícitamente
-                            stock: v.stock || 999,
-                            attribute_combination: attrCombo,
-                            images: v.images || [],
-                            image_url: v.images?.[0] || undefined,
-                          };
-                        })}
-                        basePrice={selectedProductForVariants.costB2B || 0}
-                        baseImage={selectedProductForVariants.images?.[0]}
-                        initialQuantities={initialVariantQuantities}
-                        onSelectionChange={handleVariantSelectionChange}
-                        onVariantImageChange={setVariantImage}
-                      />
-                    ) : (
-                      <div className="text-center py-3 text-muted-foreground">
-                        <Package className="h-6 w-6 mx-auto mb-1 opacity-50" />
-                        <p className="text-xs">No hay variantes disponibles</p>
-                      </div>
-                    )}
+            {/* Content - scrollable */}
+            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-4">
+              {/* Price Info */}
+              <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg text-sm">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Precio B2B</p>
+                  <p className="font-bold" style={{ color: '#29892a' }}>
+                    ${selectedProductForVariants.costB2B?.toFixed(2) || '0.00'}
+                  </p>
+                </div>
+                {variantSelections.length > 0 && (
+                  <div className="text-right">
+                    <p className="text-[10px] text-muted-foreground">Seleccionado</p>
+                    <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-sm inline-block">
+                      {variantSelections.reduce((sum, s) => sum + s.quantity, 0)} uds
+                    </span>
                   </div>
-                </ScrollArea>
+                )}
               </div>
+
+              {/* Variant Selector */}
+              {isLoadingVariants ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="ml-2 text-xs text-muted-foreground">Cargando variantes...</span>
+                </div>
+              ) : productVariants && productVariants.length > 0 ? (
+                <VariantSelectorB2B
+                  productId={selectedProductForVariants.id}
+                  variants={productVariants.map(v => {
+                    const attrCombo = v.attribute_combination || {};
+                    const colorVal = attrCombo.color || v.option_value || '';
+                    const sizeVal = attrCombo.size || '';
+                    const labelParts = [colorVal, sizeVal].filter(Boolean);
+                    const label = v.name || labelParts.join(' / ') || v.sku;
+                    
+                    return {
+                      id: v.id,
+                      sku: v.sku,
+                      label,
+                      precio: v.precio_b2b_final || v.cost_price || v.price || selectedProductForVariants.costB2B || 0,
+                      precio_b2b_final: v.precio_b2b_final,
+                      stock: v.stock || 999,
+                      attribute_combination: attrCombo,
+                      images: v.images || [],
+                      image_url: v.images?.[0] || undefined,
+                    };
+                  })}
+                  basePrice={selectedProductForVariants.costB2B || 0}
+                  baseImage={selectedProductForVariants.images?.[0]}
+                  initialQuantities={initialVariantQuantities}
+                  onSelectionChange={handleVariantSelectionChange}
+                  onVariantImageChange={setVariantImage}
+                />
+              ) : (
+                <div className="text-center py-3 text-muted-foreground">
+                  <Package className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                  <p className="text-xs">No hay variantes disponibles</p>
+                </div>
+              )}
             </div>
 
             {/* Actions Footer */}
-            <div className="p-2 border-t bg-background flex gap-2 flex-shrink-0">
+            <div className="p-2 md:p-4 border-t bg-background flex gap-2 flex-shrink-0">
               <Button
                 onClick={() => {
                   setSelectedProductForVariants(null);
@@ -1626,31 +1598,31 @@ const SellerCartPage = () => {
                   setVariantImage(null);
                 }}
                 variant="outline"
-                className="flex-1 h-9 text-sm"
+                className="flex-1 h-9 md:h-10 text-sm"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleAddVariantsToCart}
                 disabled={isAddingVariant || variantSelections.length === 0}
-                className="flex-1 h-9 text-sm text-white"
+                className="flex-1 h-9 md:h-10 text-sm text-white"
                 style={{ backgroundColor: '#071d7f' }}
               >
                 {isAddingVariant ? (
                   <>
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    <Loader2 className="h-3 md:h-4 w-3 md:w-4 mr-1 md:mr-2 animate-spin" />
                     Agregando...
                   </>
                 ) : (
                   <>
-                    <ShoppingBag className="h-3 w-3 mr-1" />
+                    <ShoppingBag className="h-3 md:h-4 w-3 md:w-4 mr-1 md:mr-2" />
                     Agregar ({variantSelections.reduce((sum, s) => sum + s.quantity, 0)})
                   </>
                 )}
               </Button>
             </div>
-          </DrawerContent>
-        </Drawer>
+          </aside>
+        </>
       )}
 
       {/* Suggested Prices Detail Modal */}

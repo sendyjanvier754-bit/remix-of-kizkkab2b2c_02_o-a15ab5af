@@ -129,8 +129,8 @@ export function useAutoSaveCart(cartId: string, selectedTierId: string | null) {
       setShippingCost(data);
       setError(null);
     } catch (err) {
-      console.error('Error calculating shipping:', err);
-      setError('Error calculando costo de envío');
+      // Solo log en consola - no mensaje visible al usuario
+      console.error('Backend shipping calculation error:', err);
     } finally {
       setIsCalculating(false);
     }
