@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { BusinessPanel } from "@/components/business/BusinessPanel";
 import { ShippingTypeSelector } from "@/components/seller/ShippingTypeSelector";
@@ -41,6 +41,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
+import { QuantitySelector } from "@/components/ui/quantity-selector";
 import VariantSelectorB2B from "@/components/products/VariantSelectorB2B";
 import { useProductVariants } from "@/hooks/useProductVariants";
 import { VariantBadges } from "@/components/seller/cart/VariantBadges";
@@ -52,13 +53,33 @@ import { SuggestedPricesDetailModal } from "@/components/seller/SuggestedPricesD
 import { useLogisticsDataForItems } from "@/hooks/useLogisticsDataForItems";
 import { useCartShippingCostView } from "@/hooks/useCartShippingCostView";
 import { useAutoSaveCartWithShipping } from "@/hooks/useAutoSaveCartWithShipping";
+import { useQueryClient } from "@tanstack/react-query";
 
 const SellerCartPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { items, isLoading, refetch } = useB2BCartItems();
+  const queryClient = useQueryClient();
+  const { items: itemsFromDB, isLoading, refetch } = useB2BCartItems();
   const { productsNotMeetingMOQ, isCartValid, productTotals } = useB2BCartProductTotals();
   const isMobile = useIsMobile();
+  
+  // Estado local para updates optimistas
+  const [items, setItems] = useState(itemsFromDB);
+  const pendingUpdatesRef = useRef(new Set<string>());
+  const lastUpdateTimeRef = useRef<number>(0);
+  
+  // Sincronizar con items de la DB solo si no hay updates pendientes RECIENTES
+  useEffect(() => {
+    const timeSinceLastUpdate = Date.now() - lastUpdateTimeRef.current;
+    
+    // Si hay updates pendientes O si fue hace menos de 2 segundos, no sincronizar
+    if (pendingUpdatesRef.current.size > 0 || timeSinceLastUpdate < 2000) {
+      return;
+    }
+    
+    // Sincronizar solo si no hay cambios pendientes
+    setItems(itemsFromDB);
+  }, [itemsFromDB]);
   
   // Shipping state - DEBE IR ANTES de usar selectedShippingTypeId
   const [selectedShippingTypeId, setSelectedShippingTypeId] = useState<string | null>(null);
@@ -382,14 +403,69 @@ const SellerCartPage = () => {
     }
   };
 
-  // ✅ NUEVO: Wrapper para manejar auto-save con validación de qty < 1
+  // ✅ UPDATE DIRECTO: Actualiza local + DB inmediatamente
   const updateQuantity = async (itemId: string, newQty: number) => {
-    if (newQty < 1) {
-      await removeItem(itemId);
+    // Si la cantidad es 0, preguntar antes de eliminar
+    if (newQty === 0) {
+      const item = items.find(i => i.id === itemId);
+      if (item) {
+        handleRemoveItem(item.id, item.name);
+      }
       return;
     }
-    // Auto-save con debounce (500ms) + optimistic UI
-    autoSaveUpdateQuantity(itemId, newQty);
+    
+    // Encontrar el item
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // Marcar como pendiente y actualizar timestamp
+    pendingUpdatesRef.current.add(itemId);
+    lastUpdateTimeRef.current = Date.now();
+    
+    // 1. UPDATE OPTIMISTA: Actualizar estado local inmediatamente
+    const newSubtotal = item.precioB2B * newQty;
+    setItems(prevItems => 
+      prevItems.map(i => 
+        i.id === itemId 
+          ? { ...i, cantidad: newQty, subtotal: newSubtotal }
+          : i
+      )
+    );
+    
+    // 2. GUARDAR EN DB inmediatamente
+    try {
+      const { error } = await supabase
+        .from('b2b_cart_items')
+        .update({
+          quantity: newQty,
+          total_price: newSubtotal
+        })
+        .eq('id', itemId);
+
+      if (error) throw error;
+      
+      // Invalidar todas las queries de logística y shipping para refrescar en tiempo real
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['cart-shipping-cost-selected'] }),
+        queryClient.invalidateQueries({ queryKey: ['cart-shipping-cost-logistics'] }),
+        queryClient.invalidateQueries({ queryKey: ['cart-shipping-cost'] }),
+        queryClient.invalidateQueries({ queryKey: ['b2b-cart-logistics'] }),
+        queryClient.invalidateQueries({ queryKey: ['cart-items'] }),
+      ]);
+      
+      // Limpiar pending después de guardar exitosamente
+      setTimeout(() => {
+        pendingUpdatesRef.current.delete(itemId);
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      toast.error('Error al actualizar la cantidad');
+      // Revertir cambio local en caso de error
+      pendingUpdatesRef.current.delete(itemId);
+      lastUpdateTimeRef.current = 0;
+      refetch();
+    }
   };
 
   // Show confirmation dialog for removing item
@@ -815,11 +891,10 @@ const SellerCartPage = () => {
                           className="data-[state=checked]:bg-[#071d7f] data-[state=checked]:border-[#071d7f]"
                         />
                         <h2 className="font-bold text-lg text-gray-900">Productos ({items.length})</h2>
-                        {/* ✅ Auto-save indicator */}
+                        {/* ✅ Auto-save indicator - discreto */}
                         {isAutoSaving && (
-                          <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-200">
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
                             <Loader2 className="w-3 h-3 animate-spin" />
-                            <span className="font-medium">Guardando...</span>
                           </div>
                         )}
                       </div>
@@ -907,13 +982,6 @@ const SellerCartPage = () => {
                                 </span>
                               </div>
                               
-                              {/* Quantity Selector */}
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="text-xs text-gray-600">
-                                  Cantidad: {item.cantidad}
-                                </span>
-                              </div>
-                              
                               {/* Logistics info per item */}
                               {(() => {
                                 const itemLogistics = cartLogistics.itemsLogistics.get(item.id);
@@ -935,8 +1003,15 @@ const SellerCartPage = () => {
                                 );
                               })()}
                             </div>
-                            {/* Subtotal */}
-                            <div className="flex items-center justify-end mt-2">
+                            {/* Quantity Selector & Subtotal */}
+                            <div className="flex items-center justify-between gap-3 mt-2">
+                              <QuantitySelector
+                                value={item.cantidad}
+                                onChange={(newQty) => updateQuantity(item.id, newQty)}
+                                min={1}
+                                max={999}
+                                size="sm"
+                              />
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1344,16 +1419,16 @@ const SellerCartPage = () => {
                                 ${item.precioB2B.toFixed(2)}
                               </span>
                             </div>
-                            
-                            {/* Quantity Info (Mobile) */}
-                            <div className="mt-2">
-                              <span className="text-xs text-gray-600">
-                                Cantidad: {item.cantidad}
-                              </span>
-                            </div>
                           </div>
-                          {/* Subtotal */}
-                          <div className="flex items-center justify-end mt-2">
+                          {/* Quantity Selector & Subtotal */}
+                          <div className="flex items-center justify-between gap-3 mt-2">
+                            <QuantitySelector
+                              value={item.cantidad}
+                              onChange={(newQty) => updateQuantity(item.id, newQty)}
+                              min={1}
+                              max={999}
+                              size="sm"
+                            />
                             <span className="text-sm font-bold" style={{ color: '#071d7f' }}>
                               ${item.subtotal.toFixed(2)}
                             </span>

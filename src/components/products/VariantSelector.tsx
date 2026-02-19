@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useGroupedVariants, ProductVariant, AttributeCombination } from "@/hooks/useProductVariants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { Minus, Plus, Package, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -372,12 +373,11 @@ const VariantSelector = ({
     }
   }, [selections, totalQty, totalPrice, variants, matchingVariant, validationState]);
 
-  const updateQuantity = (variantId: string, delta: number, variant: ProductVariant) => {
+  const updateQuantity = (variantId: string, newQty: number, variant: ProductVariant) => {
     setSelections((prev) => {
-      const current = prev[variantId] || 0;
-      let newQty = current + delta;
-      newQty = Math.max(0, Math.min(variant.stock, newQty));
-      return { ...prev, [variantId]: newQty };
+      // Validar límites: mínimo 0, máximo stock del variant
+      const clampedQty = Math.max(0, Math.min(variant.stock, newQty));
+      return { ...prev, [variantId]: clampedQty };
     });
   };
 
@@ -701,29 +701,14 @@ const VariantSelector = ({
               </div>
 
               {/* Quantity controls */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => updateQuantity(matchingVariant.id, -1, matchingVariant)}
-                  disabled={(selections[matchingVariant.id] || 0) === 0 || matchingVariant.stock === 0}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <div className="w-12 text-center text-lg font-bold">
-                  {selections[matchingVariant.id] || 0}
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => updateQuantity(matchingVariant.id, 1, matchingVariant)}
-                  disabled={matchingVariant.stock === 0 || (selections[matchingVariant.id] || 0) >= matchingVariant.stock}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+              <QuantitySelector
+                value={selections[matchingVariant.id] || 0}
+                onChange={(newQty) => updateQuantity(matchingVariant.id, newQty, matchingVariant)}
+                min={0}
+                max={matchingVariant.stock}
+                disabled={matchingVariant.stock === 0}
+                size="md"
+              />
             </div>
           </div>
         )}
@@ -812,29 +797,14 @@ const VariantSelector = ({
                   </div>
 
                   {/* Right: Quantity controls */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8"
-                      onClick={() => updateQuantity(variant.id, -1, variant)}
-                      disabled={qty === 0 || outOfStock}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <div className="w-7 sm:w-10 text-center text-xs sm:text-sm font-semibold">
-                      {qty}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8"
-                      onClick={() => updateQuantity(variant.id, 1, variant)}
-                      disabled={outOfStock || qty >= variant.stock}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <QuantitySelector
+                    value={qty}
+                    onChange={(newQty) => updateQuantity(variant.id, newQty, variant)}
+                    min={0}
+                    max={variant.stock}
+                    disabled={outOfStock}
+                    size="sm"
+                  />
                 </div>
               );
             })}

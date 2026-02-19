@@ -436,14 +436,7 @@ const CartPage = () => {
                               </span>
                             </div>
                             
-                            {/* Quantity Info (Mobile) - removed auto-save selector */}
-                            <div className="mt-2">
-                              <span className="text-xs text-gray-600">
-                                Cantidad: {item.quantity}
-                              </span>
-                            </div>
-                            
-                            {/* Subtotal */
+                            {/* Subtotal */}
                             <div className="flex items-center justify-end mt-2">
                               <span className="text-sm font-bold" style={{ color: '#071d7f' }}>
                                 ${(item.price * item.quantity).toFixed(2)}
@@ -612,18 +605,16 @@ const CartPage = () => {
                                   </span>
                                 </div>
 
-                                {/* Price */}
-                                <div className="mt-2">
-                                  <span className="text-lg font-bold" style={{ color: '#29892a' }}>
-                                    ${item.price.toFixed(2)}
-                                  </span>
-                                </div>
-
-                                {/* Quantity Info and Subtotal Row */}
-                                <div className="flex items-center justify-between mt-3">
-                                  <span className="text-sm text-gray-600">
-                                    Cantidad: {item.quantity}
-                                  </span>
+                                {/* Price and Controls Row */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-4">
+                                    <span className="text-lg font-bold" style={{ color: '#29892a' }}>
+                                      ${item.price.toFixed(2)}
+                                    </span>
+                                    <span className="text-sm text-gray-500">
+                                      x{item.quantity}
+                                    </span>
+                                  </div>
                                   <span className="text-lg font-bold" style={{ color: '#071d7f' }}>
                                     ${(item.price * item.quantity).toFixed(2)}
                                   </span>

@@ -166,8 +166,7 @@ export function useAutoSaveCartWithShipping(
               .from('b2b_cart_items')
               .update({
                 quantity,
-                total_price: quantity * item.unit_price,
-                updated_at: new Date().toISOString()
+                total_price: quantity * item.unit_price
               })
               .eq('id', itemId);
           }
@@ -210,22 +209,40 @@ export function useAutoSaveCartWithShipping(
       
       // Si es un array directo
       if (Array.isArray(oldData)) {
-        return oldData.map((item: any) => 
-          item.id === itemId 
-            ? { ...item, cantidad: newQuantity, quantity: newQuantity }
-            : item
-        );
+        return oldData.map((item: any) => {
+          if (item.id === itemId) {
+            const unitPrice = item.precioB2B || item.unit_price || 0;
+            const newSubtotal = newQuantity * unitPrice;
+            return { 
+              ...item, 
+              cantidad: newQuantity, 
+              quantity: newQuantity,
+              subtotal: newSubtotal,
+              total_price: newSubtotal
+            };
+          }
+          return item;
+        });
       }
       
       // Si tiene estructura { data: [...] }
       if (oldData.data && Array.isArray(oldData.data)) {
         return {
           ...oldData,
-          data: oldData.data.map((item: any) => 
-            item.id === itemId 
-              ? { ...item, cantidad: newQuantity, quantity: newQuantity }
-              : item
-          )
+          data: oldData.data.map((item: any) => {
+            if (item.id === itemId) {
+              const unitPrice = item.precioB2B || item.unit_price || 0;
+              const newSubtotal = newQuantity * unitPrice;
+              return { 
+                ...item, 
+                cantidad: newQuantity, 
+                quantity: newQuantity,
+                subtotal: newSubtotal,
+                total_price: newSubtotal
+              };
+            }
+            return item;
+          })
         };
       }
       
