@@ -31,6 +31,7 @@ export interface ShippingRoute {
   route_name: string | null;
   origin_country: string | null;
   destination_country: string | null;
+  market_id: string | null;
   created_at: string;
   updated_at: string;
   destination_country_info?: DestinationCountry;
@@ -193,7 +194,7 @@ export function useCountriesRoutes() {
 
   // Create shipping route
   const createRoute = useMutation({
-    mutationFn: async (route: { destination_country_id: string; transit_hub_id: string | null; is_direct: boolean; is_active: boolean }) => {
+    mutationFn: async (route: { destination_country_id: string; transit_hub_id: string | null; is_direct: boolean; is_active: boolean; route_name?: string | null; origin_country?: string | null; destination_country?: string | null; market_id?: string | null }) => {
       const { data, error } = await supabase
         .from("shipping_routes")
         .insert([route])
@@ -214,7 +215,7 @@ export function useCountriesRoutes() {
 
   // Update shipping route
   const updateRoute = useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; destination_country_id?: string; transit_hub_id?: string | null; is_direct?: boolean; is_active?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: string; destination_country_id?: string; transit_hub_id?: string | null; is_direct?: boolean; is_active?: boolean; route_name?: string | null; origin_country?: string | null; destination_country?: string | null; market_id?: string | null }) => {
       const { error } = await supabase
         .from("shipping_routes")
         .update(data)

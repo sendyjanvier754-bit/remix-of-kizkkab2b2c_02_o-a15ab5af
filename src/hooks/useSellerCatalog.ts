@@ -63,6 +63,9 @@ export const useSellerCatalog = (showAll: boolean = false) => {
   const [items, setItems] = useState<SellerCatalogItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [storeId, setStoreId] = useState<string | null>(null);
+  // null = seller has not configured their market yet
+  const [destinationCountryId, setDestinationCountryId] = useState<string | null>(null);
+  const isShippingConfigured = destinationCountryId !== null;
 
   // Fetch store ID for the current user
   useEffect(() => {
@@ -101,6 +104,41 @@ export const useSellerCatalog = (showAll: boolean = false) => {
     
     fetchStoreId();
   }, [user?.id]);
+
+  // Fetch destination country from the store (TICKET #10 v2)
+  // destination_country_id on stores = country WHERE CUSTOMERS RECEIVE PACKAGES
+  // (different from seller location or product origin)
+  // Priority: stores.destination_country_id (specific choice) → markets.destination_country_id (fallback)
+  useEffect(() => {
+    const fetchDestinationCountry = async () => {
+      if (!storeId) return;
+      const { data: storeData } = await supabase
+        .from('stores')
+        .select('market_id, destination_country_id')
+        .eq('id', storeId)
+        .maybeSingle();
+
+      // If seller already has a specific destination country saved, use it directly
+      const directCountryId = (storeData as any)?.destination_country_id;
+      if (directCountryId) {
+        setDestinationCountryId(directCountryId);
+        return;
+      }
+
+      // Fallback: resolve via market's primary destination_country_id
+      const marketId = (storeData as any)?.market_id;
+      if (!marketId) return;
+      const { data: market } = await supabase
+        .from('markets')
+        .select('destination_country_id')
+        .eq('id', marketId)
+        .maybeSingle();
+      if (market?.destination_country_id) {
+        setDestinationCountryId(market.destination_country_id);
+      }
+    };
+    fetchDestinationCountry();
+  }, [storeId]);
 
   // Fetch catalog from seller_catalog or v_seller_inventory
   const fetchCatalog = useCallback(async () => {
@@ -155,27 +193,30 @@ export const useSellerCatalog = (showAll: boolean = false) => {
           .filter(Boolean);
 
         let shippingCosts: Record<string, number> = {};
-        if (sourceProductIds.length > 0) {
-          console.log('[SHIPPING] Fetching shipping costs for products:', sourceProductIds);
-          
-          const { data: shippingData, error: shippingError } = await supabase
-            .from('v_product_shipping_costs')
-            .select('product_id, total_cost')
-            .in('product_id', sourceProductIds);
+        if (sourceProductIds.length > 0 && destinationCountryId) {
+          console.log('[SHIPPING] Fetching shipping costs for products:', sourceProductIds, 'country:', destinationCountryId);
 
-          if (shippingError) {
-            console.error('[SHIPPING ERROR] Error fetching shipping costs:', shippingError);
+          const results = await Promise.all(
+            sourceProductIds.map(productId =>
+              supabase.rpc('get_product_shipping_cost_by_country', {
+                p_product_id: productId,
+                p_destination_country_id: destinationCountryId,
+                p_tier_type: 'standard'
+              }).then(({ data, error }) => ({ productId, data, error }))
+            )
+          );
+
+          for (const { productId, data, error } of results) {
+            if (error) {
+              console.error(`[SHIPPING ERROR] product ${productId}:`, error);
+            } else if (data && data[0]?.is_available) {
+              shippingCosts[productId] = Number(data[0].shipping_cost_usd) || 0;
+            }
           }
 
-          if (shippingData) {
-            console.log('[SHIPPING] Shipping data received:', shippingData);
-            shippingCosts = Object.fromEntries(
-              shippingData.map(item => [item.product_id, item.total_cost || 0])
-            );
-            console.log('[SHIPPING] Shipping costs mapped:', shippingCosts);
-          } else {
-            console.warn('[SHIPPING] No shipping data returned from view');
-          }
+          console.log('[SHIPPING] Shipping costs mapped:', shippingCosts);
+        } else if (!destinationCountryId) {
+          console.info('[SHIPPING] Skipped: seller has no market configured yet');
         } else {
           console.warn('[SHIPPING] No source product IDs found in catalog');
         }
@@ -194,9 +235,9 @@ export const useSellerCatalog = (showAll: boolean = false) => {
             ? Number(sourceProduct.precio_sugerido_venta)
             : null;
 
-          // Get calculated shipping cost from view
+          // Get calculated shipping cost from RPC (only when market is configured)
           const sourceProductId = item.source_product_id || sourceProduct?.id;
-          const costoLogisticaCalculado = sourceProductId 
+          const costoLogisticaCalculado = (sourceProductId && destinationCountryId)
             ? (shippingCosts[sourceProductId] ?? costoLogistica)
             : costoLogistica;
           
@@ -342,7 +383,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
     } finally {
       setIsLoading(false);
     }
-  }, [storeId, showAll]);
+  }, [storeId, showAll, destinationCountryId]);
 
   useEffect(() => {
     if (storeId) {
@@ -352,7 +393,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
       setItems([]);
       setIsLoading(false);
     }
-  }, [fetchCatalog, storeId]);
+  }, [fetchCatalog, storeId, destinationCountryId]);
 
   const updatePrecioVenta = useCallback(async (itemId: string, newPrice: number) => {
     if (newPrice < 0) {
@@ -523,6 +564,8 @@ export const useSellerCatalog = (showAll: boolean = false) => {
     items,
     isLoading,
     storeId,
+    isShippingConfigured,
+    destinationCountryId,
     updatePrecioVenta,
     toggleActive,
     updateStock,

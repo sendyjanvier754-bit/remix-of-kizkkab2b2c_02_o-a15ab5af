@@ -5,12 +5,21 @@ import { Json } from '@/integrations/supabase/types';
 
 // ============ INTERFACES ============
 
+// A single country entry inside a market (from market_destination_countries)
+export interface MarketCountry {
+  id: string;
+  name: string;
+  code: string;
+  is_primary: boolean;
+  route_id?: string | null; // assigned route for this country within the market
+}
+
 export interface Market {
   id: string;
   name: string;
   code: string;
   description: string | null;
-  destination_country_id: string;
+  destination_country_id: string | null; // primary country (backward compat)
   shipping_route_id: string | null;
   currency: string;
   is_active: boolean;
@@ -30,6 +39,13 @@ export interface MarketDashboard extends Market {
   product_count: number;
   payment_method_count: number;
   seller_count: number;
+  // Multi-country support (TICKET #10 v2)
+  countries: MarketCountry[];   // all countries assigned to this market
+  country_count: number;        // number of active countries
+  tier_count: number;           // active tiers across all market countries
+  route_count: number;          // active routes across all market countries
+  route_names: { id: string; name: string | null; is_direct: boolean; transit_hub_name: string | null }[] | null;
+  is_ready: boolean;            // true when ≥1 country has route + tier configured
 }
 
 export interface MarketPaymentMethod {
@@ -107,6 +123,18 @@ export const useMarkets = () => {
       return data as Market[];
     },
   });
+
+  // Ready markets: active + properly configured (country + route + at least 1 tier)
+  // These are the only ones shown to sellers
+  const readyMarkets = (markets ?? []).filter(
+    (m): m is MarketDashboard => m.is_active && m.is_ready === true
+  );
+
+  // Helper: get all countries for a specific market
+  const getMarketCountries = (marketId: string): MarketCountry[] => {
+    const market = (markets ?? []).find(m => m.id === marketId) as MarketDashboard | undefined;
+    return market?.countries ?? [];
+  };
 
   // Create market
   const createMarket = useMutation({
@@ -192,6 +220,8 @@ export const useMarkets = () => {
   return {
     markets,
     activeMarkets,
+    readyMarkets,
+    getMarketCountries,
     isLoading,
     error,
     createMarket,
@@ -511,12 +541,13 @@ export const useMarketValidation = () => {
     if (countriesError) throw countriesError;
 
     const { data: markets, error: marketsError } = await supabase
-      .from('markets')
-      .select('destination_country_id');
+      .from('market_destination_countries')
+      .select('destination_country_id')
+      .eq('is_active', true);
     
     if (marketsError) throw marketsError;
 
-    const marketCountryIds = new Set(markets?.map(m => m.destination_country_id) || []);
+    const marketCountryIds = new Set(markets?.map((m: any) => m.destination_country_id) || []);
     return countries?.filter(c => !marketCountryIds.has(c.id)) || [];
   };
 

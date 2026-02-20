@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,6 +151,8 @@ export default function AdminGlobalLogisticsPage() {
   const [showOriginDialog, setShowOriginDialog] = useState(false);
   const [showCategoryRateDialog, setShowCategoryRateDialog] = useState(false);
   const [showTierDialog, setShowTierDialog] = useState(false);
+  const [tierMarketId, setTierMarketId] = useState<string>('');
+  const [tierCountryId, setTierCountryId] = useState<string>(''); // specific country within the market
 
   // ========== EDITING STATES ==========
   const [editingHub, setEditingHub] = useState<TransitHub | null>(null);
@@ -170,7 +173,8 @@ export default function AdminGlobalLogisticsPage() {
     is_active: true,
     route_name: '',
     origin_country: 'China',
-    destination_country: ''
+    destination_country: '',
+    market_id: ''
   });
   const [originForm, setOriginForm] = useState({ name: '', code: '', description: '', is_active: true });
   const [costForm, setCostForm] = useState({
@@ -295,6 +299,16 @@ export default function AdminGlobalLogisticsPage() {
     }
   };
 
+  // Auto-open new-route dialog when navigated from Markets page
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('action') === 'new-route') {
+      openRouteDialog();
+      setSearchParams({}, { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Route handlers
   const openRouteDialog = (route?: ShippingRoute) => {
     if (route) {
@@ -307,6 +321,7 @@ export default function AdminGlobalLogisticsPage() {
         route_name: route.route_name || '',
         origin_country: route.origin_country || 'China',
         destination_country: route.destination_country || '',
+        market_id: route.market_id || '',
       });
     } else {
       setEditingRoute(null);
@@ -317,7 +332,8 @@ export default function AdminGlobalLogisticsPage() {
         is_active: true,
         route_name: '',
         origin_country: 'China',
-        destination_country: ''
+        destination_country: '',
+        market_id: ''
       });
     }
     setShowRouteDialog(true);
@@ -332,6 +348,7 @@ export default function AdminGlobalLogisticsPage() {
       route_name: routeForm.route_name || null,
       origin_country: routeForm.origin_country || null,
       destination_country: routeForm.destination_country || null,
+      market_id: routeForm.market_id || null,
     };
     if (editingRoute) {
       updateRoute.mutate({ id: editingRoute.id, ...routeData }, { onSuccess: () => setShowRouteDialog(false) });
@@ -451,6 +468,14 @@ export default function AdminGlobalLogisticsPage() {
       // Obtener datos de la ruta para auto-completar países
       const tierRoute = routes?.find(r => r.id === tier.route_id);
       
+      // Pre-seleccionar mercado cuyo países incluyen el país destino de la ruta
+      const matchingMarket = markets?.find(m =>
+        m.countries?.some(c => c.id === tierRoute?.destination_country_id)
+        ?? m.destination_country_id === tierRoute?.destination_country_id
+      );
+      setTierMarketId(matchingMarket?.id || '');
+      setTierCountryId(tierRoute?.destination_country_id || '');
+      
       setTierForm({
         route_id: tier.route_id,
         tier_type: tier.tier_type,
@@ -478,6 +503,8 @@ export default function AdminGlobalLogisticsPage() {
     } else {
       setEditingTier(null);
       setSelectedTierRoute('');
+      setTierMarketId('');
+      setTierCountryId('');
       setTierForm({
         route_id: '',
         tier_type: 'standard',
@@ -1131,7 +1158,18 @@ export default function AdminGlobalLogisticsPage() {
                               <span className="font-medium">{market.name}</span>
                             </div>
                           </TableCell>
-                          <TableCell>{market.destination_country_name || '-'}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {(market.countries?.length ?? 0) > 0
+                                ? market.countries.map(c => (
+                                    <Badge key={c.id} variant="outline" className="text-xs gap-1">
+                                      {c.code}{c.is_primary ? ' ★' : ''}
+                                    </Badge>
+                                  ))
+                                : <span className="text-muted-foreground">{market.destination_country_name || '-'}</span>
+                              }
+                            </div>
+                          </TableCell>
                           <TableCell>
                             {route ? (
                               <Badge variant="secondary" className="gap-1">
@@ -1575,9 +1613,28 @@ export default function AdminGlobalLogisticsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{editingRoute ? 'Editar' : 'Nueva'} Ruta de Envío</DialogTitle>
-              <DialogDescription>Define el camino logístico hacia un destino</DialogDescription>
+              <DialogDescription>Define el camino logístico hacia un destino. Una ruta pertenece a un único mercado.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Mercado Propietario</Label>
+                <Select
+                  value={routeForm.market_id || '__none__'}
+                  onValueChange={v => setRouteForm(prev => ({ ...prev, market_id: v === '__none__' ? '' : v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona mercado (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sin mercado asignado</SelectItem>
+                    {markets?.filter(m => m.is_active).map(market => (
+                      <SelectItem key={market.id} value={market.id}>
+                        {market.name} ({market.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid gap-2">
                 <Label>Nombre de la Ruta</Label>
                 <Input
@@ -1845,13 +1902,102 @@ export default function AdminGlobalLogisticsPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              {/* Mercado / País Destino */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Mercado *</Label>
+                  <Select
+                    value={tierMarketId}
+                    onValueChange={(v) => {
+                      setTierMarketId(v);
+                      setTierCountryId('');
+                      // Reset route when market changes
+                      setTierForm(prev => ({ ...prev, route_id: '', tier_origin_country: '', tier_destination_country: '' }));
+                      setSelectedTierRoute('');
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un mercado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {markets?.map(m => (
+                        <SelectItem key={m.id} value={m.id}>
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span>{m.name}</span>
+                            <span className="text-xs text-muted-foreground font-mono">[{m.code}]</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>País Destino *</Label>
+                  {(() => {
+                    const selectedMarket = markets?.find(m => m.id === tierMarketId);
+                    const ctries = selectedMarket?.countries ?? [];
+                    if (!tierMarketId) {
+                      return (
+                        <div className="flex items-center gap-2 h-10 px-3 rounded-md border bg-muted text-sm text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span>Auto desde mercado</span>
+                        </div>
+                      );
+                    }
+                    if (ctries.length === 1) {
+                      // auto-select the only country
+                      if (tierCountryId !== ctries[0].id) setTierCountryId(ctries[0].id);
+                      return (
+                        <div className="flex items-center gap-2 h-10 px-3 rounded-md border bg-muted text-sm text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span>{ctries[0].name}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <Select
+                        value={tierCountryId}
+                        onValueChange={(v) => {
+                          setTierCountryId(v);
+                          setTierForm(prev => ({ ...prev, route_id: '', tier_destination_country: '' }));
+                          setSelectedTierRoute('');
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un país" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ctries.map(c => (
+                            <SelectItem key={c.id} value={c.id}>
+                              <span className="flex items-center gap-2">
+                                <MapPin className="h-3.5 w-3.5" />
+                                {c.name}
+                                <span className="text-xs text-muted-foreground font-mono">[{c.code}]</span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    );
+                  })()}
+                  <p className="text-xs text-muted-foreground">País destino del tier</p>
+                </div>
+              </div>
+
               {/* Ruta */}
               <div className="grid gap-2">
                 <Label>Ruta Logística *</Label>
                 <Select 
-                  value={tierForm.route_id} 
+                  value={tierForm.route_id}
+                  disabled={!tierMarketId || !tierCountryId}
                   onValueChange={(v) => {
                     const selectedRoute = routes?.find(r => r.id === v);
+                    // Validate country match
+                    if (selectedRoute && tierCountryId && selectedRoute.destination_country_id !== tierCountryId) {
+                      toast({ title: 'País no coincide', description: 'La ruta seleccionada no corresponde al país destino seleccionado.', variant: 'destructive' });
+                      return;
+                    }
                     setTierForm(prev => ({ 
                       ...prev, 
                       route_id: v,
@@ -1862,21 +2008,25 @@ export default function AdminGlobalLogisticsPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una ruta" />
+                    <SelectValue placeholder={tierMarketId && tierCountryId ? "Selecciona una ruta" : "Primero selecciona mercado y país"} />
                   </SelectTrigger>
                   <SelectContent>
                     {(() => {
-                      // Filtrar rutas: si es nuevo, solo mostrar rutas sin tier asignado
+                      // Filter routes by selected country (not just market primary country)
+                      const marketRoutes = tierCountryId
+                        ? routes?.filter(r => r.is_active && r.destination_country_id === tierCountryId)
+                        : routes?.filter(r => r.is_active);
+                      // If new tier, also exclude routes that already have a tier
                       const availableRoutes = editingTier 
-                        ? routes?.filter(r => r.is_active) // Si editando, mostrar todas las activas
-                        : routes?.filter(r => r.is_active && !shippingTiers?.some(tier => tier.route_id === r.id)); // Si nuevo, solo sin tier
+                        ? marketRoutes
+                        : marketRoutes?.filter(r => !shippingTiers?.some(tier => tier.route_id === r.id));
                       
                       if (!availableRoutes || availableRoutes.length === 0) {
                         return (
                           <div className="p-4 text-center text-sm text-muted-foreground">
                             {editingTier 
-                              ? "No hay rutas activas disponibles"
-                              : "Todas las rutas ya tienen tipo de envío asignado. Crea una nueva ruta primero."}
+                              ? "No hay rutas activas para este mercado"
+                              : "Todas las rutas de este mercado ya tienen tipo de envío."}
                           </div>
                         );
                       }
@@ -1903,11 +2053,12 @@ export default function AdminGlobalLogisticsPage() {
                     })()}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  {editingTier 
-                    ? "Selecciona la ruta para este tipo de envío" 
-                    : "Solo se muestran rutas sin tipo de envío asignado (una ruta = un tipo de envío)"}
-                </p>
+                {!tierMarketId && (
+                  <p className="text-xs text-amber-600">Selecciona primero el mercado para filtrar las rutas disponibles</p>
+                )}
+                {tierMarketId && !tierForm.route_id && (
+                  <p className="text-xs text-muted-foreground">Solo se muestran rutas activas del país del mercado seleccionado</p>
+                )}
               </div>
 
               {/* Tipo y Transporte */}
@@ -1987,12 +2138,12 @@ export default function AdminGlobalLogisticsPage() {
                 </p>
               </div>
 
-              {/* Nombre Personalizado */}
+              {/* Nombre Completo del Servicio */}
               <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
-                <h4 className="font-medium text-sm">Personalización del Nombre (Opcional)</h4>
+                <h4 className="font-medium text-sm">Nombre Completo del Servicio *</h4>
                 
                 <div className="grid gap-2">
-                  <Label>Nombre Completo Personalizado</Label>
+                  <Label>Nombre de Ruta *</Label>
                   <Input
                     value={tierForm.custom_tier_name}
                     onChange={e => setTierForm(prev => ({ ...prev, custom_tier_name: e.target.value }))}
@@ -2240,7 +2391,7 @@ export default function AdminGlobalLogisticsPage() {
               </Button>
               <Button 
                 onClick={handleTierSubmit}
-                disabled={!tierForm.route_id || !tierForm.tier_name || saveTierMutation.isPending}
+                disabled={!tierForm.route_id || !tierForm.tier_name || !tierForm.custom_tier_name || !tierMarketId || !tierCountryId || saveTierMutation.isPending}
               >
                 {saveTierMutation.isPending ? 'Guardando...' : 'Guardar'}
               </Button>

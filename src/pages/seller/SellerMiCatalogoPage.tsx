@@ -10,14 +10,17 @@ import { B2BCatalogImportDialog } from '@/components/seller/B2BCatalogImportDial
 import { MiCatalogStatsCards } from '@/components/seller/catalog/MiCatalogStatsCards';
 import { MiCatalogTable } from '@/components/seller/catalog/MiCatalogTable';
 import { EditProductDialog } from '@/components/seller/catalog/EditProductDialog';
-import { Search, RefreshCw, Download, AlertCircle, Loader2 } from 'lucide-react';
+import { Search, RefreshCw, Download, AlertCircle, Loader2, Globe } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function SellerMiCatalogoPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const {
     items,
     isLoading,
     storeId,
+    isShippingConfigured,
     updateStock,
     getStats,
     groupByProduct,
@@ -165,6 +168,27 @@ export default function SellerMiCatalogoPage() {
             </p>
           </div>
         </div>
+
+        {/* Shipping market notification banner */}
+        {!isShippingConfigured && (
+          <Alert className="border-amber-300 bg-amber-50">
+            <Globe className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="flex items-center justify-between gap-4">
+              <span className="text-amber-800">
+                <strong>Configura tu mercado de envío</strong> para ver los costos de logística
+                en la columna &quot;Logística&quot;. Sin esta configuración los costos no se calcularán.
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 border-amber-400 text-amber-800 hover:bg-amber-100"
+                onClick={() => navigate('/seller/cuenta?tab=informacion&section=mercado')}
+              >
+                Configurar ahora
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats Cards */}
         <MiCatalogStatsCards stats={stats} />

@@ -8,13 +8,20 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePaymentMethods, PaymentMethodInput } from '@/hooks/usePaymentMethods';
-import { Building2, Smartphone, CreditCard, Save, Loader2, Zap, Hand, AlertCircle, Key } from 'lucide-react';
+import { useCountriesRoutes } from '@/hooks/useCountriesRoutes';
+import { Building2, Smartphone, CreditCard, Save, Loader2, Zap, Hand, AlertCircle, Key, Globe, Trash2, PencilLine } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function AdminPaymentMethodsPage() {
-  const { methods, isLoading, upsertMethod, getMethodByType, refetch } = usePaymentMethods('admin');
+  const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
+  const { methods, isLoading, upsertMethod, getMethodByType, deleteMethod, refetch } = usePaymentMethods('admin', undefined, selectedCountryId);
+  // All methods across all countries — for the list table
+  const { methods: allMethods, refetch: refetchAll } = usePaymentMethods('admin');
+  const { countries, isLoading: loadingCountries } = useCountriesRoutes();
   const { toast } = useToast();
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -100,9 +107,11 @@ export default function AdminPaymentMethodsPage() {
     const input: PaymentMethodInput = {
       method_type: 'bank',
       display_name: 'Transferencia Bancaria',
+      destination_country_id: selectedCountryId,
       ...bankForm,
     };
     await upsertMethod(input);
+    await refetchAll();
     setSaving(null);
   };
 
@@ -121,6 +130,7 @@ export default function AdminPaymentMethodsPage() {
     const input: PaymentMethodInput = {
       method_type: 'moncash',
       display_name: 'MonCash',
+      destination_country_id: selectedCountryId,
       phone_number: moncashForm.phone_number,
       holder_name: moncashForm.holder_name,
       is_active: moncashForm.is_active,
@@ -152,6 +162,7 @@ export default function AdminPaymentMethodsPage() {
     const input: PaymentMethodInput = {
       method_type: 'natcash',
       display_name: 'NatCash',
+      destination_country_id: selectedCountryId,
       phone_number: natcashForm.phone_number,
       holder_name: natcashForm.holder_name,
       is_active: natcashForm.is_active,
@@ -196,9 +207,142 @@ export default function AdminPaymentMethodsPage() {
   return (
     <AdminLayout 
       title="Métodos de Pago" 
-      subtitle="Configure los métodos de pago para recibir pagos B2B de los sellers"
+      subtitle="Configure los métodos de pago según el país de la cuenta bancaria o móvil para recibir pagos B2B"
     >
       <div className="space-y-6">
+        {/* Country Selector */}
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Globe className="h-4 w-4" />
+                País de la Cuenta
+              </div>
+              <Select
+                value={selectedCountryId ?? '__all__'}
+                onValueChange={v => setSelectedCountryId(v === '__all__' ? null : v)}
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Selecciona un país..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Global (sin país específico)</SelectItem>
+                  {countries?.filter(c => c.is_active).map(country => (
+                    <SelectItem key={country.id} value={country.id}>
+                      {country.name} ({country.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedCountryId && (
+                <Badge variant="outline" className="font-mono">
+                  {countries?.find(c => c.id === selectedCountryId)?.code ?? selectedCountryId}
+                </Badge>
+              )}
+              <p className="text-xs text-muted-foreground ml-auto">
+                Selecciona el país donde está registrada la cuenta (banco o billetera móvil).
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* All Payment Methods List */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Métodos de Pago Registrados
+            </CardTitle>
+            <CardDescription>Lista de todos los métodos configurados por país de cuenta</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {allMethods.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No hay métodos configurados todavía.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>País de la Cuenta</TableHead>
+                    <TableHead>Modo</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allMethods.map(m => {
+                    const country = countries?.find(c => c.id === m.destination_country_id);
+                    const methodIcon = m.method_type === 'bank'
+                      ? <Building2 className="h-4 w-4 text-purple-500" />
+                      : m.method_type === 'moncash'
+                      ? <Smartphone className="h-4 w-4" style={{ color: '#94111f' }} />
+                      : <CreditCard className="h-4 w-4" style={{ color: '#071d7f' }} />;
+                    return (
+                      <TableRow key={m.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {methodIcon}
+                            <span className="font-medium capitalize">{m.method_type}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {m.display_name || m.bank_name || m.holder_name || '—'}
+                        </TableCell>
+                        <TableCell>
+                          {country ? (
+                            <Badge variant="outline" className="gap-1 font-mono">
+                              <Globe className="h-3 w-3" />
+                              {country.code} — {country.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Global</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {m.manual_enabled && <Badge variant="secondary" className="text-xs">Manual</Badge>}
+                            {m.automatic_enabled && <Badge variant="secondary" className="text-xs"><Zap className="h-3 w-3 mr-1" />Auto</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={m.is_active ? 'default' : 'secondary'}>
+                            {m.is_active ? 'Activo' : 'Inactivo'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              title="Editar: selecciona el país y edita en el formulario abajo"
+                              onClick={() => setSelectedCountryId(m.destination_country_id)}
+                            >
+                              <PencilLine className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={async () => {
+                                await deleteMethod(m.id);
+                                await refetchAll();
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Status Overview */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card className={bankMethod?.is_active ? 'border-purple-500/50' : ''}>

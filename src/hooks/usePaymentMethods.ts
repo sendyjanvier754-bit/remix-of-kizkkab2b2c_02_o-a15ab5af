@@ -9,6 +9,9 @@ export interface PaymentMethod {
   method_type: 'bank' | 'moncash' | 'natcash' | 'stripe';
   is_active: boolean;
   display_name: string | null;
+  // Country where this payment account is registered (bank country / mobile wallet country)
+  // NOT the shipping destination — this is the account's own country
+  destination_country_id: string | null;
   // Dual mode support - admin can enable both modes
   manual_enabled: boolean;
   automatic_enabled: boolean;
@@ -33,6 +36,8 @@ export interface PaymentMethodInput {
   method_type: 'bank' | 'moncash' | 'natcash' | 'stripe';
   is_active?: boolean;
   display_name?: string;
+  // Country where this account is registered (e.g. Haiti for MonCash, US for a USD bank account)
+  destination_country_id?: string | null;
   manual_enabled?: boolean;
   automatic_enabled?: boolean;
   bank_name?: string;
@@ -45,7 +50,7 @@ export interface PaymentMethodInput {
   metadata?: Record<string, unknown>;
 }
 
-export const usePaymentMethods = (ownerType: 'admin' | 'seller' | 'store', ownerId?: string) => {
+export const usePaymentMethods = (ownerType: 'admin' | 'seller' | 'store', ownerId?: string, countryId?: string | null) => {
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +72,15 @@ export const usePaymentMethods = (ownerType: 'admin' | 'seller' | 'store', owner
         query = query.is('owner_id', null);
       }
 
+      // Filter by country if provided
+      if (countryId !== undefined) {
+        if (countryId) {
+          query = query.eq('destination_country_id', countryId);
+        } else {
+          query = query.is('destination_country_id', null);
+        }
+      }
+
       const { data, error: fetchError } = await query.order('method_type');
 
       if (fetchError) throw fetchError;
@@ -77,20 +91,26 @@ export const usePaymentMethods = (ownerType: 'admin' | 'seller' | 'store', owner
     } finally {
       setIsLoading(false);
     }
-  }, [ownerType, ownerId]);
+  }, [ownerType, ownerId, countryId]);
 
   const upsertMethod = async (input: PaymentMethodInput): Promise<boolean> => {
     try {
-      // Check if method exists
-      const existing = methods.find(m => m.method_type === input.method_type);
+      // Find existing method matching on type AND country
+      const resolvedCountryId = input.destination_country_id !== undefined ? input.destination_country_id : (countryId ?? null);
+      const existing = methods.find(m =>
+        m.method_type === input.method_type &&
+        (m.destination_country_id ?? null) === (resolvedCountryId ?? null)
+      );
 
       // Cast metadata to Json type for Supabase compatibility
       const data = {
         owner_type: ownerType,
         owner_id: ownerType === 'admin' ? null : ownerId,
         method_type: input.method_type,
+        name: input.display_name ?? input.method_type, // 'name' is required by DB
         is_active: input.is_active,
         display_name: input.display_name,
+        destination_country_id: resolvedCountryId,
         manual_enabled: input.manual_enabled,
         automatic_enabled: input.automatic_enabled,
         bank_name: input.bank_name,
@@ -180,7 +200,7 @@ export const usePaymentMethods = (ownerType: 'admin' | 'seller' | 'store', owner
     }
   };
 
-  // Helper to get method by type
+  // Helper to get method by type (filtered by current country if set)
   const getMethodByType = (type: 'bank' | 'moncash' | 'natcash' | 'stripe'): PaymentMethod | undefined => {
     return methods.find(m => m.method_type === type);
   };

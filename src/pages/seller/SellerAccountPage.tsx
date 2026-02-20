@@ -15,8 +15,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  User, Store, Mail, Calendar, Shield, LogOut, Settings, Bell, Edit, Phone, MessageCircle, Eye, EyeOff, CheckCircle, CreditCard, Package, Clock, Truck, XCircle, DollarSign, ShoppingCart, AlertCircle, ExternalLink, MapPin, RefreshCw, AlertTriangle, Ban, ChevronRight, Loader2, Save, Star, Users, BarChart3, Smartphone, Camera, TrendingUp, Activity
+  User, Store, Mail, Calendar, Shield, LogOut, Settings, Bell, Edit, Phone, MessageCircle, Eye, EyeOff, CheckCircle, CreditCard, Package, Clock, Truck, XCircle, DollarSign, ShoppingCart, AlertCircle, ExternalLink, MapPin, RefreshCw, AlertTriangle, Ban, ChevronRight, Loader2, Save, Star, Users, BarChart3, Smartphone, Camera, TrendingUp, Activity, Globe
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMarkets } from "@/hooks/useMarkets";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
@@ -30,7 +32,7 @@ import { useBuyerB2BOrders, useCancelBuyerOrder, BuyerOrder, BuyerOrderStatus, R
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const SellerAccountPage = () => {
   const { user, signOut } = useAuth();
@@ -38,9 +40,21 @@ const SellerAccountPage = () => {
   const { data: store, isLoading } = useStoreByOwner(user?.id);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   
   // States for dialogs
-  const [activeTab, setActiveTab] = useState("informacion");
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'informacion');
+
+  // Scroll to section if requested via URL param
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section) {
+      setTimeout(() => {
+        const el = document.getElementById(`section-${section}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 400);
+    }
+  }, [searchParams]);
   const [statsTimeFilter, setStatsTimeFilter] = useState<'semana' | 'mes' | 'trimestre' | 'año'>('semana');
   const [showStatsFilter, setShowStatsFilter] = useState(false);
   const [activeStatTab, setActiveStatTab] = useState<'vistas' | 'conversion' | 'ingresos' | 'productos'>('vistas');
@@ -76,6 +90,58 @@ const SellerAccountPage = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [requestRefund, setRequestRefund] = useState(false);
+  // Market & Shipping configuration
+  // Admin manages markets; seller only picks from ready ones (country + route + tier configured).
+  const { readyMarkets, isLoading: loadingMarkets } = useMarkets();
+  const [selectedMarketId, setSelectedMarketId] = useState<string>('');
+  const [selectedCountryId, setSelectedCountryId] = useState<string>('');
+  const [currentMarketId, setCurrentMarketId] = useState<string | null>(null);
+  const [savingMarket, setSavingMarket] = useState(false);
+
+  // Load current market+country from the store object (already fetched by useStoreByOwner)
+  useEffect(() => {
+    const storeMarketId = (store as any)?.market_id as string | undefined;
+    const storeCountryId = (store as any)?.destination_country_id as string | undefined;
+    if (storeMarketId) {
+      setCurrentMarketId(storeMarketId);
+      setSelectedMarketId(storeMarketId);
+      const mkt = readyMarkets.find(m => m.id === storeMarketId);
+      if (mkt) {
+        // If store already has a saved country use it, else auto‑select if market has exactly 1
+        if (storeCountryId) {
+          setSelectedCountryId(storeCountryId);
+        } else if (mkt.countries?.length === 1) {
+          setSelectedCountryId(mkt.countries[0].id);
+        }
+      }
+    }
+  }, [store, readyMarkets]);
+
+  const handleSaveMarket = async () => {
+    if (!store?.id || !selectedMarketId || !selectedCountryId) return;
+    setSavingMarket(true);
+    try {
+      const market = readyMarkets.find(m => m.id === selectedMarketId);
+      if (!market) throw new Error('Mercado no encontrado');
+      // Validate: the chosen country must belong to this market
+      const countryInMarket = market.countries?.find(c => c.id === selectedCountryId);
+      if (!countryInMarket) throw new Error('El país seleccionado no pertenece a este mercado');
+      // Save both market_id and destination_country_id to the seller's store
+      const { error } = await supabase
+        .from('stores')
+        .update({ market_id: selectedMarketId, destination_country_id: selectedCountryId } as any)
+        .eq('id', store.id);
+      if (error) throw error;
+      setCurrentMarketId(selectedMarketId);
+      queryClient.invalidateQueries({ queryKey: ['store', 'owner', user?.id] });
+      toast({ title: 'Mercado guardado', description: `Mercado "${market.name}" → ${countryInMarket.name} configurado.` });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'No se pudo guardar el mercado', variant: 'destructive' });
+    } finally {
+      setSavingMarket(false);
+    }
+  };
+
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
     orderNotifications: true,
@@ -850,6 +916,151 @@ const SellerAccountPage = () => {
                               Tipo de Usuario
                             </span>
                             <span className="font-semibold text-[#071d7f]">Vendedor</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Market & Shipping Configuration */}
+                      <div id="section-mercado" className="space-y-4 mb-8 pb-8 border-b">
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-[#071d7f]" />
+                            Mercado de Destino
+                          </h3>
+                          <p className="text-xs text-gray-400 mt-1 ml-6">
+                            Define <strong>a qué país envías tus productos</strong> (donde tus clientes reciben los pedidos),
+                            independientemente de donde estés ubicado o de dónde provengan los productos.
+                          </p>
+                        </div>
+
+                        {!currentMarketId && (
+                          <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                            <p className="text-sm text-amber-800">
+                              Configura el mercado de destino para que los costos de logística se calculen correctamente en tu catálogo.
+                              El mercado determina <strong>dónde se entregan los pedidos de tus clientes</strong>.
+                            </p>
+                          </div>
+                        )}
+
+                        {currentMarketId && (() => {
+                            const mkt = readyMarkets.find(m => m.id === currentMarketId);
+                            const savedCountryName = mkt?.countries?.find(c => c.id === ((store as any)?.destination_country_id))?.name
+                              ?? mkt?.destination_country_name;
+                            return (
+                              <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
+                                <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+                                <span>
+                                  Mercado activo: <strong>{mkt?.name ?? currentMarketId}</strong>
+                                  {savedCountryName && (
+                                    <span className="text-green-600 ml-1">→ {savedCountryName}</span>
+                                  )}
+                                </span>
+                              </div>
+                            );
+                          })()}
+
+                        <div className="space-y-3">
+                          {/* Step 1: Market */}
+                          <div className="space-y-1">
+                            <Label className="text-sm font-medium text-gray-700">1. Mercado al que envías</Label>
+                            <p className="text-xs text-gray-400">Zona geográfica que el administrador habilitó para recibir pedidos</p>
+                            {loadingMarkets ? (
+                              <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Cargando mercados...
+                              </div>
+                            ) : readyMarkets.length === 0 ? (
+                              <div className="flex items-center gap-2 text-sm text-gray-500 py-2 px-3 border border-dashed border-gray-300 rounded-md bg-gray-50">
+                                <AlertCircle className="h-4 w-4 text-gray-400 shrink-0" />
+                                El administrador debe configurar al menos un mercado con ruta y tipo de envío activos.
+                              </div>
+                            ) : (
+                              <Select
+                                value={selectedMarketId}
+                                onValueChange={(v) => {
+                                  setSelectedMarketId(v);
+                                  const mkt = readyMarkets.find(m => m.id === v);
+                                  // Auto-select country only if the market has exactly 1
+                                  if (mkt?.countries?.length === 1) {
+                                    setSelectedCountryId(mkt.countries[0].id);
+                                  } else {
+                                    setSelectedCountryId('');
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="border-gray-300">
+                                  <SelectValue placeholder="— Elige un mercado —" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {readyMarkets.map(market => (
+                                    <SelectItem key={market.id} value={market.id}>
+                                      <span className="flex items-center gap-2">
+                                        <MapPin className="h-3.5 w-3.5 text-[#071d7f]" />
+                                        {market.name}
+                                        <span className="text-xs text-gray-400 font-mono">[{market.code}]</span>
+                                      </span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </div>
+
+                          {selectedMarketId && (
+                            <div className="space-y-1">
+                              <Label className="text-sm font-medium text-gray-700">2. País de entrega a tus clientes</Label>
+                              <p className="text-xs text-gray-400">País donde tus clientes reciben los pedidos (diferente a tu país o el origen del producto)</p>
+                              <Select
+                                value={selectedCountryId}
+                                onValueChange={setSelectedCountryId}
+                              >
+                                <SelectTrigger className="border-gray-300">
+                                  <SelectValue placeholder="— Elige el país —" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {(() => {
+                                    const mkt = readyMarkets.find(m => m.id === selectedMarketId);
+                                    const ctries = mkt?.countries ?? [];
+                                    if (ctries.length === 0) return (
+                                      <SelectItem value="__none__" disabled>Sin países configurados</SelectItem>
+                                    );
+                                    return ctries.map(c => (
+                                      <SelectItem key={c.id} value={c.id}>
+                                        <span className="flex items-center gap-2">
+                                          <Globe className="h-3.5 w-3.5 text-[#071d7f]" />
+                                          {c.name}
+                                          <span className="text-xs text-gray-400 font-mono">[{c.code}]</span>
+                                          {c.is_primary && <span className="text-xs text-blue-500">(principal)</span>}
+                                        </span>
+                                      </SelectItem>
+                                    ));
+                                  })()}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-gray-400">Los costos de envío se calcularán para entregas en este país</p>
+                            </div>
+                          )}
+
+                          {/* Save */}
+                          <div className="pt-1">
+                            <Button
+                              onClick={handleSaveMarket}
+                              disabled={
+                                savingMarket ||
+                                !selectedMarketId ||
+                                !selectedCountryId ||
+                                // Disable if nothing changed
+                                (selectedMarketId === currentMarketId && selectedCountryId === ((store as any)?.destination_country_id ?? ''))
+                              }
+                              className="bg-[#071d7f] hover:bg-[#0a27a8]"
+                            >
+                              {savingMarket ? (
+                                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Guardando...</>
+                              ) : (
+                                <><Save className="h-4 w-4 mr-2" />Guardar</>
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </div>

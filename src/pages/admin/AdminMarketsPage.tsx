@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,7 @@ import { toast } from "sonner";
 
 export default function AdminMarketsPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { markets, activeMarkets, isLoading, createMarket, updateMarket, deleteMarket, toggleMarketActive } = useMarkets();
   const { countries, routes, isLoading: loadingRoutes } = useCountriesRoutes();
   
@@ -61,13 +63,34 @@ export default function AdminMarketsPage() {
     name: "",
     code: "",
     description: "",
-    destination_country_id: "",
+    destination_country_id: "", // backward compat = primary country
     shipping_route_id: "",
     currency: "USD",
     timezone: "America/Port-au-Prince",
     sort_order: 0,
     is_active: false,
   });
+  // Multi-country selector: list of country IDs for this market
+  const [selectedCountryIds, setSelectedCountryIds] = useState<string[]>([]);
+  const toggleCountryId = (id: string) => {
+    if (selectedCountryIds.includes(id)) {
+      setSelectedCountryIds(prev => prev.filter(c => c !== id));
+    } else {
+      setSelectedCountryIds(prev => [...prev, id]);
+    }
+  };
+
+  // Per-country route selection: { countryId: Set of selected routeIds }
+  const [selectedRouteIds, setSelectedRouteIds] = useState<Record<string, string[]>>({});
+  const toggleRouteId = (countryId: string, routeId: string) => {
+    setSelectedRouteIds(prev => {
+      const current = prev[countryId] ?? [];
+      const next = current.includes(routeId)
+        ? current.filter(r => r !== routeId)
+        : [...current, routeId];
+      return { ...prev, [countryId]: next };
+    });
+  };
 
   // Payment assignment state
   const [selectedPaymentIds, setSelectedPaymentIds] = useState<string[]>([]);
@@ -83,45 +106,39 @@ export default function AdminMarketsPage() {
   const { paymentMethods, createPaymentMethod, deletePaymentMethod } = 
     useMarketPaymentMethods(selectedMarket?.id);
 
-  // Validation state
-  const [availableRoutes, setAvailableRoutes] = useState<typeof routes>([]);
-  const [noRoutesWarning, setNoRoutesWarning] = useState(false);
-
-  // Filter routes when destination country changes
-  useEffect(() => {
-    if (marketForm.destination_country_id && routes) {
-      const filtered = routes.filter(
-        r => r.destination_country_id === marketForm.destination_country_id && r.is_active
-      );
-      setAvailableRoutes(filtered);
-      setNoRoutesWarning(filtered.length === 0);
-      // Reset route selection if current selection is invalid
-      if (!filtered.find(r => r.id === marketForm.shipping_route_id)) {
-        setMarketForm(prev => ({ ...prev, shipping_route_id: "" }));
-      }
-    } else {
-      setAvailableRoutes([]);
-      setNoRoutesWarning(false);
-    }
-  }, [marketForm.destination_country_id, routes]);
-
   // Open market dialog for create/edit
-  const openMarketDialog = (market?: MarketDashboard) => {
+  const openMarketDialog = async (market?: MarketDashboard) => {
     if (market) {
       setEditingMarket(market);
+      const countryIds = market.countries?.map(c => c.id)
+        ?? (market.destination_country_id ? [market.destination_country_id] : []);
+      setSelectedCountryIds(countryIds);
       setMarketForm({
         name: market.name,
         code: market.code,
         description: market.description || "",
-        destination_country_id: market.destination_country_id,
+        destination_country_id: market.destination_country_id ?? countryIds[0] ?? "",
         shipping_route_id: market.shipping_route_id || "",
         currency: market.currency,
         timezone: market.timezone || "America/Port-au-Prince",
         sort_order: market.sort_order,
         is_active: market.is_active,
       });
+      // Load routes already assigned to this market
+      const { data: assignedRoutes } = await supabase
+        .from('shipping_routes')
+        .select('id, destination_country_id')
+        .eq('market_id', market.id);
+      const routeMap: Record<string, string[]> = {};
+      for (const r of assignedRoutes ?? []) {
+        const cid = r.destination_country_id;
+        routeMap[cid] = [...(routeMap[cid] ?? []), r.id];
+      }
+      setSelectedRouteIds(routeMap);
     } else {
       setEditingMarket(null);
+      setSelectedCountryIds([]);
+      setSelectedRouteIds({});
       setMarketForm({
         name: "",
         code: "",
@@ -138,26 +155,80 @@ export default function AdminMarketsPage() {
   };
 
   // Submit market form
-  const handleMarketSubmit = () => {
-    // Validate route selection for activation
-    if (marketForm.is_active && !marketForm.shipping_route_id) {
-      return; // Cannot activate without route
-    }
+  const handleMarketSubmit = async () => {
+    if (selectedCountryIds.length === 0) return;
+
+    // primary country = first in list
+    const primaryCountryId = selectedCountryIds[0];
 
     const data = {
       ...marketForm,
+      destination_country_id: primaryCountryId,
       description: marketForm.description || null,
-      shipping_route_id: marketForm.shipping_route_id || null,
       metadata: {},
+    };
+
+    const syncCountries = async (marketId: string) => {
+      // 1. Remove countries no longer selected
+      const { error: delErr } = await supabase
+        .from('market_destination_countries')
+        .delete()
+        .eq('market_id', marketId)
+        .not('destination_country_id', 'in', `(${selectedCountryIds.map(id => `'${id}'`).join(',')})`);
+      if (delErr) console.error('Error removing countries:', delErr);
+
+      // 2. Upsert selected countries
+      const rows = selectedCountryIds.map((countryId, idx) => ({
+        market_id: marketId,
+        destination_country_id: countryId,
+        is_primary: idx === 0,
+        is_active: true,
+        sort_order: idx,
+      }));
+      const { error: upsertErr } = await supabase
+        .from('market_destination_countries')
+        .upsert(rows, { onConflict: 'market_id,destination_country_id' });
+      if (upsertErr) console.error('Error upserting countries:', upsertErr);
+    };
+
+    const syncRoutes = async (marketId: string) => {
+      // Step 1: clear all routes previously assigned to this market
+      const { error: clearErr } = await supabase
+        .from('shipping_routes')
+        .update({ market_id: null })
+        .eq('market_id', marketId);
+      if (clearErr) console.error('Error clearing routes:', clearErr);
+
+      // Step 2: assign the currently selected routes
+      const allSelected = Object.values(selectedRouteIds).flat();
+      if (allSelected.length > 0) {
+        const { error: assignErr } = await supabase
+          .from('shipping_routes')
+          .update({ market_id: marketId })
+          .in('id', allSelected);
+        if (assignErr) console.error('Error assigning routes:', assignErr);
+      }
     };
 
     if (editingMarket) {
       updateMarket.mutate({ id: editingMarket.id, ...data }, {
-        onSuccess: () => setShowMarketDialog(false),
+        onSuccess: async () => {
+          await syncCountries(editingMarket.id);
+          await syncRoutes(editingMarket.id);
+          await queryClient.invalidateQueries({ queryKey: ['markets-dashboard'] });
+          setShowMarketDialog(false);
+        },
       });
     } else {
       createMarket.mutate(data, {
-        onSuccess: () => setShowMarketDialog(false),
+        onSuccess: async (newMarket: any) => {
+          if (newMarket?.id) {
+            await syncCountries(newMarket.id);
+            await syncRoutes(newMarket.id);
+            await queryClient.invalidateQueries({ queryKey: ['markets-dashboard'] });
+          }
+          setShowMarketDialog(false);
+        },
       });
     }
   };
@@ -404,6 +475,7 @@ export default function AdminMarketsPage() {
                     <TableHead>Ruta</TableHead>
                     <TableHead className="text-center">Productos</TableHead>
                     <TableHead className="text-center">Pagos</TableHead>
+                    <TableHead className="text-center">Configuración</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -414,17 +486,29 @@ export default function AdminMarketsPage() {
                       <TableCell className="font-mono font-bold">{market.code}</TableCell>
                       <TableCell className="font-medium">{market.name}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          {market.destination_country_name || "-"}
+                        <div className="flex flex-wrap gap-1">
+                          {(market.countries?.length ?? 0) > 0
+                            ? market.countries.map(c => (
+                                <Badge key={c.id} variant="outline" className="gap-1 text-xs">
+                                  <Globe className="h-3 w-3 text-muted-foreground" />
+                                  {c.code}
+                                  {c.is_primary && <span className="text-blue-500">★</span>}
+                                </Badge>
+                              ))
+                            : <span className="text-muted-foreground text-sm">-</span>
+                          }
                         </div>
                       </TableCell>
                       <TableCell>
-                        {market.shipping_route_id ? (
-                          <Badge variant="outline" className="gap-1">
-                            <Route className="h-3 w-3" />
-                            {market.transit_hub_name || "Directo"}
-                          </Badge>
+                        {market.route_names && market.route_names.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {market.route_names.map(r => (
+                              <Badge key={r.id} variant="outline" className="gap-1">
+                                <Route className="h-3 w-3" />
+                                {r.name || (r.is_direct ? "Directo" : r.transit_hub_name || "Ruta")}
+                              </Badge>
+                            ))}
+                          </div>
                         ) : (
                           <Badge variant="destructive" className="gap-1">
                             <AlertTriangle className="h-3 w-3" />
@@ -451,13 +535,41 @@ export default function AdminMarketsPage() {
                           </Badge>
                         )}
                       </TableCell>
+                      <TableCell className="text-center">
+                        {market.is_ready ? (
+                          <Badge className="bg-green-100 text-green-700 border border-green-200 gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Listo
+                          </Badge>
+                        ) : !market.destination_country_id ? (
+                          <Badge className="bg-red-100 text-red-700 border border-red-200 gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            Sin País
+                          </Badge>
+                        ) : (market.route_count ?? 0) === 0 ? (
+                          <Badge className="bg-red-100 text-red-700 border border-red-200 gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            Sin Ruta
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-100 text-amber-700 border border-amber-200 gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            Sin Tiers
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Switch
                           checked={market.is_active}
-                          disabled={!market.shipping_route_id}
-                          onCheckedChange={(checked) => 
-                            toggleMarketActive.mutate({ id: market.id, is_active: checked })
-                          }
+                          disabled={!market.is_ready}
+                          title={!market.is_ready ? 'Configura país, ruta y tiers antes de activar' : undefined}
+                          onCheckedChange={(checked) => {
+                            if (checked && !market.is_ready) {
+                              toast.error('El mercado necesita país, ruta y al menos 1 tier activos para activarse');
+                              return;
+                            }
+                            toggleMarketActive.mutate({ id: market.id, is_active: checked });
+                          }}
                         />
                       </TableCell>
                       <TableCell className="text-right space-x-1">
@@ -703,74 +815,94 @@ export default function AdminMarketsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="destination-country">País Destino *</Label>
-              <Select
-                value={marketForm.destination_country_id}
-                onValueChange={(value) => setMarketForm({ ...marketForm, destination_country_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar país destino" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries?.map((country) => (
-                    <SelectItem key={country.id} value={country.id}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono">{country.code}</span>
-                        <span>{country.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Países Destino <span className="text-red-500">*</span></Label>
+              <p className="text-xs text-gray-500">El primer país seleccionado será el principal. Puedes elegir varios.</p>
+              <div className="max-h-44 overflow-y-auto border rounded-md p-2 space-y-1">
+                {(countries ?? []).length === 0 ? (
+                  <p className="text-sm text-gray-400 py-2 text-center">Cargando países...</p>
+                ) : (
+                  countries?.filter(c => c.is_active).map((country) => (
+                    <label
+                      key={country.id}
+                      className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1.5 text-sm"
+                    >
+                      <Checkbox
+                        checked={selectedCountryIds.includes(country.id)}
+                        onCheckedChange={() => toggleCountryId(country.id)}
+                      />
+                      <span className="font-mono text-xs text-gray-400 w-8">{country.code}</span>
+                      <span>{country.name}</span>
+                      {selectedCountryIds[0] === country.id && (
+                        <span className="ml-auto text-xs text-blue-500 font-medium">(principal)</span>
+                      )}
+                    </label>
+                  ))
+                )}
+              </div>
+              {selectedCountryIds.length > 0 && (
+                <p className="text-xs text-gray-500">
+                  {selectedCountryIds.length} país{selectedCountryIds.length > 1 ? 'es' : ''} seleccionado{selectedCountryIds.length > 1 ? 's' : ''}
+                </p>
+              )}
             </div>
 
-            {/* Route Selection with Validation */}
-            {marketForm.destination_country_id && (
-              <div className="space-y-2">
-                <Label htmlFor="shipping-route">Ruta Logística *</Label>
-                {noRoutesWarning ? (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>No hay rutas disponibles</AlertTitle>
-                    <AlertDescription className="flex items-center justify-between">
-                      <span>Este destino no tiene rutas logísticas configuradas.</span>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setShowMarketDialog(false);
-                          navigate("/admin/paises-rutas");
-                        }}
-                      >
-                        Crear Ruta
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <Select
-                    value={marketForm.shipping_route_id}
-                    onValueChange={(value) => setMarketForm({ ...marketForm, shipping_route_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar ruta" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableRoutes.map((route) => (
-                        <SelectItem key={route.id} value={route.id}>
-                          <div className="flex items-center gap-2">
-                            {route.is_direct ? (
-                              <span>Directo → {route.destination_country_info?.name}</span>
-                            ) : (
-                              <span>
-                                Vía {route.transit_hub?.name} → {route.destination_country_info?.name}
-                              </span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+            {/* Per-country routes — read-only display */}
+            {selectedCountryIds.length > 0 && (
+              <div className="space-y-3">
+                <div>
+                  <Label>Rutas Logísticas por País</Label>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Las rutas se gestionan en <strong>Logística Global</strong>. Una ruta puede pertenecer a un solo mercado y un solo país.
+                  </p>
+                </div>
+                {selectedCountryIds.map((countryId, idx) => {
+                  const country = countries?.find(c => c.id === countryId);
+                  const countryRouteList = (routes ?? []).filter(
+                    r => r.destination_country_id === countryId && r.is_active
+                  );
+                  const checkedRoutes = selectedRouteIds[countryId] ?? [];
+                  return (
+                    <div key={countryId} className="border rounded-md p-3 space-y-2 bg-gray-50">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs bg-white border rounded px-1.5 py-0.5 text-gray-500">{country?.code ?? '??'}</span>
+                        <span className="text-sm font-medium">{country?.name ?? countryId}</span>
+                        {idx === 0 && <span className="text-xs text-blue-500 font-medium">(principal)</span>}
+                        <span className="ml-auto text-xs text-gray-400">{checkedRoutes.length}/{countryRouteList.length} seleccionada{checkedRoutes.length !== 1 ? 's' : ''}</span>
+                      </div>
+                      {countryRouteList.length === 0 ? (
+                        <div className="flex items-center justify-between text-xs text-orange-600 bg-orange-50 border border-orange-200 rounded px-2 py-1.5">
+                          <span>No hay rutas activas para este país</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-xs px-2 ml-2"
+                            onClick={() => { setShowMarketDialog(false); navigate("/admin/global-logistics?action=new-route"); }}
+                          >
+                            <Route className="h-3 w-3 mr-1" />
+                            Crear Ruta
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {countryRouteList.map(route => (
+                            <label
+                              key={route.id}
+                              className="flex items-center gap-2 text-xs bg-white border rounded px-2 py-1.5 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                            >
+                              <Checkbox
+                                checked={checkedRoutes.includes(route.id)}
+                                onCheckedChange={() => toggleRouteId(countryId, route.id)}
+                              />
+                              <Route className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                              <span className="font-medium flex-1">{route.route_name || (route.is_direct ? 'Directo' : `Vía ${route.transit_hub?.name ?? 'Hub'}`)}</span>
+                              {route.is_direct && <Badge variant="secondary" className="text-[10px] h-4">Directo</Badge>}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -811,7 +943,7 @@ export default function AdminMarketsPage() {
               </div>
               <Switch
                 checked={marketForm.is_active}
-                disabled={!marketForm.shipping_route_id}
+                disabled={selectedCountryIds.length === 0}
                 onCheckedChange={(checked) => setMarketForm({ ...marketForm, is_active: checked })}
               />
             </div>
@@ -823,7 +955,7 @@ export default function AdminMarketsPage() {
             </Button>
             <Button 
               onClick={handleMarketSubmit}
-              disabled={!marketForm.name || !marketForm.code || !marketForm.destination_country_id || createMarket.isPending || updateMarket.isPending}
+              disabled={!marketForm.name || !marketForm.code || selectedCountryIds.length === 0 || createMarket.isPending || updateMarket.isPending}
             >
               {(createMarket.isPending || updateMarket.isPending) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editingMarket ? "Guardar Cambios" : "Crear Mercado"}
