@@ -47,9 +47,13 @@ export const useBusinessPanelData = (productId?: string, variantId?: string) => 
           .select('*')
           .eq('product_id', productId);
 
-        // Si se proporciona variantId, filtrar por esa variante
+        // Si se proporciona variantId, filtrar por esa variante;
+        // si no, filtrar solo la fila del producto padre (variant_id IS NULL)
+        // para evitar que .single() falle cuando hay múltiples filas de variantes.
         if (variantId) {
           query = query.eq('variant_id', variantId);
+        } else {
+          query = query.is('variant_id', null);
         }
 
         const { data: result, error: err } = await query.single();

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2BCartItems } from '@/hooks/useB2BCartItems';
@@ -6,17 +6,22 @@ import { useCartSelectionStore } from '@/stores/useCartSelectionStore';
 import { useKYC } from '@/hooks/useKYC';
 import { useSellerCredits } from '@/hooks/useSellerCredits';
 import { useAddresses, Address } from '@/hooks/useAddresses';
-import { usePickupPoints } from '@/hooks/usePickupPoints';
+import { usePickupPoints, usePickupPointsByCommune } from '@/hooks/usePickupPoints';
 import { useCompleteB2BCart } from '@/hooks/useBuyerOrders';
 import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
 import { validateB2BCheckout, getFieldError, hasFieldError, type CheckoutValidationError } from '@/services/checkoutValidation';
 import { useApplyDiscount, AppliedDiscount } from '@/hooks/useApplyDiscount';
 import { useAdminPaymentMethods } from '@/hooks/usePaymentMethods';
 import { useB2BPricingEngineV2 } from '@/hooks/useB2BPricingEngineV2';
+import { useStoreByOwner } from '@/hooks/useStore';
+import { useMarkets } from '@/hooks/useMarkets';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Globe } from 'lucide-react';
 import { SellerLayout } from '@/components/seller/SellerLayout';
-import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { B2BShippingSelector } from '@/components/checkout/B2BShippingSelector';
+import { ShippingTypeSelector } from '@/components/seller/ShippingTypeSelector';
+import type { CartShippingSummary } from '@/hooks/useCartShippingCost';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -50,6 +55,7 @@ import {
   X,
   User,
   Edit2,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -61,6 +67,8 @@ const SellerCheckout = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { items: allItems, isLoading: cartLoading } = useB2BCartItems();
   const { b2bSelectedIds } = useCartSelectionStore();
+  const { data: store } = useStoreByOwner(user?.id);
+  const { readyMarkets, isLoading: marketsLoading } = useMarkets();
   
   // Filter only selected items for checkout
   const items = useMemo(() => 
@@ -69,7 +77,7 @@ const SellerCheckout = () => {
   );
   const { isVerified } = useKYC();
   const { credit, availableCredit, hasActiveCredit, calculateMaxCreditForCart } = useSellerCredits();
-  const { addresses, isLoading: addressesLoading, createAddress } = useAddresses();
+  const { addresses, isLoading: addressesLoading, createAddress, updateAddress } = useAddresses();
   const { pickupPoints, isLoading: pickupPointsLoading } = usePickupPoints();
   const completeCart = useCompleteB2BCart();
   const { methods: adminPaymentMethods, isLoading: paymentMethodsLoading } = useAdminPaymentMethods();
@@ -105,14 +113,51 @@ const SellerCheckout = () => {
   const [validationErrors, setValidationErrors] = useState<CheckoutValidationError[]>([]);
   const [discountCode, setDiscountCode] = useState('');
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [expandedAddressId, setExpandedAddressId] = useState<string | null>(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
   const [expandedPickupId, setExpandedPickupId] = useState<string | null>(null);
-  
+
   // B2B Shipping tier selection
-  const [selectedTier, setSelectedTier] = useState<'standard' | 'express'>('standard');
+  const [selectedTier, setSelectedTier] = useState<string>('standard');
   const [shippingOptions, setShippingOptions] = useState<any[]>([]);
   const [loadingShipping, setLoadingShipping] = useState(false);
+
+  // ShippingTypeSelector state (same as cart)
+  const [selectedShippingTypeId, setSelectedShippingTypeId] = useState<string | null>(null);
+  const [shippingSummary, setShippingSummary] = useState<CartShippingSummary | null>(null);
+  const shippingCostAmount = shippingSummary?.total_cost_with_type ?? 0;
+  const shippingETA = shippingSummary ? `${shippingSummary.eta_min ?? '?'}-${shippingSummary.eta_max ?? '?'} días` : null;
+
+  // Local logistics cost (Haiti delivery — commune + peso)
+  const [localCost, setLocalCost] = useState<number | null>(null);
+  const [localCostBreakdown, setLocalCostBreakdown] = useState<Record<string, any> | null>(null);
+  const [isLoadingLocalCost, setIsLoadingLocalCost] = useState(false);
+  // peso facturable en libras (1 kg = 2.20462 lb)
+  const pesoFacturableLb = useMemo(
+    () => (shippingSummary?.weight_rounded_kg ?? 0) * 2.20462,
+    [shippingSummary]
+  );
+
+  // Market / destination country state — pre-loaded from the seller's store config
+  const [checkoutMarketId, setCheckoutMarketId] = useState<string | null>(null);
+
+  // Derive the selected market's data
+  const checkoutMarket = useMemo(
+    () => readyMarkets.find(m => m.id === checkoutMarketId) ?? null,
+    [readyMarkets, checkoutMarketId]
+  );
+  const checkoutCountryId   = checkoutMarket?.destination_country_id ?? null;
+  const checkoutCountryName = checkoutMarket?.destination_country_name ?? null;
+  const checkoutRouteId     = checkoutMarket?.route_id ?? undefined;
+
+  // Initialize checkout market from store settings (runs once store + markets load)
+  useEffect(() => {
+    if (!store?.market_id || checkoutMarketId) return;
+    const match = readyMarkets.find(m => m.id === store.market_id);
+    if (match) setCheckoutMarketId(match.id);
+  }, [store, readyMarkets, checkoutMarketId]);
   
   // Calcular totales desde items de BD
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
@@ -153,7 +198,15 @@ const SellerCheckout = () => {
       notes?: string;
     },
     deliveryMethod?: DeliveryMethod,
-    pickupPointId?: string
+    pickupPointId?: string,
+    shippingData?: {
+      shippingTierId: string | null;
+      shippingCostGlobalUsd: number;
+      shippingCostLocalUsd: number;
+      shippingCostTotalUsd: number;
+      localCommuneId: string | null;
+      localPickupPointId: string | null;
+    }
   ) => {
     if (!user?.id || items.length === 0) {
       toast.error('Carrito vacío o usuario no autenticado');
@@ -200,6 +253,13 @@ const SellerCheckout = () => {
           status: 'placed',
           currency: 'USD',
           metadata: Object.keys(metadata).length > 0 ? metadata : null,
+          // Shipping snapshots (TICKET #15)
+          shipping_tier_id: shippingData?.shippingTierId ?? null,
+          shipping_cost_global_usd: shippingData?.shippingCostGlobalUsd ?? null,
+          shipping_cost_local_usd: shippingData?.shippingCostLocalUsd ?? null,
+          shipping_cost_total_usd: shippingData?.shippingCostTotalUsd ?? null,
+          local_commune_id: shippingData?.localCommuneId ?? null,
+          local_pickup_point_id: shippingData?.localPickupPointId ?? null,
         })
         .select()
         .single();
@@ -233,7 +293,6 @@ const SellerCheckout = () => {
 
   // Shipping address states
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
     label: 'Negocio',
     full_name: '',
@@ -246,10 +305,21 @@ const SellerCheckout = () => {
     notes: '',
     is_default: false,
   });
+
+  // Pre-fill address country from the selected destination country
+  useEffect(() => {
+    if (checkoutCountryName) {
+      setNewAddress(prev => ({ ...prev, country: checkoutCountryName }));
+    }
+  }, [checkoutCountryName]);
   
   // Separate state for department/commune selection (not saved to addresses table)
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedComm, setSelectedComm] = useState('');
+
+  // Separate dept/commune state for the pickup modal
+  const [pickupDept, setPickupDept] = useState('');
+  const [pickupComm, setPickupComm] = useState('');
 
   // Get logistics engine for departments/communes
   const logisticsEngine = useLogisticsEngine();
@@ -262,13 +332,74 @@ const SellerCheckout = () => {
   const communesQuery = logisticsEngine.useCommunes(selectedDept || undefined);
   const communes = communesQuery.data || [];
 
-  // Set default address on load
-  useState(() => {
-    const defaultAddress = addresses.find(a => a.is_default);
-    if (defaultAddress && !selectedAddressId) {
-      setSelectedAddressId(defaultAddress.id);
+  // Communes for pickup modal
+  const pickupCommunesQuery = logisticsEngine.useCommunes(pickupDept || undefined);
+  const pickupCommunes = pickupCommunesQuery.data || [];
+
+  // Get pickup points filtered by the selected commune
+  const communePickupPointsQuery = usePickupPointsByCommune(pickupComm || undefined);
+  const communePickupPoints = communePickupPointsQuery.data || [];
+
+  // When user selects a saved address, auto-restore its dept/commune
+  const pendingCommuneRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedAddressId) return;
+    const addr = addresses.find(a => a.id === selectedAddressId);
+    if (!addr) return;
+    const dept = departments.find(d => d.name === addr.state);
+    if (dept) {
+      pendingCommuneRef.current = addr.city ?? null;
+      setSelectedDept(dept.id);
+      setSelectedComm('');
     }
-  });
+  }, [selectedAddressId, addresses, departments]);
+
+  // Once communes for the dept load, set commune from pending name
+  useEffect(() => {
+    if (!pendingCommuneRef.current || communes.length === 0) return;
+    const comm = communes.find(c => c.name === pendingCommuneRef.current);
+    if (comm) {
+      setSelectedComm(comm.id);
+      pendingCommuneRef.current = null;
+    }
+  }, [communes]);
+
+  // Pre-seleccionar la dirección predeterminada cuando cargan las direcciones
+  useEffect(() => {
+    if (addresses.length === 0 || selectedAddressId) return;
+    const defaultAddress = addresses.find(a => a.is_default) ?? addresses[0];
+    if (defaultAddress) setSelectedAddressId(defaultAddress.id);
+  }, [addresses]);
+
+  // Calculate local logistics cost when commune + peso are ready
+  useEffect(() => {
+    if (!selectedComm || pesoFacturableLb <= 0) {
+      setLocalCost(null);
+      setLocalCostBreakdown(null);
+      return;
+    }
+    let cancelled = false;
+    setIsLoadingLocalCost(true);
+    supabase
+      .rpc('calculate_local_logistics_cost', {
+        p_commune_id: selectedComm,
+        p_peso_facturable_lb: pesoFacturableLb,
+      })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          console.error('Error costo logística local:', error);
+          setLocalCost(null);
+          setLocalCostBreakdown(null);
+        } else {
+          const row = (data as any[])?.[0];
+          setLocalCost(row?.costo_local_usd ?? null);
+          setLocalCostBreakdown(row?.breakdown_json ?? null);
+        }
+        setIsLoadingLocalCost(false);
+      });
+    return () => { cancelled = true; };
+  }, [selectedComm, pesoFacturableLb]);
 
   // Load shipping options when address is selected
   useEffect(() => {
@@ -290,7 +421,7 @@ const SellerCheckout = () => {
           setShippingOptions(response.options);
           // Si solo hay una opción, seleccionarla automáticamente
           if (response.options.length === 1) {
-            setSelectedTier(response.options[0].tier_type as 'standard' | 'express');
+            setSelectedTier(response.options[0].tier_type as string);
           }
         } else {
           console.log('⚠️ Sin opciones o respuesta inválida:', response?.error);
@@ -309,7 +440,7 @@ const SellerCheckout = () => {
 
   // Calculate max credit for current cart (never 100% - max is what admin configured, typically less)
   const maxCreditAmount = calculateMaxCreditForCart(subtotal);
-  const remainingToPay = subtotal - creditAmount - discountAmount;
+  const remainingToPay = subtotal + shippingCostAmount + (localCost ?? 0) - creditAmount - discountAmount;
 
   // Can use credit only if verified and has active credit
   const canUseCredit = isVerified && hasActiveCredit && maxCreditAmount > 0;
@@ -409,7 +540,6 @@ const SellerCheckout = () => {
     return (
       <SellerLayout>
         <div className="min-h-screen bg-background">
-          <Header />
           <main className="container mx-auto px-4 pb-8">
             <div className="max-w-2xl mx-auto">
               <Card className="p-8 text-center">
@@ -437,7 +567,6 @@ const SellerCheckout = () => {
     return (
       <SellerLayout>
         <div className="min-h-screen bg-background">
-          <Header />
           <main className="container mx-auto px-4 pb-8">
             <div className="max-w-2xl mx-auto">
               <Card className="p-8 text-center">
@@ -500,6 +629,12 @@ const SellerCheckout = () => {
       paymentReference,
     });
 
+    // Validate local delivery commune (required when delivery is to address)
+    if (deliveryMethod === 'address' && !selectedComm) {
+      toast.error('Completa la dirección: selecciona departamento y commune de entrega');
+      return;
+    }
+
     if (errors.length > 0) {
       setValidationErrors(errors);
       toast.error(errors[0].message);
@@ -524,17 +659,31 @@ const SellerCheckout = () => {
 
     try {
       // Create the order with the primary payment method and shipping address
-      const order = await createOrder(paymentMethod, selectedAddress ? {
-        id: selectedAddress.id,
-        full_name: selectedAddress.full_name,
-        phone: selectedAddress.phone || undefined,
-        street_address: selectedAddress.street_address,
-        city: selectedAddress.city,
-        state: selectedAddress.state || undefined,
-        postal_code: selectedAddress.postal_code || undefined,
-        country: selectedAddress.country,
-        notes: selectedAddress.notes || undefined,
-      } : undefined, deliveryMethod, deliveryMethod === 'pickup' ? selectedPickupPoint : undefined);
+      const order = await createOrder(
+        paymentMethod,
+        selectedAddress ? {
+          id: selectedAddress.id,
+          full_name: selectedAddress.full_name,
+          phone: selectedAddress.phone || undefined,
+          street_address: selectedAddress.street_address,
+          city: selectedAddress.city,
+          state: selectedAddress.state || undefined,
+          postal_code: selectedAddress.postal_code || undefined,
+          country: selectedAddress.country,
+          notes: selectedAddress.notes || undefined,
+        } : undefined,
+        deliveryMethod,
+        deliveryMethod === 'pickup' ? selectedPickupPoint : undefined,
+        // Shipping snapshot (TICKET #15)
+        {
+          shippingTierId: selectedShippingTypeId,
+          shippingCostGlobalUsd: shippingCostAmount,
+          shippingCostLocalUsd: localCost ?? 0,
+          shippingCostTotalUsd: shippingCostAmount + (localCost ?? 0),
+          localCommuneId: deliveryMethod === 'address' ? (selectedComm || null) : null,
+          localPickupPointId: deliveryMethod === 'pickup' ? (selectedPickupPoint || null) : null,
+        }
+      );
 
       if (!order) {
         throw new Error('Error al crear el pedido');
@@ -636,10 +785,9 @@ const SellerCheckout = () => {
   return (
     <SellerLayout>
       <div className="min-h-screen bg-background">
-        <Header />
 
-        {/* Fixed Checkout Header */}
-        <div className="fixed top-24 left-0 right-0 z-40 bg-white border-b border-border flex items-center">
+        {/* Checkout Header Bar */}
+        <div className="bg-white border-b border-border flex items-center">
           <div className="container mx-auto px-4 py-0 flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
               <div className="px-3 py-1.5 rounded-lg bg-[#071d7f]">
@@ -657,36 +805,23 @@ const SellerCheckout = () => {
           </div>
         </div>
 
-        <main className="container mx-auto px-4 pb-8 pt-14 space-y-0">
+        <main className="container mx-auto px-4 pb-8 pt-4 space-y-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-4">
               {/* Buyer Info */}
               <Card className="p-4">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-[#071d7f]" />
-                      <p className="font-semibold text-foreground">{user?.name || 'N/A'}</p>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setShowAddressModal(true)}
-                      className="text-[#071d7f] hover:bg-[#071d7f]/10"
-                    >
-                      <Edit2 className="h-4 w-4 mr-1" />
-                      Editar
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-[#071d7f]" />
+                    <p className="font-semibold text-foreground">{user?.name || 'N/A'}</p>
                   </div>
-                  <div className="flex items-center justify-between">
+                  {selectedAddress && (
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-[#071d7f]" />
-                      <p className="text-sm text-foreground">
-                        {selectedAddress?.street_address || 'Selecciona una dirección'}
-                      </p>
+                      <p className="text-sm text-foreground">{selectedAddress.street_address}, {selectedAddress.city}</p>
                     </div>
-                  </div>
+                  )}
                 </div>
               </Card>
 
@@ -783,53 +918,48 @@ const SellerCheckout = () => {
                 </div>
               </Card>
 
-              {/* B2B Shipping Type Selector - Only for address delivery */}
-              {deliveryMethod === 'address' && selectedAddressId && (
-                <>
-                  {shippingOptions.length > 0 ? (
-                    <Card className="p-6">
-                      <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
-                        <Truck className="h-5 w-5" />
-                        Tipo de Envío
-                      </h2>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Selecciona el tipo de envío para tu pedido
-                      </p>
-                      <B2BShippingSelector
-                        options={shippingOptions}
-                        selectedTier={selectedTier}
-                        onTierChange={setSelectedTier}
-                        hasOversizeProducts={false}
-                        loading={loadingShipping}
-                      />
-                    </Card>
-                  ) : loadingShipping ? (
-                    <Card className="p-6">
-                      <div className="flex items-center justify-center gap-2 py-4">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        <p className="text-muted-foreground">Cargando opciones de envío...</p>
-                      </div>
-                    </Card>
-                  ) : (
-                    <Card className="p-6 bg-orange-50 dark:bg-orange-950/20 border-orange-200">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h3 className="font-semibold text-orange-900 dark:text-orange-100 mb-1">
-                            Sin opciones de envío configuradas
-                          </h3>
-                          <p className="text-sm text-orange-800 dark:text-orange-200 mb-2">
-                            No hay tipos de envío (Standard/Express) disponibles para esta dirección.
-                          </p>
-                          <p className="text-xs text-orange-700 dark:text-orange-300">
-                            <strong>Para solucionar:</strong> El administrador debe configurar rutas y tipos de envío en 
-                            <code className="mx-1 px-1 py-0.5 bg-orange-100 dark:bg-orange-900 rounded">/admin/logistica/rutas</code>
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
+              {/* Logistics / Shipping Type Selector */}
+              {items.length > 0 && checkoutMarketId && (
+                <Card className="p-4">
+                  <h2 className="text-base font-bold mb-3 flex items-center gap-2">
+                    <Truck className="h-4 w-4" />
+                    Tipo de Envío
+                  </h2>
+                  <ShippingTypeSelector
+                    countryId={checkoutCountryId ?? undefined}
+                    showHeader={false}
+                    itemIds={Array.from(b2bSelectedIds)}
+                    onShippingTypeChange={(typeId, summary) => {
+                      setSelectedShippingTypeId(typeId);
+                      setShippingSummary(summary);
+                    }}
+                    compact={false}
+                  />
+                  {/* Entrega local — simple, sin detalle */}
+                  {selectedComm && (
+                    <div className="flex justify-between items-center text-sm mt-3 pt-3 border-t">
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        Entrega local
+                      </span>
+                      {isLoadingLocalCost ? (
+                        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                      ) : localCost !== null ? (
+                        <span className="font-semibold">${localCost.toFixed(2)}</span>
+                      ) : (
+                        <span className="text-xs text-orange-500">Selecciona un tipo de envío</span>
+                      )}
+                    </div>
                   )}
-                </>
+                </Card>
+              )}
+              {items.length > 0 && !checkoutMarketId && (
+                <Card className="p-4 bg-amber-50 border-amber-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-800">Selecciona un mercado de destino para ver las opciones de logística.</p>
+                  </div>
+                </Card>
               )}
 
               {/* Products Section - Max 4 visible with scroll */}
@@ -1168,6 +1298,26 @@ const SellerCheckout = () => {
                       {totalQuantity}
                     </span>
                   </div>
+
+                  {/* Shipping cost line */}
+                  <div className="flex justify-between text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Truck className="h-3 w-3" />
+                      Logística:
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {shippingCostAmount > 0 ? `$${shippingCostAmount.toFixed(2)}` : <span className="text-xs text-orange-500">Selecciona tipo</span>}
+                    </span>
+                  </div>
+                  {shippingETA && (
+                    <div className="flex justify-between text-xs text-amber-600">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        ETA:
+                      </span>
+                      <span className="font-medium">{shippingETA}</span>
+                    </div>
+                  )}
                   
                   {/* Discount Code Section */}
                   <div className="pt-3">
@@ -1243,6 +1393,35 @@ const SellerCheckout = () => {
                   </div>
                 )}
 
+                {shippingCostAmount > 0 && (
+                  <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                    <span>Productos:</span>
+                    <span>${(subtotal - discountAmount).toFixed(2)}</span>
+                  </div>
+                )}
+                {shippingCostAmount > 0 && (
+                  <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                    <span className="flex items-center gap-1"><Truck className="h-3 w-3" />Logística:</span>
+                    <span>${shippingCostAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                {localCost !== null && (
+                  <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />Entrega local:</span>
+                    <span>${localCost.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {/* Alerta: falta seleccionar commune */}
+                {deliveryMethod === 'address' && !selectedComm && (
+                  <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+                    <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-orange-700 font-medium">
+                      Completa tu dirección: selecciona el departamento y la commune de entrega para continuar.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-xl font-bold mb-4">
                   <span>Total a Pagar:</span>
                   <span className="text-primary">
@@ -1256,7 +1435,9 @@ const SellerCheckout = () => {
                     isProcessing || 
                     items.length === 0 ||
                     (deliveryMethod === 'address' && !selectedAddressId) ||
-                    (deliveryMethod === 'pickup' && !selectedPickupPoint)
+                    (deliveryMethod === 'address' && !selectedComm) ||
+                    (deliveryMethod === 'pickup' && !selectedPickupPoint) ||
+                    ((paymentMethod === 'moncash' || paymentMethod === 'transfer') && !paymentReference.trim())
                   }
                   className="w-full"
                   size="lg"
@@ -1298,12 +1479,54 @@ const SellerCheckout = () => {
           <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto border-2 border-gray-300 pb-8">
             <DialogHeader className="border-b-2 pb-3 -mx-6 px-6 border-gray-300 sticky top-0 bg-background z-10">
               <DialogTitle className="text-lg font-bold">
-                {showNewAddressForm ? 'Agregar Nueva Dirección' : 'Seleccionar Dirección'}
+                {showNewAddressForm
+                  ? editingAddressId ? 'Editar Dirección' : 'Agregar Nueva Dirección'
+                  : 'Seleccionar Dirección'}
               </DialogTitle>
             </DialogHeader>
             
             {!showNewAddressForm ? (
               <div className="space-y-3">
+                {/* Market / Country selector */}
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
+                  <Label className="text-xs font-semibold text-blue-800 flex items-center gap-1">
+                    <Globe className="h-3 w-3" />
+                    País de destino
+                  </Label>
+                  {marketsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span className="text-xs text-muted-foreground">Cargando...</span>
+                    </div>
+                  ) : (
+                    <Select
+                      value={checkoutMarketId ?? ''}
+                      onValueChange={(val) => {
+                        setCheckoutMarketId(val);
+                        setSelectedShippingTypeId(null);
+                        setShippingSummary(null);
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-sm bg-white">
+                        <SelectValue placeholder="Selecciona un mercado / país" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {readyMarkets.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.name}{m.destination_country_name ? ` — ${m.destination_country_name}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {checkoutCountryName && (
+                    <p className="text-xs text-blue-700 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      <span className="font-semibold">{checkoutCountryName}</span>
+                    </p>
+                  )}
+                </div>
+
                 <RadioGroup value={selectedAddressId || ''} onValueChange={(id) => {
                   setSelectedAddressId(id);
                   setShowAddressModal(false);
@@ -1368,8 +1591,22 @@ const SellerCheckout = () => {
                               variant="outline"
                               size="sm"
                               className="w-full text-[#071d7f]"
-                              onClick={() => {
-                                // Aquí iría la lógica para editar la dirección
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingAddressId(address.id);
+                                setNewAddress({
+                                  label: address.label || 'Negocio',
+                                  full_name: address.full_name || '',
+                                  phone: address.phone || '',
+                                  street_address: address.street_address || '',
+                                  city: address.city || '',
+                                  state: address.state || '',
+                                  postal_code: address.postal_code || '',
+                                  country: address.country || 'Haití',
+                                  notes: address.notes || '',
+                                  is_default: address.is_default || false,
+                                });
+                                setShowNewAddressForm(true);
                               }}
                             >
                               <Edit2 className="h-4 w-4 mr-2" />
@@ -1397,7 +1634,10 @@ const SellerCheckout = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowNewAddressForm(false)}
+                  onClick={() => {
+                    setShowNewAddressForm(false);
+                    setEditingAddressId(null);
+                  }}
                   className="mb-2"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -1427,6 +1667,89 @@ const SellerCheckout = () => {
                     </div>
                   </div>
                   
+                  {/* Country from market */}
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
+                    <Label className="text-xs font-semibold text-blue-800 flex items-center gap-1">
+                      <Globe className="h-3 w-3" />
+                      País de destino
+                    </Label>
+                    <Select
+                      value={checkoutMarketId ?? ''}
+                      onValueChange={(val) => {
+                        setCheckoutMarketId(val);
+                        setSelectedShippingTypeId(null);
+                        setShippingSummary(null);
+                        setSelectedDept('');
+                        setSelectedComm('');
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-sm bg-white">
+                        <SelectValue placeholder="Selecciona mercado / país" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {readyMarkets.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.name}{m.destination_country_name ? ` — ${m.destination_country_name}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {checkoutCountryName && (
+                      <p className="text-xs text-blue-700 flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        <span className="font-semibold">{checkoutCountryName}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Departamento */}
+                  {departments.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Departamento</Label>
+                      <Select
+                        value={selectedDept}
+                        onValueChange={(val) => {
+                          setSelectedDept(val);
+                          setSelectedComm('');
+                          setNewAddress(prev => ({ ...prev, state: departments.find(d => d.id === val)?.name ?? '' }));
+                        }}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Selecciona departamento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments.map((d) => (
+                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Comuna */}
+                  {selectedDept && communes.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Comuna</Label>
+                      <Select
+                        value={selectedComm}
+                        onValueChange={(val) => {
+                          setSelectedComm(val);
+                          const comm = communes.find(c => c.id === val);
+                          if (comm) setNewAddress(prev => ({ ...prev, city: comm.name }));
+                        }}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Selecciona comuna" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {communes.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="modal_address_street">Dirección *</Label>
                     <Input
@@ -1461,10 +1784,16 @@ const SellerCheckout = () => {
                   <Button 
                     onClick={async () => {
                       try {
-                        const address = await createAddress.mutateAsync(newAddress);
-                        setSelectedAddressId(address.id);
+                        if (editingAddressId) {
+                          await updateAddress.mutateAsync({ id: editingAddressId, ...newAddress });
+                          setSelectedAddressId(editingAddressId);
+                        } else {
+                          const address = await createAddress.mutateAsync(newAddress);
+                          setSelectedAddressId(address.id);
+                        }
                         setShowAddressModal(false);
                         setShowNewAddressForm(false);
+                        setEditingAddressId(null);
                         setNewAddress({
                           full_name: '',
                           street_address: '',
@@ -1478,14 +1807,14 @@ const SellerCheckout = () => {
                           is_default: false,
                         });
                       } catch (error) {
-                        console.error('Error adding address:', error);
-                        toast.error('Error al agregar dirección');
+                        console.error('Error saving address:', error);
+                        toast.error('Error al guardar dirección');
                       }
                     }}
                     className="w-full"
                   >
                     <Check className="h-4 w-4 mr-2" />
-                    Guardar Dirección
+                    {editingAddressId ? 'Actualizar Dirección' : 'Guardar Dirección'}
                   </Button>
                 </div>
               </div>
@@ -1494,66 +1823,175 @@ const SellerCheckout = () => {
         </Dialog>
 
         {/* Pickup Points Modal */}
-        <Dialog open={showPickupModal} onOpenChange={setShowPickupModal}>
-          <DialogContent className="max-w-sm border-2 border-gray-300">
-            <DialogHeader className="border-b-2 pb-3 -mx-6 px-6 border-gray-300">
+        <Dialog open={showPickupModal} onOpenChange={(open) => {
+          setShowPickupModal(open);
+          if (!open) { setPickupDept(''); setPickupComm(''); }
+        }}>
+          <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto border-2 border-gray-300 pb-8">
+            <DialogHeader className="border-b-2 pb-3 -mx-6 px-6 border-gray-300 sticky top-0 bg-background z-10">
               <DialogTitle className="flex items-center gap-2 text-lg font-bold">
                 <Store className="h-5 w-5" />
                 Puntos de Retiro
               </DialogTitle>
             </DialogHeader>
-            
-            {pickupPoints.length === 0 ? (
-              <div className="text-center py-8">
-                <Store className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No hay puntos de retiro disponibles</p>
-              </div>
-            ) : (
-              <RadioGroup value={selectedPickupPoint || ''} onValueChange={(id) => {
-                setSelectedPickupPoint(id);
-                setShowPickupModal(false);
-              }} className="space-y-2 max-h-96 overflow-y-auto">
-                {pickupPoints.map((point) => (
-                  <div
-                    key={point.id}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedPickupPoint === point.id
-                        ? 'border-[#071d7f] bg-[#071d7f]/5'
-                        : 'border-border hover:border-muted-foreground'
-                    }`}
+
+            <div className="space-y-4 pt-1">
+              {/* Country / Market selector */}
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
+                <Label className="text-xs font-semibold text-blue-800 flex items-center gap-1">
+                  <Globe className="h-3 w-3" />
+                  País de destino
+                </Label>
+                {marketsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span className="text-xs text-muted-foreground">Cargando...</span>
+                  </div>
+                ) : (
+                  <Select
+                    value={checkoutMarketId ?? ''}
+                    onValueChange={(val) => {
+                      setCheckoutMarketId(val);
+                      setSelectedShippingTypeId(null);
+                      setShippingSummary(null);
+                      setPickupDept('');
+                      setPickupComm('');
+                    }}
                   >
-                    <div
-                      onClick={() => {
-                        setSelectedPickupPoint(point.id);
-                        setShowPickupModal(false);
-                      }}
-                      className="flex items-start justify-between gap-3"
-                    >
-                      <RadioGroupItem 
-                        value={point.id} 
-                        id={`pickup-${point.id}`}
-                        className="mt-1 flex-shrink-0"
-                      />
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm">{point.name}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{point.address}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {point.city}, {point.country}
-                        </p>
-                        {point.phone && (
-                          <p className="text-xs text-muted-foreground mt-1">Tel: {point.phone}</p>
-                        )}
-                      </div>
-                      {point.is_active && (
-                        <Badge variant="outline" className="text-green-600 text-xs ml-2 flex-shrink-0">
+                    <SelectTrigger className="h-8 text-sm bg-white">
+                      <SelectValue placeholder="Selecciona mercado / país" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {readyMarkets.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.name}{m.destination_country_name ? ` — ${m.destination_country_name}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {checkoutCountryName && (
+                  <p className="text-xs text-blue-700 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    <span className="font-semibold">{checkoutCountryName}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Department selector */}
+              {checkoutMarketId && departments.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-sm">Departamento</Label>
+                  <Select
+                    value={pickupDept}
+                    onValueChange={(val) => { setPickupDept(val); setPickupComm(''); }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Selecciona departamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Commune selector */}
+              {pickupDept && pickupCommunes.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-sm">Comuna</Label>
+                  <Select
+                    value={pickupComm}
+                    onValueChange={(val) => setPickupComm(val)}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Selecciona comuna" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pickupCommunes.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Pickup points list */}
+              {pickupComm && (
+                communePickupPointsQuery.isLoading ? (
+                  <div className="flex items-center justify-center py-6 gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Buscando puntos...</span>
+                  </div>
+                ) : communePickupPoints.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Store className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No hay puntos configurados en esta comuna</p>
+                  </div>
+                ) : (
+                  <RadioGroup
+                    value={selectedPickupPoint || ''}
+                    onValueChange={(id) => {
+                      setSelectedPickupPoint(id);
+                      setShowPickupModal(false);
+                    }}
+                    className="space-y-2"
+                  >
+                    {communePickupPoints.map((point) => (
+                      <div
+                        key={point.id}
+                        onClick={() => { setSelectedPickupPoint(point.id); setShowPickupModal(false); }}
+                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex items-start gap-3 ${
+                          selectedPickupPoint === point.id
+                            ? 'border-[#071d7f] bg-[#071d7f]/5'
+                            : 'border-border hover:border-[#071d7f]'
+                        }`}
+                      >
+                        <RadioGroupItem
+                          value={point.id}
+                          id={`pickup-${point.id}`}
+                          className="mt-1 flex-shrink-0"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">{point.name}</p>
+                          {point.address && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{point.address}</p>
+                          )}
+                          {point.city && (
+                            <p className="text-xs text-muted-foreground">{point.city}</p>
+                          )}
+                          {point.phone && (
+                            <p className="text-xs text-muted-foreground">Tel: {point.phone}</p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="text-green-600 text-xs flex-shrink-0">
                           Activo
                         </Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
+                      </div>
+                    ))}
+                  </RadioGroup>
+                )
+              )}
+
+              {/* Guide when nothing selected yet */}
+              {!checkoutMarketId && (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">Selecciona el país de destino para ver los puntos disponibles.</p>
+                </div>
+              )}
+              {checkoutMarketId && !pickupDept && (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">Selecciona un departamento para continuar.</p>
+                </div>
+              )}
+              {pickupDept && !pickupComm && (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">Selecciona una comuna para ver los puntos.</p>
+                </div>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </div>

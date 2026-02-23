@@ -47,6 +47,8 @@ import { useProductVariants } from "@/hooks/useProductVariants";
 import { VariantBadges } from "@/components/seller/cart/VariantBadges";
 import { addItemB2B } from "@/services/cartService";
 import { useB2BCartLogistics } from "@/hooks/useB2BCartLogistics";
+import { useStoreByOwner } from "@/hooks/useStore";
+import { useMarkets } from "@/hooks/useMarkets";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBusinessPanelDataBatch } from "@/hooks/useBusinessPanelData";
 import { SuggestedPricesDetailModal } from "@/components/seller/SuggestedPricesDetailModal";
@@ -62,6 +64,14 @@ const SellerCartPage = () => {
   const { items: itemsFromDB, isLoading, refetch } = useB2BCartItems();
   const { productsNotMeetingMOQ, isCartValid, productTotals } = useB2BCartProductTotals();
   const isMobile = useIsMobile();
+
+  // Resolve seller's market → destination country for shipping tier filtering
+  const { data: store } = useStoreByOwner(user?.id);
+  const { readyMarkets } = useMarkets();
+  const cartCountryId = useMemo(() => {
+    if (!store?.market_id || !readyMarkets.length) return undefined;
+    return readyMarkets.find(m => m.id === store.market_id)?.destination_country_id ?? undefined;
+  }, [store?.market_id, readyMarkets]);
   
   // Estado local para updates optimistas
   const [items, setItems] = useState(itemsFromDB);
@@ -316,23 +326,28 @@ const SellerCartPage = () => {
       const shippingInfo = shippingCosts?.itemCosts?.find(
         sc => sc.productId === item.productId && sc.variantId === (item.variantId || undefined)
       ) || { weight_kg: 0, shippingCost: 0 };
+
+      // Datos pre-calculados de v_business_panel_data (fuente de verdad)
+      const shippingCostPerUnit = businessPanelData?.shipping_cost_per_unit ?? shippingInfo.shippingCost ?? 0;
+      const suggestedPvpPerUnit = businessPanelData?.suggested_pvp_per_unit ?? (costPerUnit + shippingCostPerUnit);
+      const profitPerUnit       = businessPanelData?.profit_1unit ?? shippingCostPerUnit;
+      const marginPercentage    = businessPanelData?.margin_percentage ?? 0;
       
       return {
         productId: item.productId,
         variantId: item.variantId,
         itemName: item.name,
         quantity: item.cantidad,
-        costPerUnit: costPerUnit,
+        costPerUnit,
         weight_kg: shippingInfo.weight_kg || 0,
-        shippingCostPerUnit: shippingInfo.shippingCost || 0,
+        shippingCostPerUnit,
+        suggestedPvpPerUnit,
+        profitPerUnit,
+        marginPercentage,
       };
     });
 
-    return {
-      items: items_for_modal,
-      totalWeight_kg: shippingCosts?.totalWeight_kg || 0,
-      totalShippingCost: shippingCosts?.totalCost || 0,
-    };
+    return { items: items_for_modal };
   }, [selectedItems, businessPanelDataMap, shippingCosts]);
 
   // Get unique payment methods - Default to Tarjetas, Transferencia, MonCash, NatCash
@@ -1097,6 +1112,7 @@ const SellerCartPage = () => {
                         <div className="pt-2 border-t border-blue-200">
                           <ShippingTypeSelector
                             itemIds={Array.from(b2bSelectedIds)}
+                            countryId={cartCountryId}
                             onShippingTypeChange={(typeId, summary) => {
                               console.log('📬 SellerCartPage received shipping change:', {
                                 typeId,
@@ -1705,9 +1721,6 @@ const SellerCartPage = () => {
         isOpen={showSuggestedPricesModal}
         onClose={() => setShowSuggestedPricesModal(false)}
         items={modalData.items}
-        totalWeight_kg={modalData.totalWeight_kg}
-        totalShippingCost={modalData.totalShippingCost}
-        markupMultiplier={2.5}
       />
 
       {/* Order Summary Drawer for Mobile */}
@@ -1771,6 +1784,7 @@ const SellerCartPage = () => {
                     <div className="pt-2 border-t border-blue-200">
                       <ShippingTypeSelector
                         cartItems={cartItemsForShipping}
+                        countryId={cartCountryId}
                         onShippingTypeChange={(typeId, summary) => {
                           setSelectedShippingTypeId(typeId);
                           setShippingSummary(summary);

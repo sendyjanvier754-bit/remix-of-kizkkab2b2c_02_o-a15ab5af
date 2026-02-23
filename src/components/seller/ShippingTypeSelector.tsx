@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useShippingTypes, ShippingType } from '@/hooks/useShippingTypes';
 import { useCartShippingCost, CartItem, CartShippingSummary } from '@/hooks/useCartShippingCost';
 import { useCartShippingCostView } from '@/hooks/useCartShippingCostView';
@@ -12,15 +13,24 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Truck, DollarSign, Weight, Loader2, Clock, Plane, Ship } from 'lucide-react';
+import { Truck, DollarSign, Weight, Loader2, Clock, Plane, Ship, Check, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ShippingTypeSelectorProps {
   /** 
-   * Optional: Route ID to filter shipping types
-   * If not provided, shows all available shipping tiers
+   * Optional: Route ID to filter shipping types to one specific route
    */
   routeId?: string;
+  /**
+   * Optional: Destination country ID — shows all tiers across all routes to that country
+   * Preferred over routeId when a market has multiple routes (maritime + aereo)
+   */
+  countryId?: string;
+  /**
+   * Whether to render the internal "Método de Envío" header.
+   * Set to false when the parent already has its own title.
+   */
+  showHeader?: boolean;
   /** 
    * Cart items for weight calculation (only used when itemIds is not provided)
    * When using DB-saved items, use itemIds instead and this becomes optional
@@ -38,13 +48,15 @@ interface ShippingTypeSelectorProps {
 
 export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
   routeId,
+  countryId,
   cartItems = [],
   itemIds,
   onShippingTypeChange,
   compact = false,
+  showHeader = true,
 }) => {
   const { shippingTypes, selectedTypeId, setSelectedTypeId, isLoading: typesLoading } =
-    useShippingTypes(routeId);
+    useShippingTypes(routeId, countryId);
   
   const selectedType = shippingTypes.find(t => t.id === selectedTypeId);
 
@@ -135,6 +147,17 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
       <div className="space-y-3">
         {isLoading ? (
           <Skeleton className="h-10 w-full" />
+        ) : !countryId ? (
+          <p className="text-xs text-muted-foreground py-1">
+            <Link to="/seller/account" className="underline text-primary">
+              Configura tu mercado
+            </Link>{' '}
+            para ver opciones de envío.
+          </p>
+        ) : shippingTypes.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-1">
+            No hay métodos de envío para tu país.
+          </p>
         ) : (
           <div className="flex items-end gap-2">
             <div className="flex-1">
@@ -232,150 +255,153 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
     );
   }
 
+  // Helper: format a date as "5 Mar" in locale-neutral short form
+  const formatShortDate = (d: Date) =>
+    d.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Truck className="h-4 w-4" />
-          Opciones de envío
-        </CardTitle>
-        <CardDescription>Selecciona el tipo de envío para tu pedido</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Shipping Type Selector */}
-        {isLoading ? (
-          <Skeleton className="h-12 w-full" />
-        ) : (
-          <div>
-            <label className="text-sm font-medium">Tipo de envío</label>
-            <Select value={selectedTypeId || ''} onValueChange={setSelectedTypeId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona un tipo de envío" />
-              </SelectTrigger>
-              <SelectContent>
-                {shippingTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.id}>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        {type.transport_type === 'aereo' ? (
-                          <Plane className="h-4 w-4" />
-                        ) : type.transport_type === 'maritimo' ? (
-                          <Ship className="h-4 w-4" />
-                        ) : (
-                          <Truck className="h-4 w-4" />
-                        )}
-                        <span className="font-medium">{type.display_name}</span>
-                        {type.tier_type === 'express' && (
-                          <Badge variant="default" className="text-xs">Express</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {type.tramo_a_eta_min + type.tramo_b_eta_min}-{type.tramo_a_eta_max + type.tramo_b_eta_max} días
-                      </div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+    <div className="w-full space-y-3">
+      {/* Header */}
+      {showHeader && (
+        <div className="flex items-center gap-2">
+          <Truck className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-bold text-base">Método de Envío</h3>
+        </div>
+      )}
 
-        {/* Tiempo de entrega */}
-        {summary && summary.eta_min && summary.eta_max && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              Tiempo de entrega
-            </div>
-            <span className="font-semibold">
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin inline" />
-              ) : (
-                `${summary.eta_min}-${summary.eta_max} días`
-              )}
-            </span>
-          </div>
-        )}
+      {/* Option cards — one per shipping type */}
+      {isLoading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-20 w-full rounded-lg" />
+          <Skeleton className="h-20 w-full rounded-lg" />
+        </div>
+      ) : !countryId ? (
+        <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4 text-center space-y-1">
+          <p className="text-sm text-muted-foreground">
+            No hay mercado configurado para tu tienda.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Ve a{' '}
+            <Link to="/seller/account" className="underline text-primary hover:text-primary/80">
+              Cuenta → Mi Tienda
+            </Link>{' '}
+            para seleccionar tu mercado de destino y ver las opciones de envío.
+          </p>
+        </div>
+      ) : shippingTypes.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4 text-center space-y-1">
+          <p className="text-sm text-muted-foreground">
+            No hay métodos de envío disponibles para tu país.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Contacta al administrador para que configure las rutas de envío.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {shippingTypes.map((type) => {
+            const isSelected = selectedTypeId === type.id;
+            const etaMin = (type.tramo_a_eta_min ?? 0) + (type.tramo_b_eta_min ?? 0);
+            const etaMax = (type.tramo_a_eta_max ?? 0) + (type.tramo_b_eta_max ?? 0);
+            const today = new Date();
+            const minDate = new Date(today);
+            minDate.setDate(today.getDate() + etaMin);
+            const maxDate = new Date(today);
+            maxDate.setDate(today.getDate() + etaMax);
 
-        {/* Shipping Cost Summary */}
-        {summary && (
-          <div className="space-y-3 p-4 bg-slate-50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Weight className="h-4 w-4" />
-                )}
-                Peso total
+            // Show cost only when this type is selected and summary is ready
+            const costStr =
+              isSelected && summary && !isLoading
+                ? `$${summary.total_cost_with_type.toFixed(2)}`
+                : null;
+
+            const TransportIcon =
+              type.transport_type === 'aereo'
+                ? Plane
+                : type.transport_type === 'maritimo'
+                ? Ship
+                : Truck;
+
+            return (
+              <div
+                key={type.id}
+                onClick={() => setSelectedTypeId(type.id)}
+                className={`p-4 rounded-lg border-2 cursor-pointer select-none transition-all ${
+                  isSelected
+                    ? 'border-gray-900 bg-gray-50'
+                    : 'border-gray-200 hover:border-gray-400 bg-white'
+                }`}
+              >
+                {/* Row 1: name + price (left) | radio circle (right) */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <TransportIcon className="h-4 w-4 flex-shrink-0 text-gray-500" />
+                    <span className="font-bold text-sm leading-tight">
+                      {type.display_name}
+                      {costStr ? (
+                        <span className="text-primary">: {costStr}</span>
+                      ) : null}
+                    </span>
+                    {type.tier_type === 'express' && (
+                      <Badge variant="default" className="text-xs py-0 px-1.5 flex-shrink-0">
+                        Express
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Radio indicator */}
+                  <div
+                    className={`mt-0.5 w-5 h-5 rounded-full flex-shrink-0 border-2 flex items-center justify-center transition-colors ${
+                      isSelected
+                        ? 'bg-gray-900 border-gray-900'
+                        : 'border-gray-400 bg-white'
+                    }`}
+                  >
+                    {isSelected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                  </div>
+                </div>
+
+                {/* Row 2: delivery date range */}
+                <p className="text-sm text-gray-600 mt-1.5 flex items-center gap-1">
+                  <span>
+                    Entrega: {formatShortDate(minDate)} – {formatShortDate(maxDate)}
+                  </span>
+                  <span className="text-gray-400">·</span>
+                  <span>{etaMin}–{etaMax} días hábiles</span>
+                  <ChevronRight className="h-3 w-3 text-gray-400 ml-auto flex-shrink-0" />
+                </p>
+
+
               </div>
-              <span className="font-semibold">
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin inline" />
-                ) : (
-                  `${summary.weight_rounded_kg} kg`
-                )}
-              </span>
-            </div>
+            );
+          })}
+        </div>
+      )}
 
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Costo de envío</span>
-              <span className="font-semibold">
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin inline" />
-                ) : (
-                  `$${summary.base_cost.toFixed(2)}`
-                )}
-              </span>
-            </div>
-
+      {/* Weight + cost summary bar */}
+      {summary && !isLoading && (
+        <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100">
+          <span className="flex items-center gap-1.5 text-muted-foreground">
+            <Weight className="h-3.5 w-3.5" />
+            {summary.weight_rounded_kg} kg
             {summary.extra_cost > 0 && (
-              <div className="flex items-center justify-between border-t pt-2">
-                <span className="text-sm text-amber-600">Cargo adicional</span>
-                <span className="font-semibold text-amber-600">
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin inline" />
-                  ) : (
-                    `+$${summary.extra_cost.toFixed(2)}`
-                  )}
-                </span>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between border-t pt-2 bg-white -mx-4 -mb-4 px-4 py-3 rounded-b">
-              <div className="flex items-center gap-2 font-semibold text-lg text-primary">
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <DollarSign className="h-5 w-5" />
-                )}
-                Total de envío
-              </div>
-              <span className="text-xl font-bold text-primary">
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin inline" />
-                ) : (
-                  `$${summary.total_cost_with_type.toFixed(2)}`
-                )}
+              <span className="text-amber-600 ml-2">
+                +${summary.extra_cost.toFixed(2)} cargo adicional
               </span>
-            </div>
-          </div>
-        )}
+            )}
+          </span>
+          <span className="font-bold text-primary text-base">
+            Total: ${summary.total_cost_with_type.toFixed(2)}
+          </span>
+        </div>
+      )}
 
-        {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-            <p className="font-medium">Error calculando envío</p>
-            <p className="text-xs">{error}</p>
-          </div>
-        )}
-
-        {!summary && !isLoading && (
-          <div className="text-sm text-muted-foreground text-center py-4">
-            Selecciona un tipo de envío para ver los costos
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {error && (
+        <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+          <p className="font-medium">Error calculando envío</p>
+          <p className="text-xs">{error}</p>
+        </div>
+      )}
+    </div>
   );
 };

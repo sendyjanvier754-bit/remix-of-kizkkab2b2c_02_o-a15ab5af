@@ -100,8 +100,8 @@ const SellerAccountPage = () => {
 
   // Load current market+country from the store object (already fetched by useStoreByOwner)
   useEffect(() => {
-    const storeMarketId = (store as any)?.market_id as string | undefined;
-    const storeCountryId = (store as any)?.destination_country_id as string | undefined;
+    const storeMarketId = store?.market_id;
+    const storeCountryId = store?.destination_country_id;
     if (storeMarketId) {
       setCurrentMarketId(storeMarketId);
       setSelectedMarketId(storeMarketId);
@@ -945,7 +945,7 @@ const SellerAccountPage = () => {
 
                         {currentMarketId && (() => {
                             const mkt = readyMarkets.find(m => m.id === currentMarketId);
-                            const savedCountryName = mkt?.countries?.find(c => c.id === ((store as any)?.destination_country_id))?.name
+                            const savedCountryName = mkt?.countries?.find(c => c.id === (store?.destination_country_id))?.name
                               ?? mkt?.destination_country_name;
                             return (
                               <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
@@ -1051,7 +1051,7 @@ const SellerAccountPage = () => {
                                 !selectedMarketId ||
                                 !selectedCountryId ||
                                 // Disable if nothing changed
-                                (selectedMarketId === currentMarketId && selectedCountryId === ((store as any)?.destination_country_id ?? ''))
+                                (selectedMarketId === currentMarketId && selectedCountryId === (store?.destination_country_id ?? ''))
                               }
                               className="bg-[#071d7f] hover:bg-[#0a27a8]"
                             >

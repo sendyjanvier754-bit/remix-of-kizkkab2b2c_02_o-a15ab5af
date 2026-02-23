@@ -20,7 +20,8 @@ export interface SellerCatalogItem {
   precioCosto: number; // Total: precio_b2b_base + costo_logistica
   precioB2B: number; // Precio B2B histórico (lo que pagó al admin)
   costoLogistica: number; // Costo logística histórico (lo que pagó en la orden)
-  costoLogisticaCalculado?: number; // Costo logística actual desde v_product_shipping_costs
+  costoLogisticaCalculado?: number; // Costo estándar/más barato disponible (para compatibilidad en cálculos de precio)
+  shippingCostsByTier?: Record<string, number>; // Costos por tier_type: { standard: 8.04, express: 16.08, economy: 5.50, ... }
   weightKg: number; // Peso del producto original
   precioSugeridoVenta: number | null; // Precio sugerido por el admin
   stock: number;
@@ -51,6 +52,7 @@ export interface ProductoConVariantes {
   precioMaximo: number;
   costoMinimo: number;
   precioLogisticaMinimo: number;
+  shippingCostsByTierMin?: Record<string, number>; // Min cost per tier across all variants of this product
 }
 
 /**
@@ -192,29 +194,63 @@ export const useSellerCatalog = (showAll: boolean = false) => {
           .map(item => item.source_product_id)
           .filter(Boolean);
 
+        // shippingCostsByTierAll[tierType][productId] = cost_usd
+        let shippingCostsByTierAll: Record<string, Record<string, number>> = {};
+        // Legacy: keep shippingCosts (standard/cheapest) for costoLogisticaCalculado backward compat
         let shippingCosts: Record<string, number> = {};
+
         if (sourceProductIds.length > 0 && destinationCountryId) {
-          console.log('[SHIPPING] Fetching shipping costs for products:', sourceProductIds, 'country:', destinationCountryId);
+          // Step 1: Discover all active tier_types for this destination country (no hardcoding)
+          const { data: routeIds } = await supabase
+            .from('shipping_routes')
+            .select('id')
+            .eq('destination_country_id', destinationCountryId)
+            .eq('is_active', true);
 
-          const results = await Promise.all(
-            sourceProductIds.map(productId =>
-              supabase.rpc('get_product_shipping_cost_by_country', {
-                p_product_id: productId,
-                p_destination_country_id: destinationCountryId,
-                p_tier_type: 'standard'
-              }).then(({ data, error }) => ({ productId, data, error }))
-            )
-          );
+          const routeIdList = (routeIds ?? []).map(r => r.id as string);
 
-          for (const { productId, data, error } of results) {
-            if (error) {
-              console.error(`[SHIPPING ERROR] product ${productId}:`, error);
-            } else if (data && data[0]?.is_available) {
-              shippingCosts[productId] = Number(data[0].shipping_cost_usd) || 0;
-            }
+          let distinctTierTypes: string[] = ['standard']; // fallback
+          if (routeIdList.length > 0) {
+            const { data: tierTypesData } = await supabase
+              .from('shipping_tiers')
+              .select('tier_type')
+              .in('route_id', routeIdList)
+              .eq('is_active', true);
+
+            const unique = [...new Set((tierTypesData ?? []).map(t => (t as any).tier_type).filter(Boolean))];
+            if (unique.length > 0) distinctTierTypes = unique;
           }
 
-          console.log('[SHIPPING] Shipping costs mapped:', shippingCosts);
+          console.log('[SHIPPING] Tier types for country:', distinctTierTypes);
+
+          // Step 2: For each tier_type, batch-fetch costs for all source products
+          await Promise.all(
+            distinctTierTypes.map(async (tierType) => {
+              const results = await Promise.all(
+                sourceProductIds.map(productId =>
+                  supabase.rpc('get_product_shipping_cost_by_country', {
+                    p_product_id: productId,
+                    p_destination_country_id: destinationCountryId,
+                    p_tier_type: tierType,
+                  }).then(({ data, error }) => ({ productId, data, error }))
+                )
+              );
+
+              shippingCostsByTierAll[tierType] = {};
+              for (const { productId, data, error } of results) {
+                if (!error && data && data[0]?.is_available) {
+                  const cost = Number(data[0].shipping_cost_usd) || 0;
+                  shippingCostsByTierAll[tierType][productId] = cost;
+                  // Populate legacy shippingCosts with standard or cheapest tier
+                  if (tierType === 'standard' || shippingCosts[productId] === undefined) {
+                    shippingCosts[productId] = cost;
+                  }
+                }
+              }
+            })
+          );
+
+          console.log('[SHIPPING] Costs by tier:', shippingCostsByTierAll);
         } else if (!destinationCountryId) {
           console.info('[SHIPPING] Skipped: seller has no market configured yet');
         } else {
@@ -237,6 +273,15 @@ export const useSellerCatalog = (showAll: boolean = false) => {
 
           // Get calculated shipping cost from RPC (only when market is configured)
           const sourceProductId = item.source_product_id || sourceProduct?.id;
+          // Build per-tier cost map for this product
+          const shippingCostsByTier: Record<string, number> = {};
+          if (sourceProductId) {
+            for (const [tierType, costsMap] of Object.entries(shippingCostsByTierAll)) {
+              if (costsMap[sourceProductId] !== undefined && costsMap[sourceProductId] > 0) {
+                shippingCostsByTier[tierType] = costsMap[sourceProductId];
+              }
+            }
+          }
           const costoLogisticaCalculado = (sourceProductId && destinationCountryId)
             ? (shippingCosts[sourceProductId] ?? costoLogistica)
             : costoLogistica;
@@ -269,6 +314,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
             precioB2B,
             costoLogistica,
             costoLogisticaCalculado,
+            shippingCostsByTier: Object.keys(shippingCostsByTier).length > 0 ? shippingCostsByTier : undefined,
             weightKg,
             precioSugeridoVenta: precioSugerido,
             stock: item.stock || 0,
@@ -521,6 +567,18 @@ export const useSellerCatalog = (showAll: boolean = false) => {
       const preciosCosto = variantes.map(v => v.precioCosto);
       const preciosLogistica = variantes.map(v => v.costoLogisticaCalculado || v.costoLogistica);
 
+      // Merge per-tier min costs across all variants
+      const shippingCostsByTierMin: Record<string, number> = {};
+      for (const variante of variantes) {
+        if (variante.shippingCostsByTier) {
+          for (const [tierType, cost] of Object.entries(variante.shippingCostsByTier)) {
+            if (shippingCostsByTierMin[tierType] === undefined || cost < shippingCostsByTierMin[tierType]) {
+              shippingCostsByTierMin[tierType] = cost;
+            }
+          }
+        }
+      }
+
       productosConVariantes.push({
         productId,
         nombreProducto: productData?.nombre || variantes[0].nombre,
@@ -533,6 +591,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
         precioMaximo: Math.max(...preciosVenta),
         costoMinimo: Math.min(...preciosCosto),
         precioLogisticaMinimo: Math.min(...preciosLogistica),
+        shippingCostsByTierMin: Object.keys(shippingCostsByTierMin).length > 0 ? shippingCostsByTierMin : undefined,
       });
     }
 

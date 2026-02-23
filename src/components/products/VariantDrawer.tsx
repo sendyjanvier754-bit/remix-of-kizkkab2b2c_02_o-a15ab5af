@@ -20,11 +20,6 @@ const VariantDrawer: React.FC = () => {
   const isMobile = useIsMobile();
   const { isOpen, product, close, onComplete } = useVariantDrawerStore();
   
-  // No renderizar en SellerCartPage
-  if (location.pathname === '/seller/carrito') {
-    return null;
-  }
-  
   const [selections, setSelections] = useState<any[]>([]);
   const [totalQty, setTotalQty] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -120,7 +115,7 @@ const VariantDrawer: React.FC = () => {
     
     // Get suggested PVP from BusinessPanel view
     const suggestedPvpPerUnit = businessPanelData?.suggested_pvp_per_unit || 
-      (basePriceFromDb !== null ? basePriceFromDb * 2.5 : 0);
+      (basePriceFromDb !== null ? basePriceFromDb * 3 : 0);
     
     // Calculate investment based on total price (sum of variant prices × quantities)
     const investment = totalPrice > 0 ? totalPrice : (basePriceFromDb || 0) * totalQty;
@@ -258,6 +253,9 @@ const VariantDrawer: React.FC = () => {
     if (onComplete) onComplete();
   };
 
+  // No renderizar en SellerCartPage (moved after all hooks to avoid hooks count mismatch)
+  if (location.pathname === '/seller/carrito') return null;
+
   if (!isOpen || !product) return null;
 
   const pvpPrice = product.pvp || product.price || 0;
@@ -361,6 +359,7 @@ const VariantDrawer: React.FC = () => {
               investment={businessSummary.investment}
               suggestedPricePerUnit={businessSummary.suggestedPvpPerUnit}
               quantity={businessSummary.quantity}
+              businessPanelData={businessPanelData ?? undefined}
             />
           )}
         </div>

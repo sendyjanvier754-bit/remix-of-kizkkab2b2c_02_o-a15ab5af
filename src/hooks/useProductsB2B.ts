@@ -125,7 +125,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
       const productIds = parentProducts.map(p => p.id);
       
       // Parallel fetch: variants WITH B2B prices, B2C market prices, routes, category rates, destinations
-      const [variantsResult, marketPricesResult, routesResult, logisticsCostsResult, categoryRatesResult, destinationsResult] = await Promise.all([
+      const [variantsResult, marketPricesResult, routesResult, categoryRatesResult, destinationsResult] = await Promise.all([
         supabase
           .from("v_variantes_con_precio_b2b")
           .select("id, product_id, sku, name, price, precio_b2b_final, stock, moq, attribute_combination, is_active, images")
@@ -138,10 +138,6 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
         supabase
           .from("shipping_routes")
           .select(`*, destination_country:destination_countries(*), transit_hub:transit_hubs(*)`)
-          .eq("is_active", true),
-        supabase
-          .from("route_logistics_costs")
-          .select("*")
           .eq("is_active", true),
         supabase
           .from("category_shipping_rates")
@@ -161,33 +157,26 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
       const destCode = destinationCountryCode || 'HT';
       const destination = (destinationsResult.data || []).find(d => d.code === destCode) || destinationsResult.data?.[0];
 
-      // Find route for destination
+      // Find route for destination (used for display info only)
       const route = (routesResult.data || []).find(r => 
         r.destination_country?.code?.toUpperCase() === destCode.toUpperCase()
       );
 
-      // Calculate logistics cost from route segments
-      const routeLogistics = route ? (logisticsCostsResult.data || []).filter(c => c.route_id === route.id) : [];
-      
-      const calculateLogisticsCost = (weight: number = 0.5): { cost: number; days: { min: number; max: number } } => {
-        if (!routeLogistics.length) return { cost: 0, days: { min: 0, max: 0 } };
-        
-        let totalCost = 0;
-        let totalDaysMin = 0;
-        let totalDaysMax = 0;
-        
-        routeLogistics.forEach(segment => {
-          const segmentCost = Math.max((segment.cost_per_kg || 0) * weight, segment.min_cost || 0);
-          totalCost += segmentCost;
-          totalDaysMin += segment.estimated_days_min || 0;
-          totalDaysMax += segment.estimated_days_max || 0;
-        });
-        
-        return { 
-          cost: Math.round(totalCost * 100) / 100, 
-          days: { min: totalDaysMin, max: totalDaysMax } 
-        };
-      };
+      // Apply pagination early so we can fetch view data for only this page
+      const paginatedProducts = parentProducts.slice(page * limit, (page + 1) * limit);
+      const paginatedIds = paginatedProducts.map(p => p.id);
+
+      // Fetch shipping costs from v_business_panel_data — same function as Mi Catálogo
+      // Requires auth.uid() to resolve user's market country → returns NULL if not configured
+      const { data: bpViewData } = await supabase
+        .from('v_business_panel_data')
+        .select('product_id, shipping_cost_per_unit, weight_kg')
+        .in('product_id', paginatedIds)
+        .is('variant_id', null);
+
+      const bpMap = new Map<string, { shipping_cost_per_unit: number | null; weight_kg: number }>(
+        (bpViewData || []).map(r => [r.product_id as string, r as { shipping_cost_per_unit: number | null; weight_kg: number }])
+      );
 
       // Get category fees
       const getCategoryFees = (categoryId: string | null, baseCost: number): number => {
@@ -230,7 +219,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
       });
 
       // Apply pagination
-      const paginatedProducts = parentProducts.slice(page * limit, (page + 1) * limit);
+      // (paginatedProducts already computed above before view fetch)
 
       // DEBUG: Log variant data
       console.log('🔍 DEBUG - Variants data:', {
@@ -298,16 +287,17 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
         const finalB2BPrice = p.precio_b2b || minVariantPrice || 0; // Final calculated price from vista
         const imagen = p.imagen_principal || "/placeholder.svg";
         
+        // Logistics cost from v_business_panel_data (uses user's market country → same as Mi Catálogo)
+        const bpEntry = bpMap.get(p.id);
+        const logisticsCost = bpEntry?.shipping_cost_per_unit ?? 0;
+        const estimatedDays = { min: 0, max: 0 }; // Route segment days not available without legacy table
+        
         // For breakdown display: extract components from vista fields if available
         // These are for UI display only - actual price comes from vista
         const marginPercent = 30; // Default display value
         const marginValue = Math.round((finalB2BPrice - factoryCost) * 0.3 * 100) / 100;
         const subtotalWithMargin = factoryCost + marginValue;
-        
-        // Calculate logistics (assuming avg weight 0.5kg per unit) - for display
-        const logisticsInfo = calculateLogisticsCost(0.5);
-        const logisticsCost = logisticsInfo.cost;
-        
+
         // Get category fees - for display
         const categoryFees = getCategoryFees(p.categoria_id, factoryCost);
         
@@ -358,7 +348,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
             ? `China → ${route.destination_country?.name || 'Destino'}`
             : `China → ${route.transit_hub?.name || 'Hub'} → ${route.destination_country?.name || 'Destino'}`,
           logisticsCost,
-          estimatedDays: logisticsInfo.days,
+          estimatedDays,
           originCountry: 'China',
           destinationCountry: route.destination_country?.name || destination?.name || 'Destino',
         } : null;
@@ -407,7 +397,8 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           logistics,
           logistics_cost: logisticsCost,
           category_fees: categoryFees,
-          estimated_delivery_days: logisticsInfo.days,
+          estimated_delivery_days: estimatedDays,
+          weight_kg: bpEntry?.weight_kg ?? p.weight_kg ?? 0,
           
           // Store raw attribute options for the selector to use
           variants_by_type: Object.fromEntries(
@@ -523,6 +514,7 @@ export const useFeaturedProductsB2B = (limit = 6) => {
           variant_type: attributeTypes[0] || 'unknown',
           variant_types: attributeTypes,
           has_grouped_variants: variants.length > 1,
+          weight_kg: p.weight_kg || 0,
           variants_by_type: Object.fromEntries(
             attributeTypes.map(type => [
               type,

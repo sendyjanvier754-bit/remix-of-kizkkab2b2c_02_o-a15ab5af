@@ -2,9 +2,10 @@
 
 ## Documento: PLAN_MEJORA_RELACION_MERCADO_PAIS_RUTAS_TIPO_ENVIO_CATALOGO
 
-**Fecha actualización:** 20 Febrero 2026  
-**Versión:** 3.0  
-**Estado:** 🟡 Módulo Markets + Pagos completado — Pendiente: Catálogo + Seller Account
+**Fecha actualización:** 22 Febrero 2026  
+**Versión:** 7.0  
+**Estado:** 🟡 Logística Local (Tickets #22-#25) completados — Pendiente: Admin UI + Catálogo + QA (Tickets #13, #26-#27)  
+**v7.0:** TICKETS #22/#23 ejecutados en producción + TICKETS #24/#25 integrados en SellerCheckout  
 **Arquitecto:** Senior Data Architect + Full Stack Developer
 
 ---
@@ -696,22 +697,43 @@ export function useCheckoutCountryChange(cartItems: CartItem[]) {
 
 ---
 
-### ⏳ TICKET #12: Seller Account — Selector de Mercado
-**Estado:** 🔴 PENDIENTE  
+### ✅ TICKET #12: Seller Account — Selector de Mercado
+**Estado:** ✅ COMPLETADO (SESIÓN 22-Feb-2026)  
 **Archivo:** TICKET_PASO_10_SELLER_MARKET_CONFIG.sql  
-**Pasos:**
-1. Ejecutar SQL en Supabase: `ALTER TABLE stores ADD COLUMN market_id UUID REFERENCES markets`
-2. Actualizar `SellerAccountPage.tsx` con selector de mercados activos
-3. Guardar `stores.market_id` al actualizar perfil
-4. Usar `stores.market_id → markets.destination_country_id` para calcular envío en catálogo
+**Trabajo realizado:**
+- `stores.market_id UUID FK → markets` — **ejecutado en DB**
+- `SellerAccountPage.tsx`: selector de mercados activos (`is_ready = true`), guarda `stores.market_id`
+- `useStoreByOwner()` + `useMarkets()` disponibles para resto del sistema
+- `markets_dashboard` view actualizada con `is_ready`, `tier_count`, `route_count`
+
+---
+
+### ✅ TICKET #12B: Checkout Logístico — ShippingTypeSelector por País
+**Estado:** ✅ COMPLETADO (SESIÓN 22-Feb-2026)  
+**Trabajo realizado:**
+- `useShippingTypes(routeId?, countryId?)`: nuevo parámetro `countryId` — al pasarlo, hace JOIN `shipping_routes WHERE destination_country_id = countryId`, luego `shipping_tiers IN (esos route_ids)`. Captura todos los tiers de todas las rutas hacia ese país (maritime Standard + aereo Express).
+- `ShippingTypeSelector`: nueva prop `countryId?` + `showHeader?: boolean` (evita doble encabezado cuando el padre ya tiene título)
+- `SellerCheckout`: pasa `countryId={checkoutCountryId}` (derivado de `stores.market_id → markets.destination_country_id`) y `showHeader={false}`
+- `SellerCartPage`: importa `useStoreByOwner` + `useMarkets`, deriva `cartCountryId`, pasa a ambas instancias del selector (desktop + mobile)
+
+---
+
+### ✅ TICKET #12C: Checkout UI — Rediseño ShippingTypeSelector + Fix Layout
+**Estado:** ✅ COMPLETADO (SESIÓN 22-Feb-2026)  
+**Trabajo realizado:**
+- **ShippingTypeSelector rediseñado**: de `<Select>` dropdown a **cards clickables** por tipo de envío (una card por tier). Card seleccionada = borde oscuro + checkmark blanco en círculo negro. Muestra: nombre + precio (cuando está seleccionado), rango de fechas de entrega calculado desde hoy + `eta_min/eta_max`, días hábiles, nota de caveat con ícono.
+- **Barra de resumen inferior**: peso total (kg) + cargo adicional si aplica + **Total** en bold.
+- **Íconos por transporte**: `Plane` (aéreo) / `Ship` (marítimo) / `Truck` (terrestre)
+- **Double Header fix**: `<Header />` se renderizaba 3 veces dentro de `<SellerLayout>` (empty cart, order placed, main checkout). `SellerLayout` ya incluye `Header` propio — eliminados los 3 redundantes + import removido.
+- **Fixed bar overlap fix**: `fixed top-24 left-0 right-0` cubría el sidebar. Convertida a barra in-flow normal dentro del área de contenido. `pt-14` de `<main>` eliminado.
 
 ---
 
 ### ⏳ TICKET #13: Catálogo Seller — Mostrar costo de envío dinámico
-**Estado:** 🔴 PENDIENTE (depende de TICKET #12)  
+**Estado:** 🔴 PENDIENTE (depende de TICKET #12 ✅)
 **Objetivo:** Columna "Logística" en catálogo del seller muestra costo real basado en su mercado  
 **Pasos:**
-1. `useSellerCatalog`: leer `stores.market_id → markets.destination_country_id`
+1. `useSellerCatalog`: leer `stores.market_id → markets.destination_country_id` (ya disponible via `useStoreByOwner` + `useMarkets`)
 2. Llamar `get_product_shipping_cost_by_country(product_id, destination_country_id)`
 3. Mostrar `$8.04 / $16.08` en columna Logística
 
@@ -725,44 +747,616 @@ TEST: Mercado → crear con países + rutas checkboxes → guardar → rutas asi
 TEST: Método de pago → crear para país específico → aparece en lista
 TEST: Asignar método de pago a mercado → sin error 403
 TEST: Seller selecciona mercado → stores.market_id guardado
+TEST: Checkout → countryId correctamente derivado → muestra Standard + Express
+TEST: Carrito → mismo filtro por countryId → mismo resultado que checkout
+TEST: ShippingTypeSelector → seleccionar card → precio aparece en título
 TEST: Catálogo seller → muestra costo envío correcto según mercado
-TEST: Edge cases: país inactivo, sin rutas, sin tiers
+TEST: Edge cases: país inactivo, sin rutas, sin tiers, store sin market_id
 ```
 
 ---
 
-## 🗂️ ESTADO ACTUAL DE LA BASE DE DATOS (20-Feb-2026)
+## 🗂️ ESTADO ACTUAL DE LA BASE DE DATOS (22-Feb-2026)
 
-| Columna | Tabla | Estado |
+| Columna / Tabla | Estado |
+|---|---|
+| `addresses.destination_country_id` | ✅ Existe + trigger activo |
+| `shipping_routes.market_id` | ✅ Existe en producción |
+| `payment_methods.destination_country_id` | ✅ Existe en producción |
+| `payment_methods.phone_number/holder_name/metadata` | ✅ Columnas agregadas |
+| `stores.market_id` | ✅ Ejecutado en producción |
+| `markets_dashboard` view | ✅ Reconstruida con route_names, is_ready |
+| `market_payment_methods` RLS | ✅ Admin ALL + SELECT public |
+| `transit_hubs.hub_type/destination_country_id/lat/lng/address` | ✅ 5 columnas agregadas (22-Feb-2026) |
+| `transit_hubs` → CHINA_HUB/USA_HUB `hub_type='global'` | ✅ Ejecutado |
+| `transit_hubs` → HAITI_HUB `hub_type='local_master'` | ✅ Insertado (22-Feb-2026) |
+| `communes.transit_hub_id UUID FK → transit_hubs` | ✅ Agregado + 25 communes asignadas |
+| `local_expedition_ids` tabla | ✅ Creada con RLS (22-Feb-2026) |
+| `calculate_local_logistics_cost(commune_id, peso_lb)` | ✅ Función desplegada (22-Feb-2026) |
+| `get_communes_by_department(department_id)` | ✅ Función desplegada (22-Feb-2026) |
+
+## 📦 ESTADO ACTUAL DEL FRONTEND (22-Feb-2026)
+
+| Componente / Hook | Archivo | Estado |
 |---|---|---|
-| `addresses.destination_country_id` | addresses | ✅ Existe + trigger activo |
-| `shipping_routes.market_id` | shipping_routes | ✅ Existe en producción |
-| `payment_methods.destination_country_id` | payment_methods | ✅ Existe en producción |
-| `payment_methods.phone_number/holder_name/metadata` | payment_methods | ✅ Columnas agregadas |
-| `market_destination_countries.route_id` | market_destination_countries | ✅ ELIMINADO |
-| `stores.market_id` | stores | 🔴 PENDIENTE ejecutar SQL |
-| `markets_dashboard` view | view | ✅ Reconstruida con route_names, is_ready |
-| `market_payment_methods` RLS | policies | ✅ Admin ALL + SELECT public |
+| `useShippingTypes(routeId?, countryId?)` | `src/hooks/useShippingTypes.ts` | ✅ countryId filtra por todas las rutas del país |
+| `ShippingTypeSelector` props: `countryId`, `showHeader` | `src/components/seller/ShippingTypeSelector.tsx` | ✅ Cards clickables por tier |
+| `SellerCheckout` — countryId + sin doble Header | `src/pages/seller/SellerCheckout.tsx` | ✅ Logística local integrada |
+| `SellerCartPage` — cartCountryId derivado de store | `src/pages/seller/SellerCartPage.tsx` | ✅ Ambas instancias filtradas |
+| `SellerAccountPage` — selector mercado | `src/pages/seller/SellerAccountPage.tsx` | ✅ Guarda stores.market_id |
+| `useAvailableLocalRoutes(pesoLb?)` | `src/hooks/useAvailableLocalRoutes.ts` | ✅ Nuevo — departamentos + communes + costo local |
+| Auto-preselección de dirección default | `SellerCheckout.tsx` | ✅ useEffect reemplaza useState(callback) |
+| Auto-restaurar dept/commune desde dirección | `SellerCheckout.tsx` | ✅ pendingCommuneRef + 2 useEffects |
+| Entrega local en card Tipo de Envío | `SellerCheckout.tsx` | ✅ Línea simple con spinner |
+| Validación commune requerida | `SellerCheckout.tsx` | ✅ Alerta naranja + disabled button |
 
 ---
 
-## 📌 PRÓXIMOS PASOS INMEDIATOS
+## 📌 PRÓXIMOS PASOS INMEDIATOS (v7.0)
 
-**1️⃣ Ejecutar stores.market_id migration:**
+**1️⃣ TICKET #13 — Costo de envío dinámico en catálogo seller:**
 ```bash
-Archivo: TICKET_PASO_10_SELLER_MARKET_CONFIG.sql (solo el PASO 1 — ALTER TABLE)
-Acción: Copy → Paste en Supabase SQL Editor → Execute
+Archivo: src/hooks/useSellerCatalog.ts (o componente de catálogo)
+Datos disponibles: useStoreByOwner() → store.market_id → useMarkets() → destination_country_id
+Función DB: get_product_shipping_cost_by_country(product_id, destination_country_id)
+UI: Columna "Logística" → $8.04 / $16.08
 ```
 
-**2️⃣ Implementar selector de mercado en SellerAccountPage:**
+**2️⃣ TICKET #15 — Guardar shipping_tier_id en órdenes (CRÍTICO):**
 ```bash
-Archivo: src/pages/seller/SellerAccountPage.tsx
-Agregar: Select con mercados activos → guarda stores.market_id
+ALTER b2b_orders: + shipping_tier_id, + shipping_cost_global_usd, + shipping_cost_local_usd
+                  + local_commune_id, + local_pickup_point_id
+SellerCheckout: incluir commune_id + localCost + shippingCostAmount en INSERT de orden
 ```
 
-**3️⃣ Conectar catálogo con costo de envío real:**
+**3️⃣ TICKET #26 — Admin UI Logística Local:**
 ```bash
-Archivo: src/hooks/useSellerCatalog.ts (o equivalente)
-Usar: get_product_shipping_cost_by_country(product_id, market.destination_country_id)
+AdminTransitHubsPage: CRUD transit_hubs con filtro por hub_type
+AdminCommunesPage: editar rate_per_lb, delivery_fee, operational_fee por commune
+AdminPickupPointsPage: ampliar con commune_id selector
+```
+
+**4️⃣ TICKET #27 — QA Logística Local:**
+```bash
+TEST: calculate_local_logistics_cost(PV, 5) = $19.50
+TEST: dirección guardada → dept/commune se auto-restauran al seleccionarla
+TEST: sin commune → botón deshabilitado + alerta naranja
+TEST: total checkout = subtotal + shippingCostAmount + localCost
+```
+
+---
+
+## 🔧 FASE 7: GAPS IDENTIFICADOS (Tickets #15–#21)
+
+> Gaps detectados en auditoría arquitectural (22-Feb-2026). Deben resolverse antes o durante QA general.
+
+---
+
+### ⏳ TICKET #15: Guardar shipping_tier_id en Órdenes
+**Estado:** 🔴 PENDIENTE — CRÍTICO  
+**Problema:** Al confirmar checkout, el tier de envío seleccionado no se persiste en `b2b_orders` (ni en ninguna tabla de órdenes). Las órdenes no tienen método de envío registrado.  
+**Pasos:**
+1. `ALTER TABLE b2b_orders ADD COLUMN shipping_tier_id UUID REFERENCES shipping_tiers(id)`
+2. Al confirmar checkout: incluir `shipping_tier_id` en el INSERT/UPDATE de la orden
+3. Vista de detalle de orden (admin + seller): mostrar tier de envío seleccionado
+4. Calcular `shipping_cost_snapshot NUMERIC` al momento de confirmar (inmutable post-orden)
+
+---
+
+### ⏳ TICKET #16: Validación y Completado de Pesos en Productos
+**Estado:** 🔴 PENDIENTE — CRÍTICO  
+**Problema:** `get_catalog_fastest_shipping_cost_by_product_v2` y el `ShippingTypeSelector` dependen de `b2b_cart_items.peso_kg`. Si los productos no tienen peso configurado → costo de envío = $0, selector vacío.  
+**Pasos:**
+1. Query de auditoría: `SELECT COUNT(*) FROM products WHERE peso_kg IS NULL OR peso_kg = 0`
+2. Admin UI: indicador visual en lista de productos para los que faltan pesos
+3. Regla de validación: no permitir agregar al carrito productos sin `peso_kg`
+4. Fallback: si `peso_kg` es NULL, mostrar advertencia en checkout en lugar de $0
+
+---
+
+### ⏳ TICKET #17: Empty States en ShippingTypeSelector
+**Estado:** 🟡 PENDIENTE  
+**Problema:** No hay manejo explícito de los estados vacíos del selector:  
+- Seller sin `market_id` configurado
+- Mercado sin rutas activas (`is_active = false`)
+- Rutas sin tiers para ese país
+- `countryId` null/undefined  
+**Pasos:**
+1. Si `!countryId`: mostrar `"Configura tu mercado en Cuenta → Mi Tienda para ver opciones de envío"`
+2. Si `shippingTypes.length === 0 && !loading`: mostrar `"No hay métodos de envío disponibles para tu país"`
+3. Si `loading`: skeleton loader (ya existe parcialmente, verificar)
+4. Si error de query: mensaje de error con retry button
+
+---
+
+### ⏳ TICKET #18: Persistencia del Tier Seleccionado en Carrito
+**Estado:** 🟡 PENDIENTE  
+**Problema:** Si el usuario recarga la página del carrito, el tier de envío seleccionado se pierde (solo existe en estado local React).  
+**Opciones:**
+- **Opción A (Recomendada):** `ALTER TABLE b2b_carts ADD COLUMN selected_shipping_tier_id UUID REFERENCES shipping_tiers(id)` — persiste en DB, sobrevive recargas
+- **Opción B:** `localStorage` — simple pero no sincronizado entre dispositivos  
+**Pasos (Opción A):**
+1. ALTER TABLE `b2b_carts`
+2. Hook `useCart`: al seleccionar tier, hacer UPDATE en DB
+3. Al cargar carrito: leer `selected_shipping_tier_id` y pre-seleccionar en selector
+
+---
+
+### ⏳ TICKET #19: Lógica Automática de markets.is_ready
+**Estado:** 🟡 PENDIENTE  
+**Problema:** `markets.is_ready` se usa para filtrar mercados visibles en el selector de `SellerAccountPage`, pero no hay definición de cuándo un mercado pasa a `is_ready = true`.  
+**Regla propuesta:** Un mercado está `is_ready` cuando:
+- Tiene al menos 1 `shipping_route` activa (`market_id = markets.id AND is_active = true`)
+- Esa ruta tiene al menos 1 `shipping_tier` activo
+- Tiene al menos 1 método de pago (`market_payment_methods` con `is_active = true`)  
+**Pasos:**
+1. Función SQL: `refresh_market_is_ready()` — calcula y aplica `is_ready` según reglas
+2. Trigger en `shipping_routes`, `shipping_tiers`, `market_payment_methods`: llamar a la función al INSERT/UPDATE/DELETE
+3. Actualizar `markets_dashboard` view para reflejar el nuevo cálculo
+
+---
+
+### ⏳ TICKET #20: Tasa de Cambio HTG Dinámica (por País)
+**Estado:** 🟠 PENDIENTE — Post-QA  
+**Problema:** Las funciones SQL usan `* 62.0` para convertir USD → HTG hardcodeado. Si cambia el tipo de cambio, hay que editar funciones directamente en DB.  
+**Decisión arquitectural:** La tasa de cambio se configura **por país** en `destination_countries` (cada país tiene su moneda local y su tasa). Haití usa HTG/62.0, República Dominicana usaría DOP/58.0, etc.  
+**Pasos:**
+1. `ALTER TABLE destination_countries ADD COLUMN usd_exchange_rate NUMERIC DEFAULT 62.0` — tasa configurable por país
+2. `AdminMarketsPage` (panel de países dentro del mercado): campo editable "Tasa USD → Moneda Local" al crear/editar un país
+3. Función helper: `get_country_exchange_rate(country_id)` → lee el campo del país
+4. Reemplazar todos los `* 62.0` en funciones SQL por `* get_country_exchange_rate(p_destination_country_id)`
+
+---
+
+### ⏳ TICKET #21: Arquitectura Multi-Mercado por Seller [BACKLOG]
+**Estado:** ⚪ BACKLOG — Decisión arquitectural futura  
+**Problema:** `stores.market_id` es una FK simple (1 mercado por tienda). No soporta sellers que vendan a múltiples países simultáneamente.  
+**Decisión actual:** Limitación intencional para MVP — un seller = un mercado  
+**Futura migración si se requiere:**
+```sql
+CREATE TABLE store_markets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id UUID REFERENCES stores(id),
+  market_id UUID REFERENCES markets(id),
+  is_primary BOOLEAN DEFAULT false,
+  UNIQUE(store_id, market_id)
+);
+```
+
+---
+
+## 🚚 FASE 8: LOGÍSTICA LOCAL — Módulo de Distribución Interna (Tickets #22–#30)
+
+> **Principio arquitectural:**  
+> La Logística Global (China → Hub Maestro) es una **Caja Negra** — no se modifica, solo se lee su `costo_global` y `peso_facturable`.  
+> La Logística Local (Hub Maestro → Casa del Cliente) suma su costo al resultado global.  
+> **Costo Total = Costo_Logistica_Global + Costo_Logistica_Local**  
+> El `Math.ceil()` se aplica tras la suma final.
+
+### Arquitectura de la Logística Local
+
+```
+HUB MAESTRO (Hinche)
+  └─ TRAMO TRONCAL (Bus) → Terminal Departamental  [ID: TN-XXXX]
+       └─ TRAMO CAPILAR (Moto/Livrezon) → Pwen de Livrezon / Casa  [ID: BH-XXXX]
+
+NODOS:
+  • Hub Maestro      — punto de entrada desde Logística Global
+  • Terminal de Bus  — hub intermedio departamental
+  • Pwen de Livrezon — punto de entrega final (pickup point o domicilio)
+
+PRICING LOCAL:
+  Peso Facturable = MAX(peso_real_kg * 2.20462, volumen_lb)  [en LIBRAS]
+  Costo_Tramo = Tarifa_Tramo_por_lb × Peso_Facturable_lb
+  Costo_Local = Σ(Costo_Tramo activos) + Cargos_Fijos_Categoría
+```
+
+---
+
+### ✅ TICKET #22: DB Schema — Extensiones Logística Local (tablas existentes)
+**Estado:** ✅ EJECUTADO EN PRODUCCIÓN (22-Feb-2026)  
+**Archivo:** `TICKET_LOGISTICA_LOCAL_SCHEMA.sql`  
+**Resultado:**
+- `transit_hubs` + 5 columnas: `hub_type`, `destination_country_id`, `address`, `lat`, `lng` — ejecutado ✅
+- `CHINA_HUB` y `USA_HUB` marcados como `hub_type = 'global'` ✅
+- `HAITI_HUB` insertado como `hub_type = 'local_master'` (no existía antes) ✅
+- `communes.transit_hub_id UUID FK → transit_hubs` agregado ✅
+- 25 communes asignadas a `HAITI_HUB` ✅
+- `local_expedition_ids` tabla creada con RLS policy ✅
+- Verificación final: `cols_agregadas=5`, `transit_hub_id=1`, `local_expedition_ids=1`, `communes con hub=25` ✅
+
+#### 🗂️ Mapeo: Concepto → Tabla existente
+
+| Concepto Local | Tabla existente | Campos ya presentes |
+|---|---|---|
+| Hub Maestro / Terminal Bus | `transit_hubs` | `id, name, code, description, is_active` |
+| Departamento geográfico | `departments` | `id, name, code, is_active` ✅ sin cambios |
+| Zona/Comune + **PRECIO LOCAL** | `communes` | `id, name, department_id, rate_per_lb, delivery_fee, operational_fee, extra_department_fee` ✅ precios ya existen |
+| Pwen de Livrezon | `pickup_points` | `id, name, commune_id, address, lat, lng, is_active` ✅ sin cambios |
+
+#### 📐 Estructura actual de `communes` (ya tiene los precios locales)
+```sql
+-- communes ya tiene: rate_per_lb, delivery_fee, operational_fee, extra_department_fee
+-- Fórmula local = (rate_per_lb × peso_lb) + delivery_fee + operational_fee
+-- Sin modificación de datos, solo agregar el FK al transit hub que sirve la zona
+```
+
+#### � Resultado real de la auditoría en producción (22-Feb-2026)
+
+| Tabla | Columnas existentes relevantes | Estado |
+|---|---|---|
+| `transit_hubs` | `id, name, code, description, is_active` — **solo 2 registros: CHINA_HUB y USA_HUB** | ⚠️ Son hubs de ORIGEN, no de destino local. Faltan las 5 cols de TICKET #22 |
+| `communes` | `id, name, code, department_id, rate_per_lb, delivery_fee, operational_fee, extra_department_fee, shipping_zone_id, is_active` — **25 registros con precios reales** | ✅ Precios OK. Falta solo `transit_hub_id` |
+| `departments` | `id, name, code, is_active` — 10 departamentos de Haití | ✅ Sin cambios |
+| `pickup_points` | `id, name, point_code, address, commune_id, lat, lng, phone, email, is_active` — **0 registros** | ✅ Estructura OK, sin datos |
+| `local_expedition_ids` | — | 🔴 NO EXISTE — crear |
+
+> ⚠️ **Corrección crítica vs plan anterior:** No existe un hub "Hinche" en `transit_hubs`. Los hubs actuales son `CHINA_HUB` y `USA_HUB` (hubs de origen). El hub maestro local de Haití debe **insertarse** como nuevo registro.
+
+#### 🔧 Migraciones necesarias (ALTER TABLE — NO CREATE TABLE nuevas)
+
+```sql
+-- ============================================================
+-- TICKET #22: Extensiones Logística Local
+-- Estado confirmado por auditoría 22-Feb-2026
+-- ============================================================
+
+-- 1. Extender transit_hubs: agregar tipo de hub y coordenadas opcionales
+--    (todas estas columnas NO EXISTEN — confirmado por auditoría)
+ALTER TABLE public.transit_hubs
+  ADD COLUMN IF NOT EXISTS hub_type VARCHAR(20) NOT NULL DEFAULT 'global'
+    CHECK (hub_type IN ('global', 'local_master', 'terminal_bus')),
+  ADD COLUMN IF NOT EXISTS destination_country_id UUID
+    REFERENCES public.destination_countries(id),
+  ADD COLUMN IF NOT EXISTS address TEXT,
+  ADD COLUMN IF NOT EXISTS lat NUMERIC,
+  ADD COLUMN IF NOT EXISTS lng NUMERIC;
+
+COMMENT ON COLUMN public.transit_hubs.hub_type IS
+  'global = hub de tránsito internacional (CHINA_HUB/USA_HUB); local_master = hub maestro en destino; terminal_bus = nodo local secundario';
+
+-- Marcar los hubs existentes como tipo 'global'
+UPDATE public.transit_hubs
+SET hub_type = 'global'
+WHERE code IN ('CHINA_HUB', 'USA_HUB');
+
+-- Constraint: solo 1 hub_master activo por país destino
+CREATE UNIQUE INDEX IF NOT EXISTS idx_one_master_hub_per_country
+  ON public.transit_hubs(destination_country_id)
+  WHERE hub_type = 'local_master' AND is_active = true;
+
+-- 2. INSERT del Hub Maestro de Haití (NO existe en transit_hubs — confirmado por auditoría)
+--    CHINA_HUB y USA_HUB son hubs de ORIGEN, no de destino local
+INSERT INTO public.transit_hubs (name, code, description, hub_type, destination_country_id, is_active)
+VALUES (
+  'Hub Maestro Haití',
+  'HAITI_HUB',
+  'Hub maestro de distribución local en Haití (Hinche)',
+  'local_master',
+  (SELECT id FROM public.destination_countries WHERE code = 'HT' LIMIT 1),
+  true
+)
+ON CONFLICT (code) DO NOTHING;
+
+-- 3. Vincular communes con su transit hub local
+--    communes ya tiene shipping_zone_id (confirmado por auditoría) — solo agregar transit_hub_id
+ALTER TABLE public.communes
+  ADD COLUMN IF NOT EXISTS transit_hub_id UUID
+    REFERENCES public.transit_hubs(id);
+
+COMMENT ON COLUMN public.communes.transit_hub_id IS
+  'Hub local (transit_hubs con hub_type=local_master o terminal_bus) que atiende esta commune';
+
+-- Asignar el hub maestro de Haití a todas las communes activas
+UPDATE public.communes
+SET transit_hub_id = (
+  SELECT id FROM public.transit_hubs WHERE code = 'HAITI_HUB' LIMIT 1
+)
+WHERE transit_hub_id IS NULL AND is_active = true;
+
+-- 4. Crear tabla local_expedition_ids (NO EXISTE — confirmado por auditoría)
+CREATE TABLE IF NOT EXISTS public.local_expedition_ids (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id        UUID,                                         -- FK a b2b_orders
+  commune_id      UUID REFERENCES public.communes(id),          -- destino final
+  transit_hub_id  UUID REFERENCES public.transit_hubs(id),     -- hub que procesa
+  pickup_point_id UUID REFERENCES public.pickup_points(id),    -- pwen de livrezon elegido
+  expedition_code VARCHAR(20) NOT NULL UNIQUE,                 -- LOCAL-0001, LOCAL-0002...
+  issued_at       TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.local_expedition_ids ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins manage local expeditions" ON public.local_expedition_ids
+  FOR ALL TO authenticated USING (public.is_admin(auth.uid()));
+```
+
+#### ✅ Resultado: arquitectura simplificada
+```
+China → [Global: shipping_tiers + route_logistics_costs] → Hub Maestro (transit_hubs.hub_type='local_master')
+                                                                        ↓
+                                                           communes (department/zone → rate_per_lb)
+                                                                        ↓
+                                                           pickup_points (commune_id) → Pwen de Livrezon
+```
+**Precio local total = `communes.rate_per_lb × peso_total_lb + communes.delivery_fee + communes.operational_fee`**  
+(Si cruza departamento: `+ communes.extra_department_fee`)
+
+---
+
+### ✅ TICKET #23: Función calculate_local_logistics_cost
+**Estado:** ✅ EJECUTADO EN PRODUCCIÓN (22-Feb-2026)  
+**Archivo:** `TICKET_LOGISTICA_LOCAL_FUNCIONES.sql`  
+**Resultado:**
+- `calculate_local_logistics_cost(p_commune_id UUID, p_peso_facturable_lb NUMERIC)` → `(costo_local_usd NUMERIC, breakdown_json JSONB)` — desplegada ✅
+- `get_communes_by_department(p_department_id UUID DEFAULT NULL)` → tabla con communes + hub_name — desplegada ✅
+- GRANT EXECUTE a `authenticated` en ambas funciones ✅
+- Fórmula: `(rate_per_lb × peso_lb) + delivery_fee + operational_fee`
+  - Port-au-Prince 5lb → `(2.50×5) + 5.00 + 2.00 = $19.50`
+  - Cap-Haïtien 5lb → `(3.00×5) + 7.00 + 2.50 = $24.50`
+
+```sql
+CREATE OR REPLACE FUNCTION public.calculate_local_logistics_cost(
+  p_commune_id       UUID,
+  p_peso_facturable_lb NUMERIC   -- Hereda de Logística Global, NO recalcular
+)
+RETURNS TABLE (
+  costo_local_usd  NUMERIC,
+  breakdown_json   JSONB
+) LANGUAGE plpgsql AS $$
+DECLARE
+  v_commune RECORD;
+BEGIN
+  -- Leer precios locales desde la tabla communes (ya existen)
+  SELECT
+    c.id,
+    c.name,
+    c.rate_per_lb,
+    c.delivery_fee,
+    c.operational_fee,
+    c.extra_department_fee,
+    c.transit_hub_id,
+    th.name AS hub_name
+  INTO v_commune
+  FROM public.communes c
+  LEFT JOIN public.transit_hubs th ON th.id = c.transit_hub_id
+  WHERE c.id = p_commune_id AND c.is_active = true;
+
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT 0::NUMERIC, '{"error":"commune not found"}'::JSONB;
+    RETURN;
+  END IF;
+
+  RETURN QUERY SELECT
+    ROUND(
+      (v_commune.rate_per_lb * p_peso_facturable_lb)
+      + v_commune.delivery_fee
+      + v_commune.operational_fee,
+      4
+    ),
+    JSONB_BUILD_OBJECT(
+      'commune_id',         p_commune_id,
+      'commune_name',       v_commune.name,
+      'hub_id',             v_commune.transit_hub_id,
+      'hub_name',           v_commune.hub_name,
+      'rate_per_lb',        v_commune.rate_per_lb,
+      'peso_lb',            p_peso_facturable_lb,
+      'tramo_peso_cost',    ROUND(v_commune.rate_per_lb * p_peso_facturable_lb, 4),
+      'delivery_fee',       v_commune.delivery_fee,
+      'operational_fee',    v_commune.operational_fee,
+      'total',              ROUND(
+                              (v_commune.rate_per_lb * p_peso_facturable_lb)
+                              + v_commune.delivery_fee
+                              + v_commune.operational_fee,
+                              4
+                            )
+    );
+END;
+$$;
+-- Al cambiar tarifas en el panel admin (communes.rate_per_lb etc.) → resultado se actualiza INMEDIATAMENTE
+-- (no hay cache, lee directamente de communes)
+```
+
+**Frontend hook:**
+```typescript
+// hooks/useLocalLogisticsCost.ts
+export function useLocalLogisticsCost(
+  communeId: string | undefined,
+  pesoFacturableLb: number | undefined
+) {
+  return useQuery({
+    queryKey: ['localLogistics', communeId, pesoFacturableLb],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('calculate_local_logistics_cost', {
+        p_commune_id: communeId,
+        p_peso_facturable_lb: pesoFacturableLb,
+      });
+      if (error) throw error;
+      return data?.[0] ?? { costo_local_usd: 0, breakdown_json: {} };
+    },
+    enabled: !!communeId && !!pesoFacturableLb && pesoFacturableLb > 0,
+  });
+}
+```
+
+---
+
+### ✅ TICKET #24: Integración Logística Local en SellerCheckout
+**Estado:** ✅ COMPLETADO (22-Feb-2026)  
+**Archivos:** `src/hooks/useAvailableLocalRoutes.ts` (nuevo), `src/pages/seller/SellerCheckout.tsx`  
+**Resultado:**
+- Hook `useAvailableLocalRoutes(pesoFacturableLb?)` creado — provee departamentos, communes, costo local via RPC ✅
+- `pesoFacturableLb` derivado de `shippingSummary.weight_rounded_kg × 2.20462` ✅
+- `useEffect` llama a `supabase.rpc('calculate_local_logistics_cost', ...)` cuando cambia commune o peso ✅
+- Línea **Entrega local → $X.XX** dentro del card "Tipo de Envío" (sin card separado) ✅
+- `localCost` incluido en `remainingToPay = subtotal + shippingCostAmount + (localCost ?? 0) - creditAmount - discountAmount` ✅
+- Línea de desglose "📍 Entrega local" en resumen de totales ✅
+- Alerta naranja + botón deshabilitado si `deliveryMethod === 'address'` y no hay commune ✅
+- Validación en `handlePlaceOrder` bloquea confirmación si falta commune ✅  
+
+**Principio:** `calculate_shipping_cost_cart` ya devuelve el costo global correcto con su propio `Math.ceil`. Lo único nuevo es obtener el `peso_total` que esa función ya calculó y usdarlo como entrada para la logística local.
+
+```typescript
+// En SellerCheckout.tsx — integración logística local
+
+// calculate_shipping_cost_cart ya existe y devuelve:
+// { shipping_cost_usd, peso_total_lb, ... }
+const { data: globalShipping } = useShippingCostCart(cartId, selectedTierId);
+
+// peso_total_lb viene de la Logística Global — NO se recalcula
+const pesoTotalLb = globalShipping?.peso_total_lb ?? 0;
+
+// Costo Local: calcula usando el mismo peso + commune del buyer (elegida en UI)
+const { data: localCost } = useLocalLogisticsCost(userCommuneId, pesoTotalLb);
+const costoLocal = localCost?.costo_local_usd ?? 0;
+
+// Total visible en UI: global ya viene calculado, solo se muestra el desglose
+const costoGlobal = globalShipping?.shipping_cost_usd ?? 0;
+const costoEnvioTotal = costoGlobal + costoLocal; // no se vuelve a aplicar ceil
+
+// UI: desglose claro para el buyer
+// → Logística Global:  $45.00  (calculado por calculate_shipping_cost_cart)
+// → Logística Local:   $10.00  (calculado por calculate_local_logistics_cost)
+// → ─────────────────────────
+// → Total Envío:       $55.00
+```
+
+**Regla de persistencia en orden (snapshot al confirmar):**
+```sql
+ALTER TABLE b2b_orders
+  ADD COLUMN IF NOT EXISTS shipping_cost_global_usd NUMERIC(10,2),   -- snapshot de calculate_shipping_cost_cart
+  ADD COLUMN IF NOT EXISTS shipping_cost_local_usd  NUMERIC(10,2),   -- snapshot de calculate_local_logistics_cost
+  ADD COLUMN IF NOT EXISTS shipping_cost_total_usd  NUMERIC(10,2),   -- global + local
+  ADD COLUMN IF NOT EXISTS local_commune_id UUID REFERENCES communes(id),         -- commune elegida por el buyer
+  ADD COLUMN IF NOT EXISTS local_pickup_point_id UUID REFERENCES pickup_points(id), -- pwen de livrezon elegido
+  ADD COLUMN IF NOT EXISTS shipping_tier_id UUID REFERENCES shipping_tiers(id);
+-- Nota: shipping_tier_id se solapa con TICKET #15 — se unifica en esa migración
+```
+
+---
+
+### ✅ TICKET #25: Auto-restaurar Dept/Commune desde Dirección Guardada
+**Estado:** ✅ COMPLETADO (22-Feb-2026)  
+**Archivo:** `src/pages/seller/SellerCheckout.tsx`  
+**Resultado:**
+- Dirección predeterminada (`is_default = true`) se preselecciona automáticamente al cargar el checkout — usa `useEffect` en vez del `useState(callback)` que no funcionaba con datos asíncronos ✅
+- Si no hay default, preselecciona la primera dirección disponible ✅
+- `useEffect([selectedAddressId, addresses, departments])`: al seleccionar una dirección guardada → busca `departments.name === address.state` → auto-puebla `selectedDept` ✅
+- `pendingCommuneRef` + `useEffect([communes])`: cuando cargan las communes → busca `communes.name === address.city` → auto-puebla `selectedComm` ✅
+- El cálculo de costo local se dispara automáticamente al restaurar la commune ✅
+- Dept/commune guardados en `address.state` / `address.city` al crear/editar dirección (ya existía) ✅  
+
+```typescript
+// hooks/useAvailableLocalRoutes.ts
+export function useAvailableLocalRoutes(
+  departmentId: string | undefined
+) {
+  return useQuery({
+    // Comunas activas en el departamento seleccionado (con pricing local integrado)
+    queryKey: ['localCommunes', departmentId],
+    queryFn: async () => {
+      let q = supabase
+        .from('communes')
+        .select(`
+          id, name, code,
+          rate_per_lb, delivery_fee, operational_fee,
+          department:departments(id, name, code),
+          transit_hub:transit_hubs(id, name, hub_type),
+          pickup_points(id, name, address, lat, lng, is_active)
+        `)
+        .eq('is_active', true);
+
+      if (departmentId) q = q.eq('department_id', departmentId);
+
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!departmentId,
+  });
+}
+
+// En checkout: al cambiar dirección, recalcular SOLO logística local
+// La logística global NO cambia (misma caja negra)
+const handleAddressChange = (newAddress: Address) => {
+  // 1. Actualizar commune según department elegido → dispatcher selecciona commune
+  setUserCommuneId(newAddress.communeId);
+  // 2. useLocalLogisticsCost se recalcula automáticamente (queryKey incluye communeId)
+  // 3. Buyer elige pickup point dentro de la commune
+  // 4. Costo global NO se toca
+};
+```
+
+**DB: agregar department_id al perfil/dirección:**
+```sql
+ALTER TABLE public.addresses
+  ADD COLUMN IF NOT EXISTS department_id UUID REFERENCES departments(id),
+  ADD COLUMN IF NOT EXISTS commune_id    UUID REFERENCES communes(id),
+  ADD COLUMN IF NOT EXISTS pickup_point_id UUID REFERENCES pickup_points(id);
+```
+
+---
+
+### ⏳ TICKET #26: Admin UI — Panel Gestión Logística Local
+**Estado:** 🟡 PENDIENTE (depende de #22)  
+**Objetivo:** Panel admin para gestionar la logística local usando las tablas existentes  
+**Componentes:**
+1. **`AdminTransitHubsPage`**: CRUD de `transit_hubs` — con filtro por `hub_type` ('global' / 'local_master' / 'terminal_bus'), badge por tipo, campo dirección y coordenadas
+2. **`AdminCommunesPage`**: CRUD de `communes` — editar `rate_per_lb`, `delivery_fee`, `operational_fee`, `extra_department_fee`, asignar `transit_hub_id` al hub que cubre esa zona
+3. **`AdminPickupPointsPage`**: ya parcialmente implementada vía `usePickupPoints.ts` — ampliar con selector de `commune_id` y mapa de coordenadas
+4. **`AdminOrderTrackingPage`**: tablero de `local_expedition_ids` — paquetes por estado, asignación de hub, livreur y pwen de livrezon
+5. **Tarifas en tiempo real**: al guardar `communes.rate_per_lb` → `calculate_local_logistics_cost()` la usa inmediatamente (sin cache)
+
+---
+
+### ⏳ TICKET #27: Testing & QA — Logística Local
+**Estado:** 🔴 PENDIENTE  
+**Objetivo:** Validar toda la cadena Global + Local end-to-end  
+```
+TEST: Hub Maestro — solo 1 transit_hub con hub_type='local_master' activo por país (UNIQUE INDEX)
+TEST: communes.rate_per_lb configurado → calculate_local_logistics_cost(commune_id, peso) devuelve costo correcto
+TEST: Peso facturable: MAX(real, volumen) en libras → coincide con cálculo global
+TEST: calculate_local_logistics_cost(commune_id, 5.0lb) → devuelve costo correcto
+TEST: Admin cambia communes.rate_per_lb → siguiente llamada a función devuelve nuevo valor INMEDIATAMENTE
+TEST: Costo Total checkout = Math.ceil(global + local) → sin doble rounding
+TEST: UI muestra desglose: Logística Global $40 + Logística Local $10 = $50
+TEST: Usuario cambia dirección en checkout → local recalcula, global NO cambia
+TEST: Filtro por department_id → solo muestra communes del departamento del usuario
+TEST: Edge case: usuario sin department_id → muestra todas las communes del país
+TEST: Edge case: sin commune para ese departamento → mensaje claro, costo local = $0
+```
+
+---
+
+## 📌 PRÓXIMOS PASOS INMEDIATOS (v6.0)
+
+**1️⃣ TICKET #13 — Costo de envío dinámico en catálogo seller:**
+```bash
+Archivo: src/hooks/useSellerCatalog.ts (o componente de catálogo)
+Datos disponibles: useStoreByOwner() → store.market_id → useMarkets() → destination_country_id
+Función DB: get_product_shipping_cost_by_country(product_id, destination_country_id)
+UI: Columna "Logística" → $8.04 / $16.08
+```
+
+**2️⃣ TICKET #15 — Guardar shipping_tier_id en órdenes (CRÍTICO):**
+```bash
+ALTER b2b_orders: + shipping_tier_id, + shipping_cost_snapshot
+SellerCheckout: incluir en INSERT de orden
+```
+
+**3️⃣ TICKET #22 — Schema Logística Local (iniciar nueva fase):**
+```bash
+ArchivoSQL nuevo: TICKET_LOGISTICA_LOCAL_SCHEMA.sql
+Migraciones: ALTER transit_hubs (+ hub_type, country_id, lat/lng)
+             ALTER communes (+ transit_hub_id FK)
+             CREATE local_expedition_ids
+PostSQL: TICKET_LOGISTICA_LOCAL_FUNCIONES.sql (función calculate_local_logistics_cost)
+NOTA: communes.rate_per_lb, delivery_fee, operational_fee ya existen — solo configurar datos
+```
+
+**4️⃣ TICKET #14 — QA end-to-end (cuando #13 + #15 completados):**
+```bash
+Flujo crítico: Seller configura mercado → carrito muestra Standard+Express → 
+checkout muestra mismo filtro → precio correcto en resumen → pedido confirmado
 ```
 

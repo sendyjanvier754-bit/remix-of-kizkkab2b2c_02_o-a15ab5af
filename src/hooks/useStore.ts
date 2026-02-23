@@ -19,6 +19,8 @@ export interface StoreProfile {
   facebook: string | null;
   whatsapp: string | null;
   tiktok: string | null;
+  market_id: string | null;
+  destination_country_id: string | null;
 }
 
 // Helper to check if string is a valid UUID

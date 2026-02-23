@@ -9,6 +9,7 @@ import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';
 import { SuggestedPricesDetailModal } from '@/components/seller/SuggestedPricesDetailModal';
+import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 
 interface ProductCardB2BProps {
   product: ProductB2BCard;
@@ -21,6 +22,11 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const { role } = useAuth();
   const isAdmin = role === UserRole.ADMIN;
   const [showPricingModal, setShowPricingModal] = useState(false);
+
+  // Datos desde v_business_panel_data (se cargan solo cuando se abre el modal)
+  const { data: bpData, isLoading: bpLoading } = useBusinessPanelData(
+    showPricingModal ? product.id : undefined
+  );
 
   const isOutOfStock = product.stock_fisico === 0;
   const hasMultipleVariants = (product.variant_count || 1) > 1;
@@ -36,6 +42,9 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const actualMarginPercent = product.precio_b2b > 0 
     ? Math.round(((product.precio_sugerido - product.precio_b2b) / product.precio_b2b) * 100)
     : 0;
+
+  // Weight validation
+  const missingWeight = !product.weight_kg || product.weight_kg <= 0;
 
   // Logistics info
   const hasLogistics = !!product.logistics || (product.logistics_cost !== undefined && product.logistics_cost > 0);
@@ -282,50 +291,68 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
           </Button>
           
           {/* Add to Cart Button */}
-          <Button
-            size="sm"
-            className="h-8 flex-1 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              useVariantDrawerStore.getState().open({
-                id: product.id,
-                sku: product.sku,
-                nombre: product.nombre,
-                images: product.imagen_principal ? [product.imagen_principal] : [],
-                price: product.precio_b2b,
-                costB2B: product.precio_b2b,
-                moq: product.moq,
-                stock: product.stock_fisico,
-                source_product_id: product.id,
-              });
-            }}
-            disabled={isOutOfStock}
-          >
-            <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
-            B2B
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex-1">
+                  <Button
+                    size="sm"
+                    className="h-8 w-full text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors disabled:pointer-events-none"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      useVariantDrawerStore.getState().open({
+                        id: product.id,
+                        sku: product.sku,
+                        nombre: product.nombre,
+                        images: product.imagen_principal ? [product.imagen_principal] : [],
+                        price: product.precio_b2b,
+                        costB2B: product.precio_b2b,
+                        moq: product.moq,
+                        stock: product.stock_fisico,
+                        source_product_id: product.id,
+                      });
+                    }}
+                    disabled={isOutOfStock || missingWeight}
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
+                    {missingWeight ? 'Sin Peso' : 'B2B'}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {missingWeight && (
+                <TooltipContent side="top" className="max-w-[200px] text-center">
+                  <p className="text-xs">⚠️ Peso no configurado — el admin debe agregar el peso del producto antes de poder comprarlo.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
-      {/* Pricing Detail Modal */}
+      {/* Pricing Detail Modal — datos desde v_business_panel_data */}
       <SuggestedPricesDetailModal
         isOpen={showPricingModal}
         onClose={() => setShowPricingModal(false)}
-        items={[
-          {
-            productId: product.id,
-            variantId: undefined,
-            itemName: product.nombre,
-            quantity: 1,
-            costPerUnit: product.precio_b2b,
-            weight_kg: product.weight_kg || 0.3,
-            shippingCostPerUnit: product.logistics_cost || 0,
-          }
-        ]}
-        totalWeight_kg={product.weight_kg || 0.3}
-        totalShippingCost={product.logistics_cost || 0}
-        markupMultiplier={2.5}
+        isLoading={bpLoading}
+        items={
+          bpData && bpData.shipping_cost_per_unit != null
+            ? [
+                {
+                  productId: product.id,
+                  variantId: undefined,
+                  itemName: bpData.item_name,
+                  quantity: 1,
+                  costPerUnit: bpData.cost_per_unit,
+                  shippingCostPerUnit: bpData.shipping_cost_per_unit,
+                  suggestedPvpPerUnit: bpData.suggested_pvp_per_unit ?? bpData.cost_per_unit + bpData.shipping_cost_per_unit,
+                  profitPerUnit: bpData.profit_1unit ?? bpData.shipping_cost_per_unit,
+                  marginPercentage: bpData.margin_percentage ?? 0,
+                  weight_kg: bpData.weight_kg,
+                },
+              ]
+            : []
+        }
       />
     </div>
   );

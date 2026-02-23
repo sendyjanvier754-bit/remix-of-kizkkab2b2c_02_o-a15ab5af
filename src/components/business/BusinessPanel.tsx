@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
 
 // Type for v_business_panel_data row
 export interface BusinessPanelDataRow {
@@ -10,12 +10,12 @@ export interface BusinessPanelDataRow {
   item_type?: 'product' | 'variant';
   cost_per_unit: number;
   weight_kg?: number;
-  shipping_cost_per_unit?: number;
-  suggested_pvp_per_unit: number;
+  shipping_cost_per_unit?: number | null;
+  suggested_pvp_per_unit: number | null;
   investment_1unit: number;
-  revenue_1unit: number;
-  profit_1unit: number;
-  margin_percentage: number;
+  revenue_1unit: number | null;
+  profit_1unit: number | null;
+  margin_percentage: number | null;
 }
 
 export interface BusinessPanelProps {
@@ -76,14 +76,35 @@ export const BusinessPanel: React.FC<BusinessPanelProps> = ({
     ? businessPanelData.margin_percentage
     : (costPerUnit > 0 ? ((pvpPerUnit - costPerUnit) / costPerUnit * 100) : 0);
   
-  const shippingPerUnit = businessPanelData?.shipping_cost_per_unit || 0;
+  const shippingPerUnit = businessPanelData?.shipping_cost_per_unit ?? 0;
+
+  // Detect missing market/tier configuration: DB returns NULL for shipped cost
+  const noMarketConfigured =
+    businessPanelData !== undefined &&
+    businessPanelData.shipping_cost_per_unit === null;
 
   // Calculate totals
-  const estimatedRevenue = pvpPerUnit * quantity;
-  const estimatedProfit = profitPerUnit * quantity;
+  const estimatedRevenue = (pvpPerUnit ?? 0) * quantity;
+  const estimatedProfit = (profitPerUnit ?? 0) * quantity;
   const totalInvestment = costPerUnit * quantity;
 
   if (quantity <= 0) return null;
+
+  if (noMarketConfigured) {
+    return (
+      <div className={`p-3 bg-amber-50 rounded-lg border border-amber-300 ${className}`}>
+        <div className="flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs font-semibold text-amber-800">Mercado de envío no configurado</p>
+            <p className="text-[11px] text-amber-700 mt-0.5">
+              Configura tu mercado de envío en <span className="font-semibold">Mi Cuenta → Mercado de Envío</span> para ver el análisis de negocio.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`p-3 bg-muted/50 rounded-lg border border-border ${className}`}>
@@ -102,7 +123,7 @@ export const BusinessPanel: React.FC<BusinessPanelProps> = ({
         {!compact && (
           <div className="flex justify-between text-[10px] text-muted-foreground">
             <span>Precio unitario sugerido:</span>
-            <span>${pvpPerUnit.toFixed(2)}</span>
+            <span>${(pvpPerUnit ?? 0).toFixed(2)}</span>
           </div>
         )}
         {!compact && shippingPerUnit > 0 && (
@@ -119,7 +140,7 @@ export const BusinessPanel: React.FC<BusinessPanelProps> = ({
           <div className="text-right">
             <span className="font-bold text-green-600">+${estimatedProfit.toFixed(2)}</span>
             <div className="text-[10px] text-muted-foreground">
-              {typeof marginPercentage === 'number' ? marginPercentage.toFixed(1) : '0.0'}% margen · ${profitPerUnit.toFixed(2)}/ud
+              {typeof marginPercentage === 'number' ? marginPercentage.toFixed(1) : '0.0'}% margen · ${(profitPerUnit ?? 0).toFixed(2)}/ud
             </div>
           </div>
         </div>

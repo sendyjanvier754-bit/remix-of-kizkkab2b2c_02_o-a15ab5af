@@ -25,7 +25,7 @@ interface ShippingRoute {
 interface ShippingTier {
   id: string;
   route_id: string;
-  tier_type: 'standard' | 'express';
+  tier_type: string; // e.g. 'standard', 'express', 'economy', 'fast', 'priority'
   tier_name: string;
   transport_type: 'maritimo' | 'aereo' | 'terrestre';
   tramo_a_cost_per_kg: number;
@@ -367,7 +367,12 @@ export default function AdminLogisticaRutas() {
                               <h4 className="font-medium">{tier.tier_name}</h4>
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <Badge variant={tier.tier_type === 'express' ? 'default' : 'secondary'}>
-                                  {tier.tier_type === 'express' ? 'Express' : 'Standard'}
+                                {tier.tier_type === 'express' ? 'Express'
+                                  : tier.tier_type === 'economy' ? 'Economy'
+                                  : tier.tier_type === 'fast' ? 'Fast'
+                                  : tier.tier_type === 'priority' ? 'Priority'
+                                  : tier.tier_type === 'overnight' ? 'Overnight'
+                                  : 'Standard'}
                                 </Badge>
                                 <Badge variant="outline" className="flex items-center gap-1">
                                   {tier.transport_type === 'aereo' ? (
@@ -536,7 +541,7 @@ function TierForm({
 }) {
   const [formData, setFormData] = useState({
     route_id: tier?.route_id || '',
-    tier_type: tier?.tier_type || ('standard' as 'standard' | 'express'),
+    tier_type: tier?.tier_type || 'standard',
     tier_name: tier?.tier_name || '',
     custom_tier_name: tier?.custom_tier_name || '',
     tier_origin_country: tier?.tier_origin_country || 'China',
@@ -646,14 +651,19 @@ function TierForm({
           <Label>Tipo de Envío *</Label>
           <Select
             value={formData.tier_type}
-            onValueChange={(value: 'standard' | 'express') => {
+            onValueChange={(value: string) => {
               setFormData({ 
                 ...formData, 
                 tier_type: value,
-                // Sugerir nombre automático
-                tier_name: value === 'standard' 
-                  ? 'Standard - Consolidado' 
-                  : 'Express - Prioritario'
+                // Suggest an automatic name based on the tier type
+                tier_name: {
+                  standard:  'Standard - Consolidado',
+                  express:   'Express - Prioritario',
+                  economy:   'Economy - Económico',
+                  fast:      'Fast - Rápido',
+                  priority:  'Priority - Premium',
+                  overnight: 'Overnight - Urgente',
+                }[value] ?? formData.tier_name
               });
             }}
           >
@@ -666,7 +676,7 @@ function TierForm({
                   <Package className="h-4 w-4" />
                   <div>
                     <div className="font-medium">Standard</div>
-                    <div className="text-xs text-muted-foreground">Consolidado - Más económico</div>
+                    <div className="text-xs text-muted-foreground">Consolidado — más económico</div>
                   </div>
                 </div>
               </SelectItem>
@@ -675,16 +685,60 @@ function TierForm({
                   <Zap className="h-4 w-4" />
                   <div>
                     <div className="font-medium">Express</div>
-                    <div className="text-xs text-muted-foreground">Prioritario - Más rápido</div>
+                    <div className="text-xs text-muted-foreground">Prioritario — más rápido</div>
+                  </div>
+                </div>
+              </SelectItem>
+              <SelectItem value="economy">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-green-600" />
+                  <div>
+                    <div className="font-medium">Economy</div>
+                    <div className="text-xs text-muted-foreground">Muy económico, tiempo extendido</div>
+                  </div>
+                </div>
+              </SelectItem>
+              <SelectItem value="fast">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-purple-600" />
+                  <div>
+                    <div className="font-medium">Fast</div>
+                    <div className="text-xs text-muted-foreground">Rápido — entre Standard y Express</div>
+                  </div>
+                </div>
+              </SelectItem>
+              <SelectItem value="priority">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-red-600" />
+                  <div>
+                    <div className="font-medium">Priority</div>
+                    <div className="text-xs text-muted-foreground">Premium — máxima prioridad</div>
+                  </div>
+                </div>
+              </SelectItem>
+              <SelectItem value="overnight">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-pink-600" />
+                  <div>
+                    <div className="font-medium">Overnight</div>
+                    <div className="text-xs text-muted-foreground">Entrega nocturna/urgente</div>
                   </div>
                 </div>
               </SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground mt-1">
-            {formData.tier_type === 'standard' 
-              ? '📦 Envío consolidado, generalmente marítimo, más económico pero más lento' 
-              : '⚡ Envío prioritario, generalmente aéreo, más rápido pero más costoso'}
+            {formData.tier_type === 'standard'
+              ? '📦 Envío consolidado, generalmente marítimo, más económico pero más lento'
+              : formData.tier_type === 'express'
+              ? '⚡ Envío prioritario, generalmente aéreo, más rápido pero más costoso'
+              : formData.tier_type === 'economy'
+              ? '💰 Envío muy económico, mayor tiempo de tránsito'
+              : formData.tier_type === 'fast'
+              ? '🚀 Velocidad intermedia entre Standard y Express'
+              : formData.tier_type === 'priority'
+              ? '🏆 Servicio premium con máxima prioridad'
+              : '🚧 Tipo personalizado de envío'}
           </p>
         </div>
 

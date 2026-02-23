@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface ShippingType {
   id: string;
   route_id: string;
-  tier_type: 'standard' | 'express'; // 'standard', 'express'
+  tier_type: string; // e.g. 'standard', 'express', 'economy', 'fast', 'priority', or any custom value
   tier_name: string;
   custom_tier_name?: string | null;
   transport_type: 'maritimo' | 'aereo' | 'terrestre';
@@ -51,30 +51,41 @@ export interface ShippingProductCostResult {
  * - Calculate cost for cart with weight rounding and surcharges
  * - Select and manage shipping type preferences
  */
-export const useShippingTypes = (routeId?: string) => {
+export const useShippingTypes = (routeId?: string, countryId?: string) => {
   const [shippingTypes, setShippingTypes] = useState<ShippingType[]>([]);
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<ShippingType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch available shipping types for the route (or all if no route specified)
+  // Fetch available shipping types for the route/country (or all if neither specified)
   useEffect(() => {
     const fetchShippingTypes = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        // Build query - if routeId provided, filter by it; otherwise get all active tiers
+        // Build query - filter by routeId, countryId, or get all active tiers
         let query = supabase
           .from('shipping_tiers')
           .select('*')
           .eq('is_active', true)
           .order('priority_order', { ascending: true });
 
-        // Only filter by route_id if provided
         if (routeId) {
+          // Filter by specific route
           query = query.eq('route_id', routeId);
+        } else if (countryId) {
+          // Filter by destination country — get all route IDs for that country first
+          const { data: routes } = await supabase
+            .from('shipping_routes')
+            .select('id')
+            .eq('destination_country_id', countryId)
+            .eq('is_active', true);
+          const routeIds = (routes || []).map(r => r.id);
+          if (routeIds.length > 0) {
+            query = query.in('route_id', routeIds);
+          }
         }
 
         const { data, error: queryError } = await query;
@@ -115,7 +126,7 @@ export const useShippingTypes = (routeId?: string) => {
     };
 
     fetchShippingTypes();
-  }, [routeId]); // ✅ Re-ejecuta cuando cambia routeId
+  }, [routeId, countryId]); // ✅ Re-ejecuta cuando cambia routeId o countryId
 
   // ============================================================================
   // 🔴 REALTIME SUBSCRIPTION - Auto-actualización cuando cambian los tiers

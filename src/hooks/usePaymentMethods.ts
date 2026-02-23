@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -55,6 +56,7 @@ export const usePaymentMethods = (ownerType: 'admin' | 'seller' | 'store', owner
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const fetchMethods = useCallback(async () => {
     try {
@@ -130,6 +132,26 @@ export const usePaymentMethods = (ownerType: 'admin' | 'seller' | 'store', owner
           .eq('id', existing.id);
 
         if (updateError) throw updateError;
+
+        // Sync snapshot copies stored in market_payment_methods
+        // These rows have metadata->>'source_payment_method_id' pointing back to the master record
+        if (ownerType === 'admin') {
+          const syncData: Record<string, unknown> = {
+            name: input.display_name ?? data.name,
+            account_number: input.account_number || input.phone_number || null,
+            account_holder: input.account_holder || input.holder_name || null,
+            bank_name: input.bank_name || null,
+            ...(input.is_active !== undefined && { is_active: input.is_active }),
+          };
+          // Supabase JSONB text-extraction filter: metadata->>'source_payment_method_id'
+          await supabase
+            .from('market_payment_methods')
+            .update(syncData)
+            .filter('metadata->>source_payment_method_id', 'eq', existing.id);
+          // Invalidate React Query caches so AdminMarketsPage updates without reload
+          queryClient.invalidateQueries({ queryKey: ['markets-dashboard'] });
+          queryClient.invalidateQueries({ queryKey: ['market-payment-methods'] });
+        }
       } else {
         const { error: insertError } = await supabase
           .from('payment_methods')

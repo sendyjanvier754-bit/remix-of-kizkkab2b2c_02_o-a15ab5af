@@ -53,13 +53,7 @@ export const usePayments = () => {
           notes,
           created_at,
           verified_at,
-          sellers (
-            id,
-            name,
-            email,
-            phone,
-            business_name
-          )
+          seller_id
         `)
         .order('created_at', { ascending: false });
 
@@ -68,7 +62,7 @@ export const usePayments = () => {
       const formattedPayments: Payment[] = (data || []).map((p: any) => ({
         id: p.id,
         payment_number: p.payment_number,
-        seller: p.sellers,
+        seller: { id: p.seller_id, name: p.seller_id?.slice(0, 8) || 'Seller', email: '', phone: null, business_name: null },
         amount: parseFloat(p.amount),
         currency: p.currency,
         method: p.method,
@@ -172,13 +166,22 @@ export const useSellers = () => {
     try {
       setIsLoading(true);
       const { data, error, count } = await supabase
-        .from('sellers')
-        .select('*', { count: 'exact' })
+        .from('stores')
+        .select('id, name, owner_user_id', { count: 'exact' })
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setSellers(data || []);
+      const mapped: Seller[] = (data || []).map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        email: '',
+        phone: null,
+        business_name: null,
+      }));
+
+      setSellers(mapped);
       setSellersCount(count || 0);
     } catch (error) {
       console.error('Error fetching sellers:', error);

@@ -28,7 +28,7 @@ const productSchema = z.object({
   precio_sugerido_venta: z.coerce.number().min(0).optional(),
   moq: z.coerce.number().min(1, 'MOQ debe ser >= 1'),
   stock_fisico: z.coerce.number().min(0, 'Stock debe ser >= 0'),
-  peso_g: z.coerce.number().min(1, 'Peso debe ser >= 1g').optional(),
+  peso_g: z.coerce.number({ required_error: 'Peso requerido para cálculo de envío B2B' }).min(1, 'Peso debe ser >= 1g'),
   url_origen: z.string().url().optional().or(z.literal('')),
 });
 
@@ -67,7 +67,7 @@ const ProductFormDialog = ({ open, onOpenChange }: ProductFormDialogProps) => {
       precio_sugerido_venta: data.precio_sugerido_venta || null,
       moq: data.moq,
       stock_fisico: data.stock_fisico,
-      peso_g: data.peso_g || null,
+      peso_g: data.peso_g,
       url_origen: data.url_origen || null,
     });
     form.reset();

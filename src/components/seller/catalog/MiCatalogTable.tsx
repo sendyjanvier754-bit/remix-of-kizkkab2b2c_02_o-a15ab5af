@@ -5,6 +5,46 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProductoConVariantes, SellerCatalogItem } from '@/hooks/useSellerCatalog';
 
+/** Per-tier badge colors — add more entries for new tier types as needed */
+const TIER_COLORS: Record<string, string> = {
+  standard:  'bg-blue-50   text-blue-700   border-blue-200',
+  express:   'bg-orange-50 text-orange-700 border-orange-200',
+  economy:   'bg-green-50  text-green-700  border-green-200',
+  fast:      'bg-purple-50 text-purple-700 border-purple-200',
+  priority:  'bg-red-50    text-red-700    border-red-200',
+  overnight: 'bg-pink-50   text-pink-700   border-pink-200',
+};
+const DEFAULT_TIER_COLOR = 'bg-gray-50 text-gray-700 border-gray-200';
+
+function TierCostBadge({ tierType, cost }: { tierType: string; cost: number }) {
+  const colorClass = TIER_COLORS[tierType.toLowerCase()] ?? DEFAULT_TIER_COLOR;
+  const label = tierType.charAt(0).toUpperCase() + tierType.slice(1);
+  return (
+    <Badge variant="outline" className={`${colorClass} text-xs whitespace-nowrap`}>
+      ${cost.toFixed(2)} <span className="opacity-60 ml-0.5">{label}</span>
+    </Badge>
+  );
+}
+
+function TierCostCell({ tierCosts, fallback }: { tierCosts?: Record<string, number>; fallback: number }) {
+  if (!tierCosts || Object.keys(tierCosts).length === 0) {
+    return (
+      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+        ${fallback > 0 ? fallback.toFixed(2) : '—'}
+      </Badge>
+    );
+  }
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      {Object.entries(tierCosts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([tierType, cost]) => (
+          <TierCostBadge key={tierType} tierType={tierType} cost={cost} />
+        ))}
+    </div>
+  );
+}
+
 interface MiCatalogTableProps {
   productos: ProductoConVariantes[];
   isLoading: boolean;
@@ -132,9 +172,10 @@ export function MiCatalogTable({
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      ${producto.variantes[0]?.costoLogisticaCalculado?.toFixed(2) || producto.precioLogisticaMinimo?.toFixed(2) || '0.00'}
-                    </Badge>
+                    <TierCostCell
+                      tierCosts={producto.shippingCostsByTierMin}
+                      fallback={producto.precioLogisticaMinimo ?? 0}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <div>
@@ -184,9 +225,10 @@ export function MiCatalogTable({
                       <p className="font-medium">${variante.precioCosto.toFixed(2)}</p>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                        ${(variante.costoLogisticaCalculado || variante.costoLogistica).toFixed(2)}
-                      </Badge>
+                      <TierCostCell
+                        tierCosts={variante.shippingCostsByTier}
+                        fallback={variante.costoLogisticaCalculado || variante.costoLogistica}
+                      />
                     </TableCell>
                     <TableCell className="text-right">\n                      <p className="font-medium text-green-600">${variante.precioVenta.toFixed(2)}</p>
                     </TableCell>

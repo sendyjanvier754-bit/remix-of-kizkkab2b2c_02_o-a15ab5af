@@ -31,7 +31,7 @@ export interface ShippingZone {
 export interface ShippingTier {
   id: string;
   route_id: string;
-  tier_type: 'standard' | 'express';
+  tier_type: string; // e.g. 'standard', 'express', 'economy', 'fast', 'priority', or any custom value
   tier_name: string;
   tier_description?: string;
   transport_type: 'maritimo' | 'aereo' | 'terrestre';

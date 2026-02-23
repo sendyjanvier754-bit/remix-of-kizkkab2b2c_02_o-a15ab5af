@@ -49,7 +49,7 @@ export default function AdminMarketsPage() {
   const { countries, routes, isLoading: loadingRoutes } = useCountriesRoutes();
   
   // Get all admin payment methods from the system
-  const { methods: adminPaymentMethods, isLoading: loadingAdminMethods } = useAdminPaymentMethods();
+  const { methods: adminPaymentMethods, isLoading: loadingAdminMethods, refetch: refetchAdminMethods } = useAdminPaymentMethods();
   
   // Dialog states
   const [showMarketDialog, setShowMarketDialog] = useState(false);
@@ -234,11 +234,11 @@ export default function AdminMarketsPage() {
   };
 
   // Open payment assignment dialog
-  const openAssignPaymentsDialog = (market: MarketDashboard) => {
+  const openAssignPaymentsDialog = async (market: MarketDashboard) => {
     setSelectedMarket(market);
-    // Pre-select already assigned payment methods
-    const assignedIds = paymentMethods?.map(pm => pm.name) || [];
     setSelectedPaymentIds([]);
+    // Refetch to get latest payment methods in case they were updated elsewhere
+    await refetchAdminMethods();
     setShowAssignPaymentsDialog(true);
   };
 

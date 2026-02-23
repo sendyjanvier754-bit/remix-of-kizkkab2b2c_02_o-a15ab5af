@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Json } from '@/integrations/supabase/types';
@@ -9,6 +10,7 @@ export interface PickupPoint {
   address: string;
   city: string;
   country: string | null;
+  commune_id: string | null;
   phone: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -127,6 +129,31 @@ export const usePickupPoints = () => {
     updatePickupPoint,
     refetch: fetchPickupPoints,
   };
+};
+
+/**
+ * Fetches active pickup points for a given commune (or all active if no communeId).
+ * Uses TanStack Query for caching.
+ */
+export const usePickupPointsByCommune = (communeId?: string) => {
+  return useQuery({
+    queryKey: ['pickup-points', 'by-commune', communeId ?? 'all'],
+    queryFn: async () => {
+      let query = supabase
+        .from('pickup_points')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (communeId) {
+        query = query.eq('commune_id', communeId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as PickupPoint[];
+    },
+  });
 };
 
 // Hook for staff to manage deliveries at their pickup point
