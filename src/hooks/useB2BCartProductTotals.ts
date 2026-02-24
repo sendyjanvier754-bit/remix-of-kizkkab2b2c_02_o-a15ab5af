@@ -1,9 +1,14 @@
 /**
  * Hook to calculate product-level totals from B2B cart items
  * Used for MOQ validation at the product level (not variant level)
+ *
+ * @param externalItems - Optional: pass the optimistic local items from the page
+ *   so MOQ validation reacts instantly to quantity changes without waiting for
+ *   a DB round-trip / Supabase subscription.
+ *   If not provided the hook reads from its own useB2BCartItems instance.
  */
 import { useMemo } from 'react';
-import { useB2BCartItems } from './useB2BCartItems';
+import { useB2BCartItems, type B2BCartItem } from './useB2BCartItems';
 
 export interface ProductCartTotal {
   productId: string;
@@ -21,8 +26,11 @@ export interface ProductCartTotal {
   }[];
 }
 
-export const useB2BCartProductTotals = () => {
-  const { items, isLoading, error, refetch } = useB2BCartItems();
+export const useB2BCartProductTotals = (externalItems?: B2BCartItem[]) => {
+  const { items: dbItems, isLoading, error, refetch } = useB2BCartItems();
+
+  // Prefer caller-supplied optimistic state; fall back to DB-fetched items
+  const items = externalItems ?? dbItems;
 
   // Aggregate cart items by product_id
   const productTotals = useMemo(() => {

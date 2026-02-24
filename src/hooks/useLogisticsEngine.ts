@@ -98,6 +98,31 @@ export const useLogisticsEngine = () => {
     },
   });
 
+  // Fetch departments that have at least 1 active commune
+  const useDepartmentsWithCommunes = () => useQuery({
+    queryKey: ['departments-with-communes'],
+    queryFn: async () => {
+      // Get all department_ids that have active communes
+      const { data: communeData, error: communeError } = await supabase
+        .from('communes')
+        .select('department_id')
+        .eq('is_active', true);
+      if (communeError) throw communeError;
+
+      const deptIds = [...new Set((communeData || []).map(c => c.department_id))];
+      if (deptIds.length === 0) return [] as Department[];
+
+      const { data, error } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('is_active', true)
+        .in('id', deptIds)
+        .order('name');
+      if (error) throw error;
+      return data as Department[];
+    },
+  });
+
   // Fetch communes by department
   const useCommunes = (departmentId?: string) => useQuery({
     queryKey: ['communes', departmentId],
@@ -402,6 +427,7 @@ export const useLogisticsEngine = () => {
   return {
     // Queries
     useDepartments,
+    useDepartmentsWithCommunes,
     useCommunes,
     useAllCommunes,
     useShippingRates,

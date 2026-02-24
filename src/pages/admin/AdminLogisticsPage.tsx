@@ -13,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLogisticsEngine, Department, Commune, ShippingRate, CategoryShippingRate } from '@/hooks/useLogisticsEngine';
 import { useCategories } from '@/hooks/useCategories';
 import { ShippingLabelPrinter } from '@/components/logistics/ShippingLabelPrinter';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Truck, MapPin, Building2, Package, Settings, Plus, Edit, 
   Printer, Tag, DollarSign, Percent, Save, Search, QrCode 
@@ -46,6 +48,7 @@ const AdminLogisticsPage = () => {
     extra_department_fee: 0,
     delivery_fee: 0,
     operational_fee: 0,
+    transit_hub_id: '',  // TICKET #26: hub local que atiende la commune
   });
   const [categoryRateForm, setCategoryRateForm] = useState({
     category_id: '',
@@ -78,6 +81,22 @@ const AdminLogisticsPage = () => {
     createCommune,
     updateCommune,
     createCategoryShippingRate,
+  } = useLogisticsEngine();
+
+  // TICKET #26: cargar hubs locales para el selector del commune form
+  const { data: localHubs = [] } = useQuery({
+    queryKey: ['transit-hubs-local'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transit_hubs')
+        .select('id, name, code, hub_type')
+        .in('hub_type', ['local_master', 'terminal_bus'])
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
     updateCategoryShippingRate,
     createShipmentTracking,
     generateHybridTrackingId,
@@ -136,6 +155,7 @@ const AdminLogisticsPage = () => {
       extra_department_fee: 0,
       delivery_fee: 0,
       operational_fee: 0,
+      transit_hub_id: '',
     });
   };
   
@@ -149,6 +169,7 @@ const AdminLogisticsPage = () => {
       extra_department_fee: commune.extra_department_fee,
       delivery_fee: commune.delivery_fee,
       operational_fee: commune.operational_fee,
+      transit_hub_id: commune.transit_hub_id || '',
     });
     setCommuneDialog(true);
   };
@@ -704,6 +725,42 @@ const AdminLogisticsPage = () => {
                     onChange={(e) => setCommuneForm({ ...communeForm, operational_fee: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
+              </div>
+              {/* TICKET #26: Hub local que atiende esta commune */}
+              <div>
+                <Label>Hub local asignado</Label>
+                <Select
+                  value={communeForm.transit_hub_id}
+                  onValueChange={(v) => setCommuneForm({ ...communeForm, transit_hub_id: v === '__none__' ? '' : v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar hub local..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— Sin asignar —</SelectItem>
+                    {localHubs.map((h) => (
+                      <SelectItem key={h.id} value={h.id}>
+                        {h.code} — {h.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* TICKET #26: Hub local que atiende la commune */}
+              <div>
+                <Label>Hub local asignado</Label>
+                <Select
+                  value={communeForm.transit_hub_id}
+                  onValueChange={(v) => setCommuneForm({ ...communeForm, transit_hub_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar hub..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">— Sin asignar —</SelectItem>
+                    {/* TODO: reemplazar por useQuery transit_hubs local_master */}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>

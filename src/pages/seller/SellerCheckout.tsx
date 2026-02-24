@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2BCartItems } from '@/hooks/useB2BCartItems';
@@ -134,10 +134,12 @@ const SellerCheckout = () => {
   const [localCost, setLocalCost] = useState<number | null>(null);
   const [localCostBreakdown, setLocalCostBreakdown] = useState<Record<string, any> | null>(null);
   const [isLoadingLocalCost, setIsLoadingLocalCost] = useState(false);
-  // peso facturable en libras (1 kg = 2.20462 lb)
+  // Raw cart weight from ShippingTypeSelector (available even without a tier selected)
+  const [cartTotalWeightKg, setCartTotalWeightKg] = useState(0);
+  // peso facturable en libras — prefer rounded weight from tier summary, fallback to raw cart weight
   const pesoFacturableLb = useMemo(
-    () => (shippingSummary?.weight_rounded_kg ?? 0) * 2.20462,
-    [shippingSummary]
+    () => (shippingSummary?.weight_rounded_kg ?? cartTotalWeightKg) * 2.20462,
+    [shippingSummary, cartTotalWeightKg]
   );
 
   // Market / destination country state — pre-loaded from the seller's store config
@@ -316,6 +318,8 @@ const SellerCheckout = () => {
   // Separate state for department/commune selection (not saved to addresses table)
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedComm, setSelectedComm] = useState('');
+  // true while waiting for auto-restore of dept/commune from saved address
+  const [isRestoringCommune, setIsRestoringCommune] = useState(false);
 
   // Separate dept/commune state for the pickup modal
   const [pickupDept, setPickupDept] = useState('');
@@ -324,13 +328,17 @@ const SellerCheckout = () => {
   // Get logistics engine for departments/communes
   const logisticsEngine = useLogisticsEngine();
   
-  // Get departments query
-  const departmentsQuery = logisticsEngine.useDepartments();
+  // Only departments that have at least 1 active commune
+  const departmentsQuery = logisticsEngine.useDepartmentsWithCommunes();
   const departments = departmentsQuery.data || [];
   
   // Get communes based on selected department - always call the hook
   const communesQuery = logisticsEngine.useCommunes(selectedDept || undefined);
   const communes = communesQuery.data || [];
+
+  // All communes (no filter) — used as fallback for address auto-restore
+  const allCommunesQuery = logisticsEngine.useCommunes(undefined);
+  const allCommunes = allCommunesQuery.data || [];
 
   // Communes for pickup modal
   const pickupCommunesQuery = logisticsEngine.useCommunes(pickupDept || undefined);
@@ -341,28 +349,40 @@ const SellerCheckout = () => {
   const communePickupPoints = communePickupPointsQuery.data || [];
 
   // When user selects a saved address, auto-restore its dept/commune
-  const pendingCommuneRef = useRef<string | null>(null);
+  // Single-effect approach: always use allCommunes (no two-step pending ref)
   useEffect(() => {
     if (!selectedAddressId) return;
     const addr = addresses.find(a => a.id === selectedAddressId);
     if (!addr) return;
-    const dept = departments.find(d => d.name === addr.state);
-    if (dept) {
-      pendingCommuneRef.current = addr.city ?? null;
-      setSelectedDept(dept.id);
+
+    // Wait until allCommunes query finishes loading
+    if (allCommunesQuery.isLoading) {
+      setIsRestoringCommune(true);
+      return;
+    }
+
+    setIsRestoringCommune(true);
+
+    const cityLower = addr.city?.toLowerCase();
+
+    // 1️⃣ Find commune directly in allCommunes by city name (case-insensitive)
+    const comm = cityLower
+      ? allCommunes.find(c => c.name?.toLowerCase() === cityLower)
+      : undefined;
+
+    if (comm) {
+      const commDept = departments.find(d => d.id === comm.department_id);
+      if (commDept) setSelectedDept(commDept.id);
+      setSelectedComm(comm.id);
+    } else {
+      // 2️⃣ No commune match — at least set dept from addr.state if possible
+      const dept = departments.find(d => d.name === addr.state);
+      if (dept) setSelectedDept(dept.id);
       setSelectedComm('');
     }
-  }, [selectedAddressId, addresses, departments]);
 
-  // Once communes for the dept load, set commune from pending name
-  useEffect(() => {
-    if (!pendingCommuneRef.current || communes.length === 0) return;
-    const comm = communes.find(c => c.name === pendingCommuneRef.current);
-    if (comm) {
-      setSelectedComm(comm.id);
-      pendingCommuneRef.current = null;
-    }
-  }, [communes]);
+    setIsRestoringCommune(false);
+  }, [selectedAddressId, addresses, allCommunes, allCommunesQuery.isLoading, departments]);
 
   // Pre-seleccionar la dirección predeterminada cuando cargan las direcciones
   useEffect(() => {
@@ -933,21 +953,22 @@ const SellerCheckout = () => {
                       setSelectedShippingTypeId(typeId);
                       setShippingSummary(summary);
                     }}
+                    onTotalWeightChange={(kg) => setCartTotalWeightKg(kg)}
                     compact={false}
                   />
                   {/* Entrega local — simple, sin detalle */}
-                  {selectedComm && (
+                  {(selectedComm || isRestoringCommune) && (
                     <div className="flex justify-between items-center text-sm mt-3 pt-3 border-t">
                       <span className="flex items-center gap-1.5 text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         Entrega local
                       </span>
-                      {isLoadingLocalCost ? (
+                      {(isRestoringCommune || isLoadingLocalCost) ? (
                         <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                       ) : localCost !== null ? (
                         <span className="font-semibold">${localCost.toFixed(2)}</span>
                       ) : (
-                        <span className="text-xs text-orange-500">Selecciona un tipo de envío</span>
+                        <span className="text-xs text-muted-foreground">$0.00</span>
                       )}
                     </div>
                   )}
@@ -1413,7 +1434,7 @@ const SellerCheckout = () => {
                 )}
 
                 {/* Alerta: falta seleccionar commune */}
-                {deliveryMethod === 'address' && !selectedComm && (
+                {deliveryMethod === 'address' && !selectedComm && !isRestoringCommune && (
                   <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
                     <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-orange-700 font-medium">
@@ -1435,7 +1456,8 @@ const SellerCheckout = () => {
                     isProcessing || 
                     items.length === 0 ||
                     (deliveryMethod === 'address' && !selectedAddressId) ||
-                    (deliveryMethod === 'address' && !selectedComm) ||
+                    (deliveryMethod === 'address' && !selectedComm && !isRestoringCommune) ||
+                    isRestoringCommune ||
                     (deliveryMethod === 'pickup' && !selectedPickupPoint) ||
                     ((paymentMethod === 'moncash' || paymentMethod === 'transfer') && !paymentReference.trim())
                   }

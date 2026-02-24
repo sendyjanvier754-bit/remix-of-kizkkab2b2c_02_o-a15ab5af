@@ -42,7 +42,8 @@ export const useFavorites = () => {
             )
           )
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .not('seller_catalog_id', 'is', null);
 
       if (error) {
         console.error('Error fetching favorites:', error);

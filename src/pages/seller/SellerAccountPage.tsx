@@ -1223,7 +1223,7 @@ const SellerAccountPage = () => {
                 {/* Link to full page */}
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/seller/mis-compras">
-                    Ver página completa
+                    Mis Compras
                     <ExternalLink className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>

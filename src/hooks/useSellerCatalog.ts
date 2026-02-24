@@ -619,6 +619,32 @@ export const useSellerCatalog = (showAll: boolean = false) => {
     await fetchCatalog();
   }, [fetchCatalog]);
 
+  /**
+   * Delete multiple items from seller catalog
+   * @param itemIds - Array of seller_catalog item IDs to delete
+   */
+  const deleteItems = useCallback(async (itemIds: string[]) => {
+    if (!storeId || itemIds.length === 0) return { success: false, error: 'No items to delete' };
+
+    try {
+      const { error } = await supabase
+        .from('seller_catalog')
+        .delete()
+        .in('id', itemIds)
+        .eq('seller_store_id', storeId);
+
+      if (error) throw error;
+
+      // Refetch catalog after deletion
+      await fetchCatalog();
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error deleting items:', error);
+      return { success: false, error: error.message };
+    }
+  }, [storeId, fetchCatalog]);
+
   return {
     items,
     isLoading,
@@ -632,5 +658,6 @@ export const useSellerCatalog = (showAll: boolean = false) => {
     groupByProduct,
     getStats,
     refetch,
+    deleteItems,
   };
 };

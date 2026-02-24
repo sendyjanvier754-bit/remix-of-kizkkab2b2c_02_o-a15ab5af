@@ -67,6 +67,7 @@ export const usePickupPoints = () => {
     city: string;
     country?: string;
     phone?: string;
+    commune_id?: string; // TICKET #26
   }) => {
     try {
       const { error } = await supabase

@@ -26,14 +26,6 @@ export const ShippingCostBreakdown: React.FC<ShippingCostBreakdownProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Weight info */}
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Peso:</span>
-          <span>
-            {calculation.weightGrams}g ({calculation.weightKg.toFixed(2)}kg / {calculation.weightLb.toFixed(2)}lb)
-          </span>
-        </div>
-
         <Separator />
 
         {showDetails && (

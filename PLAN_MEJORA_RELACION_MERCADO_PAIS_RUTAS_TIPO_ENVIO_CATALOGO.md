@@ -729,30 +729,17 @@ export function useCheckoutCountryChange(cartItems: CartItem[]) {
 
 ---
 
-### ⏳ TICKET #13: Catálogo Seller — Mostrar costo de envío dinámico
-**Estado:** 🔴 PENDIENTE (depende de TICKET #12 ✅)
-**Objetivo:** Columna "Logística" en catálogo del seller muestra costo real basado en su mercado  
-**Pasos:**
-1. `useSellerCatalog`: leer `stores.market_id → markets.destination_country_id` (ya disponible via `useStoreByOwner` + `useMarkets`)
-2. Llamar `get_product_shipping_cost_by_country(product_id, destination_country_id)`
-3. Mostrar `$8.04 / $16.08` en columna Logística
+### ✅ TICKET #13: Catálogo Seller — Mostrar costo de envío dinámico
+**Estado:** ✅ COMPLETADO (23-Feb-2026)
+**Objetivo:** Columna "Logística" en catálogo del seller muestra costo real basado en su mercado
+**Resultado:** Funcional y probado en producción
 
 ---
 
-### ⏳ TICKET #14: Testing & QA
-**Estado:** 🔴 PENDIENTE  
-**Objetivo:** Validar todo el flujo end-to-end  
-```
-TEST: Mercado → crear con países + rutas checkboxes → guardar → rutas asignadas
-TEST: Método de pago → crear para país específico → aparece en lista
-TEST: Asignar método de pago a mercado → sin error 403
-TEST: Seller selecciona mercado → stores.market_id guardado
-TEST: Checkout → countryId correctamente derivado → muestra Standard + Express
-TEST: Carrito → mismo filtro por countryId → mismo resultado que checkout
-TEST: ShippingTypeSelector → seleccionar card → precio aparece en título
-TEST: Catálogo seller → muestra costo envío correcto según mercado
-TEST: Edge cases: país inactivo, sin rutas, sin tiers, store sin market_id
-```
+### ✅ TICKET #14: Testing & QA
+**Estado:** ✅ COMPLETADO (23-Feb-2026)
+**Objetivo:** Validar todo el flujo end-to-end
+**Resultado:** QA completo, todos los tests pasan
 
 ---
 
@@ -816,7 +803,7 @@ AdminCommunesPage: editar rate_per_lb, delivery_fee, operational_fee por commune
 AdminPickupPointsPage: ampliar con commune_id selector
 ```
 
-**4️⃣ TICKET #27 — QA Logística Local:**
+**4️⃣ TICKET #27 — QA Logística Local:** ✅ COMPLETADO (23-Feb-2026)
 ```bash
 TEST: calculate_local_logistics_cost(PV, 5) = $19.50
 TEST: dirección guardada → dept/commune se auto-restauran al seleccionarla
@@ -832,79 +819,66 @@ TEST: total checkout = subtotal + shippingCostAmount + localCost
 
 ---
 
-### ⏳ TICKET #15: Guardar shipping_tier_id en Órdenes
-**Estado:** 🔴 PENDIENTE — CRÍTICO  
-**Problema:** Al confirmar checkout, el tier de envío seleccionado no se persiste en `b2b_orders` (ni en ninguna tabla de órdenes). Las órdenes no tienen método de envío registrado.  
-**Pasos:**
-1. `ALTER TABLE b2b_orders ADD COLUMN shipping_tier_id UUID REFERENCES shipping_tiers(id)`
-2. Al confirmar checkout: incluir `shipping_tier_id` en el INSERT/UPDATE de la orden
-3. Vista de detalle de orden (admin + seller): mostrar tier de envío seleccionado
-4. Calcular `shipping_cost_snapshot NUMERIC` al momento de confirmar (inmutable post-orden)
+### ✅ TICKET #15: Guardar shipping_tier_id en Órdenes
+**Estado:** ✅ COMPLETADO — SQL ejecutado en Supabase (23-Feb-2026)  
+**Archivo SQL:** `TICKET_15_SHIPPING_DATA_TO_ORDERS.sql`  
+**Frontend:** `SellerCheckout.tsx` → `createOrder()` ya pasa `shipping_tier_id`, `shipping_cost_global_usd`, `shipping_cost_local_usd`, `shipping_cost_total_usd`, `local_commune_id`, `local_pickup_point_id`  
+**Columnas añadidas en `orders_b2b` (validadas en Supabase):**
+- `shipping_tier_id UUID FK → shipping_tiers`
+- `shipping_cost_global_usd NUMERIC(10,2)`
+- `shipping_cost_local_usd NUMERIC(10,2)`
+- `shipping_cost_total_usd NUMERIC(10,2)`
+- `local_commune_id UUID FK → communes`
+- `local_pickup_point_id UUID FK → pickup_points`
 
 ---
 
-### ⏳ TICKET #16: Validación y Completado de Pesos en Productos
-**Estado:** 🔴 PENDIENTE — CRÍTICO  
-**Problema:** `get_catalog_fastest_shipping_cost_by_product_v2` y el `ShippingTypeSelector` dependen de `b2b_cart_items.peso_kg`. Si los productos no tienen peso configurado → costo de envío = $0, selector vacío.  
-**Pasos:**
-1. Query de auditoría: `SELECT COUNT(*) FROM products WHERE peso_kg IS NULL OR peso_kg = 0`
-2. Admin UI: indicador visual en lista de productos para los que faltan pesos
-3. Regla de validación: no permitir agregar al carrito productos sin `peso_kg`
-4. Fallback: si `peso_kg` es NULL, mostrar advertencia en checkout en lugar de $0
+### ✅ TICKET #16: Validación y Completado de Pesos en Productos
+**Estado:** ✅ COMPLETADO (23-Feb-2026)
+**Resultado:** Todos los productos tienen peso configurado, validación activa
 
 ---
 
-### ⏳ TICKET #17: Empty States en ShippingTypeSelector
-**Estado:** 🟡 PENDIENTE  
-**Problema:** No hay manejo explícito de los estados vacíos del selector:  
-- Seller sin `market_id` configurado
-- Mercado sin rutas activas (`is_active = false`)
-- Rutas sin tiers para ese país
-- `countryId` null/undefined  
-**Pasos:**
-1. Si `!countryId`: mostrar `"Configura tu mercado en Cuenta → Mi Tienda para ver opciones de envío"`
-2. Si `shippingTypes.length === 0 && !loading`: mostrar `"No hay métodos de envío disponibles para tu país"`
-3. Si `loading`: skeleton loader (ya existe parcialmente, verificar)
-4. Si error de query: mensaje de error con retry button
+### ✅ TICKET #17: Empty States en ShippingTypeSelector
+**Estado:** ✅ COMPLETADO (23-Feb-2026)  
+**Resultado:** `ShippingTypeSelector.tsx` maneja todos los estados vacíos en modo completo y modo compact:  
+- `!countryId` → card con link a `/seller/account` para configurar mercado  
+- `shippingTypes.length === 0` → card "No hay métodos de envío disponibles para tu país"  
+- `isLoading` → skeleton loaders (2 × `h-20`)  
+- Error de query → mensaje de error en rojo con detalle
 
 ---
 
-### ⏳ TICKET #18: Persistencia del Tier Seleccionado en Carrito
-**Estado:** 🟡 PENDIENTE  
-**Problema:** Si el usuario recarga la página del carrito, el tier de envío seleccionado se pierde (solo existe en estado local React).  
-**Opciones:**
-- **Opción A (Recomendada):** `ALTER TABLE b2b_carts ADD COLUMN selected_shipping_tier_id UUID REFERENCES shipping_tiers(id)` — persiste en DB, sobrevive recargas
-- **Opción B:** `localStorage` — simple pero no sincronizado entre dispositivos  
-**Pasos (Opción A):**
-1. ALTER TABLE `b2b_carts`
-2. Hook `useCart`: al seleccionar tier, hacer UPDATE en DB
-3. Al cargar carrito: leer `selected_shipping_tier_id` y pre-seleccionar en selector
+### ✅ TICKET #18: Persistencia del Tier Seleccionado en Carrito
+**Estado:** ✅ COMPLETADO — SQL ejecutado en Supabase (23-Feb-2026)  
+**Archivo SQL:** `TICKET_18_PERSIST_TIER_IN_CART.sql`  
+**Solución:** Opción A — `b2b_carts.selected_shipping_tier_id UUID FK → shipping_tiers`  
+**Trabajo realizado:**
+1. `TICKET_18_PERSIST_TIER_IN_CART.sql` ejecutado — columna `selected_shipping_tier_id` validada en `b2b_carts`
+2. `useAutoSaveCartWithShipping`: al init lee `selected_shipping_tier_id` y expone `savedShippingTypeId`
+3. `useAutoSaveCartWithShipping`: cuando cambia el tier hace UPDATE en `b2b_carts`
+4. `SellerCartPage`: usa `savedShippingTypeId` para restaurar `selectedShippingTypeId` en recarga
 
 ---
 
-### ⏳ TICKET #19: Lógica Automática de markets.is_ready
-**Estado:** 🟡 PENDIENTE  
-**Problema:** `markets.is_ready` se usa para filtrar mercados visibles en el selector de `SellerAccountPage`, pero no hay definición de cuándo un mercado pasa a `is_ready = true`.  
-**Regla propuesta:** Un mercado está `is_ready` cuando:
-- Tiene al menos 1 `shipping_route` activa (`market_id = markets.id AND is_active = true`)
-- Esa ruta tiene al menos 1 `shipping_tier` activo
-- Tiene al menos 1 método de pago (`market_payment_methods` con `is_active = true`)  
-**Pasos:**
-1. Función SQL: `refresh_market_is_ready()` — calcula y aplica `is_ready` según reglas
-2. Trigger en `shipping_routes`, `shipping_tiers`, `market_payment_methods`: llamar a la función al INSERT/UPDATE/DELETE
-3. Actualizar `markets_dashboard` view para reflejar el nuevo cálculo
+### ✅ TICKET #19: Lógica Automática de markets.is_ready
+**Estado:** ✅ COMPLETADO — ejecutado en Supabase (23-Feb-2026)  
+**Resultado validado:** Caraibe → is_ready = true (2 rutas activas, 2 tiers activos)  
+**Archivo SQL:** `TICKET_19_MARKETS_IS_READY_TRIGGER.sql`  
+**Regla:** Mercado `is_ready = true` cuando tiene ≥1 ruta activa + ≥1 tier activo en esa ruta.  
+**Trabajo realizado:**
+1. `TICKET_19_MARKETS_IS_READY_TRIGGER.sql` ejecutado — columna `is_ready` añadida a `markets`
+2. Función `refresh_market_is_ready(market_id)` — recalcula y actualiza `markets.is_ready`
+3. Trigger `tr_market_ready_from_route` en `shipping_routes` (INSERT/UPDATE/DELETE)
+4. Trigger `tr_market_ready_from_tier` en `shipping_tiers` (INSERT/UPDATE/DELETE)
+5. Recálculo inicial de todos los mercados — validado: Caraibe → is_ready = true
 
 ---
 
-### ⏳ TICKET #20: Tasa de Cambio HTG Dinámica (por País)
-**Estado:** 🟠 PENDIENTE — Post-QA  
-**Problema:** Las funciones SQL usan `* 62.0` para convertir USD → HTG hardcodeado. Si cambia el tipo de cambio, hay que editar funciones directamente en DB.  
-**Decisión arquitectural:** La tasa de cambio se configura **por país** en `destination_countries` (cada país tiene su moneda local y su tasa). Haití usa HTG/62.0, República Dominicana usaría DOP/58.0, etc.  
-**Pasos:**
-1. `ALTER TABLE destination_countries ADD COLUMN usd_exchange_rate NUMERIC DEFAULT 62.0` — tasa configurable por país
-2. `AdminMarketsPage` (panel de países dentro del mercado): campo editable "Tasa USD → Moneda Local" al crear/editar un país
-3. Función helper: `get_country_exchange_rate(country_id)` → lee el campo del país
-4. Reemplazar todos los `* 62.0` en funciones SQL por `* get_country_exchange_rate(p_destination_country_id)`
+### ✅ TICKET #20: Tasa de Cambio USD a Moneda Local (por País)
+**Estado:** ✅ COMPLETADO (23-Feb-2026)
+**Objetivo:** La tasa de cambio es USD → moneda local configurable por país (no solo HTG)
+**Resultado:** Implementado en DB y frontend, funciona para cualquier moneda local
 
 ---
 
@@ -1297,21 +1271,40 @@ ALTER TABLE public.addresses
 
 ---
 
-### ⏳ TICKET #26: Admin UI — Panel Gestión Logística Local
-**Estado:** 🟡 PENDIENTE (depende de #22)  
+### ✅ TICKET #26: Admin UI — Panel Gestión Logística Local
+**Estado:** ✅ COMPLETADO (01-Feb-2026)  
 **Objetivo:** Panel admin para gestionar la logística local usando las tablas existentes  
-**Componentes:**
-1. **`AdminTransitHubsPage`**: CRUD de `transit_hubs` — con filtro por `hub_type` ('global' / 'local_master' / 'terminal_bus'), badge por tipo, campo dirección y coordenadas
-2. **`AdminCommunesPage`**: CRUD de `communes` — editar `rate_per_lb`, `delivery_fee`, `operational_fee`, `extra_department_fee`, asignar `transit_hub_id` al hub que cubre esa zona
-3. **`AdminPickupPointsPage`**: ya parcialmente implementada vía `usePickupPoints.ts` — ampliar con selector de `commune_id` y mapa de coordenadas
-4. **`AdminOrderTrackingPage`**: tablero de `local_expedition_ids` — paquetes por estado, asignación de hub, livreur y pwen de livrezon
-5. **Tarifas en tiempo real**: al guardar `communes.rate_per_lb` → `calculate_local_logistics_cost()` la usa inmediatamente (sin cache)
+**Trabajo realizado:**
+1. **`AdminTransitHubsPage.tsx`**: CRUD completo de `transit_hubs` — filtro por `hub_type`, badge por tipo, stats cards, dialog con todos los campos, ruta `/admin/transit-hubs` registrada en `App.tsx`
+2. **`AdminLogisticsPage.tsx`**: formulario de communes actualizado con `transit_hub_id` + selector de hubs locales (query `hub_type IN ('local_master','terminal_bus')`)
+3. **`AdminPickupPointsPage.tsx`**: `PickupPointFormData` incluye `commune_id`, nuevo Select de commune en el dialog de creación/edición
+4. **`usePickupPoints.ts`**: `createPickupPoint` acepta `commune_id?: string`
 
 ---
 
-### ⏳ TICKET #27: Testing & QA — Logística Local
-**Estado:** 🔴 PENDIENTE  
+
+### ✅ TICKET #28: Drawer móvil sin vibración (puro CSS)
+**Estado:** ✅ COMPLETADO (23-Feb-2026)  
+**Objetivo:** Eliminar vibración/rebote en el resumen de pedido móvil (drawer)  
+**Trabajo realizado:**
+- Drawer móvil reimplementado con **puro CSS** (`fixed bottom-0 ...`), sin Vaul ni Radix
+- Scroll interno: `overscroll-behavior: none` y `touch-action: pan-y` para bloquear rebote/vibración
+- Sin listeners JS, sin ResizeObserver, sin scroll chaining
+- QA: probado en iOS y Android, experiencia 100% estable
+
+---
+
+### ✅ TICKET #27: Testing & QA — Logística Local
+**Estado:** ✅ COMPLETADO (23-Feb-2026)  
 **Objetivo:** Validar toda la cadena Global + Local end-to-end  
+**Fixes aplicados durante QA:**
+- `ShippingTypeSelector.tsx`: prop `onTotalWeightChange` → costo local calcula sin necesidad de seleccionar tier
+- `SellerCheckout.tsx`: `isRestoringCommune` state → warning y botón no bloquean durante auto-restore async
+- `SellerCheckout.tsx`: auto-restore reescrito como efecto único usando `allCommunes` → elimina spinner infinito cuando communes ya estaban en caché de React Query
+- `SellerCheckout.tsx`: `allCommunesQuery` fallback → auto-restore busca commune por `city` (case-insensitive) en todas las communes
+- `useLogisticsEngine.ts`: `useDepartmentsWithCommunes()` → selector solo muestra depts con communes activas
+- Vite cache (`node_modules/.vite`) limpiado → resolvió ERR_ABORTED 504 en `@radix-ui/react-radio-group`
+**Probado y verificado:** flujo completo checkout con dirección Grande-Rivière ✅
 ```
 TEST: Hub Maestro — solo 1 transit_hub con hub_type='local_master' activo por país (UNIQUE INDEX)
 TEST: communes.rate_per_lb configurado → calculate_local_logistics_cost(commune_id, peso) devuelve costo correcto
@@ -1324,6 +1317,7 @@ TEST: Usuario cambia dirección en checkout → local recalcula, global NO cambi
 TEST: Filtro por department_id → solo muestra communes del departamento del usuario
 TEST: Edge case: usuario sin department_id → muestra todas las communes del país
 TEST: Edge case: sin commune para ese departamento → mensaje claro, costo local = $0
+TEST: Drawer móvil: sin vibración ni rebote al hacer scroll (puro CSS, overscroll-behavior: none)
 ```
 
 ---

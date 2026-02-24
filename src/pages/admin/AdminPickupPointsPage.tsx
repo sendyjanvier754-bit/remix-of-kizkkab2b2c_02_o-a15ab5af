@@ -2,6 +2,8 @@ import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { usePickupPoints } from "@/hooks/usePickupPoints";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -10,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   MapPin, Plus, Edit2, Trash2, Search, Loader2, AlertCircle, CheckCircle, Phone, MapIcon, Building
 } from "lucide-react";
@@ -29,12 +32,27 @@ interface PickupPointFormData {
   city: string;
   country: string;
   phone: string;
+  commune_id: string; // TICKET #26
 }
 
 const AdminPickupPointsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { pickupPoints, isLoading, createPickupPoint, updatePickupPoint, refetch } = usePickupPoints();
+
+  // TICKET #26: cargar communes para selector
+  const { data: communes = [] } = useQuery({
+    queryKey: ['communes-for-pickup'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('communes')
+        .select('id, name, code')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   const [activeTab, setActiveTab] = useState("lista");
   const [showDialog, setShowDialog] = useState(false);
@@ -49,6 +67,7 @@ const AdminPickupPointsPage = () => {
     city: "",
     country: "Haiti",
     phone: "",
+    commune_id: "",
   });
 
   // Filtrar puntos de retiro
@@ -69,6 +88,7 @@ const AdminPickupPointsPage = () => {
         city: point.city,
         country: point.country || "Haiti",
         phone: point.phone || "",
+        commune_id: point.commune_id || "",
       });
     } else {
       setSelectedPoint(null);
@@ -78,6 +98,7 @@ const AdminPickupPointsPage = () => {
         city: "",
         country: "Haiti",
         phone: "",
+        commune_id: "",
       });
     }
     setShowDialog(true);
@@ -92,6 +113,7 @@ const AdminPickupPointsPage = () => {
       city: "",
       country: "Haiti",
       phone: "",
+      commune_id: "",
     });
   };
 
@@ -349,6 +371,27 @@ const AdminPickupPointsPage = () => {
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
               />
+            </div>
+
+            {/* TICKET #26: Commune */}
+            <div className="space-y-2">
+              <Label>Commune (opcional)</Label>
+              <Select
+                value={form.commune_id}
+                onValueChange={(v) => setForm({ ...form, commune_id: v === '__none__' ? '' : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar commune..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Sin commune —</SelectItem>
+                  {communes.map(c => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.code} — {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

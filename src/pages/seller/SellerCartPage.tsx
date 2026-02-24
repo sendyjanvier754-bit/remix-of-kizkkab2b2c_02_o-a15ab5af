@@ -20,15 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerClose,
-} from "@/components/ui/drawer";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { ShoppingCart, Trash2, Package, AlertCircle, MessageCircle, X, Banknote, Wallet, DollarSign, AlertTriangle, Info, CheckSquare, Square, TrendingUp, Loader2, ShoppingBag, Truck, Clock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
@@ -62,7 +54,29 @@ const SellerCartPage = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { items: itemsFromDB, isLoading, refetch } = useB2BCartItems();
-  const { productsNotMeetingMOQ, isCartValid, productTotals } = useB2BCartProductTotals();
+
+  // Estado local para updates optimistas — debe declararse ANTES de useB2BCartProductTotals
+  // para que la validación MOQ sea inmediata al cambiar cantidades.
+  const [items, setItems] = useState(itemsFromDB);
+  const pendingUpdatesRef = useRef(new Set<string>());
+  const lastUpdateTimeRef = useRef<number>(0);
+
+  // Sincronizar con items de la DB solo si no hay updates pendientes RECIENTES
+  useEffect(() => {
+    const timeSinceLastUpdate = Date.now() - lastUpdateTimeRef.current;
+
+    // Si hay updates pendientes O si fue hace menos de 2 segundos, no sincronizar
+    if (pendingUpdatesRef.current.size > 0 || timeSinceLastUpdate < 2000) {
+      return;
+    }
+
+    // Sincronizar solo si no hay cambios pendientes
+    setItems(itemsFromDB);
+  }, [itemsFromDB]);
+
+  // Pasar items optimistas para que isCartValid / productsNotMeetingMOQ
+  // se actualicen en tiempo real sin recargar la página.
+  const { productsNotMeetingMOQ, isCartValid, productTotals } = useB2BCartProductTotals(items);
   const isMobile = useIsMobile();
 
   // Resolve seller's market → destination country for shipping tier filtering
@@ -72,24 +86,6 @@ const SellerCartPage = () => {
     if (!store?.market_id || !readyMarkets.length) return undefined;
     return readyMarkets.find(m => m.id === store.market_id)?.destination_country_id ?? undefined;
   }, [store?.market_id, readyMarkets]);
-  
-  // Estado local para updates optimistas
-  const [items, setItems] = useState(itemsFromDB);
-  const pendingUpdatesRef = useRef(new Set<string>());
-  const lastUpdateTimeRef = useRef<number>(0);
-  
-  // Sincronizar con items de la DB solo si no hay updates pendientes RECIENTES
-  useEffect(() => {
-    const timeSinceLastUpdate = Date.now() - lastUpdateTimeRef.current;
-    
-    // Si hay updates pendientes O si fue hace menos de 2 segundos, no sincronizar
-    if (pendingUpdatesRef.current.size > 0 || timeSinceLastUpdate < 2000) {
-      return;
-    }
-    
-    // Sincronizar solo si no hay cambios pendientes
-    setItems(itemsFromDB);
-  }, [itemsFromDB]);
   
   // Shipping state - DEBE IR ANTES de usar selectedShippingTypeId
   const [selectedShippingTypeId, setSelectedShippingTypeId] = useState<string | null>(null);
@@ -171,8 +167,17 @@ const SellerCartPage = () => {
     shippingCost: autoSaveShippingCost,
     isSaving: isAutoSaving,
     isCalculatingShipping: isCalculatingAutoShipping,
-    updateQuantity: autoSaveUpdateQuantity
+    updateQuantity: autoSaveUpdateQuantity,
+    // TICKET #18: tier guardado en DB para restaurar al recargar
+    savedShippingTypeId,
   } = useAutoSaveCartWithShipping(selectedShippingTypeId, refetch);
+
+  // TICKET #18: restaurar el tier guardado cuando llega del hook (solo una vez, si el user no eligió uno ya)
+  useEffect(() => {
+    if (savedShippingTypeId && !selectedShippingTypeId) {
+      setSelectedShippingTypeId(savedShippingTypeId);
+    }
+  }, [savedShippingTypeId]);
 
   // ⚠️ DEPRECADO: Hook antiguo (mantener temporalmente para compatibilidad)
   // TODO: Remover cuando auto-save esté completamente probado
@@ -1096,10 +1101,7 @@ const SellerCartPage = () => {
                             
                             {/* Mostrar costo si ya fue calculado */}
                             {selectedShippingTypeId && autoSaveShippingCost && (
-                              <div className="flex justify-between items-center mt-1">
-                                <span className="text-xs text-blue-700">
-                                  {autoSaveShippingCost.total_weight_kg.toFixed(2)} kg
-                                </span>
+                              <div className="flex justify-end items-center mt-1">
                                 <span className="text-xs font-bold text-blue-900">
                                   ${autoSaveShippingCost.total_cost_with_type.toFixed(2)}
                                 </span>
@@ -1723,17 +1725,29 @@ const SellerCartPage = () => {
         items={modalData.items}
       />
 
-      {/* Order Summary Drawer for Mobile */}
-      <Drawer open={showOrderSummaryDrawer} onOpenChange={setShowOrderSummaryDrawer}>
-        <DrawerContent className="max-h-[95vh]">
-          <DrawerHeader className="border-b">
-            <DrawerTitle>Resumen del Pedido</DrawerTitle>
-            <DrawerDescription>
-              Procesa descuentos y asientos luego confirmar precio final
-            </DrawerDescription>
-          </DrawerHeader>
-          
-          <ScrollArea className="flex-1 px-4">
+      {/* Order Summary Bottom Sheet for Mobile - Pure CSS, no Vaul */}
+      {showOrderSummaryDrawer && (
+        <div className="fixed inset-0 z-[10000]" aria-modal="true" role="dialog">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/80"
+            onClick={() => setShowOrderSummaryDrawer(false)}
+          />
+          {/* Sheet */}
+          <div className="absolute inset-x-0 bottom-0 h-[88vh] flex flex-col rounded-t-[10px] border bg-background z-[10001]">
+            {/* Drag handle visual */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="h-1.5 w-12 rounded-full bg-muted" />
+            </div>
+            {/* Header */}
+            <div className="grid gap-1.5 px-4 pb-3 text-center sm:text-left border-b flex-shrink-0">
+              <h2 className="text-lg font-semibold leading-none tracking-tight">Resumen del Pedido</h2>
+              <p className="text-sm text-muted-foreground">
+                Procesa descuentos y asientos luego confirmar precio final
+              </p>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto px-4" style={{ touchAction: 'pan-y', overscrollBehavior: 'none' }}>
             <div className="space-y-3 py-4">
               {/* Pricing Details */}
               <div className="space-y-2 pb-3 border-b border-gray-200">
@@ -1768,10 +1782,7 @@ const SellerCartPage = () => {
                         
                         {/* Mostrar costo si ya fue calculado */}
                         {selectedShippingTypeId && autoSaveShippingCost && (
-                          <div className="flex justify-between items-center mt-1">
-                            <span className="text-xs text-blue-700">
-                              {autoSaveShippingCost.total_weight_kg.toFixed(2)} kg
-                            </span>
+                          <div className="flex justify-end items-center mt-1">
                             <span className="text-xs font-bold text-blue-900">
                               ${autoSaveShippingCost.total_cost_with_type.toFixed(2)}
                             </span>
@@ -1974,9 +1985,10 @@ const SellerCartPage = () => {
                 </div>
               </div>
             </div>
-          </ScrollArea>
-        </DrawerContent>
-      </Drawer>
+            </div>
+          </div>
+        </div>
+      )}
     </SellerLayout>
   );
 };

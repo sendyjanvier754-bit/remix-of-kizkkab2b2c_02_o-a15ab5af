@@ -152,6 +152,7 @@ const Header = ({
   const accountLink = role === UserRole.SELLER ? "/seller/cuenta" : 
                     role === UserRole.ADMIN ? "/admin/dashboard" : 
                     "/cuenta";
+  const favoritesLink = isB2B ? "/seller/favoritos" : "/favoritos";
 
   const handleCategoryClick = (category: any | null) => {
     const catId = category ? category.id : null;
@@ -325,7 +326,7 @@ const Header = ({
             </div>
 
             {/* Favorites heart */}
-            <Link to="/favoritos" className="relative flex-shrink-0">
+            <Link to={favoritesLink} className="relative flex-shrink-0">
               <Heart className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#071d7f] rounded-full border-2 border-white" />
             </Link>
@@ -474,7 +475,7 @@ const Header = ({
               <Flame className="w-6 h-6" />
               <span className="text-xs">Tendencias</span>
             </Link>
-            <Link to="/favoritos" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
+            <Link to={favoritesLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <Heart className="w-6 h-6" />
               <span className="text-xs">Favoritos</span>
             </Link>
@@ -616,7 +617,7 @@ const Header = ({
 
             <nav className="flex flex-col gap-2">
               <div className="flex items-center justify-around py-4 border-b border-gray-100">
-                <Link to="/favoritos" className="flex flex-col items-center gap-1 text-gray-700" onClick={() => setIsMenuOpen(false)}>
+                <Link to={favoritesLink} className="flex flex-col items-center gap-1 text-gray-700" onClick={() => setIsMenuOpen(false)}>
                   <Heart className="w-6 h-6" />
                   <span className="text-xs">Favoritos</span>
                 </Link>

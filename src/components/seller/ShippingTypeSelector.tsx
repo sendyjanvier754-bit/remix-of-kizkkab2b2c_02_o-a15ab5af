@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Truck, DollarSign, Weight, Loader2, Clock, Plane, Ship, Check, ChevronRight } from 'lucide-react';
+import { Truck, DollarSign, Loader2, Clock, Plane, Ship, Check, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ShippingTypeSelectorProps {
@@ -43,6 +43,8 @@ interface ShippingTypeSelectorProps {
    */
   itemIds?: string[];
   onShippingTypeChange?: (typeId: string | null, summary: CartShippingSummary | null) => void;
+  /** Fires whenever the raw cart weight is known (even without a tier selected) */
+  onTotalWeightChange?: (totalWeightKg: number) => void;
   compact?: boolean;
 }
 
@@ -52,6 +54,7 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
   cartItems = [],
   itemIds,
   onShippingTypeChange,
+  onTotalWeightChange,
   compact = false,
   showHeader = true,
 }) => {
@@ -124,6 +127,13 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
 
   const totalWeight = itemIds && orchestratorData ? orchestratorData.total_weight_kg : engineWeight;
   const costLoading = itemIds ? orchestratorLoading : engineLoading;
+
+  // Notify parent of raw cart weight as soon as it's available (independent of tier)
+  useEffect(() => {
+    if (onTotalWeightChange && totalWeight > 0) {
+      onTotalWeightChange(totalWeight);
+    }
+  }, [totalWeight, onTotalWeightChange]);
   const isLoading = typesLoading || costLoading;
   const error = null; // orchestrator doesn't expose error directly
 
@@ -203,29 +213,19 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
                 )}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Peso:</span>
-              <span className="font-medium">
+            <div className="flex justify-between pt-1">
+              <span className="font-semibold text-primary">Envío:</span>
+              <span className="font-bold text-primary">
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin inline" />
                 ) : (
-                  `${summary.weight_rounded_kg} kg`
-                )}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Costo de envío:</span>
-              <span className="font-medium">
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin inline" />
-                ) : (
-                  `$${summary.base_cost.toFixed(2)}`
+                  `$${summary.total_cost_with_type.toFixed(2)}`
                 )}
               </span>
             </div>
             {summary.extra_cost > 0 && (
               <div className="flex justify-between text-amber-600">
-                <span className="text-muted-foreground">Surcharge:</span>
+                <span className="text-muted-foreground">Cargo adicional:</span>
                 <span className="font-medium">
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin inline" />
@@ -235,16 +235,7 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
                 </span>
               </div>
             )}
-            <div className="flex justify-between pt-1 border-t">
-              <span className="font-semibold text-primary">Total:</span>
-              <span className="font-bold text-primary">
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin inline" />
-                ) : (
-                  `$${summary.total_cost_with_type.toFixed(2)}`
-                )}
-              </span>
-            </div>
+
           </div>
         )}
 
@@ -378,20 +369,11 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
         </div>
       )}
 
-      {/* Weight + cost summary bar */}
+      {/* Cost summary bar */}
       {summary && !isLoading && (
-        <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Weight className="h-3.5 w-3.5" />
-            {summary.weight_rounded_kg} kg
-            {summary.extra_cost > 0 && (
-              <span className="text-amber-600 ml-2">
-                +${summary.extra_cost.toFixed(2)} cargo adicional
-              </span>
-            )}
-          </span>
+        <div className="flex items-center justify-end text-sm pt-2 border-t border-gray-100">
           <span className="font-bold text-primary text-base">
-            Total: ${summary.total_cost_with_type.toFixed(2)}
+            Envío: ${summary.total_cost_with_type.toFixed(2)}
           </span>
         </div>
       )}

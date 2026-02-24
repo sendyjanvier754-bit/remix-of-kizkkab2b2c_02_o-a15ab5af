@@ -69,6 +69,7 @@ const AdminCotizaciones = lazy(() => import("./pages/admin/AdminCotizaciones"));
 const AdminReembolsos = lazy(() => import("./pages/admin/AdminReembolsos"));
 const AdminCommissionPage = lazy(() => import("./pages/admin/AdminCommissionPage"));
 const AdminPickupPointsPage = lazy(() => import("./pages/admin/AdminPickupPointsPage"));
+const AdminTransitHubsPage = lazy(() => import("./pages/admin/AdminTransitHubsPage"));
 const AdminDiscountCodes = lazy(() => import("./pages/admin/AdminDiscountCodes"));
 const AdminUserDiscounts = lazy(() => import("./pages/admin/AdminUserDiscounts"));
 const AdminCartAnalytics = lazy(() => import("./pages/admin/AdminCartAnalytics"));
@@ -262,6 +263,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminPickupPointsPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/transit-hubs" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminTransitHubsPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />

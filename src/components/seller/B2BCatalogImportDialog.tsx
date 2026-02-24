@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Package, Loader2, Plus, Check, ImageOff } from 'lucide-react';
+import { Search, Package, Loader2, Plus, Check, ImageOff, DollarSign } from 'lucide-react';
 
 interface B2BProduct {
   id: string;
@@ -18,6 +18,7 @@ interface B2BProduct {
   precio_sugerido_venta: number | null;
   imagen_principal: string | null;
   stock?: number;
+  suggested_pvp?: number | null; // From v_business_panel_data
 }
 
 interface B2BCatalogImportDialogProps {
@@ -37,28 +38,54 @@ export function B2BCatalogImportDialog({
 }: B2BCatalogImportDialogProps) {
   const [products, setProducts] = useState<B2BProduct[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
-  // Fetch B2B products
+  // Fetch B2B products with suggested PVP from v_business_panel_data
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Fetch products from v_business_panel_data to get suggested_pvp_per_unit
       let query = supabase
-        .from('v_productos_con_precio_b2b')
-        .select('id, sku_interno, nombre, descripcion_corta, precio_b2b, precio_sugerido_venta, imagen_principal')
+        .from('v_business_panel_data')
+        .select('product_id, item_name, sku, cost_per_unit, suggested_pvp_per_unit')
         .eq('is_active', true)
-        .order('nombre');
+        .eq('item_type', 'product')
+        .order('item_name');
 
       if (search) {
-        query = query.or(`nombre.ilike.%${search}%,sku_interno.ilike.%${search}%`);
+        query = query.or(`item_name.ilike.%${search}%,sku.ilike.%${search}%`);
       }
 
-      const { data, error } = await query.limit(50);
+      const { data: bpData, error: bpError } = await query.limit(50);
+      if (bpError) throw bpError;
 
-      if (error) throw error;
-      setProducts(data || []);
+      // Map to B2BProduct interface and fetch additional details
+      const productIds = (bpData || []).map(p => p.product_id);
+      
+      if (productIds.length > 0) {
+        const { data: productsData, error: productsError } = await supabase
+          .from('v_productos_con_precio_b2b')
+          .select('id, sku_interno, nombre, descripcion_corta, precio_b2b, precio_sugerido_venta, imagen_principal')
+          .in('id', productIds);
+
+        if (productsError) throw productsError;
+
+        // Merge data
+        const mergedProducts = (productsData || []).map(p => {
+          const bp = bpData?.find(b => b.product_id === p.id);
+          return {
+            ...p,
+            suggested_pvp: bp?.suggested_pvp_per_unit || null,
+          };
+        });
+
+        setProducts(mergedProducts);
+      } else {
+        setProducts([]);
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Error al cargar productos');
@@ -72,6 +99,7 @@ export function B2BCatalogImportDialog({
       fetchProducts();
     } else {
       setSelectedProducts(new Set());
+      setCustomPrices({});
       setSearch('');
     }
   }, [open, fetchProducts]);
@@ -105,35 +133,45 @@ export function B2BCatalogImportDialog({
     try {
       const selectedProductsList = products.filter(p => selectedProducts.has(p.id));
       
-      // Prepare catalog items - using precio_b2b (with market margins) and calculate_suggested_pvp()
-      const catalogItems = await Promise.all(
-        selectedProductsList.map(async (product) => {
-          // Get suggested PVP from database function
-          let suggestedPvp = product.precio_sugerido_venta;
+      // Prepare catalog items - using custom price or suggested PVP from v_business_panel_data
+      const catalogItems = selectedProductsList.map(product => {
+        // Priority: custom price > suggested_pvp from v_business_panel_data > precio_sugerido_venta
+        const precioVenta = customPrices[product.id] 
+          || product.suggested_pvp 
+          || product.precio_sugerido_venta 
+          || null;
+
+        // Skip products without a valid price
+        if (!precioVenta || precioVenta <= 0) {
+          toast.error(`${product.nombre}: Sin precio de venta válido. Configura tu mercado o establece un precio manualmente.`);
+          return null;
+        }
           
-          if (!suggestedPvp) {
-            const { data: pvpData } = await supabase.rpc('calculate_suggested_pvp', {
-              p_product_id: product.id
-            });
-            suggestedPvp = pvpData || product.precio_b2b * 4; // Fallback to 4x markup
-          }
-          
-          return {
-            seller_store_id: storeId,
-            source_product_id: product.id,
-            source_order_id: null, // No order - direct import for marketing
-            sku: product.sku_interno,
-            nombre: product.nombre,
-            descripcion: product.descripcion_corta,
-            precio_costo: product.precio_b2b, // ← Precio con márgenes de mercado
-            precio_venta: suggestedPvp, // ← PVP calculado o sugerido
-            stock: 0, // No physical stock - marketing only
-            images: product.imagen_principal ? JSON.stringify([product.imagen_principal]) : JSON.stringify([]),
-            is_active: true,
-            metadata: { import_type: 'b2b_catalog_direct', marketing_only: true },
-          };
-        })
-      );
+        return {
+          seller_store_id: storeId,
+          source_product_id: product.id,
+          source_order_id: null, // No order - direct import for marketing
+          sku: product.sku_interno,
+          nombre: product.nombre,
+          descripcion: product.descripcion_corta,
+          precio_costo: product.precio_b2b,
+          precio_venta: precioVenta, // Custom or suggested PVP
+          stock: 0, // No physical stock - marketing only
+          images: product.imagen_principal ? JSON.stringify([product.imagen_principal]) : JSON.stringify([]),
+          is_active: true,
+          metadata: { 
+            import_type: 'b2b_catalog_direct', 
+            marketing_only: true,
+            price_source: customPrices[product.id] ? 'manual' : 'suggested'
+          },
+        };
+      }).filter(Boolean); // Remove nulls
+
+      if (catalogItems.length === 0) {
+        toast.error('No hay productos válidos para importar');
+        setIsImporting(false);
+        return;
+      }
 
       const { error } = await supabase
         .from('seller_catalog')
@@ -200,50 +238,104 @@ export function B2BCatalogImportDialog({
                 return (
                   <div
                     key={product.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    className={`rounded-lg border transition-colors ${
                       alreadyImported 
                         ? 'bg-muted/50 cursor-not-allowed opacity-60' 
                         : isSelected 
                           ? 'bg-primary/10 border-primary' 
-                          : 'hover:bg-muted/50 cursor-pointer'
+                          : 'hover:bg-muted/50'
                     }`}
-                    onClick={() => !alreadyImported && toggleProduct(product.id)}
                   >
-                    <Checkbox
-                      checked={isSelected}
-                      disabled={alreadyImported}
-                      onCheckedChange={() => !alreadyImported && toggleProduct(product.id)}
-                    />
-                    
-                    {/* Image */}
-                    <div className="w-12 h-12 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {product.imagen_principal ? (
-                        <img
-                          src={product.imagen_principal}
-                          alt={product.nombre}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <ImageOff className="h-5 w-5 text-muted-foreground" />
-                      )}
+                    {/* Main row: Checkbox, Image, Info, Status */}
+                    <div 
+                      className="flex items-center gap-3 p-3 cursor-pointer"
+                      onClick={() => !alreadyImported && toggleProduct(product.id)}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        disabled={alreadyImported}
+                        onCheckedChange={() => !alreadyImported && toggleProduct(product.id)}
+                      />
+                      
+                      {/* Image */}
+                      <div className="w-12 h-12 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {product.imagen_principal ? (
+                          <img
+                            src={product.imagen_principal}
+                            alt={product.nombre}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageOff className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{product.nombre}</p>
+                        <p className="text-xs text-muted-foreground">{product.sku_interno}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Costo: <span className="font-medium">${product.precio_b2b.toFixed(2)}</span>
+                        </p>
+                      </div>
+
+                      {/* Status */}
+                      <div className="text-right flex-shrink-0">
+                        {alreadyImported && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Check className="h-3 w-3 mr-1" />
+                            Importado
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{product.nombre}</p>
-                      <p className="text-xs text-muted-foreground">{product.sku_interno}</p>
-                    </div>
-
-                    {/* Price & Status */}
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-semibold text-sm">${product.precio_b2b.toFixed(2)}</p>
-                      {alreadyImported && (
-                        <Badge variant="secondary" className="text-xs">
-                          <Check className="h-3 w-3 mr-1" />
-                          Importado
-                        </Badge>
-                      )}
-                    </div>
+                    {/* Price input (only shown when selected) */}
+                    {isSelected && !alreadyImported && (
+                      <div className="px-3 pb-3 pt-0 border-t" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2 mt-2">
+                          <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="flex-1">
+                            <label className="text-xs text-muted-foreground block mb-1">
+                              Precio de Venta
+                              {(product.suggested_pvp || product.precio_sugerido_venta) && (
+                                <span className="ml-1 font-medium text-primary">
+                                  (Sugerido: ${(product.suggested_pvp || product.precio_sugerido_venta)?.toFixed(2)})
+                                </span>
+                              )}
+                              {!product.suggested_pvp && !product.precio_sugerido_venta && (
+                                <span className="ml-1 text-orange-600 font-medium">
+                                  (Sin PVP - configura tu mercado)
+                                </span>
+                              )}
+                            </label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder={
+                                (product.suggested_pvp || product.precio_sugerido_venta)?.toFixed(2) || 
+                                'Establecer precio...'
+                              }
+                              value={customPrices[product.id] || ''}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value);
+                                if (!isNaN(value) && value >= 0) {
+                                  setCustomPrices(prev => ({ ...prev, [product.id]: value }));
+                                } else if (e.target.value === '') {
+                                  setCustomPrices(prev => {
+                                    const newPrices = { ...prev };
+                                    delete newPrices[product.id];
+                                    return newPrices;
+                                  });
+                                }
+                              }}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

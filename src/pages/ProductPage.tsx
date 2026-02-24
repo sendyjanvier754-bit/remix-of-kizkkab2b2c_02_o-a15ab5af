@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from '@/types/auth';
 import { useCart } from "@/hooks/useCart";
 import { useB2BCartSupabase } from "@/hooks/useB2BCartSupabase";
-import { useWishlist } from "@/hooks/useWishlist";
+import { useB2BFavorites } from "@/hooks/useB2BFavorites";
+import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/hooks/useStore';
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -210,14 +211,42 @@ const ProductPage = () => {
   const {
     user
   } = useAuth();
+  const { role } = useAuth();
   const {
     toast
   } = useToast();
-  // Determine if user is B2B (Seller)
-  const isB2BUser = user?.role === UserRole.SELLER;
+  // Determine if user is B2B (Seller or Admin)
+  const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
 
-  // Use the correct wishlist hook based on user type
-  const { isInWishlist, toggleWishlist } = useWishlist();
+  // Use separate favorite hooks for B2B and B2C
+  const b2bFav = useB2BFavorites();
+  const b2cFav = useB2CFavorites();
+
+  const toggleFavorite = () => {
+    if (!product) return;
+    if (isB2BUser) {
+      const productId = (product as any).source_product?.id || product.id;
+      b2bFav.toggle(productId);
+    } else {
+      const type = (product as any).type;
+      b2cFav.toggle({
+        productId: type !== 'seller_catalog' ? product.id : undefined,
+        sellerCatalogId: type === 'seller_catalog' ? product.id : undefined,
+      });
+    }
+  };
+
+  const isFavorite = (): boolean => {
+    if (!product) return false;
+    if (isB2BUser) {
+      return b2bFav.isInFavorites((product as any).source_product?.id || product.id);
+    }
+    const type = (product as any).type;
+    return b2cFav.isInFavorites(
+      type !== 'seller_catalog' ? product.id : undefined,
+      type === 'seller_catalog' ? product.id : undefined
+    );
+  };
 
   // Fetch product data from both tables
   const {
@@ -632,19 +661,10 @@ const ProductPage = () => {
             </div>
 
             <button 
-              onClick={() => {
-                if (product) {
-                  toggleWishlist({
-                    productId: isB2BUser ? product.id : undefined,
-                    sellerCatalogId: !isB2BUser ? product.id : undefined,
-                    storeId: product.store?.id,
-                    type: isB2BUser ? 'B2B' : 'B2C',
-                  });
-                }
-              }}
+              onClick={() => toggleFavorite()}
               className="flex-shrink-0 p-1.5 hover:bg-white/10 rounded"
             >
-              <Heart className={`w-5 h-5 ${product && (isB2BUser ? isInWishlist(product.id) : isInWishlist(undefined, product.id)) ? 'fill-red-400 text-red-400' : 'text-white'}`} />
+              <Heart className={`w-5 h-5 ${isFavorite() ? 'fill-red-400 text-red-400' : 'text-white'}`} />
             </button>
 
             <button className="flex-shrink-0 p-1.5 hover:bg-white/10 rounded">
@@ -745,23 +765,12 @@ const ProductPage = () => {
                 </div>}
               
               <button 
-                onClick={() => {
-                  if (product?.id) {
-                    toggleWishlist({ 
-                      productId: isB2BUser ? product.id : undefined,
-                      sellerCatalogId: !isB2BUser ? product.id : undefined,
-                      storeId: (product as any)?.store?.id,
-                      type: isB2BUser ? 'B2B' : 'B2C',
-                    });
-                  }
-                }}
+                onClick={() => toggleFavorite()}
                 className="absolute top-4 right-4 bg-white/80 hover:bg-white rounded-full p-2 shadow-sm transition"
               >
                 <Heart 
                   className={`w-5 h-5 transition-colors ${
-                    product?.id && (isB2BUser ? isInWishlist(product.id) : isInWishlist(undefined, product.id))
-                      ? 'text-red-500 fill-red-500' 
-                      : 'text-gray-400 hover:text-red-500'
+                    isFavorite() ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'
                   }`} 
                 />
               </button>
@@ -946,17 +955,8 @@ const ProductPage = () => {
                 {/* Open VariantDrawer for both mobile and desktop */}
                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="mt-3 flex items-center gap-3">
-                    <button onClick={() => {
-                      if (product) {
-                        toggleWishlist({
-                          productId: isB2BUser ? product.id : undefined,
-                          sellerCatalogId: !isB2BUser ? product.id : undefined,
-                          storeId: product.store?.id,
-                          type: isB2BUser ? 'B2B' : 'B2C',
-                        });
-                      }
-                    }} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
-                      <Heart className={`w-5 h-5 transition-all duration-300 ${product && (isB2BUser ? isInWishlist(product.id) : isInWishlist(undefined, product.id)) ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
+                    <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
+                      <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
                     </button>
                     <Button 
                       onClick={() => {

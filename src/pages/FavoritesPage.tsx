@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, ShoppingCart, Trash2, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useB2CCartSupabase } from "@/hooks/useB2CCartSupabase";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
 const FavoritesPage = () => {
-  const { items, isLoading, removeFavorite, isRemoving } = useFavorites();
+  const { items, isLoading, removeFavorite, isRemoving } = useB2CFavorites();
   const { addItem } = useB2CCartSupabase();
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -57,12 +57,12 @@ const FavoritesPage = () => {
     setAddingItemId(item.id);
     try {
       await addItem({
-        sku: item.sku,
-        name: item.name,
-        price: item.price,
-        image: item.image,
-        storeId: item.store_id,
-        storeName: item.store_name,
+        sku: item.sku || '',
+        name: item.name || 'Producto',
+        price: item.price || 0,
+        image: item.image || '/placeholder.svg',
+        storeId: item.store_id || undefined,
+        storeName: item.store_name || '',
       });
     } finally {
       setAddingItemId(null);
@@ -102,13 +102,13 @@ const FavoritesPage = () => {
                     src={item.image || '/placeholder.svg'}
                     alt={item.name}
                     className="w-full h-full object-cover cursor-pointer"
-                    onClick={() => navigate(`/producto/${item.seller_catalog_id}`)}
+                    onClick={() => navigate(`/producto/${item.sku || item.seller_catalog_id || item.product_id}`)}
                   />
                   <Button
                     variant="ghost"
                     size="icon"
                     className="absolute top-2 right-2 bg-white/80 hover:bg-white text-red-500 hover:text-red-600 rounded-full"
-                    onClick={() => removeFavorite(item.seller_catalog_id)}
+                    onClick={() => removeFavorite({ favoriteId: item.id })}
                     disabled={isRemoving}
                   >
                     <Trash2 className="h-5 w-5" />

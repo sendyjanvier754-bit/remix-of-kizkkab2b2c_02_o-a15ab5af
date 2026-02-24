@@ -4,7 +4,6 @@ import { useBuyerOrders } from '@/hooks/useBuyerOrders';
 import { useSellerCredits } from '@/hooks/useSellerCredits';
 import { useKYC } from '@/hooks/useKYC';
 import { SellerLayout } from '@/components/seller/SellerLayout';
-import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,7 +56,6 @@ const SellerDashboard = () => {
   return (
     <SellerLayout>
       <div className="min-h-screen bg-gradient-to-b from-background via-blue-50/30 to-background">
-        <Header />
 
         <main className="container mx-auto px-4 py-6 mt-3">
           {/* Welcome Section */}

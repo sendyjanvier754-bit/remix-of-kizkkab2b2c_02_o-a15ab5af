@@ -1,6 +1,6 @@
 import { MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, MessageCircle, ShieldCheck, TrendingUp, ArrowUpRight, Truck, Clock } from 'lucide-react';
+import { ShoppingCart, MessageCircle, ShieldCheck, TrendingUp, ArrowUpRight, Truck, Clock, Heart } from 'lucide-react';
 import { ProductB2BCard, CartItemB2B } from '@/types/b2b';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';
 import { SuggestedPricesDetailModal } from '@/components/seller/SuggestedPricesDetailModal';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
+import { useB2BFavorites } from '@/hooks/useB2BFavorites';
 
 interface ProductCardB2BProps {
   product: ProductB2BCard;
@@ -22,6 +23,8 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const { role } = useAuth();
   const isAdmin = role === UserRole.ADMIN;
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const { toggle: toggleFav, isInFavorites } = useB2BFavorites();
+  const isFav = isInFavorites(product.id);
 
   // Datos desde v_business_panel_data (se cargan solo cuando se abre el modal)
   const { data: bpData, isLoading: bpLoading } = useBusinessPanelData(
@@ -117,8 +120,25 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
           </div>
         </div>
 
-        {/* View Pricing Button - Bottom Right */}
-        <div className="absolute bottom-2 right-2">
+        {/* Bottom-right buttons: Heart + Pricing */}
+        <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-9 w-9 p-0 rounded-full border-0 shadow-lg transition-colors ${
+              isFav
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : 'bg-white/90 hover:bg-white text-gray-500 hover:text-red-500'
+            }`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleFav(product.id);
+            }}
+            title={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Heart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
+          </Button>
           <Button
             variant="outline"
             size="sm"

@@ -5274,6 +5274,88 @@ export type Database = {
         }
         Relationships: []
       }
+      b2b_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      b2c_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string | null
+          seller_catalog_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          seller_catalog_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          seller_catalog_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2c_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2c_favorites_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "seller_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2c_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       user_favorites: {
         Row: {
           created_at: string
@@ -5283,6 +5365,7 @@ export type Database = {
           store_id: string | null
           type: string | null
           user_id: string
+          variant_id: string | null
         }
         Insert: {
           created_at?: string
@@ -5292,6 +5375,7 @@ export type Database = {
           store_id?: string | null
           type?: string | null
           user_id: string
+          variant_id?: string | null
         }
         Update: {
           created_at?: string
@@ -5301,6 +5385,7 @@ export type Database = {
           store_id?: string | null
           type?: string | null
           user_id?: string
+          variant_id?: string | null
         }
         Relationships: [
           {

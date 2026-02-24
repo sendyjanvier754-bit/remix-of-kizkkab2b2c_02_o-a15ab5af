@@ -21,6 +21,9 @@ export interface WishlistItem {
   sku?: string;
   store_name?: string;
   moq?: number;
+  // Category data (for grouping/filtering)
+  categoria_id?: string | null;
+  categoria_name?: string | null;
 }
 
 const resolveCatalogImage = (catalog: any): string => {
@@ -73,7 +76,12 @@ export const useWishlist = (type?: WishlistType) => {
             precio_mayorista,
             imagen_principal,
             sku_interno,
-            moq
+            moq,
+            categoria_id,
+            categories:categoria_id (
+              id,
+              name
+            )
           ),
           seller_catalog:seller_catalog_id (
             id,
@@ -113,13 +121,26 @@ export const useWishlist = (type?: WishlistType) => {
           type: item.type,
           created_at: item.created_at,
           // Enriched data depends on type
-          name: isB2B ? product?.nombre : catalog?.nombre || 'Producto',
-          price: isB2B ? product?.precio_mayorista : catalog?.precio_venta || 0,
-          image: isB2B ? product?.imagen_principal : resolveCatalogImage(catalog),
-          sku: isB2B ? product?.sku_interno : catalog?.sku || '',
+          name: isB2B
+            ? (product?.nombre || 'Producto')
+            : (catalog?.nombre || product?.nombre || 'Producto'),
+          price: isB2B
+            ? (product?.precio_mayorista || 0)
+            : (catalog?.precio_venta || product?.precio_mayorista || 0),
+          image: isB2B
+            ? (product?.imagen_principal || '/placeholder.svg')
+            : (resolveCatalogImage(catalog) !== '/placeholder.svg'
+                ? resolveCatalogImage(catalog)
+                : (product?.imagen_principal || '/placeholder.svg')),
+          sku: isB2B
+            ? (product?.sku_interno || '')
+            : (catalog?.sku || product?.sku_interno || ''),
           // seller_catalog doesn't have a reliable FK relationship cached for nested store joins.
           store_name: '',
           moq: product?.moq || 1,
+          // Category for grouping/filtering
+          categoria_id: product?.categoria_id ?? null,
+          categoria_name: (product?.categories as any)?.name ?? null,
         };
       });
     },

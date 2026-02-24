@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import html2pdf from 'html2pdf.js';
 
 interface CatalogProduct {
   id: string;
@@ -50,6 +51,24 @@ const formatPrice = (price: number): string => {
   return `$${price.toFixed(2)}`;
 };
 
+// Helper: Convert image URL to base64 data URL
+const imageToBase64 = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url, { mode: 'cors' });
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error converting image to base64:', error);
+    // Return placeholder if conversion fails
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ddd" width="400" height="400"/%3E%3C/svg%3E';
+  }
+};
+
 // Generate Interactive PDF Catalog - Ultra-Minimalist Design
 // ONLY includes: Main Image, Variant Thumbnails, Price, Buy Button
 // NO title, NO description as per design specs
@@ -60,27 +79,35 @@ export const generatePDFCatalog = async (options: PDFGeneratorOptions): Promise<
     ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-catalog-click`
     : null;
 
+  // Convert store logo to base64 if exists
+  const storeLogoBase64 = storeLogo ? await imageToBase64(storeLogo) : null;
+
   // Generate HTML content for PDF
   let productsHtml = '';
   
-  for (const product of products) {
+  for (let i = 0; i < products.length; i++) {
+    const product = products[i];
     const mainImage = product.images[0] || '/placeholder.svg';
     const productLink = getProductLink(product, storeSlug);
-    const qrUrl = showQR ? await generateQRCode(productLink, 80) : null;
+    // QR Code removed as per requirements
     
-    // Generate variant thumbnails HTML - circular mini thumbnails
+    // Convert main image to base64 for reliable PDF rendering
+    const mainImageBase64 = await imageToBase64(mainImage);
+    
+    // Generate variant thumbnails HTML - circular mini thumbnails with inline styles
     let variantThumbnails = '';
     if (product.variants && product.variants.length > 1) {
       variantThumbnails = `
-        <div class="variants-row">
+        <div class="variants-row" style="text-align: center; padding: 6px 8px; background: #ffffff; height: 36px; box-sizing: border-box;">
           ${product.variants.slice(0, 8).map((v, idx) => `
             <button class="variant-thumb ${idx === 0 ? 'active' : ''}" 
                     data-variant-idx="${idx}" 
                     data-variant-image="${v.image || mainImage}"
                     data-variant-id="${v.id}"
                     onclick="switchVariant(this, '${productLink}${v.id ? `?variant=${v.id}` : ''}')"
-                    title="${v.color || v.size || 'Variante'}">
-              <img src="${v.image || mainImage}" alt="" />
+                    title="${v.color || v.size || 'Variante'}"
+                    style="display: inline-block; width: 24px; height: 24px; border-radius: 50%; border: 2px solid ${idx === 0 ? primaryColor : 'transparent'}; padding: 0; overflow: hidden; background: none; cursor: pointer; margin: 0 2px; vertical-align: middle;">
+              <img src="${v.image || mainImage}" alt="" width="24" height="24" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
             </button>
           `).join('')}
         </div>
@@ -92,22 +119,21 @@ export const generatePDFCatalog = async (options: PDFGeneratorOptions): Promise<
       ? `<img src="${trackingBaseUrl}?sid=${storeId}&pid=${product.id}&src=pdf_catalog" width="1" height="1" style="position:absolute;opacity:0;" />`
       : '';
 
-    // Ultra-minimalist product card: Image + Variants + Price + Buy Button ONLY
+    // Check if this is the 6th product (end of page) for page break
+    const pageBreakStyle = (i + 1) % 6 === 0 && i < products.length - 1 ? ' page-break-after: always;' : '';
+
+    // Ultra-minimalist product card: Image + Price Badge with border
     productsHtml += `
-      <div class="product-card" data-product-id="${product.id}">
+      <div class="product-card" data-product-id="${product.id}" style="float: left; width: 373px; height: 310px; margin: 0 6px 12px 6px; background: #ffffff; border: 3px solid #071d7f; border-radius: 8px; overflow: hidden; box-sizing: border-box; page-break-inside: avoid;${pageBreakStyle}">
         ${trackingPixel}
-        <a href="${productLink}" class="image-link" target="_blank">
-          <div class="product-image-container">
-            <img class="main-image" src="${mainImage}" alt="" />
+        <a href="${productLink}" class="image-link" target="_blank" style="display: block; text-decoration: none; padding: 10px 10px 6px 10px;">
+          <div class="product-image-container" style="width: 180px; height: 180px; margin: 0 auto; background: #f0f0f0; border-radius: 8px; overflow: hidden;">
+            <img class="main-image" src="${mainImageBase64}" alt="${product.nombre}" width="180" height="180" style="width: 180px; height: 180px; object-fit: cover; display: block;" crossorigin="anonymous" />
           </div>
         </a>
         ${variantThumbnails}
-        <div class="product-footer">
-          <div class="price-qr-row">
-            <span class="product-price">${formatPrice(product.precio_venta)}</span>
-            ${qrUrl ? `<img src="${qrUrl}" alt="" class="mini-qr" />` : ''}
-          </div>
-          <a href="${productLink}" class="buy-button" target="_blank">COMPRAR</a>
+        <div class="product-footer" style="padding: 10px 8px; background: #ffffff; text-align: center; height: 60px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;">
+          <div class="product-price" style="padding: 8px 16px; background: #071d7f; color: #ffffff; font-size: 20px; font-weight: 800; border-radius: 24px; letter-spacing: -0.3px; text-align: center; white-space: nowrap;">${formatPrice(product.precio_venta)}</div>
         </div>
       </div>
     `;
@@ -128,99 +154,140 @@ export const generatePDFCatalog = async (options: PDFGeneratorOptions): Promise<
           font-family: 'Inter', sans-serif;
           background: #ffffff;
           color: #0a0a0a;
+          padding: 0;
+          margin: 0;
+          width: 794px;
+          max-width: 794px;
         }
         
         .catalog-header {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 16px;
-          padding: 24px 20px;
-          border-bottom: 1px solid #e5e5e5;
+          display: block;
+          text-align: center;
+          padding: 16px 10px;
+          border-bottom: 4px solid #071d7f;
+          background: #f5f5f5;
+          height: 80px;
+          box-sizing: border-box;
+          margin-bottom: 0;
         }
         
         .store-logo {
-          width: 48px;
-          height: 48px;
+          display: inline-block;
+          width: 42px;
+          height: 42px;
           border-radius: 50%;
           object-fit: cover;
+          vertical-align: middle;
+          margin-right: 10px;
         }
         
         .store-name {
+          display: inline-block;
           font-size: 24px;
-          font-weight: 800;
+          font-weight: 900;
           letter-spacing: -0.5px;
+          color: #071d7f;
+          vertical-align: middle;
+          text-transform: uppercase;
         }
         
         .products-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 16px;
-          padding: 20px;
-          max-width: 1100px;
-          margin: 0 auto;
+          width: 794px;
+          padding: 20px 0 12px 0;
+          box-sizing: border-box;
+        }
+        
+        .products-grid::after {
+          content: "";
+          display: block;
+          clear: both;
         }
         
         .product-card {
-          background: #fafafa;
-          border-radius: 12px;
+          float: left;
+          width: 373px;
+          height: 310px;
+          margin: 0 6px 12px 6px;
+          background: #ffffff;
+          border: 3px solid #071d7f;
+          border-radius: 8px;
           overflow: hidden;
           position: relative;
-          transition: transform 0.2s, box-shadow 0.2s;
+          page-break-inside: avoid;
+          break-inside: avoid;
+          box-sizing: border-box;
         }
         
-        .product-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        .product-card:nth-child(2n+1) {
+          margin-left: 12px;
+        }
+        
+        .product-card:nth-child(2n) {
+          margin-right: 12px;
+        }
+        
+        /* Force page break after every 6 products (3 rows × 2 cols) */
+        .product-card:nth-child(6n) {
+          page-break-after: always;
+          break-after: page;
         }
         
         .image-link {
           display: block;
           text-decoration: none;
+          width: 100%;
+          padding: 10px 10px 6px 10px;
+          box-sizing: border-box;
         }
         
         .product-image-container {
-          aspect-ratio: 1;
+          width: 180px;
+          height: 180px;
+          max-width: 180px;
+          max-height: 180px;
           overflow: hidden;
           background: #f0f0f0;
+          margin: 0 auto;
+          border-radius: 8px;
         }
         
         .main-image {
-          width: 100%;
-          height: 100%;
+          width: 180px !important;
+          height: 180px !important;
+          max-width: 180px !important;
+          max-height: 180px !important;
+          min-width: 180px !important;
+          min-height: 180px !important;
           object-fit: cover;
-          transition: opacity 0.2s ease;
+          display: block;
         }
         
         /* Variant Thumbnails - Circular mini swatches */
         .variants-row {
-          display: flex;
-          gap: 6px;
-          padding: 10px 12px;
+          display: block;
+          text-align: center;
+          padding: 6px 8px;
           background: #ffffff;
-          justify-content: center;
-          flex-wrap: wrap;
+          height: 36px;
+          box-sizing: border-box;
         }
         
         .variant-thumb {
-          width: 32px;
-          height: 32px;
+          display: inline-block;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
           border: 2px solid transparent;
           padding: 0;
-          cursor: pointer;
           overflow: hidden;
           background: none;
-          transition: all 0.15s ease;
-        }
-        
-        .variant-thumb:hover {
-          transform: scale(1.1);
+          cursor: pointer;
+          margin: 0 2px;
+          vertical-align: middle;
         }
         
         .variant-thumb.active {
           border-color: ${primaryColor};
-          box-shadow: 0 0 0 2px ${primaryColor}33;
         }
         
         .variant-thumb img {
@@ -230,63 +297,89 @@ export const generatePDFCatalog = async (options: PDFGeneratorOptions): Promise<
           border-radius: 50%;
         }
         
-        /* Footer: Price + QR + Buy Button */
+        /* Footer: Price Badge */
         .product-footer {
-          padding: 12px;
+          padding: 10px 8px;
           background: #ffffff;
-        }
-        
-        .price-qr-row {
+          text-align: center;
+          height: 60px;
+          box-sizing: border-box;
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          margin-bottom: 10px;
+          justify-content: center;
         }
         
         .product-price {
-          font-size: 28px;
+          padding: 8px 16px;
+          background: #071d7f;
+          color: #ffffff;
+          font-size: 20px;
           font-weight: 800;
-          color: ${primaryColor};
-          letter-spacing: -1px;
-        }
-        
-        .mini-qr {
-          width: 48px;
-          height: 48px;
-          border-radius: 6px;
-        }
-        
-        .buy-button {
-          display: block;
-          width: 100%;
+          border-radius: 24px;
+          letter-spacing: -0.3px;
           text-align: center;
-          padding: 12px;
-          background: ${primaryColor};
-          color: white;
-          text-decoration: none;
-          font-weight: 700;
-          font-size: 14px;
-          letter-spacing: 0.5px;
-          border-radius: 8px;
-          transition: background 0.2s, transform 0.1s;
-        }
-        
-        .buy-button:hover {
-          background: ${primaryColor}dd;
-          transform: scale(1.02);
-        }
-        
-        .buy-button:active {
-          transform: scale(0.98);
+          white-space: nowrap;
         }
         
         @media print {
-          .product-card { break-inside: avoid; page-break-inside: avoid; }
-          .buy-button { background: ${primaryColor} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .product-price { color: ${primaryColor} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body {
+            width: 794px !important;
+          }
+          .products-grid {
+            width: 794px !important;
+          }
+          .products-grid::after {
+            content: "" !important;
+            display: block !important;
+            clear: both !important;
+          }
+          .product-card { 
+            float: left !important;
+            break-inside: avoid !important; 
+            page-break-inside: avoid !important;
+            -webkit-column-break-inside: avoid !important;
+            width: 373px !important;
+            height: 310px !important;
+            border: 3px solid #071d7f !important;
+            background: #ffffff !important;
+          }
+          .product-footer {
+            padding: 10px 8px !important;
+            text-align: center !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          
+          .product-price { 
+            background: #071d7f !important;
+            color: #ffffff !important;
+            padding: 8px 16px !important;
+            text-align: center !important;
+            white-space: nowrap !important;
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+            color-adjust: exact;
+          }
+          .catalog-header {
+            background: #f5f5f5 !important;
+            border-bottom: 4px solid #071d7f !important;
+            height: 80px !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+          }
+          .store-name {
+            color: #071d7f !important;
+            font-size: 24px !important;
+            font-weight: 900 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
         }
         
         @page {
+          size: A4;
           margin: 0.5cm;
         }
       </style>
@@ -295,7 +388,6 @@ export const generatePDFCatalog = async (options: PDFGeneratorOptions): Promise<
           const card = thumb.closest('.product-card');
           const mainImg = card.querySelector('.main-image');
           const imageLink = card.querySelector('.image-link');
-          const buyButton = card.querySelector('.buy-button');
           const newSrc = thumb.dataset.variantImage;
           
           // Update active state
@@ -309,20 +401,20 @@ export const generatePDFCatalog = async (options: PDFGeneratorOptions): Promise<
             mainImg.style.opacity = '1';
           }, 100);
           
-          // Update links to include variant
+          // Update link to include variant
           imageLink.href = link;
-          buyButton.href = link;
         }
       </script>
     </head>
     <body>
-      <header class="catalog-header">
-        ${storeLogo ? `<img src="${storeLogo}" alt="" class="store-logo" />` : ''}
-        <h1 class="store-name">${storeName}</h1>
+      <header class="catalog-header" style="display: block; text-align: center; padding: 16px 10px; border-bottom: 4px solid #071d7f; background: #f5f5f5; height: 80px; box-sizing: border-box; margin-bottom: 0;">
+        ${storeLogoBase64 ? `<img src="${storeLogoBase64}" alt="${storeName}" class="store-logo" width="42" height="42" style="display: inline-block; width: 42px; height: 42px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 10px;" crossorigin="anonymous" />` : ''}
+        <span class="store-name" style="display: inline-block; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #071d7f; vertical-align: middle; text-transform: uppercase;">${storeName}</span>
       </header>
       
-      <main class="products-grid">
+      <main class="products-grid" style="width: 794px; padding: 20px 0 12px 0; box-sizing: border-box;">
         ${productsHtml}
+        <div style="clear: both;"></div>
       </main>
     </body>
     </html>
@@ -333,15 +425,237 @@ export const generatePDFCatalog = async (options: PDFGeneratorOptions): Promise<
 
 // Open PDF catalog in new window for printing
 export const openPDFCatalog = async (options: PDFGeneratorOptions) => {
-  const htmlContent = await generatePDFCatalog(options);
-  
+  // Open window BEFORE any await — browsers block window.open after async gaps
   const printWindow = window.open('', '_blank');
+
+  const htmlContent = await generatePDFCatalog(options);
+
   if (printWindow) {
     printWindow.document.write(htmlContent);
     printWindow.document.close();
   }
   
   return htmlContent;
+};
+
+// Generate PDF file (Blob) from HTML for storage upload
+export const generatePDFBlob = async (options: PDFGeneratorOptions): Promise<{ pdfBlob: Blob; htmlContent: string }> => {
+  const htmlContent = await generatePDFCatalog(options);
+  
+  // Create an iframe to properly load the HTML content
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.top = '0';
+  iframe.style.left = '0';
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.zIndex = '9999';
+  iframe.style.border = 'none';
+  iframe.style.backgroundColor = '#ffffff';
+  
+  document.body.appendChild(iframe);
+
+  try {
+    // Load HTML into iframe
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) throw new Error('Cannot access iframe document');
+    
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+    
+    // Wait for all images to load
+    const images = Array.from(iframeDoc.querySelectorAll('img'));
+    await Promise.all(
+      images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = () => resolve(null);
+          img.onerror = () => resolve(null);
+          setTimeout(() => resolve(null), 5000);
+        });
+      })
+    );
+    
+    // Additional wait to ensure rendering
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Configure html2pdf options optimized for images
+    const opt = {
+      margin: [0.5, 0.5, 0.5, 0.5],
+      filename: `${options.storeName}_catalog.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        letterRendering: true,
+        imageTimeout: 0,
+        backgroundColor: '#ffffff',
+        width: 794,
+        windowWidth: 794,
+        onclone: (clonedDoc: Document) => {
+          // Ensure floats are preserved in cloned document
+          const cards = clonedDoc.querySelectorAll('.product-card');
+          cards.forEach((card: Element) => {
+            (card as HTMLElement).style.float = 'left';
+            (card as HTMLElement).style.display = 'block';
+          });
+          
+          // Force flexbox centering on footers for proper PDF rendering
+          const footers = clonedDoc.querySelectorAll('.product-footer');
+          footers.forEach((footer: Element) => {
+            (footer as HTMLElement).style.display = 'flex';
+            (footer as HTMLElement).style.alignItems = 'center';
+            (footer as HTMLElement).style.justifyContent = 'center';
+            (footer as HTMLElement).style.textAlign = 'center';
+          });
+          
+          // Force text centering on price badges
+          const prices = clonedDoc.querySelectorAll('.product-price');
+          prices.forEach((price: Element) => {
+            (price as HTMLElement).style.textAlign = 'center';
+            (price as HTMLElement).style.display = 'block';
+          });
+        }
+      },
+      jsPDF: { 
+        unit: 'cm', 
+        format: 'a4', 
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    // Use the iframe's body
+    const bodyElement = iframeDoc.body;
+
+    // Generate PDF and get the blob
+    const pdfBlob = await html2pdf()
+      .set(opt)
+      .from(bodyElement)
+      .output('blob');
+
+    return { pdfBlob, htmlContent };
+  } finally {
+    // Clean up
+    document.body.removeChild(iframe);
+  }
+};
+
+// Generate PDF catalog, download it, AND return blob for storage upload
+export const generateAndDownloadPDFCatalog = async (options: PDFGeneratorOptions): Promise<{ pdfBlob: Blob; htmlContent: string }> => {
+  const htmlContent = await generatePDFCatalog(options);
+  
+  // Create an iframe to properly load the HTML content
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.top = '0';
+  iframe.style.left = '0';
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.zIndex = '9999';
+  iframe.style.border = 'none';
+  iframe.style.backgroundColor = '#ffffff';
+  
+  document.body.appendChild(iframe);
+
+  try {
+    // Load HTML into iframe
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) throw new Error('Cannot access iframe document');
+    
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+    
+    // Wait for all images to load
+    const images = Array.from(iframeDoc.querySelectorAll('img'));
+    await Promise.all(
+      images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = () => resolve(null);
+          img.onerror = () => resolve(null); // Continue even if image fails
+          // Fallback timeout per image
+          setTimeout(() => resolve(null), 5000);
+        });
+      })
+    );
+    
+    // Additional wait to ensure rendering
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    console.log('[PDF] All images loaded, generating PDF...');
+    
+    const opt = {
+      margin: [0.5, 0.5, 0.5, 0.5],
+      filename: `${options.storeName}_catalog.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        letterRendering: true,
+        imageTimeout: 0,
+        backgroundColor: '#ffffff',
+        width: 794,
+        windowWidth: 794,
+        onclone: (clonedDoc: Document) => {
+          // Ensure floats are preserved in cloned document
+          const cards = clonedDoc.querySelectorAll('.product-card');
+          cards.forEach((card: Element) => {
+            (card as HTMLElement).style.float = 'left';
+            (card as HTMLElement).style.display = 'block';
+          });
+          
+          // Force flexbox centering on footers for proper PDF rendering
+          const footers = clonedDoc.querySelectorAll('.product-footer');
+          footers.forEach((footer: Element) => {
+            (footer as HTMLElement).style.display = 'flex';
+            (footer as HTMLElement).style.alignItems = 'center';
+            (footer as HTMLElement).style.justifyContent = 'center';
+            (footer as HTMLElement).style.textAlign = 'center';
+          });
+          
+          // Force text centering on price badges
+          const prices = clonedDoc.querySelectorAll('.product-price');
+          prices.forEach((price: Element) => {
+            (price as HTMLElement).style.textAlign = 'center';
+            (price as HTMLElement).style.display = 'block';
+          });
+        }
+      },
+      jsPDF: { 
+        unit: 'cm', 
+        format: 'a4', 
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    // Use the iframe's body for PDF generation
+    const bodyElement = iframeDoc.body;
+
+    // Generate PDF, save it, and get blob
+    const worker = html2pdf().set(opt).from(bodyElement);
+    
+    // Download the PDF
+    await worker.save();
+    
+    // Also get the blob for storage upload
+    const pdfBlob = await worker.output('blob');
+
+    console.log('[PDF] PDF generated successfully, size:', pdfBlob.size);
+
+    return { pdfBlob, htmlContent };
+  } finally {
+    document.body.removeChild(iframe);
+  }
 };
 
 // Generate WhatsApp Status image (9:16 aspect ratio)

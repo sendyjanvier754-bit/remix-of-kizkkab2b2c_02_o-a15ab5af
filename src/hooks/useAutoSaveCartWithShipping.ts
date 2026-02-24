@@ -43,13 +43,17 @@ export function useAutoSaveCartWithShipping(
   const [isSaving, setIsSaving] = useState(false);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
   const [shippingCost, setShippingCost] = useState<ShippingCost | null>(null);
+  // TICKET #18: tier guardado en DB, para restaurar al recargar página
+  const [savedShippingTypeId, setSavedShippingTypeId] = useState<string | null>(null);
   
   // Queue de updates pendientes
   const updateQueue = useRef<Record<string, number>>({});
   const saveTimeout = useRef<NodeJS.Timeout | null>(null);
+  // TICKET #18: evitar el UPDATE al cargar la primera vez (solo cuando el user cambia el tier)
+  const isInitializedRef = useRef(false);
 
   // ============================================================================
-  // PASO 1: Obtener o crear carrito
+  // PASO 1: Obtener o crear carrito (+ leer tier guardado)
   // ============================================================================
   
   useEffect(() => {
@@ -62,7 +66,7 @@ export function useAutoSaveCartWithShipping(
       try {
         const { data, error } = await supabase
           .from('b2b_carts')
-          .select('id')
+          .select('id, selected_shipping_tier_id')
           .eq('buyer_user_id', user.id)
           .eq('status', 'open')
           .maybeSingle();
@@ -71,17 +75,22 @@ export function useAutoSaveCartWithShipping(
 
         if (data) {
           setCartId(data.id);
+          // TICKET #18: restaurar tier guardado
+          if (data.selected_shipping_tier_id) {
+            setSavedShippingTypeId(data.selected_shipping_tier_id);
+          }
         } else {
           // Crear nuevo carrito
           const { data: newCart, error: createError } = await supabase
             .from('b2b_carts')
             .insert({ buyer_user_id: user.id, status: 'open' })
-            .select('id')
+            .select('id, selected_shipping_tier_id')
             .single();
 
           if (createError) throw createError;
           setCartId(newCart.id);
         }
+        isInitializedRef.current = true;
       } catch (err) {
         console.error('Error initializing cart:', err);
       } finally {
@@ -132,6 +141,23 @@ export function useAutoSaveCartWithShipping(
       calculateShippingCost();
     }
   }, [cartId, calculateShippingCost]);
+
+  // TICKET #18: persistir el tier seleccionado en b2b_carts cuando cambia
+  useEffect(() => {
+    if (!cartId || !isInitializedRef.current) return;
+    // No persistir null → solo guardar cuando hay un tier real seleccionado
+    if (!selectedShippingTypeId) return;
+
+    supabase
+      .from('b2b_carts')
+      .update({ selected_shipping_tier_id: selectedShippingTypeId })
+      .eq('id', cartId)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Error persisting selected tier:', error);
+        }
+      });
+  }, [cartId, selectedShippingTypeId]);
 
   // ============================================================================
   // PASO 3: Guardar cambios en DB (debounced)
@@ -289,6 +315,8 @@ export function useAutoSaveCartWithShipping(
     isSaving,
     isCalculatingShipping,
     shippingCost,
+    // TICKET #18: tier guardado en DB para restaurar al init
+    savedShippingTypeId,
     updateQuantity,
     forceSave,
     refetchShipping: calculateShippingCost

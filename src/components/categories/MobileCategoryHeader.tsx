@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail, Camera, Search, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Category } from "@/hooks/useCategories";
+import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/auth";
 
 interface MobileCategoryHeaderProps {
   categories: Category[];
@@ -17,6 +19,8 @@ const MobileCategoryHeader = ({
 }: MobileCategoryHeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { role } = useAuth();
+  const favoritesLink = (role === UserRole.SELLER || role === UserRole.ADMIN) ? "/seller/favoritos" : "/favoritos";
   const tabsRef = useRef<HTMLDivElement>(null);
 
   // Get root categories (no parent)
@@ -62,7 +66,7 @@ const MobileCategoryHeader = ({
         </div>
 
         {/* Favorites heart */}
-        <Link to="/favoritos" className="relative flex-shrink-0">
+        <Link to={favoritesLink} className="relative flex-shrink-0">
           <Heart className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
           <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#071d7f] rounded-full border-2 border-white" />
         </Link>
