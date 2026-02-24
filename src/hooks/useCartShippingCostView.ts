@@ -35,12 +35,15 @@ export const useCartShippingCostView = (
   selectedItems?: Array<{ id: string; cantidad: number }>, // DEPRECATED
   shippingTypeId?: string | null
 ) => {
-  // Convertir Set a Array de UUIDs
-  const itemIdsArray = selectedItemIds ? Array.from(selectedItemIds) : [];
+  // Convertir Set a Array de UUIDs y ordenar una sola vez
+  const itemIdsArray = useMemo(() => {
+    if (!selectedItemIds || selectedItemIds.size === 0) return [];
+    return Array.from(selectedItemIds).sort();
+  }, [selectedItemIds]);
 
   // queryKey simplificado - solo IDs y tier (la BD tiene las cantidades actualizadas)
   const queryKey = useMemo(() => 
-    ['cart-shipping-cost-selected', itemIdsArray.sort(), shippingTypeId],
+    ['cart-shipping-cost-selected', itemIdsArray.join(','), shippingTypeId],
     [itemIdsArray, shippingTypeId]
   );
 
