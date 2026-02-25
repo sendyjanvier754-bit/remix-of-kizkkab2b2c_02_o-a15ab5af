@@ -16,6 +16,8 @@ export interface Address {
   country: string;
   is_default: boolean;
   notes: string | null;
+  department_id: string | null;
+  commune_id: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -176,7 +176,7 @@ export const ShippingTypeSelector: React.FC<ShippingTypeSelectorProps> = ({
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-[10002]">
+                <SelectContent>
                   {shippingTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       <div className="flex items-center gap-2">

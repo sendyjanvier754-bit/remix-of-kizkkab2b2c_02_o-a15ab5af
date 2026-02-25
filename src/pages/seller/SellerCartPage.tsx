@@ -162,12 +162,6 @@ const SellerCartPage = () => {
     [items, b2bSelectedIds]
   );
 
-  // Memoize selected item IDs array to prevent unnecessary re-renders
-  const selectedItemIdsArray = useMemo(() => 
-    Array.from(b2bSelectedIds), 
-    [b2bSelectedIds]
-  );
-
   // ✅ NUEVO: Auto-save cart con shipping calculation 100% desde DB
   const {
     shippingCost: autoSaveShippingCost,
@@ -1119,7 +1113,7 @@ const SellerCartPage = () => {
                         {/* Selector de tipo de envío */}
                         <div className="pt-2 border-t border-blue-200">
                           <ShippingTypeSelector
-                            itemIds={selectedItemIdsArray}
+                            itemIds={Array.from(b2bSelectedIds)}
                             countryId={cartCountryId}
                             onShippingTypeChange={(typeId, summary) => {
                               console.log('📬 SellerCartPage received shipping change:', {
@@ -1135,6 +1129,26 @@ const SellerCartPage = () => {
                         </div>
                       </div>
                     )}
+
+                    {/* Delivery Time Estimate */}
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-amber-600 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Tiempo de Entrega:
+                      </span>
+                      <span className="font-semibold text-amber-600">
+                        {cartLogistics.estimatedDeliveryDays.min}-{cartLogistics.estimatedDeliveryDays.max} días
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-600">Promociones:</span>
+                      <span className="font-semibold text-red-600">—</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-600">Cupón:</span>
+                      <span className="font-semibold text-blue-600">—</span>
+                    </div>
                   </div>
 
                   {/* Total Price */}
@@ -1186,6 +1200,17 @@ const SellerCartPage = () => {
                         <TrendingUp className="w-4 h-4" />
                         Ver Precios de Venta Sugeridos
                       </button>
+                      
+                      {consolidatedBusinessPanelData && consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity > 0 && (
+                        <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
+                          <p className="text-blue-900">
+                            <span className="font-semibold">Costo de logística incluido:</span> ${(consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity).toFixed(2)}
+                          </p>
+                          <p className="text-blue-700 mt-1">
+                            Tu ganancia neta: <span className="font-bold text-green-700">${(consolidatedBusinessPanelData.profit_1unit * totalQuantity).toFixed(2)}</span>
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1702,36 +1727,17 @@ const SellerCartPage = () => {
 
       {/* Order Summary Bottom Sheet for Mobile - Pure CSS, no Vaul */}
       {showOrderSummaryDrawer && (
-        <div className="fixed inset-0 z-[10000]" aria-modal="true" role="dialog" style={{ contain: 'layout style paint' }}>
+        <div className="fixed inset-0 z-[10000]" aria-modal="true" role="dialog">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/80"
             onClick={() => setShowOrderSummaryDrawer(false)}
-            style={{ touchAction: 'none' }}
           />
           {/* Sheet */}
-          <div 
-            className="fixed bottom-0 left-0 right-0 flex flex-col rounded-t-[10px] border bg-background z-[10001] shadow-2xl"
-            style={{ 
-              height: 'min(85vh, 700px)',
-              paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)',
-              contain: 'layout style paint size',
-              willChange: 'contents',
-              transform: 'translate3d(0, 0, 0)'
-            }}
-          >
-            {/* Drag handle visual + Close button */}
-            <div className="flex justify-between items-center pt-3 pb-1 px-4 flex-shrink-0">
-              <div className="flex-1 flex justify-center">
-                <div className="h-1.5 w-12 rounded-full bg-muted" />
-              </div>
-              <button
-                onClick={() => setShowOrderSummaryDrawer(false)}
-                className="text-gray-400 hover:text-gray-600 transition -mr-2"
-                aria-label="Cerrar"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          <div className="absolute inset-x-0 bottom-0 h-[88vh] flex flex-col rounded-t-[10px] border bg-background z-[10001]">
+            {/* Drag handle visual */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="h-1.5 w-12 rounded-full bg-muted" />
             </div>
             {/* Header */}
             <div className="grid gap-1.5 px-4 pb-3 text-center sm:text-left border-b flex-shrink-0">
@@ -1741,16 +1747,8 @@ const SellerCartPage = () => {
               </p>
             </div>
 
-            <div 
-              className="flex-1 overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent" 
-              style={{ 
-                touchAction: 'pan-y', 
-                WebkitOverflowScrolling: 'touch',
-                contain: 'strict',
-                backfaceVisibility: 'hidden'
-              }}
-            >
-            <div className="space-y-3 py-4 px-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-4" style={{ touchAction: 'pan-y', overscrollBehavior: 'none' }}>
+            <div className="space-y-3 py-4">
               {/* Pricing Details */}
               <div className="space-y-2 pb-3 border-b border-gray-200">
                 <div className="flex justify-between items-center text-xs">
@@ -1796,7 +1794,7 @@ const SellerCartPage = () => {
                     {/* Selector de tipo de envío */}
                     <div className="pt-2 border-t border-blue-200">
                       <ShippingTypeSelector
-                        itemIds={selectedItemIdsArray}
+                        cartItems={cartItemsForShipping}
                         countryId={cartCountryId}
                         onShippingTypeChange={(typeId, summary) => {
                           setSelectedShippingTypeId(typeId);
@@ -1807,6 +1805,26 @@ const SellerCartPage = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Delivery Time Estimate */}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-amber-600 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Tiempo de Entrega:
+                  </span>
+                  <span className="font-semibold text-amber-600">
+                    {cartLogistics.estimatedDeliveryDays.min}-{cartLogistics.estimatedDeliveryDays.max} días
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-600">Promociones:</span>
+                  <span className="font-semibold text-red-600">—</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-600">Cupón:</span>
+                  <span className="font-semibold text-blue-600">—</span>
+                </div>
               </div>
 
               {/* Total Price */}
@@ -1861,6 +1879,17 @@ const SellerCartPage = () => {
                     <TrendingUp className="w-4 h-4" />
                     Ver Precios de Venta Sugeridos
                   </button>
+                  
+                  {consolidatedBusinessPanelData && consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity > 0 && (
+                    <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
+                      <p className="text-blue-900">
+                        <span className="font-semibold">Costo de logística incluido:</span> ${(consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity).toFixed(2)}
+                      </p>
+                      <p className="text-blue-700 mt-1">
+                        Tu ganancia neta: <span className="font-bold text-green-700">${(consolidatedBusinessPanelData.profit_1unit * totalQuantity).toFixed(2)}</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1913,7 +1942,7 @@ const SellerCartPage = () => {
               </div>
 
               {/* Checkout Buttons */}
-              <div className="space-y-2 pb-8">
+              <div className="space-y-2 pb-4">
                 {!isCartValid && (
                   <div className="text-xs text-amber-600 text-center bg-amber-50 p-2 rounded-lg border border-amber-200">
                     <AlertTriangle className="w-3 h-3 inline mr-1" />

@@ -6,6 +6,7 @@ import { useCartSelectionStore } from '@/stores/useCartSelectionStore';
 import { useKYC } from '@/hooks/useKYC';
 import { useSellerCredits } from '@/hooks/useSellerCredits';
 import { useAddresses, Address } from '@/hooks/useAddresses';
+import { useSavedPickupPoints } from '@/hooks/useSavedPickupPoints';
 import { usePickupPoints, usePickupPointsByCommune } from '@/hooks/usePickupPoints';
 import { useCompleteB2BCart } from '@/hooks/useBuyerOrders';
 import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
@@ -78,6 +79,7 @@ const SellerCheckout = () => {
   const { isVerified } = useKYC();
   const { credit, availableCredit, hasActiveCredit, calculateMaxCreditForCart } = useSellerCredits();
   const { addresses, isLoading: addressesLoading, createAddress, updateAddress } = useAddresses();
+  const { savedPoints, isLoading: savedPointsLoading, createSavedPoint } = useSavedPickupPoints();
   const { pickupPoints, isLoading: pickupPointsLoading } = usePickupPoints();
   const completeCart = useCompleteB2BCart();
   const { methods: adminPaymentMethods, isLoading: paymentMethodsLoading } = useAdminPaymentMethods();
@@ -118,6 +120,7 @@ const SellerCheckout = () => {
   const [expandedAddressId, setExpandedAddressId] = useState<string | null>(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
   const [expandedPickupId, setExpandedPickupId] = useState<string | null>(null);
+  const [savePickupAsAddress, setSavePickupAsAddress] = useState(false);
 
   // B2B Shipping tier selection
   const [selectedTier, setSelectedTier] = useState<string>('standard');
@@ -276,7 +279,7 @@ const SellerCheckout = () => {
         nombre: item.name,
         cantidad: item.cantidad,
         precio_unitario: item.precioB2B,
-        subtotal: item.subtotal,
+        precio_total: item.subtotal,  // La columna se llama precio_total, no subtotal
       }));
 
       const { error: itemsError } = await supabase
@@ -349,11 +352,19 @@ const SellerCheckout = () => {
   const communePickupPoints = communePickupPointsQuery.data || [];
 
   // When user selects a saved address, auto-restore its dept/commune
-  // Single-effect approach: always use allCommunes (no two-step pending ref)
+  // TICKET #25: Prioritize department_id/commune_id if saved, fallback to city name matching
   useEffect(() => {
     if (!selectedAddressId) return;
     const addr = addresses.find(a => a.id === selectedAddressId);
     if (!addr) return;
+
+    console.log('🔍 [CHECKOUT DEBUG] Dirección seleccionada:', {
+      id: addr.id,
+      label: addr.label,
+      city: addr.city,
+      department_id: addr.department_id,
+      commune_id: addr.commune_id
+    });
 
     // Wait until allCommunes query finishes loading
     if (allCommunesQuery.isLoading) {
@@ -363,6 +374,20 @@ const SellerCheckout = () => {
 
     setIsRestoringCommune(true);
 
+    // 🎯 PRIORITY 1: Use saved department_id and commune_id if they exist
+    if (addr.department_id && addr.commune_id) {
+      console.log('✅ [CHECKOUT DEBUG] Usando dept/commune guardados:', {
+        department_id: addr.department_id,
+        commune_id: addr.commune_id
+      });
+      setSelectedDept(addr.department_id);
+      setSelectedComm(addr.commune_id);
+      setIsRestoringCommune(false);
+      return;
+    }
+
+    // 🔄 FALLBACK: Try to match by city name (legacy addresses without dept/commune saved)
+    console.log('⚠️ [CHECKOUT DEBUG] Dirección sin dept/commune guardados, intentando match por city');
     const cityLower = addr.city?.toLowerCase();
 
     // 1️⃣ Find commune directly in allCommunes by city name (case-insensitive)
@@ -371,10 +396,15 @@ const SellerCheckout = () => {
       : undefined;
 
     if (comm) {
+      console.log('✅ [CHECKOUT DEBUG] Commune encontrada por city match:', {
+        commune_id: comm.id,
+        commune_name: comm.name
+      });
       const commDept = departments.find(d => d.id === comm.department_id);
       if (commDept) setSelectedDept(commDept.id);
       setSelectedComm(comm.id);
     } else {
+      console.log('❌ [CHECKOUT DEBUG] No se pudo encontrar commune, dirección incompleta');
       // 2️⃣ No commune match — at least set dept from addr.state if possible
       const dept = departments.find(d => d.name === addr.state);
       if (dept) setSelectedDept(dept.id);
@@ -522,6 +552,8 @@ const SellerCheckout = () => {
     try {
       const result = await createAddress.mutateAsync({
         ...newAddress,
+        department_id: selectedDept || null,
+        commune_id: selectedComm || null,
         is_default: addresses.length === 0,
       });
       setSelectedAddressId(result.id);
@@ -542,6 +574,27 @@ const SellerCheckout = () => {
       setSelectedComm('');
     } catch (error) {
       console.error('Error creating address:', error);
+    }
+  };
+
+  // Handle saving pickup point as address (for reuse)
+  const handleSavePickupPoint = async (pickupPointId: string) => {
+    if (!user || !savePickupAsAddress) return;
+
+    const point = communePickupPoints.find(p => p.id === pickupPointId);
+    if (!point) return;
+
+    try {
+      await createSavedPoint.mutateAsync({
+        pickup_point_id: pickupPointId,
+        department_id: pickupDept || null,
+        commune_id: pickupComm || null,
+        label: point.name,
+        is_default: savedPoints.length === 0,
+      });
+    } catch (error) {
+      console.error('Error saving pickup point:', error);
+      // Error already handled by the mutation
     }
   };
 
@@ -639,6 +692,16 @@ const SellerCheckout = () => {
   }
 
   const handlePlaceOrder = async () => {
+    console.log('🚀 [CHECKOUT DEBUG] Iniciando handlePlaceOrder');
+    console.log('📍 [CHECKOUT DEBUG] Estado actual:', {
+      deliveryMethod,
+      selectedAddressId,
+      selectedDept,
+      selectedComm,
+      selectedPickupPoint,
+      paymentMethod
+    });
+
     // Validate form using centralized validation service
     const errors = validateB2BCheckout({
       items: items.map(item => ({ id: item.id, quantity: item.cantidad })),
@@ -651,16 +714,21 @@ const SellerCheckout = () => {
 
     // Validate local delivery commune (required when delivery is to address)
     if (deliveryMethod === 'address' && !selectedComm) {
-      toast.error('Completa la dirección: selecciona departamento y commune de entrega');
+      console.error('❌ [CHECKOUT DEBUG] Validación falló: falta selectedComm');
+      toast.error('⚠️ Falta información de entrega: Haz scroll hacia arriba, selecciona una dirección y elige el departamento y comuna de entrega');
+      // Scroll to top to show delivery section
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (errors.length > 0) {
+      console.error('❌ [CHECKOUT DEBUG] Errores de validación:', errors);
       setValidationErrors(errors);
       toast.error(errors[0].message);
       return;
     }
 
+    console.log('✅ [CHECKOUT DEBUG] Validación pasó correctamente');
     // Clear validation errors if all checks pass
     setValidationErrors([]);
 
@@ -679,6 +747,25 @@ const SellerCheckout = () => {
 
     try {
       // Create the order with the primary payment method and shipping address
+      console.log('📦 [CHECKOUT DEBUG] Preparando datos del pedido:', {
+        paymentMethod,
+        deliveryMethod,
+        shippingData: {
+          shippingTierId: selectedShippingTypeId,
+          shippingCostGlobalUsd: shippingCostAmount,
+          shippingCostLocalUsd: localCost,
+          shippingCostTotalUsd: shippingCostAmount + (localCost ?? 0),
+          localCommuneId: deliveryMethod === 'address' ? selectedComm : null,
+          localPickupPointId: deliveryMethod === 'pickup' ? selectedPickupPoint : null,
+        },
+        selectedAddress: selectedAddress ? {
+          id: selectedAddress.id,
+          city: selectedAddress.city,
+          department_id: selectedAddress.department_id,
+          commune_id: selectedAddress.commune_id
+        } : null
+      });
+
       const order = await createOrder(
         paymentMethod,
         selectedAddress ? {
@@ -790,8 +877,15 @@ const SellerCheckout = () => {
         // Don't fail the order if cart clearing fails
       }
     } catch (error) {
-      console.error('Error placing order:', error);
-      toast.error('Error al procesar el pedido');
+      console.error('❌ [CHECKOUT DEBUG] Error placing order:', error);
+      console.error('❌ [CHECKOUT DEBUG] Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      });
+      
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al procesar el pedido: ${errorMessage}`);
     } finally {
       setIsProcessing(false);
     }
@@ -936,6 +1030,33 @@ const SellerCheckout = () => {
                   </div>
                 </RadioGroup>
                 </div>
+
+                {/* Alert: Address selected but missing dept/commune */}
+                {deliveryMethod === 'address' && selectedAddress && !selectedComm && !isRestoringCommune && (
+                  <div className="mx-4 mb-4 p-4 bg-amber-50 border-2 border-amber-400 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-amber-900 text-sm mb-1">
+                          ⚠️ Información de entrega incompleta
+                        </p>
+                        <p className="text-sm text-amber-800 mb-3">
+                          La dirección seleccionada no tiene departamento y comuna guardados. 
+                          Por favor, selecciona la dirección de nuevo para completar esta información.
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-amber-600 text-amber-900 hover:bg-amber-100"
+                          onClick={() => setShowAddressModal(true)}
+                        >
+                          <MapPin className="h-3 w-3 mr-1" />
+                          Seleccionar departamento y comuna
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </Card>
 
               {/* Logistics / Shipping Type Selector */}
@@ -1806,30 +1927,65 @@ const SellerCheckout = () => {
                   <Button 
                     onClick={async () => {
                       try {
-                        if (editingAddressId) {
-                          await updateAddress.mutateAsync({ id: editingAddressId, ...newAddress });
+                        const isEditing = Boolean(editingAddressId);
+                        
+                        console.log('💾 [ADDRESS DEBUG] Guardando dirección:', {
+                          isEditing,
+                          addressId: editingAddressId,
+                          department_id: selectedDept,
+                          commune_id: selectedComm,
+                          newAddress
+                        });
+                        
+                        if (isEditing) {
+                          const updated = await updateAddress.mutateAsync({ 
+                            id: editingAddressId, 
+                            ...newAddress,
+                            department_id: selectedDept || null,
+                            commune_id: selectedComm || null,
+                          });
+                          console.log('✅ [ADDRESS DEBUG] Dirección actualizada:', updated);
                           setSelectedAddressId(editingAddressId);
                         } else {
-                          const address = await createAddress.mutateAsync(newAddress);
+                          const address = await createAddress.mutateAsync({
+                            ...newAddress,
+                            department_id: selectedDept || null,
+                            commune_id: selectedComm || null,
+                          });
+                          console.log('✅ [ADDRESS DEBUG] Dirección creada:', address);
                           setSelectedAddressId(address.id);
                         }
+                        
+                        console.log('📋 [ADDRESS DEBUG] Estado después de guardar:', {
+                          selectedDept,
+                          selectedComm,
+                          willClearStates: !isEditing
+                        });
+                        
                         setShowAddressModal(false);
                         setShowNewAddressForm(false);
                         setEditingAddressId(null);
-                        setNewAddress({
-                          full_name: '',
-                          street_address: '',
-                          city: '',
-                          state: '',
-                          postal_code: '',
-                          phone: '',
-                          country: 'Haití',
-                          label: 'Negocio',
-                          notes: '',
-                          is_default: false,
-                        });
+                        
+                        // Solo limpiar el formulario si NO es edición
+                        // Si es edición, mantener dept/comm para que el useEffect los use
+                        if (!isEditing) {
+                          setNewAddress({
+                            full_name: '',
+                            street_address: '',
+                            city: '',
+                            state: '',
+                            postal_code: '',
+                            phone: '',
+                            country: 'Haití',
+                            label: 'Negocio',
+                            notes: '',
+                            is_default: false,
+                          });
+                          setSelectedDept('');
+                          setSelectedComm('');
+                        }
                       } catch (error) {
-                        console.error('Error saving address:', error);
+                        console.error('❌ [ADDRESS DEBUG] Error saving address:', error);
                         toast.error('Error al guardar dirección');
                       }
                     }}
@@ -1858,6 +2014,55 @@ const SellerCheckout = () => {
             </DialogHeader>
 
             <div className="space-y-4 pt-1">
+              {/* Saved pickup points section */}
+              {savedPoints.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold flex items-center gap-1">
+                    <Store className="h-4 w-4 text-purple-600" />
+                    Mis Puntos Guardados
+                  </Label>
+                  <div className="space-y-2">
+                    {savedPoints.map((saved) => (
+                      <div
+                        key={saved.id}
+                        onClick={() => {
+                          setSelectedPickupPoint(saved.pickup_point_id);
+                          // Auto-fill commune for logistics cost calculation
+                          if (saved.commune_id) setSelectedComm(saved.commune_id);
+                          setShowPickupModal(false);
+                        }}
+                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          selectedPickupPoint === saved.pickup_point_id
+                            ? 'border-purple-600 bg-purple-50'
+                            : 'border-border hover:border-purple-400'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Store className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm">{saved.label}</p>
+                            {saved.pickup_point && (
+                              <>
+                                <p className="text-xs text-muted-foreground">{saved.pickup_point.name}</p>
+                                <p className="text-xs text-muted-foreground">{saved.pickup_point.city}</p>
+                              </>
+                            )}
+                          </div>
+                          {saved.is_default && (
+                            <Badge variant="secondary" className="text-xs flex-shrink-0">
+                              Predeterminado
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t pt-2">
+                    <p className="text-xs text-center text-muted-foreground">O busca otro punto abajo</p>
+                  </div>
+                </div>
+              )}
+
               {/* Country / Market selector */}
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
                 <Label className="text-xs font-semibold text-blue-800 flex items-center gap-1">
@@ -1953,47 +2158,78 @@ const SellerCheckout = () => {
                     <p className="text-sm text-muted-foreground">No hay puntos configurados en esta comuna</p>
                   </div>
                 ) : (
-                  <RadioGroup
-                    value={selectedPickupPoint || ''}
-                    onValueChange={(id) => {
-                      setSelectedPickupPoint(id);
-                      setShowPickupModal(false);
-                    }}
-                    className="space-y-2"
-                  >
-                    {communePickupPoints.map((point) => (
-                      <div
-                        key={point.id}
-                        onClick={() => { setSelectedPickupPoint(point.id); setShowPickupModal(false); }}
-                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex items-start gap-3 ${
-                          selectedPickupPoint === point.id
-                            ? 'border-[#071d7f] bg-[#071d7f]/5'
-                            : 'border-border hover:border-[#071d7f]'
-                        }`}
-                      >
-                        <RadioGroupItem
-                          value={point.id}
-                          id={`pickup-${point.id}`}
-                          className="mt-1 flex-shrink-0"
-                        />
-                        <div className="flex-1">
-                          <p className="font-semibold text-sm">{point.name}</p>
-                          {point.address && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{point.address}</p>
-                          )}
-                          {point.city && (
-                            <p className="text-xs text-muted-foreground">{point.city}</p>
-                          )}
-                          {point.phone && (
-                            <p className="text-xs text-muted-foreground">Tel: {point.phone}</p>
-                          )}
+                  <>
+                    {/* Checkbox to save pickup point */}
+                    <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <input
+                        type="checkbox"
+                        id="save-pickup"
+                        checked={savePickupAsAddress}
+                        onChange={(e) => setSavePickupAsAddress(e.target.checked)}
+                        className="rounded"
+                      />
+                      <Label htmlFor="save-pickup" className="text-sm font-medium cursor-pointer">
+                        Guardar este punto para futuros pedidos
+                      </Label>
+                    </div>
+
+                    <RadioGroup
+                      value={selectedPickupPoint || ''}
+                      onValueChange={async (id) => {
+                        setSelectedPickupPoint(id);
+                        // Set commune for logistics cost calculation
+                        if (pickupComm) setSelectedComm(pickupComm);
+                        if (savePickupAsAddress) {
+                          await handleSavePickupPoint(id);
+                        }
+                        setShowPickupModal(false);
+                        setSavePickupAsAddress(false);
+                      }}
+                      className="space-y-2"
+                    >
+                      {communePickupPoints.map((point) => (
+                        <div
+                          key={point.id}
+                          onClick={async () => {
+                            setSelectedPickupPoint(point.id);
+                            // Set commune for logistics cost calculation
+                            if (pickupComm) setSelectedComm(pickupComm);
+                            if (savePickupAsAddress) {
+                              await handleSavePickupPoint(point.id);
+                            }
+                            setShowPickupModal(false);
+                            setSavePickupAsAddress(false);
+                          }}
+                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex items-start gap-3 ${
+                            selectedPickupPoint === point.id
+                              ? 'border-[#071d7f] bg-[#071d7f]/5'
+                              : 'border-border hover:border-[#071d7f]'
+                          }`}
+                        >
+                          <RadioGroupItem
+                            value={point.id}
+                            id={`pickup-${point.id}`}
+                            className="mt-1 flex-shrink-0"
+                          />
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm">{point.name}</p>
+                            {point.address && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{point.address}</p>
+                            )}
+                            {point.city && (
+                              <p className="text-xs text-muted-foreground">{point.city}</p>
+                            )}
+                            {point.phone && (
+                              <p className="text-xs text-muted-foreground">Tel: {point.phone}</p>
+                            )}
+                          </div>
+                          <Badge variant="outline" className="text-green-600 text-xs flex-shrink-0">
+                            Activo
+                          </Badge>
                         </div>
-                        <Badge variant="outline" className="text-green-600 text-xs flex-shrink-0">
-                          Activo
-                        </Badge>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                      ))}
+                    </RadioGroup>
+                  </>
                 )
               )}
 
