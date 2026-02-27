@@ -15,7 +15,7 @@ import { PageLoader } from "@/components/ui/PageLoader";
 const ProtectedRoute = ({
   children,
   requiredRoles,
-  fallbackPath = "/cuenta",
+  fallbackPath = "/",
 }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
 
@@ -23,7 +23,7 @@ const ProtectedRoute = ({
     return <PageLoader />;
   }
 
-  // Si no hay usuario autenticado
+  // Si no hay usuario autenticado, redirigir al fallback o home
   if (!user) {
     return <Navigate to={fallbackPath} replace />;
   }

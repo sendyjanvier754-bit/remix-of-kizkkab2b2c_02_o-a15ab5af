@@ -70,15 +70,14 @@ export const ViewModeProvider = ({ children }: { children: ReactNode }) => {
         if (newMode === "client") {
           navigateToOwnStore();
         } else {
-          // Si vuelve a B2B, ir al catálogo
-          navigate("/seller/adquisicion-lotes");
+          // Si vuelve a B2B, NO redirigir - mantener la página actual
           toast.info("Vista B2B restaurada");
         }
         
         return newMode;
       });
     }
-  }, [canToggle, navigateToOwnStore, navigate]);
+  }, [canToggle, navigateToOwnStore]);
 
   const isClientPreview = viewMode === "client";
 

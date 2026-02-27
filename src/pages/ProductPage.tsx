@@ -833,7 +833,7 @@ const ProductPage = () => {
                   </Badge> : <Badge variant="secondary" className="bg-gray-100 text-gray-700">
                     Nuevo
                   </Badge>}
-                {product.store && <Link to={`/tienda/${product.store.id}`} className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-medium hover:bg-purple-100 transition-colors">
+                {product.store && <Link to={`/tienda/${product.store.slug || product.store.id}`} className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-medium hover:bg-purple-100 transition-colors">
                     <StoreIcon className="w-3 h-3" />
                     {product.store.name}
                     <div className="flex items-center gap-0.5 ml-1 pl-1 border-l border-purple-200">

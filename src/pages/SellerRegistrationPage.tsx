@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { generateUniqueStoreSlug } from "@/utils/storeSlugGenerator";
 
 const sellerRegistrationSchema = z.object({
   storeName: z.string().min(2, "El nombre de la tienda debe tener al menos 2 caracteres").max(100),
@@ -250,10 +251,21 @@ const SellerRegistrationPage = () => {
       }
 
       // 4. Create store record with name and description
-      // Generate slug: KZ + 6 random numbers + year (no hyphen)
-      const randomNumbers = Math.floor(Math.random() * 900000) + 100000; // 100000-999999
-      const currentYear = new Date().getFullYear();
-      const slug = `KZ${randomNumbers}${currentYear}`;
+      // Generate unique slug with collision detection
+      const slug = await generateUniqueStoreSlug(async (candidateSlug) => {
+        const { data } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('slug', candidateSlug)
+          .maybeSingle();
+        return data === null; // true if doesn't exist (unique)
+      });
+
+      if (!slug) {
+        toast.error("Error generando ID de tienda. Por favor intenta de nuevo.");
+        setIsLoading(false);
+        return;
+      }
 
       const { error: storeError } = await supabase.from("stores").insert({
         owner_user_id: authData.user.id,

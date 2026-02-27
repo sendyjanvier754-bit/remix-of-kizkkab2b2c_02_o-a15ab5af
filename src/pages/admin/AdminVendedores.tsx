@@ -47,13 +47,22 @@ import { useCommissionOverrides } from "@/hooks/useCommissionOverrides";
 
 interface Seller {
   id: string;
-  name: string;
-  email: string;
-  phone: string | null;
+  user_id: string;
+  store_id: string | null;
   business_name: string | null;
-  is_verified: boolean | null;
+  business_type: string | null;
+  is_verified: boolean;
+  verification_status: string;
+  commission_rate: number | null;
+  is_active: boolean;
   created_at: string;
-  user_id: string | null;
+  // Datos de profiles
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  // IDs
+  user_code: string | null;  // Código personal del usuario (KZ...)
+  store_slug: string | null;  // Slug de la tienda (K...)
 }
 
 const AdminVendedores = () => {
@@ -78,13 +87,55 @@ const AdminVendedores = () => {
   const fetchSellers = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // 1. Obtener sellers
+      const { data: sellersData, error: sellersError } = await supabase
         .from("sellers")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setSellers(data || []);
+      if (sellersError) throw sellersError;
+
+      // 2. Para cada seller, obtener datos de profiles y stores
+      const sellersWithCodes = await Promise.all(
+        (sellersData || []).map(async (seller) => {
+          // Obtener datos del usuario de profiles
+          let profileData = { user_code: null, full_name: null, email: null, phone: null };
+          if (seller.user_id) {
+            const { data } = await supabase
+              .from("profiles")
+              .select("user_code, full_name, email, phone")
+              .eq("id", seller.user_id)
+              .maybeSingle();
+            if (data) {
+              profileData = {
+                user_code: data.user_code || null,
+                full_name: data.full_name || null,
+                email: data.email || null,
+                phone: data.phone || null,
+              };
+            }
+          }
+
+          // Obtener store slug
+          let storeSlug = null;
+          if (seller.user_id) {
+            const { data: storeData } = await supabase
+              .from("stores")
+              .select("slug")
+              .eq("owner_user_id", seller.user_id)
+              .maybeSingle();
+            storeSlug = storeData?.slug || null;
+          }
+
+          return {
+            ...seller,
+            ...profileData,
+            store_slug: storeSlug,
+          };
+        })
+      );
+
+      setSellers(sellersWithCodes);
     } catch (error) {
       console.error("Error fetching sellers:", error);
       toast.error("Error al cargar vendedores");
@@ -102,30 +153,45 @@ const AdminVendedores = () => {
 
     setIsProcessing(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("sellers")
-        .update({ is_verified: actionType === "verify" })
-        .eq("id", actionSeller.id);
+        .update({ 
+          is_verified: actionType === "verify",
+          verification_status: actionType === "verify" ? "verified" : "pending_verification"
+        })
+        .eq("id", actionSeller.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error detallado:", error);
+        throw new Error(`Error al actualizar: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error("No se pudo actualizar el vendedor. Verifica los permisos.");
+      }
 
       toast.success(
         actionType === "verify"
-          ? `Vendedor ${actionSeller.name} verificado exitosamente`
-          : `Vendedor ${actionSeller.name} desverificado`
+          ? `Vendedor ${actionSeller.full_name || actionSeller.email} verificado exitosamente`
+          : `Vendedor ${actionSeller.full_name || actionSeller.email} desverificado`
       );
 
       // Update local state
       setSellers((prev) =>
         prev.map((s) =>
           s.id === actionSeller.id
-            ? { ...s, is_verified: actionType === "verify" }
+            ? { 
+                ...s, 
+                is_verified: actionType === "verify",
+                verification_status: actionType === "verify" ? "verified" : "pending_verification"
+              }
             : s
         )
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating seller:", error);
-      toast.error("Error al actualizar vendedor");
+      toast.error(error.message || "Error al actualizar vendedor");
     } finally {
       setIsProcessing(false);
       setActionSeller(null);
@@ -162,9 +228,11 @@ const AdminVendedores = () => {
 
   const filteredSellers = sellers.filter(
     (seller) =>
-      seller.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      seller.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      seller.business_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      seller.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      seller.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      seller.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      seller.user_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      seller.store_slug?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const pendingSellers = filteredSellers.filter((s) => !s.is_verified);
@@ -230,6 +298,8 @@ const AdminVendedores = () => {
                       <TableRow>
                         <TableHead>Vendedor</TableHead>
                         <TableHead>Email</TableHead>
+                        <TableHead>ID Usuario</TableHead>
+                        <TableHead>ID Tienda</TableHead>
                         <TableHead>Teléfono</TableHead>
                         <TableHead>Fecha Registro</TableHead>
                         <TableHead>Estado</TableHead>
@@ -241,7 +311,7 @@ const AdminVendedores = () => {
                         <TableRow key={seller.id}>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{seller.name}</div>
+                              <div className="font-medium">{seller.full_name || 'Sin nombre'}</div>
                               {seller.business_name && (
                                 <div className="text-sm text-muted-foreground">
                                   {seller.business_name}
@@ -250,6 +320,16 @@ const AdminVendedores = () => {
                             </div>
                           </TableCell>
                           <TableCell>{seller.email}</TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-purple-50 px-2 py-1 rounded border border-purple-200">
+                              {seller.user_code || '-'}
+                            </code>
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                              {seller.store_slug || '-'}
+                            </code>
+                          </TableCell>
                           <TableCell>{seller.phone || "-"}</TableCell>
                           <TableCell>
                             {new Date(seller.created_at).toLocaleDateString("es")}
@@ -297,6 +377,8 @@ const AdminVendedores = () => {
                       <TableRow>
                         <TableHead>Vendedor</TableHead>
                         <TableHead>Email</TableHead>
+                        <TableHead>ID Usuario</TableHead>
+                        <TableHead>ID Tienda</TableHead>
                         <TableHead>Teléfono</TableHead>
                         <TableHead>Fecha Registro</TableHead>
                         <TableHead>Estado</TableHead>
@@ -308,7 +390,7 @@ const AdminVendedores = () => {
                         <TableRow key={seller.id}>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{seller.name}</div>
+                              <div className="font-medium">{seller.full_name || 'Sin nombre'}</div>
                               {seller.business_name && (
                                 <div className="text-sm text-muted-foreground">
                                   {seller.business_name}
@@ -317,6 +399,16 @@ const AdminVendedores = () => {
                             </div>
                           </TableCell>
                           <TableCell>{seller.email}</TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-purple-50 px-2 py-1 rounded border border-purple-200">
+                              {seller.user_code || '-'}
+                            </code>
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                              {seller.store_slug || '-'}
+                            </code>
+                          </TableCell>
                           <TableCell>{seller.phone || "-"}</TableCell>
                           <TableCell>
                             {new Date(seller.created_at).toLocaleDateString("es")}
@@ -380,14 +472,14 @@ const AdminVendedores = () => {
             <AlertDialogDescription>
               {actionType === "verify" ? (
                 <>
-                  ¿Confirmas que deseas verificar a <strong>{actionSeller?.name}</strong>?
+                  ¿Confirmas que deseas verificar a <strong>{actionSeller?.full_name || actionSeller?.email}</strong>?
                   <br />
                   Una vez verificado, el vendedor podrá publicar productos en la plataforma.
                 </>
               ) : (
                 <>
                   ¿Confirmas que deseas revocar la verificación de{" "}
-                  <strong>{actionSeller?.name}</strong>?
+                  <strong>{actionSeller?.full_name || actionSeller?.email}</strong>?
                   <br />
                   El vendedor no podrá publicar nuevos productos hasta ser verificado nuevamente.
                 </>
@@ -424,7 +516,7 @@ const AdminVendedores = () => {
             </DialogTitle>
             <DialogDescription>
               Configura una comisión personalizada para{" "}
-              <strong>{selectedSellerForCommission?.name}</strong>
+              <strong>{selectedSellerForCommission?.full_name || selectedSellerForCommission?.email}</strong>
             </DialogDescription>
           </DialogHeader>
 

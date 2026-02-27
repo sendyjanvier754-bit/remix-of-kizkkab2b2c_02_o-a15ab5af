@@ -36,9 +36,13 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- Generate unique slug with format: KZ + 6 random digits + creation year (no hyphen)
-  v_store_slug := 'KZ' || SUBSTRING(CAST(FLOOR(RANDOM() * 999999 + 100000) AS TEXT), 1, 6) || 
-                  EXTRACT(YEAR FROM NOW())::TEXT;
+  -- Generate unique slug using better randomization
+  -- Formato: K + 10 caracteres hex + año (UUID-based para casi 0% colisión)
+  -- Usa gen_random_uuid() de PostgreSQL que es криптографicamente seguro
+  -- Espacio: 16^10 = 1.1 trillones de combinaciones
+  v_store_slug := 'K' || 
+                  UPPER(SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', ''), 1, 10)) ||
+                  SUBSTRING(EXTRACT(YEAR FROM NOW())::TEXT, 3, 2);
 
   -- Create EMPTY store placeholder
   -- Seller MUST complete the configuration via SellerOnboardingPage
@@ -86,7 +90,10 @@ INSERT INTO public.stores (owner_user_id, name, slug, description, logo, is_acti
 SELECT 
   ur.user_id,
   NULL,
-  'KZ' || SUBSTRING(LPAD(CAST(ABS(HASHTEXT(ur.user_id::text)) % 900000 + 100000 AS TEXT), 6, '0'), 1, 6) || EXTRACT(YEAR FROM NOW())::TEXT,
+  -- Generate unique slug: K + 10 hex chars + year (UUID-based)
+  -- Uses gen_random_uuid() for cryptographic security
+  'K' || UPPER(SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', ''), 1, 10)) ||
+  SUBSTRING(EXTRACT(YEAR FROM NOW())::TEXT, 3, 2),
   NULL,
   NULL,
   false,

@@ -65,6 +65,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
   const [items, setItems] = useState<SellerCatalogItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [storeSlug, setStoreSlug] = useState<string | null>(null);
   // null = seller has not configured their market yet
   const [destinationCountryId, setDestinationCountryId] = useState<string | null>(null);
   const isShippingConfigured = destinationCountryId !== null;
@@ -81,22 +82,25 @@ export const useSellerCatalog = (showAll: boolean = false) => {
       try {
         const { data: store, error } = await supabase
           .from('stores')
-          .select('id')
+          .select('id, slug')
           .eq('owner_user_id', user.id)
           .maybeSingle();
         
         if (error) {
           console.error('useSellerCatalog: Error fetching store:', error);
           setStoreId(null);
+          setStoreSlug(null);
           return;
         }
 
         if (store) {
           console.log('useSellerCatalog: Store found:', store.id);
           setStoreId(store.id);
+          setStoreSlug(store.slug);
         } else {
           console.log('useSellerCatalog: No store found for user');
           setStoreId(null);
+          setStoreSlug(null);
         }
       } catch (err) {
         console.error('useSellerCatalog: Exception fetching store:', err);
@@ -649,6 +653,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
     items,
     isLoading,
     storeId,
+    storeSlug,
     isShippingConfigured,
     destinationCountryId,
     updatePrecioVenta,

@@ -11,6 +11,7 @@ interface AppUser {
   role: UserRole;
   avatar_url: string | null;
   banner_url: string | null;
+  user_code: string | null;  // Código personal KZ...
   created_at: string;
   updated_at: string;
 }
@@ -86,6 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: UserRole.USER, // Se obtiene de la tabla user_roles
         avatar_url: data.avatar_url || null,
         banner_url: data.banner_url || null,
+        user_code: data.user_code || null,  // Código KZ...
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
@@ -96,20 +98,71 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+    
     // Safety timeout: if auth doesn't complete within 3 seconds, show the app anyway
     const safetyTimeout = setTimeout(() => {
       console.warn('Auth initialization timeout - showing app anyway');
-      setIsLoading(false);
+      if (mounted) setIsLoading(false);
     }, 3000);
 
-    // Set up auth state listener FIRST
+    // PRIMERO: Cargar sesión existente SINCRÓNICAMENTE para evitar "parpadeo"
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user && mounted) {
+          console.log('🔄 Loading existing session...');
+          setSession(session);
+          
+          const profile = await fetchUserProfile(session.user.id);
+          const userRole = await getUserRole(session.user.id);
+          
+          if (!profile) {
+            console.error('No profile found for user:', session.user.id);
+            setIsLoading(false);
+            clearTimeout(safetyTimeout);
+            setHasInitialized(true);
+            return;
+          }
+          
+          const appUser: AppUser = { ...profile, role: userRole };
+          setUser(appUser);
+          setRole(userRole);
+          setIsLoading(false);
+          clearTimeout(safetyTimeout);
+          setHasInitialized(true);
+        } else {
+          setIsLoading(false);
+          clearTimeout(safetyTimeout);
+          setHasInitialized(true);
+        }
+      } catch (error) {
+        console.error('Error loading session:', error);
+        setIsLoading(false);
+        clearTimeout(safetyTimeout);
+      }
+    };
+    
+    initAuth();
+
+    // SEGUNDO: Configurar listener para cambios de auth (login, logout, refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!mounted) return;
+        
+        console.log(`🔐 Auth event: ${event}`, {
+          hasSession: !!session,
+          currentPath: window.location.pathname,
+          hasInitialized
+        });
+        
         setSession(session);
 
-        // Defer profile and role check with setTimeout to avoid deadlock
+        // Procesar cambios de auth
         if (session?.user) {
-          setTimeout(async () => {
+          // Usar promesa directa sin setTimeout para evitar delay
+          (async () => {
             const profile = await fetchUserProfile(session.user.id);
             const userRole = await getUserRole(session.user.id);
             
@@ -117,8 +170,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               console.error('No profile found for user:', session.user.id);
               setUser(null);
               setRole(null);
-              setIsLoading(false);
-              clearTimeout(safetyTimeout);
               return;
             }
             
@@ -126,75 +177,80 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             setUser(appUser);
             setRole(userRole);
-            setIsLoading(false);
-            clearTimeout(safetyTimeout);
-            setHasInitialized(true);
 
-            // SOLO redirigir en eventos de login genuino, NO en TOKEN_REFRESHED o INITIAL_SESSION
-            // Esto evita que la app redirija cuando el usuario cambia de pestaña o refresca
-            if (event === 'SIGNED_IN' && !hasInitialized) {
+            // SOLO redirigir si es un login GENUINO desde /login
+            // Usamos sessionStorage para detectar login genuino
+            const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
+            
+            if (event === 'SIGNED_IN' && justLoggedIn) {
+              // Limpiar flag inmediatamente
+              sessionStorage.removeItem('just_logged_in');
+              
               const currentPath = window.location.pathname;
+              console.log('✅ Genuine login detected - checking redirect from:', currentPath, 'role:', userRole);
 
-              // Solo redirigir si está en páginas de autenticación
-              if (currentPath === '/login' || currentPath === '/cuenta') {
+              // Verificar si el usuario ya está en la ruta correcta para su rol
+              const isInCorrectArea = 
+                (userRole === UserRole.SELLER && currentPath.startsWith('/seller')) ||
+                (userRole === UserRole.ADMIN && currentPath.startsWith('/admin')) ||
+                (userRole === UserRole.USER && !currentPath.startsWith('/seller') && !currentPath.startsWith('/admin'));
+
+              console.log('🔍 Is in correct area?', isInCorrectArea, 'for role:', userRole);
+
+              // Solo redirigir si está en páginas de autenticación, raíz, o área incorrecta
+              const needsRedirect = 
+                currentPath === '/login' || 
+                currentPath === '/registro' ||
+                currentPath === '/' ||
+                !isInCorrectArea;
+
+              console.log('🔍 Needs redirect?', needsRedirect);
+
+              if (needsRedirect) {
+                console.log('📍 Redirecting to default page for role:', userRole);
                 if (userRole === UserRole.SELLER) {
-                  navigate('/seller/adquisicion-lotes');
+                  navigate('/seller/adquisicion-lotes', { replace: true });
                 } else if (userRole === UserRole.ADMIN) {
-                  navigate('/admin/dashboard');
+                  navigate('/admin/dashboard', { replace: true });
                 } else {
-                  navigate('/perfil');
+                  navigate('/perfil', { replace: true });
                 }
+              } else {
+                console.log('⏸️ Not redirecting - user already in correct area:', currentPath);
               }
-              // En cualquier otra página, NO redirigir - el usuario se queda donde está
+            } else {
+              console.log('⏸️ Not redirecting - not a genuine login (page reload or token refresh)');
             }
-          }, 0);
+          })();
         } else {
           setUser(null);
           setRole(null);
-          setIsLoading(false);
-          clearTimeout(safetyTimeout);
         }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        const userRole = await getUserRole(session.user.id);
-        
-        if (!profile) {
-          console.error('No profile found for user:', session.user.id);
-          setIsLoading(false);
-          clearTimeout(safetyTimeout);
-          setHasInitialized(true);
-          return;
-        }
-        
-        const appUser: AppUser = { ...profile, role: userRole };
-
-        setUser(appUser);
-        setRole(userRole);
-        setIsLoading(false);
-        clearTimeout(safetyTimeout);
-      } else {
-        setIsLoading(false);
-        clearTimeout(safetyTimeout);
-      }
-      
-      setHasInitialized(true);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps: only run on mount. Removed navigate to prevent re-runs on navigation
 
   const signIn = async (email: string, password: string) => {
+    // Marcar que este es un login genuino (no un reload)
+    sessionStorage.setItem('just_logged_in', 'true');
+    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    // Si hay error, limpiar el flag
+    if (error) {
+      sessionStorage.removeItem('just_logged_in');
+    }
+    
     return { error };
   };
 

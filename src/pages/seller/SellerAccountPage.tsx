@@ -908,7 +908,9 @@ const SellerAccountPage = () => {
                           </div>
                           <div className="flex justify-between items-start py-2 border-b border-gray-100 last:border-b-0">
                             <span className="text-gray-600 text-sm">ID de Usuario</span>
-                            <span className="font-mono text-gray-900 text-xs font-semibold">{user?.id.slice(0, 8)}...</span>
+                            <code className="bg-purple-50 px-3 py-1 rounded border border-purple-200 text-purple-700 font-semibold text-sm">
+                              {user?.user_code || user?.id.slice(0, 8) + '...'}
+                            </code>
                           </div>
                           <div className="flex justify-between items-start py-2 border-b border-gray-100 last:border-b-0">
                             <span className="text-gray-600 text-sm flex items-center gap-1">

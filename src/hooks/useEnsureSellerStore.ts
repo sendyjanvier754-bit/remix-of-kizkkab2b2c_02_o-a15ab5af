@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useNavigate } from 'react-router-dom';
+import { generateUniqueStoreSlug } from '@/utils/storeSlugGenerator';
 
 interface StoreStatus {
   hasStore: boolean;
@@ -34,6 +35,18 @@ export const useEnsureSellerStore = () => {
         return;
       }
 
+      // Don't run if already on onboarding page
+      if (window.location.pathname.includes('/seller/onboarding')) {
+        return;
+      }
+
+      // Check if we've already validated in this session
+      const sessionKey = `store_validated_${user.id}`;
+      const alreadyValidated = sessionStorage.getItem(sessionKey);
+      if (alreadyValidated) {
+        return;
+      }
+
       setIsValidating(true);
 
       try {
@@ -54,18 +67,27 @@ export const useEnsureSellerStore = () => {
         if (!store) {
           console.warn(`⚠️ No store found for seller ${user.id}, creating placeholder...`);
           
-          // Generate slug: KZ + 6 random numbers + year (no hyphen)
-          const generateStoreSlug = () => {
-            const randomNumbers = Math.floor(Math.random() * 900000) + 100000; // 100000-999999
-            const currentYear = new Date().getFullYear();
-            return `KZ${randomNumbers}${currentYear}`;
-          };
+          // Generate unique slug with retry logic
+          const slug = await generateUniqueStoreSlug(async (candidateSlug) => {
+            const { data } = await supabase
+              .from('stores')
+              .select('id')
+              .eq('slug', candidateSlug)
+              .maybeSingle();
+            return data === null; // true if doesn't exist (unique)
+          });
+
+          if (!slug) {
+            console.error('Failed to generate unique slug after multiple attempts');
+            setIsValidating(false);
+            return;
+          }
           
           const { data: newStore, error: createError } = await supabase
             .from('stores')
             .insert({
               owner_user_id: user.id,
-              slug: generateStoreSlug(),
+              slug: slug,
               is_active: false,
               is_accepting_orders: true,
               show_stock: true,
@@ -111,6 +133,9 @@ export const useEnsureSellerStore = () => {
         if (!isConfigured) {
           console.log(`⚠️ Store ${store.id} is incomplete, redirecting to onboarding...`);
           setShouldRedirectToOnboarding(true);
+        } else {
+          // Mark as validated for this session to avoid re-checking
+          sessionStorage.setItem(sessionKey, 'true');
         }
 
       } catch (err) {
@@ -120,9 +145,8 @@ export const useEnsureSellerStore = () => {
       }
     };
 
-    // Small delay to avoid race conditions
-    const timer = setTimeout(validateStoreStatus, 100);
-    return () => clearTimeout(timer);
+    // Run immediately without delay to avoid flickering
+    validateStoreStatus();
   }, [user?.id, role]);
 
   // Auto-redirect to onboarding if store is incomplete

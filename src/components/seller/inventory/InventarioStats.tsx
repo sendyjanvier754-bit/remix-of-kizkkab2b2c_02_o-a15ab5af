@@ -1,4 +1,4 @@
-import { Package, PackageCheck, DollarSign, Percent } from "lucide-react";
+import { Package, PackageCheck, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReactNode } from "react";
 
@@ -7,7 +7,7 @@ interface InventarioStatsProps {
   activeProducts: number;
   totalStock: number;
   totalValue: number;
-  avgMargin: number;
+  avgMargin: number; // Mantenido para compatibilidad pero no se muestra
   actions?: ReactNode;
 }
 
@@ -15,8 +15,7 @@ export function InventarioStats({
   totalProducts, 
   activeProducts, 
   totalStock, 
-  totalValue, 
-  avgMargin,
+  totalValue,
   actions 
 }: InventarioStatsProps) {
   const stats = [
@@ -52,14 +51,6 @@ export function InventarioStats({
       bgColor: "bg-amber-50",
       borderColor: "border-amber-200",
     },
-    {
-      label: "Margen Promedio",
-      value: `${avgMargin.toFixed(1)}%`,
-      icon: Percent,
-      color: avgMargin < 0 ? "text-red-500" : "text-emerald-500",
-      bgColor: avgMargin < 0 ? "bg-red-50" : "bg-emerald-50",
-      borderColor: avgMargin < 0 ? "border-red-200" : "border-emerald-200",
-    },
   ];
 
   return (
@@ -69,12 +60,12 @@ export function InventarioStats({
           <h2 className="text-lg font-bold text-foreground">Inventario B2C</h2>
           {actions && <div className="flex gap-2">{actions}</div>}
         </div>
-        <div className="grid grid-cols-5 gap-1 w-full">
+        <div className="grid grid-cols-4 gap-1 w-full">
           {stats.map((stat) => (
             <Card key={stat.label} className={`${stat.bgColor} ${stat.borderColor} border`}>
               <CardContent className="p-1.5 text-center">
                 <stat.icon className={`h-3 w-3 ${stat.color} mx-auto mb-0.5`} />
-                <div className={`text-base md:text-lg font-bold ${stat.color}`}>{stat.value}</div>
+                <div className={`text-xs md:text-lg font-bold ${stat.color} truncate px-0.5`}>{stat.value}</div>
                 <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">{stat.label}</p>
               </CardContent>
             </Card>

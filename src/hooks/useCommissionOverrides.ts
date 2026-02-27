@@ -24,25 +24,32 @@ export const useCommissionOverrides = () => {
   const fetchOverrides = async () => {
     try {
       setIsLoading(true);
+      
+      // Fetch overrides
       const { data, error } = await supabase
         .from('seller_commission_overrides')
-        .select(`
-          *,
-          sellers (
-            name,
-            business_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formatted = (data || []).map((o: any) => ({
-        ...o,
-        seller_name: o.sellers?.business_name || o.sellers?.name,
-      }));
+      // Fetch seller names separately
+      const overridesWithNames = await Promise.all(
+        (data || []).map(async (override: any) => {
+          const { data: sellerData } = await supabase
+            .from('sellers')
+            .select('name, business_name')
+            .eq('id', override.seller_id)
+            .maybeSingle();
 
-      setOverrides(formatted);
+          return {
+            ...override,
+            seller_name: sellerData?.business_name || sellerData?.name,
+          };
+        })
+      );
+
+      setOverrides(overridesWithNames);
     } catch (error: any) {
       console.error('Error fetching overrides:', error);
     } finally {

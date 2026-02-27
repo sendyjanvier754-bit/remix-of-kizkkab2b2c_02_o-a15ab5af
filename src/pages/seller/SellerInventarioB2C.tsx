@@ -16,6 +16,7 @@ export default function SellerInventarioB2C() {
     items, 
     isLoading, 
     storeId,
+    storeSlug,
     updatePrecioVenta, 
     toggleActive, 
     updateStock, 
@@ -105,16 +106,16 @@ export default function SellerInventarioB2C() {
         )}
 
         {/* Store ID Info Card */}
-        {storeId && (
+        {storeSlug && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-indigo-600 uppercase tracking-wide">ID de tu Tienda</p>
-                <p className="text-sm font-mono text-indigo-900 mt-1 break-all">{storeId}</p>
+                <p className="text-sm font-mono text-indigo-900 mt-1 break-all">{storeSlug}</p>
               </div>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(storeId);
+                  navigator.clipboard.writeText(storeSlug);
                   // Optional: Show a toast here if you have access to toast
                 }}
                 className="px-3 py-2 text-sm border border-indigo-300 rounded hover:bg-indigo-100 transition-colors flex-shrink-0 ml-4"
@@ -157,11 +158,8 @@ export default function SellerInventarioB2C() {
           <div className="text-center py-12 bg-muted/50 rounded-lg">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Sin productos en inventario</h3>
-            <p className="text-muted-foreground mb-4">
-              Tu inventario aparecerá aquí cuando completes órdenes B2B.
-            </p>
             <p className="text-sm text-muted-foreground">
-              Visita <a href="/seller/catalogo" className="underline font-semibold">Mi Catálogo</a> para importar productos manualmente.
+              Visita el <a href="/seller/adquisicion-lotes" className="underline font-semibold">Catálogo B2B</a> para comprar productos.
             </p>
           </div>
         ) : (

@@ -35,7 +35,18 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const hasMultipleVariants = (product.variant_count || 1) > 1;
   const hasPriceRange = product.precio_b2b_max && product.precio_b2b_max !== product.precio_b2b;
 
-  // Use market-referenced profit calculation
+  // ============================================
+  // CÁLCULO DE GANANCIA Y ROI
+  // ============================================
+  // Estos valores vienen de v_productos_con_precio_b2b (vista SQL)
+  // profit_amount = precio_sugerido - precio_b2b
+  // roi_percent = (profit / precio_b2b) * 100
+  // 
+  // precio_sugerido viene de:
+  // 1. b2c_market_prices.max_price (si is_market_synced = true)
+  // 2. pricing_configs.suggested_pvp (configurado por admin)
+  // 3. Cálculo automático: precio_b2b * (1 + margen/100)
+  // ============================================
   const profit = product.profit_amount ?? ((product.precio_sugerido || 0) - product.precio_b2b);
   const roiPercent = product.roi_percent ?? (product.precio_b2b > 0 ? (profit / product.precio_b2b) * 100 : 0);
   const isMarketSynced = product.is_market_synced ?? false;
@@ -199,17 +210,12 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="inline-flex items-center gap-1">
-                      <span className="inline-flex items-center gap-0.5 text-[10px] text-green-600 font-semibold cursor-help">
-                        {isMarketSynced && (
-                          <ArrowUpRight className="w-3 h-3 text-green-500" />
-                        )}
-                        PVP: ${product.precio_sugerido.toFixed(2)}
-                      </span>
-                      <span className="text-[9px] text-green-700 font-bold bg-green-50 px-1 py-0.5 rounded">
-                        ROI {roiPercent.toFixed(0)}%
-                      </span>
-                    </div>
+                    <span className="inline-flex items-center gap-0.5 text-[10px] text-green-600 font-semibold cursor-help">
+                      {isMarketSynced && (
+                        <ArrowUpRight className="w-3 h-3 text-green-500" />
+                      )}
+                      PVP: ${product.precio_sugerido.toFixed(2)}
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
                     {isMarketSynced ? (

@@ -34,14 +34,19 @@ const LoginPage = () => {
   // Redirigir si el usuario ya está autenticado
   useEffect(() => {
     if (!authLoading && user) {
-      if (role === UserRole.SELLER) {
-        navigate('/seller/adquisicion-lotes', { replace: true });
-      } else if (role === UserRole.ADMIN) {
-        navigate('/admin/dashboard', { replace: true });
-      } else if (role === UserRole.USER) {
-        navigate('/perfil', { replace: true });
-      } else {
-        navigate('/perfil', { replace: true });
+      // Solo redirigir si venimos de registro o ya estábamos aquí
+      // El login genuino es manejado por useAuth
+      const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
+      if (!justLoggedIn) {
+        if (role === UserRole.SELLER) {
+          navigate('/seller/adquisicion-lotes', { replace: true });
+        } else if (role === UserRole.ADMIN) {
+          navigate('/admin/dashboard', { replace: true });
+        } else if (role === UserRole.USER) {
+          navigate('/perfil', { replace: true });
+        } else {
+          navigate('/perfil', { replace: true });
+        }
       }
     }
   }, [user, role, authLoading, navigate]);
@@ -59,10 +64,9 @@ const LoginPage = () => {
         } else {
           setError(error.message);
         }
-      } else {
-        // Login successful - redirect to home
-        navigate("/");
       }
+      // Si no hay error, useAuth manejará la redirección automáticamente
+      // No necesitamos navigate() aquí
     } catch (err) {
       setError("Error al iniciar sesión. Intenta de nuevo.");
     } finally {

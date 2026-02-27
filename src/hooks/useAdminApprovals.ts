@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";import { generateStoreSlug } from '@/utils/storeSlugGenerator';import { toast } from "sonner";
 
 // Local types that match what the code expects (DB enum may differ)
 export type ApprovalRequestType = 'kyc_verification' | 'referral_bonus' | 'credit_limit_increase' | 'credit_activation' | 'seller_upgrade' | 'withdrawal' | 'refund' | 'credit_purchase' | 'kyc_review';
@@ -237,29 +236,38 @@ export const useAdminApprovals = () => {
           console.warn(`⚠️ Trigger didn't create store for ${request.requester_id}, creating manually...`);
           
           const storeName = metadata?.store_name || metadata?.user_name || 'Mi Tienda';
-          console.warn(`⚠️ Trigger didn't create store for ${request.requester_id}, creating manually...`);
           
-          // Generate slug: KZ + 6 random numbers + year (no hyphen)
-          const randomNumbers = Math.floor(Math.random() * 900000) + 100000; // 100000-999999
-          const currentYear = new Date().getFullYear();
-          const slug = `KZ${randomNumbers}${currentYear}`;
-          
-          const { error: storeError } = await supabase.from('stores').insert({
-            owner_user_id: request.requester_id,
-            name: storeName || "Mi Tienda",
-            description: metadata?.store_description || `Tienda de ${storeName || 'vendedor'}`,
-            slug: slug,
-            is_active: true,
-            is_accepting_orders: true,
-            show_stock: true,
-            country: 'Haiti',
+          // Generate unique slug with retry logic
+          const slug = await generateUniqueStoreSlug(async (candidateSlug) => {
+            const { data } = await supabase
+              .from('stores')
+              .select('id')
+              .eq('slug', candidateSlug)
+              .maybeSingle();
+            return data === null; // true if doesn't exist (unique)
           });
-          
-          if (storeError) {
-            console.error('Error creating store manually:', storeError);
-            // Don't throw - store creation is not critical
+
+          if (!slug) {
+            console.error('Failed to generate unique slug, skipping store creation');
+            // Continue without store - seller will be redirected to onboarding
           } else {
-            console.log(`✅ Manually created store for seller ${request.requester_id}`);
+            const { error: storeError } = await supabase.from('stores').insert({
+              owner_user_id: request.requester_id,
+              name: storeName || "Mi Tienda",
+              description: metadata?.store_description || `Tienda de ${storeName || 'vendedor'}`,
+              slug: slug,
+              is_active: true,
+              is_accepting_orders: true,
+              show_stock: true,
+              country: 'Haiti',
+            });
+            
+            if (storeError) {
+              console.error('Error creating store manually:', storeError);
+              // Don't throw - store creation is not critical
+            } else {
+              console.log(`✅ Manually created store for seller ${request.requester_id}`);
+            }
           }
         }
         
