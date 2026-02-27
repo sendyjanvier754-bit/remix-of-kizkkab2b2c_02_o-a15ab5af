@@ -57,6 +57,7 @@ export const useBuyerOrders = (statusFilter?: BuyerOrderStatus | 'all') => {
 
   return useQuery({
     queryKey: ['buyer-orders', user?.id, statusFilter],
+    enabled: !!user?.id, // Solo ejecutar cuando el usuario esté cargado
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -118,6 +119,7 @@ export const useBuyerB2BOrders = (statusFilter?: BuyerOrderStatus | 'all') => {
 
   return useQuery({
     queryKey: ['buyer-b2b-orders', user?.id, statusFilter],
+    enabled: !!user?.id, // Solo ejecutar cuando el usuario esté cargado
     queryFn: async () => {
       if (!user?.id) return [];
 

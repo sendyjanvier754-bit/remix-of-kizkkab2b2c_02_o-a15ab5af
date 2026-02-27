@@ -123,7 +123,7 @@ export const useCreateB2COrder = () => {
 
       if (orderError) throw orderError;
 
-      // Create order items
+      // Create order items (use precio_total column, not subtotal)
       const orderItems = params.items.map(item => ({
         order_id: order.id,
         product_id: null, // B2C items come from seller_catalog, not products table
@@ -131,7 +131,7 @@ export const useCreateB2COrder = () => {
         nombre: item.nombre,
         cantidad: item.cantidad,
         precio_unitario: item.precio_unitario,
-        subtotal: item.subtotal,
+        precio_total: item.subtotal,
       }));
 
       const { error: itemsError } = await supabase

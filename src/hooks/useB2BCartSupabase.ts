@@ -328,14 +328,21 @@ export const useB2BCartSupabase = () => {
     }
 
     try {
+      // Determine payment_status based on payment method (same as SellerCheckout)
+      const paymentStatus = paymentMethod === 'stripe' 
+        ? 'pending' 
+        : 'pending_validation';
+
       // Create order with shipping address in metadata
       const { data: order, error: orderError } = await supabase
         .from('orders_b2b')
         .insert({
           seller_id: user.id,
+          buyer_id: user.id,  // FIX: Asignar buyer_id también para que el pedido sea visible
           total_amount: cart.subtotal,
           total_quantity: cart.totalQuantity,
           payment_method: paymentMethod,
+          payment_status: paymentStatus,
           status: 'draft',
           currency: 'USD',
           metadata: shippingAddress ? { shipping_address: shippingAddress } : null,
@@ -345,7 +352,7 @@ export const useB2BCartSupabase = () => {
 
       if (orderError) throw orderError;
 
-      // Create order items
+      // Create order items (use precio_total column, not subtotal)
       const orderItems = cart.items.map(item => ({
         order_id: order.id,
         product_id: item.productId,
@@ -353,7 +360,7 @@ export const useB2BCartSupabase = () => {
         nombre: item.nombre,
         cantidad: item.quantity,
         precio_unitario: item.unitPrice,
-        subtotal: item.totalPrice,
+        precio_total: item.totalPrice,
       }));
 
       const { error: itemsError } = await supabase
