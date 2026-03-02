@@ -79,10 +79,10 @@ WITH productos_a_consolidar AS (
     seller_store_id,
     source_product_id,
     COUNT(*) as total_registros,
-    array_agg(id ORDER BY created_at) as ids,
-    array_agg(variant_id ORDER BY created_at) as variant_ids,
-    array_agg(sku ORDER BY created_at) as skus,
-    array_agg(stock ORDER BY created_at) as stocks
+    array_agg(id ORDER BY imported_at) as ids,
+    array_agg(variant_id ORDER BY imported_at) as variant_ids,
+    array_agg(sku ORDER BY imported_at) as skus,
+    array_agg(stock ORDER BY imported_at) as stocks
   FROM seller_catalog
   WHERE source_product_id IS NOT NULL
   GROUP BY seller_store_id, source_product_id
@@ -119,10 +119,10 @@ BEGIN
     SELECT 
       seller_store_id,
       source_product_id,
-      array_agg(id ORDER BY created_at) as ids,
-      array_agg(variant_id ORDER BY created_at) as variant_ids,
-      array_agg(sku ORDER BY created_at) as skus,
-      array_agg(stock ORDER BY created_at) as stocks
+      array_agg(id ORDER BY imported_at) as ids,
+      array_agg(variant_id ORDER BY imported_at) as variant_ids,
+      array_agg(sku ORDER BY imported_at) as skus,
+      array_agg(stock ORDER BY imported_at) as stocks
     FROM seller_catalog
     WHERE source_product_id IS NOT NULL
     GROUP BY seller_store_id, source_product_id
@@ -278,15 +278,16 @@ SELECT
       'product_variant_id', scv.variant_id,
       'sku', scv.sku,
       'stock', scv.stock,
-      'precio', COALESCE(scv.precio_override, pv.precio),
+      'precio', COALESCE(scv.precio_override, pv.price),
       'is_available', scv.is_available,
-      'attributes', pv.attributes
+      'attributes', pv.attribute_combination,
+      'images', pv.images
     ) ORDER BY scv.created_at
   ) FILTER (WHERE scv.id IS NOT NULL) as variantes,
   
   -- Rango de precios
-  MIN(COALESCE(scv.precio_override, pv.precio)) as precio_min,
-  MAX(COALESCE(scv.precio_override, pv.precio)) as precio_max,
+  MIN(COALESCE(scv.precio_override, pv.price)) as precio_min,
+  MAX(COALESCE(scv.precio_override, pv.price)) as precio_max,
   
   -- Estado de disponibilidad
   BOOL_OR(scv.is_available) as tiene_variantes_disponibles
@@ -321,9 +322,9 @@ BEGIN
      (OLD.status IS NULL OR OLD.status NOT IN ('completed', 'delivered')) THEN
     
     -- Obtener seller_store_id del comprador
-    SELECT seller_store_id INTO v_store_id
-    FROM buyer_profiles
-    WHERE id = NEW.buyer_id
+    SELECT id INTO v_store_id
+    FROM stores
+    WHERE owner_user_id = NEW.buyer_id
     LIMIT 1;
     
     -- Si el comprador tiene seller_store, agregar productos a su catálogo
@@ -447,8 +448,8 @@ CREATE POLICY seller_catalog_variants_select_own
     seller_catalog_id IN (
       SELECT id FROM seller_catalog 
       WHERE seller_store_id IN (
-        SELECT seller_store_id FROM buyer_profiles 
-        WHERE id = auth.uid()
+        SELECT id FROM stores 
+        WHERE owner_user_id = auth.uid()
       )
     )
   );
@@ -473,8 +474,8 @@ CREATE POLICY seller_catalog_variants_update_own
     seller_catalog_id IN (
       SELECT id FROM seller_catalog 
       WHERE seller_store_id IN (
-        SELECT seller_store_id FROM buyer_profiles 
-        WHERE id = auth.uid()
+        SELECT id FROM stores 
+        WHERE owner_user_id = auth.uid()
       )
     )
   );
@@ -487,8 +488,8 @@ CREATE POLICY seller_catalog_variants_delete_own
     seller_catalog_id IN (
       SELECT id FROM seller_catalog 
       WHERE seller_store_id IN (
-        SELECT seller_store_id FROM buyer_profiles 
-        WHERE id = auth.uid()
+        SELECT id FROM stores 
+        WHERE owner_user_id = auth.uid()
       )
     )
   );
