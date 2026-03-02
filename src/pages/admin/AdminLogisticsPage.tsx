@@ -81,6 +81,10 @@ const AdminLogisticsPage = () => {
     createCommune,
     updateCommune,
     createCategoryShippingRate,
+    updateCategoryShippingRate,
+    createShipmentTracking,
+    generateHybridTrackingId,
+    markLabelPrinted,
   } = useLogisticsEngine();
 
   // TICKET #26: cargar hubs locales para el selector del commune form
@@ -97,11 +101,6 @@ const AdminLogisticsPage = () => {
       return data ?? [];
     },
   });
-    updateCategoryShippingRate,
-    createShipmentTracking,
-    generateHybridTrackingId,
-    markLabelPrinted,
-  } = useLogisticsEngine();
   
   const { data: departments, isLoading: loadingDepts } = useDepartments();
   const { data: allCommunes, isLoading: loadingCommunes } = useAllCommunes();
