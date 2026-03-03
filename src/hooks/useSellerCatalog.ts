@@ -60,12 +60,15 @@ export interface ProductoConVariantes {
   isActive: boolean;
 }
 
+export type SellerCatalogSourceType = 'imported' | 'inventory' | 'all';
+
 /**
  * Hook para catálogo/inventario del seller
  * Uses seller_catalog + seller_catalog_variants (1 product : N variants)
  * @param showAll - true: all catalog; false: only with stock > 0
+ * @param sourceType - 'imported': productos importados (source_order_id IS NULL), 'inventory': productos de inventario B2B (source_order_id IS NOT NULL), 'all': todos
  */
-export const useSellerCatalog = (showAll: boolean = false) => {
+export const useSellerCatalog = (showAll: boolean = false, sourceType: SellerCatalogSourceType = 'all') => {
   const { user } = useAuth();
   const [productos, setProductos] = useState<ProductoConVariantes[]>([]);
   const [items, setItems] = useState<SellerCatalogItem[]>([]); // flat list for backward compat
@@ -124,11 +127,21 @@ export const useSellerCatalog = (showAll: boolean = false) => {
     try {
       if (!storeId) { setProductos([]); setItems([]); return; }
 
-      // Query the aggregated view
-      const { data: viewData, error } = await supabase
+      // Query the aggregated view with source type filter
+      let query = supabase
         .from('v_seller_catalog_with_variants' as any)
         .select('*')
         .eq('seller_store_id', storeId);
+
+      // Apply source type filter
+      if (sourceType === 'imported') {
+        query = query.is('source_order_id', null);
+      } else if (sourceType === 'inventory') {
+        query = query.not('source_order_id', 'is', null);
+      }
+      // 'all' = no filter
+
+      const { data: viewData, error } = await query;
 
       if (error) { console.error('useSellerCatalog: Error:', error); throw error; }
 
@@ -238,7 +251,7 @@ export const useSellerCatalog = (showAll: boolean = false) => {
             isActive: v.is_available ?? true,
             importedAt: row.catalog_created_at || new Date().toISOString(),
             sourceProductId: row.source_product_id,
-            sourceOrderId: null,
+            sourceOrderId: row.source_order_id || null,
             orderStatus: null,
             margenPorcentaje: 0,
             gananciaPorUnidad: 0,
@@ -296,12 +309,12 @@ export const useSellerCatalog = (showAll: boolean = false) => {
     } finally {
       setIsLoading(false);
     }
-  }, [storeId, showAll, destinationCountryId]);
+  }, [storeId, showAll, destinationCountryId, sourceType]);
 
   useEffect(() => {
     if (storeId) fetchCatalog();
     else { setItems([]); setProductos([]); setIsLoading(false); }
-  }, [fetchCatalog, storeId, destinationCountryId]);
+  }, [fetchCatalog, storeId, destinationCountryId, sourceType]);
 
   const updateStock = useCallback(async (variantId: string, newStock: number, reason?: string) => {
     if (newStock < 0) { toast.error('El stock no puede ser negativo'); return false; }

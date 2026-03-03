@@ -3,30 +3,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
-// Tipos del inventario B2C
-export interface InventarioB2CItem {
+// Tipos del inventario B2C - Variante individual
+export interface InventarioB2CVariante {
   order_item_id: string;
-  order_id: string;
-  order_number: string;
-  seller_store_id: string;
-  tienda_vendedor: string;
+  variant_id: string;
+  sku: string;
+  color: string;
+  size: string;
+  stock: number;
+  precio_original: number;
+}
+
+// Tipo del producto agrupado con sus variantes
+export interface InventarioB2CItem {
   product_id: string;
   producto_nombre: string;
   descripcion_corta: string;
   imagen_principal: string;
   galeria_imagenes: string[];
-  variant_id: string;
-  sku: string;
-  color: string;
-  size: string;
-  precio_original: number;
-  stock: number;
-  order_status: string;
-  payment_status: string;
+  order_id: string;
+  order_number: string;
+  seller_store_id: string;
+  tienda_vendedor: string;
+  total_stock: number;
+  precio_promedio: number;
   availability_status: 'available' | 'pending' | 'cancelled';
   payment_confirmed_at: string;
   fecha_pedido: string;
   ultima_actualizacion: string;
+  variantes: InventarioB2CVariante[];
+  categoria_id?: string | null; // Categoría del producto original
 }
 
 export interface InventarioB2CResumen {
@@ -70,9 +76,9 @@ export const useInventarioB2C = (options: UseInventarioB2COptions = {}) => {
       setIsLoading(true);
       setError(null);
 
-      // Llamar a la función get_inventario_b2c
+      // Llamar a la función get_inventario_b2c_agrupado
       const { data: inventarioData, error: inventarioError } = await supabase.rpc(
-        'get_inventario_b2c',
+        'get_inventario_b2c_agrupado',
         {
           p_user_id: null, // null = usuario actual
           p_availability_status: options.availability_status || null,

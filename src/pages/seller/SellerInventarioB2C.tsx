@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { useAuth } from "@/hooks/useAuth";
-import { useInventarioB2C, InventarioB2CItem } from "@/hooks/useInventarioB2C";
+import { useInventarioB2C, InventarioB2CItem, InventarioB2CVariante } from "@/hooks/useInventarioB2C";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, AlertCircle, Filter, ShoppingCart } from "lucide-react";
+import { RefreshCw, Package, AlertCircle, Filter, ShoppingCart, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +14,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { PublishToB2CModal, PublishData } from "@/components/seller/PublishToB2CModal";
+import { usePublishToB2C } from "@/hooks/usePublishToB2C";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SellerInventarioB2C() {
   const { user, isLoading: authLoading } = useAuth();
   const [filtro, setFiltro] = useState<'all' | 'available' | 'pending'>('all');
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [selectedItemToPublish, setSelectedItemToPublish] = useState<InventarioB2CItem | null>(null);
   
   const { 
     inventario, 
@@ -32,6 +45,24 @@ export default function SellerInventarioB2C() {
     limit: 100,
   });
 
+  const { publish } = usePublishToB2C();
+  
+  // Obtener store_id del usuario
+  const { data: storeData } = useQuery({
+    queryKey: ['user-store', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('owner_user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -41,9 +72,20 @@ export default function SellerInventarioB2C() {
   };
 
   const handlePublicar = (item: InventarioB2CItem) => {
-    // TODO: Implementar lógica de publicación en B2C marketplace
-    console.log('Publicar producto:', item);
-    // Aquí podrías abrir un modal para configurar precio de venta, etc.
+    setSelectedItemToPublish(item);
+    setPublishModalOpen(true);
+  };
+
+  const handlePublishSubmit = async (data: PublishData) => {
+    if (!storeData?.id) {
+      alert('No se encontró tu tienda. Contacta a soporte.');
+      return;
+    }
+
+    await publish({
+      ...data,
+      storeId: storeData.id,
+    });
   };
 
   if (authLoading || isLoading) {
@@ -185,77 +227,259 @@ export default function SellerInventarioB2C() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {inventario.map((item) => (
-              <Card key={item.order_item_id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                {/* Imagen */}
-                <div className="relative h-48 bg-gray-100">
-                  <img
-                    src={item.imagen_principal}
-                    alt={item.producto_nombre}
-                    className="w-full h-full object-cover"
-                  />
-                  
-                  {/* Badge de disponibilidad */}
-                  <div className="absolute top-2 right-2">
-                    {item.availability_status === 'available' ? (
-                      <Badge className="bg-green-500">✅ Disponible</Badge>
-                    ) : item.availability_status === 'pending' ? (
-                      <Badge className="bg-amber-500">⏳ Pendiente</Badge>
-                    ) : (
-                      <Badge variant="secondary">❌ Cancelado</Badge>
-                    )}
-                  </div>
-                </div>
-
-                <CardContent className="p-4 space-y-3">
-                  {/* Nombre */}
-                  <h3 className="font-semibold text-lg line-clamp-2 min-h-[3.5rem]">
-                    {item.producto_nombre}
-                  </h3>
-
-                  {/* Detalles */}
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <p className="font-mono text-xs">SKU: {item.sku}</p>
-                    {item.color && <p>Color: {item.color}</p>}
-                    {item.size && <p>Talla: {item.size}</p>}
-                    <p className="font-semibold text-blue-600">
-                      Stock: {item.stock} unidades
-                    </p>
-                  </div>
-
-                  {/* Precio */}
-                  <div className="pt-2 border-t">
-                    <p className="text-xs text-muted-foreground">Precio sugerido</p>
-                    <p className="text-xl font-bold">
-                      ${item.precio_original?.toFixed(2)}
-                    </p>
-                  </div>
-
-                  {/* Botón de acción */}
-                  <Button
-                    className="w-full"
-                    onClick={() => handlePublicar(item)}
-                    disabled={item.availability_status !== 'available'}
-                  >
-                    {item.availability_status === 'available' ? (
-                      <>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Publicar en B2C
-                      </>
-                    ) : (
-                      '⏳ En tránsito'
-                    )}
-                  </Button>
-
-                  {/* Info del pedido */}
-                  <p className="text-xs text-muted-foreground text-center">
-                    Pedido: {item.order_number}
-                  </p>
-                </CardContent>
-              </Card>
+              <ProductCard 
+                key={item.product_id} 
+                item={item} 
+                onPublicar={handlePublicar}
+              />
             ))}
           </div>
         )}
       </div>
+      
+      {/* Modal de publicación */}
+      {selectedItemToPublish && (
+        <PublishToB2CModal
+          open={publishModalOpen}
+          onClose={() => {
+            setPublishModalOpen(false);
+            setSelectedItemToPublish(null);
+          }}
+          item={selectedItemToPublish}
+          onPublish={handlePublishSubmit}
+        />
+      )}
     </SellerLayout>
+  );
+}
+
+// Componente para cada tarjeta de producto con variantes
+function ProductCard({ 
+  item, 
+  onPublicar 
+}: { 
+  item: InventarioB2CItem;
+  onPublicar: (item: InventarioB2CItem) => void;
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      {/* Imagen */}
+      <div className="relative h-48 bg-gray-100">
+        <img
+          src={item.imagen_principal}
+          alt={item.producto_nombre}
+          className="w-full h-full object-cover"
+        />
+        
+        {/* Badge de disponibilidad */}
+        <div className="absolute top-2 right-2">
+          {item.availability_status === 'available' ? (
+            <Badge className="bg-green-500">✅ Disponible</Badge>
+          ) : item.availability_status === 'pending' ? (
+            <Badge className="bg-amber-500">⏳ Pendiente</Badge>
+          ) : (
+            <Badge variant="secondary">❌ Cancelado</Badge>
+          )}
+        </div>
+        
+        {/* Badge de cantidad de variantes */}
+        {item.variantes.length > 1 && (
+          <div className="absolute top-2 left-2">
+            <Badge variant="outline" className="bg-white/90">
+              {item.variantes.length} variantes
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      <CardContent className="p-4 space-y-3">
+        {/* Nombre */}
+        <h3 className="font-semibold text-lg line-clamp-2 min-h-[3.5rem]">
+          {item.producto_nombre}
+        </h3>
+
+        {/* Resumen */}
+        <div className="space-y-1 text-sm text-muted-foreground">
+          <p className="font-semibold text-blue-600">
+            <Package className="h-4 w-4 inline mr-1" />
+            Total Stock: {item.total_stock} unidades
+          </p>
+          <p className="text-xs">
+            Precio promedio: <span className="font-bold text-foreground">${item.precio_promedio?.toFixed(2)}</span>
+          </p>
+        </div>
+
+        {/* Botones */}
+        <div className="flex gap-2">
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex-1" size="sm">
+                Ver más
+              </Button>
+            </DialogTrigger>
+            
+            <VariantesModal 
+              item={item} 
+              onClose={() => setIsModalOpen(false)}
+            />
+          </Dialog>
+          
+          <Button 
+            className="flex-1" 
+            size="sm"
+            onClick={() => onPublicar(item)}
+            disabled={item.availability_status === 'cancelled'}
+          >
+            <ShoppingCart className="h-3 w-3 mr-2" />
+            Publicar
+          </Button>
+        </div>
+
+        {/* Info del pedido */}
+        <div className="text-xs text-muted-foreground pt-2 border-t">
+          <p>Pedido: {item.order_number}</p>
+          <p>Tienda: {item.store_name}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Modal con paginación para mostrar variantes
+function VariantesModal({ 
+  item, 
+  onClose 
+}: { 
+  item: InventarioB2CItem;
+  onClose: () => void;
+}) {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [imageZoom, setImageZoom] = useState<string | null>(null);
+  const itemsPerPage = 6;
+  
+  const totalPages = Math.ceil(item.variantes.length / itemsPerPage);
+  const startIdx = currentPage * itemsPerPage;
+  const endIdx = startIdx + itemsPerPage;
+  const currentVariantes = item.variantes.slice(startIdx, endIdx);
+  
+  return (
+    <>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">{item.producto_nombre}</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            {item.variantes.length} variante{item.variantes.length > 1 ? 's' : ''} disponible{item.variantes.length > 1 ? 's' : ''}
+          </p>
+        </DialogHeader>
+        
+        {/* Grid de variantes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          {currentVariantes.map((variante, idx) => (
+            <Card key={variante.variant_id || idx} className="overflow-hidden">
+              {/* Imagen de la variante */}
+              <div 
+                className="relative h-48 bg-gray-100 cursor-pointer group"
+                onClick={() => setImageZoom(item.imagen_principal)}
+              >
+                <img
+                  src={item.imagen_principal}
+                  alt={`${item.producto_nombre} - ${variante.color} ${variante.size}`}
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                  <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </div>
+              
+              <CardContent className="p-4 space-y-2">
+                <div className="space-y-1">
+                  <p className="font-mono text-xs text-muted-foreground">
+                    SKU: {variante.sku}
+                  </p>
+                  
+                  <div className="flex gap-2">
+                    {variante.color && (
+                      <Badge variant="outline">
+                        {variante.color}
+                      </Badge>
+                    )}
+                    {variante.size && (
+                      <Badge variant="outline">
+                        Talla: {variante.size}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-2">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Stock</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {variante.stock}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Precio</p>
+                      <p className="text-xl font-bold">
+                        ${variante.precio_original?.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-4 mt-6 pb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+              disabled={currentPage === 0}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Anterior
+            </Button>
+            
+            <span className="text-sm text-muted-foreground">
+              Página {currentPage + 1} de {totalPages}
+            </span>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+              disabled={currentPage === totalPages - 1}
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+      
+      {/* Lightbox para zoom de imagen */}
+      {imageZoom && (
+        <Dialog open={!!imageZoom} onOpenChange={() => setImageZoom(null)}>
+          <DialogContent className="max-w-4xl p-2">
+            <button
+              onClick={() => setImageZoom(null)}
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+            <img
+              src={imageZoom}
+              alt="Zoom"
+              className="w-full h-auto max-h-[85vh] object-contain"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }

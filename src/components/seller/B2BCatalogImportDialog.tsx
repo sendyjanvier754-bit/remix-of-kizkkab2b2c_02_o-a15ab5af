@@ -173,11 +173,83 @@ export function B2BCatalogImportDialog({
         return;
       }
 
-      const { error } = await supabase
+      // Insert into seller_catalog and get the IDs back
+      const { data: insertedCatalog, error: catalogError } = await supabase
         .from('seller_catalog')
-        .insert(catalogItems);
+        .insert(catalogItems)
+        .select('id, source_product_id, sku');
 
-      if (error) throw error;
+      if (catalogError) throw catalogError;
+      if (!insertedCatalog || insertedCatalog.length === 0) {
+        throw new Error('No se pudieron insertar los productos');
+      }
+
+      // Now create default variants in seller_catalog_variants for each inserted product
+      // Get product_variants for these products
+      const sourceProductIds = insertedCatalog.map(c => c.source_product_id);
+      const { data: productVariants, error: variantsError } = await supabase
+        .from('product_variants')
+        .select('id, product_id, sku, nombre, price')
+        .in('product_id', sourceProductIds);
+
+      if (variantsError) throw variantsError;
+
+      // Create seller_catalog_variants entries
+      const catalogVariants = [];
+      for (const catalog of insertedCatalog) {
+        // Get all product variants for this product
+        const variants = productVariants?.filter(v => v.product_id === catalog.source_product_id) || [];
+        
+        if (variants.length > 0) {
+          // Insert all variants
+          for (const variant of variants) {
+            const selectedProduct = selectedProductsList.find(p => p.id === catalog.source_product_id);
+            const precioVenta = customPrices[catalog.source_product_id!] 
+              || selectedProduct?.suggested_pvp 
+              || selectedProduct?.precio_sugerido_venta 
+              || variant.price;
+
+            catalogVariants.push({
+              seller_catalog_id: catalog.id,
+              variant_id: variant.id,
+              sku: variant.sku,
+              precio_override: precioVenta,
+              stock: 0,
+              is_available: true,
+              availability_status: 'available',
+            });
+          }
+        } else {
+          // No variants found - create a default one
+          const selectedProduct = selectedProductsList.find(p => p.id === catalog.source_product_id);
+          const precioVenta = customPrices[catalog.source_product_id!] 
+            || selectedProduct?.suggested_pvp 
+            || selectedProduct?.precio_sugerido_venta 
+            || selectedProduct?.precio_b2b;
+
+          catalogVariants.push({
+            seller_catalog_id: catalog.id,
+            variant_id: null, // No specific variant
+            sku: catalog.sku,
+            precio_override: precioVenta,
+            stock: 0,
+            is_available: true,
+            availability_status: 'available',
+          });
+        }
+      }
+
+      // Insert all variants
+      if (catalogVariants.length > 0) {
+        const { error: variantsInsertError } = await supabase
+          .from('seller_catalog_variants')
+          .insert(catalogVariants);
+
+        if (variantsInsertError) {
+          console.error('Error inserting variants:', variantsInsertError);
+          // Don't throw - products are already inserted
+        }
+      }
 
       toast.success(`${selectedProducts.size} productos importados exitosamente`);
       onSuccess();

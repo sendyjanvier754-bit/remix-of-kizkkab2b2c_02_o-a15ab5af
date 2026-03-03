@@ -62,6 +62,7 @@ interface CatalogProduct {
   }>;
   store_slug: string;
   store_name: string;
+  sourceOrderId: string | null; // null = importado, not null = del inventario B2B
 }
 
 export const SellerMarketingTools: React.FC = () => {
@@ -80,6 +81,7 @@ export const SellerMarketingTools: React.FC = () => {
   const itemsPerPage = 5;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [productFilter, setProductFilter] = useState<'all' | 'imported' | 'inventory'>('all');
 
   // Transform catalog items to CatalogProduct format — grouped by sourceProductId
   const products: CatalogProduct[] = useMemo(() => {
@@ -104,6 +106,7 @@ export const SellerMarketingTools: React.FC = () => {
           variants: [],
           store_slug: store?.slug || '',
           store_name: store?.name || '',
+          sourceOrderId: item.sourceOrderId,
         });
       } else {
         const group = groups.get(groupId)!;
@@ -120,9 +123,19 @@ export const SellerMarketingTools: React.FC = () => {
     return Array.from(groups.values());
   }, [catalogItems, store]);
 
+  // Filter products by origin
+  const filteredProducts = useMemo(() => {
+    if (productFilter === 'imported') {
+      return products.filter(p => !p.sourceOrderId);
+    } else if (productFilter === 'inventory') {
+      return products.filter(p => p.sourceOrderId !== null);
+    }
+    return products;
+  }, [products, productFilter]);
+
   const selectedProductsData = useMemo(() => {
-    return products.filter(p => selectedProducts.has(p.id));
-  }, [products, selectedProducts]);
+    return filteredProducts.filter(p => selectedProducts.has(p.id));
+  }, [filteredProducts, selectedProducts]);
 
   const toggleProduct = (productId: string) => {
     setSelectedProducts(prev => {
@@ -137,7 +150,7 @@ export const SellerMarketingTools: React.FC = () => {
   };
 
   const selectAll = () => {
-    setSelectedProducts(new Set(products.map(p => p.id)));
+    setSelectedProducts(new Set(filteredProducts.map(p => p.id)));
   };
 
   const clearSelection = () => {
@@ -370,15 +383,55 @@ export const SellerMarketingTools: React.FC = () => {
 
       {/* Products Grid */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-end pb-3 pt-3">
-          {products.length > 0 && (
+        <CardHeader className="flex flex-row items-center justify-between pb-3 pt-3">
+          {/* Product filter */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={productFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setProductFilter('all')}
+              className="h-7 text-xs"
+            >
+              Todos ({products.length})
+            </Button>
+            <Button
+              variant={productFilter === 'imported' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setProductFilter('imported')}
+              className="h-7 text-xs"
+            >
+              📦 Importados ({products.filter(p => !p.sourceOrderId).length})
+            </Button>
+            <Button
+              variant={productFilter === 'inventory' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setProductFilter('inventory')}
+              className="h-7 text-xs"
+            >
+              🛒 Inventario ({products.filter(p => p.sourceOrderId).length})
+            </Button>
+            
+            {/* Botón de importar */}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setImportDialogOpen(true)}
+              className="h-7 text-xs ml-2"
+              style={{ backgroundColor: '#071d7f' }}
+            >
+              <Download className="h-3 w-3 mr-1" />
+              Importar B2B
+            </Button>
+          </div>
+          
+          {filteredProducts.length > 0 && (
             <div className="flex items-center gap-2">
               <button
                 title="Seleccionar todo"
-                onClick={selectedProducts.size === products.length ? clearSelection : selectAll}
+                onClick={selectedProducts.size === filteredProducts.length ? clearSelection : selectAll}
                 className="flex items-center justify-center h-7 w-7 rounded border border-input bg-background hover:bg-accent transition-colors"
               >
-                {selectedProducts.size === products.length
+                {selectedProducts.size === filteredProducts.length
                   ? <Check className="h-4 w-4 text-primary" />
                   : <Check className="h-4 w-4 text-muted-foreground" />}
               </button>
@@ -409,28 +462,59 @@ export const SellerMarketingTools: React.FC = () => {
           )}
         </CardHeader>
         <CardContent>
-          {products.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground space-y-4">
               <Package className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              <p className="font-medium">No tienes productos en tu catálogo</p>
-              <p className="text-sm max-w-md mx-auto">
-                Importa productos directamente desde el catálogo B2B para generar materiales de marketing.
-                ¡No necesitas comprar primero!
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <Button
-                  variant="default"
-                  style={{ backgroundColor: '#071d7f' }}
-                  onClick={() => setImportDialogOpen(true)}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Importar desde B2B
-                </Button>
-              </div>
+              {products.length === 0 ? (
+                <>
+                  <p className="font-medium">No tienes productos en tu catálogo</p>
+                  <p className="text-sm max-w-md mx-auto">
+                    Importa productos directamente desde el catálogo B2B para generar materiales de marketing.
+                    ¡No necesitas comprar primero!
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button
+                      variant="default"
+                      style={{ backgroundColor: '#071d7f' }}
+                      onClick={() => setImportDialogOpen(true)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Importar desde B2B
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium">No hay productos {productFilter === 'imported' ? 'importados' : 'del inventario B2B'}</p>
+                  <p className="text-sm max-w-md mx-auto">
+                    {productFilter === 'imported' 
+                      ? 'Importa productos desde el catálogo B2B para marketing sin necesidad de comprarlos primero.'
+                      : 'Publica productos desde tu Inventario B2C para agregarlos a marketing.'}
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {productFilter === 'imported' && (
+                      <Button
+                        variant="default"
+                        style={{ backgroundColor: '#071d7f' }}
+                        onClick={() => setImportDialogOpen(true)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Importar desde B2B
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => setProductFilter('all')}
+                    >
+                      Ver todos los productos
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {products.map(product => {
+              {filteredProducts.map(product => {
                 const isSelected = selectedProducts.has(product.id);
                 return (
                   <div 
@@ -448,6 +532,16 @@ export const SellerMarketingTools: React.FC = () => {
                         checked={isSelected}
                         className="bg-white/80 backdrop-blur-sm"
                       />
+                    </div>
+                    
+                    {/* Origen badge */}
+                    <div className="absolute top-2 left-10 z-10">
+                      <Badge 
+                        variant={product.sourceOrderId ? "default" : "secondary"}
+                        className="text-[10px] px-1.5 py-0 h-5 bg-white/90 backdrop-blur-sm border"
+                      >
+                        {product.sourceOrderId ? '🛒 Inventario' : '📦 Importado'}
+                      </Badge>
                     </div>
                     
                     {/* Quick actions */}
