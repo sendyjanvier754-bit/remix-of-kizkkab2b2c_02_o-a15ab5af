@@ -51,8 +51,7 @@ export const useProductShippingCosts = (productIds?: string[]) => {
         const { data, error: queryError } = await supabase
           .from('v_product_shipping_costs')
           .select('*')
-          .in('product_id', ids)
-          .timeout(10000); // Timeout de 10 segundos
+          .in('product_id', ids);
 
         if (queryError) {
           console.warn('Error fetching shipping costs from view:', queryError);

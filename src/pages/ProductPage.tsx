@@ -511,6 +511,8 @@ const ProductPage = () => {
       addItemB2B({
         productId: product.source_product?.id || product.id,
         variantId: null,
+        sku: product.sku || '',
+        nombre: product.nombre || '',
         quantity: quantity,
         unitPrice: priceToAdd,
         moq: moq,
@@ -564,6 +566,8 @@ const ProductPage = () => {
           addItemB2B({
             productId: product.source_product?.id || product.id,
             variantId: null,
+            sku: product.sku || '',
+            nombre: product.nombre || '',
             quantity: qty,
             unitPrice: priceToAdd,
             moq: moq,

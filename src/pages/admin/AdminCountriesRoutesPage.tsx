@@ -207,6 +207,7 @@ export default function AdminCountriesRoutesPage() {
   const handleCostSubmit = () => {
     const costData = {
       ...costForm,
+      transport_type: 'aereo' as const,
       notes: costForm.notes || null,
     };
     if (editingCost) {

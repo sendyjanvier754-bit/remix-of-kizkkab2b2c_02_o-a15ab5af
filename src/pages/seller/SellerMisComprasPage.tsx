@@ -193,7 +193,7 @@ const SellerMisComprasPage = () => {
         nombre: item.nombre,
         cantidad: item.cantidad,
         precio_unitario: item.precio_unitario,
-        subtotal: item.precio_total,
+        subtotal: item.subtotal,
         color: item.sku?.split('-')[1],
         size: item.sku?.split('-')[2],
         image: item.image || undefined,
@@ -699,7 +699,7 @@ const SellerMisComprasPage = () => {
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <p className="font-semibold">${item.precio_total?.toLocaleString() || '0'}</p>
+                            <p className="font-semibold">${item.subtotal?.toLocaleString() || '0'}</p>
                             <p className="text-xs text-muted-foreground">× {item.cantidad} uds</p>
                           </div>
                           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -884,7 +884,7 @@ const SellerMisComprasPage = () => {
             
             // Calculate totals for all variants
             const totalQuantity = allVariants.reduce((sum, item) => sum + item.cantidad, 0);
-            const totalSubtotal = allVariants.reduce((sum, item) => sum + (item.precio_total || 0), 0);
+            const totalSubtotal = allVariants.reduce((sum, item) => sum + (item.subtotal || 0), 0);
             
             return (
               <>

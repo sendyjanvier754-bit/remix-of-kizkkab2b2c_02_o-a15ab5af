@@ -25,8 +25,11 @@ interface ShippingRoute {
 interface ShippingTier {
   id: string;
   route_id: string;
-  tier_type: string; // e.g. 'standard', 'express', 'economy', 'fast', 'priority'
+  tier_type: string;
   tier_name: string;
+  custom_tier_name?: string;
+  tier_origin_country?: string;
+  tier_destination_country?: string;
   transport_type: 'maritimo' | 'aereo' | 'terrestre';
   tramo_a_cost_per_kg: number;
   tramo_a_eta_min: number;

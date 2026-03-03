@@ -90,6 +90,8 @@ export const useSmartCart = () => {
       b2bCart.addItem({
         productId: product.id,
         variantId: null,
+        sku: product.sku,
+        nombre: product.name,
         quantity: moq,
         unitPrice: priceB2B,
         moq: moq,

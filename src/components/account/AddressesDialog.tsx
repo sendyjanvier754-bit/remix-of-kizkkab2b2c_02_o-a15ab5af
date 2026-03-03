@@ -37,6 +37,8 @@ const emptyAddress: AddressInput = {
   country: 'Haiti',
   is_default: false,
   notes: '',
+  department_id: null,
+  commune_id: null,
 };
 
 export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) => {
@@ -65,6 +67,8 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
       country: address.country,
       is_default: address.is_default,
       notes: address.notes || '',
+      department_id: address.department_id || null,
+      commune_id: address.commune_id || null,
     });
     setIsEditing(true);
   };

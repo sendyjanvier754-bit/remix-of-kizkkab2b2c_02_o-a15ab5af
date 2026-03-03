@@ -82,7 +82,6 @@ export const useBuyerOrders = (statusFilter?: BuyerOrderStatus | 'all') => {
 
       return filteredData;
     },
-    enabled: !!user?.id,
   });
 };
 
@@ -233,7 +232,6 @@ export const useBuyerB2BOrders = (statusFilter?: BuyerOrderStatus | 'all') => {
 
       return filteredData;
     },
-    enabled: !!user?.id,
   });
 };
 

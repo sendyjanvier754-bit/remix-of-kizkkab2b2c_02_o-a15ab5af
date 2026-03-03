@@ -340,7 +340,7 @@ function ProductCard({
         {/* Info del pedido */}
         <div className="text-xs text-muted-foreground pt-2 border-t">
           <p>Pedido: {item.order_number}</p>
-          <p>Tienda: {item.store_name}</p>
+          <p>Tienda: {item.tienda_vendedor}</p>
         </div>
       </CardContent>
     </Card>

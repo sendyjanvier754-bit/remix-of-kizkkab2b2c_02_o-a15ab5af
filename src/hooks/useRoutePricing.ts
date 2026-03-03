@@ -32,8 +32,8 @@ export function useRoutePricing() {
 
       return {
         id: route.id,
-        countryName: route.destination_country?.name || 'Desconocido',
-        countryCode: route.destination_country?.code || '??',
+        countryName: route.destination_country_info?.name || (typeof route.destination_country === 'object' ? (route.destination_country as any)?.name : null) || 'Desconocido',
+        countryCode: route.destination_country_info?.code || (typeof route.destination_country === 'object' ? (route.destination_country as any)?.code : null) || '??',
         hubName: route.transit_hub?.name,
         hubCode: route.transit_hub?.code,
         isDirect: route.is_direct,

@@ -75,6 +75,7 @@ const AdminUserDiscounts = lazy(() => import("./pages/admin/AdminUserDiscounts")
 const AdminCartAnalytics = lazy(() => import("./pages/admin/AdminCartAnalytics"));
 const AdminLogisticsPage = lazy(() => import("./pages/admin/AdminLogisticsPage"));
 const AdminInventoryPage = lazy(() => import("./pages/admin/AdminInventoryPage"));
+const AdminPOMasterPage = lazy(() => import("./pages/admin/AdminPOMasterPage"));
 const AdminPaymentMethodsPage = lazy(() => import("./pages/admin/AdminPaymentMethodsPage"));
 const AdminMarketplaceSections = lazy(() => import("./pages/admin/AdminMarketplaceSections"));
 const AdminCountriesRoutesPage = lazy(() => import("./pages/admin/AdminCountriesRoutesPage"));
@@ -311,6 +312,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminInventoryPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/po-master" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminPOMasterPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />

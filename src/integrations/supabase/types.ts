@@ -2237,6 +2237,7 @@ export type Database = {
           auto_close_at: string | null
           china_tracking: string | null
           close_reason: string | null
+          close_trigger: string | null
           closed_at: string | null
           country_code: string | null
           created_at: string
@@ -2248,21 +2249,26 @@ export type Database = {
           has_sensitive_orders: boolean | null
           hub_code: string | null
           id: string
+          market_id: string | null
           metadata: Json | null
           notes: string | null
           orders_at_close: number | null
           po_number: string
+          quantity_threshold: number | null
+          scheduled_close_at: string | null
           status: string | null
           total_amount: number | null
           total_orders: number | null
           total_quantity: number | null
           transit_tracking: string | null
           updated_at: string
+          weight_threshold_kg: number | null
         }
         Insert: {
           auto_close_at?: string | null
           china_tracking?: string | null
           close_reason?: string | null
+          close_trigger?: string | null
           closed_at?: string | null
           country_code?: string | null
           created_at?: string
@@ -2274,21 +2280,26 @@ export type Database = {
           has_sensitive_orders?: boolean | null
           hub_code?: string | null
           id?: string
+          market_id?: string | null
           metadata?: Json | null
           notes?: string | null
           orders_at_close?: number | null
           po_number: string
+          quantity_threshold?: number | null
+          scheduled_close_at?: string | null
           status?: string | null
           total_amount?: number | null
           total_orders?: number | null
           total_quantity?: number | null
           transit_tracking?: string | null
           updated_at?: string
+          weight_threshold_kg?: number | null
         }
         Update: {
           auto_close_at?: string | null
           china_tracking?: string | null
           close_reason?: string | null
+          close_trigger?: string | null
           closed_at?: string | null
           country_code?: string | null
           created_at?: string
@@ -2300,18 +2311,37 @@ export type Database = {
           has_sensitive_orders?: boolean | null
           hub_code?: string | null
           id?: string
+          market_id?: string | null
           metadata?: Json | null
           notes?: string | null
           orders_at_close?: number | null
           po_number?: string
+          quantity_threshold?: number | null
+          scheduled_close_at?: string | null
           status?: string | null
           total_amount?: number | null
           total_orders?: number | null
           total_quantity?: number | null
           transit_tracking?: string | null
           updated_at?: string
+          weight_threshold_kg?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "master_purchase_orders_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_purchase_orders_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -2612,6 +2642,7 @@ export type Database = {
           discount_amount: number | null
           hybrid_tracking_id: string | null
           id: string
+          internal_tracking_id: string | null
           is_express: boolean | null
           is_oversize: boolean | null
           is_sensitive: boolean | null
@@ -2621,12 +2652,14 @@ export type Database = {
           metadata: Json | null
           notes: string | null
           order_number: string | null
+          origin_segment: string | null
           packing_instructions: string | null
           payment_confirmed_at: string | null
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           po_id: string | null
           po_linked_at: string | null
+          preparing_at: string | null
           reservation_expires_at: string | null
           seller_id: string
           shipping_address: Json | null
@@ -2658,6 +2691,7 @@ export type Database = {
           discount_amount?: number | null
           hybrid_tracking_id?: string | null
           id?: string
+          internal_tracking_id?: string | null
           is_express?: boolean | null
           is_oversize?: boolean | null
           is_sensitive?: boolean | null
@@ -2667,12 +2701,14 @@ export type Database = {
           metadata?: Json | null
           notes?: string | null
           order_number?: string | null
+          origin_segment?: string | null
           packing_instructions?: string | null
           payment_confirmed_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           po_id?: string | null
           po_linked_at?: string | null
+          preparing_at?: string | null
           reservation_expires_at?: string | null
           seller_id: string
           shipping_address?: Json | null
@@ -2704,6 +2740,7 @@ export type Database = {
           discount_amount?: number | null
           hybrid_tracking_id?: string | null
           id?: string
+          internal_tracking_id?: string | null
           is_express?: boolean | null
           is_oversize?: boolean | null
           is_sensitive?: boolean | null
@@ -2713,12 +2750,14 @@ export type Database = {
           metadata?: Json | null
           notes?: string | null
           order_number?: string | null
+          origin_segment?: string | null
           packing_instructions?: string | null
           payment_confirmed_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           po_id?: string | null
           po_linked_at?: string | null
+          preparing_at?: string | null
           reservation_expires_at?: string | null
           seller_id?: string
           shipping_address?: Json | null
@@ -3179,6 +3218,63 @@ export type Database = {
           value?: string | null
         }
         Relationships: []
+      }
+      po_market_settings: {
+        Row: {
+          auto_close_enabled: boolean | null
+          close_cron_expression: string | null
+          close_mode: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          market_id: string
+          quantity_threshold: number | null
+          time_interval_hours: number | null
+          updated_at: string | null
+          weight_threshold_kg: number | null
+        }
+        Insert: {
+          auto_close_enabled?: boolean | null
+          close_cron_expression?: string | null
+          close_mode?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          market_id: string
+          quantity_threshold?: number | null
+          time_interval_hours?: number | null
+          updated_at?: string | null
+          weight_threshold_kg?: number | null
+        }
+        Update: {
+          auto_close_enabled?: boolean | null
+          close_cron_expression?: string | null
+          close_mode?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          market_id?: string
+          quantity_threshold?: number | null
+          time_interval_hours?: number | null
+          updated_at?: string | null
+          weight_threshold_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_market_settings_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_market_settings_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       po_order_links: {
         Row: {
@@ -4398,6 +4494,7 @@ export type Database = {
       }
       seller_catalog: {
         Row: {
+          category_id: string | null
           costo_logistica: number | null
           created_at: string
           descripcion: string | null
@@ -4419,6 +4516,7 @@ export type Database = {
           variant_id: string | null
         }
         Insert: {
+          category_id?: string | null
           costo_logistica?: number | null
           created_at?: string
           descripcion?: string | null
@@ -4440,6 +4538,7 @@ export type Database = {
           variant_id?: string | null
         }
         Update: {
+          category_id?: string | null
           costo_logistica?: number | null
           created_at?: string
           descripcion?: string | null
@@ -4461,6 +4560,13 @@ export type Database = {
           variant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "seller_catalog_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "seller_catalog_seller_store_id_fkey"
             columns: ["seller_store_id"]
@@ -7015,11 +7121,9 @@ export type Database = {
           product_images: string[] | null
           product_name: string | null
           seller_store_id: string | null
+          source_order_id: string | null
           source_product_id: string | null
-          stock_available: number | null
-          stock_pending: number | null
-          tiene_stock_disponible: boolean | null
-          tiene_stock_pendiente: boolean | null
+          tiene_variantes_disponibles: boolean | null
           total_stock: number | null
           total_variantes: number | null
           variantes: Json | null
@@ -7357,6 +7461,10 @@ export type Database = {
         Returns: Json
       }
       cleanup_deleted_product_images: { Args: never; Returns: Json }
+      close_market_po_and_open_next: {
+        Args: { p_close_reason?: string; p_po_id: string }
+        Returns: Json
+      }
       close_po_and_open_new: {
         Args: { p_close_reason?: string; p_po_id: string }
         Returns: Json
@@ -7417,10 +7525,26 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_inventario_b2c_agrupado: {
+        Args: {
+          p_availability_status?: string
+          p_limit?: number
+          p_user_id?: string
+        }
+        Returns: Database["public"]["CompositeTypes"]["inventario_b2c_producto_agrupado"][]
+        SetofOptions: {
+          from: "*"
+          to: "inventario_b2c_producto_agrupado"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_inventario_b2c_resumen: {
         Args: { p_user_id?: string }
         Returns: Json
       }
+      get_market_po_dashboard: { Args: never; Returns: Json }
+      get_or_create_market_po: { Args: { p_market_id: string }; Returns: Json }
       get_primary_role: { Args: { p_user_id: string }; Returns: string }
       get_product_market_analysis: {
         Args: { p_product_id: string }
@@ -7485,6 +7609,10 @@ export type Database = {
       }
       refresh_suggested_pvp_cache: { Args: never; Returns: undefined }
       sync_missing_profiles_and_roles: { Args: never; Returns: Json }
+      update_po_china_tracking: {
+        Args: { p_china_tracking: string; p_po_id: string }
+        Returns: Json
+      }
       validate_product_for_shipping: {
         Args: { p_product_id: string; p_tier_type?: string }
         Returns: Json
@@ -7559,6 +7687,25 @@ export type Database = {
         payment_confirmed_at: string | null
         fecha_pedido: string | null
         ultima_actualizacion: string | null
+      }
+      inventario_b2c_producto_agrupado: {
+        product_id: string | null
+        producto_nombre: string | null
+        descripcion_corta: string | null
+        imagen_principal: string | null
+        galeria_imagenes: string[] | null
+        order_id: string | null
+        order_number: string | null
+        seller_store_id: string | null
+        tienda_vendedor: string | null
+        total_stock: number | null
+        precio_promedio: number | null
+        availability_status: string | null
+        payment_confirmed_at: string | null
+        fecha_pedido: string | null
+        ultima_actualizacion: string | null
+        variantes: Json | null
+        categoria_id: string | null
       }
     }
   }

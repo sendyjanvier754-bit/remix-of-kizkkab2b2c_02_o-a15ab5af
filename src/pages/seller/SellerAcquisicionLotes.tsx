@@ -160,6 +160,8 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
     addItemToCart({
       productId: item.productId,
       variantId: item.variantId || null,
+      sku: item.sku || '',
+      nombre: item.nombre,
       quantity: item.cantidad,
       unitPrice: item.precio_b2b,
       moq: item.moq,

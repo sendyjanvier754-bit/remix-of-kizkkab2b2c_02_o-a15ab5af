@@ -60,6 +60,7 @@ const mainNavItems = [
 ];
 
 const analyticsItems = [
+  { title: "PO Maestra", url: "/admin/po-master", icon: Package },
   { title: "Optimización Inventario", url: "/admin/cart-analytics", icon: BarChart3 },
   { title: "Gestión Inventario", url: "/admin/inventory", icon: Package },
 ];

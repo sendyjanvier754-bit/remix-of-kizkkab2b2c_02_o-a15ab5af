@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";import { generateStoreSlug } from '@/utils/storeSlugGenerator';import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { generateStoreSlug, generateUniqueStoreSlug } from '@/utils/storeSlugGenerator';
+import { toast } from "sonner";
 
 // Local types that match what the code expects (DB enum may differ)
 export type ApprovalRequestType = 'kyc_verification' | 'referral_bonus' | 'credit_limit_increase' | 'credit_activation' | 'seller_upgrade' | 'withdrawal' | 'refund' | 'credit_purchase' | 'kyc_review';
