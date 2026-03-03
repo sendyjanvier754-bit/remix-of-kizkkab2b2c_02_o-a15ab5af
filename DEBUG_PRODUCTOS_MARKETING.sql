@@ -35,15 +35,15 @@ ORDER BY sc.nombre, scv.sku;
 SELECT 
   'v_seller_catalog_with_variants' as vista,
   catalog_id,
-  nombre_producto,
+  nombre,
+  product_name,
   source_product_id,
   source_order_id,
-  COUNT(*) as num_variantes,
+  total_variantes as num_variantes,
   CASE WHEN source_order_id IS NULL THEN '📦 Importado' ELSE '🛒 Inventario' END as tipo
 FROM v_seller_catalog_with_variants
 WHERE source_order_id IS NULL
-GROUP BY catalog_id, nombre_producto, source_product_id, source_order_id
-ORDER BY nombre_producto;
+ORDER BY nombre;
 
 -- 4️⃣ CLAVE: Ver si hay productos con el MISMO source_product_id  
 -- (esto causaría que Marketing los agrupe como UNO)
@@ -51,7 +51,7 @@ SELECT
   '🔍 Agrupación por source_product_id' as analisis,
   source_product_id,
   COUNT(DISTINCT catalog_id) as num_productos_distintos,
-  STRING_AGG(DISTINCT nombre_producto, ', ') as nombres
+  STRING_AGG(DISTINCT nombre, ', ') as nombres
 FROM v_seller_catalog_with_variants
 WHERE source_order_id IS NULL
 GROUP BY source_product_id
@@ -60,11 +60,12 @@ HAVING COUNT(DISTINCT catalog_id) > 1;  -- Productos que comparten source_produc
 -- 5️⃣ Ver información completa actual
 SELECT 
   catalog_id,
-  nombre_producto,
+  nombre,
+  product_name,
   source_product_id,
   source_order_id,
   total_stock,
-  JSONB_ARRAY_LENGTH(variantes) as num_variantes_en_json
+  total_variantes
 FROM v_seller_catalog_with_variants
 WHERE source_order_id IS NULL
-ORDER BY nombre_producto;
+ORDER BY nombre;
