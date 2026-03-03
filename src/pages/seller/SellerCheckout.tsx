@@ -269,7 +269,12 @@ const SellerCheckout = () => {
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('❌ Error al crear orden en orders_b2b:', orderError);
+        throw orderError;
+      }
+
+      console.log('✅ Orden creada exitosamente:', order.id);
 
       // Create order items (only include columns that exist in order_items_b2b table)
       const orderItems = items.map(item => ({
@@ -279,18 +284,28 @@ const SellerCheckout = () => {
         nombre: item.name,
         cantidad: item.cantidad,
         precio_unitario: item.precioB2B,
-        precio_total: item.subtotal,  // La columna se llama precio_total, no subtotal
+        precio_total: item.subtotal,  // La columna se llama precio_total según types.ts y la auditoría previa
       }));
+
+      console.log('📦 Insertando items:', orderItems.length, 'items');
+      console.log('📦 Ejemplo de item:', orderItems[0]);
 
       const { error: itemsError } = await supabase
         .from('order_items_b2b')
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('❌ Error al insertar items en order_items_b2b:', itemsError);
+        console.error('❌ Items que se intentaron insertar:', orderItems);
+        throw itemsError;
+      }
+
+      console.log('✅ Items insertados exitosamente');
 
       return order;
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('❌ Error creating order:', error);
+      console.error('❌ Error completo:', JSON.stringify(error, null, 2));
       toast.error('Error al crear pedido');
       return null;
     }
