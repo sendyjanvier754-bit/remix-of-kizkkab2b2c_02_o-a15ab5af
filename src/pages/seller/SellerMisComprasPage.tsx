@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { generateInvoicePDF } from '@/services/pdfGenerators';
+import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
 import { 
   Package, 
   Clock, 
@@ -44,7 +45,8 @@ import {
   Ship,
   Plane,
   Warehouse,
-  PackageCheck
+  PackageCheck,
+  Upload
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -699,7 +701,7 @@ const SellerMisComprasPage = () => {
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <p className="font-semibold">${item.subtotal?.toLocaleString() || '0'}</p>
+                            <p className="font-semibold">${((item as any).precio_total != null ? Number((item as any).precio_total) : Number(item.precio_unitario || 0) * Number(item.cantidad || 0)).toFixed(2)}</p>
                             <p className="text-xs text-muted-foreground">× {item.cantidad} uds</p>
                           </div>
                           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -709,15 +711,70 @@ const SellerMisComprasPage = () => {
                   </div>
                 </div>
 
-                {/* Total */}
-                <div className="border-t pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold">Total</span>
-                    <span className="text-2xl font-bold text-primary">
-                      {selectedOrder.currency} ${selectedOrder.total_amount.toLocaleString()}
-                    </span>
+                {/* Payment Breakdown */}
+                {(() => {
+                  const meta = selectedOrder.metadata as any;
+                  const itemsSubtotal = Number(meta?.items_subtotal) || Number((selectedOrder as any).subtotal) || selectedOrder.order_items_b2b?.reduce((sum, item) => sum + ((item as any).precio_total != null ? Number((item as any).precio_total) : Number(item.precio_unitario || 0) * Number(item.cantidad || 0)), 0) || 0;
+                  const shippingCost = Number(selectedOrder.shipping_cost_total_usd || meta?.shipping_cost || 0);
+                  const platformFee = Number(meta?.platform_fee || meta?.fee_plataforma || 0);
+                  const discount = Number(meta?.discount_amount || 0);
+                  const totalAmount = Number(selectedOrder.total_amount || 0);
+
+                  return (
+                    <div className="border-t pt-4 space-y-2">
+                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Resumen de Pago</h4>
+                      <div className="bg-primary/10 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Subtotal productos</span>
+                          <span>${itemsSubtotal.toFixed(2)}</span>
+                        </div>
+                        {shippingCost > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Envío / Logística</span>
+                            <span>${shippingCost.toFixed(2)}</span>
+                          </div>
+                        )}
+                        {platformFee > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Fee plataforma</span>
+                            <span>${platformFee.toFixed(2)}</span>
+                          </div>
+                        )}
+                        {discount > 0 && (
+                          <div className="flex justify-between text-sm text-green-600">
+                            <span>Descuento</span>
+                            <span>-${discount.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="border-t pt-2 flex justify-between items-center">
+                          <span className="font-semibold text-base">Total a Pagar</span>
+                          <span className="text-2xl font-bold text-primary">
+                            ${totalAmount.toFixed(2)} <span className="text-sm font-normal">{selectedOrder.currency}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Comprobante de Pago — for manual payment methods awaiting validation */}
+                {selectedOrder.payment_method !== 'stripe' &&
+                  selectedOrder.payment_status !== 'paid' &&
+                  selectedOrder.status !== 'cancelled' && (
+                  <div className="border-t pt-4 space-y-2">
+                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Comprobante de Pago
+                    </h4>
+                    <PaymentProofUpload
+                      orderId={selectedOrder.id}
+                      existingUrl={(selectedOrder.metadata as any)?.payment_proof_url}
+                      onUploaded={() => {
+                        queryClient.invalidateQueries({ queryKey: ['buyer-b2b-orders'] });
+                      }}
+                    />
                   </div>
-                </div>
+                )}
 
                 {/* Cancellation Info */}
                 {selectedOrder.status === 'cancelled' && (

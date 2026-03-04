@@ -48,6 +48,9 @@ export interface BuyerOrder {
   } | null;
   created_at: string;
   updated_at: string;
+  shipping_cost_total_usd?: number | null;
+  shipping_cost_global_usd?: number | null;
+  shipping_cost_local_usd?: number | null;
   order_items_b2b?: BuyerOrderItem[];
   seller_profile?: { full_name: string | null; email: string | null } | null;
 }

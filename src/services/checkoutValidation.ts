@@ -72,14 +72,7 @@ export const validateB2CCheckout = (data: B2CCheckoutData): CheckoutValidationEr
     });
   }
 
-  // Check payment reference for MonCash/NatCash/Transfer
-  if ((data.paymentMethod === 'moncash' || data.paymentMethod === 'natcash' || data.paymentMethod === 'transfer') && !data.paymentReference?.trim()) {
-    const methodName = data.paymentMethod === 'moncash' ? 'MonCash' : data.paymentMethod === 'natcash' ? 'NatCash' : 'transferencia';
-    errors.push({
-      field: 'paymentReference',
-      message: `Ingresa tu referencia de ${methodName}`,
-    });
-  }
+  // Payment reference is no longer required — sellers upload a proof (comprobante) from Mis Compras
 
   return errors;
 };
@@ -130,14 +123,7 @@ export const validateB2BCheckout = (data: B2BCheckoutData): CheckoutValidationEr
     });
   }
 
-  // Check payment reference for MonCash/NatCash/Transfer
-  if ((data.paymentMethod === 'moncash' || data.paymentMethod === 'natcash' || data.paymentMethod === 'transfer') && !data.paymentReference?.trim()) {
-    const methodName = data.paymentMethod === 'moncash' ? 'MonCash' : data.paymentMethod === 'natcash' ? 'NatCash' : 'transferencia';
-    errors.push({
-      field: 'paymentReference',
-      message: `Ingresa tu referencia de ${methodName}`,
-    });
-  }
+  // Payment reference is no longer required — sellers upload a proof (comprobante) from Mis Compras
 
   return errors;
 };

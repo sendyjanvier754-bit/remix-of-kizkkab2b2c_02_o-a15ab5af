@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +37,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: React.ElementType }> = {
   draft: { label: 'Borrador', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: Clock },
@@ -96,6 +99,25 @@ const AdminPedidos = () => {
   // Payment confirmation state
   const [paymentConfirmationNotes, setPaymentConfirmationNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+
+  // Live query for selected order — ensures metadata (e.g. payment_proof_url) is always fresh
+  const { data: liveSelectedOrder } = useQuery({
+    queryKey: ['admin-order-live', selectedOrder?.id],
+    enabled: !!selectedOrder?.id,
+    refetchInterval: 5000, // poll every 5s so proof appears without reload
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orders_b2b')
+        .select('*, order_items_b2b (*), profiles:profiles!orders_b2b_seller_id_fkey (full_name, email), buyer_profile:profiles!orders_b2b_buyer_id_fkey (full_name, email)')
+        .eq('id', selectedOrder!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Merge: use live data when available so proof_url is never stale
+  const dialogOrder = liveSelectedOrder ? { ...selectedOrder, ...liveSelectedOrder } as typeof selectedOrder : selectedOrder;
 
   const { data: orders, isLoading } = useAllOrders({ status: statusFilter, search: searchTerm });
   const { data: stats } = useOrderStats();
@@ -577,6 +599,8 @@ const AdminPedidos = () => {
                       <p className="font-mono text-sm">{(selectedOrder.metadata as any).payment_reference}</p>
                     </div>
                   )}
+
+                  {/* Payment proof upload/view - moved to standalone section below */}
                   
                   <div className="space-y-2">
                     <Label htmlFor="paymentNotes">Notas de confirmación (opcional)</Label>
@@ -617,6 +641,29 @@ const AdminPedidos = () => {
                   </div>
                 </div>
               )}
+
+              {/* COMPROBANTE DE PAGO - always visible for manual payment methods */}
+              {selectedOrder.payment_method && selectedOrder.payment_method !== 'stripe' && (() => {
+                const proofUrl = (dialogOrder?.metadata as any)?.payment_proof_url ?? null;
+                return (
+                  <div className="p-4 bg-muted/40 rounded-lg space-y-3 border">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <p className="font-medium text-sm">Comprobante de Pago</p>
+                      {proofUrl ? (
+                        <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Subido</span>
+                      ) : (
+                        <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Pendiente</span>
+                      )}
+                    </div>
+                    <PaymentProofUpload
+                      orderId={selectedOrder.id}
+                      existingUrl={proofUrl}
+                      readOnly
+                    />
+                  </div>
+                );
+              })()}
 
               {/* Update Status - Only show if payment is already confirmed */}
               {selectedOrder.payment_status === 'paid' && (
@@ -758,7 +805,7 @@ const AdminPedidos = () => {
                           </TableCell>
                           <TableCell className="text-center">{item.cantidad}</TableCell>
                           <TableCell className="text-right">${Number(item.precio_unitario).toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">${Number(item.precio_total ?? item.subtotal ?? (item.precio_unitario * item.cantidad)).toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-medium">${(item.precio_total != null ? Number(item.precio_total) : Number(item.precio_unitario || 0) * Number(item.cantidad || 0)).toFixed(2)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -769,10 +816,10 @@ const AdminPedidos = () => {
               {/* Cost Breakdown */}
               {(() => {
                 const meta = selectedOrder.metadata as any;
-                const itemsSubtotal = selectedOrder.order_items_b2b?.reduce((sum, item) => sum + Number(item.subtotal || 0), 0) || 0;
-                const shippingCost = Number(meta?.shipping_cost || meta?.costo_envio || 0);
+                const itemsSubtotal = Number(meta?.items_subtotal) || Number((selectedOrder as any).subtotal) || selectedOrder.order_items_b2b?.reduce((sum, item) => sum + (item.precio_total != null ? Number(item.precio_total) : Number(item.precio_unitario || 0) * Number(item.cantidad || 0)), 0) || 0;
+                const shippingCost = Number(selectedOrder.shipping_cost_total_usd || meta?.shipping_cost || 0);
                 const platformFee = Number(meta?.platform_fee || meta?.fee_plataforma || 0);
-                const discount = Number(meta?.discount_amount || meta?.descuento || 0);
+                const discount = Number(meta?.discount_amount || 0);
                 const totalAmount = Number(selectedOrder.total_amount || 0);
                 
                 return (

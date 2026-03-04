@@ -37,6 +37,9 @@ export interface Order {
   metadata: any;
   created_at: string;
   updated_at: string;
+  shipping_cost_total_usd?: number | null;
+  shipping_cost_global_usd?: number | null;
+  shipping_cost_local_usd?: number | null;
   profiles?: { full_name: string | null; email: string | null } | null;
   buyer_profile?: { full_name: string | null; email: string | null } | null;
   order_items_b2b?: OrderItem[];

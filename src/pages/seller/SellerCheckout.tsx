@@ -240,7 +240,15 @@ const SellerCheckout = () => {
       // Create order with shipping address and delivery info in metadata
       const orderSubtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
       const orderTotalQuantity = items.reduce((sum, item) => sum + item.cantidad, 0);
-      
+      const orderShipping = shippingData?.shippingCostTotalUsd ?? 0;
+      const orderDiscount = discountAmount ?? 0;
+      const grandTotal = orderSubtotal + orderShipping - orderDiscount;
+
+      // Persist breakdown fields in metadata for display later
+      metadata.items_subtotal = orderSubtotal;
+      if (orderShipping > 0) metadata.shipping_cost = orderShipping;
+      if (orderDiscount > 0) metadata.discount_amount = orderDiscount;
+
       // Determine payment_status based on payment method
       const paymentStatus = paymentMethod === 'stripe' 
         ? 'pending' 
@@ -251,7 +259,8 @@ const SellerCheckout = () => {
         .insert({
           seller_id: user.id,
           buyer_id: user.id,
-          total_amount: orderSubtotal,
+          total_amount: grandTotal,
+          subtotal: orderSubtotal,
           total_quantity: orderTotalQuantity,
           payment_method: paymentMethod,
           payment_status: paymentStatus,
@@ -1375,24 +1384,16 @@ const SellerCheckout = () => {
                   </div>
                 )}
 
-                {/* Payment Reference (for non-Stripe methods) */}
+                {/* Info: proof upload happens from Mis Compras after placing order */}
                 {paymentMethod !== 'stripe' && (
                   <div className="mt-3 space-y-3">
-                    <div>
-                      <Label htmlFor="payment-reference">
-                        Referencia de Pago *
-                      </Label>
-                      <Input
-                        id="payment-reference"
-                        placeholder="Ej: Número de transacción o confirmación"
-                        value={paymentReference}
-                        onChange={(e) => setPaymentReference(e.target.value)}
-                        className={`mt-1 ${hasFieldError(validationErrors, 'paymentReference') ? 'border-red-500' : ''}`}
-                      />
-                      {hasFieldError(validationErrors, 'paymentReference') && (
-                        <p className="text-sm text-red-600 mt-1">{getFieldError(validationErrors, 'paymentReference')}</p>
-                      )}
-                    </div>
+                    <Alert className="border-amber-200 bg-amber-50">
+                      <Info className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-800 text-sm">
+                        Realiza el pago y luego <strong>sube el comprobante desde "Mis Compras"</strong>. 
+                        Tu pedido quedará en estado <em>Pendiente de Pago</em> hasta que el admin lo confirme.
+                      </AlertDescription>
+                    </Alert>
                     <div>
                       <Label htmlFor="payment-notes">Notas (opcional)</Label>
                       <Textarea
@@ -1401,7 +1402,7 @@ const SellerCheckout = () => {
                         value={paymentNotes}
                         onChange={(e) => setPaymentNotes(e.target.value)}
                         className="mt-1"
-                        rows={3}
+                        rows={2}
                       />
                     </div>
                   </div>
@@ -1601,8 +1602,7 @@ const SellerCheckout = () => {
                     (deliveryMethod === 'address' && !selectedAddressId) ||
                     (deliveryMethod === 'address' && !selectedComm && !isRestoringCommune) ||
                     isRestoringCommune ||
-                    (deliveryMethod === 'pickup' && !selectedPickupPoint) ||
-                    ((paymentMethod === 'moncash' || paymentMethod === 'transfer') && !paymentReference.trim())
+                    (deliveryMethod === 'pickup' && !selectedPickupPoint)
                   }
                   className="w-full"
                   size="lg"
