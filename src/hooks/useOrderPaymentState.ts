@@ -192,8 +192,9 @@ export const useOrderPaymentState = (): OrderPaymentStateResult => {
       const { error } = await supabase
         .from('orders_b2b')
         .update({ 
-          payment_status: 'paid',
+          payment_status: 'paid' as any,
           status: 'paid',
+          payment_verified_by: user?.id ?? null,
         })
         .eq('id', orderId);
 
