@@ -282,38 +282,16 @@ export const useOrders = () => {
     },
   });
 
-  // Confirm manual payment (MonCash, NatCash, Transfer, Cash)
+  // Confirm manual payment via SECURITY DEFINER RPC
   const confirmManualPayment = useMutation({
     mutationFn: async ({ orderId, paymentNotes }: { orderId: string; paymentNotes?: string }) => {
-      // Get current order to preserve metadata
-      const { data: currentOrder } = await supabase
-        .from('orders_b2b')
-        .select('metadata')
-        .eq('id', orderId)
-        .maybeSingle();
-      
-      const existingMetadata = (currentOrder?.metadata as Record<string, any>) || {};
-      
-      const { data, error } = await supabase
-        .from('orders_b2b')
-        .update({ 
-          payment_status: 'paid' as any,
-          status: 'paid',
-          payment_confirmed_at: new Date().toISOString(),
-          payment_verified_by: user?.id ?? null,
-          updated_at: new Date().toISOString(),
-          metadata: {
-            ...existingMetadata,
-            payment_confirmed_by: user?.id,
-            payment_confirmation_notes: paymentNotes || null,
-          }
-        })
-        .eq('id', orderId)
-        .select()
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('admin_confirm_payment', {
+        p_order_id: orderId,
+        p_admin_user_id: user?.id,
+        p_payment_notes: paymentNotes || null,
+      });
       
       if (error) throw error;
-      if (!data) throw new Error('Pedido no encontrado');
       return data;
     },
     onSuccess: () => {
@@ -333,36 +311,16 @@ export const useOrders = () => {
     },
   });
 
-  // Reject manual payment
+  // Reject manual payment via SECURITY DEFINER RPC
   const rejectManualPayment = useMutation({
     mutationFn: async ({ orderId, rejectionReason }: { orderId: string; rejectionReason?: string }) => {
-      // Get current order to preserve metadata
-      const { data: currentOrder } = await supabase
-        .from('orders_b2b')
-        .select('metadata')
-        .eq('id', orderId)
-        .maybeSingle();
-      
-      const existingMetadata = (currentOrder?.metadata as Record<string, any>) || {};
-      
-      const { data, error } = await supabase
-        .from('orders_b2b')
-        .update({ 
-          payment_status: 'failed',
-          status: 'cancelled',
-          updated_at: new Date().toISOString(),
-          metadata: {
-            ...existingMetadata,
-            payment_rejected_by: user?.id,
-            payment_rejection_reason: rejectionReason || 'Pago no verificado',
-          }
-        })
-        .eq('id', orderId)
-        .select()
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('admin_reject_payment', {
+        p_order_id: orderId,
+        p_admin_user_id: user?.id,
+        p_rejection_reason: rejectionReason || 'Pago no verificado',
+      });
       
       if (error) throw error;
-      if (!data) throw new Error('Pedido no encontrado');
       return data;
     },
     onSuccess: () => {
