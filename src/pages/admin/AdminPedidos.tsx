@@ -291,16 +291,21 @@ const AdminPedidos = () => {
       customer_address: metadata?.shipping_address?.street_address,
       department: metadata?.shipping_address?.state,
       commune: metadata?.shipping_address?.city,
-      items: items.map((item: any) => ({
-        sku: item.sku,
-        nombre: item.nombre,
-        cantidad: item.cantidad,
-        precio_unitario: item.precio_unitario,
-        subtotal: item.subtotal,
-        color: item.color,
-        size: item.size,
-        image: item.image,
-      })),
+      items: items.map((item: any) => {
+        const unitPrice = Number(item.precio_unitario || 0);
+        const qty = Number(item.cantidad || 0);
+        const lineTotal = Number(item.precio_total ?? (unitPrice * qty));
+        return {
+          sku: item.sku,
+          nombre: item.nombre,
+          cantidad: qty,
+          precio_unitario: unitPrice,
+          subtotal: lineTotal,
+          color: item.color,
+          size: item.size,
+          image: item.image,
+        };
+      }),
       total_amount: order.total_amount,
       payment_method: order.payment_method || undefined,
       created_at: order.created_at,

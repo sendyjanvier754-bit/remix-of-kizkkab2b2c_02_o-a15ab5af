@@ -365,13 +365,13 @@ export const generateInvoicePDF = (order: OrderData) => {
                 </td>
                 <td>${item.sku}</td>
                 <td style="text-align: center;">${item.cantidad}</td>
-                <td style="text-align: right;">$${item.precio_unitario.toFixed(2)}</td>
-                <td style="text-align: right;">$${item.subtotal.toFixed(2)}</td>
+                <td style="text-align: right;">$${Number(item.precio_unitario || 0).toFixed(2)}</td>
+                <td style="text-align: right;">$${Number(item.subtotal || 0).toFixed(2)}</td>
               </tr>
             `).join('')}
             <tr class="total-row">
               <td colspan="5" style="text-align: right;">TOTAL</td>
-              <td style="text-align: right;">$${order.total_amount.toFixed(2)}</td>
+              <td style="text-align: right;">$${Number(order.total_amount || 0).toFixed(2)}</td>
             </tr>
           </tbody>
         </table>

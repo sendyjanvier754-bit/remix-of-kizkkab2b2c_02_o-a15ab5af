@@ -190,16 +190,21 @@ const SellerMisComprasPage = () => {
       customer_address: shippingAddress.street || '',
       department: shippingAddress.department,
       commune: shippingAddress.commune,
-      items: (order.order_items_b2b || []).map(item => ({
-        sku: item.sku,
-        nombre: item.nombre,
-        cantidad: item.cantidad,
-        precio_unitario: item.precio_unitario,
-        subtotal: item.subtotal,
-        color: item.sku?.split('-')[1],
-        size: item.sku?.split('-')[2],
-        image: item.image || undefined,
-      })),
+      items: (order.order_items_b2b || []).map(item => {
+        const unitPrice = Number(item.precio_unitario || 0);
+        const qty = Number(item.cantidad || 0);
+        const lineTotal = Number((item as any).precio_total ?? (unitPrice * qty));
+        return {
+          sku: item.sku,
+          nombre: item.nombre,
+          cantidad: qty,
+          precio_unitario: unitPrice,
+          subtotal: lineTotal,
+          color: item.sku?.split('-')[1],
+          size: item.sku?.split('-')[2],
+          image: item.image || undefined,
+        };
+      }),
       total_amount: order.total_amount,
       payment_method: order.payment_method || 'N/A',
       created_at: order.created_at,

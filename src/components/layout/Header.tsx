@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useB2CCartItems } from "@/hooks/useB2CCartItems";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useViewMode } from "@/contexts/ViewModeContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -489,6 +490,7 @@ const Header = ({
                 <span className="text-xs font-medium">B2B</span>
               </Link>
             )}
+            <LanguageSwitcher compact variant="ghost" />
             <Link to={cartLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
               <ShoppingBag className="w-6 h-6" />
               <span className="text-xs">Carrito</span>
