@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import * as XLSX from 'xlsx';
 
 // Types for PDF data
 interface OrderItem {
@@ -1192,6 +1193,162 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
   openPrintWindow(html, `Manifiesto PO - ${data.po_number}`);
 };
 
+// PDF: Buying list for a PO (Artículos a Comprar)
+export const generatePOBuyingListPDF = (data: {
+  po_number: string;
+  market_name: string;
+  generated_at: string;
+  items: {
+    sku: string;
+    nombre: string;
+    variantName: string | null;
+    image: string | null;
+    cantidad: number;
+    url_origen: string | null;
+  }[];
+}) => {
+  const totalUnits = data.items.reduce((s, i) => s + i.cantidad, 0);
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Lista de Compra - ${data.po_number}</title>
+      <style>
+        ${baseStyles}
+        .po-badge { display:inline-block; background:#071d7f; color:#fff; padding:4px 12px; border-radius:4px; font-size:14px; font-weight:bold; margin-top:6px; }
+        .variant-name { color:#1d4ed8; font-weight:bold; font-size:12px; }
+        .sku-text { color:#888; font-size:10px; font-family:monospace; }
+        .item-img { width:64px; height:64px; object-fit:cover; border-radius:4px; border:1px solid #eee; }
+        .img-placeholder { width:64px; height:64px; background:#f5f5f5; border:1px solid #eee; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:10px; text-align:center; }
+        td.center { text-align:center; }
+        .qty-badge { display:inline-block; background:#0f766e; color:#fff; border-radius:50%; width:32px; height:32px; line-height:32px; text-align:center; font-weight:bold; font-size:14px; }
+        .total-row td { background:#f0fdf4; font-weight:bold; font-size:13px; }
+        a { color:#1d4ed8; font-size:10px; word-break:break-all; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="logo">SIVER MARKET 509</div>
+        <div class="subtitle">Lista de Artículos a Comprar</div>
+        <div class="po-badge">${data.po_number} — ${data.market_name}</div>
+      </div>
+
+      <div class="section">
+        <p><strong>Fecha:</strong> ${format(new Date(data.generated_at), 'PPP p', { locale: es })}</p>
+        <p><strong>Total de variantes:</strong> ${data.items.length} &nbsp;|&nbsp; <strong>Total de unidades:</strong> ${totalUnits}</p>
+      </div>
+
+      <div class="section">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:70px">Imagen</th>
+              <th>Producto / Variante</th>
+              <th style="width:55px" class="center">Cant.</th>
+              <th>URL Origen</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.items.map((item, idx) => `
+              <tr>
+                <td class="center">
+                  ${item.image
+                    ? `<img src="${item.image}" alt="${item.nombre}" class="item-img" />`
+                    : `<div class="img-placeholder">Sin<br>imagen</div>`}
+                </td>
+                <td>
+                  <div style="font-weight:600;font-size:12px">${item.nombre}</div>
+                  ${item.variantName ? `<div class="variant-name">${item.variantName}</div>` : ''}
+                  <div class="sku-text">${item.sku}</div>
+                </td>
+                <td class="center">
+                  <span class="qty-badge">${item.cantidad}</span>
+                </td>
+                <td>
+                  ${item.url_origen
+                    ? `<a href="${item.url_origen}" target="_blank">${item.url_origen}</a>`
+                    : '<span style="color:#bbb">—</span>'}
+                </td>
+              </tr>
+            `).join('')}
+            <tr class="total-row">
+              <td colspan="2">TOTAL</td>
+              <td class="center">${totalUnits}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer">
+        <p>SIVER MARKET 509 - Puerto Príncipe, Haití</p>
+        <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  openPrintWindow(html, `Lista de Compra - ${data.po_number}`);
+};
+
+// Excel: Buying list for a PO (Artículos a Comprar)
+export const generatePOBuyingListExcel = (data: {
+  po_number: string;
+  market_name: string;
+  generated_at: string;
+  items: {
+    sku: string;
+    nombre: string;
+    variantName: string | null;
+    image: string | null;
+    cantidad: number;
+    url_origen: string | null;
+  }[];
+}) => {
+  const wb = XLSX.utils.book_new();
+
+  // Build rows
+  const headers = ['#', 'SKU', 'Producto', 'Variante', 'Cantidad', 'URL Origen'];
+  const rows = data.items.map((item, idx) => [
+    idx + 1,
+    item.sku,
+    item.nombre,
+    item.variantName || '',
+    item.cantidad,
+    item.url_origen || '',
+  ]);
+
+  // Total row
+  const totalUnits = data.items.reduce((s, i) => s + i.cantidad, 0);
+  rows.push(['', '', 'TOTAL', '', totalUnits, '']);
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+  // Column widths
+  ws['!cols'] = [
+    { wch: 4 },   // #
+    { wch: 28 },  // SKU
+    { wch: 45 },  // Producto
+    { wch: 20 },  // Variante
+    { wch: 10 },  // Cantidad
+    { wch: 50 },  // URL
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Artículos');
+
+  // Metadata sheet
+  const meta = XLSX.utils.aoa_to_sheet([
+    ['PO', data.po_number],
+    ['Mercado', data.market_name],
+    ['Generado', format(new Date(data.generated_at), 'PPP p', { locale: es })],
+    ['Total variantes', data.items.length],
+    ['Total unidades', totalUnits],
+  ]);
+  XLSX.utils.book_append_sheet(wb, meta, 'Info');
+
+  XLSX.writeFile(wb, `Lista_Compra_${data.po_number}_${format(new Date(), 'yyyyMMdd')}.xlsx`);
+};
+
 export const PDFGenerators = {
   generatePurchaseOrderPDF,
   generateArrivalManifestPDF,
@@ -1200,4 +1357,6 @@ export const PDFGenerators = {
   generateBatchLabelsPDF,
   generatePickingManifestPDF,
   generatePOPickingManifestPDF,
+  generatePOBuyingListPDF,
+  generatePOBuyingListExcel,
 };

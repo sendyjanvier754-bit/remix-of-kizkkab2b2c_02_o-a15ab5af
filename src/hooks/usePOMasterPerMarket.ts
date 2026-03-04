@@ -56,16 +56,89 @@ export function usePOMasterPerMarket() {
     queryKey: ['po-orders', poId],
     queryFn: async () => {
       if (!poId) return [];
-      const { data, error } = await supabase
+
+      // Step 1: collect order IDs linked via po_order_links (any order_type)
+      const { data: links } = await supabase
+        .from('po_order_links')
+        .select('order_id')
+        .eq('po_id', poId);
+      const linkedIds = (links || []).map((l: { order_id: string }) => l.order_id);
+
+      // Step 2: query orders_b2b — try master_po_id, po_id (legacy), or po_order_links IDs
+      let ordersQuery = supabase
         .from('orders_b2b')
-        .select(`
-          *,
-          buyer:profiles!orders_b2b_buyer_user_id_fkey(id, full_name, email)
-        `)
-        .eq('master_po_id', poId)
+        .select('*, buyer:profiles!orders_b2b_buyer_id_fkey(id, full_name, email)')
         .order('created_at', { ascending: true });
-      if (error) throw error;
-      return data || [];
+
+      if (linkedIds.length > 0) {
+        ordersQuery = ordersQuery.or(
+          `master_po_id.eq.${poId},po_id.eq.${poId},id.in.(${linkedIds.join(',')})`
+        );
+      } else {
+        ordersQuery = ordersQuery.or(`master_po_id.eq.${poId},po_id.eq.${poId}`);
+      }
+
+      const { data: orders, error: ordersError } = await ordersQuery;
+      if (ordersError) throw ordersError;
+      if (!orders || orders.length === 0) return [];
+
+      // Step 3: fetch items for these orders (simple query, no nested joins)
+      const orderIds = orders.map((o: any) => o.id);
+      const { data: items } = await supabase
+        .from('order_items_b2b')
+        .select('id, order_id, nombre, sku, cantidad, precio_unitario, precio_total, color, size, variant_id, product_id, variant_attributes, metadata, image')
+        .in('order_id', orderIds);
+
+      // Step 4: fetch products and variants
+      const productIds = [...new Set((items || []).filter((i: any) => i.product_id).map((i: any) => i.product_id))];
+      const explicitVariantIds = [...new Set((items || []).filter((i: any) => i.variant_id).map((i: any) => i.variant_id))];
+      // Items without image saved and without variant_id → look up by SKU
+      const skusForImageLookup = [...new Set(
+        (items || []).filter((i: any) => !i.image && !i.variant_id && i.sku).map((i: any) => i.sku as string)
+      )];
+
+      const [productsRes, variantsByIdRes, variantsBySkuRes] = await Promise.all([
+        productIds.length > 0
+          ? supabase.from('products').select('*').in('id', productIds as string[])
+          : Promise.resolve({ data: [] }),
+        explicitVariantIds.length > 0
+          ? supabase.from('product_variants').select('*').in('id', explicitVariantIds as string[])
+          : Promise.resolve({ data: [] }),
+        skusForImageLookup.length > 0
+          ? supabase.from('product_variants').select('id, sku, images, name, option_type, option_value').in('sku', skusForImageLookup)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      const productMap = new Map((productsRes.data || []).map((p: any) => [p.id, p]));
+      const variantByIdMap = new Map((variantsByIdRes.data || []).map((v: any) => [v.id, v]));
+      const variantBySkuMap = new Map((variantsBySkuRes.data || []).map((v: any) => [v.sku, v]));
+
+      // Step 5: attach enriched items to each order
+      const itemsByOrder = new Map<string, any[]>();
+      (items || []).forEach((item: any) => {
+        const list = itemsByOrder.get(item.order_id) || [];
+        // Resolve variant: by id first, then by SKU (only for image resolution)
+        const variantById = item.variant_id ? (variantByIdMap.get(item.variant_id) ?? null) : null;
+        const variantBySku = !variantById && item.sku ? (variantBySkuMap.get(item.sku) ?? null) : null;
+        const variant = variantById ?? variantBySku ?? null;
+        // Resolve image: saved on item → variant.images[0] → product.imagen_principal
+        const variantImg = variant?.images
+          ? (Array.isArray(variant.images) ? variant.images[0] : variant.images) ?? null
+          : null;
+        const productImg = productMap.get(item.product_id)?.imagen_principal ?? null;
+        list.push({
+          ...item,
+          image: item.image || variantImg || productImg || null,
+          product: productMap.get(item.product_id) ?? null,
+          variant: variantById ?? variantBySku ?? null,
+        });
+        itemsByOrder.set(item.order_id, list);
+      });
+
+      return orders.map((o: any) => ({
+        ...o,
+        order_items_b2b: itemsByOrder.get(o.id) || [],
+      }));
     },
     enabled: !!poId,
   });

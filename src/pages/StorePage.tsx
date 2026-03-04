@@ -1,28 +1,28 @@
 ﻿import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useStore, useStoreProducts } from "@/hooks/useStore";
-import ProductCard from "@/components/landing/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, MapPin, Star, Store as StoreIcon, Filter, ShoppingBag } from "lucide-react";
+import { Search, MapPin, Star, Store as StoreIcon, Filter, ShoppingBag, Package } from "lucide-react";
 import { useState } from "react";
 
 const StorePage = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
+  const navigate = useNavigate();
   const { data: store, isLoading: isLoadingStore } = useStore(sellerId);
   const { data: productsData, isLoading: isLoadingProducts } = useStoreProducts(sellerId);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter products client-side for now
+  // Filter by search term using seller_catalog fields directly
   const filteredProducts = productsData?.products?.filter((item: any) => {
-    const product = item.product;
-    if (!product) return false;
-    return product.nombre.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!item) return false;
+    return item.nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           item.sku?.toLowerCase().includes(searchQuery.toLowerCase());
   }) || [];
 
   if (isLoadingStore) {
@@ -178,22 +178,62 @@ const StorePage = () => {
             ) : filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {filteredProducts.map((item: any) => {
-                        const product = item.product;
-                        
-                        // Map Supabase product to ProductCard interface
-                        const mappedProduct = {
-                            id: product.id,
-                            name: product.nombre,
-                            price: product.precio_b2c || 0,
-                            image: product.galeria_imagenes?.[0] || "/placeholder.png",
-                            originalPrice: undefined,
-                            discount: 0,
-                            badge: undefined,
-                            sku: product.sku || product.id
-                        };
+                        // Use seller_catalog fields directly (nombre, precio_venta, images, stock)
+                        let images = item.images;
+                        if (typeof images === 'string') {
+                          try { images = JSON.parse(images); } catch { images = []; }
+                        }
+                        const imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : null;
+                        const outOfStock = (item.stock ?? 0) === 0;
+                        const disponiblePronto = item.metadata?.disponible_pronto === true;
 
                         return (
-                            <ProductCard key={item.id} product={mappedProduct} />
+                          <div
+                            key={item.id}
+                            className="bg-white rounded-xl overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer border border-gray-100"
+                            onClick={() => navigate(`/producto/${item.sku}`)}
+                          >
+                            {/* Image */}
+                            <div className="relative h-48 bg-gray-100 overflow-hidden group">
+                              {imageUrl ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={item.nombre}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300">
+                                  <Package className="h-12 w-12" />
+                                </div>
+                              )}
+                              {/* Stock badge */}
+                              {disponiblePronto ? (
+                                <span className="absolute top-2 left-2 bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                                  Disponible Pronto
+                                </span>
+                              ) : outOfStock ? (
+                                <span className="absolute top-2 left-2 bg-gray-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                                  Agotado
+                                </span>
+                              ) : null}
+                            </div>
+
+                            {/* Info */}
+                            <div className="p-3">
+                              <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
+                                {item.nombre}
+                              </h3>
+                              <p className="text-lg font-bold text-gray-900">
+                                ${Number(item.precio_venta || 0).toFixed(2)}
+                              </p>
+                              {!outOfStock && !disponiblePronto && (
+                                <p className="text-xs text-green-600 font-medium mt-0.5">
+                                  Stock: {item.stock}
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         );
                     })}
                 </div>

@@ -280,11 +280,16 @@ const SellerCheckout = () => {
       const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.productId || null,
+        variant_id: item.variantId || null,
         sku: item.sku,
         nombre: item.name,
         cantidad: item.cantidad,
         precio_unitario: item.precioB2B,
         precio_total: item.subtotal,  // La columna se llama precio_total según types.ts y la auditoría previa
+        image: item.image || null,
+        color: item.color || null,
+        size: item.size || null,
+        variant_attributes: item.variantAttributes || null,
       }));
 
       console.log('📦 Insertando items:', orderItems.length, 'items');

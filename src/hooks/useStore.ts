@@ -73,16 +73,21 @@ export const useStoreProducts = (storeId: string | undefined, page = 0, limit = 
     queryFn: async () => {
       if (!storeId) return { products: [], total: 0 };
 
+      // Fetch seller_catalog rows directly — use catalog fields (nombre, precio_venta, images, stock)
+      // as the source of truth. Also include items with stock=0 so we can show "Agotado" badge.
       const { data, error, count } = await supabase
         .from("seller_catalog")
-        .select("*, product:products(*)", { count: "exact" })
+        .select(
+          "id, seller_store_id, source_product_id, source_order_id, sku, nombre, descripcion, images, is_active, imported_at, metadata, precio_venta, precio_costo, stock",
+          { count: "exact" }
+        )
         .eq("seller_store_id", storeId)
         .eq("is_active", true)
         .range(page * limit, (page + 1) * limit - 1)
         .order("imported_at", { ascending: false });
 
       if (error) throw new Error(error.message);
-      return { products: data, total: count || 0 };
+      return { products: data ?? [], total: count || 0 };
     },
     enabled: !!storeId,
   });

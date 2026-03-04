@@ -15,10 +15,11 @@ import { usePOMasterPerMarket, MarketPODashboardItem } from '@/hooks/usePOMaster
 import { 
   Globe, Package, PlayCircle, StopCircle, Settings, Truck, 
   Clock, AlertTriangle, CheckCircle, BarChart3, Eye,
-  ArrowRight, Plane, Building2, Hash, Timer
+  ArrowRight, Plane, Building2, Hash, Timer, ExternalLink, ShoppingBag, FileDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { generatePOBuyingListPDF, generatePOBuyingListExcel } from '@/services/pdfGenerators';
 
 const stageConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   open: { label: 'Abierta', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: <PlayCircle className="h-4 w-4" /> },
@@ -60,7 +61,7 @@ export default function AdminPOMasterPage() {
     close_cron_expression: '',
   });
 
-  const { data: poOrders } = usePOOrders(selectedMarket?.active_po_id || null);
+  const { data: poOrders, isLoading: poOrdersLoading } = usePOOrders(selectedMarket?.active_po_id || null);
   const { data: closedPOs } = useClosedPOs(selectedMarket?.market_id || null);
   const { data: marketSettings } = useMarketSettings(selectedMarket?.market_id || null);
 
@@ -365,50 +366,262 @@ export default function AdminPOMasterPage() {
 
       {/* Orders Dialog */}
       <Dialog open={ordersDialog} onOpenChange={setOrdersDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Pedidos en {selectedMarket?.active_po_number} — {selectedMarket?.market_name}
+              {selectedMarket?.active_po_number} — {selectedMarket?.market_name}
             </DialogTitle>
           </DialogHeader>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Comprador</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Tracking Interno</TableHead>
-                <TableHead className="text-right">Monto</TableHead>
-                <TableHead>Fecha</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {poOrders?.map((order: any) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}</TableCell>
-                  <TableCell>{order.buyer?.full_name || 'N/A'}</TableCell>
-                  <TableCell>
-                    <Badge className={stageConfig[order.status]?.color || 'bg-muted'}>
-                      {stageConfig[order.status]?.label || order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {order.internal_tracking_id || '—'}
-                  </TableCell>
-                  <TableCell className="text-right font-bold">${order.total_amount?.toFixed(2)}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {format(new Date(order.created_at), 'dd/MM/yy', { locale: es })}
-                  </TableCell>
-                </TableRow>
-              )) || (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Sin pedidos en esta PO
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+
+          <Tabs defaultValue="articulos">
+            <TabsList className="mb-4">
+              <TabsTrigger value="articulos">
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                Artículos a Comprar
+              </TabsTrigger>
+              <TabsTrigger value="pedidos">
+                <Package className="h-4 w-4 mr-2" />
+                Pedidos ({poOrders?.length ?? 0})
+              </TabsTrigger>
+            </TabsList>
+
+            {/* ── Tab: Artículos a Comprar ── */}
+            <TabsContent value="articulos">
+              {(() => {
+                // Flatten all items across all orders and aggregate by variant/product
+                const itemMap = new Map<string, {
+                  key: string;
+                  nombre: string;
+                  variantName: string | null;
+                  optionType: string | null;
+                  optionValue: string | null;
+                  image: string | null;
+                  url_origen: string | null;
+                  cantidad: number;
+                  sku: string;
+                }>();
+
+                (poOrders || []).forEach((order: any) => {
+                  (order.order_items_b2b || []).forEach((item: any) => {
+                    // Use SKU as key — it's always unique per variant (e.g. "924221472274-Negro-3XL")
+                    const key = item.sku || item.variant_id || item.product_id || item.id;
+                    const existing = itemMap.get(key);
+                    // Priority: saved image on item (variant-specific, from checkout) → variant object images → product images
+                    const savedImg = item.image || null;
+                    const variantImg = Array.isArray(item.variant?.images) && item.variant.images.length > 0
+                      ? item.variant.images[0]
+                      : (typeof item.variant?.images === 'string' ? item.variant.images : null);
+                    const productImg = item.product?.imagen_principal
+                      || (Array.isArray(item.product?.galeria_imagenes) ? item.product.galeria_imagenes[0] : null)
+                      || null;
+                    const image = savedImg || variantImg || productImg;
+                    const url_origen = item.product?.url_origen ?? null;
+
+                    // Use variant name from DB — name field, option_type+option_value, or color+size (all real DB values)
+                    const variantName: string | null =
+                      item.variant?.name
+                      || (item.variant?.option_type && item.variant?.option_value
+                          ? `${item.variant.option_type}: ${item.variant.option_value}`
+                          : null)
+                      || ((item.color || item.size)
+                          ? [item.color, item.size].filter(Boolean).join(' / ')
+                          : null)
+                      || null;
+
+                    if (existing) {
+                      existing.cantidad += item.cantidad;
+                    } else {
+                      itemMap.set(key, {
+                        key,
+                        nombre: item.product?.nombre || item.nombre,
+                        variantName,
+                        optionType: item.variant?.option_type ?? null,
+                        optionValue: item.variant?.option_value ?? null,
+                        image,
+                        url_origen,
+                        cantidad: item.cantidad,
+                        sku: item.sku,
+                      });
+                    }
+                  });
+                });
+
+                const rows = Array.from(itemMap.values());
+
+                if (poOrdersLoading) {
+                  return (
+                    <div className="text-center py-10 text-muted-foreground">Cargando artículos...</div>
+                  );
+                }
+
+                if (rows.length === 0) {
+                  return (
+                    <div className="text-center py-10 text-muted-foreground">
+                      Sin artículos en esta PO
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    <div className="flex justify-end gap-2 mb-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => generatePOBuyingListExcel({
+                          po_number: selectedMarket?.active_po_number || '',
+                          market_name: selectedMarket?.market_name || '',
+                          generated_at: new Date().toISOString(),
+                          items: rows.map(r => ({
+                            sku: r.sku,
+                            nombre: r.nombre,
+                            variantName: r.variantName,
+                            image: r.image,
+                            cantidad: r.cantidad,
+                            url_origen: r.url_origen,
+                          })),
+                        })}
+                        className="gap-2"
+                      >
+                        <FileDown className="h-4 w-4" />
+                        Excel
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => generatePOBuyingListPDF({
+                          po_number: selectedMarket?.active_po_number || '',
+                          market_name: selectedMarket?.market_name || '',
+                          generated_at: new Date().toISOString(),
+                          items: rows.map(r => ({
+                            sku: r.sku,
+                            nombre: r.nombre,
+                            variantName: r.variantName,
+                            image: r.image,
+                            cantidad: r.cantidad,
+                            url_origen: r.url_origen,
+                          })),
+                        })}
+                        className="gap-2"
+                      >
+                        <FileDown className="h-4 w-4" />
+                        Descargar PDF
+                      </Button>
+                    </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-16">Imagen</TableHead>
+                        <TableHead>Producto / Variante</TableHead>
+                        <TableHead className="w-24 text-center">Cantidad</TableHead>
+                        <TableHead className="w-40">URL Origen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row) => (
+                        <TableRow key={row.key}>
+                          <TableCell>
+                            <div className="w-32 h-32 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                              {row.image ? (
+                                <img
+                                  src={row.image}
+                                  alt={row.nombre}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Package className="h-12 w-12 text-muted-foreground/40" />
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-medium text-sm">{row.nombre}</p>
+                            {row.variantName && (
+                              <p className="text-base font-bold text-blue-600 mt-0.5">{row.variantName}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground/60 font-mono">{row.sku}</p>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="secondary" className="text-base font-bold px-3 py-1">
+                              {row.cantidad}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {row.url_origen ? (
+                              <a
+                                href={row.url_origen}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline max-w-[160px] truncate"
+                              >
+                                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{row.url_origen}</span>
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  </>
+                );
+              })()}
+            </TabsContent>
+
+            {/* ── Tab: Pedidos ── */}
+            <TabsContent value="pedidos">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Comprador</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Tracking Interno</TableHead>
+                    <TableHead className="text-right">Monto</TableHead>
+                    <TableHead>Fecha</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {poOrdersLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Cargando pedidos...
+                      </TableCell>
+                    </TableRow>
+                  ) : poOrders && poOrders.length > 0 ? (
+                    poOrders.map((order: any) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}</TableCell>
+                        <TableCell>{order.buyer?.full_name || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge className={stageConfig[order.status]?.color || 'bg-muted'}>
+                            {stageConfig[order.status]?.label || order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {order.internal_tracking_id || '—'}
+                        </TableCell>
+                        <TableCell className="text-right font-bold">${order.total_amount?.toFixed(2)}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {format(new Date(order.created_at), 'dd/MM/yy', { locale: es })}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Sin pedidos en esta PO
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

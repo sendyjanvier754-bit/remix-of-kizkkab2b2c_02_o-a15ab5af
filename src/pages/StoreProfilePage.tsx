@@ -413,6 +413,9 @@ const StoreProfilePage = () => {
                   imageUrl = images[0];
               }
 
+              const outOfStock = (product.stock ?? 0) === 0;
+              const disponiblePronto = product.metadata?.disponible_pronto === true;
+
               return (
               <div
                 key={product.id}
@@ -433,6 +436,20 @@ const StoreProfilePage = () => {
                           <ShoppingBag className="h-12 w-12" />
                       </div>
                   )}
+                  {/* Stock / availability badge */}
+                  {disponiblePronto ? (
+                    <span className="absolute top-2 left-2 bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                      Disponible Pronto
+                    </span>
+                  ) : outOfStock ? (
+                    <span className="absolute top-2 left-2 bg-gray-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                      Agotado
+                    </span>
+                  ) : (
+                    <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                      En Stock
+                    </span>
+                  )}
                 </div>
 
                 {/* Info */}
@@ -448,6 +465,13 @@ const StoreProfilePage = () => {
                     </span>
                   </div>
 
+                  {/* Stock count (only when in stock) */}
+                  {!outOfStock && !disponiblePronto && (
+                    <p className="text-xs text-green-600 font-medium mb-2">
+                      {product.stock} disponible{product.stock !== 1 ? 's' : ''}
+                    </p>
+                  )}
+
                   {/* Action Buttons */}
                   <div className="mt-3 space-y-2">
                     {(role === UserRole.ADMIN || role === UserRole.SELLER) ? (
@@ -457,6 +481,7 @@ const StoreProfilePage = () => {
                           navigate(`/producto/${product.sku}`);
                         }}
                         className="w-full bg-green-600 text-white hover:bg-green-700"
+                        disabled={outOfStock && !disponiblePronto}
                       >
                         Vender (Agregar al Carrito)
                       </Button>
@@ -467,8 +492,9 @@ const StoreProfilePage = () => {
                           navigate(`/producto/${product.sku}`);
                         }}
                         className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                        disabled={outOfStock && !disponiblePronto}
                       >
-                        Ver Detalles
+                        {outOfStock && !disponiblePronto ? "Sin Stock" : "Ver Detalles"}
                       </Button>
                     )}
                   </div>

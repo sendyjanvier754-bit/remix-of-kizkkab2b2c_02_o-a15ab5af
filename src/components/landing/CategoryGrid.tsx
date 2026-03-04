@@ -30,9 +30,8 @@ const CategoryGrid = () => {
           </div>
         </div>
         {/* Desktop skeleton */}
-        <div className="hidden lg:block container mx-auto">
-          <div className="max-w-screen-xl mx-auto">
-            <div className="grid grid-cols-6 xl:grid-cols-8 gap-8 justify-items-center">
+        <div className="hidden lg:block w-full px-4">
+          <div className="grid grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-x-4 gap-y-6 justify-items-center">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="flex flex-col items-center">
                   <Skeleton className="w-28 h-28 md:w-32 md:h-32 rounded-full" />
@@ -40,7 +39,6 @@ const CategoryGrid = () => {
                 </div>
               ))}
             </div>
-          </div>
         </div>
       </section>
     );
@@ -86,10 +84,9 @@ const CategoryGrid = () => {
         </div>
       </div>
 
-      {/* Desktop: Grid layout */}
-      <div className="hidden lg:block container mx-auto px-4">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="grid grid-cols-6 xl:grid-cols-8 gap-8 justify-items-center">
+      {/* Desktop: Grid layout - full width */}
+      <div className="hidden lg:block w-full px-4">
+          <div className="grid grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-x-4 gap-y-6 justify-items-center">
             {rootCategories.map((cat) => (
               <div key={cat.id} className="w-full flex flex-col items-center">
                 <CategoryCard 
@@ -101,7 +98,6 @@ const CategoryGrid = () => {
             ))}
           </div>
         </div>
-      </div>
     </section>
   );
 };

@@ -33,7 +33,7 @@ const Index = () => {
   }, [categories]);
 
   return (
-    <div className="min-h-screen bg-background w-full overflow-x-hidden">
+    <div className="min-h-screen bg-background w-full">
       {!isMobile && <GlobalHeader />}
       
       <main className={`w-full overflow-x-hidden ${isMobile ? 'pb-14' : ''}`}>

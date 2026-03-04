@@ -54,7 +54,7 @@ export function usePOMasterCycle() {
         .from('orders_b2b')
         .select(`
           *,
-          buyer:profiles!orders_b2b_buyer_user_id_fkey(id, full_name, email)
+          buyer:profiles!orders_b2b_buyer_id_fkey(id, full_name, email)
         `)
         .eq('master_po_id', activePO.id)
         .order('created_at', { ascending: true });

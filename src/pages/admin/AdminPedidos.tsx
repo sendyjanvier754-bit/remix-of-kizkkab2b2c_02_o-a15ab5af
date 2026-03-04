@@ -174,23 +174,31 @@ const AdminPedidos = () => {
   // Handle manual payment confirmation (for transfer, natcash, etc.)
   const handleConfirmPayment = async () => {
     if (!selectedOrder) return;
-    await confirmManualPayment.mutateAsync({
-      orderId: selectedOrder.id,
-      paymentNotes: paymentConfirmationNotes || undefined,
-    });
-    setSelectedOrder(null);
-    setPaymentConfirmationNotes('');
+    try {
+      await confirmManualPayment.mutateAsync({
+        orderId: selectedOrder.id,
+        paymentNotes: paymentConfirmationNotes || undefined,
+      });
+      setSelectedOrder(null);
+      setPaymentConfirmationNotes('');
+    } catch {
+      // Error toast is handled by mutation.onError
+    }
   };
 
   // Handle payment rejection
   const handleRejectPayment = async () => {
     if (!selectedOrder) return;
-    await rejectManualPayment.mutateAsync({
-      orderId: selectedOrder.id,
-      rejectionReason: rejectionReason || 'Pago no verificado',
-    });
-    setSelectedOrder(null);
-    setRejectionReason('');
+    try {
+      await rejectManualPayment.mutateAsync({
+        orderId: selectedOrder.id,
+        rejectionReason: rejectionReason || 'Pago no verificado',
+      });
+      setSelectedOrder(null);
+      setRejectionReason('');
+    } catch {
+      // Error toast is handled by mutation.onError
+    }
   };
 
   // Generate Picking Manifest PDF
@@ -715,6 +723,7 @@ const AdminPedidos = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-14"></TableHead>
                         <TableHead>Producto</TableHead>
                         <TableHead className="text-center">Cant.</TableHead>
                         <TableHead className="text-right">Precio</TableHead>
@@ -724,15 +733,32 @@ const AdminPedidos = () => {
                     <TableBody>
                       {selectedOrder.order_items_b2b?.map((item) => (
                         <TableRow key={item.id}>
+                          <TableCell className="pr-0">
+                            <div className="w-12 h-12 rounded-md bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center">
+                              {item.image ? (
+                                <img
+                                  src={item.image}
+                                  alt={item.nombre}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                              ) : (
+                                <Package className="h-5 w-5 text-muted-foreground/40" />
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell>
                             <div>
                               <p className="font-medium">{item.nombre}</p>
+                              {(item.color || item.size) && (
+                                <p className="text-sm font-semibold text-blue-600">{[item.color, item.size].filter(Boolean).join(' / ')}</p>
+                              )}
                               <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
                             </div>
                           </TableCell>
                           <TableCell className="text-center">{item.cantidad}</TableCell>
                           <TableCell className="text-right">${Number(item.precio_unitario).toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">${Number(item.subtotal).toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-medium">${Number(item.precio_total ?? item.subtotal ?? (item.precio_unitario * item.cantidad)).toFixed(2)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

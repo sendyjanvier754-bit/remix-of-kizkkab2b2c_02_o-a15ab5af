@@ -380,7 +380,7 @@ const Header = ({
 
   return (
     <>
-    <header ref={headerRef} className="sticky top-0 left-0 right-0 z-50 bg-[#ffdcdc] border-b border-gray-200">
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-[#ffdcdc] border-b border-gray-200">
       {/* Top Bar */}
       <div className="bg-gray-50 border-b border-gray-200">
         <div className="container mx-auto px-4">
@@ -669,8 +669,8 @@ const Header = ({
       )}
     </header>
 
-    {/* spacer to push page content below fixed header */}
-    <div aria-hidden style={{ height: '10px' }} />
+    {/* spacer to push page content below fixed header — matches actual header height */}
+    <div aria-hidden style={{ height: `${headerHeight}px` }} />
     </>
   );
 };

@@ -10,12 +10,17 @@ export interface OrderItem {
   id: string;
   order_id: string;
   product_id: string | null;
+  variant_id?: string | null;
   sku: string;
   nombre: string;
   cantidad: number;
   precio_unitario: number;
   descuento_percent: number | null;
   subtotal: number;
+  precio_total?: number | null;
+  image?: string | null;
+  color?: string | null;
+  size?: string | null;
 }
 
 export interface Order {
@@ -165,7 +170,57 @@ export const useOrders = () => {
 
         const { data, error } = await query;
         if (error) throw error;
-        return data as Order[];
+
+        // Enrich items with variant/product images (for orders where image was not saved at checkout)
+        const allItems = (data || []).flatMap(o => o.order_items_b2b || []);
+        const variantIds = [...new Set(allItems.filter((i: any) => i.variant_id).map((i: any) => i.variant_id as string))];
+        const productIds = [...new Set(allItems.filter((i: any) => i.product_id).map((i: any) => i.product_id as string))];
+        // Items without variant_id → look up variant by SKU
+        const skusWithoutVariantId = [...new Set(
+          allItems.filter((i: any) => !i.variant_id && i.sku).map((i: any) => i.sku as string)
+        )];
+
+        const [variantsByIdRes, productImagesRes, variantsBySkuRes] = await Promise.all([
+          variantIds.length > 0
+            ? supabase.from('product_variants').select('id, sku, images').in('id', variantIds)
+            : Promise.resolve({ data: [] }),
+          productIds.length > 0
+            ? supabase.from('products').select('id, imagen_principal').in('id', productIds)
+            : Promise.resolve({ data: [] }),
+          skusWithoutVariantId.length > 0
+            ? supabase.from('product_variants').select('id, sku, images').in('sku', skusWithoutVariantId)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        // variant_id → image
+        const variantByIdImageMap = new Map<string, string>(
+          (variantsByIdRes.data || [])
+            .filter((v: any) => v.images?.[0])
+            .map((v: any) => [v.id, Array.isArray(v.images) ? v.images[0] : v.images])
+        );
+        // sku → image (for items where variant_id is null)
+        const variantBySkuImageMap = new Map<string, string>(
+          (variantsBySkuRes.data || [])
+            .filter((v: any) => v.images?.[0])
+            .map((v: any) => [v.sku, Array.isArray(v.images) ? v.images[0] : v.images])
+        );
+        const productImageMap = new Map<string, string>(
+          (productImagesRes.data || [])
+            .filter((p: any) => p.imagen_principal)
+            .map((p: any) => [p.id, p.imagen_principal])
+        );
+
+        return (data || []).map(order => ({
+          ...order,
+          order_items_b2b: (order.order_items_b2b || []).map((item: any) => ({
+            ...item,
+            image: item.image
+              || (item.variant_id ? variantByIdImageMap.get(item.variant_id) : null)
+              || (item.sku ? variantBySkuImageMap.get(item.sku) : null)
+              || (item.product_id ? productImageMap.get(item.product_id) : null)
+              || null,
+          })),
+        })) as Order[];
       },
     });
   };
@@ -285,13 +340,33 @@ export const useOrders = () => {
   // Confirm manual payment via SECURITY DEFINER RPC
   const confirmManualPayment = useMutation({
     mutationFn: async ({ orderId, paymentNotes }: { orderId: string; paymentNotes?: string }) => {
-      const { data, error } = await supabase.rpc('admin_confirm_payment', {
+      const payload = {
         p_order_id: orderId,
         p_admin_user_id: user?.id,
         p_payment_notes: paymentNotes || null,
-      });
-      
+      };
+
+      let { data, error } = await supabase.rpc('admin_confirm_payment', payload);
+
+      // Backward compatibility: some environments still expose p_notes instead of p_payment_notes
+      if (error && /admin_confirm_payment/i.test(error.message || '')) {
+        const { data: fallbackData, error: fallbackError } = await (supabase as any).rpc('admin_confirm_payment', {
+          p_order_id: orderId,
+          p_admin_user_id: user?.id,
+          p_notes: paymentNotes || null,
+        });
+        data = fallbackData;
+        error = fallbackError;
+      }
+
       if (error) throw error;
+
+      // Many SQL functions return JSON with success=false instead of raising SQL exceptions
+      if (data && typeof data === 'object' && 'success' in (data as any) && (data as any).success === false) {
+        const message = (data as any).error || 'No se pudo confirmar el pago';
+        throw new Error(message);
+      }
+
       return data;
     },
     onSuccess: () => {

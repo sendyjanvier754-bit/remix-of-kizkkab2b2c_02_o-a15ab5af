@@ -122,7 +122,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
     <div className="bg-card rounded-lg overflow-hidden hover:shadow-lg transition group border border-border h-full flex flex-col">
       {/* Image Container */}
       <Link to={product.sku ? `/producto/${product.sku}` : '#'} className="relative block">
-        <div className="relative overflow-hidden aspect-[3/4] bg-muted">
+        <div className="relative overflow-hidden aspect-square bg-muted">
           {product.image ? (
             <img
               src={product.image}
@@ -204,7 +204,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
       </Link>
 
       {/* Product Info */}
-      <div className="p-3 flex flex-col flex-1">
+      <div className="p-1 flex flex-col flex-1">
         <Link to={product.sku ? `/producto/${product.sku}` : '#'}>
           <h3 className="text-sm font-medium text-foreground line-clamp-1 mb-1 hover:text-primary transition h-5">
             {product.name}
