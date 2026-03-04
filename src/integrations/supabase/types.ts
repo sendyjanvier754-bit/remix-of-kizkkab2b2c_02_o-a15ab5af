@@ -7329,7 +7329,11 @@ export type Database = {
     }
     Functions: {
       admin_confirm_payment: {
-        Args: { p_admin_user_id: string; p_notes?: string; p_order_id: string }
+        Args: {
+          p_admin_user_id: string
+          p_order_id: string
+          p_payment_notes?: string
+        }
         Returns: Json
       }
       calculate_b2b_price: {

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { useOrders, OrderStatus, Order } from '@/hooks/useOrders';
 import { PDFGenerators, generatePickingManifestPDF } from '@/services/pdfGenerators';
 import { 
@@ -739,11 +740,47 @@ const AdminPedidos = () => {
                 </div>
               </div>
 
-              {/* Total */}
-              <div className="flex justify-between items-center p-4 bg-primary/10 rounded-lg">
-                <span className="font-medium">Total del Pedido</span>
-                <span className="text-2xl font-bold text-primary">${Number(selectedOrder.total_amount).toFixed(2)} {selectedOrder.currency}</span>
-              </div>
+              {/* Cost Breakdown */}
+              {(() => {
+                const meta = selectedOrder.metadata as any;
+                const itemsSubtotal = selectedOrder.order_items_b2b?.reduce((sum, item) => sum + Number(item.subtotal || 0), 0) || 0;
+                const shippingCost = Number(meta?.shipping_cost || meta?.costo_envio || 0);
+                const platformFee = Number(meta?.platform_fee || meta?.fee_plataforma || 0);
+                const discount = Number(meta?.discount_amount || meta?.descuento || 0);
+                const totalAmount = Number(selectedOrder.total_amount || 0);
+                
+                return (
+                  <div className="p-4 bg-primary/10 rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal Productos</span>
+                      <span>${itemsSubtotal.toFixed(2)}</span>
+                    </div>
+                    {shippingCost > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Envío / Logística</span>
+                        <span>${shippingCost.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {platformFee > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Fee Plataforma</span>
+                        <span>${platformFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {discount > 0 && (
+                      <div className="flex justify-between text-sm text-green-500">
+                        <span>Descuento</span>
+                        <span>-${discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Total Pagado por Cliente</span>
+                      <span className="text-2xl font-bold text-primary">${totalAmount.toFixed(2)} {selectedOrder.currency}</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Notes */}
               {selectedOrder.notes && (
