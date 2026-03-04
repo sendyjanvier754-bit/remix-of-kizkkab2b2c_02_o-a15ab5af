@@ -1,0 +1,1 @@
+ALTER FUNCTION public.auto_add_to_seller_catalog_on_complete() SECURITY DEFINER;
