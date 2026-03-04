@@ -268,9 +268,10 @@ export const useConfirmB2CPayment = () => {
       const { error } = await supabase
         .from('orders_b2b')
         .update({ 
-          payment_status: 'paid',
+          payment_status: 'paid' as any,
           status: 'paid',
           payment_confirmed_at: new Date().toISOString(),
+          // payment_verified_by set by admin via useOrders hook
         })
         .eq('id', orderId);
 

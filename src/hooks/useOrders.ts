@@ -297,9 +297,10 @@ export const useOrders = () => {
       const { data, error } = await supabase
         .from('orders_b2b')
         .update({ 
-          payment_status: 'paid',
+          payment_status: 'paid' as any,
           status: 'paid',
           payment_confirmed_at: new Date().toISOString(),
+          payment_verified_by: user?.id ?? null,
           updated_at: new Date().toISOString(),
           metadata: {
             ...existingMetadata,

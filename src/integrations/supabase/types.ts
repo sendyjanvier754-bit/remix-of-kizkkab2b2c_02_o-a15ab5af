@@ -2657,6 +2657,7 @@ export type Database = {
           payment_confirmed_at: string | null
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          payment_verified_by: string | null
           po_id: string | null
           po_linked_at: string | null
           preparing_at: string | null
@@ -2706,6 +2707,7 @@ export type Database = {
           payment_confirmed_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          payment_verified_by?: string | null
           po_id?: string | null
           po_linked_at?: string | null
           preparing_at?: string | null
@@ -2755,6 +2757,7 @@ export type Database = {
           payment_confirmed_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          payment_verified_by?: string | null
           po_id?: string | null
           po_linked_at?: string | null
           preparing_at?: string | null

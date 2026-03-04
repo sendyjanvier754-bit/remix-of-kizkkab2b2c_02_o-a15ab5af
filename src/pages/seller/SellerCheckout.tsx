@@ -848,11 +848,13 @@ const SellerCheckout = () => {
       // Handle payment completion based on method
       if (paymentMethod === 'stripe') {
         // For Stripe, mark order as paid (payment confirmed immediately)
+        // Setting payment_status='paid' triggers auto-linking to the Market's Master PO
         const { error: updateError } = await supabase
           .from('orders_b2b')
           .update({ 
-            payment_status: 'paid',
-            status: 'paid'
+            payment_status: 'paid' as any,
+            status: 'paid',
+            payment_verified_by: user.id,
           })
           .eq('id', order.id);
         
