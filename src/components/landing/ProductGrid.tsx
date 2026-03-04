@@ -1,4 +1,5 @@
 import ProductCard from "./ProductCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Product {
   id: string;
@@ -9,32 +10,49 @@ interface Product {
   discount?: number;
   badge?: string;
   sku: string;
+  storeId?: string;
+  storeName?: string;
+  storeWhatsapp?: string;
+  rating?: number;
+  source_product_id?: string;
+  [key: string]: any;
 }
 
 interface ProductGridProps {
-  title: string;
-  subtitle?: string;
   products: Product[];
+  isLoading?: boolean;
+  skeletonCount?: number;
 }
 
-const ProductGrid = ({ title, subtitle, products }: ProductGridProps) => {
-  return (
-    <section className="container mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-          {title}
-        </h2>
-        {subtitle && <p className="text-gray-600">{subtitle}</p>}
+const ProductGrid = ({ products, isLoading = false, skeletonCount = 30 }: ProductGridProps) => {
+  if (isLoading) {
+    return (
+      <div className="w-full px-4 py-2">
+        <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-1">
+          {Array.from({ length: skeletonCount }).map((_, i) => (
+            <div key={i} className="bg-card rounded-lg overflow-hidden">
+              <Skeleton className="aspect-square w-full" />
+              <div className="p-1 space-y-1">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+    );
+  }
 
-      {/* Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+  if (products.length === 0) return null;
+
+  return (
+    <div className="w-full px-4 py-2">
+      <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-1">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-    </section>
+    </div>
   );
 };
 

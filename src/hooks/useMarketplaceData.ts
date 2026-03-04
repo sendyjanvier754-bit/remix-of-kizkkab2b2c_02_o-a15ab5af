@@ -349,7 +349,7 @@ export const useRecommendedProducts = (productId: string | null, categoryId: str
         `)
         .eq("is_active", true)
         .gt("stock", 0)
-        .limit(limit * 2);
+        .limit(Math.max(limit * 2, 200));
 
       if (productId) {
         query = query.neq("id", productId);
@@ -405,6 +405,39 @@ export const useMarketplaceBanners = () => {
       }
 
       return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+/**
+ * Hook para el feed principal - todos los productos del catálogo mezclados (estilo SHEIN/Temu)
+ */
+export const useAllSellerProducts = (limit = 200) => {
+  return useQuery({
+    queryKey: ["marketplace-all-products", limit],
+    queryFn: async (): Promise<MarketplaceProduct[]> => {
+      const { data, error } = await supabase
+        .from("seller_catalog")
+        .select(`
+          id, sku, nombre, descripcion, precio_venta, precio_costo, stock, images, metadata,
+          store:stores!seller_catalog_seller_store_id_fkey(id, name, whatsapp, logo, slug),
+          source_product:products!seller_catalog_source_product_id_fkey(
+            id, categoria_id,
+            category:categories!products_categoria_id_fkey(id, name, slug)
+          )
+        `)
+        .eq("is_active", true)
+        .gt("stock", 0)
+        .order("imported_at", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("Error fetching all seller products:", error);
+        return [];
+      }
+
+      return (data || []).map(transformProduct);
     },
     staleTime: 5 * 60 * 1000,
   });

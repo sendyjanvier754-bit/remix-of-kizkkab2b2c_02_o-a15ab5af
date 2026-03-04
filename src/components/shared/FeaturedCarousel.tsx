@@ -40,13 +40,7 @@ const FeaturedCarousel = ({ products, showMoq = false }: FeaturedCarouselProps) 
   const isB2B = user && (role === UserRole.SELLER || role === UserRole.ADMIN);
 
   const handleProductClick = (product: FeaturedProduct) => {
-    if (isB2B) {
-      // Redirect to B2B catalog with search
-      navigate(`/seller/adquisicion-lotes?search=${encodeURIComponent(product.nombre)}`);
-    } else {
-      // Redirect to B2C product detail
-      navigate(`/producto/${product.sku}`);
-    }
+    navigate(`/producto/${product.sku}`);
   };
 
   if (products.length === 0) return null;

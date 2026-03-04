@@ -4,6 +4,7 @@ import Autoplay from 'embla-carousel-autoplay';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FeaturedProductsCarouselProps {
@@ -14,6 +15,7 @@ const FeaturedProductsCarousel = ({
   products
 }: FeaturedProductsCarouselProps) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const autoplayPlugin = useRef(Autoplay({
     delay: 3000,
     stopOnInteraction: false,
@@ -31,7 +33,7 @@ const FeaturedProductsCarousel = ({
         <div className="border border-gray-300 rounded-lg p-2">
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex gap-4">
-              {products.map(product => <div className="flex-[0_0_28%] min-w-[100px] max-w-[120px]" key={product.id}>
+              {products.map(product => <div className="flex-[0_0_28%] min-w-[100px] max-w-[120px] cursor-pointer" key={product.id} onClick={() => navigate(`/producto/${product.sku}`)}>
                   <Card className="h-full border-none shadow-sm hover:shadow-md transition-shadow bg-white">
                     <CardContent className={isMobile ? "p-2" : "p-2"}>
                       <div className="relative aspect-square mb-2 rounded-md overflow-hidden bg-gray-100">

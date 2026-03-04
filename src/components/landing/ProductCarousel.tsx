@@ -177,16 +177,12 @@ const ProductCarousel = ({
             </button>
           </div>
 
-          {/* Mobile: Horizontal scroll */}
-          <div className="md:hidden p-3">
-            <div className="overflow-x-auto scrollbar-hide -mx-3 px-3">
-              <div className="flex gap-3 min-w-max">
-                {products.map((product) => (
-                  <div key={product.id} className="w-20 flex-shrink-0">
-                    <ProductCard product={product} />
-                  </div>
-                ))}
-              </div>
+          {/* Mobile: Grid matching ProductGrid layout */}
+          <div className="md:hidden p-1">
+            <div className="grid grid-cols-2 gap-1">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
             </div>
           </div>
         </div>

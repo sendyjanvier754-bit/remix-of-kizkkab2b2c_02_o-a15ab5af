@@ -165,26 +165,6 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
             </div>
           )}
 
-          {/* Store Badge */}
-          {product.storeName && (
-            <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-[10px] rounded flex items-center gap-1 z-10">
-              <Store className="h-3 w-3" />
-              {product.storeName}
-            </div>
-          )}
-
-          {/* Review Rating Badge - Link to Reviews */}
-          <Link 
-            to={product.sku ? `/producto/${product.sku}#reviews` : '#'} 
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-white/70 hover:bg-white/90 text-gray-900 text-[9px] rounded flex items-center gap-0.5 z-10 shadow-md border border-[#29892a] transition-all"
-          >
-            <span className="text-yellow-400 text-[10px]">★</span>
-            <span className="font-bold text-[9px]">5.0</span>
-          </Link>
-
           {/* Favorite Button */}
           <button
             onClick={(e) => {

@@ -20,6 +20,7 @@ import VariantDrawer from '@/components/products/VariantDrawer';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import ProductReviews from "@/components/products/ProductReviews";
 import ProductCarousel from "@/components/landing/ProductCarousel";
+import ProductGrid from "@/components/landing/ProductGrid";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -263,7 +264,7 @@ const ProductPage = () => {
   const { data: recommendedProducts = [], isLoading: loadingRecommended } = useRecommendedProducts(
     product?.id || null,
     categoryId,
-    8
+    100
   );
 
   // ✅ Fetch product variants with B2B prices if user is seller
@@ -1124,33 +1125,14 @@ const ProductPage = () => {
 
         {/* Recomendados - Full Width */}
         <div id="section-recs" ref={recsRef} className="mt-12 pt-8 border-t border-gray-200 scroll-mt-20">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">Recomendados</h3>
           {loadingRecommended ? (
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-gray-900">Recomendados</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-card rounded-lg overflow-hidden">
-                    <Skeleton className="aspect-square w-full" />
-                    <div className="p-3 space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-2/3" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ProductGrid products={[]} isLoading={true} skeletonCount={20} />
           ) : recommendedProducts.length > 0 ? (
-            <ProductCarousel
-              title="Recomendados"
-              products={recommendedProducts}
-              itemsPerView={4}
-            />
+            <ProductGrid products={recommendedProducts} isLoading={false} />
           ) : (
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-gray-900">Recomendados</h3>
-              <div className="bg-gray-50 border rounded-lg p-6 text-center text-gray-400">
-                No hay productos recomendados disponibles.
-              </div>
+            <div className="bg-gray-50 border rounded-lg p-6 text-center text-gray-400">
+              No hay productos recomendados disponibles.
             </div>
           )}
         </div>

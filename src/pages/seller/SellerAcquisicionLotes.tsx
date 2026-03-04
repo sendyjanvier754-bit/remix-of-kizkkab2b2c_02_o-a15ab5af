@@ -196,7 +196,7 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="container mx-auto px-4 pb-12 pt-0">
+      <main className="container mx-auto px-4 pb-4 pt-0">
         {/* Hero Carousel (Mobile Only) */}
         {isMobile && featuredProducts.length > 0 && (
           <div className="mb-0 -mx-4">

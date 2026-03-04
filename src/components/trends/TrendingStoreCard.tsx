@@ -34,11 +34,7 @@ const TrendingStoreCard = ({ store, onFollowChange }: TrendingStoreCardProps) =>
   });
 
   const handleProductClick = (product: TrendingStore["products"][0]) => {
-    if (isB2B) {
-      navigate(`/seller/adquisicion-lotes?search=${encodeURIComponent(product.sku)}`);
-    } else {
-      navigate(`/producto/${product.sku}`);
-    }
+    navigate(`/producto/${product.sku}`);
   };
 
   const handleStoreClick = () => {

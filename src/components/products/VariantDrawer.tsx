@@ -263,7 +263,7 @@ const VariantDrawer: React.FC = () => {
   // Mobile: Bottom Sheet | Desktop: Side Drawer
   return (
     <div 
-      className={`fixed z-[60] flex ${isMobile ? 'inset-0 items-end' : 'top-[160px] right-0 bottom-0 left-0 justify-end items-stretch'}`}
+      className={`fixed z-[10000] flex ${isMobile ? 'inset-0 items-end' : 'top-[160px] right-0 bottom-0 left-0 justify-end items-stretch'}`}
       style={{ pointerEvents: 'auto' }}
     >
       {/* Overlay */}
@@ -278,7 +278,7 @@ const VariantDrawer: React.FC = () => {
         className={`
           relative bg-background shadow-2xl flex flex-col
           ${isMobile 
-            ? 'w-full max-h-[85vh] rounded-t-2xl border-t' 
+            ? 'w-full max-h-[85vh] rounded-t-2xl border-t mb-12' 
             : 'border-l'
           }
         `}
