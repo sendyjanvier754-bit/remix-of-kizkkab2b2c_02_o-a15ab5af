@@ -190,8 +190,12 @@ const LoginPage = () => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                  <TabsTrigger value="login">Contraseña</TabsTrigger>
+                  <TabsTrigger value="otp">
+                    <KeyRound className="h-3 w-3 mr-1" />
+                    Código Email
+                  </TabsTrigger>
                   <TabsTrigger value="register">Registrarse</TabsTrigger>
                 </TabsList>
 
@@ -228,7 +232,12 @@ const LoginPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">Contraseña</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="login-password">Contraseña</Label>
+                        <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                          ¿Olvidaste tu contraseña?
+                        </Link>
+                      </div>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -254,6 +263,58 @@ const LoginPage = () => {
                       {isLoading ? "Iniciando..." : "Iniciar Sesión"}
                     </Button>
                   </form>
+                </TabsContent>
+
+                <TabsContent value="otp">
+                  {!otpSent ? (
+                    <form onSubmit={handleSendOTP} className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Te enviaremos un código de verificación a tu email para iniciar sesión sin contraseña.
+                      </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="otp-email">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="otp-email"
+                            type="email"
+                            placeholder="tu@email.com"
+                            className="pl-10"
+                            value={otpEmail}
+                            onChange={(e) => setOtpEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Enviando..." : "Enviar código"}
+                      </Button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyOTP} className="space-y-4">
+                      <p className="text-sm text-muted-foreground text-center">
+                        Ingresa el código de 6 dígitos enviado a <strong>{otpEmail}</strong>
+                      </p>
+                      <div className="flex justify-center">
+                        <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading || otpCode.length !== 6}>
+                        {isLoading ? "Verificando..." : "Verificar código"}
+                      </Button>
+                      <Button type="button" variant="ghost" className="w-full" onClick={() => { setOtpSent(false); setOtpCode(""); setError(null); setSuccess(null); }}>
+                        Enviar nuevo código
+                      </Button>
+                    </form>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="register">
