@@ -2456,6 +2456,7 @@ export type Database = {
           color: string | null
           created_at: string | null
           id: string
+          image: string | null
           metadata: Json | null
           nombre: string
           order_id: string
@@ -2472,6 +2473,7 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           id?: string
+          image?: string | null
           metadata?: Json | null
           nombre: string
           order_id: string
@@ -2488,6 +2490,7 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           id?: string
+          image?: string | null
           metadata?: Json | null
           nombre?: string
           order_id?: string
@@ -2639,6 +2642,7 @@ export type Database = {
           consolidation_status: string | null
           created_at: string
           currency: string | null
+          department_code: string | null
           discount_amount: number | null
           hybrid_tracking_id: string | null
           id: string
@@ -2689,6 +2693,7 @@ export type Database = {
           consolidation_status?: string | null
           created_at?: string
           currency?: string | null
+          department_code?: string | null
           discount_amount?: number | null
           hybrid_tracking_id?: string | null
           id?: string
@@ -2739,6 +2744,7 @@ export type Database = {
           consolidation_status?: string | null
           created_at?: string
           currency?: string | null
+          department_code?: string | null
           discount_amount?: number | null
           hybrid_tracking_id?: string | null
           id?: string
