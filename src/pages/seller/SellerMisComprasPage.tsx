@@ -56,10 +56,14 @@ const statusConfig: Record<BuyerOrderStatus, { label: string; color: string; ico
   draft: { label: 'Borrador', color: 'text-gray-600', icon: Clock, bgColor: 'bg-gray-100' },
   placed: { label: 'Procesando', color: 'text-blue-600', icon: Package, bgColor: 'bg-blue-100' },
   paid: { label: 'Pagado', color: 'text-green-600', icon: CheckCircle, bgColor: 'bg-green-100' },
+  preparing: { label: 'En Preparación', color: 'text-amber-600', icon: Package, bgColor: 'bg-amber-100' },
+  in_transit: { label: 'En Tránsito', color: 'text-blue-600', icon: Truck, bgColor: 'bg-blue-100' },
   shipped: { label: 'En camino', color: 'text-purple-600', icon: Truck, bgColor: 'bg-purple-100' },
   delivered: { label: 'Entregado', color: 'text-green-600', icon: CheckCircle, bgColor: 'bg-green-100' },
   cancelled: { label: 'Cancelado', color: 'text-red-600', icon: XCircle, bgColor: 'bg-red-100' },
 };
+
+const defaultStatusConfig = { label: 'Desconocido', color: 'text-gray-600', icon: Clock, bgColor: 'bg-gray-100' };
 
 // Payment status configuration
 const paymentStatusConfig: Record<string, { label: string; color: string; icon: React.ElementType; bgColor: string }> = {
@@ -97,7 +101,13 @@ const SellerMisComprasPage = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [requestRefund, setRequestRefund] = useState(false);
 
-  const { data: orders, isLoading } = useBuyerB2BOrders(statusFilter === 'all' ? undefined : statusFilter);
+  // Always fetch all orders; filter client-side so stats/tab badges are always accurate
+  const { data: rawOrders, isLoading } = useBuyerB2BOrders();
+  const orders = statusFilter === 'all'
+    ? rawOrders
+    : statusFilter === 'preparing'
+      ? rawOrders?.filter(o => o.status === 'preparing' || o.status === 'in_transit')
+      : rawOrders?.filter(o => o.status === statusFilter);
   const cancelOrder = useCancelBuyerOrder();
 
   // Get order IDs to fetch PO info
@@ -216,6 +226,18 @@ const SellerMisComprasPage = () => {
 
   // Use payment_status for badge when order is placed but payment not yet confirmed
   const getOrderDisplayBadge = (order: BuyerOrder) => {
+    // Preparing / in_transit — always show logistics status (payment already confirmed)
+    if (order.status === 'preparing' || order.status === 'in_transit') {
+      const config = statusConfig[order.status];
+      const Icon = config.icon;
+      return (
+        <Badge className={`${config.bgColor} ${config.color} gap-1`}>
+          <Icon className="h-3 w-3" />
+          {config.label}
+        </Badge>
+      );
+    }
+
     // If order is delivered, shipped, or cancelled - show order status
     if (['delivered', 'shipped', 'cancelled'].includes(order.status)) {
       const config = statusConfig[order.status];
@@ -254,7 +276,7 @@ const SellerMisComprasPage = () => {
     }
     
     // Default: show order status
-    const config = statusConfig[order.status];
+    const config = statusConfig[order.status] ?? defaultStatusConfig;
     const Icon = config.icon;
     return (
       <Badge className={`${config.bgColor} ${config.color} gap-1`}>
@@ -265,7 +287,7 @@ const SellerMisComprasPage = () => {
   };
 
   const getStatusBadge = (status: BuyerOrderStatus) => {
-    const config = statusConfig[status];
+    const config = statusConfig[status] ?? defaultStatusConfig;
     const Icon = config.icon;
     return (
       <Badge className={`${config.bgColor} ${config.color} gap-1`}>
@@ -296,15 +318,17 @@ const SellerMisComprasPage = () => {
   };
 
   const filteredOrders = orders || [];
+  // Stats always from ALL orders so tab badges are correct regardless of active tab
+  const allOrders = rawOrders || [];
 
-  // Stats
   const stats = {
-    total: filteredOrders.length,
-    pending: filteredOrders.filter(o => o.status === 'placed').length,
-    paid: filteredOrders.filter(o => o.status === 'paid').length,
-    shipped: filteredOrders.filter(o => o.status === 'shipped').length,
-    delivered: filteredOrders.filter(o => o.status === 'delivered').length,
-    totalAmount: filteredOrders.filter(o => ['paid', 'shipped', 'delivered'].includes(o.status))
+    total: allOrders.length,
+    pending: allOrders.filter(o => o.status === 'placed').length,
+    paid: allOrders.filter(o => o.status === 'paid').length,
+    preparing: allOrders.filter(o => o.status === 'preparing' || o.status === 'in_transit').length,
+    shipped: allOrders.filter(o => o.status === 'shipped').length,
+    delivered: allOrders.filter(o => o.status === 'delivered').length,
+    totalAmount: allOrders.filter(o => ['paid', 'preparing', 'in_transit', 'shipped', 'delivered'].includes(o.status))
       .reduce((sum, o) => sum + o.total_amount, 0),
   };
 
@@ -369,6 +393,10 @@ const SellerMisComprasPage = () => {
                 <TabsTrigger value="all" className="text-xs shrink-0">Todos</TabsTrigger>
                 <TabsTrigger value="placed" className="text-xs shrink-0">Pendientes</TabsTrigger>
                 <TabsTrigger value="paid" className="text-xs shrink-0">Pagados</TabsTrigger>
+                <TabsTrigger value="preparing" className="text-xs shrink-0">
+                  En Preparación
+                  {stats.preparing > 0 && <span className="ml-1 bg-amber-500 text-white text-[10px] rounded-full px-1">{stats.preparing}</span>}
+                </TabsTrigger>
                 <TabsTrigger value="shipped" className="text-xs shrink-0">En Camino</TabsTrigger>
                 <TabsTrigger value="delivered" className="text-xs shrink-0">Entregados</TabsTrigger>
                 <TabsTrigger value="cancelled" className="text-xs shrink-0">Cancelados</TabsTrigger>
@@ -387,16 +415,36 @@ const SellerMisComprasPage = () => {
             </Card>
           ) : filteredOrders.length === 0 ? (
             <Card className="p-8 text-center">
-              <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No tienes compras aún</h3>
-              <p className="text-muted-foreground mb-4">Explora el catálogo B2B y realiza tu primera compra</p>
-              <Button asChild>
-                <Link to="/seller/adquisicion-lotes">Ir al Catálogo B2B</Link>
-              </Button>
+              {statusFilter === 'all' ? (
+                <>
+                  <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No tienes compras aún</h3>
+                  <p className="text-muted-foreground mb-4">Explora el catálogo B2B y realiza tu primera compra</p>
+                  <Button asChild>
+                    <Link to="/seller/adquisicion-lotes">Ir al Catálogo B2B</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {statusFilter === 'placed' && <Clock className="h-12 w-12 text-blue-300 mx-auto mb-4" />}
+                  {statusFilter === 'paid' && <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-4" />}
+                  {statusFilter === 'preparing' && <Package className="h-12 w-12 text-amber-300 mx-auto mb-4" />}
+                  {statusFilter === 'shipped' && <Truck className="h-12 w-12 text-purple-300 mx-auto mb-4" />}
+                  {statusFilter === 'delivered' && <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-4" />}
+                  {statusFilter === 'cancelled' && <XCircle className="h-12 w-12 text-red-300 mx-auto mb-4" />}
+                  <h3 className="text-lg font-semibold mb-2">Sin pedidos en este estado</h3>
+                  <p className="text-muted-foreground mb-4">
+                    No tienes pedidos con estado «{statusConfig[statusFilter as BuyerOrderStatus]?.label ?? statusFilter}» por el momento
+                  </p>
+                  <Button variant="outline" onClick={() => setStatusFilter('all')}>
+                    Ver todos los pedidos
+                  </Button>
+                </>
+              )}
             </Card>
           ) : (
             filteredOrders.map((order) => {
-              const status = statusConfig[order.status];
+              const status = statusConfig[order.status] ?? defaultStatusConfig;
               const Icon = status.icon;
               const trackingNumber = order.metadata?.tracking_number;
               const carrier = order.metadata?.carrier;
@@ -408,9 +456,10 @@ const SellerMisComprasPage = () => {
                   className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4 ${
                     order.status === 'shipped' ? 'border-l-purple-500' : 
                     order.status === 'delivered' ? 'border-l-green-500' : 
+                    order.status === 'preparing' || order.status === 'in_transit' ? 'border-l-amber-500' :
                     order.payment_status === 'paid' || order.status === 'paid' ? 'border-l-green-500' : 
                     order.payment_status === 'pending_validation' ? 'border-l-orange-500' :
-                    order.status === 'placed' ? 'border-l-amber-500' : 
+                    order.status === 'placed' ? 'border-l-amber-400' : 
                     order.status === 'cancelled' ? 'border-l-red-500' : 'border-l-gray-300'
                   }`}
                   onClick={() => setSelectedOrder(order)}
@@ -474,23 +523,40 @@ const SellerMisComprasPage = () => {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           {selectedOrder && (() => {
             const selectedPoInfo = poInfoMap?.[selectedOrder.id];
+            const selectedStatusConfig = statusConfig[selectedOrder.status] ?? defaultStatusConfig;
             return (
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${
-                    selectedOrder.payment_status === 'pending_validation' 
-                      ? 'bg-orange-100 text-orange-600'
-                      : selectedOrder.payment_status === 'paid'
-                        ? 'bg-green-100 text-green-600'
-                        : statusConfig[selectedOrder.status].bgColor + ' ' + statusConfig[selectedOrder.status].color
+                    selectedOrder.status === 'cancelled'
+                      ? 'bg-red-100 text-red-600'
+                      : selectedOrder.status === 'preparing' || selectedOrder.status === 'in_transit'
+                        ? 'bg-amber-100 text-amber-600'
+                        : selectedOrder.status === 'shipped'
+                          ? 'bg-purple-100 text-purple-600'
+                          : selectedOrder.status === 'delivered'
+                            ? 'bg-green-100 text-green-600'
+                            : selectedOrder.payment_status === 'pending_validation'
+                              ? 'bg-orange-100 text-orange-600'
+                              : selectedOrder.payment_status === 'paid'
+                                ? 'bg-green-100 text-green-600'
+                                : selectedStatusConfig.bgColor + ' ' + selectedStatusConfig.color
                   }`}>
                     {(() => {
-                      const Icon = selectedOrder.payment_status === 'pending_validation' 
-                        ? AlertCircle 
-                        : selectedOrder.payment_status === 'paid'
-                          ? CheckCircle
-                          : statusConfig[selectedOrder.status].icon;
+                      const Icon = selectedOrder.status === 'cancelled'
+                        ? XCircle
+                        : selectedOrder.status === 'preparing' || selectedOrder.status === 'in_transit'
+                          ? Package
+                          : selectedOrder.status === 'shipped'
+                            ? Truck
+                            : selectedOrder.status === 'delivered'
+                              ? CheckCircle
+                              : selectedOrder.payment_status === 'pending_validation'
+                                ? AlertCircle
+                                : selectedOrder.payment_status === 'paid'
+                                  ? CheckCircle
+                                  : selectedStatusConfig.icon;
                       return <Icon className="h-5 w-5" />;
                     })()}
                   </div>
@@ -632,10 +698,17 @@ const SellerMisComprasPage = () => {
                   <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Estado del Pedido</h4>
                   <div className="flex items-center justify-between w-full">
                     {['placed', 'paid', 'shipped', 'delivered'].map((step, index, arr) => {
+                      // rank map: preparing/in_transit sit between paid(1) and shipped(2)
+                      const statusRank: Record<string, number> = {
+                        placed: 0, paid: 1, preparing: 1, in_transit: 1, shipped: 2, delivered: 3,
+                      };
+                      const stepRank: Record<string, number> = { placed: 0, paid: 1, shipped: 2, delivered: 3 };
+                      const orderRank = statusRank[selectedOrder.status] ?? -1;
                       const stepStatus = statusConfig[step as BuyerOrderStatus];
                       const StepIcon = stepStatus.icon;
-                      const isCompleted = ['placed', 'paid', 'shipped', 'delivered'].indexOf(selectedOrder.status) >= index;
-                      const isCurrent = selectedOrder.status === step;
+                      const isCompleted = selectedOrder.status !== 'cancelled' && orderRank >= (stepRank[step] ?? 99);
+                      const isCurrent = selectedOrder.status === step
+                        || (step === 'paid' && (selectedOrder.status === 'preparing' || selectedOrder.status === 'in_transit'));
 
                       return (
                         <div key={step} className="flex items-center flex-1 last:flex-none">

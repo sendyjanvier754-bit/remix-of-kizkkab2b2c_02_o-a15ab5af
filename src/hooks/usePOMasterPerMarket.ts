@@ -215,7 +215,16 @@ export function usePOMasterPerMarket() {
         { description: `Nueva PO abierta automáticamente` }
       );
     },
-    onError: () => toast.error('Error al cerrar PO'),
+    onError: (error: any) => {
+      console.error('❌ Close PO error details:', {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        full: error,
+      });
+      toast.error(`Error al cerrar PO: ${error?.message || error?.details || 'Error desconocido'}`);
+    },
   });
 
   // Update China tracking

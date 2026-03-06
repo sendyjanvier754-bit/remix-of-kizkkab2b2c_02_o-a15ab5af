@@ -265,14 +265,17 @@ const SellerAccountPage = () => {
   const isVerified = seller?.is_verified || false;
 
   // Status config
-  const statusConfig: Record<BuyerOrderStatus, { label: string; color: string; icon: React.ElementType; bgColor: string }> = {
+  const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType; bgColor: string }> = {
     draft: { label: 'Borrador', color: 'text-gray-600', icon: Clock, bgColor: 'bg-gray-100' },
     placed: { label: 'Confirmado', color: 'text-blue-600', icon: Package, bgColor: 'bg-blue-100' },
     paid: { label: 'Pagado', color: 'text-amber-600', icon: CheckCircle, bgColor: 'bg-amber-100' },
+    preparing: { label: 'En Preparación', color: 'text-amber-600', icon: Package, bgColor: 'bg-amber-100' },
+    in_transit: { label: 'En Tránsito', color: 'text-blue-600', icon: Truck, bgColor: 'bg-blue-100' },
     shipped: { label: 'En camino', color: 'text-purple-600', icon: Truck, bgColor: 'bg-purple-100' },
     delivered: { label: 'Entregado', color: 'text-green-600', icon: CheckCircle, bgColor: 'bg-green-100' },
     cancelled: { label: 'Cancelado', color: 'text-red-600', icon: XCircle, bgColor: 'bg-red-100' },
   };
+  const defaultStatusConfig = { label: 'Desconocido', color: 'text-gray-600', icon: Clock, bgColor: 'bg-gray-100' };
 
   const refundStatusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
     none: { label: 'Sin reembolso', color: 'text-gray-600', bgColor: 'bg-gray-100' },
@@ -290,7 +293,7 @@ const SellerAccountPage = () => {
   };
 
   const getStatusBadge = (status: BuyerOrderStatus) => {
-    const config = statusConfig[status];
+    const config = statusConfig[status] ?? defaultStatusConfig;
     const Icon = config.icon;
     return (
       <Badge className={`${config.bgColor} ${config.color} gap-1`}>
@@ -1168,7 +1171,7 @@ const SellerAccountPage = () => {
                     </Card>
                   ) : orders && orders.length > 0 ? (
                     orders.map((order) => {
-                      const status = statusConfig[order.status];
+                      const status = statusConfig[order.status] ?? defaultStatusConfig;
                       const Icon = status.icon;
                       
                       return (
@@ -1937,9 +1940,9 @@ const SellerAccountPage = () => {
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${statusConfig[selectedOrder.status].bgColor} ${statusConfig[selectedOrder.status].color}`}>
+                  <div className={`p-2 rounded-lg ${(statusConfig[selectedOrder.status] ?? defaultStatusConfig).bgColor} ${(statusConfig[selectedOrder.status] ?? defaultStatusConfig).color}`}>
                     {(() => {
-                      const Icon = statusConfig[selectedOrder.status].icon;
+                      const Icon = (statusConfig[selectedOrder.status] ?? defaultStatusConfig).icon;
                       return <Icon className="h-5 w-5" />;
                     })()}
                   </div>
@@ -2001,7 +2004,7 @@ const SellerAccountPage = () => {
                   <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Estado del Pedido</h4>
                   <div className="flex items-center justify-between w-full">
                     {['placed', 'paid', 'shipped', 'delivered'].map((step, index, arr) => {
-                      const stepStatus = statusConfig[step as BuyerOrderStatus];
+                      const stepStatus = statusConfig[step as BuyerOrderStatus] ?? defaultStatusConfig;
                       const StepIcon = stepStatus.icon;
                       const isCompleted = ['placed', 'paid', 'shipped', 'delivered'].indexOf(selectedOrder.status) >= index;
                       const isCurrent = selectedOrder.status === step;
