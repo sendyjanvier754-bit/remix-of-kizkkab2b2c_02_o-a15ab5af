@@ -81,6 +81,57 @@ const LoginPage = () => {
     }
   };
 
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: otpEmail,
+        options: {
+          shouldCreateUser: false,
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setOtpSent(true);
+        setSuccess("Código enviado a tu email. Revisa tu bandeja de entrada.");
+      }
+    } catch {
+      setError("Error al enviar el código.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      sessionStorage.setItem('just_logged_in', 'true');
+      const { error } = await supabase.auth.verifyOtp({
+        email: otpEmail,
+        token: otpCode,
+        type: 'email',
+      });
+
+      if (error) {
+        sessionStorage.removeItem('just_logged_in');
+        setError("Código inválido o expirado. Intenta de nuevo.");
+      }
+    } catch {
+      sessionStorage.removeItem('just_logged_in');
+      setError("Error al verificar el código.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
