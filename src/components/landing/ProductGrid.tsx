@@ -1,5 +1,9 @@
+import { useMemo } from "react";
 import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/auth";
+import { useB2BPricesMap } from "@/hooks/useMarketplaceData";
 
 interface Product {
   id: string;
@@ -25,6 +29,15 @@ interface ProductGridProps {
 }
 
 const ProductGrid = ({ products, isLoading = false, skeletonCount = 30 }: ProductGridProps) => {
+  const { user } = useAuth();
+  const isB2BUser = user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN;
+
+  const sourceProductIds = useMemo(
+    () => isB2BUser ? products.map(p => p.source_product_id).filter(Boolean) as string[] : [],
+    [isB2BUser, products]
+  );
+
+  const { data: b2bPricesMap = {} } = useB2BPricesMap(sourceProductIds);
   if (isLoading) {
     return (
       <div className="w-full px-4 py-2">
@@ -49,7 +62,11 @@ const ProductGrid = ({ products, isLoading = false, skeletonCount = 30 }: Produc
     <div className="w-full px-4 py-2">
       <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-1">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            b2bData={isB2BUser && product.source_product_id ? b2bPricesMap[product.source_product_id] : undefined}
+          />
         ))}
       </div>
     </div>

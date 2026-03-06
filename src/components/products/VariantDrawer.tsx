@@ -26,6 +26,7 @@ const VariantDrawer: React.FC = () => {
   const [variantImage, setVariantImage] = useState<string | null>(null);
   const [basePriceFromDb, setBasePriceFromDb] = useState<number | null>(null);
   const [variantPrices, setVariantPrices] = useState<Record<string, number>>({});
+  const [b2cVariantPrices, setB2cVariantPrices] = useState<Record<string, number>>({});
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
   const { user, role } = useAuth();
@@ -72,6 +73,31 @@ const VariantDrawer: React.FC = () => {
       }
       return acc;
     }, {});
+
+  // 3. Fetch B2C per-variant precio_override (for non-B2B users)
+  useEffect(() => {
+    const fetchB2cVariantPrices = async () => {
+      if (isB2BUser || !product?.id) return;
+      // product.id = seller_catalog.id when opened from marketplace
+      const { data } = await supabase
+        .from('seller_catalog_variants' as any)
+        .select('variant_id, precio_override')
+        .eq('seller_catalog_id', product.id)
+        .not('precio_override', 'is', null);
+      if (data && data.length > 0) {
+        const map: Record<string, number> = {};
+        for (const row of data as any[]) {
+          if (row.variant_id && row.precio_override != null) {
+            map[row.variant_id] = Number(row.precio_override);
+          }
+        }
+        setB2cVariantPrices(map);
+      } else {
+        setB2cVariantPrices({});
+      }
+    };
+    fetchB2cVariantPrices();
+  }, [isB2BUser, product?.id]);
 
     setVariantPrices(priceMap);
   }, [productVariants, isB2BUser]);
@@ -323,6 +349,11 @@ const VariantDrawer: React.FC = () => {
                     <span className="text-lg font-bold text-primary">${variantPrices[selectedVariantId].toFixed(2)}</span>
                     <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">B2B</span>
                   </div>
+                ) : basePriceFromDb !== null ? (
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-lg font-bold text-primary">${basePriceFromDb.toFixed(2)}</span>
+                    <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">B2B</span>
+                  </div>
                 ) : (
                   <div className="mt-1 text-xs text-muted-foreground italic">
                     Selecciona una variante para ver el precio
@@ -331,7 +362,7 @@ const VariantDrawer: React.FC = () => {
               ) : (
                 <div className="mt-1 text-lg font-bold text-foreground">${displayPrice.toFixed(2)}</div>
               )}
-              <span className="text-[10px] text-muted-foreground">costo</span>
+              {isB2BUser && <span className="text-[10px] text-muted-foreground">costo</span>}
             </div>
           </div>
 
@@ -342,6 +373,7 @@ const VariantDrawer: React.FC = () => {
             baseImage={product.images?.[0]}
             isB2B={isB2BUser}
             variantPrices={variantPrices}
+            b2cVariantPrices={b2cVariantPrices}
             onSelectionChange={(list, qty, price) => {
               setSelections(list);
               setTotalQty(qty);

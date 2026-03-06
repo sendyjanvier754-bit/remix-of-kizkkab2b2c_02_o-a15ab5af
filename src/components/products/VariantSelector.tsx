@@ -17,6 +17,7 @@ interface VariantSelectorProps {
   baseImage?: string;
   isB2B?: boolean;
   variantPrices?: Record<string, number>;
+  b2cVariantPrices?: Record<string, number>;
   onSelectionChange?: (selections: VariantSelection[], totalQty: number, totalPrice: number, selectedVariant?: ProductVariant | null, isValid?: boolean, validationErrors?: string[]) => void;
   onVariantImageChange?: (imageUrl: string | null) => void;
 }
@@ -68,6 +69,7 @@ const VariantSelector = ({
   baseImage,
   isB2B = false,
   variantPrices = {},
+  b2cVariantPrices = {},
   onSelectionChange,
   onVariantImageChange,
 }: VariantSelectorProps) => {
@@ -313,8 +315,9 @@ const VariantSelector = ({
   const totalQty = Object.values(selections).reduce((sum, qty) => sum + qty, 0);
   const totalPrice = variants?.reduce((sum, v) => {
     const qty = selections[v.id] || 0;
-    // ALWAYS use B2B dynamic price from vista for B2B users
-    const price = isB2B ? (variantPrices[v.id] || 0) : (v.price ?? basePrice);
+      // ALWAYS use B2B dynamic price from vista for B2B users;
+      // for B2C, use per-variant override if set, else basePrice
+      const price = isB2B ? (variantPrices[v.id] || 0) : (b2cVariantPrices[v.id] ?? basePrice);
     return sum + price * qty;
   }, 0) || 0;
 
@@ -658,6 +661,7 @@ const VariantSelector = ({
         {/* Show matching variant with quantity control and consolidated info */}
         {matchingVariant && (
           <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+            {/* Top row: image + name/badges + quantity selector */}
             <div className="flex items-center gap-4">
               {/* Variant image thumbnail */}
               {matchingVariant.images?.[0] && (
@@ -685,19 +689,9 @@ const VariantSelector = ({
                     <Badge variant="outline" className="text-xs">Min: {matchingVariant.moq}</Badge>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                  <span className="text-lg font-bold text-primary whitespace-nowrap">
-                    ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (matchingVariant.price ?? basePrice)).toFixed(2)}
-                  </span>
-                  {matchingVariant.precio_promocional && matchingVariant.precio_promocional < (isB2B ? (variantPrices[matchingVariant.id] || 0) : (matchingVariant.price ?? basePrice)) && (
-                    <span className="text-sm text-muted-foreground line-through whitespace-nowrap">
-                      ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (matchingVariant.price ?? basePrice)).toFixed(2)}
-                    </span>
-                  )}
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {matchingVariant.stock} disponibles
-                  </span>
-                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {matchingVariant.stock} disponibles
+                </span>
               </div>
 
               {/* Quantity controls */}
@@ -709,6 +703,18 @@ const VariantSelector = ({
                 disabled={matchingVariant.stock === 0}
                 size="md"
               />
+            </div>
+
+            {/* Price row — below so it doesn't overlap the quantity selector */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 pl-0">
+              <span className="text-lg font-bold text-primary whitespace-nowrap">
+                ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)).toFixed(2)}
+              </span>
+              {matchingVariant.precio_promocional && matchingVariant.precio_promocional < (isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)) && (
+                <span className="text-sm text-muted-foreground line-through whitespace-nowrap">
+                  ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)).toFixed(2)}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -741,7 +747,7 @@ const VariantSelector = ({
           <div className="space-y-1.5 sm:space-y-2">
             {grouped[type].map((variant) => {
               const qty = selections[variant.id] || 0;
-              const price = isB2B ? (variantPrices[variant.id] || 0) : (variant.price ?? basePrice);
+              const price = isB2B ? (variantPrices[variant.id] || 0) : (b2cVariantPrices[variant.id] ?? basePrice);
               const hasPromo = variant.precio_promocional && variant.precio_promocional < price;
               const displayPrice = hasPromo ? variant.precio_promocional : price;
               const outOfStock = variant.stock === 0;

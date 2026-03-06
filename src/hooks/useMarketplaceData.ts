@@ -446,6 +446,38 @@ export const useAllSellerProducts = (limit = 200) => {
 /**
  * Hook para estadísticas generales del marketplace
  */
+/**
+ * Fetches B2B prices from v_productos_con_precio_b2b for a list of source product IDs.
+ * Returns a map: { [sourceProductId]: { price_b2b, suggested_pvp, moq, stock } }
+ * Only runs when the user is a seller or admin.
+ */
+export const useB2BPricesMap = (sourceProductIds: string[]) => {
+  return useQuery({
+    queryKey: ['b2b-prices-map', sourceProductIds.join(',')],
+    enabled: sourceProductIds.length > 0,
+    staleTime: 1000 * 60 * 5,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_productos_con_precio_b2b')
+        .select('id, precio_b2b, moq, stock_fisico')
+        .in('id', sourceProductIds);
+
+      if (error) return {} as Record<string, { price_b2b: number; suggested_pvp: number; moq: number; stock: number }>;
+
+      const map: Record<string, { price_b2b: number; suggested_pvp: number; moq: number; stock: number }> = {};
+      (data || []).forEach((row: any) => {
+        map[row.id] = {
+          price_b2b: row.precio_b2b || 0,
+          suggested_pvp: row.precio_b2b ? Math.round(row.precio_b2b * 1.4 * 100) / 100 : 0,
+          moq: row.moq || 1,
+          stock: row.stock_fisico || 0,
+        };
+      });
+      return map;
+    },
+  });
+};
+
 export const useMarketplaceStats = () => {
   return useQuery({
     queryKey: ["marketplace-stats"],

@@ -100,11 +100,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
     
-    // Safety timeout: if auth doesn't complete within 3 seconds, show the app anyway
+    // Safety timeout: if auth doesn't complete within 8 seconds, show the app anyway
     const safetyTimeout = setTimeout(() => {
-      console.warn('Auth initialization timeout - showing app anyway');
       if (mounted) setIsLoading(false);
-    }, 3000);
+    }, 8000);
 
     // PRIMERO: Cargar sesión existente SINCRÓNICAMENTE para evitar "parpadeo"
     const initAuth = async () => {
@@ -115,8 +114,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.log('🔄 Loading existing session...');
           setSession(session);
           
-          const profile = await fetchUserProfile(session.user.id);
-          const userRole = await getUserRole(session.user.id);
+          const [profile, userRole] = await Promise.all([
+            fetchUserProfile(session.user.id),
+            getUserRole(session.user.id),
+          ]);
           
           if (!profile) {
             console.error('No profile found for user:', session.user.id);
@@ -161,10 +162,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Procesar cambios de auth
         if (session?.user) {
-          // Usar promesa directa sin setTimeout para evitar delay
+          // Usar promesas en paralelo para reducir latencia
           (async () => {
-            const profile = await fetchUserProfile(session.user.id);
-            const userRole = await getUserRole(session.user.id);
+            const [profile, userRole] = await Promise.all([
+              fetchUserProfile(session.user.id),
+              getUserRole(session.user.id),
+            ]);
             
             if (!profile) {
               console.error('No profile found for user:', session.user.id);

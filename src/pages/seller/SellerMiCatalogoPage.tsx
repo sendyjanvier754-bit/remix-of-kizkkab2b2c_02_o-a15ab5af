@@ -30,6 +30,7 @@ export default function SellerMiCatalogoPage() {
     storeId,
     isShippingConfigured,
     updateStock,
+    updatePrecioVenta,
     getStats,
     refetch,
   } = activeTab === 'imported' ? catalogImported : catalogInventory;
@@ -73,8 +74,11 @@ export default function SellerMiCatalogoPage() {
   };
 
   const handleSaveProduct = async (itemId: string, precio: number, stock: number) => {
-    const success = await updateStock(itemId, stock);
-    return success;
+    const [stockOk, precioOk] = await Promise.all([
+      updateStock(itemId, stock),
+      updatePrecioVenta(itemId, precio),
+    ]);
+    return stockOk && precioOk;
   };
 
   const handleImportSuccess = async () => {

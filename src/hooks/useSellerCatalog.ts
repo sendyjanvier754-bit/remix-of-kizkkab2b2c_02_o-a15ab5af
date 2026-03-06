@@ -375,10 +375,37 @@ export const useSellerCatalog = (showAll: boolean = false, sourceType: SellerCat
     }
   }, [productos]);
 
-  const updatePrecioVenta = useCallback(async (_itemId: string, _newPrice: number) => {
-    toast.info('Los precios B2B se calculan automáticamente según rangos de margen configurados');
-    return false;
-  }, []);
+  const updatePrecioVenta = useCallback(async (itemId: string, newPrice: number) => {
+    if (newPrice < 0) { toast.error('El precio no puede ser negativo'); return false; }
+    try {
+      // Save per-variant price override — if NULL later, falls back to catalog default
+      const { error: variantError } = await supabase
+        .from('seller_catalog_variants' as any)
+        .update({ precio_override: newPrice, updated_at: new Date().toISOString() })
+        .eq('id', itemId);
+      if (variantError) throw variantError;
+
+      // Optimistic update
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, precioVenta: newPrice } : i));
+      setProductos(prev => prev.map(p => {
+        const updatedVariantes = p.variantes.map(v => v.id === itemId ? { ...v, precioVenta: newPrice } : v);
+        const prices = updatedVariantes.map(v => v.precioVenta).filter(p => p > 0);
+        return {
+          ...p,
+          variantes: updatedVariantes,
+          precioMinimo: prices.length > 0 ? Math.min(...prices) : p.precioMinimo,
+          precioMaximo: prices.length > 0 ? Math.max(...prices) : p.precioMaximo,
+        };
+      }));
+
+      toast.success('Precio actualizado');
+      return true;
+    } catch (error) {
+      console.error('Error updating price:', error);
+      toast.error('Error al actualizar precio');
+      return false;
+    }
+  }, [items]);
 
   const getMargin = useCallback((item: SellerCatalogItem) => {
     if (item.precioCosto <= 0) return 0;
