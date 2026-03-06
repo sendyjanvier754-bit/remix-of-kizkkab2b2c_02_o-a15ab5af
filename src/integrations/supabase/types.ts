@@ -5953,8 +5953,10 @@ export type Database = {
           allow_comments: boolean | null
           banner: string | null
           city: string | null
+          commune_id: string | null
           country: string | null
           created_at: string
+          department_id: string | null
           description: string | null
           destination_country_id: string | null
           facebook: string | null
@@ -5979,8 +5981,10 @@ export type Database = {
           allow_comments?: boolean | null
           banner?: string | null
           city?: string | null
+          commune_id?: string | null
           country?: string | null
           created_at?: string
+          department_id?: string | null
           description?: string | null
           destination_country_id?: string | null
           facebook?: string | null
@@ -6005,8 +6009,10 @@ export type Database = {
           allow_comments?: boolean | null
           banner?: string | null
           city?: string | null
+          commune_id?: string | null
           country?: string | null
           created_at?: string
+          department_id?: string | null
           description?: string | null
           destination_country_id?: string | null
           facebook?: string | null
@@ -6033,6 +6039,20 @@ export type Database = {
             columns: ["destination_country_id"]
             isOneToOne: false
             referencedRelation: "destination_countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_commune_id_fkey"
+            columns: ["commune_id"]
+            isOneToOne: false
+            referencedRelation: "communes"
             referencedColumns: ["id"]
           },
           {

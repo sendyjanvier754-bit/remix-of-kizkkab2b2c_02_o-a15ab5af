@@ -673,33 +673,35 @@ const VariantSelector = ({
               )}
               
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-semibold text-foreground">
-                    {Object.values(selectedAttributes).join(' / ')}
-                  </span>
-                  {matchingVariant.stock === 0 && (
-                    <Badge variant="secondary" className="text-xs">Agotado</Badge>
-                  )}
-                  {matchingVariant.stock > 0 && matchingVariant.stock <= 5 && (
-                    <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
-                      ¡Últimas {matchingVariant.stock}!
-                    </Badge>
-                  )}
-                  {isB2B && matchingVariant.moq > 1 && (
-                    <Badge variant="outline" className="text-xs">Min: {matchingVariant.moq}</Badge>
-                  )}
+                <div className="flex flex-col gap-1">
+                  {/* Variant name + badges */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold text-foreground">
+                      {Object.values(selectedAttributes).join(' / ')}
+                    </span>
+                    {matchingVariant.stock === 0 && (
+                      <Badge variant="secondary" className="text-xs">Agotado</Badge>
+                    )}
+                    {matchingVariant.stock > 0 && matchingVariant.stock <= 5 && (
+                      <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                        ¡Últimas {matchingVariant.stock}!
+                      </Badge>
+                    )}
+                    {isB2B && matchingVariant.moq > 1 && (
+                      <Badge variant="outline" className="text-xs">Min: {matchingVariant.moq}</Badge>
+                    )}
+                  </div>
+                  {/* Quantity controls — below the name */}
+                  <QuantitySelector
+                    value={selections[matchingVariant.id] || 0}
+                    onChange={(newQty) => updateQuantity(matchingVariant.id, newQty, matchingVariant)}
+                    min={0}
+                    max={matchingVariant.stock}
+                    disabled={matchingVariant.stock === 0}
+                    size="md"
+                  />
                 </div>
               </div>
-
-              {/* Quantity controls */}
-              <QuantitySelector
-                value={selections[matchingVariant.id] || 0}
-                onChange={(newQty) => updateQuantity(matchingVariant.id, newQty, matchingVariant)}
-                min={0}
-                max={matchingVariant.stock}
-                disabled={matchingVariant.stock === 0}
-                size="md"
-              />
             </div>
 
             {/* Price row + stock — below quantity selector */}

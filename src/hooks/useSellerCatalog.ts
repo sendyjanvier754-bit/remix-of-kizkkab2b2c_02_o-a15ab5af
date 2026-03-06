@@ -221,8 +221,17 @@ export const useSellerCatalog = (showAll: boolean = false, sourceType: SellerCat
 
         for (const v of rawVariantes) {
           const precio = Number(v.precio) || 0;
-          const costoLogistica = shippingCosts[row.source_product_id] || 0;
-          const precioCosto = precio + costoLogistica;
+
+          // Use the real purchase price stored in seller_catalog when available
+          // (written by the trigger when the B2B order was paid: precio_b2b_base + costo_logistica)
+          // For imported products (no source_order_id) fall back to the live calculation.
+          const hasPrecioCostoReal = row.source_order_id && Number(row.precio_costo) > 0;
+          const costoLogistica = hasPrecioCostoReal
+            ? Number(row.costo_logistica) || 0
+            : shippingCosts[row.source_product_id] || 0;
+          const precioCosto = hasPrecioCostoReal
+            ? Number(row.precio_costo)
+            : precio + (shippingCosts[row.source_product_id] || 0);
           // Build per-tier cost map
           const tierCosts: Record<string, number> = {};
           if (row.source_product_id) {

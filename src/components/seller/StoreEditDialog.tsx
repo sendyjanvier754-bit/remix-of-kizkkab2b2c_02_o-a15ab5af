@@ -47,6 +47,8 @@ interface StoreEditDialogProps {
     banner: string | null;
     country: string | null;
     city: string | null;
+    department_id: string | null;
+    commune_id: string | null;
     instagram: string | null;
     facebook: string | null;
     whatsapp: string | null;
@@ -67,6 +69,10 @@ export function StoreEditDialog({ store }: StoreEditDialogProps) {
   const [banner, setBanner] = useState(store?.banner || "");
   const [country, setCountry] = useState(store?.country || "Haití");
   const [city, setCity] = useState(store?.city || "");
+  const [departmentId, setDepartmentId] = useState(store?.department_id || "");
+  const [communeId, setCommuneId] = useState(store?.commune_id || "");
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [communes, setCommunes] = useState<{ id: string; name: string }[]>([]);
   const [instagram, setInstagram] = useState(store?.instagram || "");
   const [facebook, setFacebook] = useState(store?.facebook || "");
   const [whatsapp, setWhatsapp] = useState(store?.whatsapp || "");
@@ -75,6 +81,19 @@ export function StoreEditDialog({ store }: StoreEditDialogProps) {
   const queryClient = useQueryClient();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch departments on mount
+  useEffect(() => {
+    supabase.from("departments").select("id, name").eq("is_active", true).order("name")
+      .then(({ data }) => setDepartments(data || []));
+  }, []);
+
+  // Fetch communes when department changes
+  useEffect(() => {
+    if (!departmentId) { setCommunes([]); return; }
+    supabase.from("communes").select("id, name").eq("department_id", departmentId).eq("is_active", true).order("name")
+      .then(({ data }) => setCommunes(data || []));
+  }, [departmentId]);
 
   // Max file sizes: 2MB for logo, 5MB for banner
   const MAX_LOGO_SIZE = 2 * 1024 * 1024;
@@ -189,13 +208,15 @@ export function StoreEditDialog({ store }: StoreEditDialogProps) {
     try {
       const { error } = await supabase
         .from("stores")
-        .update({ 
-          name, 
+        .update({
+          name,
           description,
           logo,
           banner,
           country,
           city,
+          department_id: departmentId || null,
+          commune_id: communeId || null,
           instagram,
           facebook,
           whatsapp,
@@ -429,36 +450,71 @@ export function StoreEditDialog({ store }: StoreEditDialogProps) {
           </div>
 
           {/* Location fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="country" className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                País
-              </Label>
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger className="w-full bg-white">
-                  <SelectValue placeholder="Selecciona un país" />
-                </SelectTrigger>
-                <SelectContent className="bg-white z-50 max-h-[300px]">
-                  {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.name} className="cursor-pointer">
-                      <span className="flex items-center gap-2">
-                        <span>{c.flag}</span>
-                        <span>{c.name}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <MapPin className="h-4 w-4" />
+              Ubicación de la Tienda
+            </Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="country">País</Label>
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger className="w-full bg-white">
+                    <SelectValue placeholder="Selecciona un país" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50 max-h-[300px]">
+                    {COUNTRIES.map((c) => (
+                      <SelectItem key={c.code} value={c.name} className="cursor-pointer">
+                        <span className="flex items-center gap-2">
+                          <span>{c.flag}</span>
+                          <span>{c.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">Ciudad (texto libre)</Label>
+                <Input
+                  id="city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="Ej: Port-au-Prince"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">Ciudad</Label>
-              <Input
-                id="city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Ej: Port-au-Prince"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Departamento</Label>
+                <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setCommuneId(""); }}>
+                  <SelectTrigger className="w-full bg-white">
+                    <SelectValue placeholder="Selecciona departamento" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50 max-h-[300px]">
+                    {departments.map((d) => (
+                      <SelectItem key={d.id} value={d.id} className="cursor-pointer">{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Comuna</Label>
+                <Select
+                  value={communeId}
+                  onValueChange={setCommuneId}
+                  disabled={!departmentId || communes.length === 0}
+                >
+                  <SelectTrigger className="w-full bg-white">
+                    <SelectValue placeholder={departmentId ? "Selecciona comuna" : "Elige departamento primero"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50 max-h-[300px]">
+                    {communes.map((c) => (
+                      <SelectItem key={c.id} value={c.id} className="cursor-pointer">{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

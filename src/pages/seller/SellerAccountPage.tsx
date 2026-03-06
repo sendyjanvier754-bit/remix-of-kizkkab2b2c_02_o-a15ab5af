@@ -72,7 +72,24 @@ const SellerAccountPage = () => {
   // Store Info states
   const [editStoreName, setEditStoreName] = useState(store?.name || "");
   const [editStoreDescription, setEditStoreDescription] = useState(store?.description || "");
+  const [editCountry, setEditCountry] = useState(store?.country || "");
+  const [editDepartmentId, setEditDepartmentId] = useState(store?.department_id || "");
+  const [editCommuneId, setEditCommuneId] = useState(store?.commune_id || "");
+  const [locationDepartments, setLocationDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [locationCommunes, setLocationCommunes] = useState<{ id: string; name: string }[]>([]);
   const [savingStoreInfo, setSavingStoreInfo] = useState(false);
+
+  // Fetch departments once
+  useEffect(() => {
+    supabase.from("departments").select("id, name").eq("is_active", true).order("name")
+      .then(({ data }) => setLocationDepartments(data || []));
+  }, []);
+  // Fetch communes when department changes
+  useEffect(() => {
+    if (!editDepartmentId) { setLocationCommunes([]); return; }
+    supabase.from("communes").select("id, name").eq("department_id", editDepartmentId).eq("is_active", true).order("name")
+      .then(({ data }) => setLocationCommunes(data || []));
+  }, [editDepartmentId]);
   
   // Contact Info states
   const [contactInfo, setContactInfo] = useState({
@@ -202,6 +219,9 @@ const SellerAccountPage = () => {
     if (store) {
       setEditStoreName(store.name || "");
       setEditStoreDescription(store.description || "");
+      setEditCountry(store.country || "");
+      setEditDepartmentId(store.department_id || "");
+      setEditCommuneId(store.commune_id || "");
       setStoreDescription(store.description || "");
       setContactInfo(prev => ({
         ...prev,
@@ -260,6 +280,39 @@ const SellerAccountPage = () => {
       return data;
     },
     enabled: !!user?.id,
+  });
+
+  // Real stats
+  const { data: productsCount = 0 } = useQuery({
+    queryKey: ["seller-products-count", store?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("seller_catalog")
+        .select("id", { count: "exact", head: true })
+        .eq("seller_store_id", store!.id)
+        .eq("is_active", true);
+      return count || 0;
+    },
+    enabled: !!store?.id,
+  });
+
+  const { data: salesCount = 0 } = useQuery({
+    queryKey: ["seller-sales-count", store?.id],
+    queryFn: async () => {
+      const { data: sellerRow } = await supabase
+        .from("sellers")
+        .select("id")
+        .eq("user_id", store!.owner_user_id)
+        .maybeSingle();
+      if (!sellerRow) return 0;
+      const { count } = await supabase
+        .from("orders_b2b")
+        .select("id", { count: "exact", head: true })
+        .eq("seller_id", sellerRow.id)
+        .not("status", "eq", "cancelled");
+      return count || 0;
+    },
+    enabled: !!store?.id,
   });
 
   const isVerified = seller?.is_verified || false;
@@ -701,6 +754,9 @@ const SellerAccountPage = () => {
         .update({
           name: nameInput?.value || store.name,
           description: descInput?.value || store.description,
+          country: editCountry || null,
+          department_id: editDepartmentId || null,
+          commune_id: editCommuneId || null,
         })
         .eq("id", store.id);
 
@@ -1236,6 +1292,29 @@ const SellerAccountPage = () => {
 
               {/* Mi Tienda Tab */}
               <TabsContent value="tienda" className={`space-y-6 mt-0 ${!isMobile ? 'pt-8' : ''}`}>
+
+                {/* Location incomplete warning */}
+                {store && !store.commune_id && (
+                  <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-500" />
+                    <div className="flex-1">
+                      <p className="font-semibold">Completa tu ubicación</p>
+                      <p className="text-amber-700 text-xs mt-0.5">
+                        Tus clientes no pueden ver tu país, departamento y comuna.
+                        Configúralos en <strong>Editar Tienda</strong> para que aparezcan en tu página pública.
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-amber-300 text-amber-800 hover:bg-amber-100 text-xs h-7 px-3 flex-shrink-0"
+                      onClick={() => setShowEditStore(true)}
+                    >
+                      Configurar
+                    </Button>
+                  </div>
+                )}
+
                 {/* Store Header */}
                 <Card className="shadow-lg border-none overflow-hidden">
                   <CardHeader className="bg-gray-100 text-gray-900 pb-8 relative">
@@ -1291,22 +1370,22 @@ const SellerAccountPage = () => {
                       <div className="flex flex-col items-center justify-center p-1.5 bg-blue-50 rounded-lg flex-1">
                         <Package className="h-3 w-3 text-blue-600 mb-0.5" />
                         <p className="text-[10px] text-muted-foreground text-center">Productos</p>
-                        <p className="text-base font-bold text-blue-600">0</p>
+                        <p className="text-base font-bold text-blue-600">{productsCount}</p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-1.5 bg-green-50 rounded-lg flex-1">
                         <ShoppingCart className="h-3 w-3 text-green-600 mb-0.5" />
                         <p className="text-[10px] text-muted-foreground text-center">Ventas</p>
-                        <p className="text-base font-bold text-green-600">0</p>
+                        <p className="text-base font-bold text-green-600">{salesCount}</p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-1.5 bg-amber-50 rounded-lg flex-1">
                         <Star className="h-3 w-3 text-amber-600 mb-0.5" />
                         <p className="text-[10px] text-muted-foreground text-center">Calificación</p>
-                        <p className="text-base font-bold text-amber-600">4.8</p>
+                        <p className="text-base font-bold text-amber-600">—</p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-1.5 bg-purple-50 rounded-lg flex-1">
                         <Users className="h-3 w-3 text-purple-600 mb-0.5" />
                         <p className="text-[10px] text-muted-foreground text-center">Seguidores</p>
-                        <p className="text-base font-bold text-purple-600">0</p>
+                        <p className="text-base font-bold text-purple-600">—</p>
                       </div>
                     </div>
                   </CardContent>
@@ -2465,6 +2544,63 @@ const SellerAccountPage = () => {
                 placeholder="Describe tu tienda"
                 rows={4}
               />
+            </div>
+
+            {/* Location */}
+            <div className="space-y-3 pt-2 border-t">
+              <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <MapPin className="h-4 w-4" />
+                Ubicación de la Tienda
+              </Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">País</Label>
+                  <Select value={editCountry} onValueChange={setEditCountry}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="País" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-[60] max-h-[260px]">
+                      <SelectItem value="Haïtí">🇭🇹 Haïtí</SelectItem>
+                      <SelectItem value="República Dominicana">🇩🇴 República Dominicana</SelectItem>
+                      <SelectItem value="México">🇲🇽 México</SelectItem>
+                      <SelectItem value="Colombia">🇨🇴 Colombia</SelectItem>
+                      <SelectItem value="Estados Unidos">🇺🇸 Estados Unidos</SelectItem>
+                      <SelectItem value="Francia">🇫🇷 Francia</SelectItem>
+                      <SelectItem value="Canadá">🇨🇦 Canadá</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-600">Departamento</Label>
+                  <Select value={editDepartmentId} onValueChange={(v) => { setEditDepartmentId(v); setEditCommuneId(""); }}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Departamento" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-[60] max-h-[260px]">
+                      {locationDepartments.map(d => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-gray-600">Comuna</Label>
+                <Select
+                  value={editCommuneId}
+                  onValueChange={setEditCommuneId}
+                  disabled={!editDepartmentId || locationCommunes.length === 0}
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder={editDepartmentId ? "Selecciona una comuna" : "Elige departamento primero"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-[60] max-h-[260px]">
+                    {locationCommunes.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

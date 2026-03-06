@@ -74,6 +74,9 @@ const VariantDrawer: React.FC = () => {
       return acc;
     }, {});
 
+    setVariantPrices(priceMap);
+  }, [productVariants, isB2BUser]);
+
   // 3. Fetch B2C per-variant precio_override (for non-B2B users)
   useEffect(() => {
     const fetchB2cVariantPrices = async () => {
@@ -98,9 +101,6 @@ const VariantDrawer: React.FC = () => {
     };
     fetchB2cVariantPrices();
   }, [isB2BUser, product?.id]);
-
-    setVariantPrices(priceMap);
-  }, [productVariants, isB2BUser]);
 
   // Prevent body scroll when drawer open
   useEffect(() => {

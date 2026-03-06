@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +12,8 @@ import { UserRole } from "@/types/auth";
 import { useStore, useStoreProducts, useStoreSales } from "@/hooks/useStore";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PaymentMethodsDisplay, PaymentMethodsData } from "@/components/shared/PaymentMethodsDisplay";
+import { useStoreFollow } from "@/hooks/useTrendingStores";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Star,
   MessageCircle,
@@ -43,14 +46,80 @@ const COUNTRIES_MAP: Record<string, string> = {
 const StoreProfilePage = () => {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  // Fetch real store data
+  // Fetch real store data — resolves slug OR uuid to full store object
   const { data: storeData, isLoading: isStoreLoading } = useStore(storeId);
-  const { data: productsData, isLoading: isProductsLoading } = useStoreProducts(storeId);
-  const { data: totalSales30Days } = useStoreSales(storeId);
+
+  // Use the real UUID (storeData.id) for all sub-queries — never pass the slug directly
+  const realStoreId = storeData?.id;
+  const { data: productsData, isLoading: isProductsLoading } = useStoreProducts(realStoreId);
+  const { data: totalSales30Days } = useStoreSales(realStoreId);
+
+  // Real followers count — use storeData.id (UUID), not the slug
+  const { data: followersCount = 0, refetch: refetchFollowers } = useQuery({
+    queryKey: ["store-followers-count", storeData?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("store_followers")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", storeData!.id);
+      return count || 0;
+    },
+    enabled: !!storeData?.id,
+  });
+
+  // Real store rating from store_reviews
+  const { data: ratingData } = useQuery({
+    queryKey: ["store-rating", storeData?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("store_reviews")
+        .select("rating")
+        .eq("store_id", storeData!.id);
+      if (!data || data.length === 0) return null;
+      const avg = data.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / data.length;
+      return { avg: Math.round(avg * 10) / 10, count: data.length };
+    },
+    enabled: !!storeData?.id,
+  });
+
+  // Follow state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const { followStore, unfollowStore, checkIfFollowing } = useStoreFollow();
+
+  useEffect(() => {
+    if (storeData?.id && user?.id) {
+      checkIfFollowing(storeData.id, user.id).then(setIsFollowing).catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeData?.id, user?.id]);
+
+  const handleFollowToggle = async () => {
+    if (!user) {
+      toast({ title: "Inicia sesión para seguir esta tienda", variant: "destructive" });
+      return;
+    }
+    if (!storeData?.id) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await unfollowStore(storeData.id, user.id);
+        setIsFollowing(false);
+      } else {
+        await followStore(storeData.id, user.id);
+        setIsFollowing(true);
+      }
+      refetchFollowers();
+    } catch {
+      toast({ title: "Error", description: "No se pudo actualizar el seguimiento.", variant: "destructive" });
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,14 +167,21 @@ const StoreProfilePage = () => {
   // Merge real data with mock defaults for missing fields
   const store = {
     ...storeData,
-    rating: 4.8,
-    reviews: 150,
-    followers: 342,
+    rating: ratingData?.avg ?? null,
+    reviews: ratingData?.count ?? null,
+    followers: followersCount,
     productsCount: productsData?.total || 0,
     joinDate: new Date(storeData.created_at).toLocaleDateString(),
-    location: storeData.city && storeData.country 
-      ? `${storeData.city}, ${storeData.country}` 
-      : storeData.country || COUNTRIES_MAP[storeData.metadata?.country] || "Haití",
+    location: (() => {
+      const parts: string[] = [];
+      if (storeData.communes?.name) parts.push(storeData.communes.name);
+      if (storeData.departments?.name) parts.push(storeData.departments.name);
+      if (storeData.country) parts.push(storeData.country);
+      else if (storeData.city) parts.push(storeData.city);
+      return parts.length > 0
+        ? parts.join(", ")
+        : COUNTRIES_MAP[storeData.metadata?.country] || "Haití";
+    })(),
     responseTime: "Usually within 24h",
     categories: ["Ropa", "Accesorios", "Tecnología"], // Mock categories for now
     badges: storeData.is_active ? ["Verificado"] : [],
@@ -167,24 +243,8 @@ const StoreProfilePage = () => {
       {!isMobile && <Header />}
 
       <main className={`container mx-auto px-4 ${isMobile ? 'pb-20' : 'pb-0'}`}>
-        {/* Banner - Compact */}
-        <div className="relative h-24 md:h-32 bg-gray-200 rounded-b-lg overflow-hidden -mx-4 mb-0">
-          {store.banner ? (
-            <img
-              src={store.banner}
-              alt={store.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-r from-blue-900 to-blue-600 flex items-center justify-center">
-                <ShoppingBag className="h-16 w-16 text-white/20" />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-        </div>
-
         {/* Store Profile Card */}
-        <div className="bg-white rounded-lg shadow-lg p-6 -mt-24 relative z-10 mb-8">
+        <div className="bg-white rounded-lg shadow-lg p-6 mt-4 relative z-10 mb-8">
           <div className="flex flex-col md:flex-row md:items-start md:gap-6">
             {/* Logo & Main Info */}
             <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1 mb-4 md:mb-0">
@@ -213,8 +273,28 @@ const StoreProfilePage = () => {
                   {store.is_active && <CheckCircle className="w-6 h-6 text-blue-600" />}
                 </div>
 
-                {/* Badges */}
-                <div className="flex flex-wrap gap-2 mb-3">
+                {/* Location + Ver Descripción — below the name */}
+                <div className="flex items-center gap-3 mb-3">
+                  {store.description && (
+                    <Button
+                      onClick={() => setShowProfileModal(true)}
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-300 text-[#071d7f] hover:bg-blue-50"
+                    >
+                      Ver Descripción
+                    </Button>
+                  )}
+                  {store.location && (
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="font-medium text-gray-700">{store.location}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Badges + Store ID */}
+                <div className="flex flex-wrap items-center gap-2 mb-3">
                   {store.badges.map((badge) => (
                     <span
                       key={badge}
@@ -223,6 +303,11 @@ const StoreProfilePage = () => {
                       {badge}
                     </span>
                   ))}
+                  {store.slug && (
+                    <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded select-all">
+                      {store.slug}
+                    </span>
+                  )}
                   {(totalSales30Days || 0) >= 1500 && (
                     <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
@@ -233,19 +318,29 @@ const StoreProfilePage = () => {
 
                 {/* Stats */}
                 <div className="flex items-center gap-4 flex-wrap text-sm mb-3">
+                  {/* Rating */}
                   <div className="flex items-center gap-1">
                     <div className="flex text-yellow-400">
-                      <Star className="w-4 h-4 fill-current" />
+                      {[1,2,3,4,5].map(i => (
+                        <Star key={i} className={`w-4 h-4 ${store.rating !== null && i <= Math.round(store.rating!) ? 'fill-current' : 'text-gray-300'}`} />
+                      ))}
                     </div>
-                    <span className="font-semibold text-gray-900">{store.rating}</span>
-                    <span className="text-gray-600">({store.reviews})</span>
+                    {store.rating !== null ? (
+                      <>
+                        <span className="font-semibold text-gray-900">{store.rating}</span>
+                        <span className="text-gray-500">({store.reviews} reseñas)</span>
+                      </>
+                    ) : (
+                      <span className="text-gray-400 text-xs">Sin reseñas</span>
+                    )}
                   </div>
+                  {/* Productos */}
                   <div className="text-gray-600">
-                    <span className="font-semibold">{store.followers}</span>{" "}
-                    seguidores
+                    <span className="font-semibold text-gray-900">{store.productsCount}</span> productos
                   </div>
+                  {/* Seguidores — siempre visible */}
                   <div className="text-gray-600">
-                    <span className="font-semibold">{store.productsCount}</span> productos
+                    <span className="font-semibold text-gray-900">{store.followers}</span> seguidores
                   </div>
                 </div>
 
@@ -277,9 +372,15 @@ const StoreProfilePage = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-2 w-full md:w-auto">
-              <Button className="w-full md:w-40 bg-blue-600 hover:bg-blue-700 text-white">
-                <Heart className="w-4 h-4 mr-2" />
-                Seguir
+              <Button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className={isFollowing
+                  ? "w-full md:w-40 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+                  : "w-full md:w-40 bg-blue-600 hover:bg-blue-700 text-white"}
+              >
+                <Heart className={`w-4 h-4 mr-2 ${isFollowing ? "fill-red-500 text-red-500" : ""}`} />
+                {isFollowing ? "Siguiendo" : "Seguir"}
               </Button>
               <Button
                 variant="outline"
@@ -297,49 +398,6 @@ const StoreProfilePage = () => {
                 Compartir
               </Button>
             </div>
-          </div>
-
-          {/* Additional Info */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-gray-200">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-gray-600" />
-              <div>
-                <p className="text-xs text-gray-600">Ubicación</p>
-                <p className="font-semibold text-gray-900">{store.location}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-gray-600" />
-              <div>
-                <p className="text-xs text-gray-600">Tiempo de respuesta</p>
-                <p className="font-semibold text-gray-900">{store.responseTime}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-gray-600" />
-              <div>
-                <p className="text-xs text-gray-600">Se unió</p>
-                <p className="font-semibold text-gray-900">{store.joinDate}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-gray-600" />
-              <div>
-                <p className="text-xs text-gray-600">Tasa de envío</p>
-                <p className="font-semibold text-gray-900">99.8%</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Description Button */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <Button 
-              onClick={() => setShowProfileModal(true)}
-              variant="outline"
-              className="w-full md:w-auto border-gray-300 text-[#071d7f] hover:bg-blue-50"
-            >
-              Ver Descripción
-            </Button>
           </div>
 
           {/* Payment Methods Section - from store metadata */}
@@ -600,6 +658,20 @@ const StoreProfilePage = () => {
                 <p className="text-gray-900 font-semibold flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   {store.location}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-medium">Tiempo de respuesta</p>
+                <p className="text-gray-900 font-semibold flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {store.responseTime}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-medium">Tasa de envío</p>
+                <p className="text-gray-900 font-semibold flex items-center gap-1">
+                  <ShoppingBag className="h-4 w-4" />
+                  99.8%
                 </p>
               </div>
             </div>

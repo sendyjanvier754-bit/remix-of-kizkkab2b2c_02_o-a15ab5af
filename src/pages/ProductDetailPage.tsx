@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Star,
   Heart,
@@ -17,6 +22,8 @@ import {
   MessageCircle,
   Zap,
   Award,
+  ThumbsUp,
+  CheckCircle,
 } from "lucide-react";
 
 interface ProductDetail {
@@ -52,6 +59,10 @@ interface ProductDetail {
 const ProductPage = () => {
   const { sku } = useParams<{ sku: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -59,8 +70,120 @@ const ProductPage = () => {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
 
+  // ----- Review form state -----
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewHover, setReviewHover] = useState(0);
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewComment, setReviewComment] = useState("");
+  const [showReviewForm, setShowReviewForm] = useState(false);
+
+  // Real catalog item by SKU (to get the id for reviews)
+  const { data: catalogItem } = useQuery({
+    queryKey: ["catalog-item-by-sku", sku],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seller_catalog")
+        .select("id, nombre, source_product_id, seller_store_id, stores(id, name, logo)")
+        .eq("sku", sku!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!sku,
+  });
+
+  // Real product reviews
+  const { data: reviews = [], refetch: refetchReviews } = useQuery({
+    queryKey: ["product-reviews", catalogItem?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_reviews")
+        .select("id, rating, title, comment, created_at, user_id, user_email, is_verified_purchase, helpful_count")
+        .eq("seller_catalog_id", catalogItem!.id)
+        .eq("is_approved", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!catalogItem?.id,
+  });
+
+  // Check if current user already reviewed this item
+  const { data: myReview } = useQuery({
+    queryKey: ["my-review", catalogItem?.id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_reviews")
+        .select("id, rating, title, comment")
+        .eq("seller_catalog_id", catalogItem!.id)
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!catalogItem?.id && !!user?.id,
+  });
+
+  // Check if user has purchased this product (B2B order)
+  const { data: hasPurchased = false } = useQuery({
+    queryKey: ["has-purchased", catalogItem?.source_product_id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("order_items_b2b")
+        .select("id")
+        .eq("product_id", catalogItem!.source_product_id!)
+        .limit(1);
+      return (data?.length ?? 0) > 0;
+    },
+    enabled: !!catalogItem?.source_product_id && !!user?.id,
+  });
+
+  // Submit review mutation
+  const submitReviewMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !catalogItem) throw new Error("not authenticated");
+      const payload = {
+        seller_catalog_id: catalogItem.id,
+        product_id: catalogItem.source_product_id,
+        user_id: user.id,
+        user_email: user.email,
+        rating: reviewRating,
+        title: reviewTitle || null,
+        comment: reviewComment || null,
+        is_verified_purchase: hasPurchased,
+        is_approved: true,
+      };
+      if (myReview) {
+        const { error } = await supabase
+          .from("product_reviews")
+          .update({ rating: reviewRating, title: reviewTitle || null, comment: reviewComment || null })
+          .eq("id", myReview.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("product_reviews").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "¡Gracias!", description: "Tu reseña ha sido publicada." });
+      setShowReviewForm(false);
+      setReviewRating(0);
+      setReviewTitle("");
+      setReviewComment("");
+      queryClient.invalidateQueries({ queryKey: ["product-reviews", catalogItem?.id] });
+      queryClient.invalidateQueries({ queryKey: ["my-review", catalogItem?.id, user?.id] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo guardar tu reseña.", variant: "destructive" });
+    },
+  });
+
+  // Compute derived rating stats from real reviews
+  const avgRating = reviews.length > 0
+    ? Math.round((reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / reviews.length) * 10) / 10
+    : null;
+
   useEffect(() => {
-    // Mock data - En producción, vendría de Supabase
+    // Mock data for product display (real product fetch is separate)
     const mockProduct: ProductDetail = {
       sku: sku || "DRESS-001",
       name: "Vestido Casual Floral Elegante - Premium Collection",
@@ -478,6 +601,173 @@ const ProductPage = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ===== SECCIÓN DE RESEÑAS ===== */}
+        <div className="bg-white rounded-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Reseñas del Producto</h2>
+              {avgRating !== null && (
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex text-yellow-400">
+                    {[1,2,3,4,5].map(i => (
+                      <Star key={i} className={`w-5 h-5 ${i <= Math.round(avgRating) ? 'fill-current' : 'text-gray-300'}`} />
+                    ))}
+                  </div>
+                  <span className="font-bold text-gray-900">{avgRating}</span>
+                  <span className="text-gray-500">({reviews.length} reseñas)</span>
+                </div>
+              )}
+            </div>
+            {user && !myReview && (
+              <Button
+                onClick={() => setShowReviewForm(v => !v)}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              >
+                <Star className="w-4 h-4 mr-2" />
+                Escribir Reseña
+              </Button>
+            )}
+            {user && myReview && (
+              <Button
+                onClick={() => {
+                  setReviewRating(myReview.rating);
+                  setReviewTitle(myReview.title || "");
+                  setReviewComment(myReview.comment || "");
+                  setShowReviewForm(v => !v);
+                }}
+                variant="outline"
+                className="border-gray-400 text-gray-600 hover:bg-gray-50"
+              >
+                <Star className="w-4 h-4 mr-2" />
+                Editar mi Reseña
+              </Button>
+            )}
+          </div>
+
+          {/* Review Form */}
+          {showReviewForm && user && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6">
+              <h3 className="font-semibold text-gray-900 mb-4">
+                {myReview ? "Editar tu reseña" : "Escribe tu reseña"}
+              </h3>
+
+              {/* Star selector */}
+              <div className="flex gap-1 mb-4">
+                {[1,2,3,4,5].map(i => (
+                  <button
+                    key={i}
+                    type="button"
+                    onMouseEnter={() => setReviewHover(i)}
+                    onMouseLeave={() => setReviewHover(0)}
+                    onClick={() => setReviewRating(i)}
+                  >
+                    <Star
+                      className={`w-8 h-8 transition-colors ${
+                        i <= (reviewHover || reviewRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <input
+                type="text"
+                placeholder="Título (opcional)"
+                value={reviewTitle}
+                onChange={e => setReviewTitle(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <Textarea
+                placeholder="Cuéntanos tu experiencia con este producto..."
+                value={reviewComment}
+                onChange={e => setReviewComment(e.target.value)}
+                rows={3}
+                className="mb-3"
+              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => submitReviewMutation.mutate()}
+                  disabled={reviewRating === 0 || submitReviewMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {submitReviewMutation.isPending ? "Guardando..." : "Publicar Reseña"}
+                </Button>
+                <Button variant="outline" onClick={() => setShowReviewForm(false)}>Cancelar</Button>
+              </div>
+            </div>
+          )}
+
+          {/* Reviews list */}
+          {reviews.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">
+              <Star className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+              <p className="font-medium">Aún no hay reseñas para este producto.</p>
+              {user ? (
+                <p className="text-sm mt-1">¡Sé el primero en dejar una!</p>
+              ) : (
+                <p className="text-sm mt-1">Inicia sesión para escribir una reseña.</p>
+              )}
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {reviews.map((review: {
+                id: string;
+                rating: number;
+                title: string | null;
+                comment: string | null;
+                created_at: string;
+                user_id: string;
+                user_email: string | null;
+                is_verified_purchase: boolean | null;
+                helpful_count: number | null;
+              }) => (
+                <div key={review.id} className="py-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
+                        {(review.user_email?.[0] ?? "U").toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">
+                          {review.user_email ? review.user_email.split("@")[0] : "Usuario"}
+                        </p>
+                        {review.is_verified_purchase && (
+                          <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                            <CheckCircle className="w-3 h-3" /> Compra verificada
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      {new Date(review.created_at).toLocaleDateString("es", { year: "numeric", month: "short", day: "numeric" })}
+                    </span>
+                  </div>
+
+                  <div className="flex text-yellow-400 mb-2">
+                    {[1,2,3,4,5].map(i => (
+                      <Star key={i} className={`w-4 h-4 ${i <= review.rating ? 'fill-current' : 'text-gray-200'}`} />
+                    ))}
+                  </div>
+
+                  {review.title && (
+                    <p className="font-semibold text-gray-900 mb-1">{review.title}</p>
+                  )}
+                  {review.comment && (
+                    <p className="text-gray-700 text-sm">{review.comment}</p>
+                  )}
+
+                  {(review.helpful_count ?? 0) > 0 && (
+                    <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                      <ThumbsUp className="w-3 h-3" /> {review.helpful_count} personas encontraron esto útil
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 

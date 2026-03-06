@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Home, LogOut, ShoppingBag, ChevronLeft, Package, Heart, User, Store, LayoutGrid, ClipboardList, Shield, Wallet, LayoutDashboard, Ticket, Users, Share2, BarChart3 } from "lucide-react";
+import { ShoppingCart, Home, LogOut, ShoppingBag, ChevronLeft, Package, Heart, User, Store, LayoutGrid, ClipboardList, Shield, Wallet, LayoutDashboard, Ticket, Users, Share2, BarChart3, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar, SidebarSeparator } from "@/components/ui/sidebar";
 export function SellerSidebar() {
@@ -15,6 +17,20 @@ export function SellerSidebar() {
   } = useAuth();
   const isCollapsed = state === "collapsed";
   const location = useLocation();
+  const [storeSlug, setStoreSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('stores')
+      .select('id, slug')
+      .eq('owner_user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setStoreSlug(data.slug || data.id);
+      });
+  }, [user?.id]);
+
   const mainNavItems = [{
     title: "Dashboard",
     url: "/seller/dashboard",
@@ -137,6 +153,16 @@ export function SellerSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {storeSlug && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Ver mi tienda como cliente" className="h-auto py-3 px-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 transition-all">
+                    <a href={`/tienda/${storeSlug}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
+                      <ExternalLink className="h-5 w-5 flex-shrink-0" />
+                      <span className="font-medium">Ver mi Tienda</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

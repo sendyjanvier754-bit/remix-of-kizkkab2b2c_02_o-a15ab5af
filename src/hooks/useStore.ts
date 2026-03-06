@@ -15,6 +15,11 @@ export interface StoreProfile {
   metadata: any;
   country: string | null;
   city: string | null;
+  department_id: string | null;
+  commune_id: string | null;
+  // Joined from FK relations (populated when using extended select)
+  departments?: { id: string; name: string } | null;
+  communes?: { id: string; name: string } | null;
   instagram: string | null;
   facebook: string | null;
   whatsapp: string | null;
@@ -38,7 +43,7 @@ export const useStore = (storeIdOrSlug: string | undefined) => {
       
       const { data, error } = await supabase
         .from("stores")
-        .select("*")
+        .select("*, departments(id, name), communes(id, name)")
         .eq(column, storeIdOrSlug!)
         .single();
 
@@ -56,7 +61,7 @@ export const useStoreByOwner = (userId: string | undefined) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stores")
-        .select("*")
+        .select("*, departments(id, name), communes(id, name)")
         .eq("owner_user_id", userId!)
         .single();
 
