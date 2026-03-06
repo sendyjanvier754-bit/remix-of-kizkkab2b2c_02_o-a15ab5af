@@ -32,6 +32,8 @@ import LoginPage from "./pages/LoginPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import SellerOnboardingPage from "./pages/seller/SellerOnboardingPage";
 import SellerRegistrationPage from "./pages/SellerRegistrationPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 // Lazy loaded - Public Pages
 const StorePage = lazy(() => import("./pages/StorePage"));
@@ -146,6 +148,8 @@ const AppContent = () => {
             {/* Auth Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/seller/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             
             {/* Seller Registration Landing Page */}
             <Route path="/registro-vendedor" element={<SellerRegistrationPage />} />

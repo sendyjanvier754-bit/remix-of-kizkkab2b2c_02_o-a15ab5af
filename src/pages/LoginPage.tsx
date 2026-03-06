@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound } from "lucide-react";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 
@@ -21,6 +23,11 @@ const LoginPage = () => {
   // Login form
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  
+  // OTP login
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
   
   // Register form
   const [registerName, setRegisterName] = useState("");
@@ -69,6 +76,57 @@ const LoginPage = () => {
       // No necesitamos navigate() aquí
     } catch (err) {
       setError("Error al iniciar sesión. Intenta de nuevo.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: otpEmail,
+        options: {
+          shouldCreateUser: false,
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setOtpSent(true);
+        setSuccess("Código enviado a tu email. Revisa tu bandeja de entrada.");
+      }
+    } catch {
+      setError("Error al enviar el código.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      sessionStorage.setItem('just_logged_in', 'true');
+      const { error } = await supabase.auth.verifyOtp({
+        email: otpEmail,
+        token: otpCode,
+        type: 'email',
+      });
+
+      if (error) {
+        sessionStorage.removeItem('just_logged_in');
+        setError("Código inválido o expirado. Intenta de nuevo.");
+      }
+    } catch {
+      sessionStorage.removeItem('just_logged_in');
+      setError("Error al verificar el código.");
     } finally {
       setIsLoading(false);
     }
@@ -132,8 +190,12 @@ const LoginPage = () => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                  <TabsTrigger value="login">Contraseña</TabsTrigger>
+                  <TabsTrigger value="otp">
+                    <KeyRound className="h-3 w-3 mr-1" />
+                    Código Email
+                  </TabsTrigger>
                   <TabsTrigger value="register">Registrarse</TabsTrigger>
                 </TabsList>
 
@@ -170,7 +232,12 @@ const LoginPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">Contraseña</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="login-password">Contraseña</Label>
+                        <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                          ¿Olvidaste tu contraseña?
+                        </Link>
+                      </div>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -196,6 +263,58 @@ const LoginPage = () => {
                       {isLoading ? "Iniciando..." : "Iniciar Sesión"}
                     </Button>
                   </form>
+                </TabsContent>
+
+                <TabsContent value="otp">
+                  {!otpSent ? (
+                    <form onSubmit={handleSendOTP} className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Te enviaremos un código de verificación a tu email para iniciar sesión sin contraseña.
+                      </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="otp-email">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="otp-email"
+                            type="email"
+                            placeholder="tu@email.com"
+                            className="pl-10"
+                            value={otpEmail}
+                            onChange={(e) => setOtpEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Enviando..." : "Enviar código"}
+                      </Button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyOTP} className="space-y-4">
+                      <p className="text-sm text-muted-foreground text-center">
+                        Ingresa el código de 6 dígitos enviado a <strong>{otpEmail}</strong>
+                      </p>
+                      <div className="flex justify-center">
+                        <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading || otpCode.length !== 6}>
+                        {isLoading ? "Verificando..." : "Verificar código"}
+                      </Button>
+                      <Button type="button" variant="ghost" className="w-full" onClick={() => { setOtpSent(false); setOtpCode(""); setError(null); setSuccess(null); }}>
+                        Enviar nuevo código
+                      </Button>
+                    </form>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="register">

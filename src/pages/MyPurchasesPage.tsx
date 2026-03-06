@@ -94,6 +94,18 @@ const statusConfig: Record<BuyerOrderStatus, {
     color: "text-red-600",
     icon: <XCircle className="h-4 w-4" />,
     bgColor: "bg-red-100"
+  },
+  in_transit: {
+    label: "En tránsito",
+    color: "text-indigo-600",
+    icon: <Truck className="h-4 w-4" />,
+    bgColor: "bg-indigo-100"
+  },
+  preparing: {
+    label: "Preparando",
+    color: "text-orange-600",
+    icon: <Package className="h-4 w-4" />,
+    bgColor: "bg-orange-100"
   }
 };
 

@@ -2456,6 +2456,7 @@ export type Database = {
           color: string | null
           created_at: string | null
           id: string
+          image: string | null
           metadata: Json | null
           nombre: string
           order_id: string
@@ -2472,6 +2473,7 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           id?: string
+          image?: string | null
           metadata?: Json | null
           nombre: string
           order_id: string
@@ -2488,6 +2490,7 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           id?: string
+          image?: string | null
           metadata?: Json | null
           nombre?: string
           order_id?: string
@@ -2639,6 +2642,7 @@ export type Database = {
           consolidation_status: string | null
           created_at: string
           currency: string | null
+          department_code: string | null
           discount_amount: number | null
           hybrid_tracking_id: string | null
           id: string
@@ -2689,6 +2693,7 @@ export type Database = {
           consolidation_status?: string | null
           created_at?: string
           currency?: string | null
+          department_code?: string | null
           discount_amount?: number | null
           hybrid_tracking_id?: string | null
           id?: string
@@ -2739,6 +2744,7 @@ export type Database = {
           consolidation_status?: string | null
           created_at?: string
           currency?: string | null
+          department_code?: string | null
           discount_amount?: number | null
           hybrid_tracking_id?: string | null
           id?: string
@@ -4164,7 +4170,6 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
-          role: string | null
           updated_at: string
           user_code: string | null
         }
@@ -4176,7 +4181,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
-          role?: string | null
           updated_at?: string
           user_code?: string | null
         }
@@ -4188,7 +4192,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
-          role?: string | null
           updated_at?: string
           user_code?: string | null
         }

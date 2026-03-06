@@ -29,7 +29,6 @@ i18n
       // Detection order: localStorage first, then browser language
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'i18n_language',
-      cacheUserLanguage: true,
     },
     interpolation: {
       // React already escapes by default
