@@ -139,6 +139,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setHasInitialized(true);
         }
       } catch (error) {
+        // AbortError comes from Supabase's navigatorLock when component
+        // unmounts during React StrictMode double-invoke or fast refresh — safe to ignore
+        if (error instanceof Error && error.name === 'AbortError') {
+          if (mounted) { setIsLoading(false); clearTimeout(safetyTimeout); }
+          return;
+        }
         console.error('Error loading session:', error);
         setIsLoading(false);
         clearTimeout(safetyTimeout);

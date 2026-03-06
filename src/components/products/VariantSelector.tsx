@@ -689,9 +689,6 @@ const VariantSelector = ({
                     <Badge variant="outline" className="text-xs">Min: {matchingVariant.moq}</Badge>
                   )}
                 </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {matchingVariant.stock} disponibles
-                </span>
               </div>
 
               {/* Quantity controls */}
@@ -705,8 +702,8 @@ const VariantSelector = ({
               />
             </div>
 
-            {/* Price row — below so it doesn't overlap the quantity selector */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 pl-0">
+            {/* Price row + stock — below quantity selector */}
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-3 pl-0">
               <span className="text-lg font-bold text-primary whitespace-nowrap">
                 ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)).toFixed(2)}
               </span>
@@ -715,6 +712,9 @@ const VariantSelector = ({
                   ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)).toFixed(2)}
                 </span>
               )}
+              <span className="text-xs text-muted-foreground whitespace-nowrap ml-auto">
+                {matchingVariant.stock} disponibles
+              </span>
             </div>
           </div>
         )}

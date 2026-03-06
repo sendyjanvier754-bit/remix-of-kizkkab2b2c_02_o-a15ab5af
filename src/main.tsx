@@ -63,6 +63,9 @@ window.addEventListener('error', (e) => {
 });
 
 window.addEventListener('unhandledrejection', (e) => {
+  // Supabase navigatorLock AbortError on component unmount — safe to ignore
+  if (e.reason instanceof Error && e.reason.name === 'AbortError') return;
+  if (typeof e.reason === 'string' && e.reason.includes('aborted')) return;
   console.error('Unhandled rejection:', e.reason);
   showRuntimeOverlay(e.reason || 'Unhandled promise rejection');
 });
