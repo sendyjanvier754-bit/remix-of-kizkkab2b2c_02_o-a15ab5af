@@ -32,6 +32,8 @@ import LoginPage from "./pages/LoginPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import SellerOnboardingPage from "./pages/seller/SellerOnboardingPage";
 import SellerRegistrationPage from "./pages/SellerRegistrationPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 // Lazy loaded - Public Pages
 const StorePage = lazy(() => import("./pages/StorePage"));
