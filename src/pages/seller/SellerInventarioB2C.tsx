@@ -307,7 +307,7 @@ function ProductCard({
             Total Stock: {item.total_stock} unidades
           </p>
           <p className="text-xs">
-            Costo promedio B2B: <span className="font-bold text-green-700">${item.precio_promedio?.toFixed(2)}</span>
+            Precio pagado B2B: <span className="font-bold text-green-700">${item.precio_promedio?.toFixed(2)}</span>
           </p>
         </div>
 
@@ -420,7 +420,7 @@ function VariantesModal({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Costo B2B</p>
+                      <p className="text-sm text-muted-foreground">Precio pagado</p>
                       <p className="text-xl font-bold text-green-700">
                         ${variante.precio_original?.toFixed(2)}
                       </p>
