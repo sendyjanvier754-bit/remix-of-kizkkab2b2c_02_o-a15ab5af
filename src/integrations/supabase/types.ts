@@ -5952,6 +5952,8 @@ export type Database = {
         Row: {
           allow_comments: boolean | null
           banner: string | null
+          banner_images: string[] | null
+          banner_slide_interval: number | null
           city: string | null
           commune_id: string | null
           country: string | null
@@ -5980,6 +5982,8 @@ export type Database = {
         Insert: {
           allow_comments?: boolean | null
           banner?: string | null
+          banner_images?: string[] | null
+          banner_slide_interval?: number | null
           city?: string | null
           commune_id?: string | null
           country?: string | null
@@ -6008,6 +6012,8 @@ export type Database = {
         Update: {
           allow_comments?: boolean | null
           banner?: string | null
+          banner_images?: string[] | null
+          banner_slide_interval?: number | null
           city?: string | null
           commune_id?: string | null
           country?: string | null
@@ -6035,10 +6041,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "stores_destination_country_id_fkey"
-            columns: ["destination_country_id"]
+            foreignKeyName: "stores_commune_id_fkey"
+            columns: ["commune_id"]
             isOneToOne: false
-            referencedRelation: "destination_countries"
+            referencedRelation: "communes"
             referencedColumns: ["id"]
           },
           {
@@ -6049,10 +6055,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stores_commune_id_fkey"
-            columns: ["commune_id"]
+            foreignKeyName: "stores_destination_country_id_fkey"
+            columns: ["destination_country_id"]
             isOneToOne: false
-            referencedRelation: "communes"
+            referencedRelation: "destination_countries"
             referencedColumns: ["id"]
           },
           {
@@ -7136,10 +7142,13 @@ export type Database = {
         Row: {
           catalog_created_at: string | null
           catalog_id: string | null
+          costo_logistica: number | null
           descripcion: string | null
           images: Json | null
           is_active: boolean | null
           nombre: string | null
+          precio_b2b_base: number | null
+          precio_costo: number | null
           precio_max: number | null
           precio_min: number | null
           product_description: string | null
@@ -7575,7 +7584,6 @@ export type Database = {
       }
       get_market_po_dashboard: { Args: never; Returns: Json }
       get_or_create_market_po: { Args: { p_market_id: string }; Returns: Json }
-      get_primary_role: { Args: { p_user_id: string }; Returns: string }
       get_product_market_analysis: {
         Args: { p_product_id: string }
         Returns: {
@@ -7638,7 +7646,7 @@ export type Database = {
         Returns: undefined
       }
       refresh_suggested_pvp_cache: { Args: never; Returns: undefined }
-      sync_missing_profiles_and_roles: { Args: never; Returns: Json }
+      sync_missing_profiles_and_roles: { Args: never; Returns: undefined }
       update_po_china_tracking: {
         Args: { p_china_tracking: string; p_po_id: string }
         Returns: Json
