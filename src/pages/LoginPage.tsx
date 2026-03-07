@@ -101,7 +101,13 @@ const LoginPage = () => {
       });
 
       if (error) {
-        setError(error.message);
+        if (error.message.includes("Signups not allowed") || error.message.includes("otp")) {
+          setError("El inicio de sesión por código OTP no está habilitado. Contacta al administrador o usa contraseña.");
+        } else if (error.message.includes("rate limit") || error.message.includes("429")) {
+          setError("Demasiados intentos. Espera unos minutos antes de solicitar otro código.");
+        } else {
+          setError(error.message);
+        }
       } else {
         setOtpSent(true);
         setSuccess("Código enviado a tu email. Revisa tu bandeja de entrada.");
