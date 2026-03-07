@@ -307,7 +307,7 @@ function ProductCard({
             Total Stock: {item.total_stock} unidades
           </p>
           <p className="text-xs">
-            Precio promedio: <span className="font-bold text-foreground">${item.precio_promedio?.toFixed(2)}</span>
+            Costo promedio B2B: <span className="font-bold text-green-700">${item.precio_promedio?.toFixed(2)}</span>
           </p>
         </div>
 

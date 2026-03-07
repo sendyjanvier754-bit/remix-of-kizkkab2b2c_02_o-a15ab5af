@@ -134,7 +134,11 @@ const LoginPage = () => {
 
       if (error) {
         sessionStorage.removeItem('just_logged_in');
-        setError("Código inválido o expirado. Intenta de nuevo.");
+        if (error.message.includes("expired") || error.message.includes("Token")) {
+          setError("El código ha expirado. Solicita uno nuevo.");
+        } else {
+          setError("Código inválido. Verifica e intenta de nuevo.");
+        }
       }
     } catch {
       sessionStorage.removeItem('just_logged_in');

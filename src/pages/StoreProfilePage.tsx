@@ -535,12 +535,17 @@ const StoreProfilePage = () => {
               }
               const imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : '';
 
+              const stock = product.stock ?? 0;
+              const availabilityBadge = stock > 0 
+                ? 'Disponible' 
+                : (product.metadata?.disponible_pronto ? 'Disponible Pronto' : 'Agotado');
+
               const productForCard = {
                 id: product.id,
                 name: product.nombre,
                 price: Number(product.precio_venta || 0),
                 priceB2B: Number(product.precio_costo || product.precio_venta || 0),
-                stock: product.stock ?? 0,
+                stock: stock,
                 image: imageUrl,
                 sku: product.sku,
                 storeId: storeData?.id,
@@ -548,7 +553,7 @@ const StoreProfilePage = () => {
                 storeWhatsapp: storeData?.whatsapp,
                 isSellerVerified: storeData?.is_active || false,
                 source_product_id: product.source_product_id,
-                badge: product.metadata?.disponible_pronto ? 'Pronto' : undefined,
+                badge: availabilityBadge,
               };
 
               return <ProductCard key={product.id} product={productForCard} />;
