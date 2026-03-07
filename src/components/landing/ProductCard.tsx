@@ -152,7 +152,15 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
 
           {/* Custom Badge */}
           {product.badge && !isB2BUser && (
-            <div className="absolute top-2 right-2 bg-yellow-400 text-gray-900 px-2 py-1 rounded text-xs font-bold z-10">
+            <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-bold z-10 ${
+              product.badge === 'Agotado' 
+                ? 'bg-red-500 text-white' 
+                : product.badge === 'Disponible Pronto' 
+                  ? 'bg-amber-400 text-gray-900' 
+                  : product.badge === 'Disponible'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-yellow-400 text-gray-900'
+            }`}>
               {product.badge}
             </div>
           )}
