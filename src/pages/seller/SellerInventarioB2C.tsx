@@ -412,7 +412,7 @@ function VariantesModal({
                     )}
                   </div>
                   
-                  <div className="flex justify-between items-center pt-2">
+                   <div className="flex justify-between items-center pt-2">
                     <div>
                       <p className="text-sm text-muted-foreground">Stock</p>
                       <p className="text-xl font-bold text-blue-600">
@@ -420,8 +420,8 @@ function VariantesModal({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Precio</p>
-                      <p className="text-xl font-bold">
+                      <p className="text-sm text-muted-foreground">Costo B2B</p>
+                      <p className="text-xl font-bold text-green-700">
                         ${variante.precio_original?.toFixed(2)}
                       </p>
                     </div>
