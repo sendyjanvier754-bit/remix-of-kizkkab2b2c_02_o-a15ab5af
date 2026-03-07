@@ -375,7 +375,7 @@ export const importGroupedProducts = async (
 
       const { data: product, error: productError } = await supabase
         .from('products')
-        .insert({
+        .upsert({
           sku_interno: group.baseSku,
           nombre: group.parentName,
           descripcion_corta: group.description || null,
@@ -383,14 +383,14 @@ export const importGroupedProducts = async (
           proveedor_id: supplierId || null,
           origin_country_id: originCountryId || null,
           costo_base_excel: minCost,
-          precio_mayorista: b2bPrice,
+          precio_mayorista_base: b2bPrice,
           moq: representativeVariant.moq,
           stock_fisico: totalStock,
           imagen_principal: representativeVariant.imageUrl || null,
           galeria_imagenes: allImages.length > 0 ? allImages : null,
           url_origen: representativeVariant.sourceUrl || null,
           is_parent: true,
-        })
+        }, { onConflict: 'sku_interno', ignoreDuplicates: false })
         .select()
         .single();
 
@@ -423,7 +423,7 @@ export const importGroupedProducts = async (
               .insert({
                 name: detectedAttr.attributeName,
                 slug: detectedAttr.attributeName,
-                display_name: detectedAttr.columnName,
+                display_name: (detectedAttr as any).displayName || detectedAttr.columnName,
                 attribute_type: detectedAttr.type,
                 render_type: detectedAttr.renderType,
                 category_hint: detectedAttr.categoryHint,
@@ -431,7 +431,7 @@ export const importGroupedProducts = async (
               .select()
               .single();
 
-            if (attrError) throw attrError;
+            if (attrError) throw new Error(`Error creating attribute '${detectedAttr.attributeName}': ${attrError.message}`);
             attrId = newAttr.id;
           }
           attributeCache[detectedAttr.attributeName] = attrId;
@@ -469,7 +469,7 @@ export const importGroupedProducts = async (
               .select()
               .single();
 
-            if (optError) throw optError;
+            if (optError) throw new Error(`Error creating option '${value}': ${optError.message}`);
             optionCache[attrId][value] = newOpt.id;
           }
         }
@@ -493,13 +493,18 @@ export const importGroupedProducts = async (
         // Build variant label from attribute values
         const variantLabel = Object.values(variant.attributeValues).join(' / ') || variant.sku;
 
+        const firstAttr = group.detectedAttributes[0];
+        const optionTypeLabel = firstAttr
+          ? ((firstAttr as any).displayName || firstAttr.attributeName)
+          : 'variant';
+
         const { data: variantData, error: variantError } = await supabase
           .from('product_variants')
           .insert({
             product_id: product.id,
             sku: variant.sku,
             name: variantLabel,
-            option_type: group.detectedAttributes[0]?.attributeName || 'variant',
+            option_type: optionTypeLabel,
             option_value: Object.values(variant.attributeValues)[0] || variant.sku,
             price: variantPrice,
             stock: variant.stock,
@@ -567,7 +572,8 @@ export const importGroupedProducts = async (
       }
     } catch (err) {
       failed++;
-      errors.push(`${group.parentName}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      const errMsg = err instanceof Error ? err.message : (err as { message?: string })?.message ?? 'Unknown error';
+      errors.push(`${group.parentName}: ${errMsg}`);
     }
   }
 

@@ -396,7 +396,22 @@ const SmartBulkImportDialog = ({ open, onOpenChange }: SmartBulkImportDialogProp
       rows, headers, mappingRecord,
       configuredColumns.length > 0 ? configuredColumns : undefined
     );
-    
+
+    // Apply user-defined custom names from attributeConfigs to detectedAttributes
+    groups.forEach(group => {
+      group.detectedAttributes.forEach(attr => {
+        const config = attributeConfigs.find(
+          c => c.valueColumn === attr.columnName && c.nameType === 'manual' && c.nameValue.trim()
+        );
+        if (config) {
+          const slug = config.nameValue.trim().toLowerCase().replace(/\s+/g, '_');
+          attr.attributeName = slug;
+          // columnName stays as the Excel column; display_name will be set from nameValue on insert
+          (attr as any).displayName = config.nameValue.trim();
+        }
+      });
+    });
+
     setIsCheckingDuplicates(true);
     try {
       const baseSkus = groups.map(g => g.baseSku);
