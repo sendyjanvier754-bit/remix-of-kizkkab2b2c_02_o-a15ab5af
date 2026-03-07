@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound, ChevronRight, ArrowLeft } from "lucide-react";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 
@@ -34,9 +34,15 @@ const LoginPage = () => {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  // Account type step: null = not chosen yet
+  const [accountType, setAccountType] = useState<'buyer' | 'seller' | null>(null);
   
   const { signIn, signUp, user, role, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Default to register tab if ?tab=register
+  const defaultTab = searchParams.get('tab') === 'register' ? 'register' : 'login';
 
   // Redirigir si el usuario ya está autenticado
   useEffect(() => {
@@ -189,7 +195,7 @@ const LoginPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="login" className="w-full">
+              <Tabs defaultValue={defaultTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-6">
                   <TabsTrigger value="login">Contraseña</TabsTrigger>
                   <TabsTrigger value="otp">
@@ -318,7 +324,53 @@ const LoginPage = () => {
                 </TabsContent>
 
                 <TabsContent value="register">
-                  <form onSubmit={handleRegister} className="space-y-4">
+                  {/* Step 1: Choose account type */}
+                  {accountType === null && (
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground text-center">¿Qué tipo de cuenta deseas crear?</p>
+                      <button
+                        type="button"
+                        onClick={() => setAccountType('buyer')}
+                        className="w-full flex items-center gap-4 p-4 border-2 border-border rounded-xl hover:border-primary hover:bg-primary/5 transition group text-left"
+                      >
+                        <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition">
+                          <ShoppingBag className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">Cuenta de Cliente</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Compra productos de tus tiendas favoritas</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/registro-vendedor')}
+                        className="w-full flex items-center gap-4 p-4 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 transition group text-left"
+                      >
+                        <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition">
+                          <Store className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">Cuenta de Vendedor</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Esta cuenta es para comerciantes interesados en compra al por mayor</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 2: Buyer registration form */}
+                  {accountType === 'buyer' && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setAccountType(null)}
+                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Cambiar tipo de cuenta
+                      </button>
+                      <form onSubmit={handleRegister} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="register-name">Nombre completo</Label>
                       <div className="relative">
@@ -394,6 +446,8 @@ const LoginPage = () => {
                       {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
                     </Button>
                   </form>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
 

@@ -84,10 +84,9 @@ ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'product-images'
-  AND EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid()
-    AND role IN ('seller', 'admin')
+  AND (
+    public.is_admin(auth.uid())
+    OR EXISTS (SELECT 1 FROM public.sellers WHERE user_id = auth.uid())
   )
 );
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import VariantSelector from './VariantSelector';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
@@ -9,7 +9,7 @@ import { UserRole } from '@/types/auth';
 import { addItemB2C, addItemB2B } from '@/services/cartService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { X, TrendingUp, ImageIcon, Info } from 'lucide-react';
+import { X, TrendingUp, ImageIcon, Info, LogIn, UserPlus } from 'lucide-react';
 import { useB2BCartProductTotals } from '@/hooks/useB2BCartProductTotals';
 import { BusinessPanel } from '@/components/business/BusinessPanel';
 import { useProductVariants } from '@/hooks/useProductVariants';
@@ -17,9 +17,11 @@ import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 
 const VariantDrawer: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { isOpen, product, close, onComplete } = useVariantDrawerStore();
   
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [selections, setSelections] = useState<any[]>([]);
   const [totalQty, setTotalQty] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -197,7 +199,7 @@ const VariantDrawer: React.FC = () => {
     }
 
     if (!user?.id) {
-      toast({ title: 'Error', description: 'Debes estar autenticado para agregar items', variant: 'destructive' });
+      setShowAuthPrompt(true);
       return;
     }
 
@@ -285,6 +287,56 @@ const VariantDrawer: React.FC = () => {
   if (!isOpen || !product) return null;
 
   const pvpPrice = product.pvp || product.price || 0;
+
+  // Auth prompt overlay (shown when unauthenticated user tries to add to cart)
+  if (showAuthPrompt) {
+    return (
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60">
+        <div className="bg-background rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-foreground">Inicia sesión para continuar</h2>
+            <button onClick={() => { setShowAuthPrompt(false); close(); }} className="p-1 rounded-full hover:bg-muted transition">
+              <X className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+            <img
+              src={product.images?.[0] || '/placeholder.svg'}
+              alt={product.nombre}
+              className="w-14 h-14 object-cover rounded-lg border border-border flex-shrink-0"
+            />
+            <div>
+              <p className="text-sm font-medium text-foreground line-clamp-2">{product.nombre}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{totalQty > 0 ? `${totalQty} unidades seleccionadas` : 'Agrega al carrito'}</p>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground text-center">
+            Necesitas una cuenta para agregar productos al carrito y realizar pedidos.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <Button
+              className="w-full gap-2"
+              onClick={() => { setShowAuthPrompt(false); close(); navigate('/login'); }}
+            >
+              <LogIn className="w-4 h-4" />
+              Iniciar Sesión
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => { setShowAuthPrompt(false); close(); navigate('/login?tab=register'); }}
+            >
+              <UserPlus className="w-4 h-4" />
+              Crear Cuenta
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Mobile: Bottom Sheet | Desktop: Side Drawer
   return (

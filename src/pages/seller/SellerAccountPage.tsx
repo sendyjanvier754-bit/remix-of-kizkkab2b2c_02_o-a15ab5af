@@ -68,6 +68,15 @@ const SellerAccountPage = () => {
   const [editingDescription, setEditingDescription] = useState(false);
   const [storeDescription, setStoreDescription] = useState(store?.description || "");
   const [showViewProfilePhoto, setShowViewProfilePhoto] = useState<'profile' | 'banner' | null>(null);
+  const [showEditPersonalPhoto, setShowEditPersonalPhoto] = useState(false);
+  const [newAvatarFile, setNewAvatarFile] = useState<File | null>(null);
+  const [newAvatarPreview, setNewAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [newLogoFile, setNewLogoFile] = useState<File | null>(null);
+  const [newBannerFiles, setNewBannerFiles] = useState<File[]>([]);
+  const [newLogoPreview, setNewLogoPreview] = useState<string | null>(null);
+  const [newBannerPreviews, setNewBannerPreviews] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
   
   // Store Info states
   const [editStoreName, setEditStoreName] = useState(store?.name || "");
@@ -664,6 +673,97 @@ const SellerAccountPage = () => {
     }
   };
 
+  const handleSavePersonalPhoto = async () => {
+    if (!user?.id || !newAvatarFile) {
+      setShowEditPersonalPhoto(false);
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = newAvatarFile.name.split('.').pop();
+      const path = `user-avatars/${user.id}/avatar.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from('product-images')
+        .upload(path, newAvatarFile, { upsert: true, contentType: newAvatarFile.type });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+      const { error: dbErr } = await supabase
+        .from('profiles')
+        .update({ avatar_url: `${urlData.publicUrl}?t=${Date.now()}` })
+        .eq('id', user.id);
+      if (dbErr) throw dbErr;
+      setNewAvatarFile(null);
+      setNewAvatarPreview(null);
+      setShowEditPersonalPhoto(false);
+      toast({ title: 'Foto actualizada', description: 'Tu foto de perfil personal fue guardada correctamente.' });
+      queryClient.invalidateQueries({ queryKey: ['store', 'owner', user?.id] });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'No se pudo guardar la foto', variant: 'destructive' });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleSavePhotos = async () => {
+    if (!store?.id) return;
+    if (!newLogoFile && newBannerFiles.length === 0) {
+      setShowEditProfilePhoto(false);
+      return;
+    }
+    setUploadingPhotos(true);
+    try {
+      const updates: { logo?: string; banner?: string; banner_images?: string[] } = {};
+
+      if (newLogoFile) {
+        const ext = newLogoFile.name.split('.').pop();
+        const path = `store-logos/${store.id}/logo.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('product-images')
+          .upload(path, newLogoFile, { upsert: true, contentType: newLogoFile.type });
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+        updates.logo = `${urlData.publicUrl}?t=${Date.now()}`;
+      }
+
+      if (newBannerFiles.length > 0) {
+        const uploadedUrls: string[] = [];
+        // Keep existing banners that weren't replaced
+        const existingBanners = store.banner_images || [];
+        for (let i = 0; i < newBannerFiles.length; i++) {
+          const file = newBannerFiles[i];
+          const ext = file.name.split('.').pop();
+          const path = `store-logos/${store.id}/banner_${Date.now()}_${i}.${ext}`;
+          const { error: uploadErr } = await supabase.storage
+            .from('product-images')
+            .upload(path, file, { upsert: true, contentType: file.type });
+          if (uploadErr) throw uploadErr;
+          const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+          uploadedUrls.push(`${urlData.publicUrl}?t=${Date.now()}`);
+        }
+        // Merge: existing + new uploads
+        const allBanners = [...existingBanners, ...uploadedUrls];
+        updates.banner_images = allBanners;
+        // Keep legacy banner = first image for backward compat
+        updates.banner = allBanners[0];
+      }
+
+      const { error } = await supabase.from('stores').update(updates).eq('id', store.id);
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['store', 'owner', user?.id] });
+      setNewLogoFile(null);
+      setNewBannerFiles([]);
+      setNewLogoPreview(null);
+      setNewBannerPreviews([]);
+      setShowEditProfilePhoto(false);
+      toast({ title: 'Fotos actualizadas', description: 'Las imágenes de tu tienda se guardaron correctamente.' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'No se pudieron guardar las fotos', variant: 'destructive' });
+    } finally {
+      setUploadingPhotos(false);
+    }
+  };
+
   // Handler for saving store info (name and description)
   const handleSaveStoreInfo = async () => {
     if (!store?.id) return;
@@ -877,10 +977,10 @@ const SellerAccountPage = () => {
                       <div className="flex items-start justify-between">
                         <div 
                           className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => setShowEditProfilePhoto(true)}
+                          onClick={() => setShowEditPersonalPhoto(true)}
                         >
                           <Avatar className="h-16 w-16 border-4 border-gray-300">
-                            <AvatarImage src={store?.logo || user?.avatar_url || ""} />
+                            <AvatarImage src={user?.avatar_url || ""} />
                             <AvatarFallback className="bg-blue-100 text-[#071d7f] font-bold text-lg">
                               {user?.name?.charAt(0)?.toUpperCase()}
                             </AvatarFallback>
@@ -1317,21 +1417,32 @@ const SellerAccountPage = () => {
 
                 {/* Store Header */}
                 <Card className="shadow-lg border-none overflow-hidden">
-                  <CardHeader className="bg-gray-100 text-gray-900 pb-8 relative">
+                  <CardHeader
+                    className="text-gray-900 pb-8 relative overflow-hidden"
+                    style={store?.banner
+                      ? { backgroundImage: `url(${store.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                      : { backgroundColor: '#f3f4f6' }
+                    }
+                  >
+                    {/* Dark overlay when banner is set so text stays readable */}
+                    {store?.banner && <div className="absolute inset-0 bg-black/40 pointer-events-none" />}
+
+                    {/* Edit photos button */}
                     <button 
                       type="button"
                       className="absolute top-4 left-4 p-2 bg-[#071d7f] hover:bg-[#071d7f]/90 rounded-lg transition-colors z-10"
                       onClick={() => setShowEditProfilePhoto(true)}
-                      title="Editar foto de perfil"
+                      title="Editar logo y banner de la tienda"
                     >
                       <Edit className="h-5 w-5 text-white" />
                     </button>
-                    <div className="flex items-start justify-between">
+
+                    <div className="relative z-10 flex items-start justify-between">
                       <div 
                         className="flex items-center gap-4 flex-1 cursor-pointer"
                         onClick={() => setShowEditProfilePhoto(true)}
                       >
-                        <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center overflow-hidden border-4 border-white hover:shadow-lg transition-shadow">
+                        <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center overflow-hidden border-4 border-white hover:shadow-lg transition-shadow flex-shrink-0">
                           {store?.logo ? (
                             <img src={store.logo} alt={store?.name} className="w-full h-full object-cover" />
                           ) : (
@@ -1340,20 +1451,20 @@ const SellerAccountPage = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h2 className="text-2xl font-bold">{store?.name || "Mi Tienda"}</h2>
+                            <h2 className={`text-2xl font-bold ${store?.banner ? 'text-white drop-shadow' : 'text-gray-900'}`}>{store?.name || "Mi Tienda"}</h2>
                             <button 
                               type="button"
                               className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                              onClick={() => setShowEditStore(true)}
+                              onClick={(e) => { e.stopPropagation(); setShowEditStore(true); }}
                               title="Editar información de la tienda"
                             >
-                              <Edit className="h-4 w-4 text-white" />
+                              <Edit className={`h-4 w-4 ${store?.banner ? 'text-white' : 'text-[#071d7f]'}`} />
                             </button>
                           </div>
-                          {/* Truncated Description - Click to open modal */}
+                          {/* Truncated Description */}
                           <button
                             onClick={() => setShowEditProfilePhoto(true)}
-                            className="mt-3 bg-white rounded-lg px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                            className="mt-3 bg-white/90 rounded-lg px-4 py-2 text-left hover:bg-white transition-colors"
                             title={store?.description || "Descripción de tu tienda"}
                           >
                             <p className="text-black text-sm font-medium max-w-[140px] truncate">
@@ -1365,27 +1476,27 @@ const SellerAccountPage = () => {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-4">
-                    <div className="flex gap-1.5 justify-between">
-                      <div className="flex flex-col items-center justify-center p-1.5 bg-blue-50 rounded-lg flex-1">
-                        <Package className="h-3 w-3 text-blue-600 mb-0.5" />
-                        <p className="text-[10px] text-muted-foreground text-center">Productos</p>
-                        <p className="text-base font-bold text-blue-600">{productsCount}</p>
+                  <CardContent className="px-4 pb-4 pt-2">
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="flex flex-col items-center justify-center py-3 px-1 md:py-5 bg-blue-50 rounded-xl">
+                        <Package className="h-4 w-4 md:h-7 md:w-7 text-blue-600 mb-1" />
+                        <p className="text-[10px] md:text-sm text-muted-foreground text-center font-medium leading-tight">Productos</p>
+                        <p className="text-base md:text-3xl font-bold text-blue-600">{productsCount}</p>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-1.5 bg-green-50 rounded-lg flex-1">
-                        <ShoppingCart className="h-3 w-3 text-green-600 mb-0.5" />
-                        <p className="text-[10px] text-muted-foreground text-center">Ventas</p>
-                        <p className="text-base font-bold text-green-600">{salesCount}</p>
+                      <div className="flex flex-col items-center justify-center py-3 px-1 md:py-5 bg-green-50 rounded-xl">
+                        <ShoppingCart className="h-4 w-4 md:h-7 md:w-7 text-green-600 mb-1" />
+                        <p className="text-[10px] md:text-sm text-muted-foreground text-center font-medium leading-tight">Ventas</p>
+                        <p className="text-base md:text-3xl font-bold text-green-600">{salesCount}</p>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-1.5 bg-amber-50 rounded-lg flex-1">
-                        <Star className="h-3 w-3 text-amber-600 mb-0.5" />
-                        <p className="text-[10px] text-muted-foreground text-center">Calificación</p>
-                        <p className="text-base font-bold text-amber-600">—</p>
+                      <div className="flex flex-col items-center justify-center py-3 px-1 md:py-5 bg-amber-50 rounded-xl">
+                        <Star className="h-4 w-4 md:h-7 md:w-7 text-amber-600 mb-1" />
+                        <p className="text-[10px] md:text-sm text-muted-foreground text-center font-medium leading-tight">Calificación</p>
+                        <p className="text-base md:text-3xl font-bold text-amber-600">—</p>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-1.5 bg-purple-50 rounded-lg flex-1">
-                        <Users className="h-3 w-3 text-purple-600 mb-0.5" />
-                        <p className="text-[10px] text-muted-foreground text-center">Seguidores</p>
-                        <p className="text-base font-bold text-purple-600">—</p>
+                      <div className="flex flex-col items-center justify-center py-3 px-1 md:py-5 bg-purple-50 rounded-xl">
+                        <Users className="h-4 w-4 md:h-7 md:w-7 text-purple-600 mb-1" />
+                        <p className="text-[10px] md:text-sm text-muted-foreground text-center font-medium leading-tight">Seguidores</p>
+                        <p className="text-base md:text-3xl font-bold text-purple-600">—</p>
                       </div>
                     </div>
                   </CardContent>
@@ -2644,7 +2755,15 @@ const SellerAccountPage = () => {
       </Dialog>
 
       {/* Edit Profile Photo Dialog */}
-      <Dialog open={showEditProfilePhoto} onOpenChange={setShowEditProfilePhoto}>
+      <Dialog open={showEditProfilePhoto} onOpenChange={(open) => {
+        if (!open) {
+          setNewLogoFile(null);
+          setNewBannerFiles([]);
+          setNewLogoPreview(null);
+          setNewBannerPreviews([]);
+        }
+        setShowEditProfilePhoto(open);
+      }}>
         <DialogContent className="w-[95vw] max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0">
           <DialogHeader className="px-4 pt-4 pb-2 flex-shrink-0">
             <DialogTitle className="text-[#071d7f]">Editar Foto de Perfil y Banner</DialogTitle>
@@ -2662,34 +2781,141 @@ const SellerAccountPage = () => {
                   <Label htmlFor="profile-photo">Foto de Perfil</Label>
                   <span className="text-xs text-gray-500">800x800px mín.</span>
                 </div>
-                <label htmlFor="profile-photo" className="block border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#071d7f] transition-colors cursor-pointer">
-                  <Edit className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-                  <p className="text-xs text-gray-600">Haz clic para seleccionar</p>
+                <label htmlFor="profile-photo" className="block border-2 border-dashed border-gray-300 rounded-lg overflow-hidden text-center hover:border-[#071d7f] transition-colors cursor-pointer">
+                  {newLogoPreview ? (
+                    <img src={newLogoPreview} alt="Vista previa logo" className="w-full h-32 object-cover" />
+                  ) : store?.logo ? (
+                    <img src={store.logo} alt="Logo actual" className="w-full h-32 object-cover opacity-60" />
+                  ) : (
+                    <div className="p-4">
+                      <Edit className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-600">Haz clic para seleccionar</p>
+                    </div>
+                  )}
                   <input 
                     id="profile-photo" 
                     type="file" 
                     accept="image/*" 
                     className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setNewLogoFile(file);
+                        setNewLogoPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                </label>
+                {newLogoPreview && (
+                  <p className="text-xs text-green-600">✓ Nueva foto seleccionada</p>
+                )}
+              </div>
+
+              {/* Banner Photos — múltiples, carrusel */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Banners de la Tienda</Label>
+                  <span className="text-xs text-gray-500">7257×2079px ideal · infinitos</span>
+                </div>
+
+                {/* Existing banners from DB */}
+                {(store?.banner_images ?? (store?.banner ? [store.banner] : [])).length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-500 font-medium">Actuales ({(store?.banner_images ?? (store?.banner ? [store.banner] : [])).length})</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(store?.banner_images ?? (store?.banner ? [store.banner] : [])).map((url, i) => (
+                        <div key={i} className="relative group">
+                          <img src={url} alt={`Banner ${i+1}`} className="h-16 w-28 object-cover rounded border border-gray-200" />
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!store?.id) return;
+                              const current = store.banner_images ?? (store.banner ? [store.banner] : []);
+                              const updated = current.filter((_, idx) => idx !== i);
+                              await supabase.from('stores').update({
+                                banner_images: updated,
+                                banner: updated[0] ?? null,
+                              }).eq('id', store.id);
+                              queryClient.invalidateQueries({ queryKey: ['store', 'owner', user?.id] });
+                            }}
+                            className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >✕</button>
+                          {i === 0 && <span className="absolute bottom-0.5 left-0.5 bg-[#071d7f] text-white text-[9px] px-1 rounded">Principal</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New banners to add */}
+                {newBannerPreviews.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-green-600 font-medium">Nuevas a subir ({newBannerPreviews.length})</p>
+                    <div className="flex flex-wrap gap-2">
+                      {newBannerPreviews.map((src, i) => (
+                        <div key={i} className="relative group">
+                          <img src={src} alt={`Nuevo banner ${i+1}`} className="h-16 w-28 object-cover rounded border-2 border-green-400" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewBannerFiles(prev => prev.filter((_, idx) => idx !== i));
+                              setNewBannerPreviews(prev => prev.filter((_, idx) => idx !== i));
+                            }}
+                            className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add more button */}
+                <label htmlFor="banner-photo" className="flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-3 cursor-pointer hover:border-[#071d7f] transition-colors">
+                  <Edit className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-xs text-gray-600">Agregar foto(s) al carrusel</span>
+                  <input
+                    id="banner-photo"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length === 0) return;
+                      setNewBannerFiles(prev => [...prev, ...files]);
+                      setNewBannerPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                      e.target.value = '';
+                    }}
                   />
                 </label>
               </div>
 
-              {/* Banner Photo */}
-              <div className="space-y-2">
+              {/* Banner slide interval */}
+              <div className="space-y-2 border-t pt-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="banner-photo">Banner de la Tienda</Label>
-                  <span className="text-xs text-gray-500">1200x400px mín.</span>
+                  <Label>Velocidad del carrusel</Label>
+                  <span className="text-xs text-gray-500">segundos por imagen</span>
                 </div>
-                <label htmlFor="banner-photo" className="block border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#071d7f] transition-colors cursor-pointer">
-                  <Edit className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-                  <p className="text-xs text-gray-600">Haz clic para seleccionar</p>
-                  <input 
-                    id="banner-photo" 
-                    type="file" 
-                    accept="image/*" 
-                    className="hidden"
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={2}
+                    max={10}
+                    step={1}
+                    defaultValue={store?.banner_slide_interval ?? 3}
+                    className="flex-1 accent-[#071d7f]"
+                    onChange={async (e) => {
+                      if (!store?.id) return;
+                      const val = Number(e.target.value);
+                      await supabase.from('stores').update({ banner_slide_interval: val }).eq('id', store.id);
+                      queryClient.invalidateQueries({ queryKey: ['store', 'owner', user?.id] });
+                    }}
                   />
-                </label>
+                  <span className="w-10 text-center text-sm font-semibold text-[#071d7f]">
+                    {store?.banner_slide_interval ?? 3}s
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400">Mínimo 2s · Máximo 10s</p>
               </div>
 
               {/* Store Description Section - Separate scrollable box */}
@@ -2748,11 +2974,64 @@ const SellerAccountPage = () => {
 
           {/* Fixed footer */}
           <DialogFooter className="px-4 py-3 border-t flex-shrink-0 gap-2">
-            <Button variant="outline" onClick={() => setShowEditProfilePhoto(false)} className="flex-1">
+            <Button variant="outline" onClick={() => setShowEditProfilePhoto(false)} className="flex-1" disabled={uploadingPhotos}>
               Cancelar
             </Button>
-            <Button className="bg-[#071d7f] hover:bg-[#071d7f]/90 flex-1" onClick={() => setShowEditProfilePhoto(false)}>
-              Guardar Fotos
+            <Button className="bg-[#071d7f] hover:bg-[#071d7f]/90 flex-1" onClick={handleSavePhotos} disabled={uploadingPhotos}>
+              {uploadingPhotos ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Guardando...</> : 'Guardar Fotos'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Personal Photo Dialog */}
+      <Dialog open={showEditPersonalPhoto} onOpenChange={(open) => {
+        if (!open) { setNewAvatarFile(null); setNewAvatarPreview(null); }
+        setShowEditPersonalPhoto(open);
+      }}>
+        <DialogContent className="w-[95vw] max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#071d7f]">Foto de Perfil Personal</DialogTitle>
+            <DialogDescription>
+              Esta foto representa tu cuenta personal, no tu tienda.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* Current / Preview avatar */}
+            <div className="flex justify-center">
+              <label htmlFor="personal-avatar-input" className="cursor-pointer group relative">
+                <Avatar className="h-28 w-28 border-4 border-gray-200 group-hover:border-[#071d7f] transition-colors">
+                  <AvatarImage src={newAvatarPreview || user?.avatar_url || ""} />
+                  <AvatarFallback className="bg-blue-100 text-[#071d7f] font-bold text-3xl">
+                    {user?.name?.charAt(0)?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="h-7 w-7 text-white" />
+                </div>
+                <input
+                  id="personal-avatar-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) { setNewAvatarFile(file); setNewAvatarPreview(URL.createObjectURL(file)); }
+                  }}
+                />
+              </label>
+            </div>
+            {newAvatarPreview
+              ? <p className="text-xs text-green-600 text-center">✓ Nueva foto seleccionada — haz clic en Guardar</p>
+              : <p className="text-xs text-gray-500 text-center">Haz clic en la imagen para seleccionar una foto</p>
+            }
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowEditPersonalPhoto(false)} disabled={uploadingAvatar} className="flex-1">
+              Cancelar
+            </Button>
+            <Button className="bg-[#071d7f] hover:bg-[#071d7f]/90 flex-1" onClick={handleSavePersonalPhoto} disabled={uploadingAvatar || !newAvatarFile}>
+              {uploadingAvatar ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Guardando...</> : 'Guardar'}
             </Button>
           </DialogFooter>
         </DialogContent>

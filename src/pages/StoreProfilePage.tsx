@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useStore, useStoreProducts, useStoreSales } from "@/hooks/useStore";
+import ProductCard from "@/components/landing/ProductCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PaymentMethodsDisplay, PaymentMethodsData } from "@/components/shared/PaymentMethodsDisplay";
 import { useStoreFollow } from "@/hooks/useTrendingStores";
@@ -124,6 +125,27 @@ const StoreProfilePage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const [bannerSliding, setBannerSliding] = useState(false);
+
+  // Auto-cycle banner with configurable interval (default 3s)
+  useEffect(() => {
+    const banners = storeData?.banner_images?.length
+      ? storeData.banner_images
+      : storeData?.banner
+      ? [storeData.banner]
+      : [];
+    if (banners.length <= 1) return;
+    const intervalSec = storeData?.banner_slide_interval ?? 3;
+    const timer = setInterval(() => {
+      setBannerSliding(true);
+      setTimeout(() => {
+        setBannerIndex(prev => (prev + 1) % banners.length);
+        setBannerSliding(false);
+      }, 600);
+    }, intervalSec * 1000);
+    return () => clearInterval(timer);
+  }, [storeData?.banner_images, storeData?.banner, storeData?.banner_slide_interval]);
 
   // Derived state
   const isLoading = isStoreLoading || isProductsLoading;
@@ -243,52 +265,108 @@ const StoreProfilePage = () => {
       {!isMobile && <Header />}
 
       <main className={`container mx-auto px-4 ${isMobile ? 'pb-20' : 'pb-0'}`}>
-        {/* Store Profile Card */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-4 relative z-10 mb-8">
-          <div className="flex flex-col md:flex-row md:items-start md:gap-6">
-            {/* Logo & Main Info */}
-            <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1 mb-4 md:mb-0">
-              {/* Logo */}
-              <div 
-                onClick={() => setShowProfileModal(true)}
-                className="w-24 h-24 md:w-32 md:h-32 rounded-lg border-4 border-white shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
-              >
-                  {store.logo ? (
-                    <img
-                        src={store.logo}
-                        alt={store.name}
-                        className="w-full h-full object-cover"
+        {/* Store Profile Card — banner (7257×2079) covers entire card as background */}
+        <div className="rounded-lg shadow-lg mt-4 relative z-10 mb-8 overflow-hidden">
+          {/* Banner carousel as full-card background — slide right-to-left */}
+          {(() => {
+            const banners = storeData?.banner_images?.length
+              ? storeData.banner_images
+              : store.banner
+              ? [store.banner]
+              : [];
+            return banners.length > 0 ? (
+              <>
+                {/* Sliding track: all banners side by side, translateX moves left */}
+                <div
+                  className="absolute inset-0 flex"
+                  style={{
+                    width: `${banners.length * 100}%`,
+                    transform: `translateX(${bannerSliding
+                      ? -((bannerIndex + 1) % banners.length) * (100 / banners.length)
+                      : -(bannerIndex * (100 / banners.length))
+                    }%)`,
+                    transition: bannerSliding ? 'transform 0.6s cubic-bezier(0.4,0,0.2,1)' : 'none',
+                  }}
+                >
+                  {banners.map((url, i) => (
+                    <div
+                      key={i}
+                      className="h-full bg-cover bg-center bg-no-repeat flex-shrink-0"
+                      style={{
+                        width: `${100 / banners.length}%`,
+                        backgroundImage: `url(${url})`,
+                      }}
                     />
-                  ) : (
-                    <span className="text-3xl font-bold text-gray-300">{store.name.substring(0, 2).toUpperCase()}</span>
-                  )}
-              </div>
+                  ))}
+                </div>
+                {/* Dot indicators */}
+                {banners.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                    {banners.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          if (i === bannerIndex) return;
+                          setBannerSliding(true);
+                          setTimeout(() => { setBannerIndex(i); setBannerSliding(false); }, 600);
+                        }}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          i === bannerIndex ? 'bg-white scale-125' : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-r from-[#071d7f] to-blue-400" />
+            );
+          })()}
+          {/* Dark scrim for readability */}
+          <div className="absolute inset-0 bg-black/50" />
 
-              {/* Basic Info */}
-              <div className="flex-1">
+          {/* Content — sits above the banner */}
+          <div className="relative z-10 px-6 py-6">
+            {/* Logo */}
+            <div className="flex items-center gap-4 mb-4">
+              <div
+                onClick={() => setShowProfileModal(true)}
+                className="w-20 h-20 md:w-28 md:h-28 rounded-xl border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+              >
+                {store.logo ? (
+                  <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl font-bold text-[#071d7f]">{store.name.substring(0, 2).toUpperCase()}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row md:items-start md:gap-6">
+              {/* Main Info */}
+              <div className="flex-1 mb-4 md:mb-0">
                 <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white">
                     {store.name}
                   </h1>
-                  {store.is_active && <CheckCircle className="w-6 h-6 text-blue-600" />}
+                  {store.is_active && <CheckCircle className="w-6 h-6 text-white" />}
                 </div>
 
-                {/* Location + Ver Descripción — below the name */}
+                {/* Location + Ver Descripción */}
                 <div className="flex items-center gap-3 mb-3">
                   {store.description && (
                     <Button
                       onClick={() => setShowProfileModal(true)}
                       variant="outline"
                       size="sm"
-                      className="border-gray-300 text-[#071d7f] hover:bg-blue-50"
+                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
                     >
                       Ver Descripción
                     </Button>
                   )}
                   {store.location && (
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      <span className="font-medium text-gray-700">{store.location}</span>
+                    <div className="flex items-center gap-1 text-sm text-white/90">
+                      <MapPin className="w-4 h-4 text-white/70 flex-shrink-0" />
+                      <span className="font-medium text-white">{store.location}</span>
                     </div>
                   )}
                 </div>
@@ -298,20 +376,20 @@ const StoreProfilePage = () => {
                   {store.badges.map((badge) => (
                     <span
                       key={badge}
-                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-semibold"
+                      className="bg-white text-[#071d7f] text-xs px-3 py-1 rounded-full font-semibold"
                     >
                       {badge}
                     </span>
                   ))}
                   {store.slug && (
-                    <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded select-all">
+                    <span className="text-xs text-[#071d7f] font-mono bg-white px-2 py-1 rounded select-all font-semibold">
                       {store.slug}
                     </span>
                   )}
                   {(totalSales30Days || 0) >= 1500 && (
-                    <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        ~{approxSales24h} ventas (24h)
+                    <span className="bg-white text-[#071d7f] text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" />
+                      ~{approxSales24h} ventas (24h)
                     </span>
                   )}
                 </div>
@@ -319,7 +397,7 @@ const StoreProfilePage = () => {
                 {/* Stats */}
                 <div className="flex items-center gap-4 flex-wrap text-sm mb-3">
                   {/* Rating */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 bg-white px-2 py-1 rounded">
                     <div className="flex text-yellow-400">
                       {[1,2,3,4,5].map(i => (
                         <Star key={i} className={`w-4 h-4 ${store.rating !== null && i <= Math.round(store.rating!) ? 'fill-current' : 'text-gray-300'}`} />
@@ -327,88 +405,86 @@ const StoreProfilePage = () => {
                     </div>
                     {store.rating !== null ? (
                       <>
-                        <span className="font-semibold text-gray-900">{store.rating}</span>
-                        <span className="text-gray-500">({store.reviews} reseñas)</span>
+                        <span className="font-semibold text-[#071d7f]">{store.rating}</span>
+                        <span className="text-[#071d7f]/70">({store.reviews} reseñas)</span>
                       </>
                     ) : (
-                      <span className="text-gray-400 text-xs">Sin reseñas</span>
+                      <span className="text-[#071d7f]/60 text-xs">Sin reseñas</span>
                     )}
                   </div>
                   {/* Productos */}
-                  <div className="text-gray-600">
-                    <span className="font-semibold text-gray-900">{store.productsCount}</span> productos
+                  <div className="bg-white px-2 py-1 rounded text-[#071d7f]">
+                    <span className="font-semibold text-[#071d7f]">{store.productsCount}</span> productos
                   </div>
-                  {/* Seguidores — siempre visible */}
-                  <div className="text-gray-600">
-                    <span className="font-semibold text-gray-900">{store.followers}</span> seguidores
+                  {/* Seguidores */}
+                  <div className="bg-white px-2 py-1 rounded text-[#071d7f]">
+                    <span className="font-semibold text-[#071d7f]">{store.followers}</span> seguidores
                   </div>
                 </div>
 
-                {/* Social Media Links (Top) */}
+                {/* Social Media Links */}
                 <div className="flex gap-3 mt-2">
-                    {store.social.facebook && (
-                        <a href={store.social.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
-                            <Facebook className="h-5 w-5" />
-                        </a>
-                    )}
-                    {store.social.instagram && (
-                        <a href={store.social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-600 transition-colors">
-                            <Instagram className="h-5 w-5" />
-                        </a>
-                    )}
-                    {store.social.whatsapp && (
-                        <a href={`https://wa.me/${store.social.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-600 transition-colors">
-                            <Phone className="h-5 w-5" />
-                        </a>
-                    )}
-                    {store.social.tiktok && (
-                        <a href={store.social.tiktok} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-black transition-colors">
-                            <Video className="h-5 w-5" />
-                        </a>
-                    )}
+                  {store.social.facebook && (
+                    <a href={store.social.facebook} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors">
+                      <Facebook className="h-5 w-5" />
+                    </a>
+                  )}
+                  {store.social.instagram && (
+                    <a href={store.social.instagram} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-pink-300 transition-colors">
+                      <Instagram className="h-5 w-5" />
+                    </a>
+                  )}
+                  {store.social.whatsapp && (
+                    <a href={`https://wa.me/${store.social.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-green-300 transition-colors">
+                      <Phone className="h-5 w-5" />
+                    </a>
+                  )}
+                  {store.social.tiktok && (
+                    <a href={store.social.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors">
+                      <Video className="h-5 w-5" />
+                    </a>
+                  )}
                 </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2 w-full md:w-auto">
+                <Button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className="w-full md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0"
+                >
+                  <Heart className={`w-4 h-4 mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+                  {isFollowing ? "Siguiendo" : "Seguir"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2 text-[#071d7f]" />
+                  Contactar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
+                  onClick={handleShare}
+                >
+                  <Share2 className="w-4 h-4 mr-2 text-[#071d7f]" />
+                  Compartir
+                </Button>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-2 w-full md:w-auto">
-              <Button
-                onClick={handleFollowToggle}
-                disabled={followLoading}
-                className={isFollowing
-                  ? "w-full md:w-40 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
-                  : "w-full md:w-40 bg-blue-600 hover:bg-blue-700 text-white"}
-              >
-                <Heart className={`w-4 h-4 mr-2 ${isFollowing ? "fill-red-500 text-red-500" : ""}`} />
-                {isFollowing ? "Siguiendo" : "Seguir"}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full md:w-40 border-blue-600 text-blue-600 hover:bg-blue-50"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Contactar
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full md:w-40 border-gray-300 text-gray-700 hover:bg-gray-50"
-                onClick={handleShare}
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Compartir
-              </Button>
-            </div>
+            {/* Payment Methods Section */}
+            {storeData?.metadata && (
+              <div className="mt-8 pt-8 border-t border-white/20">
+                <PaymentMethodsDisplay
+                  paymentData={storeData.metadata as PaymentMethodsData}
+                  title="Métodos de Pago Aceptados"
+                />
+              </div>
+            )}
           </div>
-
-          {/* Payment Methods Section - from store metadata */}
-          {storeData?.metadata && (
-            <div className="mt-8 pt-8 border-t border-gray-200">
-              <PaymentMethodsDisplay 
-                paymentData={storeData.metadata as PaymentMethodsData}
-                title="Métodos de Pago Aceptados"
-              />
-            </div>
-          )}
         </div>
 
         {/* Products Section */}
@@ -451,114 +527,32 @@ const StoreProfilePage = () => {
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {filteredProducts.map((product: any) => {
-              // Handle images which might be JSONB array or string array
-              let imageUrl = null;
               let images = product.images;
-
-              // Safe parsing for JSONB
               if (typeof images === 'string') {
-                try {
-                    images = JSON.parse(images);
-                } catch (e) {
-                    console.error("Error parsing images for product", product.id, e);
-                    images = [];
-                }
+                try { images = JSON.parse(images); } catch { images = []; }
               }
+              const imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : '';
 
-              if (Array.isArray(images) && images.length > 0) {
-                  imageUrl = images[0];
-              }
+              const productForCard = {
+                id: product.id,
+                name: product.nombre,
+                price: Number(product.precio_venta || 0),
+                priceB2B: Number(product.precio_costo || product.precio_venta || 0),
+                stock: product.stock ?? 0,
+                image: imageUrl,
+                sku: product.sku,
+                storeId: storeData?.id,
+                storeName: storeData?.name,
+                storeWhatsapp: storeData?.whatsapp,
+                isSellerVerified: storeData?.is_active || false,
+                source_product_id: product.source_product_id,
+                badge: product.metadata?.disponible_pronto ? 'Pronto' : undefined,
+              };
 
-              const outOfStock = (product.stock ?? 0) === 0;
-              const disponiblePronto = product.metadata?.disponible_pronto === true;
-
-              return (
-              <div
-                key={product.id}
-                className="bg-white rounded-lg overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer"
-                onClick={() => navigate(`/producto/${product.sku}`)}
-              >
-                {/* Image */}
-                <div className="relative h-56 bg-gray-100 overflow-hidden group">
-                  {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        alt={product.nombre}
-                        className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-                        loading="lazy"
-                      />
-                  ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                          <ShoppingBag className="h-12 w-12" />
-                      </div>
-                  )}
-                  {/* Stock / availability badge */}
-                  {disponiblePronto ? (
-                    <span className="absolute top-2 left-2 bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                      Disponible Pronto
-                    </span>
-                  ) : outOfStock ? (
-                    <span className="absolute top-2 left-2 bg-gray-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                      Agotado
-                    </span>
-                  ) : (
-                    <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                      En Stock
-                    </span>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 mb-2">
-                    {product.nombre}
-                  </h3>
-
-                  {/* Price */}
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-lg font-bold text-gray-900">
-                      ${Number(product.precio_venta || 0).toFixed(2)}
-                    </span>
-                  </div>
-
-                  {/* Stock count (only when in stock) */}
-                  {!outOfStock && !disponiblePronto && (
-                    <p className="text-xs text-green-600 font-medium mb-2">
-                      {product.stock} disponible{product.stock !== 1 ? 's' : ''}
-                    </p>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="mt-3 space-y-2">
-                    {(role === UserRole.ADMIN || role === UserRole.SELLER) ? (
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/producto/${product.sku}`);
-                        }}
-                        className="w-full bg-green-600 text-white hover:bg-green-700"
-                        disabled={outOfStock && !disponiblePronto}
-                      >
-                        Vender (Agregar al Carrito)
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/producto/${product.sku}`);
-                        }}
-                        className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                        disabled={outOfStock && !disponiblePronto}
-                      >
-                        {outOfStock && !disponiblePronto ? "Sin Stock" : "Ver Detalles"}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )})}
+              return <ProductCard key={product.id} product={productForCard} />;
+            })}
           </div>
 
           {filteredProducts.length === 0 && (

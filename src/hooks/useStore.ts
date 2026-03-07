@@ -26,6 +26,8 @@ export interface StoreProfile {
   tiktok: string | null;
   market_id: string | null;
   destination_country_id: string | null;
+  banner_images: string[] | null;
+  banner_slide_interval: number | null;
 }
 
 // Helper to check if string is a valid UUID
