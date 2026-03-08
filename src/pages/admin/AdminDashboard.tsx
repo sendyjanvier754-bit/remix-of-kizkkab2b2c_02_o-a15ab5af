@@ -269,8 +269,8 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout 
-      title="Dashboard" 
-      subtitle="Bienvenido al panel de administración"
+      title={t('adminDashboard.title')} 
+      subtitle={t('adminDashboard.subtitle')}
     >
       {/* Sticky Stats Header */}
       <div className="sticky top-0 z-40 bg-gradient-to-b from-background via-background/98 to-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 border-b border-border/20 shadow-sm -mx-6 px-6 py-5 mb-8">
