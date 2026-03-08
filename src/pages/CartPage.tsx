@@ -290,7 +290,7 @@ const CartPage = () => {
               className="text-gray-900 p-1.5 rounded-lg flex items-center gap-1.5 bg-white border-b border-gray-200"
             >
               <ShoppingCart className="w-4 h-4" />
-              <h1 className="font-bold text-sm">Mi Carrito</h1>
+              <h1 className="font-bold text-sm">{t('cart.title')}</h1>
               <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-bold">
                 {items.length}
               </span>
