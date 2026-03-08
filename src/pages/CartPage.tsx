@@ -86,7 +86,7 @@ const CartPage = () => {
       if (error) throw error;
       await refetch(false);
 
-      toast.success('Producto eliminado del carrito');
+      toast.success(t('cart.productRemoved'));
       setShowRemoveItemDialog(false);
       setItemToRemove(null);
     } catch (error) {
