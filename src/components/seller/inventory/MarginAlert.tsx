@@ -1,5 +1,6 @@
-import { AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { AlertTriangle, TrendingDown } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslation } from "react-i18next";
 
 interface MarginAlertProps {
   precioVenta: number;
@@ -8,6 +9,7 @@ interface MarginAlertProps {
 }
 
 export function MarginAlert({ precioVenta, precioCosto, className }: MarginAlertProps) {
+  const { t } = useTranslation();
   const margin = precioCosto > 0 ? ((precioVenta - precioCosto) / precioCosto) * 100 : 0;
   const isLoss = precioVenta < precioCosto;
   const isLowMargin = margin > 0 && margin < 10;
@@ -27,12 +29,15 @@ export function MarginAlert({ precioVenta, precioCosto, className }: MarginAlert
       <AlertDescription className={`text-[10px] ${isLoss ? "" : "text-yellow-700"}`}>
         {isLoss ? (
           <>
-            <strong>Pérdida:</strong> Precio ${precioVenta.toFixed(2)} &lt; Costo ${precioCosto.toFixed(2)}. 
-            Perderás ${(precioCosto - precioVenta).toFixed(2)}/unidad.
+            <strong>{t('marginAlert.loss')}:</strong> {t('marginAlert.lossDetail', { 
+              price: precioVenta.toFixed(2), 
+              cost: precioCosto.toFixed(2), 
+              diff: (precioCosto - precioVenta).toFixed(2) 
+            })}
           </>
         ) : (
           <>
-            <strong>Margen bajo:</strong> {margin.toFixed(1)}%. Considera aumentar el precio.
+            <strong>{t('marginAlert.lowMargin')}:</strong> {t('marginAlert.lowMarginDetail', { margin: margin.toFixed(1) })}
           </>
         )}
       </AlertDescription>

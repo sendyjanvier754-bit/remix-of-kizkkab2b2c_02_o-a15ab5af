@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Package } from "lucide-react";
 import { SellerCatalogItem } from "@/hooks/useSellerCatalog";
+import { useTranslation } from "react-i18next";
 
 interface StockAdjustDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ export function StockAdjustDialog({
   item, 
   onSave 
 }: StockAdjustDialogProps) {
+  const { t } = useTranslation();
   const [newStock, setNewStock] = useState<string>("");
   const [reason, setReason] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -66,12 +68,11 @@ export function StockAdjustDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Ajustar Stock
+            {t('stockAdjust.title')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Product Info */}
           <div className="flex gap-4 p-3 bg-muted rounded-lg">
             {item.images[0] && (
               <img 
@@ -86,16 +87,14 @@ export function StockAdjustDialog({
             </div>
           </div>
 
-          {/* Current Stock */}
           <div className="p-3 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Stock Actual:</strong> {item.stock} unidades
+              <strong>{t('stockAdjust.currentStock')}:</strong> {item.stock} {t('stockAdjust.units')}
             </p>
           </div>
 
-          {/* New Stock Input */}
           <div className="space-y-2">
-            <Label htmlFor="newStock">Nuevo Stock</Label>
+            <Label htmlFor="newStock">{t('stockAdjust.newStock')}</Label>
             <Input
               id="newStock"
               type="number"
@@ -106,30 +105,27 @@ export function StockAdjustDialog({
             />
             {stockDiff !== 0 && (
               <p className={`text-sm ${stockDiff > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {stockDiff > 0 ? '+' : ''}{stockDiff} unidades
+                {stockDiff > 0 ? '+' : ''}{stockDiff} {t('stockAdjust.units')}
               </p>
             )}
           </div>
 
-          {/* Warning for stock reduction */}
           {stockDiff < 0 && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Estás reduciendo el stock en {Math.abs(stockDiff)} unidades. 
-                Este cambio se registrará en el historial de movimientos.
+                {t('stockAdjust.reduceWarning', { count: Math.abs(stockDiff) })}
               </AlertDescription>
             </Alert>
           )}
 
-          {/* Reason Input */}
           <div className="space-y-2">
-            <Label htmlFor="reason">Motivo del ajuste (opcional)</Label>
+            <Label htmlFor="reason">{t('stockAdjust.reason')}</Label>
             <Textarea
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Ej: Inventario físico, devolución, merma..."
+              placeholder={t('stockAdjust.reasonPlaceholder')}
               rows={2}
             />
           </div>
@@ -137,10 +133,10 @@ export function StockAdjustDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Guardando..." : "Confirmar Ajuste"}
+            {isSaving ? t('stockAdjust.saving') : t('stockAdjust.confirmAdjust')}
           </Button>
         </DialogFooter>
       </DialogContent>
