@@ -583,7 +583,7 @@ const CartPage = () => {
                                       handleRemoveItem(item.id, item.name);
                                     }}
                                     className="text-gray-400 hover:text-red-600 transition flex-shrink-0 p-1 hover:bg-red-50 rounded"
-                                    title="Eliminar del carrito"
+                                    title={t('cart.removeFromCart')}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
