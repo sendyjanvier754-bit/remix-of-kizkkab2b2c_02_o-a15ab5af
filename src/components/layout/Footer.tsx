@@ -1,152 +1,85 @@
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
 const Footer = () => {
-  return <footer className="hidden md:block bg-gray-900 text-white">
-      {/* Main Footer */}
+  const { t } = useTranslation();
+
+  return (
+    <footer className="hidden md:block bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
-          {/* Brand */}
           <div>
             <h4 className="font-bold text-lg mb-4">SIVER</h4>
-            <p className="text-gray-400 text-sm">
-              Tu tienda de compras en línea confiable con los mejores productos
-              a los mejores precios.
-            </p>
+            <p className="text-gray-400 text-sm">{t('footer.tagline')}</p>
           </div>
 
-          {/* Compras */}
           <div>
-            <h4 className="font-bold mb-4">COMPRAS</h4>
+            <h4 className="font-bold mb-4">{t('footer.shopping')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Solo para ti
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Novedades
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Ofertas
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Ropa de mujer
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Ropa de hombre
-                </Link>
-              </li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.justForYou')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.newArrivals')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.deals')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.womenClothing')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.menClothing')}</Link></li>
             </ul>
           </div>
 
-          {/* Categorías */}
           <div>
-            <h4 className="font-bold mb-4">CATEGORÍAS</h4>
+            <h4 className="font-bold mb-4">{t('footer.categories')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Accesorios
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Zapatos
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Belleza
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Hogar y Vida
-                </Link>
-              </li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.accessories')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.shoes')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.beauty')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.homeLife')}</Link></li>
             </ul>
           </div>
 
-          {/* Cuenta */}
           <div>
-            <h4 className="font-bold mb-4">CUENTA</h4>
+            <h4 className="font-bold mb-4">{t('footer.account')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Mi Cuenta
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Mis Pedidos
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-white transition">
-                  Favoritos
-                </Link>
-              </li>
-              <li>
-                
-              </li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.myAccount')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.myOrders')}</Link></li>
+              <li><Link to="#" className="hover:text-white transition">{t('footer.favorites')}</Link></li>
             </ul>
           </div>
 
-          {/* Contacto */}
           <div>
-            <h4 className="font-bold mb-4">CONTACTO</h4>
+            <h4 className="font-bold mb-4">{t('footer.contact')}</h4>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2 text-gray-400">
-                <Phone className="w-4 h-4" />
-                +1 (509) 3234-5678
+                <Phone className="w-4 h-4" />+1 (509) 3234-5678
               </li>
               <li className="flex items-center gap-2 text-gray-400">
-                <Mail className="w-4 h-4" />
-                contacto@siver.com
+                <Mail className="w-4 h-4" />contacto@siver.com
               </li>
               <li className="flex items-center gap-2 text-gray-400">
-                <MapPin className="w-4 h-4" />
-                Puerto Príncipe, Haití
+                <MapPin className="w-4 h-4" />Puerto Príncipe, Haití
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Divider */}
         <div className="border-t border-gray-800 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-400 mb-6">
             <div>
-              <h5 className="font-semibold text-white mb-2">
-                ✓ Envío desde el extranjero
-              </h5>
-              <p>Recibe tus productos en 7-15 días</p>
+              <h5 className="font-semibold text-white mb-2">✓ {t('footer.shippingAbroad')}</h5>
+              <p>{t('footer.shippingDays')}</p>
             </div>
             <div>
-              <h5 className="font-semibold text-white mb-2">
-                ✓ Devolución Gratis
-              </h5>
-              <p>Devuelve fácilmente en 30 días</p>
+              <h5 className="font-semibold text-white mb-2">✓ {t('footer.freeReturns')}</h5>
+              <p>{t('footer.returnDays')}</p>
             </div>
             <div>
-              <h5 className="font-semibold text-white mb-2">
-                ✓ Pago Seguro
-              </h5>
-              <p>Múltiples opciones de pago</p>
+              <h5 className="font-semibold text-white mb-2">✓ {t('footer.securePayment')}</h5>
+              <p>{t('footer.multiplePayments')}</p>
             </div>
           </div>
         </div>
 
-        {/* Payment Methods */}
         <div className="border-t border-gray-800 py-6">
-          <p className="text-sm font-semibold text-white mb-4">Métodos de Pago Aceptados:</p>
+          <p className="text-sm font-semibold text-white mb-4">{t('common.acceptedPaymentMethods')}</p>
           <div className="grid grid-cols-5 gap-4 md:gap-6 max-w-2xl">
-            {/* Credit Cards */}
             <div className="flex flex-col items-center gap-2">
               <img src="/visa.png" alt="VISA" className="h-6 w-auto" />
             </div>
@@ -162,23 +95,17 @@ const Footer = () => {
             <div className="flex flex-col items-center gap-2">
               <img src="/google pay.png" alt="Google Pay" className="h-6 w-auto" />
             </div>
-
-            {/* Bank Transfer */}
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center justify-center px-2 py-1 rounded" style={{ backgroundColor: 'white' }}>
-                <span className="text-[9px] font-bold" style={{ color: '#071d7f' }}>Transferencia</span>
+                <span className="text-[9px] font-bold" style={{ color: '#071d7f' }}>{t('common.transfer')}</span>
               </div>
             </div>
-
-            {/* MonCash */}
             <div className="flex flex-col items-center gap-2">
               <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: '#94111f' }}>
                 <span className="text-[9px] font-bold text-white">MC</span>
               </div>
               <span className="text-xs font-bold" style={{ color: '#94111f' }}>MonCash</span>
             </div>
-
-            {/* NatCash */}
             <div className="flex flex-col items-center gap-2">
               <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: '#1e40af' }}>
                 <span className="text-[9px] font-bold text-white">NC</span>
@@ -188,22 +115,17 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Footer */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
-          <p>&copy; 2024 SIVER Market. Todos los derechos reservados.</p>
+          <p>{t('common.allRightsReserved')}</p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <Link to="#" className="hover:text-white transition">
-              Términos y Condiciones
-            </Link>
-            <Link to="#" className="hover:text-white transition">
-              Política de Privacidad
-            </Link>
-            <Link to="#" className="hover:text-white transition">
-              Política de Cookies
-            </Link>
+            <Link to="#" className="hover:text-white transition">{t('common.termsConditions')}</Link>
+            <Link to="#" className="hover:text-white transition">{t('common.privacyPolicy')}</Link>
+            <Link to="#" className="hover:text-white transition">{t('common.cookiePolicy')}</Link>
           </div>
         </div>
       </div>
-    </footer>;
+    </footer>
+  );
 };
+
 export default Footer;

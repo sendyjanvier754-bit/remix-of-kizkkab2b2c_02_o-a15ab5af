@@ -6,15 +6,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar, SidebarSeparator } from "@/components/ui/sidebar";
+import { useTranslation } from "react-i18next";
+
 export function SellerSidebar() {
-  const {
-    state,
-    toggleSidebar
-  } = useSidebar();
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const { t } = useTranslation();
+  const { state, toggleSidebar } = useSidebar();
+  const { user, signOut } = useAuth();
   const isCollapsed = state === "collapsed";
   const location = useLocation();
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
@@ -31,72 +28,28 @@ export function SellerSidebar() {
       });
   }, [user?.id]);
 
-  const mainNavItems = [{
-    title: "Dashboard",
-    url: "/seller/dashboard",
-    icon: LayoutDashboard
-  }, {
-    title: "Comprar Lotes",
-    url: "/seller/adquisicion-lotes",
-    icon: ShoppingCart,
-    badge: "B2B"
-  }, {
-    title: "Mis Compras",
-    url: "/seller/mis-compras",
-    icon: Package,
-    badge: "Nuevo"
-  }, {
-    title: "Mis Ventas",
-    url: "/seller/pedidos",
-    icon: ClipboardList
-  }, {
-    title: "Inventario B2C",
-    url: "/seller/inventario",
-    icon: LayoutGrid
-  }, {
-    title: "Marketing",
-    url: "/seller/marketing",
-    icon: Share2,
-    badge: "Nuevo"
-  }, {
-    title: "Analytics",
-    url: "/seller/analytics",
-    icon: BarChart3
-  }, {
-    title: "Mi Catálogo",
-    url: "/seller/catalogo",
-    icon: Store
-  }, {
-    title: "Carrito B2B",
-    url: "/seller/carrito",
-    icon: ShoppingBag
-  }, {
-    title: "Lista de Deseos",
-    url: "/seller/favoritos",
-    icon: Heart
-  }, {
-    title: "Mi Billetera",
-    url: "/seller/wallet",
-    icon: Wallet
-  }, {
-    title: "Créditos",
-    url: "/seller/credit",
-    icon: Shield
-  }, {
-    title: "Mis Códigos",
-    url: "/seller/codigos-descuento",
-    icon: Ticket
-  }, {
-    title: "Desc. Clientes",
-    url: "/seller/descuentos-clientes",
-    icon: Users
-  }, {
-    title: "Mi Cuenta",
-    url: "/seller/cuenta",
-    icon: User
-  }];
+  const mainNavItems = [
+    { title: t('sellerSidebar.dashboard'), url: "/seller/dashboard", icon: LayoutDashboard },
+    { title: t('sellerSidebar.buyLots'), url: "/seller/adquisicion-lotes", icon: ShoppingCart, badge: t('sellerSidebar.b2b') },
+    { title: t('sellerSidebar.myPurchases'), url: "/seller/mis-compras", icon: Package, badge: t('sellerSidebar.new') },
+    { title: t('sellerSidebar.mySales'), url: "/seller/pedidos", icon: ClipboardList },
+    { title: t('sellerSidebar.inventoryB2C'), url: "/seller/inventario", icon: LayoutGrid },
+    { title: t('sellerSidebar.marketing'), url: "/seller/marketing", icon: Share2, badge: t('sellerSidebar.new') },
+    { title: t('sellerSidebar.analytics'), url: "/seller/analytics", icon: BarChart3 },
+    { title: t('sellerSidebar.myCatalog'), url: "/seller/catalogo", icon: Store },
+    { title: t('sellerSidebar.cartB2B'), url: "/seller/carrito", icon: ShoppingBag },
+    { title: t('sellerSidebar.wishlist'), url: "/seller/favoritos", icon: Heart },
+    { title: t('sellerSidebar.myWallet'), url: "/seller/wallet", icon: Wallet },
+    { title: t('sellerSidebar.credits'), url: "/seller/credit", icon: Shield },
+    { title: t('sellerSidebar.myCodes'), url: "/seller/codigos-descuento", icon: Ticket },
+    { title: t('sellerSidebar.customerDiscounts'), url: "/seller/descuentos-clientes", icon: Users },
+    { title: t('sellerSidebar.myAccount'), url: "/seller/cuenta", icon: User },
+  ];
+
   const isActive = (url: string) => location.pathname === url;
-  return <Sidebar collapsible="icon" className="border-r border-border/50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 pt-4 md:pt-16 lg:pt-20 h-screen flex flex-col">
+
+  return (
+    <Sidebar collapsible="icon" className="border-r border-border/50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 pt-4 md:pt-16 lg:pt-20 h-screen flex flex-col">
       <SidebarHeader className="p-4 pb-2 flex-shrink-0">
         <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
           <div className="flex items-center gap-3 overflow-hidden transition-all duration-300 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
@@ -105,7 +58,7 @@ export function SellerSidebar() {
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-sm text-foreground tracking-tight">Siver Market</span>
-              <span className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">Seller Hub</span>
+              <span className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">{t('sellerSidebar.sellerHub')}</span>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50">
@@ -118,12 +71,12 @@ export function SellerSidebar() {
 
       <SidebarContent className="px-2 flex-1 overflow-y-auto min-h-0">
         <SidebarGroup>
-          
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
               {mainNavItems.map(item => {
-              const active = isActive(item.url);
-              return <SidebarMenuItem key={item.title}>
+                const active = isActive(item.url);
+                return (
+                  <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild tooltip={item.title} isActive={active} className={`
                       h-auto py-3 px-3 rounded-xl transition-all duration-200 border mb-2
                       ${active ? "!bg-[#071d7f] !text-white !border-[#071d7f] shadow-md hover:!bg-[#071d7f]/90 hover:!text-white" : "bg-white text-[#071d7f] border-[#071d7f] hover:bg-gray-50 hover:text-[#071d7f]"}
@@ -131,13 +84,16 @@ export function SellerSidebar() {
                       <Link to={item.url} className="flex items-center gap-3 w-full">
                         <item.icon className={`h-5 w-5 flex-shrink-0 transition-colors ${active ? "text-white" : "text-[#071d7f]"}`} />
                         <span className="font-medium flex-1">{item.title}</span>
-                        {item.badge && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${active ? "bg-white/20 text-white" : "bg-blue-100 text-[#071d7f]"}`}>
+                        {item.badge && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${active ? "bg-white/20 text-white" : "bg-blue-100 text-[#071d7f]"}`}>
                             {item.badge}
-                          </span>}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>;
-            })}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -146,19 +102,19 @@ export function SellerSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Ir a inicio" className="h-auto py-3 px-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all">
+                <SidebarMenuButton asChild tooltip={t('sellerSidebar.backToStore')} className="h-auto py-3 px-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all">
                   <Link to="/" className="flex items-center gap-3">
                     <Home className="h-5 w-5 flex-shrink-0" />
-                    <span className="font-medium">Volver a la Tienda</span>
+                    <span className="font-medium">{t('sellerSidebar.backToStore')}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {storeSlug && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="Ver mi tienda como cliente" className="h-auto py-3 px-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 transition-all">
+                  <SidebarMenuButton asChild tooltip={t('sellerSidebar.viewMyStore')} className="h-auto py-3 px-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 transition-all">
                     <a href={`/tienda/${storeSlug}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
                       <ExternalLink className="h-5 w-5 flex-shrink-0" />
-                      <span className="font-medium">Ver mi Tienda</span>
+                      <span className="font-medium">{t('sellerSidebar.viewMyStore')}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -176,16 +132,19 @@ export function SellerSidebar() {
               {user?.name?.substring(0, 2).toUpperCase() || "SV"}
             </AvatarFallback>
           </Avatar>
-          
-          {!isCollapsed && <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-sm font-semibold truncate text-foreground">{user?.name || "Vendedor"}</span>
+          {!isCollapsed && (
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-sm font-semibold truncate text-foreground">{user?.name || t('seller.seller')}</span>
               <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
-            </div>}
-          
-          {!isCollapsed && <Button variant="ghost" size="icon" onClick={signOut} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg ml-1">
+            </div>
+          )}
+          {!isCollapsed && (
+            <Button variant="ghost" size="icon" onClick={signOut} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg ml-1">
               <LogOut className="h-4 w-4" />
-            </Button>}
+            </Button>
+          )}
         </div>
       </SidebarFooter>
-    </Sidebar>;
+    </Sidebar>
+  );
 }

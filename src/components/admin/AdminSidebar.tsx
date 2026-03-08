@@ -1,95 +1,90 @@
 import { 
-  LayoutDashboard, 
-  CreditCard, 
-  Package, 
-  Users, 
-  MapPin, 
-  Settings,
-  LogOut,
-  ShoppingBag,
-  ChevronLeft,
-  FolderTree,
-  ShoppingCart,
-  Image as ImageIcon,
-  Truck,
-  ClipboardList,
-  Calculator,
-  MessageSquare,
-  RefreshCw,
-  Ticket,
-  UserCheck,
-  BarChart3,
-  LayoutGrid,
-  Globe,
-  Store,
-  Headset,
-  Bell,
-  MessageCircle
+  LayoutDashboard, CreditCard, Package, Users, MapPin, Settings, LogOut, ShoppingBag,
+  ChevronLeft, FolderTree, ShoppingCart, Image as ImageIcon, Truck, ClipboardList,
+  Calculator, MessageSquare, RefreshCw, Ticket, UserCheck, BarChart3, LayoutGrid,
+  Globe, Store, Headset, Bell, MessageCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CheckSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 
-import { CheckSquare } from "lucide-react";
-
-const mainNavItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Aprobaciones", url: "/admin/aprobaciones", icon: CheckSquare },
-  { title: "Cotizaciones", url: "/admin/cotizaciones", icon: MessageSquare },
-  { title: "Pedidos B2B", url: "/admin/pedidos", icon: ClipboardList },
-  { title: "Reembolsos", url: "/admin/reembolsos", icon: RefreshCw },
-  { title: "Conciliación B2B", url: "/admin/conciliacion", icon: CreditCard },
-  { title: "Catálogo", url: "/admin/catalogo", icon: Package },
-  { title: "Categorías", url: "/admin/categorias", icon: FolderTree },
-  { title: "Proveedores", url: "/admin/proveedores", icon: Truck },
-  { title: "Config. Precios", url: "/admin/precios", icon: Calculator },
-  { title: "Vendedores", url: "/admin/vendedores", icon: Users },
-  { title: "Banners", url: "/admin/banners", icon: ImageIcon },
-  { title: "Pedidos por Agente", url: "/admin/agente-pedidos", icon: Headset },
-  { title: "Live Chat", url: "/admin/soporte-chat", icon: MessageCircle },
-  { title: "Notificaciones", url: "/admin/notificaciones", icon: Bell },
-];
-
-const analyticsItems = [
-  { title: "PO Maestra", url: "/admin/po-master", icon: Package },
-  { title: "Optimización Inventario", url: "/admin/cart-analytics", icon: BarChart3 },
-  { title: "Gestión Inventario", url: "/admin/inventory", icon: Package },
-];
-
-const settingsItems = [
-  { title: "Markets", url: "/admin/markets", icon: Store },
-  { title: "Logística Global", url: "/admin/global-logistics", icon: Globe },
-  { title: "Secciones Marketplace", url: "/admin/marketplace-sections", icon: LayoutGrid },
-  { title: "Logística Local", url: "/admin/logistics", icon: Truck },
-  { title: "Puntos de Retiro", url: "/admin/pickup-points", icon: MapPin },
-  { title: "Comisiones", url: "/admin/commissions", icon: Settings },
-  { title: "Métodos de Pago", url: "/admin/payment-methods", icon: CreditCard },
-];
-
-const discountItems = [
-  { title: "Códigos de Descuento", url: "/admin/codigos-descuento", icon: Ticket },
-  { title: "Descuentos por Usuario", url: "/admin/descuentos-usuarios", icon: UserCheck },
-];
-
 export function AdminSidebar() {
+  const { t } = useTranslation();
   const { state, toggleSidebar } = useSidebar();
   const { signOut, user } = useAuth();
   const isCollapsed = state === "collapsed";
+
+  const mainNavItems = [
+    { title: t('adminSidebar.dashboard'), url: "/admin", icon: LayoutDashboard },
+    { title: t('adminSidebar.approvals'), url: "/admin/aprobaciones", icon: CheckSquare },
+    { title: t('adminSidebar.quotes'), url: "/admin/cotizaciones", icon: MessageSquare },
+    { title: t('adminSidebar.ordersB2B'), url: "/admin/pedidos", icon: ClipboardList },
+    { title: t('adminSidebar.refunds'), url: "/admin/reembolsos", icon: RefreshCw },
+    { title: t('adminSidebar.conciliation'), url: "/admin/conciliacion", icon: CreditCard },
+    { title: t('adminSidebar.catalog'), url: "/admin/catalogo", icon: Package },
+    { title: t('adminSidebar.categories'), url: "/admin/categorias", icon: FolderTree },
+    { title: t('adminSidebar.suppliers'), url: "/admin/proveedores", icon: Truck },
+    { title: t('adminSidebar.priceConfig'), url: "/admin/precios", icon: Calculator },
+    { title: t('adminSidebar.sellers'), url: "/admin/vendedores", icon: Users },
+    { title: t('adminSidebar.banners'), url: "/admin/banners", icon: ImageIcon },
+    { title: t('adminSidebar.agentOrders'), url: "/admin/agente-pedidos", icon: Headset },
+    { title: t('adminSidebar.liveChat'), url: "/admin/soporte-chat", icon: MessageCircle },
+    { title: t('adminSidebar.notifications'), url: "/admin/notificaciones", icon: Bell },
+  ];
+
+  const analyticsItems = [
+    { title: t('adminSidebar.poMaster'), url: "/admin/po-master", icon: Package },
+    { title: t('adminSidebar.inventoryOptimization'), url: "/admin/cart-analytics", icon: BarChart3 },
+    { title: t('adminSidebar.inventoryManagement'), url: "/admin/inventory", icon: Package },
+  ];
+
+  const settingsItems = [
+    { title: t('adminSidebar.markets'), url: "/admin/markets", icon: Store },
+    { title: t('adminSidebar.globalLogistics'), url: "/admin/global-logistics", icon: Globe },
+    { title: t('adminSidebar.marketplaceSections'), url: "/admin/marketplace-sections", icon: LayoutGrid },
+    { title: t('adminSidebar.localLogistics'), url: "/admin/logistics", icon: Truck },
+    { title: t('adminSidebar.pickupPoints'), url: "/admin/pickup-points", icon: MapPin },
+    { title: t('adminSidebar.commissions'), url: "/admin/commissions", icon: Settings },
+    { title: t('adminSidebar.paymentMethods'), url: "/admin/payment-methods", icon: CreditCard },
+  ];
+
+  const discountItems = [
+    { title: t('adminSidebar.discountCodes'), url: "/admin/codigos-descuento", icon: Ticket },
+    { title: t('adminSidebar.userDiscounts'), url: "/admin/descuentos-usuarios", icon: UserCheck },
+  ];
+
+  const renderGroup = (label: string, items: typeof mainNavItems) => (
+    <SidebarGroup>
+      <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>{label}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.url}>
+              <SidebarMenuButton asChild tooltip={item.title}>
+                <NavLink 
+                  to={item.url} 
+                  end={item.url === "/admin"}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  activeClassName="bg-primary/10 text-primary font-medium"
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {!isCollapsed && <span>{item.title}</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border bg-card">
@@ -106,129 +101,27 @@ export function AdminSidebar() {
               </div>
             )}
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleSidebar}
-            className="h-8 w-8"
-          >
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8">
             <ChevronLeft className={`h-4 w-4 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
           </Button>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            Principal
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink 
-                      to={item.url} 
-                      end={item.url === "/admin"}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {renderGroup(t('adminSidebar.main'), mainNavItems)}
+        {renderGroup(t('adminSidebar.analytics'), analyticsItems)}
+        {renderGroup(t('adminSidebar.discounts'), discountItems)}
+        {renderGroup(t('adminSidebar.system'), settingsItems)}
 
         <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            Analytics
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {analyticsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink 
-                      to={item.url}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            Descuentos
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {discountItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink 
-                      to={item.url}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            Sistema
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {settingsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink 
-                      to={item.url}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            B2B Mayorista
-          </SidebarGroupLabel>
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>{t('adminSidebar.b2bWholesale')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Portal B2B">
-                  <Link
-                    to="/seller/adquisicion-lotes"
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  >
+                <SidebarMenuButton asChild tooltip={t('adminSidebar.b2bPortal')}>
+                  <Link to="/seller/adquisicion-lotes" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
                     <ShoppingCart className="h-5 w-5 flex-shrink-0" />
-                    {!isCollapsed && <span>Portal B2B</span>}
+                    {!isCollapsed && <span>{t('adminSidebar.b2bPortal')}</span>}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -260,13 +153,9 @@ export function AdminSidebar() {
             </Avatar>
           </div>
         )}
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
-          onClick={signOut}
-        >
+        <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive" onClick={signOut}>
           <LogOut className="h-5 w-5" />
-          {!isCollapsed && <span>Cerrar Sesión</span>}
+          {!isCollapsed && <span>{t('adminSidebar.logoutSession')}</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
