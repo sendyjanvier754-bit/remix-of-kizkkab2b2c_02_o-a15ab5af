@@ -555,6 +555,7 @@ const AppContent = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
       <MobileBottomNav />
+      <PopupRenderer />
     </>
   );
 };
