@@ -118,7 +118,7 @@ const CartPage = () => {
 
       if (error) throw error;
       await refetch(false);
-      toast.success('Cantidad actualizada');
+      toast.success(t('cart.quantityUpdated'));
     } catch (error) {
       console.error('Error updating quantity:', error);
       toast.error('No se pudo actualizar la cantidad');
