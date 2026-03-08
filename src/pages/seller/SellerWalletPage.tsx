@@ -273,7 +273,7 @@ const SellerWalletPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <AlertCircle className="h-4 w-4 text-purple-600" />
-                        <span className="text-xs md:text-sm font-medium text-gray-600">Movimientos</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-600">{t('sellerWallet.movementsCount')}</span>
                       </div>
                       <p className="text-lg md:text-2xl font-bold text-gray-900">
                         {transactions?.length || 0}
