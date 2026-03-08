@@ -367,17 +367,22 @@ const StoreProfilePage = () => {
                   {store.is_active && <CheckCircle className="w-6 h-6 text-white" />}
                 </div>
 
-                {/* Location + Ver Descripción */}
-                <div className="flex items-center gap-2 mb-0.5 md:mb-3">
+                {/* Location + Ver Descripción + Store ID */}
+                <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-3 flex-wrap">
                   {store.description && (
                     <Button
                       onClick={() => setShowProfileModal(true)}
                       variant="outline"
                       size="sm"
-                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-7 md:h-9 px-2 md:px-3"
+                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-6 md:h-9 px-2 md:px-3"
                     >
                       Ver Descripción
                     </Button>
+                  )}
+                  {store.slug && (
+                    <span className="text-xs text-[#071d7f] font-mono bg-white px-1.5 py-0.5 md:px-2 md:py-1 rounded select-all font-semibold">
+                      {store.slug}
+                    </span>
                   )}
                   <div className="hidden md:flex items-center gap-1 text-sm text-white/90">
                     {store.location && (
@@ -389,23 +394,18 @@ const StoreProfilePage = () => {
                   </div>
                 </div>
 
-                {/* Badges + Store ID */}
+                {/* Badges */}
                 <div className="flex flex-wrap items-center gap-1 md:gap-2 mb-1 md:mb-3">
                   {store.badges.map((badge) => (
                     <span
                       key={badge}
-                      className="bg-white text-[#071d7f] text-xs px-3 py-1 rounded-full font-semibold"
+                      className="bg-white text-[#071d7f] text-xs px-2 md:px-3 py-0.5 md:py-1 rounded-full font-semibold"
                     >
                       {badge}
                     </span>
                   ))}
-                  {store.slug && (
-                    <span className="text-xs text-[#071d7f] font-mono bg-white px-2 py-1 rounded select-all font-semibold">
-                      {store.slug}
-                    </span>
-                  )}
                   {(totalSales30Days || 0) >= 1500 && (
-                    <span className="bg-white text-[#071d7f] text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1">
+                    <span className="bg-white text-[#071d7f] text-xs px-2 md:px-3 py-0.5 md:py-1 rounded-full font-semibold flex items-center gap-1">
                       <TrendingUp className="h-3 w-3" />
                       ~{approxSales24h} ventas (24h)
                     </span>
