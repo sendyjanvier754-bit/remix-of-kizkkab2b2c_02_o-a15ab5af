@@ -28,6 +28,7 @@ interface WithdrawalFormData {
 }
 
 const SellerWalletPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const { wallet, transactions, isLoading, requestWithdrawal } = useSellerWallet(user?.id);
