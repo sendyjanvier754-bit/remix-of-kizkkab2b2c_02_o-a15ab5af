@@ -449,7 +449,7 @@ const SellerDesktopHeader = ({
                     </>
                   ) : (
                     <div className="p-4 text-center text-gray-500 text-sm">
-                      No se encontraron productos para "{searchQuery}"
+                      {t('common.noProductsFor', { query: searchQuery })}
                     </div>
                   )}
                 </div>
