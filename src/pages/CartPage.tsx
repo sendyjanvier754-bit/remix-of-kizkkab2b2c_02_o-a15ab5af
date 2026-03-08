@@ -710,7 +710,7 @@ const CartPage = () => {
                     title="Contactar por WhatsApp"
                   >
                     <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
-                    Soporte
+                    {t('common.support')}
                   </button>
                   {someSelected ? (
                     <Link
