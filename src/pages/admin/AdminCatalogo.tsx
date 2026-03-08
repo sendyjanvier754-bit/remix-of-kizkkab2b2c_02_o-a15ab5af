@@ -180,7 +180,7 @@ const AdminCatalogo = () => {
           </Card>
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Agotados</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('adminCatalog.outOfStock')}</CardTitle>
               <TrendingDown className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
