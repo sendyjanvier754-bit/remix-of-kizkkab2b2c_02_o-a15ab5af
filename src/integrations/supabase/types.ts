@@ -1385,6 +1385,53 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          chat_id: string
+          content: string
+          created_at: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          is_read: boolean
+          message_type: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          chat_id: string
+          content: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          chat_id?: string
+          content?: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "support_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_debts: {
         Row: {
           commission_amount: number
@@ -6273,6 +6320,69 @@ export type Database = {
         }
         Relationships: []
       }
+      support_chats: {
+        Row: {
+          assigned_at: string | null
+          assigned_to: string | null
+          close_reason: string | null
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          created_by: string
+          id: string
+          last_message_at: string | null
+          order_id: string | null
+          order_type: string | null
+          paused_at: string | null
+          paused_by: string | null
+          status: Database["public"]["Enums"]["chat_status"]
+          title: string
+          unread_customer: number
+          unread_staff: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          close_reason?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          last_message_at?: string | null
+          order_id?: string | null
+          order_type?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
+          status?: Database["public"]["Enums"]["chat_status"]
+          title?: string
+          unread_customer?: number
+          unread_staff?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          close_reason?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_message_at?: string | null
+          order_id?: string | null
+          order_type?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
+          status?: Database["public"]["Enums"]["chat_status"]
+          title?: string
+          unread_customer?: number
+          unread_staff?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transit_hubs: {
         Row: {
           address: string | null
@@ -7827,6 +7937,7 @@ export type Database = {
         | "credit_limit_increase"
         | "credit_activation"
       approval_status: "pending" | "approved" | "rejected"
+      chat_status: "waiting" | "active" | "paused" | "closed"
       payment_method:
         | "bank_transfer"
         | "moncash"
@@ -8046,6 +8157,7 @@ export const Constants = {
         "credit_activation",
       ],
       approval_status: ["pending", "approved", "rejected"],
+      chat_status: ["waiting", "active", "paused", "closed"],
       payment_method: [
         "bank_transfer",
         "moncash",
