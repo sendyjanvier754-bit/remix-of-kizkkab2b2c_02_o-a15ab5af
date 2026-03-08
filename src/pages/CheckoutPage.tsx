@@ -630,8 +630,8 @@ const CheckoutPage = () => {
                   <div className="flex items-center gap-3 flex-1">
                     <Store className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-semibold">Retiro en Punto</p>
-                      <p className="text-sm text-muted-foreground">Retira tu pedido en uno de nuestros puntos</p>
+                      <p className="font-semibold">{t('checkout.pickupPoint')}</p>
+                      <p className="text-sm text-muted-foreground">{t('checkout.pickupPointDesc')}</p>
                     </div>
                   </div>
                 </div>
