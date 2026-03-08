@@ -201,45 +201,45 @@ const AdminDashboard = () => {
 
   const dashStatsData = [
     {
-      title: "Pagos Pendientes",
+      title: t('adminDashboard.pendingPayments'),
       value: stats.pending.toString(),
-      description: "Requieren verificación",
+      description: t('adminDashboard.requireVerification'),
       icon: Clock,
       color: "text-amber-500",
       bgColor: "bg-amber-500/10",
       link: "/admin/conciliacion?status=pending"
     },
     {
-      title: "Pagos Verificados",
+      title: t('adminDashboard.verifiedPayments'),
       value: stats.verified.toString(),
-      description: "Este mes",
+      description: t('adminDashboard.thisMonth'),
       icon: CheckCircle2,
       color: "text-teal",
       bgColor: "bg-teal/10",
       link: "/admin/conciliacion?status=verified"
     },
     {
-      title: "Vendedores Activos",
+      title: t('adminDashboard.activeSellers'),
       value: sellersCount.toString(),
-      description: "Registrados",
+      description: t('adminDashboard.registered'),
       icon: Users,
       color: "text-primary",
       bgColor: "bg-primary/10",
       link: "/admin/vendedores"
     },
     {
-      title: "Volumen B2B",
+      title: t('adminDashboard.b2bVolume'),
       value: formatCurrency(stats.totalVolume || 0),
-      description: "Total verificado",
+      description: t('adminDashboard.totalVerified'),
       icon: TrendingUp,
       color: "text-accent",
       bgColor: "bg-accent/10",
       link: "/admin/conciliacion"
     },
     {
-      title: "Comisiones Pendientes",
+      title: t('adminDashboard.pendingCommissions'),
       value: formatCurrency(dashStats?.unpaidCommissions || 0),
-      description: "Por cobrar",
+      description: t('adminDashboard.toCollect'),
       icon: Percent,
       color: "text-purple-600",
       bgColor: "bg-purple-600/10",
