@@ -1269,7 +1269,7 @@ const CheckoutPage = () => {
                 )}
                 
                 <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
+                  <span>{t('common.total')}</span>
                   <span className="text-[#071d7f]">${totalWithShipping.toFixed(2)}</span>
                 </div>
               </div>
