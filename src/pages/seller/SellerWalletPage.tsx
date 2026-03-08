@@ -237,7 +237,7 @@ const SellerWalletPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <CheckCircle className="h-4 w-4 text-blue-600" />
-                        <span className="text-xs md:text-sm font-medium text-gray-600">Total Retirado</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-600">{t('sellerWallet.totalWithdrawn')}</span>
                       </div>
                       <p className="text-lg md:text-2xl font-bold text-gray-900">
                         ${(wallet?.total_withdrawn || 0).toLocaleString("es-DO", {
