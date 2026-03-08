@@ -172,7 +172,7 @@ const SellerDashboard = () => {
                           <div className="flex items-start justify-between mb-2">
                             <div>
                               <p className="font-semibold text-sm">
-                                Orden #{order.id.slice(0, 8).toUpperCase()}
+                                {t('sellerDashboard.orderNumber', { id: order.id.slice(0, 8).toUpperCase() })}
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {new Date(order.created_at).toLocaleDateString('es-ES')}
