@@ -472,7 +472,7 @@ const CheckoutPage = () => {
     setValidationErrors([]);
 
     if (items.length === 0) {
-      toast.error('El carrito está vacío');
+      toast.error(t('errors.emptyCart'));
       return;
     }
 
