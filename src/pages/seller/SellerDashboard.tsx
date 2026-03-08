@@ -63,7 +63,7 @@ const SellerDashboard = () => {
           {/* Welcome Section */}
           <div className="mb-4">
             <h1 className="text-2xl font-bold text-foreground">
-              ¡Bienvenido, {user?.name?.split(' ')[0]}!
+              {t('sellerDashboard.welcome', { name: user?.name?.split(' ')[0] })}
             </h1>
           </div>
 
