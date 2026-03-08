@@ -481,7 +481,7 @@ const StoreProfilePage = () => {
               </div>
 
               {/* Action Buttons - icon-only on mobile, full buttons on desktop */}
-              <div className="flex flex-row md:flex-col gap-3 md:gap-2 w-auto md:w-auto justify-start md:justify-start">
+              <div className="flex flex-row md:flex-col gap-3 md:gap-2 w-auto md:w-auto items-center justify-start md:justify-start">
                 <button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
@@ -495,6 +495,10 @@ const StoreProfilePage = () => {
                 <button onClick={handleShare} className="md:hidden p-0 bg-transparent border-0 cursor-pointer">
                   <Share2 className="w-5 h-5 text-white" />
                 </button>
+                {/* Productos badge - mobile only, right-aligned */}
+                <div className="md:hidden ml-auto bg-white px-1.5 py-0.5 rounded text-[#071d7f] text-xs">
+                  <span className="font-semibold">{store.productsCount}</span> prod.
+                </div>
                 <Button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
