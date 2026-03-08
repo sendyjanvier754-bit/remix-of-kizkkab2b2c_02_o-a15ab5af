@@ -643,10 +643,10 @@ const CheckoutPage = () => {
               <Card className="p-6">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-[#071d7f]" />
-                  Zona de Entrega
+                  {t('checkout.deliveryZone')}
                 </h2>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Selecciona tu departamento y comuna para calcular el costo de envío
+                  {t('checkout.selectDeptCommune')}
                 </p>
                 <LocationSelector
                   departmentId={selectedDepartment}
