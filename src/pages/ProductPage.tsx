@@ -835,9 +835,9 @@ const ProductPage = () => {
               {/* Badges */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {isB2BUser ? <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
-                    Mayorista
+                    {t('auth.roles.b2b')}
                   </Badge> : <Badge variant="secondary" className="bg-gray-100 text-gray-700">
-                    Nuevo
+                    {t('products.new')}
                   </Badge>}
                 {product.store && <Link to={`/tienda/${product.store.slug || product.store.id}`} className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-medium hover:bg-purple-100 transition-colors">
                     <StoreIcon className="w-3 h-3" />
