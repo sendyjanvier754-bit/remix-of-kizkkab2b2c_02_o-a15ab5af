@@ -1190,7 +1190,7 @@ const CheckoutPage = () => {
                     )}
                     {(shippingCalculation.deliveryFee + shippingCalculation.operationalFee) > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Cargos locales</span>
+                        <span className="text-muted-foreground">{t('checkout.localCharges')}</span>
                         <span>${(shippingCalculation.deliveryFee + shippingCalculation.operationalFee).toFixed(2)}</span>
                       </div>
                     )}
