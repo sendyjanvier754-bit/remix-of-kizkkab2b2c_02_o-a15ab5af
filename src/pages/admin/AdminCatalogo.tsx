@@ -110,7 +110,7 @@ const AdminCatalogo = () => {
           </TabsTrigger>
           <TabsTrigger value="embeddings" className="gap-2">
             <Cpu className="h-4 w-4" />
-            IA / Embeddings
+            {t('adminCatalog.aiEmbeddings')}
           </TabsTrigger>
           <TabsTrigger value="normalization" className="gap-2">
             <RefreshCw className="h-4 w-4" />
