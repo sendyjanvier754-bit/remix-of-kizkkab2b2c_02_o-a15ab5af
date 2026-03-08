@@ -7658,7 +7658,13 @@ export type Database = {
       validate_product_weight: { Args: { p_product_id: string }; Returns: Json }
     }
     Enums: {
-      app_role: "admin" | "seller" | "user" | "gestor" | "investor"
+      app_role:
+        | "admin"
+        | "seller"
+        | "user"
+        | "gestor"
+        | "investor"
+        | "sales_agent"
       approval_request_type:
         | "withdrawal"
         | "refund"
@@ -7869,7 +7875,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "seller", "user", "gestor", "investor"],
+      app_role: [
+        "admin",
+        "seller",
+        "user",
+        "gestor",
+        "investor",
+        "sales_agent",
+      ],
       approval_request_type: [
         "withdrawal",
         "refund",
