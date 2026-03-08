@@ -259,13 +259,13 @@ const SellerMobileHeader = ({
       setIsListening(false);
       
       if (event.error === 'no-speech') {
-        toast.error("No se detectó ninguna voz. Intenta de nuevo.");
+        toast.error(t('header.noSpeech'));
       } else if (event.error === 'audio-capture') {
-        toast.error("No se pudo acceder al micrófono.");
+        toast.error(t('header.noMicrophone'));
       } else if (event.error === 'not-allowed') {
-        toast.error("Permiso de micrófono denegado.");
+        toast.error(t('header.micDenied'));
       } else {
-        toast.error("Error al reconocer voz. Intenta de nuevo.");
+        toast.error(t('header.voiceError'));
       }
     };
 
