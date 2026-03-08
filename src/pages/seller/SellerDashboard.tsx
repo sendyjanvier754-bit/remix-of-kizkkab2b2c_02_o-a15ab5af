@@ -100,7 +100,7 @@ const SellerDashboard = () => {
                   <CardContent className="p-1.5 text-center">
                     <ShoppingCart className="h-3 w-3 text-blue-600 mx-auto mb-0.5" />
                     <div className="text-base md:text-lg font-bold text-blue-600">{totalOrders}</div>
-                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">Compras</p>
+                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">{t('sellerDashboard.purchases')}</p>
                   </CardContent>
                 </Card>
 
