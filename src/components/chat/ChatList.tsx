@@ -7,11 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageCircle, Clock, Pause, X, User, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { es, enUS, fr } from 'date-fns/locale';
-import { fr } from 'date-fns/locale';
+import { es, enUS, fr as frLocale } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 
-const dateLocales: Record<string, any> = { es, en, fr };
+const dateLocales: Record<string, any> = { es, en: enUS, fr: frLocale };
 
 interface ChatListProps {
   onSelectChat: (chatId: string) => void;
