@@ -794,7 +794,7 @@ const ProductPage = () => {
             {/* Color Variants Grid for Mobile */}
             {isMobile && images.length > 0 && (
               <div className="px-4 py-4 bg-white border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">Colores disponibles</h4>
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('products.color')}</h4>
                 <div className="flex flex-wrap gap-3 justify-start">
                   {images.map((image, index) => (
                     <button
