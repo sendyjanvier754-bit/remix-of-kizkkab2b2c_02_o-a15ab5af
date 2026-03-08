@@ -21,44 +21,54 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Plus, Trash2, Edit, MoreHorizontal, Eye, EyeOff, Megaphone,
-  MousePointerClick, ShoppingCart, Clock, Gift, BarChart3, Ticket,
+  Plus, Trash2, Edit, MoreHorizontal, Megaphone,
+  MousePointerClick, ShoppingCart, Clock, Gift, Ticket,
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 
-const triggerTypeConfig = {
+type TriggerType = 'welcome' | 'exit_intent' | 'cart_abandon' | 'timed_promotion';
+type DisplayFreq = 'once_per_session' | 'once_per_day' | 'once_ever' | 'always';
+
+const triggerTypeConfig: Record<TriggerType, { label: string; icon: React.ElementType; color: string }> = {
   welcome: { label: 'Bienvenida', icon: Gift, color: 'bg-green-100 text-green-800' },
   exit_intent: { label: 'Exit Intent', icon: MousePointerClick, color: 'bg-orange-100 text-orange-800' },
   cart_abandon: { label: 'Carrito Abandonado', icon: ShoppingCart, color: 'bg-red-100 text-red-800' },
   timed_promotion: { label: 'Promoción Temporal', icon: Clock, color: 'bg-blue-100 text-blue-800' },
 };
 
-const defaultForm = {
-  title: '',
-  description: '',
-  trigger_type: 'welcome' as 'welcome' | 'exit_intent' | 'cart_abandon' | 'timed_promotion',
-  heading: '',
-  body_text: '',
-  image_url: '',
-  button_text: 'Obtener Descuento',
-  button_url: '',
-  background_color: '#ffffff',
-  discount_code_id: null as string | null,
-  auto_generate_coupon: false,
+interface PopupForm {
+  title: string;
+  description: string;
+  trigger_type: TriggerType;
+  heading: string;
+  body_text: string;
+  image_url: string;
+  button_text: string;
+  button_url: string;
+  background_color: string;
+  discount_code_id: string | null;
+  auto_generate_coupon: boolean;
+  auto_coupon_config: { discount_type: string; discount_value: number; prefix: string; max_uses_per_user: number };
+  display_frequency: DisplayFreq;
+  delay_seconds: number;
+  scroll_percentage: number | null;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+  target_audience: string;
+  target_pages: string[];
+}
+
+const emptyForm: PopupForm = {
+  title: '', description: '', trigger_type: 'welcome', heading: '', body_text: '',
+  image_url: '', button_text: 'Obtener Descuento', button_url: '', background_color: '#ffffff',
+  discount_code_id: null, auto_generate_coupon: false,
   auto_coupon_config: { discount_type: 'percentage', discount_value: 10, prefix: 'POPUP', max_uses_per_user: 1 },
-  display_frequency: 'once_per_session' as 'once_per_session' | 'once_per_day' | 'once_ever' | 'always',
-  delay_seconds: 3,
-  scroll_percentage: null as number | null,
-  starts_at: '',
-  ends_at: '',
-  is_active: true,
-  target_audience: 'all',
-  target_pages: [] as string[],
-
-
+  display_frequency: 'once_per_session', delay_seconds: 3, scroll_percentage: null,
+  starts_at: '', ends_at: '', is_active: true, target_audience: 'all', target_pages: [],
+};
 
 const AdminPopupsPage = () => {
   const { user } = useAuth();
@@ -66,57 +76,37 @@ const AdminPopupsPage = () => {
   const { discountCodes } = useDiscountCodes();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(defaultForm);
+  const [form, setForm] = useState<PopupForm>(emptyForm);
   const [activeTab, setActiveTab] = useState('all');
 
-  const filteredPopups = activeTab === 'all' 
-    ? popups 
-    : popups.filter(p => p.trigger_type === activeTab);
+  const filteredPopups = activeTab === 'all' ? popups : popups.filter(p => p.trigger_type === activeTab);
 
-  const openCreate = () => {
-    setEditingId(null);
-    setForm(defaultForm);
-    setIsDialogOpen(true);
-  };
+  const openCreate = () => { setEditingId(null); setForm(emptyForm); setIsDialogOpen(true); };
 
-  const openEdit = (popup: MarketingPopup) => {
-    setEditingId(popup.id);
+  const openEdit = (p: MarketingPopup) => {
+    setEditingId(p.id);
     setForm({
-      title: popup.title,
-      description: popup.description || '',
-      trigger_type: popup.trigger_type,
-      heading: popup.heading,
-      body_text: popup.body_text || '',
-      image_url: popup.image_url || '',
-      button_text: popup.button_text || 'Obtener Descuento',
-      button_url: popup.button_url || '',
-      background_color: popup.background_color || '#ffffff',
-      discount_code_id: popup.discount_code_id,
-      auto_generate_coupon: popup.auto_generate_coupon,
-      auto_coupon_config: popup.auto_coupon_config || defaultForm.auto_coupon_config,
-      display_frequency: popup.display_frequency,
-      delay_seconds: popup.delay_seconds,
-      scroll_percentage: popup.scroll_percentage,
-      starts_at: popup.starts_at ? popup.starts_at.slice(0, 16) : '',
-      ends_at: popup.ends_at ? popup.ends_at.slice(0, 16) : '',
-      is_active: popup.is_active,
-      target_audience: popup.target_audience,
-      target_pages: popup.target_pages || [],
+      title: p.title, description: p.description || '', trigger_type: p.trigger_type,
+      heading: p.heading, body_text: p.body_text || '', image_url: p.image_url || '',
+      button_text: p.button_text || 'Obtener Descuento', button_url: p.button_url || '',
+      background_color: p.background_color || '#ffffff', discount_code_id: p.discount_code_id,
+      auto_generate_coupon: p.auto_generate_coupon,
+      auto_coupon_config: p.auto_coupon_config || emptyForm.auto_coupon_config,
+      display_frequency: p.display_frequency, delay_seconds: p.delay_seconds,
+      scroll_percentage: p.scroll_percentage,
+      starts_at: p.starts_at ? p.starts_at.slice(0, 16) : '',
+      ends_at: p.ends_at ? p.ends_at.slice(0, 16) : '',
+      is_active: p.is_active, target_audience: p.target_audience, target_pages: p.target_pages || [],
     });
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.title || !form.heading) return;
-
     const payload = {
-      ...form,
-      starts_at: form.starts_at || null,
-      ends_at: form.ends_at || null,
-      discount_code_id: form.discount_code_id || null,
-      created_by: user?.id,
+      ...form, starts_at: form.starts_at || null, ends_at: form.ends_at || null,
+      discount_code_id: form.discount_code_id || null, created_by: user?.id,
     };
-
     if (editingId) {
       await updatePopup.mutateAsync({ id: editingId, ...payload });
     } else {
@@ -126,14 +116,13 @@ const AdminPopupsPage = () => {
   };
 
   const stats = {
-    total: popups.length,
-    active: popups.filter(p => p.is_active).length,
+    total: popups.length, active: popups.filter(p => p.is_active).length,
     totalViews: popups.reduce((s, p) => s + p.views_count, 0),
     totalClicks: popups.reduce((s, p) => s + p.clicks_count, 0),
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout title="Pop-ups de Marketing" subtitle="Gestiona pop-ups con cupones y descuentos">
       <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -141,26 +130,24 @@ const AdminPopupsPage = () => {
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Megaphone className="h-6 w-6" /> Pop-ups de Marketing
             </h1>
-            <p className="text-muted-foreground text-sm">Gestiona pop-ups con cupones y descuentos para el marketplace</p>
+            <p className="text-muted-foreground text-sm">Configura pop-ups con cupones y descuentos para el marketplace</p>
           </div>
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-2" /> Nuevo Pop-up
-          </Button>
+          <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Nuevo Pop-up</Button>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card><CardHeader className="pb-2"><CardDescription>Total Pop-ups</CardDescription><CardTitle className="text-2xl">{stats.total}</CardTitle></CardHeader></Card>
+          <Card><CardHeader className="pb-2"><CardDescription>Total</CardDescription><CardTitle className="text-2xl">{stats.total}</CardTitle></CardHeader></Card>
           <Card><CardHeader className="pb-2"><CardDescription>Activos</CardDescription><CardTitle className="text-2xl text-green-600">{stats.active}</CardTitle></CardHeader></Card>
-          <Card><CardHeader className="pb-2"><CardDescription>Vistas Totales</CardDescription><CardTitle className="text-2xl">{stats.totalViews.toLocaleString()}</CardTitle></CardHeader></Card>
-          <Card><CardHeader className="pb-2"><CardDescription>Clicks Totales</CardDescription><CardTitle className="text-2xl">{stats.totalClicks.toLocaleString()}</CardTitle></CardHeader></Card>
+          <Card><CardHeader className="pb-2"><CardDescription>Vistas</CardDescription><CardTitle className="text-2xl">{stats.totalViews.toLocaleString()}</CardTitle></CardHeader></Card>
+          <Card><CardHeader className="pb-2"><CardDescription>Clicks</CardDescription><CardTitle className="text-2xl">{stats.totalClicks.toLocaleString()}</CardTitle></CardHeader></Card>
         </div>
 
         {/* Filter Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="all">Todos ({popups.length})</TabsTrigger>
-            {Object.entries(triggerTypeConfig).map(([key, cfg]) => (
+            {(Object.entries(triggerTypeConfig) as [TriggerType, typeof triggerTypeConfig[TriggerType]][]).map(([key, cfg]) => (
               <TabsTrigger key={key} value={key} className="gap-1">
                 <cfg.icon className="h-3 w-3" />
                 {cfg.label} ({popups.filter(p => p.trigger_type === key).length})
@@ -210,12 +197,9 @@ const AdminPopupsPage = () => {
                       </TableCell>
                       <TableCell>
                         {popup.discount_code ? (
-                          <Badge variant="outline" className="gap-1">
-                            <Ticket className="h-3 w-3" />
-                            {popup.discount_code.code}
-                          </Badge>
+                          <Badge variant="outline" className="gap-1"><Ticket className="h-3 w-3" />{popup.discount_code.code}</Badge>
                         ) : popup.auto_generate_coupon ? (
-                          <Badge variant="outline" className="text-blue-600">Auto-generado</Badge>
+                          <Badge variant="outline">Auto-generado</Badge>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
@@ -224,23 +208,14 @@ const AdminPopupsPage = () => {
                       <TableCell className="text-center">{popup.views_count}</TableCell>
                       <TableCell className="text-center">{popup.clicks_count}</TableCell>
                       <TableCell>
-                        <Switch
-                          checked={popup.is_active}
-                          onCheckedChange={(v) => togglePopup.mutate({ id: popup.id, is_active: v })}
-                        />
+                        <Switch checked={popup.is_active} onCheckedChange={(v) => togglePopup.mutate({ id: popup.id, is_active: v })} />
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEdit(popup)}>
-                              <Edit className="h-4 w-4 mr-2" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => deletePopup.mutate(popup.id)} className="text-red-600">
-                              <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEdit(popup)}><Edit className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => deletePopup.mutate(popup.id)} className="text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -268,10 +243,10 @@ const AdminPopupsPage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Tipo de activación *</Label>
-                  <Select value={form.trigger_type} onValueChange={(v: any) => setForm({ ...form, trigger_type: v })}>
+                  <Select value={form.trigger_type} onValueChange={(v) => setForm({ ...form, trigger_type: v as TriggerType })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {Object.entries(triggerTypeConfig).map(([k, v]) => (
+                      {(Object.entries(triggerTypeConfig) as [TriggerType, typeof triggerTypeConfig[TriggerType]][]).map(([k, v]) => (
                         <SelectItem key={k} value={k}>{v.label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -279,7 +254,7 @@ const AdminPopupsPage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Frecuencia de muestra</Label>
-                  <Select value={form.display_frequency} onValueChange={(v: any) => setForm({ ...form, display_frequency: v })}>
+                  <Select value={form.display_frequency} onValueChange={(v) => setForm({ ...form, display_frequency: v as DisplayFreq })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="once_per_session">Una vez por sesión</SelectItem>
@@ -321,7 +296,6 @@ const AdminPopupsPage = () => {
                   <Switch checked={form.auto_generate_coupon} onCheckedChange={(v) => setForm({ ...form, auto_generate_coupon: v, discount_code_id: v ? null : form.discount_code_id })} />
                   <Label>Generar cupón automáticamente</Label>
                 </div>
-
                 {form.auto_generate_coupon ? (
                   <div className="grid grid-cols-3 gap-3 p-3 bg-muted rounded-lg">
                     <div className="space-y-1">
@@ -350,7 +324,7 @@ const AdminPopupsPage = () => {
                       <SelectTrigger><SelectValue placeholder="Sin cupón" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Sin cupón</SelectItem>
-                        {discountCodes?.filter(c => c.is_active).map(c => (
+                        {discountCodes?.filter((c: any) => c.is_active).map((c: any) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.code} ({c.discount_type === 'percentage' ? `${c.discount_value}%` : `$${c.discount_value}`})
                           </SelectItem>
@@ -361,7 +335,7 @@ const AdminPopupsPage = () => {
                 )}
               </div>
 
-              {/* Scheduling & Targeting */}
+              {/* Scheduling */}
               <div className="space-y-4 border-t pt-4">
                 <h3 className="font-semibold text-sm">Programación</h3>
                 <div className="grid grid-cols-2 gap-4">
