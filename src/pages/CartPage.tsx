@@ -1,5 +1,5 @@
+import { useTranslation } from 'react-i18next';
 import GlobalHeader from "@/components/layout/GlobalHeader";
-import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
