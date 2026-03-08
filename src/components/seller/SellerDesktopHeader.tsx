@@ -460,6 +460,10 @@ const SellerDesktopHeader = ({
                 <Flame className="w-6 h-6" />
                 <span className="text-xs">Tendencias</span>
               </Link>
+              <Link to="/admin/soporte-chat" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
+                <MessageCircle className="w-6 h-6" />
+                <span className="text-xs">Soporte</span>
+              </Link>
               <Link to="/seller/favoritos" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <Heart className="w-6 h-6" />
                 <span className="text-xs">Favoritos</span>
