@@ -1163,7 +1163,7 @@ const CheckoutPage = () => {
           {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-24">
-              <h2 className="text-lg font-bold mb-4">Resumen</h2>
+              <h2 className="text-lg font-bold mb-4">{t('common.orderSummary')}</h2>
               
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
