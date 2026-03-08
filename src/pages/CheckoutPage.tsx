@@ -756,8 +756,8 @@ const CheckoutPage = () => {
                             <span className="font-medium">{address.label}</span>
                             {address.is_default && (
                               <Badge variant="secondary" className="text-xs">
-                                <Star className="h-3 w-3 mr-1" />
-                                Predeterminada
+                                 <Star className="h-3 w-3 mr-1" />
+                                {t('checkout.default')}
                               </Badge>
                             )}
                           </div>
