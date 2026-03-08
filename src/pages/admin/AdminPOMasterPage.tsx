@@ -190,7 +190,7 @@ export default function AdminPOMasterPage() {
               onClose={() => { setSelectedMarket(market); setCloseConfirmDialog(true); }}
               onTracking={() => { setSelectedMarket(market); setTrackingDialog(true); }}
               onSettings={() => handleOpenSettings(market)}
-              onViewOrders={() => { setSelectedMarket(market); setOrdersDialog(true); }}
+              onViewOrders={() => { setSelectedMarket(market); setViewingPOId(market.active_po_id); setViewingPONumber(market.active_po_number); setOrdersDialog(true); }}
               onViewHistory={() => { setSelectedMarket(market); setHistoryDialog(true); }}
             />
           ))}
