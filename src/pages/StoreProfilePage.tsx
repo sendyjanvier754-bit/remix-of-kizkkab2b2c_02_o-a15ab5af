@@ -448,28 +448,28 @@ const StoreProfilePage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-2 w-full md:w-auto">
+              <div className="flex flex-row md:flex-col gap-1.5 md:gap-2 w-full md:w-auto">
                 <Button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className="w-full md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0"
+                  className="flex-1 md:flex-none md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0 text-sm py-1.5 md:text-base md:py-2"
                 >
-                  <Heart className={`w-4 h-4 mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+                  <Heart className={`w-4 h-4 mr-1.5 md:mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
                   {isFollowing ? "Siguiendo" : "Seguir"}
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
+                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm py-1.5 md:text-base md:py-2"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2 text-[#071d7f]" />
+                  <MessageCircle className="w-4 h-4 mr-1.5 md:mr-2 text-[#071d7f]" />
                   Contactar
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
+                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm py-1.5 md:text-base md:py-2"
                   onClick={handleShare}
                 >
-                  <Share2 className="w-4 h-4 mr-2 text-[#071d7f]" />
+                  <Share2 className="w-4 h-4 mr-1.5 md:mr-2 text-[#071d7f]" />
                   Compartir
                 </Button>
               </div>
