@@ -1041,7 +1041,7 @@ const ProductPage = () => {
               <DrawerContent className="max-h-[50vh] h-[50vh]">
                 <div className="mx-auto w-full max-w-sm flex flex-col h-[45vh]">
                   <DrawerHeader className="flex-shrink-0 flex items-center justify-between">
-                    <DrawerTitle className="text-lg font-bold">Descripción del Producto</DrawerTitle>
+                    <DrawerTitle className="text-lg font-bold">{t('productPage.productDescription')}</DrawerTitle>
                     <button
                       onClick={() => setIsDescriptionDrawerOpen(false)}
                       className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
