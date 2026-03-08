@@ -17,6 +17,7 @@ interface EditProductDialogProps {
 }
 
 export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProductDialogProps) {
+  const { t } = useTranslation();
   const [precio, setPrecio] = useState(item?.precioVenta.toString() || '');
   const [stock, setStock] = useState(item?.stock.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
