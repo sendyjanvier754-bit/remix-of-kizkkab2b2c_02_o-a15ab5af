@@ -326,12 +326,12 @@ const StoreProfilePage = () => {
           <div className="absolute inset-0 bg-black/50" />
 
           {/* Content — sits above the banner */}
-          <div className="relative z-10 px-6 py-6">
+          <div className="relative z-10 px-4 py-3 md:px-6 md:py-6">
             {/* Logo */}
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-4">
               <div
                 onClick={() => setShowProfileModal(true)}
-                className="w-20 h-20 md:w-28 md:h-28 rounded-xl border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+                className="w-14 h-14 md:w-28 md:h-28 rounded-xl border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
               >
                 {store.logo ? (
                   <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
@@ -344,15 +344,15 @@ const StoreProfilePage = () => {
             <div className="flex flex-col md:flex-row md:items-start md:gap-6">
               {/* Main Info */}
               <div className="flex-1 mb-4 md:mb-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white">
+                <div className="flex items-center gap-2 mb-1 md:mb-2">
+                  <h1 className="text-xl md:text-3xl font-bold text-white">
                     {store.name}
                   </h1>
                   {store.is_active && <CheckCircle className="w-6 h-6 text-white" />}
                 </div>
 
                 {/* Location + Ver Descripción */}
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-1.5 md:mb-3">
                   {store.description && (
                     <Button
                       onClick={() => setShowProfileModal(true)}
@@ -372,7 +372,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Badges + Store ID */}
-                <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1.5 md:mb-3">
                   {store.badges.map((badge) => (
                     <span
                       key={badge}
@@ -395,7 +395,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="flex items-center gap-4 flex-wrap text-sm mb-3">
+                <div className="flex items-center gap-2 md:gap-4 flex-wrap text-sm mb-1.5 md:mb-3">
                   {/* Rating */}
                   <div className="flex items-center gap-1 bg-white px-2 py-1 rounded">
                     <div className="flex text-yellow-400">
@@ -423,7 +423,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Social Media Links */}
-                <div className="flex gap-3 mt-2">
+                <div className="flex gap-3 mt-1 md:mt-2">
                   {store.social.facebook && (
                     <a href={store.social.facebook} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors">
                       <Facebook className="h-5 w-5" />
@@ -448,28 +448,28 @@ const StoreProfilePage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-2 w-full md:w-auto">
+              <div className="flex flex-row md:flex-col gap-1.5 md:gap-2 w-full md:w-auto">
                 <Button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className="w-full md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0"
+                  className="flex-1 md:flex-none md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0 text-sm py-1.5 md:text-base md:py-2"
                 >
-                  <Heart className={`w-4 h-4 mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+                  <Heart className={`w-4 h-4 mr-1.5 md:mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
                   {isFollowing ? "Siguiendo" : "Seguir"}
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
+                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm py-1.5 md:text-base md:py-2"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2 text-[#071d7f]" />
+                  <MessageCircle className="w-4 h-4 mr-1.5 md:mr-2 text-[#071d7f]" />
                   Contactar
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
+                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm py-1.5 md:text-base md:py-2"
                   onClick={handleShare}
                 >
-                  <Share2 className="w-4 h-4 mr-2 text-[#071d7f]" />
+                  <Share2 className="w-4 h-4 mr-1.5 md:mr-2 text-[#071d7f]" />
                   Compartir
                 </Button>
               </div>
@@ -477,7 +477,7 @@ const StoreProfilePage = () => {
 
             {/* Payment Methods Section */}
             {storeData?.metadata && (
-              <div className="mt-8 pt-8 border-t border-white/20">
+              <div className="mt-4 pt-4 md:mt-8 md:pt-8 border-t border-white/20">
                 <PaymentMethodsDisplay
                   paymentData={storeData.metadata as PaymentMethodsData}
                   title="Métodos de Pago Aceptados"
