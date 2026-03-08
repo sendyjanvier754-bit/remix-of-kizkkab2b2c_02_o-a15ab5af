@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import Footer from '@/components/layout/Footer';
@@ -55,6 +56,7 @@ type DeliveryMethod = 'address' | 'pickup';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, role, isLoading: authLoading } = useAuth();
   const { items: allItems, isLoading: cartLoading } = useB2CCartItems();
   const { b2cSelectedIds } = useCartSelectionStore();
@@ -137,8 +139,8 @@ const CheckoutPage = () => {
   const paymentMethods = [
     {
       id: 'stripe' as PaymentMethod,
-      name: 'Tarjeta de Crédito',
-      description: 'Visa, Mastercard, American Express',
+      name: t('payments.creditCard'),
+      description: t('checkout.creditCardDesc'),
       icon: CreditCard,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -146,7 +148,7 @@ const CheckoutPage = () => {
     {
       id: 'moncash' as PaymentMethod,
       name: 'MonCash',
-      description: 'Billetera digital haitiana',
+      description: t('checkout.moncashDesc'),
       icon: Smartphone,
       color: 'text-[#94111f]',
       bgColor: 'bg-[#94111f]/10',
@@ -154,15 +156,15 @@ const CheckoutPage = () => {
     {
       id: 'natcash' as PaymentMethod,
       name: 'NatCash',
-      description: 'Billetera digital haitiana',
+      description: t('checkout.natcashDesc'),
       icon: Smartphone,
       color: 'text-[#071d7f]',
       bgColor: 'bg-[#071d7f]/10',
     },
     {
       id: 'transfer' as PaymentMethod,
-      name: 'Transferencia Bancaria',
-      description: 'Transferencia directa',
+      name: t('payments.bankTransfer'),
+      description: t('checkout.bankTransferDesc'),
       icon: Building2,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -318,12 +320,12 @@ const CheckoutPage = () => {
         <main className="flex-1 container mx-auto px-4 flex items-center justify-center">
           <Card className="p-8 text-center max-w-md">
             <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-4">Inicia Sesión</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('checkout.loginRequired')}</h1>
             <p className="text-muted-foreground mb-6">
-              Debes iniciar sesión para completar tu compra.
+              {t('checkout.loginMessage')}
             </p>
             <Button asChild className="w-full bg-[#071d7f] hover:bg-[#0a2a9f]">
-              <Link to="/login">Iniciar Sesión</Link>
+              <Link to="/login">{t('auth.login')}</Link>
             </Button>
           </Card>
         </main>
@@ -339,14 +341,14 @@ const CheckoutPage = () => {
         <main className="flex-1 container mx-auto px-4 flex items-center justify-center">
           <Card className="p-8 text-center max-w-md">
             <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-4">Carrito Vacío</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('checkout.emptyCartTitle')}</h1>
             <p className="text-muted-foreground mb-6">
-              No tienes productos en tu carrito.
+              {t('checkout.emptyCartMessage')}
             </p>
             <Button asChild className="bg-[#071d7f] hover:bg-[#0a2a9f]">
               <Link to="/">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Ir a Comprar
+                {t('checkout.goShopping')}
               </Link>
             </Button>
           </Card>
@@ -397,13 +399,13 @@ const CheckoutPage = () => {
                   <Check className="w-10 h-10 text-green-600" />
                 </div>
               </div>
-              <h1 className="text-2xl font-bold mb-2">¡Pedido Enviado!</h1>
+              <h1 className="text-2xl font-bold mb-2">{t('checkout.orderSent')}</h1>
               <p className="text-muted-foreground mb-4">
-                Tu pedido ha sido recibido. Completa el pago según las instrucciones.
+                {t('checkout.orderReceivedMessage')}
               </p>
               {orderId && (
                 <div className="bg-muted p-4 rounded-lg mb-6">
-                  <p className="text-sm text-muted-foreground">Número de Pedido</p>
+                  <p className="text-sm text-muted-foreground">{t('checkout.orderNumberLabel')}</p>
                   <p className="font-mono font-bold text-lg">{orderId}</p>
                 </div>
               )}
@@ -412,7 +414,7 @@ const CheckoutPage = () => {
                 <div className="text-left bg-blue-50 p-4 rounded-lg mb-6">
                   <p className="font-semibold text-sm mb-2 flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    Dirección de Envío
+                    {t('checkout.shippingAddress')}
                   </p>
                   <p className="text-sm">{selectedAddressData.full_name}</p>
                   <p className="text-sm text-muted-foreground">{selectedAddressData.street_address}</p>
@@ -424,19 +426,19 @@ const CheckoutPage = () => {
 
               {paymentMethod !== 'stripe' && (
                 <div className="text-left bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
-                  <p className="font-semibold text-yellow-800">Pendiente de Verificación</p>
+                  <p className="font-semibold text-yellow-800">{t('checkout.pendingVerification')}</p>
                   <p className="text-sm text-yellow-700 mt-1">
-                    Tu pedido está pendiente de verificación de pago. Te notificaremos una vez confirmado.
+                    {t('checkout.pendingVerificationMessage')}
                   </p>
                 </div>
               )}
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild variant="outline">
-                  <Link to="/mis-compras">Ver Mis Pedidos</Link>
+                  <Link to="/mis-compras">{t('checkout.viewMyOrders')}</Link>
                 </Button>
                 <Button asChild className="bg-[#071d7f] hover:bg-[#0a2a9f]">
-                  <Link to="/">Seguir Comprando</Link>
+                  <Link to="/">{t('checkout.continueShopping')}</Link>
                 </Button>
               </div>
             </Card>
@@ -470,7 +472,7 @@ const CheckoutPage = () => {
     setValidationErrors([]);
 
     if (items.length === 0) {
-      toast.error('El carrito está vacío');
+      toast.error(t('errors.emptyCart'));
       return;
     }
 
@@ -546,7 +548,7 @@ const CheckoutPage = () => {
       }
     } catch (error) {
       console.error('Error placing order:', error);
-      toast.error('Error al procesar el pedido');
+      toast.error(t('errors.orderError'));
     } finally {
       setIsProcessing(false);
     }
@@ -560,9 +562,9 @@ const CheckoutPage = () => {
         <div className="mb-6">
           <Link to="/carrito" className="flex items-center gap-2 text-[#071d7f] hover:underline mb-4">
             <ArrowLeft className="w-4 h-4" />
-            Volver al Carrito
+            {t('checkout.backToCart')}
           </Link>
-          <h1 className="text-2xl md:text-3xl font-bold">Finalizar Compra</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">{t('checkout.title')}</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -572,7 +574,7 @@ const CheckoutPage = () => {
             <Card className={`p-6 ${hasFieldError(validationErrors, 'deliveryMethod') ? 'border-red-500 border-2' : ''}`}>
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Truck className="h-5 w-5 text-[#071d7f]" />
-                Opción de Entrega
+                {t('checkout.deliveryOption')}
               </h2>
               {hasFieldError(validationErrors, 'deliveryMethod') && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
@@ -606,8 +608,8 @@ const CheckoutPage = () => {
                   <div className="flex items-center gap-3 flex-1">
                     <Truck className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-semibold">Envío a Domicilio</p>
-                      <p className="text-sm text-muted-foreground">Recibirás tu pedido en la dirección que indiques</p>
+                      <p className="font-semibold">{t('checkout.homeDelivery')}</p>
+                      <p className="text-sm text-muted-foreground">{t('checkout.homeDeliveryDesc')}</p>
                     </div>
                   </div>
                 </div>
@@ -628,8 +630,8 @@ const CheckoutPage = () => {
                   <div className="flex items-center gap-3 flex-1">
                     <Store className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-semibold">Retiro en Punto</p>
-                      <p className="text-sm text-muted-foreground">Retira tu pedido en uno de nuestros puntos</p>
+                      <p className="font-semibold">{t('checkout.pickupPoint')}</p>
+                      <p className="text-sm text-muted-foreground">{t('checkout.pickupPointDesc')}</p>
                     </div>
                   </div>
                 </div>
@@ -641,10 +643,10 @@ const CheckoutPage = () => {
               <Card className="p-6">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-[#071d7f]" />
-                  Zona de Entrega
+                  {t('checkout.deliveryZone')}
                 </h2>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Selecciona tu departamento y comuna para calcular el costo de envío
+                  {t('checkout.selectDeptCommune')}
                 </p>
                 <LocationSelector
                   departmentId={selectedDepartment}
@@ -674,20 +676,20 @@ const CheckoutPage = () => {
                       <div className="flex justify-between text-sm">
                         <span className="flex items-center gap-2">
                           <Shield className="h-4 w-4 text-purple-500" />
-                          Seguro
+                           {t('checkout.insurance')}
                         </span>
                         <span>${shippingCalculation.insuranceCost.toFixed(2)}</span>
                       </div>
                     )}
                     {(shippingCalculation.deliveryFee > 0 || shippingCalculation.operationalFee > 0) && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Cargos locales</span>
+                        <span className="text-muted-foreground">{t('checkout.localCharges')}</span>
                         <span>${(shippingCalculation.deliveryFee + shippingCalculation.operationalFee).toFixed(2)}</span>
                       </div>
                     )}
                     <Separator className="my-2" />
                     <div className="flex justify-between font-semibold">
-                      <span>Total Envío</span>
+                      <span>{t('checkout.totalShipping')}</span>
                       <span className="text-primary">${shippingCalculation.totalShippingCost.toFixed(2)}</span>
                     </div>
                   </div>
@@ -701,7 +703,7 @@ const CheckoutPage = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-[#071d7f]" />
-                    Dirección de Envío
+                    {t('checkout.shippingAddress')}
                   </h2>
                   <Button 
                     variant="outline" 
@@ -709,7 +711,7 @@ const CheckoutPage = () => {
                     onClick={() => setShowAddressDialog(true)}
                   >
                     <Pencil className="h-4 w-4 mr-1" />
-                    Gestionar
+                    {t('checkout.manage')}
                   </Button>
                 </div>
 
@@ -723,13 +725,13 @@ const CheckoutPage = () => {
                 {addresses.length === 0 ? (
                   <div className="text-center py-6 bg-muted/50 rounded-lg">
                     <MapPin className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-3">No tienes direcciones guardadas</p>
+                    <p className="text-muted-foreground mb-3">{t('checkout.noAddresses')}</p>
                     <Button 
                       onClick={() => setShowAddressDialog(true)}
                       className="bg-[#071d7f] hover:bg-[#0a2a9f]"
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Agregar Dirección
+                      {t('checkout.addAddress')}
                     </Button>
                   </div>
                 ) : (
@@ -754,8 +756,8 @@ const CheckoutPage = () => {
                             <span className="font-medium">{address.label}</span>
                             {address.is_default && (
                               <Badge variant="secondary" className="text-xs">
-                                <Star className="h-3 w-3 mr-1" />
-                                Predeterminada
+                                 <Star className="h-3 w-3 mr-1" />
+                                {t('checkout.default')}
                               </Badge>
                             )}
                           </div>
@@ -780,13 +782,13 @@ const CheckoutPage = () => {
               <Card className="p-6">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <Store className="h-5 w-5 text-[#071d7f]" />
-                  Punto de Retiro
+                  {t('checkout.pickupPointTitle')}
                 </h2>
 
                 {pickupPoints.length === 0 ? (
                   <div className="text-center py-6 bg-muted/50 rounded-lg">
                     <Store className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">No hay puntos de retiro disponibles</p>
+                    <p className="text-muted-foreground">{t('checkout.noPickupPoints')}</p>
                   </div>
                 ) : (
                   <RadioGroup 
@@ -831,7 +833,7 @@ const CheckoutPage = () => {
             <Card className="p-6">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Package className="h-5 w-5 text-[#071d7f]" />
-                Resumen del Pedido ({totalItems} productos)
+                {t('common.orderSummary')} ({totalItems} {t('common.products')})
               </h2>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {items.map((item) => (
@@ -869,7 +871,7 @@ const CheckoutPage = () => {
             <Card className={`p-6 ${hasFieldError(validationErrors, 'paymentMethod') ? 'border-red-500 border-2' : ''}`}>
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-[#071d7f]" />
-                Método de Pago
+                {t('checkout.paymentMethod')}
               </h2>
               
               {hasFieldError(validationErrors, 'paymentMethod') && (
@@ -1148,11 +1150,11 @@ const CheckoutPage = () => {
 
             {/* Order Notes */}
             <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4">Notas del Pedido</h2>
+              <h2 className="text-lg font-bold mb-4">{t('checkout.orderNotes')}</h2>
               <Textarea
                 value={orderNotes}
                 onChange={(e) => setOrderNotes(e.target.value)}
-                placeholder="Instrucciones especiales para tu pedido (opcional)"
+                placeholder={t('checkout.orderNotesPlaceholder')}
                 rows={3}
               />
             </Card>
@@ -1161,11 +1163,11 @@ const CheckoutPage = () => {
           {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-24">
-              <h2 className="text-lg font-bold mb-4">Resumen</h2>
+              <h2 className="text-lg font-bold mb-4">{t('common.orderSummary')}</h2>
               
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal ({totalItems} productos)</span>
+                  <span className="text-muted-foreground">{t('common.subtotal')} ({totalItems} {t('common.products')})</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 
@@ -1173,31 +1175,31 @@ const CheckoutPage = () => {
                 {shippingCalculation ? (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Envío (China → USA)</span>
+                      <span className="text-muted-foreground">{t('shipping.cost')} (China → USA)</span>
                       <span>${shippingCalculation.chinaUsaCost.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Envío (USA → Haití)</span>
+                      <span className="text-muted-foreground">{t('shipping.cost')} (USA → Haití)</span>
                       <span>${shippingCalculation.usaHaitiCost.toFixed(2)}</span>
                     </div>
                     {shippingCalculation.insuranceCost > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Seguro</span>
+                        <span className="text-muted-foreground">{t('checkout.insurance')}</span>
                         <span>${shippingCalculation.insuranceCost.toFixed(2)}</span>
                       </div>
                     )}
                     {(shippingCalculation.deliveryFee + shippingCalculation.operationalFee) > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Cargos locales</span>
+                        <span className="text-muted-foreground">{t('checkout.localCharges')}</span>
                         <span>${(shippingCalculation.deliveryFee + shippingCalculation.operationalFee).toFixed(2)}</span>
                       </div>
                     )}
                   </>
                 ) : (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Envío</span>
+                    <span className="text-muted-foreground">{t('shipping.cost')}</span>
                     <span className="text-muted-foreground italic text-xs">
-                      {deliveryMethod === 'pickup' ? 'Retiro gratis' : 'Selecciona zona'}
+                      {deliveryMethod === 'pickup' ? t('cart.freeShipping') : t('checkout.deliveryZone')}
                     </span>
                   </div>
                 )}
@@ -1231,7 +1233,7 @@ const CheckoutPage = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Código de descuento</Label>
+                      <Label className="text-xs text-muted-foreground">{t('checkout.discountCode')}</Label>
                       <div className="flex gap-2">
                         <Input
                           value={discountCode}
@@ -1248,7 +1250,7 @@ const CheckoutPage = () => {
                           {isValidatingDiscount ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            'Aplicar'
+                            t('checkout.applyDiscount')
                           )}
                         </Button>
                       </div>
@@ -1261,20 +1263,20 @@ const CheckoutPage = () => {
                 {/* Show discount in summary */}
                 {appliedDiscount && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Descuento</span>
+                    <span>{t('cart.discount')}</span>
                     <span>-${discountAmount.toFixed(2)}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
+                  <span>{t('common.total')}</span>
                   <span className="text-[#071d7f]">${totalWithShipping.toFixed(2)}</span>
                 </div>
               </div>
 
               {deliveryMethod === 'address' && selectedAddressData && (
                 <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Enviar a:</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t('checkout.sendTo')}:</p>
                   <p className="text-sm font-medium">{selectedAddressData.full_name}</p>
                   <p className="text-xs text-muted-foreground">{selectedAddressData.city}, {selectedAddressData.country}</p>
                 </div>
@@ -1301,12 +1303,12 @@ const CheckoutPage = () => {
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Procesando...
+                    {t('checkout.processing')}
                   </>
                 ) : (
                   <>
                     <Check className="h-4 w-4 mr-2" />
-                    Confirmar Pedido
+                    {t('checkout.placeOrder')}
                   </>
                 )}
               </Button>

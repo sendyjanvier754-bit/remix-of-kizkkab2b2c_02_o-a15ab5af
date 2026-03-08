@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import ProductsWithoutWeightAlert from '@/components/admin/ProductsWithoutWeight
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminCatalogo = () => {
+  const { t } = useTranslation();
   const { useProducts, useCategories, useSuppliers, useCatalogKPIs } = useCatalog();
   const [filters, setFilters] = useState<ProductFilters>({ stockStatus: 'all' });
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,31 +90,31 @@ const AdminCatalogo = () => {
   const getStockBadge = (status: string) => {
     switch (status) {
       case 'in_stock':
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">En Stock</Badge>;
+        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{t('adminCatalog.inStock')}</Badge>;
       case 'low_stock':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Bajo MOQ</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{t('adminCatalog.lowStock')}</Badge>;
       case 'out_of_stock':
-        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Agotado</Badge>;
+        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{t('adminCatalog.outOfStock')}</Badge>;
       default:
         return null;
     }
   };
 
   return (
-    <AdminLayout title="Catálogo Maestro B2B" subtitle="Logística Central - Gestión de Inventario">
+    <AdminLayout title={t('adminCatalog.title')} subtitle={t('adminCatalog.subtitle')}>
       <Tabs defaultValue="productos" className="space-y-6">
         <TabsList>
           <TabsTrigger value="productos" className="gap-2">
             <Package className="h-4 w-4" />
-            Productos
+            {t('adminCatalog.products')}
           </TabsTrigger>
           <TabsTrigger value="embeddings" className="gap-2">
             <Cpu className="h-4 w-4" />
-            IA / Embeddings
+            {t('adminCatalog.aiEmbeddings')}
           </TabsTrigger>
           <TabsTrigger value="normalization" className="gap-2">
             <RefreshCw className="h-4 w-4" />
-            Normalizar EAV
+            {t('adminCatalog.normalizeEAV')}
           </TabsTrigger>
         </TabsList>
 
@@ -124,19 +126,19 @@ const AdminCatalogo = () => {
           <div className="flex flex-wrap gap-2">
             <Button variant="default" onClick={() => setSmartImportOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
-              Importar Productos
+              {t('adminCatalog.importProducts')}
             </Button>
             <Button variant="outline" onClick={() => setBulkPriceOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
-              Actualizar Precios
+              {t('adminCatalog.updatePrices')}
             </Button>
             <Button variant="outline" onClick={() => setNewProductOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Nueva Entrada
+              {t('adminCatalog.newEntry')}
             </Button>
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="h-4 w-4 mr-2" />
-              Exportar CSV
+              {t('adminCatalog.exportCSV')}
             </Button>
           </div>
         </div>
@@ -145,7 +147,7 @@ const AdminCatalogo = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">SKUs Activos</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('adminCatalog.activeSKUs')}</CardTitle>
               <Package className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
@@ -156,7 +158,7 @@ const AdminCatalogo = () => {
           </Card>
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Stock Total</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('adminCatalog.totalStock')}</CardTitle>
               <Package className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -167,7 +169,7 @@ const AdminCatalogo = () => {
           </Card>
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Alertas Bajo MOQ</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('adminCatalog.lowMOQAlerts')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
@@ -178,7 +180,7 @@ const AdminCatalogo = () => {
           </Card>
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Agotados</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('adminCatalog.outOfStock')}</CardTitle>
               <TrendingDown className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
@@ -196,7 +198,7 @@ const AdminCatalogo = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por SKU o nombre..."
+                  placeholder={t('adminCatalog.searchBySKU')}
                   className="pl-10"
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
@@ -210,7 +212,7 @@ const AdminCatalogo = () => {
                   <SelectValue placeholder="Categoría" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas las Categorías</SelectItem>
+                  <SelectItem value="all">{t('adminCatalog.allCategories')}</SelectItem>
                   {categories?.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                   ))}
@@ -224,7 +226,7 @@ const AdminCatalogo = () => {
                   <SelectValue placeholder="Proveedor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los Proveedores</SelectItem>
+                  <SelectItem value="all">{t('adminCatalog.allSuppliers')}</SelectItem>
                   {suppliers?.map((sup) => (
                     <SelectItem key={sup.id} value={sup.id}>{sup.name}</SelectItem>
                   ))}
@@ -238,10 +240,10 @@ const AdminCatalogo = () => {
                   <SelectValue placeholder="Estado Stock" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="in_stock">En Stock</SelectItem>
-                  <SelectItem value="low_stock">Bajo MOQ</SelectItem>
-                  <SelectItem value="out_of_stock">Agotado</SelectItem>
+                  <SelectItem value="all">{t('common.all')}</SelectItem>
+                  <SelectItem value="in_stock">{t('adminCatalog.inStock')}</SelectItem>
+                  <SelectItem value="low_stock">{t('adminCatalog.lowStock')}</SelectItem>
+                  <SelectItem value="out_of_stock">{t('adminCatalog.outOfStock')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -255,14 +257,14 @@ const AdminCatalogo = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border hover:bg-muted/50">
-                    <TableHead className="text-muted-foreground">SKU Interno</TableHead>
-                    <TableHead className="text-muted-foreground">Producto</TableHead>
-                    <TableHead className="text-muted-foreground text-right">Precio B2B</TableHead>
-                    <TableHead className="text-muted-foreground text-center">MOQ</TableHead>
-                    <TableHead className="text-muted-foreground text-center">Stock</TableHead>
-                    <TableHead className="text-muted-foreground text-center">Estado</TableHead>
-                    <TableHead className="text-muted-foreground">Proveedor</TableHead>
-                    <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
+                    <TableHead className="text-muted-foreground">{t('adminCatalog.skuInterno')}</TableHead>
+                    <TableHead className="text-muted-foreground">{t('adminCatalog.product')}</TableHead>
+                    <TableHead className="text-muted-foreground text-right">{t('adminCatalog.priceB2B')}</TableHead>
+                    <TableHead className="text-muted-foreground text-center">{t('adminCatalog.moq')}</TableHead>
+                    <TableHead className="text-muted-foreground text-center">{t('adminCatalog.stock')}</TableHead>
+                    <TableHead className="text-muted-foreground text-center">{t('common.status')}</TableHead>
+                    <TableHead className="text-muted-foreground">{t('adminCatalog.supplier')}</TableHead>
+                    <TableHead className="text-muted-foreground text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -275,7 +277,7 @@ const AdminCatalogo = () => {
                   ) : products?.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
-                        No hay productos en el catálogo
+                        {t('adminCatalog.noProductsInCatalog')}
                       </TableCell>
                     </TableRow>
                   ) : (

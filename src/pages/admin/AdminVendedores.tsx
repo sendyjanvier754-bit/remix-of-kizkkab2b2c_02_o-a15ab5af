@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -66,6 +67,7 @@ interface Seller {
 }
 
 const AdminVendedores = () => {
+  const { t } = useTranslation();
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -239,7 +241,7 @@ const AdminVendedores = () => {
   const verifiedSellers = filteredSellers.filter((s) => s.is_verified);
 
   return (
-    <AdminLayout title="Gestión de Vendedores" subtitle="Verifica y gestiona las cuentas de vendedores">
+    <AdminLayout title={t('adminSellers.title')} subtitle={t('adminSellers.subtitle')}>
       <div className="space-y-6">
         <div className="flex justify-end">
           <Button variant="outline" onClick={fetchSellers} disabled={isLoading}>

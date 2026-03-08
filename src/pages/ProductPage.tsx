@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -149,7 +150,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
   });
 };
 const ProductPage = () => {
-  // Sticky nav state
+  const { t } = useTranslation();
   const [showStickyNav, setShowStickyNav] = useState(false);
   const [showCompactHeader, setShowCompactHeader] = useState(false);
   const [showFloatingCart, setShowFloatingCart] = useState(false);
@@ -622,8 +623,8 @@ const ProductPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <Package className="h-16 w-16 text-gray-300 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900">Producto no encontrado</h2>
-        <Button onClick={() => navigate("/")} className="mt-4">Volver al inicio</Button>
+        <h2 className="text-2xl font-bold text-gray-900">{t('products.noProducts')}</h2>
+        <Button onClick={() => navigate("/")} className="mt-4">{t('common.back')}</Button>
       </div>
     );
   }
@@ -688,21 +689,21 @@ const ProductPage = () => {
                 setActiveTab('desc');
                 scrollToSection(descRef);
               }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'desc' ? 'bg-[#071d7f] text-white rounded-full shadow-sm' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
-                Descripción
+                {t('common.description')}
               </button>
 
               <button id="tab-reviews-mobile" role="tab" aria-selected={activeTab === 'reviews'} aria-controls="section-reviews" tabIndex={activeTab === 'reviews' ? 0 : -1} onClick={() => {
                 setActiveTab('reviews');
                 scrollToSection(reviewsRef);
               }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'reviews' ? 'bg-[#071d7f] text-white rounded-full shadow-sm' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
-                Valoraciones
+                {t('productPage.productReviews')}
               </button>
 
               <button id="tab-recs-mobile" role="tab" aria-selected={activeTab === 'recs'} aria-controls="section-recs" tabIndex={activeTab === 'recs' ? 0 : -1} onClick={() => {
                 setActiveTab('recs');
                 scrollToSection(recsRef);
               }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'recs' ? 'bg-[#071d7f] text-white rounded-full shadow-sm' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
-                Recomendados
+                {t('products.seeMore')}
               </button>
             </div>
           </div>
@@ -720,7 +721,7 @@ const ProductPage = () => {
             className="flex items-center gap-2 text-[#071d7f] hover:text-[#0a2a9f] mb-6 md:mt-16 group transition-all"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-medium text-sm">Volver</span>
+            <span className="font-medium text-sm">{t('common.back')}</span>
           </button>
         )}
 
@@ -793,7 +794,7 @@ const ProductPage = () => {
             {/* Color Variants Grid for Mobile */}
             {isMobile && images.length > 0 && (
               <div className="px-4 py-4 bg-white border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">Colores disponibles</h4>
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('products.color')}</h4>
                 <div className="flex flex-wrap gap-3 justify-start">
                   {images.map((image, index) => (
                     <button
@@ -834,9 +835,9 @@ const ProductPage = () => {
               {/* Badges */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {isB2BUser ? <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
-                    Mayorista
+                    {t('auth.roles.b2b')}
                   </Badge> : <Badge variant="secondary" className="bg-gray-100 text-gray-700">
-                    Nuevo
+                    {t('products.new')}
                   </Badge>}
                 {product.store && <Link to={`/tienda/${product.store.slug || product.store.id}`} className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-medium hover:bg-purple-100 transition-colors">
                     <StoreIcon className="w-3 h-3" />
@@ -924,7 +925,7 @@ const ProductPage = () => {
             {/* Color Variants List for Desktop */}
             {!isMobile && images.length > 0 && (
               <div className="mt-4 pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">Variantes de color</h4>
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('products.color')}</h4>
                 <div className="flex flex-wrap gap-3">
                   {images.map((image, index) => (
                     <button
@@ -988,7 +989,7 @@ const ProductPage = () => {
                       ref={buyButtonRef}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {isB2BUser ? 'Comprar B2B' : 'Comprar'}
+                      {isB2BUser ? t('productPage.buyWholesale') : t('common.buy')}
                     </Button>
                   </div>
                 </div>
@@ -1003,14 +1004,14 @@ const ProductPage = () => {
                   className="w-full border-2 text-sm font-semibold"
                   style={{ borderColor: '#94111f', color: '#94111f' }}
                 >
-                  Ver Descripción
+                  {t('productPage.productDescription')}
                 </Button>
               </div>
             ) : (
               <Accordion type="single" collapsible defaultValue="descripcion" className="w-full mt-10">
                 <AccordionItem value="descripcion" className="border border-gray-200 rounded-lg overflow-hidden">
                   <AccordionTrigger className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between">
-                    <span>Descripción</span>
+                    <span>{t('common.description')}</span>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4 bg-white border-t border-gray-200">
                     <div 
@@ -1026,7 +1027,7 @@ const ProductPage = () => {
 
                 <AccordionItem value="valoraciones" className="border border-gray-200 rounded-lg overflow-hidden mt-3">
                   <AccordionTrigger className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between">
-                    <span>Valoraciones</span>
+                    <span>{t('productPage.productReviews')}</span>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4 bg-white border-t border-gray-200">
                     <ProductReviews productId={product?.source_product?.id || product?.id} productName={product?.nombre} />
@@ -1040,7 +1041,7 @@ const ProductPage = () => {
               <DrawerContent className="max-h-[50vh] h-[50vh]">
                 <div className="mx-auto w-full max-w-sm flex flex-col h-[45vh]">
                   <DrawerHeader className="flex-shrink-0 flex items-center justify-between">
-                    <DrawerTitle className="text-lg font-bold">Descripción del Producto</DrawerTitle>
+                    <DrawerTitle className="text-lg font-bold">{t('productPage.productDescription')}</DrawerTitle>
                     <button
                       onClick={() => setIsDescriptionDrawerOpen(false)}
                       className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
@@ -1068,7 +1069,7 @@ const ProductPage = () => {
             {/* Valoraciones - Using ProductReviews component */}
             {isMobile && (
               <div id="section-reviews" ref={reviewsRef} className="mt-10 scroll-mt-20">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Valoraciones</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('productPage.productReviews')}</h3>
                 <ProductReviews productId={product.source_product?.id || product.id} productName={product.nombre} />
               </div>
             )}
@@ -1078,15 +1079,15 @@ const ProductPage = () => {
               <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                 <Truck className="w-5 h-5 text-blue-600" />
                 <div className="text-xs">
-                  <p className="font-semibold text-gray-900">Envío Nacional</p>
-                  <p className="text-gray-500">24-48 horas</p>
+                  <p className="font-semibold text-gray-900">{t('productPage.fastShipping')}</p>
+                  <p className="text-gray-500">24-48h</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                 <Shield className="w-5 h-5 text-green-600" />
                 <div className="text-xs">
-                  <p className="font-semibold text-gray-900">Compra Segura</p>
-                  <p className="text-gray-500">Protección total</p>
+                  <p className="font-semibold text-gray-900">{t('productPage.buyerProtection')}</p>
+                  <p className="text-gray-500">{t('productPage.buyerProtectionDesc')}</p>
                 </div>
               </div>
             </div>
@@ -1095,7 +1096,7 @@ const ProductPage = () => {
 
           {/* Related Products */}
         {relatedProducts.length > 0 && <div className="mt-12">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Productos Relacionados</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">{t('products.seeMore')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {relatedProducts.map(p => <Link key={p.id} to={`/producto/${p.sku}`} className="group">
                   <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all">
@@ -1125,14 +1126,14 @@ const ProductPage = () => {
 
         {/* Recomendados - Full Width */}
         <div id="section-recs" ref={recsRef} className="mt-12 pt-8 border-t border-gray-200 scroll-mt-20">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Recomendados</h3>
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('products.seeMore')}</h3>
           {loadingRecommended ? (
             <ProductGrid products={[]} isLoading={true} skeletonCount={20} />
           ) : recommendedProducts.length > 0 ? (
             <ProductGrid products={recommendedProducts} isLoading={false} />
           ) : (
             <div className="bg-gray-50 border rounded-lg p-6 text-center text-gray-400">
-              No hay productos recomendados disponibles.
+              {t('products.noProducts')}
             </div>
           )}
         </div>

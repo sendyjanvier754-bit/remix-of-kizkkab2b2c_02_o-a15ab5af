@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { OpenChatButton } from '@/components/chat/OpenChatButton';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,6 +60,7 @@ const paymentMethodConfig: Record<string, { label: string; icon: React.ElementTy
 };
 
 const SellerPedidosPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { 
     useSellerB2CSales, 
@@ -171,7 +173,7 @@ const SellerPedidosPage = () => {
         <div className="bg-card border border-border rounded-lg md:mt-14">
           <div className="p-3">
             <div className="border-b pb-2 mb-3">
-              <h1 className="text-lg font-bold text-foreground">Mis Ventas B2C</h1>
+              <h1 className="text-lg font-bold text-foreground">{t('sellerOrders.title')}</h1>
             </div>
             <div className="grid grid-cols-5 gap-1 w-full">
               <Card className="bg-card border-border">

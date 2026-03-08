@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useSellerWallet } from "@/hooks/useSellerWallet";
@@ -27,6 +28,7 @@ interface WithdrawalFormData {
 }
 
 const SellerWalletPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const { wallet, transactions, isLoading, requestWithdrawal } = useSellerWallet(user?.id);
@@ -156,8 +158,8 @@ const SellerWalletPage = () => {
               <Wallet className="h-6 w-6 text-[#071d7f]" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Mi Billetera</h1>
-              <p className="text-sm text-gray-500">Gestiona tu saldo y retiros</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{t('sellerWallet.title')}</h1>
+              <p className="text-sm text-gray-500">{t('sellerWallet.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -168,10 +170,10 @@ const SellerWalletPage = () => {
             {/* Tab Navigation */}
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="overview" className="text-xs md:text-sm">
-                Resumen
+                {t('sellerWallet.overview')}
               </TabsTrigger>
               <TabsTrigger value="transactions" className="text-xs md:text-sm">
-                Movimientos
+                {t('sellerWallet.transactions')}
               </TabsTrigger>
             </TabsList>
 
@@ -186,7 +188,7 @@ const SellerWalletPage = () => {
                       <DollarSign className="h-4 w-4 text-[#071d7f] flex-shrink-0" />
                       <div className="min-w-0">
                         <Badge variant="outline" className="text-xs bg-white text-gray-700 border-gray-300 mb-1">
-                          Saldo Disponible
+                          {t('sellerWallet.availableBalance')}
                         </Badge>
                         <div className="text-xl md:text-2xl font-bold text-[#071d7f] truncate">
                           ${(wallet?.available_balance || 0).toLocaleString("es-DO", {
@@ -203,7 +205,7 @@ const SellerWalletPage = () => {
                       className="bg-[#94111f] hover:bg-[#7a0d1a] text-white font-semibold text-xs md:text-sm px-2.5 md:px-3 py-1.5 md:py-2 flex-shrink-0 h-fit whitespace-nowrap"
                     >
                       <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
-                      Retiro
+                      {t('sellerWallet.withdrawal')}
                     </Button>
                   </div>
                 </CardContent>
@@ -217,7 +219,7 @@ const SellerWalletPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <TrendingUp className="h-4 w-4 text-green-600" />
-                        <span className="text-xs md:text-sm font-medium text-gray-600">Total Ganado</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-600">{t('sellerWallet.totalEarned')}</span>
                       </div>
                       <p className="text-lg md:text-2xl font-bold text-gray-900">
                         ${(wallet?.total_earned || 0).toLocaleString("es-DO", {
@@ -235,7 +237,7 @@ const SellerWalletPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <CheckCircle className="h-4 w-4 text-blue-600" />
-                        <span className="text-xs md:text-sm font-medium text-gray-600">Total Retirado</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-600">{t('sellerWallet.totalWithdrawn')}</span>
                       </div>
                       <p className="text-lg md:text-2xl font-bold text-gray-900">
                         ${(wallet?.total_withdrawn || 0).toLocaleString("es-DO", {
@@ -253,7 +255,7 @@ const SellerWalletPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-amber-600" />
-                        <span className="text-xs md:text-sm font-medium text-gray-600">Pendiente Liberar</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-600">{t('sellerWallet.pendingRelease')}</span>
                       </div>
                       <p className="text-lg md:text-2xl font-bold text-gray-900">
                         ${(wallet?.pending_balance || 0).toLocaleString("es-DO", {
@@ -271,7 +273,7 @@ const SellerWalletPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <AlertCircle className="h-4 w-4 text-purple-600" />
-                        <span className="text-xs md:text-sm font-medium text-gray-600">Movimientos</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-600">{t('sellerWallet.movementsCount')}</span>
                       </div>
                       <p className="text-lg md:text-2xl font-bold text-gray-900">
                         {transactions?.length || 0}
@@ -284,7 +286,7 @@ const SellerWalletPage = () => {
               {/* Recent Transactions Preview */}
               <Card className="border border-gray-200">
                 <CardHeader className="pb-3 md:pb-4">
-                  <h3 className="text-lg md:text-xl font-bold text-gray-900">Últimos Movimientos</h3>
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900">{t('sellerWallet.recentMovements')}</h3>
                 </CardHeader>
                 <CardContent>
                   {filteredTransactions.length === 0 ? (

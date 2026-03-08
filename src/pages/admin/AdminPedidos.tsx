@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { OpenChatButton } from '@/components/chat/OpenChatButton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,6 +79,7 @@ const carrierOptions = [
 ];
 
 const AdminPedidos = () => {
+  const { t } = useTranslation();
   const { useAllOrders, useOrderStats, usePaidOrdersForManifest, updateOrderStatus, updateOrderTracking, updateLogisticsStage, cancelOrder, confirmManualPayment, rejectManualPayment } = useOrders();
   
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
@@ -340,7 +342,7 @@ const AdminPedidos = () => {
   };
 
   return (
-    <AdminLayout title="Gestión de Pedidos B2B" subtitle="Administra todos los pedidos de mayoristas">
+    <AdminLayout title={t('adminOrders.title')} subtitle={t('adminOrders.subtitle')}>
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">

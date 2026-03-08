@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useInventarioB2C, InventarioB2CItem, InventarioB2CVariante } from "@/hooks/useInventarioB2C";
@@ -27,6 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function SellerInventarioB2C() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const [filtro, setFiltro] = useState<'all' | 'available' | 'pending'>('all');
   const [publishModalOpen, setPublishModalOpen] = useState(false);
@@ -125,9 +127,9 @@ export default function SellerInventarioB2C() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Mi Inventario B2C</h1>
+            <h1 className="text-3xl font-bold">{t('sellerInventory.title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Productos de tus compras B2B disponibles para reventa
+              {t('sellerInventory.subtitle')}
             </p>
           </div>
           
@@ -146,7 +148,7 @@ export default function SellerInventarioB2C() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Productos
+                {t('sellerInventory.totalProducts')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -157,7 +159,7 @@ export default function SellerInventarioB2C() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Unidades
+                {t('sellerInventory.totalUnits')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -168,7 +170,7 @@ export default function SellerInventarioB2C() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                ✅ Disponibles
+                ✅ {t('sellerInventory.available')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -179,7 +181,7 @@ export default function SellerInventarioB2C() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                ⏳ Pendientes
+                ⏳ {t('sellerInventory.pending')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -213,14 +215,14 @@ export default function SellerInventarioB2C() {
         {inventario.length === 0 ? (
           <div className="text-center py-12 bg-muted/50 rounded-lg">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Sin productos en inventario</h3>
+            <h3 className="text-lg font-medium mb-2">{t('sellerInventory.noProductsTitle')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Los productos de tus pedidos B2B pagados aparecerán aquí
+              {t('sellerInventory.noProductsDesc')}
             </p>
             <Button asChild>
               <a href="/seller/adquisicion-lotes">
                 <ShoppingCart className="h-4 w-4 mr-2" />
-                Ver Catálogo B2B
+                {t('sellerInventory.viewB2BCatalog')}
               </a>
             </Button>
           </div>
