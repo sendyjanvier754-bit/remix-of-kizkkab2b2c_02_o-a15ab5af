@@ -155,10 +155,10 @@ const SellerDashboard = () => {
                   {recentOrders.length === 0 ? (
                     <div className="text-center py-8">
                       <Package className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground">No tienes órdenes aún</p>
+                      <p className="text-muted-foreground">{t('sellerDashboard.noOrdersYet')}</p>
                       <Button asChild className="mt-4 bg-[#071d7f] hover:bg-[#0a2a9f]">
                         <Link to="/seller/adquisicion-lotes">
-                          Comienza a Comprar
+                          {t('sellerDashboard.startBuying')}
                         </Link>
                       </Button>
                     </div>
