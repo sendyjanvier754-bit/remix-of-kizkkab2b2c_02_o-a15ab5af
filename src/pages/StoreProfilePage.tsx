@@ -352,7 +352,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Location + Ver Descripción */}
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-1.5 md:mb-3">
                   {store.description && (
                     <Button
                       onClick={() => setShowProfileModal(true)}
