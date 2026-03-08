@@ -130,7 +130,7 @@ const AdminCatalogo = () => {
             </Button>
             <Button variant="outline" onClick={() => setBulkPriceOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
-              Actualizar Precios
+              {t('adminCatalog.updatePrices')}
             </Button>
             <Button variant="outline" onClick={() => setNewProductOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
