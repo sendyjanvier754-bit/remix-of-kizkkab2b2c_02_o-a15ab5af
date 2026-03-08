@@ -63,7 +63,8 @@ export default function AdminPOMasterPage() {
     close_cron_expression: '',
   });
 
-  const { data: poOrders, isLoading: poOrdersLoading } = usePOOrders(selectedMarket?.active_po_id || null);
+  const effectivePOId = viewingPOId || selectedMarket?.active_po_id || null;
+  const { data: poOrders, isLoading: poOrdersLoading } = usePOOrders(effectivePOId);
   const { data: closedPOs } = useClosedPOs(selectedMarket?.market_id || null);
   const { data: marketSettings } = useMarketSettings(selectedMarket?.market_id || null);
 
