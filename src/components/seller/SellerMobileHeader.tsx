@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, User, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/useCategories";
+import { useTranslation } from "react-i18next";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -73,6 +74,7 @@ const SellerMobileHeader = ({
   onCategorySelect,
   onSearch 
 }: SellerMobileHeaderProps) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -207,7 +209,7 @@ const SellerMobileHeader = ({
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognitionAPI) {
-      toast.error("Búsqueda por voz no soportada en este navegador");
+      toast.error(t('header.voiceNotSupported'));
       return;
     }
 
@@ -223,7 +225,7 @@ const SellerMobileHeader = ({
 
     recognition.onstart = () => {
       setIsListening(true);
-      toast.info("Escuchando...", { duration: 2000 });
+      toast.info(t('header.listening'), { duration: 2000 });
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -245,7 +247,7 @@ const SellerMobileHeader = ({
 
       if (finalTranscript) {
         setSearchQuery(finalTranscript);
-        toast.success(`Buscando: "${finalTranscript}"`);
+        toast.success(t('header.searching', { query: finalTranscript }));
         if (onSearch) {
           onSearch(finalTranscript.trim());
         }
@@ -257,13 +259,13 @@ const SellerMobileHeader = ({
       setIsListening(false);
       
       if (event.error === 'no-speech') {
-        toast.error("No se detectó ninguna voz. Intenta de nuevo.");
+        toast.error(t('header.noSpeech'));
       } else if (event.error === 'audio-capture') {
-        toast.error("No se pudo acceder al micrófono.");
+        toast.error(t('header.noMicrophone'));
       } else if (event.error === 'not-allowed') {
-        toast.error("Permiso de micrófono denegado.");
+        toast.error(t('header.micDenied'));
       } else {
-        toast.error("Error al reconocer voz. Intenta de nuevo.");
+        toast.error(t('header.voiceError'));
       }
     };
 
@@ -280,20 +282,20 @@ const SellerMobileHeader = ({
     if (!file) return;
 
     setIsImageSearching(true);
-    toast.info("Cargando modelo de IA... Esto puede tomar unos segundos la primera vez.");
+    toast.info(t('header.loadingAI'));
 
     try {
       const results = await searchProductsByImage(file);
       if (results && results.length > 0) {
         sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
         navigate('/seller/adquisicion-lotes?source=image');
-        toast.success(`Se encontraron ${results.length} productos similares`);
+        toast.success(t('header.similarFound', { count: results.length }));
       } else {
-        toast.info("No se encontraron productos similares");
+        toast.info(t('header.noSimilarFound'));
       }
     } catch (error) {
       console.error("Image search error:", error);
-      toast.error("Error al buscar por imagen");
+      toast.error(t('header.imageSearchError'));
     } finally {
       setIsImageSearching(false);
       if (imageInputRef.current) {
@@ -398,7 +400,7 @@ const SellerMobileHeader = ({
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                            Sin img
+                            {t('common.noImage')}
                           </div>
                         )}
                       </div>
@@ -412,12 +414,12 @@ const SellerMobileHeader = ({
                     onClick={handleSearch}
                     className="w-full p-3 text-center text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
                   >
-                    Ver todos los resultados para "{searchQuery}"
+                    {t('common.seeAllResults', { query: searchQuery })}
                   </button>
                 </>
               ) : (
                 <div className="p-4 text-center text-gray-500 text-sm">
-                  No se encontraron productos para "{searchQuery}"
+                  {t('common.noProductsFor', { query: searchQuery })}
                 </div>
               )}
             </div>
@@ -466,7 +468,7 @@ const SellerMobileHeader = ({
               : "text-gray-400 hover:text-white"
           )}
         >
-          Todo
+          {t('header.allCategories')}
         </button>
 
         {rootCategories.map((category) => (

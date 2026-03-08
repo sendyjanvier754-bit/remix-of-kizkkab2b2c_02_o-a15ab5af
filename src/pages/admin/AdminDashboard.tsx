@@ -21,25 +21,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCoverageAlerts } from "@/hooks/useCoverageAlerts";
+import { useTranslation } from "react-i18next";
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string, t: any) => {
   switch (status) {
     case "verified":
-      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-teal/10 text-teal"><CheckCircle2 className="w-3 h-3" />Verificado</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-teal/10 text-teal"><CheckCircle2 className="w-3 h-3" />{t('common.verified')}</span>;
     case "pending":
-      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500"><Clock className="w-3 h-3" />Pendiente</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500"><Clock className="w-3 h-3" />{t('common.pending')}</span>;
     case "rejected":
-      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive"><AlertTriangle className="w-3 h-3" />Rechazado</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive"><AlertTriangle className="w-3 h-3" />{t('common.rejected')}</span>;
     default:
       return null;
   }
 };
 
-const getMethodLabel = (method: string) => {
+const getMethodLabel = (method: string, t: any) => {
   switch (method) {
     case "stripe": return "Stripe";
     case "moncash": return "Mon Cash";
-    case "transfer": return "Transferencia";
+    case "transfer": return t('common.transfer');
     default: return method;
   }
 };
@@ -129,6 +130,7 @@ const useAdminDashboardStats = () => {
 };
 
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const { payments, stats, isLoading: paymentsLoading } = usePayments();
   const { sellersCount, isLoading: sellersLoading } = useSellers();
   const { data: dashStats, isLoading: statsLoading } = useAdminDashboardStats();
@@ -148,7 +150,7 @@ const AdminDashboard = () => {
 
   const stickyStatsData = [
     {
-      label: "Total Órdenes",
+      label: t('adminDashboard.totalOrders'),
       value: dashStats?.totalOrders?.toLocaleString() || "0",
       icon: Package,
       color: "text-blue-600",
@@ -156,7 +158,7 @@ const AdminDashboard = () => {
       isLoading: statsLoading
     },
     {
-      label: "Ingresos",
+      label: t('adminDashboard.revenue'),
       value: formatCurrency(dashStats?.totalRevenue || 0),
       icon: TrendingUp,
       color: "text-green-600",
@@ -164,7 +166,7 @@ const AdminDashboard = () => {
       isLoading: statsLoading
     },
     {
-      label: "Comisiones",
+      label: t('adminDashboard.commissions'),
       value: formatCurrency(dashStats?.totalCommissions || 0),
       icon: DollarSign,
       color: "text-amber-600",
@@ -172,7 +174,7 @@ const AdminDashboard = () => {
       isLoading: statsLoading
     },
     {
-      label: "Vendedores",
+      label: t('adminDashboard.sellers'),
       value: sellersCount.toString(),
       icon: Users,
       color: "text-purple-600",
@@ -180,7 +182,7 @@ const AdminDashboard = () => {
       isLoading: sellersLoading
     },
     {
-      label: "KYC Pendiente",
+      label: t('adminDashboard.kycPending'),
       value: dashStats?.kycPending?.toString() || "0",
       icon: AlertCircle,
       color: "text-yellow-600",
@@ -188,7 +190,7 @@ const AdminDashboard = () => {
       isLoading: statsLoading
     },
     {
-      label: "Aprobaciones",
+      label: t('adminDashboard.approvals'),
       value: dashStats?.pendingApprovals?.toString() || "0",
       icon: CheckCircle2,
       color: "text-emerald-600",
@@ -199,45 +201,45 @@ const AdminDashboard = () => {
 
   const dashStatsData = [
     {
-      title: "Pagos Pendientes",
+      title: t('adminDashboard.pendingPayments'),
       value: stats.pending.toString(),
-      description: "Requieren verificación",
+      description: t('adminDashboard.requireVerification'),
       icon: Clock,
       color: "text-amber-500",
       bgColor: "bg-amber-500/10",
       link: "/admin/conciliacion?status=pending"
     },
     {
-      title: "Pagos Verificados",
+      title: t('adminDashboard.verifiedPayments'),
       value: stats.verified.toString(),
-      description: "Este mes",
+      description: t('adminDashboard.thisMonth'),
       icon: CheckCircle2,
       color: "text-teal",
       bgColor: "bg-teal/10",
       link: "/admin/conciliacion?status=verified"
     },
     {
-      title: "Vendedores Activos",
+      title: t('adminDashboard.activeSellers'),
       value: sellersCount.toString(),
-      description: "Registrados",
+      description: t('adminDashboard.registered'),
       icon: Users,
       color: "text-primary",
       bgColor: "bg-primary/10",
       link: "/admin/vendedores"
     },
     {
-      title: "Volumen B2B",
+      title: t('adminDashboard.b2bVolume'),
       value: formatCurrency(stats.totalVolume || 0),
-      description: "Total verificado",
+      description: t('adminDashboard.totalVerified'),
       icon: TrendingUp,
       color: "text-accent",
       bgColor: "bg-accent/10",
       link: "/admin/conciliacion"
     },
     {
-      title: "Comisiones Pendientes",
+      title: t('adminDashboard.pendingCommissions'),
       value: formatCurrency(dashStats?.unpaidCommissions || 0),
-      description: "Por cobrar",
+      description: t('adminDashboard.toCollect'),
       icon: Percent,
       color: "text-purple-600",
       bgColor: "bg-purple-600/10",
@@ -247,7 +249,7 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <AdminLayout title="Dashboard" subtitle="Bienvenido al panel de administración">
+      <AdminLayout title={t('adminDashboard.title')} subtitle={t('adminDashboard.subtitle')}>
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 -mx-6 px-6 py-4 mb-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -267,8 +269,8 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout 
-      title="Dashboard" 
-      subtitle="Bienvenido al panel de administración"
+      title={t('adminDashboard.title')} 
+      subtitle={t('adminDashboard.subtitle')}
     >
       {/* Sticky Stats Header */}
       <div className="sticky top-0 z-40 bg-gradient-to-b from-background via-background/98 to-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 border-b border-border/20 shadow-sm -mx-6 px-6 py-5 mb-8">
@@ -339,7 +341,7 @@ const AdminDashboard = () => {
                   </div>
                   <Link to="/admin/markets">
                     <Button size="sm" variant="outline">
-                      <Globe className="h-4 w-4 mr-1" /> Configurar
+                      <Globe className="h-4 w-4 mr-1" /> {t('common.configure')}
                     </Button>
                   </Link>
                 </div>
@@ -353,11 +355,11 @@ const AdminDashboard = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg">Pagos Recientes B2B</CardTitle>
-            <p className="text-sm text-muted-foreground">Últimas transacciones para verificar</p>
+            <CardTitle className="text-lg">{t('adminDashboard.recentPaymentsB2B')}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t('adminDashboard.lastTransactions')}</p>
           </div>
           <Button variant="outline" asChild>
-            <Link to="/admin/conciliacion">Ver Todos</Link>
+            <Link to="/admin/conciliacion">{t('common.viewAll')}</Link>
           </Button>
         </CardHeader>
         <CardContent>
@@ -366,12 +368,12 @@ const AdminDashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Vendedor</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Monto</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Método</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Estado</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Fecha</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.id')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.seller')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.amount')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.paymentMethod')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.paymentStatus')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.paymentDate')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -380,8 +382,8 @@ const AdminDashboard = () => {
                       <td className="py-3 px-4 text-sm font-mono text-foreground">{payment.payment_number}</td>
                       <td className="py-3 px-4 text-sm text-foreground">{payment.seller?.name || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm font-semibold text-foreground">${payment.amount.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">{getMethodLabel(payment.method)}</td>
-                      <td className="py-3 px-4">{getStatusBadge(payment.status)}</td>
+                      <td className="py-3 px-4 text-sm text-muted-foreground">{getMethodLabel(payment.method, t)}</td>
+                      <td className="py-3 px-4">{getStatusBadge(payment.status, t)}</td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
                         {new Date(payment.created_at).toLocaleDateString("es-HT", {
                           day: "2-digit",
@@ -397,8 +399,8 @@ const AdminDashboard = () => {
             ) : (
               <div className="text-center py-12">
                 <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-lg font-medium text-foreground mb-2">Sin pagos recientes</p>
-                <p className="text-sm text-muted-foreground">Los pagos B2B aparecerán aquí cuando se registren</p>
+                <p className="text-lg font-medium text-foreground mb-2">{t('adminDashboard.noRecentPayments')}</p>
+                <p className="text-sm text-muted-foreground">{t('adminDashboard.paymentsWillAppear')}</p>
               </div>
             )}
           </div>

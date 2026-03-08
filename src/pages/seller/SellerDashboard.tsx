@@ -24,8 +24,10 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const SellerDashboard = () => {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { data: orders, isLoading: ordersLoading } = useBuyerOrders();
   const { credit, availableCredit } = useSellerCredits();
@@ -61,7 +63,7 @@ const SellerDashboard = () => {
           {/* Welcome Section */}
           <div className="mb-4">
             <h1 className="text-2xl font-bold text-foreground">
-              ¡Bienvenido, {user?.name?.split(' ')[0]}!
+              {t('sellerDashboard.welcome', { name: user?.name?.split(' ')[0] })}
             </h1>
           </div>
 
@@ -71,13 +73,13 @@ const SellerDashboard = () => {
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-orange-900 mb-1">Verificación KYC Pendiente</h3>
+                  <h3 className="font-semibold text-orange-900 mb-1">{t('sellerDashboard.kycPendingTitle')}</h3>
                   <p className="text-sm text-orange-700 mb-3">
-                    Completa tu verificación para acceder a todas las funcionalidades y maximizar tu crédito.
+                    {t('sellerDashboard.kycPendingMessage')}
                   </p>
                   <Button asChild size="sm" className="bg-orange-600 hover:bg-orange-700">
                     <Link to="/seller/cuenta">
-                      Completar Verificación
+                      {t('sellerDashboard.completeVerification')}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
@@ -90,7 +92,7 @@ const SellerDashboard = () => {
           <div className="bg-card border border-border rounded-lg md:mt-14">
             <div className="p-3">
               <div className="border-b pb-2 mb-3">
-                <h1 className="text-lg font-bold text-foreground">Mi Actividad</h1>
+                <h1 className="text-lg font-bold text-foreground">{t('sellerDashboard.myActivity')}</h1>
               </div>
               <div className="grid grid-cols-4 gap-1 w-full">
                 {/* Total Compras - Azul */}
@@ -98,7 +100,7 @@ const SellerDashboard = () => {
                   <CardContent className="p-1.5 text-center">
                     <ShoppingCart className="h-3 w-3 text-blue-600 mx-auto mb-0.5" />
                     <div className="text-base md:text-lg font-bold text-blue-600">{totalOrders}</div>
-                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">Compras</p>
+                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">{t('sellerDashboard.purchases')}</p>
                   </CardContent>
                 </Card>
 
@@ -107,7 +109,7 @@ const SellerDashboard = () => {
                   <CardContent className="p-1.5 text-center">
                     <DollarSign className="h-3 w-3 text-green-600 mx-auto mb-0.5" />
                     <div className="text-base md:text-lg font-bold text-green-600">${totalSpent.toFixed(0)}</div>
-                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">Inversión</p>
+                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">{t('sellerDashboard.investment')}</p>
                   </CardContent>
                 </Card>
 
@@ -116,7 +118,7 @@ const SellerDashboard = () => {
                   <CardContent className="p-1.5 text-center">
                     <Clock className="h-3 w-3 text-amber-600 mx-auto mb-0.5" />
                     <div className="text-base md:text-lg font-bold text-amber-600">{pendingOrders}</div>
-                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">Pendientes</p>
+                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">{t('sellerDashboard.pendingOrders')}</p>
                   </CardContent>
                 </Card>
 
@@ -125,7 +127,7 @@ const SellerDashboard = () => {
                   <CardContent className="p-1.5 text-center">
                     <CreditCard className="h-3 w-3 text-purple-600 mx-auto mb-0.5" />
                     <div className="text-base md:text-lg font-bold text-purple-600">${availableCredit.toFixed(0)}</div>
-                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">Crédito</p>
+                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">{t('sellerDashboard.credit')}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -140,11 +142,11 @@ const SellerDashboard = () => {
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold flex items-center gap-2">
                       <Package className="h-5 w-5 text-[#071d7f]" />
-                      Órdenes Recientes
+                      {t('sellerDashboard.recentOrders')}
                     </h2>
                     <Button asChild variant="outline" size="sm">
                       <Link to="/seller/mis-compras">
-                        Ver todas
+                        {t('sellerDashboard.viewAll')}
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </Link>
                     </Button>
@@ -153,10 +155,10 @@ const SellerDashboard = () => {
                   {recentOrders.length === 0 ? (
                     <div className="text-center py-8">
                       <Package className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground">No tienes órdenes aún</p>
+                      <p className="text-muted-foreground">{t('sellerDashboard.noOrdersYet')}</p>
                       <Button asChild className="mt-4 bg-[#071d7f] hover:bg-[#0a2a9f]">
                         <Link to="/seller/adquisicion-lotes">
-                          Comienza a Comprar
+                          {t('sellerDashboard.startBuying')}
                         </Link>
                       </Button>
                     </div>
@@ -170,7 +172,7 @@ const SellerDashboard = () => {
                           <div className="flex items-start justify-between mb-2">
                             <div>
                               <p className="font-semibold text-sm">
-                                Orden #{order.id.slice(0, 8).toUpperCase()}
+                                {t('sellerDashboard.orderNumber', { id: order.id.slice(0, 8).toUpperCase() })}
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {new Date(order.created_at).toLocaleDateString('es-ES')}
@@ -187,15 +189,15 @@ const SellerDashboard = () => {
                               }
                             >
                               {order.status === 'paid'
-                                ? 'Completado'
+                                ? t('orders.statuses.paid')
                                 : order.status === 'placed'
-                                  ? 'En Proceso'
-                                  : 'Pendiente'}
+                                  ? t('orders.statuses.placed')
+                                  : t('orders.statuses.pending')}
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between">
                             <p className="text-sm">
-                              <span className="text-muted-foreground">{order.total_quantity} productos - </span>
+                              <span className="text-muted-foreground">{t('sellerDashboard.productsCount', { count: order.total_quantity })} - </span>
                               <span className="font-semibold text-foreground">
                                 ${order.total_amount.toFixed(2)}
                               </span>
@@ -215,7 +217,7 @@ const SellerDashboard = () => {
                 <div className="p-6">
                   <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                     <Zap className="h-4 w-4 text-[#071d7f]" />
-                    Acciones Rápidas
+                    {t('sellerDashboard.quickActions')}
                   </h2>
 
                   <div className="space-y-2">
@@ -227,7 +229,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/adquisicion-lotes">
                         <ShoppingCart className="h-3 w-3 mr-2" />
-                        Comprar Lotes
+                        {t('sellerDashboard.buyLots')}
                       </Link>
                     </Button>
 
@@ -239,7 +241,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/catalogo">
                         <Package className="h-3 w-3 mr-2" />
-                        Mi Catálogo
+                        {t('sellerDashboard.myCatalog')}
                       </Link>
                     </Button>
 
@@ -251,7 +253,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/inventario">
                         <Package className="h-3 w-3 mr-2" />
-                        Inventario
+                        {t('sellerDashboard.inventoryAction')}
                       </Link>
                     </Button>
 
@@ -263,7 +265,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/wallet">
                         <CreditCard className="h-3 w-3 mr-2" />
-                        Billetera
+                        {t('sellerDashboard.wallet')}
                       </Link>
                     </Button>
 
@@ -275,7 +277,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/cuenta">
                         <User className="h-3 w-3 mr-2" />
-                        Verificación
+                        {t('sellerDashboard.verification')}
                       </Link>
                     </Button>
                   </div>
@@ -283,7 +285,7 @@ const SellerDashboard = () => {
                   <Separator className="my-4" />
 
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-xs text-foreground">Estado</h3>
+                    <h3 className="font-semibold text-xs text-foreground">{t('sellerDashboard.statusSection')}</h3>
                     <div className="space-y-1 text-xs">
                       <div className="flex items-center gap-2">
                         {isVerified ? (
@@ -292,7 +294,7 @@ const SellerDashboard = () => {
                           <AlertCircle className="h-3 w-3 text-yellow-600" />
                         )}
                         <span>
-                          {isVerified ? 'KYC Verificado' : 'KYC Pendiente'}
+                          {isVerified ? t('sellerDashboard.kycVerified') : t('sellerDashboard.kycPending')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -302,7 +304,7 @@ const SellerDashboard = () => {
                           <AlertCircle className="h-3 w-3 text-yellow-600" />
                         )}
                         <span>
-                          {credit ? 'Crédito Activo' : 'Sin Crédito'}
+                          {credit ? t('sellerDashboard.creditActive') : t('sellerDashboard.noCredit')}
                         </span>
                       </div>
                     </div>
