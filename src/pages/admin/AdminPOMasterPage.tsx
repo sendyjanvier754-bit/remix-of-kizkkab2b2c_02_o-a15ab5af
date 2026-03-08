@@ -677,7 +677,7 @@ export default function AdminPOMasterPage() {
                 </TableRow>
               )) || (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Sin historial
                   </TableCell>
                 </TableRow>
