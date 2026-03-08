@@ -16,6 +16,7 @@ import VariantDrawer from "@/components/products/VariantDrawer";
 import { PageLoader } from "./components/ui/PageLoader";
 import { NavigationLoader } from "./components/ui/NavigationLoader";
 import MobileBottomNav from "./components/categories/MobileBottomNav";
+import { PopupRenderer } from "./components/marketing/PopupRenderer";
 import GlobalMobileHeader from "./components/layout/GlobalMobileHeader";
 
 // Suspense Wrapper for lazy components
@@ -73,6 +74,7 @@ const AdminCommissionPage = lazy(() => import("./pages/admin/AdminCommissionPage
 const AdminPickupPointsPage = lazy(() => import("./pages/admin/AdminPickupPointsPage"));
 const AdminTransitHubsPage = lazy(() => import("./pages/admin/AdminTransitHubsPage"));
 const AdminDiscountCodes = lazy(() => import("./pages/admin/AdminDiscountCodes"));
+const AdminPopupsPage = lazy(() => import("./pages/admin/AdminPopupsPage"));
 const AdminUserDiscounts = lazy(() => import("./pages/admin/AdminUserDiscounts"));
 const AdminCartAnalytics = lazy(() => import("./pages/admin/AdminCartAnalytics"));
 const AdminLogisticsPage = lazy(() => import("./pages/admin/AdminLogisticsPage"));
@@ -287,6 +289,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminDiscountCodes /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/popups" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminPopupsPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -546,6 +556,7 @@ const AppContent = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
       <MobileBottomNav />
+      <PopupRenderer />
     </>
   );
 };

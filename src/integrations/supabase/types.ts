@@ -2334,6 +2334,104 @@ export type Database = {
           },
         ]
       }
+      marketing_popups: {
+        Row: {
+          auto_coupon_config: Json | null
+          auto_generate_coupon: boolean | null
+          background_color: string | null
+          body_text: string | null
+          button_text: string | null
+          button_url: string | null
+          clicks_count: number | null
+          conversions_count: number | null
+          created_at: string | null
+          created_by: string | null
+          delay_seconds: number | null
+          description: string | null
+          discount_code_id: string | null
+          display_frequency: string | null
+          ends_at: string | null
+          heading: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          scroll_percentage: number | null
+          starts_at: string | null
+          target_audience: string | null
+          target_pages: string[] | null
+          title: string
+          trigger_type: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          auto_coupon_config?: Json | null
+          auto_generate_coupon?: boolean | null
+          background_color?: string | null
+          body_text?: string | null
+          button_text?: string | null
+          button_url?: string | null
+          clicks_count?: number | null
+          conversions_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          delay_seconds?: number | null
+          description?: string | null
+          discount_code_id?: string | null
+          display_frequency?: string | null
+          ends_at?: string | null
+          heading: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          scroll_percentage?: number | null
+          starts_at?: string | null
+          target_audience?: string | null
+          target_pages?: string[] | null
+          title: string
+          trigger_type?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          auto_coupon_config?: Json | null
+          auto_generate_coupon?: boolean | null
+          background_color?: string | null
+          body_text?: string | null
+          button_text?: string | null
+          button_url?: string | null
+          clicks_count?: number | null
+          conversions_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          delay_seconds?: number | null
+          description?: string | null
+          discount_code_id?: string | null
+          display_frequency?: string | null
+          ends_at?: string | null
+          heading?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          scroll_percentage?: number | null
+          starts_at?: string | null
+          target_audience?: string | null
+          target_pages?: string[] | null
+          title?: string
+          trigger_type?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_popups_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_section_settings: {
         Row: {
           created_at: string | null
@@ -3607,6 +3705,38 @@ export type Database = {
             columns: ["po_order_link_id"]
             isOneToOne: false
             referencedRelation: "po_order_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      popup_dismissals: {
+        Row: {
+          dismissed_at: string | null
+          id: string
+          popup_id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          dismissed_at?: string | null
+          id?: string
+          popup_id: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          dismissed_at?: string | null
+          id?: string
+          popup_id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "popup_dismissals_popup_id_fkey"
+            columns: ["popup_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_popups"
             referencedColumns: ["id"]
           },
         ]
