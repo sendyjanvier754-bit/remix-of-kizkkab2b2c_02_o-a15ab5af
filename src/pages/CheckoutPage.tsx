@@ -1233,7 +1233,7 @@ const CheckoutPage = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Código de descuento</Label>
+                      <Label className="text-xs text-muted-foreground">{t('checkout.discountCode')}</Label>
                       <div className="flex gap-2">
                         <Input
                           value={discountCode}
