@@ -788,7 +788,7 @@ const CheckoutPage = () => {
                 {pickupPoints.length === 0 ? (
                   <div className="text-center py-6 bg-muted/50 rounded-lg">
                     <Store className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">No hay puntos de retiro disponibles</p>
+                    <p className="text-muted-foreground">{t('checkout.noPickupPoints')}</p>
                   </div>
                 ) : (
                   <RadioGroup 
