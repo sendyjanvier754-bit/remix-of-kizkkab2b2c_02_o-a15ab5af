@@ -368,12 +368,12 @@ const AdminDashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Vendedor</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Monto</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Método</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Estado</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Fecha</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.id')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.seller')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.amount')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.paymentMethod')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.paymentStatus')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t('adminDashboard.paymentDate')}</th>
                   </tr>
                 </thead>
                 <tbody>
