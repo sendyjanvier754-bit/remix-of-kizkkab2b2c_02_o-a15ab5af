@@ -623,8 +623,8 @@ const ProductPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <Package className="h-16 w-16 text-gray-300 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900">Producto no encontrado</h2>
-        <Button onClick={() => navigate("/")} className="mt-4">Volver al inicio</Button>
+        <h2 className="text-2xl font-bold text-gray-900">{t('products.noProducts')}</h2>
+        <Button onClick={() => navigate("/")} className="mt-4">{t('common.back')}</Button>
       </div>
     );
   }
