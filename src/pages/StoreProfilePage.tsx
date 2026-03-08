@@ -394,8 +394,8 @@ const StoreProfilePage = () => {
                   </div>
                 </div>
 
-                {/* Badges */}
-                <div className="flex flex-wrap items-center gap-1 md:gap-2 mb-1 md:mb-3">
+                {/* Badges - hidden on mobile since verification icon is next to name */}
+                <div className="hidden md:flex flex-wrap items-center gap-1 md:gap-2 mb-1 md:mb-3">
                   {store.badges.map((badge) => (
                     <span
                       key={badge}
