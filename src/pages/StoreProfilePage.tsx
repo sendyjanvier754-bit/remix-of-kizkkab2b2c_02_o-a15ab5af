@@ -326,12 +326,12 @@ const StoreProfilePage = () => {
           <div className="absolute inset-0 bg-black/50" />
 
           {/* Content — sits above the banner */}
-          <div className="relative z-10 px-6 py-6">
+          <div className="relative z-10 px-4 py-3 md:px-6 md:py-6">
             {/* Logo */}
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-4">
               <div
                 onClick={() => setShowProfileModal(true)}
-                className="w-20 h-20 md:w-28 md:h-28 rounded-xl border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+                className="w-14 h-14 md:w-28 md:h-28 rounded-xl border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
               >
                 {store.logo ? (
                   <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
