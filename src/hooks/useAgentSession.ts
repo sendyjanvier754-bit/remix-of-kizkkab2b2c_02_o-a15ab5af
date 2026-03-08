@@ -65,7 +65,10 @@ export function useAgentSession() {
         body: { target_user_id: targetUserId },
       });
       if (error) throw error;
-      toast.success(`Código enviado a ${data.target_user_name}`);
+      const channels = [];
+      if (data.whatsapp_sent) channels.push('WhatsApp');
+      channels.push('notificación in-app');
+      toast.success(`Código enviado a ${data.target_user_name} vía ${channels.join(' y ')}`);
       await loadSessions();
       return data;
     } catch (err: any) {
