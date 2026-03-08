@@ -60,6 +60,7 @@ const paymentMethodConfig: Record<string, { label: string; icon: React.ElementTy
 };
 
 const SellerPedidosPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { 
     useSellerB2CSales, 
