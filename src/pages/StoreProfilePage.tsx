@@ -468,31 +468,43 @@ const StoreProfilePage = () => {
                 </div>
               </div>
 
-              {/* Action Buttons - icon-only small pills on mobile */}
-              <div className="flex flex-row md:flex-col gap-2 md:gap-2 w-full md:w-auto justify-center md:justify-start">
+              {/* Action Buttons - icon-only on mobile, full buttons on desktop */}
+              <div className="flex flex-row md:flex-col gap-3 md:gap-2 w-auto md:w-auto justify-start md:justify-start">
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className="md:hidden p-0 bg-transparent border-0 cursor-pointer disabled:opacity-50"
+                >
+                  <Heart className={`w-5 h-5 ${isFollowing ? "fill-red-500 text-red-500" : "text-white"}`} />
+                </button>
+                <button className="md:hidden p-0 bg-transparent border-0 cursor-pointer">
+                  <MessageCircle className="w-5 h-5 text-white" />
+                </button>
+                <button onClick={handleShare} className="md:hidden p-0 bg-transparent border-0 cursor-pointer">
+                  <Share2 className="w-5 h-5 text-white" />
+                </button>
                 <Button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  variant="ghost"
-                  className="flex-1 md:flex-none md:w-40 bg-transparent hover:bg-white/20 md:bg-white md:hover:bg-white/90 text-primary-foreground md:text-[#071d7f] font-semibold border-0 h-auto py-1 md:py-2 md:h-auto text-sm md:text-base rounded-full md:rounded-md px-0 md:px-4"
+                  className="hidden md:inline-flex md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0"
                 >
-                  <Heart className={`w-4 h-4 md:mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-primary-foreground md:text-[#071d7f]"}`} />
-                  <span className="hidden md:inline">{isFollowing ? "Siguiendo" : "Seguir"}</span>
+                  <Heart className={`w-4 h-4 mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+                  {isFollowing ? "Siguiendo" : "Seguir"}
                 </Button>
                 <Button
-                  variant="ghost"
-                  className="flex-1 md:flex-none md:w-40 bg-transparent hover:bg-white/20 md:bg-white md:hover:bg-white/90 text-primary-foreground md:text-[#071d7f] font-semibold border-0 h-auto py-1 md:py-2 md:h-auto text-sm md:text-base rounded-full md:rounded-md px-0 md:px-4"
+                  variant="outline"
+                  className="hidden md:inline-flex md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
                 >
-                  <MessageCircle className="w-4 h-4 md:mr-2 text-primary-foreground md:text-[#071d7f]" />
-                  <span className="hidden md:inline">Contactar</span>
+                  <MessageCircle className="w-4 h-4 mr-2 text-[#071d7f]" />
+                  Contactar
                 </Button>
                 <Button
-                  variant="ghost"
-                  className="flex-1 md:flex-none md:w-40 bg-transparent hover:bg-white/20 md:bg-white md:hover:bg-white/90 text-primary-foreground md:text-[#071d7f] font-semibold border-0 h-auto py-1 md:py-2 md:h-auto text-sm md:text-base rounded-full md:rounded-md px-0 md:px-4"
+                  variant="outline"
+                  className="hidden md:inline-flex md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
                   onClick={handleShare}
                 >
-                  <Share2 className="w-4 h-4 md:mr-2 text-primary-foreground md:text-[#071d7f]" />
-                  <span className="hidden md:inline">Compartir</span>
+                  <Share2 className="w-4 h-4 mr-2 text-[#071d7f]" />
+                  Compartir
                 </Button>
               </div>
             </div>
