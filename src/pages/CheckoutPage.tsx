@@ -1303,12 +1303,12 @@ const CheckoutPage = () => {
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Procesando...
+                    {t('checkout.processing')}
                   </>
                 ) : (
                   <>
                     <Check className="h-4 w-4 mr-2" />
-                    Confirmar Pedido
+                    {t('checkout.placeOrder')}
                   </>
                 )}
               </Button>
