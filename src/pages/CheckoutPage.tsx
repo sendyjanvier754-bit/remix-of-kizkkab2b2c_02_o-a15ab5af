@@ -676,7 +676,7 @@ const CheckoutPage = () => {
                       <div className="flex justify-between text-sm">
                         <span className="flex items-center gap-2">
                           <Shield className="h-4 w-4 text-purple-500" />
-                          Seguro
+                           {t('checkout.insurance')}
                         </span>
                         <span>${shippingCalculation.insuranceCost.toFixed(2)}</span>
                       </div>
