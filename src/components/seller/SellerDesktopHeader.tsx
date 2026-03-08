@@ -318,16 +318,16 @@ const SellerDesktopHeader = ({
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-8 text-xs text-gray-600">
               <div className="flex items-center gap-4">
-                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">Envío desde el extranjero</span>
+                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">{t('header.shippingAbroad')}</span>
                 <Link to="/tendencias" className="flex items-center gap-1 hover:text-[#071d7f] transition-colors">
                   <Flame className="w-3 h-3" />
-                  Tendencias
+                  {t('header.trends')}
                 </Link>
-                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">Devolución Gratis</span>
+                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">{t('header.freeReturns')}</span>
               </div>
               <div className="flex items-center gap-4">
-                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">Centro de Ayuda</span>
-                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">Vender</span>
+                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">{t('header.helpCenter')}</span>
+                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">{t('header.sell')}</span>
               </div>
             </div>
           </div>
