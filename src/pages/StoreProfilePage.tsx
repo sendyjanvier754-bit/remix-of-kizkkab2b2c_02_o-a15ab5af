@@ -383,7 +383,7 @@ const StoreProfilePage = () => {
                       onClick={() => setShowProfileModal(true)}
                       variant="outline"
                       size="sm"
-                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-6 md:h-9 px-2 md:px-3"
+                      className="hidden md:inline-flex bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm h-9 px-3"
                     >
                       Ver Descripción
                     </Button>
