@@ -399,8 +399,8 @@ const AdminDashboard = () => {
             ) : (
               <div className="text-center py-12">
                 <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-lg font-medium text-foreground mb-2">Sin pagos recientes</p>
-                <p className="text-sm text-muted-foreground">Los pagos B2B aparecerán aquí cuando se registren</p>
+                <p className="text-lg font-medium text-foreground mb-2">{t('adminDashboard.noRecentPayments')}</p>
+                <p className="text-sm text-muted-foreground">{t('adminDashboard.paymentsWillAppear')}</p>
               </div>
             )}
           </div>
