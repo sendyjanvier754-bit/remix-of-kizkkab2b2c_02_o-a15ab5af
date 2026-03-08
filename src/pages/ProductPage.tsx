@@ -721,7 +721,7 @@ const ProductPage = () => {
             className="flex items-center gap-2 text-[#071d7f] hover:text-[#0a2a9f] mb-6 md:mt-16 group transition-all"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-medium text-sm">Volver</span>
+            <span className="font-medium text-sm">{t('common.back')}</span>
           </button>
         )}
 
