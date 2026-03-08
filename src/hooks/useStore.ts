@@ -90,6 +90,7 @@ export const useStoreProducts = (storeId: string | undefined, page = 0, limit = 
         )
         .eq("seller_store_id", storeId)
         .eq("is_active", true)
+        .gt("stock", 0)
         .range(page * limit, (page + 1) * limit - 1)
         .order("imported_at", { ascending: false });
 
