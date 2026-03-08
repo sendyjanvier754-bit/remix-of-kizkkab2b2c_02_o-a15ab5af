@@ -57,24 +57,8 @@ const defaultForm = {
   is_active: true,
   target_audience: 'all',
   target_pages: [] as string[],
-};
-  body_text: '',
-  image_url: '',
-  button_text: 'Obtener Descuento',
-  button_url: '',
-  background_color: '#ffffff',
-  discount_code_id: null as string | null,
-  auto_generate_coupon: false,
-  auto_coupon_config: { discount_type: 'percentage', discount_value: 10, prefix: 'POPUP', max_uses_per_user: 1 },
-  display_frequency: 'once_per_session' as const,
-  delay_seconds: 3,
-  scroll_percentage: null as number | null,
-  starts_at: '',
-  ends_at: '',
-  is_active: true,
-  target_audience: 'all',
-  target_pages: [] as string[],
-};
+
+
 
 const AdminPopupsPage = () => {
   const { user } = useAuth();
