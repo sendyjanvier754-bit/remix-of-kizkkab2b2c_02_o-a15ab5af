@@ -85,6 +85,8 @@ const AdminMarketsPage = lazy(() => import("./pages/admin/AdminMarketsPage"));
 const AdminWishlistPage = lazy(() => import("./pages/admin/AdminWishlistPage"));
 const AdminGlobalLogisticsPage = lazy(() => import("./pages/admin/AdminGlobalLogisticsPage"));
 const AdminAgentOrders = lazy(() => import("./pages/admin/AdminAgentOrders"));
+const AdminSupportChats = lazy(() => import("./pages/admin/AdminSupportChats"));
+const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage"));
 
 // Lazy loaded - Seller Pages
 const SellerAcquisicionLotes = lazy(() => import("./pages/seller/SellerAcquisicionLotes"));
