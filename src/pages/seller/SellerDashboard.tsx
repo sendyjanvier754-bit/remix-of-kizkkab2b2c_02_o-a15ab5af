@@ -285,7 +285,7 @@ const SellerDashboard = () => {
                   <Separator className="my-4" />
 
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-xs text-foreground">Estado</h3>
+                    <h3 className="font-semibold text-xs text-foreground">{t('sellerDashboard.statusSection')}</h3>
                     <div className="space-y-1 text-xs">
                       <div className="flex items-center gap-2">
                         {isVerified ? (
@@ -294,7 +294,7 @@ const SellerDashboard = () => {
                           <AlertCircle className="h-3 w-3 text-yellow-600" />
                         )}
                         <span>
-                          {isVerified ? 'KYC Verificado' : 'KYC Pendiente'}
+                          {isVerified ? t('sellerDashboard.kycVerified') : t('sellerDashboard.kycPending')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -304,7 +304,7 @@ const SellerDashboard = () => {
                           <AlertCircle className="h-3 w-3 text-yellow-600" />
                         )}
                         <span>
-                          {credit ? 'Crédito Activo' : 'Sin Crédito'}
+                          {credit ? t('sellerDashboard.creditActive') : t('sellerDashboard.noCredit')}
                         </span>
                       </div>
                     </div>
