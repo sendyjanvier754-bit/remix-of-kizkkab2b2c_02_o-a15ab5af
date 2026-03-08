@@ -170,10 +170,10 @@ const SellerWalletPage = () => {
             {/* Tab Navigation */}
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="overview" className="text-xs md:text-sm">
-                Resumen
+                {t('sellerWallet.overview')}
               </TabsTrigger>
               <TabsTrigger value="transactions" className="text-xs md:text-sm">
-                Movimientos
+                {t('sellerWallet.transactions')}
               </TabsTrigger>
             </TabsList>
 
