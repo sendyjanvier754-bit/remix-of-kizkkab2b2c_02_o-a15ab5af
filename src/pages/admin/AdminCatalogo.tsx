@@ -106,7 +106,7 @@ const AdminCatalogo = () => {
         <TabsList>
           <TabsTrigger value="productos" className="gap-2">
             <Package className="h-4 w-4" />
-            Productos
+            {t('adminCatalog.products')}
           </TabsTrigger>
           <TabsTrigger value="embeddings" className="gap-2">
             <Cpu className="h-4 w-4" />
