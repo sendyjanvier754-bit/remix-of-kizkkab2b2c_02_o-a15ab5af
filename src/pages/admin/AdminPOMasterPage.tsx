@@ -50,6 +50,8 @@ export default function AdminPOMasterPage() {
   const [chinaTracking, setChinaTracking] = useState('');
   const [ordersDialog, setOrdersDialog] = useState(false);
   const [historyDialog, setHistoryDialog] = useState(false);
+  const [viewingPOId, setViewingPOId] = useState<string | null>(null);
+  const [viewingPONumber, setViewingPONumber] = useState<string>('');
 
   // Settings form state
   const [settingsForm, setSettingsForm] = useState({
