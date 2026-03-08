@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { OpenChatButton } from '@/components/chat/OpenChatButton';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
