@@ -110,9 +110,9 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
               />
             </div>
             <div className="text-xs text-muted-foreground space-y-1 mt-2 p-2 bg-muted/30 rounded">
-              <p>💰 Costo: ${item.precioCosto.toFixed(2)}</p>
-              <p>📊 Margen actual: {margen.toFixed(1)}%</p>
-              <p className="text-amber-600 font-medium">💡 Margen sugerido (30%): ${margenSugerido.toFixed(2)}</p>
+              <p>💰 {t('editProductDialog.cost')}: ${item.precioCosto.toFixed(2)}</p>
+              <p>📊 {t('editProductDialog.currentMargin')}: {margen.toFixed(1)}%</p>
+              <p className="text-amber-600 font-medium">💡 {t('editProductDialog.suggestedMargin')}: ${margenSugerido.toFixed(2)}</p>
             </div>
           </div>
 
