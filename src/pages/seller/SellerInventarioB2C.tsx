@@ -28,6 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function SellerInventarioB2C() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const [filtro, setFiltro] = useState<'all' | 'available' | 'pending'>('all');
   const [publishModalOpen, setPublishModalOpen] = useState(false);
