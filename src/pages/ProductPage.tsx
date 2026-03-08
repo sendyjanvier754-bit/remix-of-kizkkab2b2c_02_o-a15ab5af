@@ -1069,7 +1069,7 @@ const ProductPage = () => {
             {/* Valoraciones - Using ProductReviews component */}
             {isMobile && (
               <div id="section-reviews" ref={reviewsRef} className="mt-10 scroll-mt-20">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Valoraciones</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('productPage.productReviews')}</h3>
                 <ProductReviews productId={product.source_product?.id || product.id} productName={product.nombre} />
               </div>
             )}
