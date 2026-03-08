@@ -300,11 +300,11 @@ const CartPage = () => {
             <div className="mt-2 flex items-center justify-between text-xs bg-gray-50 p-2 rounded-lg border border-gray-200">
               <div className="flex gap-4">
                 <div>
-                  <span className="text-gray-900">Total Items:</span>
+                  <span className="text-gray-900">{t('cart.totalItems')}:</span>
                   <span className="font-bold ml-1 text-gray-900">{items.length}</span>
                 </div>
                 <div>
-                  <span className="text-gray-900">Unidades:</span>
+                  <span className="text-gray-900">{t('common.units')}:</span>
                   <span className="font-bold ml-1 text-gray-900">{totalQuantity}</span>
                 </div>
               </div>
