@@ -249,7 +249,7 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <AdminLayout title="Dashboard" subtitle="Bienvenido al panel de administración">
+      <AdminLayout title={t('adminDashboard.title')} subtitle={t('adminDashboard.subtitle')}>
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 -mx-6 px-6 py-4 mb-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
