@@ -1150,11 +1150,11 @@ const CheckoutPage = () => {
 
             {/* Order Notes */}
             <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4">Notas del Pedido</h2>
+              <h2 className="text-lg font-bold mb-4">{t('checkout.orderNotes')}</h2>
               <Textarea
                 value={orderNotes}
                 onChange={(e) => setOrderNotes(e.target.value)}
-                placeholder="Instrucciones especiales para tu pedido (opcional)"
+                placeholder={t('checkout.orderNotesPlaceholder')}
                 rows={3}
               />
             </Card>
