@@ -8,10 +8,10 @@ import AgentDraftList from '@/components/agent/AgentDraftList';
 import AgentProductSelector from '@/components/agent/AgentProductSelector';
 import AgentCartDraft from '@/components/agent/AgentCartDraft';
 import AgentShippingConfig from '@/components/agent/AgentShippingConfig';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Headset, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 
 type Step = 'search' | 'otp' | 'workspace';
 
