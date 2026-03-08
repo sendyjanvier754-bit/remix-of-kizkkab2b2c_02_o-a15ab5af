@@ -325,10 +325,10 @@ const CartPage = () => {
         {items.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium mb-2">Tu carrito está vacío</p>
-            <p className="text-xs text-gray-500 mb-4">Explora el catálogo para encontrar productos</p>
+            <p className="text-gray-600 font-medium mb-2">{t('cart.empty')}</p>
+            <p className="text-xs text-gray-500 mb-4">{t('cart.emptyMessage')}</p>
             <Button asChild style={{ backgroundColor: '#071d7f' }} className="text-white hover:opacity-90">
-              <Link to="/">Ir al Catálogo</Link>
+              <Link to="/">{t('cart.goToCatalog')}</Link>
             </Button>
           </div>
         ) : isMobile ? (
