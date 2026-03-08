@@ -341,7 +341,7 @@ const AdminDashboard = () => {
                   </div>
                   <Link to="/admin/markets">
                     <Button size="sm" variant="outline">
-                      <Globe className="h-4 w-4 mr-1" /> Configurar
+                      <Globe className="h-4 w-4 mr-1" /> {t('common.configure')}
                     </Button>
                   </Link>
                 </div>
