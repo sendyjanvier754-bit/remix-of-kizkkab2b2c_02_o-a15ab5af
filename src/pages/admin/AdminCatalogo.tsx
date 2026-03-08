@@ -240,10 +240,10 @@ const AdminCatalogo = () => {
                   <SelectValue placeholder="Estado Stock" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="in_stock">En Stock</SelectItem>
-                  <SelectItem value="low_stock">Bajo MOQ</SelectItem>
-                  <SelectItem value="out_of_stock">Agotado</SelectItem>
+                  <SelectItem value="all">{t('common.all')}</SelectItem>
+                  <SelectItem value="in_stock">{t('adminCatalog.inStock')}</SelectItem>
+                  <SelectItem value="low_stock">{t('adminCatalog.lowStock')}</SelectItem>
+                  <SelectItem value="out_of_stock">{t('adminCatalog.outOfStock')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
