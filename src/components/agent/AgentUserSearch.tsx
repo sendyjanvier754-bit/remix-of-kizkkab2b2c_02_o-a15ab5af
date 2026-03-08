@@ -38,7 +38,7 @@ export default function AgentUserSearch({ onSelectUser, isLoading }: AgentUserSe
         const { data } = await supabase
           .from('profiles')
           .select('id, full_name, email')
-          .or(`full_name.ilike.%${query}%,email.ilike.%${query}%,id.ilike.%${query}%`)
+          .or(`full_name.ilike.%${query}%,email.ilike.%${query}%,user_code.ilike.%${query}%`)
           .limit(8);
         setResults((data || []) as UserResult[]);
         setShowDropdown(true);
