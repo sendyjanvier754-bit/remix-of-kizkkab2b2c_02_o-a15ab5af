@@ -134,7 +134,7 @@ const AdminCatalogo = () => {
             </Button>
             <Button variant="outline" onClick={() => setNewProductOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Nueva Entrada
+              {t('adminCatalog.newEntry')}
             </Button>
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="h-4 w-4 mr-2" />
