@@ -1263,7 +1263,7 @@ const CheckoutPage = () => {
                 {/* Show discount in summary */}
                 {appliedDiscount && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Descuento</span>
+                    <span>{t('cart.discount')}</span>
                     <span>-${discountAmount.toFixed(2)}</span>
                   </div>
                 )}
