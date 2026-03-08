@@ -127,9 +127,9 @@ export default function SellerInventarioB2C() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Mi Inventario B2C</h1>
+            <h1 className="text-3xl font-bold">{t('sellerInventory.title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Productos de tus compras B2B disponibles para reventa
+              {t('sellerInventory.subtitle')}
             </p>
           </div>
           
