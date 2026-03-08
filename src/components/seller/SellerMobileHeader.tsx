@@ -468,7 +468,7 @@ const SellerMobileHeader = ({
               : "text-gray-400 hover:text-white"
           )}
         >
-          Todo
+          {t('header.allCategories')}
         </button>
 
         {rootCategories.map((category) => (
