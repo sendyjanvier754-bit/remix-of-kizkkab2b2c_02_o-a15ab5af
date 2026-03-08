@@ -149,7 +149,7 @@ const CartPage = () => {
         .maybeSingle();
 
       if (cartError || !cartData?.id) {
-        toast.error('No se encontró un carrito abierto');
+        toast.error(t('cart.noOpenCart'));
         return;
       }
 
