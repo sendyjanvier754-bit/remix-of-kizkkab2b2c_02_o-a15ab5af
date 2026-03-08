@@ -326,49 +326,60 @@ const StoreProfilePage = () => {
           <div className="absolute inset-0 bg-black/50" />
 
           {/* Content — sits above the banner */}
-          <div className="relative z-10 px-4 py-3 md:px-6 md:py-6">
-            {/* Logo */}
-            <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-4">
+          <div className="relative z-10 px-3 py-2 md:px-6 md:py-6">
+            {/* Logo + Title inline on mobile */}
+            <div className="flex items-center gap-2.5 md:gap-4 mb-1.5 md:mb-4">
               <div
                 onClick={() => setShowProfileModal(true)}
-                className="w-14 h-14 md:w-28 md:h-28 rounded-xl border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+                className="w-11 h-11 md:w-28 md:h-28 rounded-lg md:rounded-xl border-2 md:border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
               >
                 {store.logo ? (
                   <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-bold text-[#071d7f]">{store.name.substring(0, 2).toUpperCase()}</span>
+                  <span className="text-lg md:text-3xl font-bold text-[#071d7f]">{store.name.substring(0, 2).toUpperCase()}</span>
+                )}
+              </div>
+              <div className="md:hidden">
+                <h1 className="text-lg font-bold text-white leading-tight">{store.name}</h1>
+                {store.location && (
+                  <div className="flex items-center gap-1 text-xs text-white/80">
+                    <MapPin className="w-3 h-3" />
+                    <span>{store.location}</span>
+                  </div>
                 )}
               </div>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-start md:gap-6">
               {/* Main Info */}
-              <div className="flex-1 mb-4 md:mb-0">
-                <div className="flex items-center gap-2 mb-1 md:mb-2">
-                  <h1 className="text-xl md:text-3xl font-bold text-white">
+              <div className="flex-1 mb-2 md:mb-0">
+                <div className="hidden md:flex items-center gap-2 mb-2">
+                  <h1 className="text-3xl font-bold text-white">
                     {store.name}
                   </h1>
                   {store.is_active && <CheckCircle className="w-6 h-6 text-white" />}
                 </div>
 
                 {/* Location + Ver Descripción */}
-                <div className="flex items-center gap-3 mb-1.5 md:mb-3">
+                <div className="flex items-center gap-2 mb-1 md:mb-3">
                   {store.description && (
                     <Button
                       onClick={() => setShowProfileModal(true)}
                       variant="outline"
                       size="sm"
-                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
+                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-7 md:h-9 px-2 md:px-3"
                     >
                       Ver Descripción
                     </Button>
                   )}
-                  {store.location && (
-                    <div className="flex items-center gap-1 text-sm text-white/90">
-                      <MapPin className="w-4 h-4 text-white/70 flex-shrink-0" />
-                      <span className="font-medium text-white">{store.location}</span>
-                    </div>
-                  )}
+                  <div className="hidden md:flex items-center gap-1 text-sm text-white/90">
+                    {store.location && (
+                      <>
+                        <MapPin className="w-4 h-4 text-white/70 flex-shrink-0" />
+                        <span className="font-medium text-white">{store.location}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {/* Badges + Store ID */}
@@ -423,7 +434,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Social Media Links */}
-                <div className="flex gap-3 mt-1 md:mt-2">
+                <div className="hidden md:flex gap-3 mt-1 md:mt-2">
                   {store.social.facebook && (
                     <a href={store.social.facebook} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors">
                       <Facebook className="h-5 w-5" />
