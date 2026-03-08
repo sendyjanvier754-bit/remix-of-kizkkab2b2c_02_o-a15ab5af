@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { OpenChatButton } from "@/components/chat/OpenChatButton";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
