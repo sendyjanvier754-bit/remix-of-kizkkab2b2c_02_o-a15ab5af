@@ -142,11 +142,11 @@ const SellerDashboard = () => {
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold flex items-center gap-2">
                       <Package className="h-5 w-5 text-[#071d7f]" />
-                      Órdenes Recientes
+                      {t('sellerDashboard.recentOrders')}
                     </h2>
                     <Button asChild variant="outline" size="sm">
                       <Link to="/seller/mis-compras">
-                        Ver todas
+                        {t('sellerDashboard.viewAll')}
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </Link>
                     </Button>
