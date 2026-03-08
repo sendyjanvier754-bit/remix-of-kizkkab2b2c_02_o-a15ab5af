@@ -548,7 +548,7 @@ const CheckoutPage = () => {
       }
     } catch (error) {
       console.error('Error placing order:', error);
-      toast.error('Error al procesar el pedido');
+      toast.error(t('errors.orderError'));
     } finally {
       setIsProcessing(false);
     }
