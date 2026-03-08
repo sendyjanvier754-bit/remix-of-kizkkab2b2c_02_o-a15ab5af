@@ -190,6 +190,157 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_cart_draft_items: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          draft_id: string
+          id: string
+          image: string | null
+          moq: number | null
+          nombre: string
+          peso_kg: number | null
+          product_id: string
+          quantity: number
+          size: string | null
+          sku: string
+          total_price: number
+          unit_price: number
+          variant_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          draft_id: string
+          id?: string
+          image?: string | null
+          moq?: number | null
+          nombre: string
+          peso_kg?: number | null
+          product_id: string
+          quantity?: number
+          size?: string | null
+          sku: string
+          total_price: number
+          unit_price: number
+          variant_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          draft_id?: string
+          id?: string
+          image?: string | null
+          moq?: number | null
+          nombre?: string
+          peso_kg?: number | null
+          product_id?: string
+          quantity?: number
+          size?: string | null
+          sku?: string
+          total_price?: number
+          unit_price?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_cart_draft_items_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "agent_cart_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_cart_drafts: {
+        Row: {
+          agent_id: string
+          agent_session_id: string | null
+          created_at: string | null
+          id: string
+          label: string | null
+          market_country: string | null
+          metadata: Json | null
+          shipping_address: Json | null
+          status: string
+          target_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          agent_session_id?: string | null
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          market_country?: string | null
+          metadata?: Json | null
+          shipping_address?: Json | null
+          status?: string
+          target_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          agent_session_id?: string | null
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          market_country?: string | null
+          metadata?: Json | null
+          shipping_address?: Json | null
+          status?: string
+          target_user_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_cart_drafts_agent_session_id_fkey"
+            columns: ["agent_session_id"]
+            isOneToOne: false
+            referencedRelation: "agent_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_sessions: {
+        Row: {
+          agent_id: string
+          code_expires_at: string
+          created_at: string | null
+          id: string
+          session_expires_at: string | null
+          status: string
+          target_user_id: string
+          updated_at: string | null
+          verification_code: string
+          verified_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          code_expires_at: string
+          created_at?: string | null
+          id?: string
+          session_expires_at?: string | null
+          status?: string
+          target_user_id: string
+          updated_at?: string | null
+          verification_code: string
+          verified_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          code_expires_at?: string
+          created_at?: string | null
+          id?: string
+          session_expires_at?: string | null
+          status?: string
+          target_user_id?: string
+          updated_at?: string | null
+          verification_code?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       asset_processing_items: {
         Row: {
           created_at: string
@@ -7368,6 +7519,7 @@ export type Database = {
         }
         Returns: Json
       }
+      agent_push_cart_to_user: { Args: { p_draft_id: string }; Returns: Json }
       calculate_b2b_price: {
         Args: {
           p_destination_country_id?: string
