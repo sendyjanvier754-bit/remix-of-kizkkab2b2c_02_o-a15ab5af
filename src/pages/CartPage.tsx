@@ -728,7 +728,7 @@ const CartPage = () => {
                       style={{ backgroundColor: '#071d7f' }}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Selecciona productos
+                      {t('common.selectProducts')}
                     </button>
                   )}
                 </div>
