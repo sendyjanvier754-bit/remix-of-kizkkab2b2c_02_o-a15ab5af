@@ -150,7 +150,7 @@ const AdminDashboard = () => {
 
   const stickyStatsData = [
     {
-      label: "Total Órdenes",
+      label: t('adminDashboard.totalOrders'),
       value: dashStats?.totalOrders?.toLocaleString() || "0",
       icon: Package,
       color: "text-blue-600",
@@ -158,7 +158,7 @@ const AdminDashboard = () => {
       isLoading: statsLoading
     },
     {
-      label: "Ingresos",
+      label: t('adminDashboard.revenue'),
       value: formatCurrency(dashStats?.totalRevenue || 0),
       icon: TrendingUp,
       color: "text-green-600",
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
       isLoading: statsLoading
     },
     {
-      label: "Comisiones",
+      label: t('adminDashboard.commissions'),
       value: formatCurrency(dashStats?.totalCommissions || 0),
       icon: DollarSign,
       color: "text-amber-600",
@@ -174,7 +174,7 @@ const AdminDashboard = () => {
       isLoading: statsLoading
     },
     {
-      label: "Vendedores",
+      label: t('adminDashboard.sellers'),
       value: sellersCount.toString(),
       icon: Users,
       color: "text-purple-600",
@@ -182,7 +182,7 @@ const AdminDashboard = () => {
       isLoading: sellersLoading
     },
     {
-      label: "KYC Pendiente",
+      label: t('adminDashboard.kycPending'),
       value: dashStats?.kycPending?.toString() || "0",
       icon: AlertCircle,
       color: "text-yellow-600",
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
       isLoading: statsLoading
     },
     {
-      label: "Aprobaciones",
+      label: t('adminDashboard.approvals'),
       value: dashStats?.pendingApprovals?.toString() || "0",
       icon: CheckCircle2,
       color: "text-emerald-600",
