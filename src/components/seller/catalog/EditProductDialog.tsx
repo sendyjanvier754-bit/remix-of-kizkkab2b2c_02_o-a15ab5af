@@ -37,12 +37,12 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
     const stockNum = parseInt(stock, 10);
 
     if (isNaN(precioNum) || precioNum < 0) {
-      toast.error('Ingresa un precio válido');
+      toast.error(t('editProductDialog.invalidPrice'));
       return;
     }
 
     if (isNaN(stockNum) || stockNum < 0) {
-      toast.error('Ingresa un stock válido');
+      toast.error(t('editProductDialog.invalidStock'));
       return;
     }
 
