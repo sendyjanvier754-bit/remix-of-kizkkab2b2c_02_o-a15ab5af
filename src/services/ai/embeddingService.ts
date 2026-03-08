@@ -1,38 +1,28 @@
-import { pipeline, env } from '@xenova/transformers';
-
-// Skip local model checks since we are running in the browser
-env.allowLocalModels = false;
-env.useBrowserCache = true;
+// Lazy-loaded to avoid blocking initial page load (~50MB library)
+let pipelineInstance: any = null;
 
 class EmbeddingService {
-  static instance: any = null;
-  static modelName = 'Xenova/clip-vit-base-patch32';
-  static pipe: any = null;
-
   static async getInstance() {
-    if (!this.pipe) {
+    if (!pipelineInstance) {
       console.log('Loading CLIP model...');
-      this.pipe = await pipeline('feature-extraction', this.modelName);
+      const { pipeline, env } = await import('@xenova/transformers');
+      env.allowLocalModels = false;
+      env.useBrowserCache = true;
+      pipelineInstance = await pipeline('feature-extraction', 'Xenova/clip-vit-base-patch32');
       console.log('CLIP model loaded.');
     }
-    return this.pipe;
+    return pipelineInstance;
   }
 
   static async generateImageEmbedding(imageUrl: string): Promise<number[]> {
     const extractor = await this.getInstance();
-    
-    // The extractor can take a URL directly
     const output = await extractor(imageUrl, { pooling: 'mean', normalize: true });
-    
-    // Convert Tensor to regular array
     return Array.from(output.data);
   }
 
   static async generateTextEmbedding(text: string): Promise<number[]> {
     const extractor = await this.getInstance();
-    
     const output = await extractor(text, { pooling: 'mean', normalize: true });
-    
     return Array.from(output.data);
   }
 }

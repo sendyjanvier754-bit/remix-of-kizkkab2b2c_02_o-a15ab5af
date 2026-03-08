@@ -20,7 +20,7 @@ export const NavigationLoader = () => {
     // Ajustable según preferencia (800ms es un buen balance)
     const timer = setTimeout(() => {
       setIsNavigating(false);
-    }, 800);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [location.pathname]);
