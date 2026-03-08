@@ -189,10 +189,10 @@ const SellerDashboard = () => {
                               }
                             >
                               {order.status === 'paid'
-                                ? 'Completado'
+                                ? t('orders.statuses.paid')
                                 : order.status === 'placed'
-                                  ? 'En Proceso'
-                                  : 'Pendiente'}
+                                  ? t('orders.statuses.placed')
+                                  : t('orders.statuses.pending')}
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between">
