@@ -130,6 +130,7 @@ const useAdminDashboardStats = () => {
 };
 
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const { payments, stats, isLoading: paymentsLoading } = usePayments();
   const { sellersCount, isLoading: sellersLoading } = useSellers();
   const { data: dashStats, isLoading: statsLoading } = useAdminDashboardStats();
