@@ -871,7 +871,7 @@ const CheckoutPage = () => {
             <Card className={`p-6 ${hasFieldError(validationErrors, 'paymentMethod') ? 'border-red-500 border-2' : ''}`}>
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-[#071d7f]" />
-                Método de Pago
+                {t('checkout.paymentMethod')}
               </h2>
               
               {hasFieldError(validationErrors, 'paymentMethod') && (
