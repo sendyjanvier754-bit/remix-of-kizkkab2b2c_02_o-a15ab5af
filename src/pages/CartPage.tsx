@@ -638,7 +638,7 @@ const CartPage = () => {
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-24">
                 {/* Summary Header */}
                 <div className="bg-gray-50 border-b border-gray-200 p-3">
-                  <h2 className="font-bold text-base text-gray-900">Resumen del Pedido</h2>
+                  <h2 className="font-bold text-base text-gray-900">{t('common.orderSummary')}</h2>
                   <p className="text-xs text-gray-600 mt-1">Procesa descuentos y asientos luego confirmar precio final</p>
                 </div>
 
