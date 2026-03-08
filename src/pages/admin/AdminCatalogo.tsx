@@ -138,7 +138,7 @@ const AdminCatalogo = () => {
             </Button>
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="h-4 w-4 mr-2" />
-              Exportar CSV
+              {t('adminCatalog.exportCSV')}
             </Button>
           </div>
         </div>
