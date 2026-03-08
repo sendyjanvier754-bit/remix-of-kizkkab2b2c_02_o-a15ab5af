@@ -144,10 +144,6 @@ const handler = async (req: Request): Promise<Response> => {
         .update({ is_email_sent: true })
         .eq("id", notificationId);
     }
-        .from("notifications")
-        .update({ is_email_sent: true })
-        .eq("id", notificationId);
-    }
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
