@@ -1250,7 +1250,7 @@ const CheckoutPage = () => {
                           {isValidatingDiscount ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            'Aplicar'
+                            t('checkout.applyDiscount')
                           )}
                         </Button>
                       </div>
