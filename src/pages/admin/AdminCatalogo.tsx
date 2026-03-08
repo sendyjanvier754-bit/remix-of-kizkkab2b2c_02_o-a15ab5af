@@ -277,7 +277,7 @@ const AdminCatalogo = () => {
                   ) : products?.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
-                        No hay productos en el catálogo
+                        {t('adminCatalog.noProductsInCatalog')}
                       </TableCell>
                     </TableRow>
                   ) : (
