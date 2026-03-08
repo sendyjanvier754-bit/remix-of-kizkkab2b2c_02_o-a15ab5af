@@ -91,7 +91,7 @@ const CartPage = () => {
       setItemToRemove(null);
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('No se pudo eliminar el producto');
+      toast.error(t('cart.removeError'));
     }
   };
 
