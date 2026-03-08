@@ -74,6 +74,7 @@ const SellerMobileHeader = ({
   onCategorySelect,
   onSearch 
 }: SellerMobileHeaderProps) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
