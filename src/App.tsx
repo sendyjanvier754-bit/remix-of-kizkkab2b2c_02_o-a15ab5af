@@ -73,6 +73,7 @@ const AdminCommissionPage = lazy(() => import("./pages/admin/AdminCommissionPage
 const AdminPickupPointsPage = lazy(() => import("./pages/admin/AdminPickupPointsPage"));
 const AdminTransitHubsPage = lazy(() => import("./pages/admin/AdminTransitHubsPage"));
 const AdminDiscountCodes = lazy(() => import("./pages/admin/AdminDiscountCodes"));
+const AdminPopupsPage = lazy(() => import("./pages/admin/AdminPopupsPage"));
 const AdminUserDiscounts = lazy(() => import("./pages/admin/AdminUserDiscounts"));
 const AdminCartAnalytics = lazy(() => import("./pages/admin/AdminCartAnalytics"));
 const AdminLogisticsPage = lazy(() => import("./pages/admin/AdminLogisticsPage"));
