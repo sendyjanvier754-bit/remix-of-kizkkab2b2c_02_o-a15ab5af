@@ -101,7 +101,7 @@ const AdminCatalogo = () => {
   };
 
   return (
-    <AdminLayout title="Catálogo Maestro B2B" subtitle="Logística Central - Gestión de Inventario">
+    <AdminLayout title={t('adminCatalog.title')} subtitle={t('adminCatalog.subtitle')}>
       <Tabs defaultValue="productos" className="space-y-6">
         <TabsList>
           <TabsTrigger value="productos" className="gap-2">
