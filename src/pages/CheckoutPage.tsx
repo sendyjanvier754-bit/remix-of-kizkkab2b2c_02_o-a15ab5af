@@ -562,9 +562,9 @@ const CheckoutPage = () => {
         <div className="mb-6">
           <Link to="/carrito" className="flex items-center gap-2 text-[#071d7f] hover:underline mb-4">
             <ArrowLeft className="w-4 h-4" />
-            Volver al Carrito
+            {t('checkout.backToCart')}
           </Link>
-          <h1 className="text-2xl md:text-3xl font-bold">Finalizar Compra</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">{t('checkout.title')}</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
