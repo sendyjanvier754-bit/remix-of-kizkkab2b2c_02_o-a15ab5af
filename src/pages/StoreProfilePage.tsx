@@ -350,9 +350,9 @@ const StoreProfilePage = () => {
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-start md:gap-6">
+              <div className="flex flex-col md:flex-row md:items-start md:gap-6">
               {/* Main Info */}
-              <div className="flex-1 mb-2 md:mb-0">
+              <div className="flex-1 mb-1 md:mb-0">
                 <div className="hidden md:flex items-center gap-2 mb-2">
                   <h1 className="text-3xl font-bold text-white">
                     {store.name}
