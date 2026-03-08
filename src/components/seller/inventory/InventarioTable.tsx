@@ -1,33 +1,16 @@
 import { useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Package, 
-  Eye, 
-  EyeOff,
-  Search,
-  ArrowUpDown,
-  TrendingUp,
-  TrendingDown
-} from "lucide-react";
+import { MoreHorizontal, Edit, Package, Eye, EyeOff, Search, ArrowUpDown, TrendingUp, TrendingDown } from "lucide-react";
 import { SellerCatalogItem } from "@/hooks/useSellerCatalog";
+import { useTranslation } from "react-i18next";
 
 interface InventarioTableProps {
   items: SellerCatalogItem[];
@@ -40,13 +23,8 @@ interface InventarioTableProps {
 type SortField = 'nombre' | 'stock' | 'precioVenta' | 'margin';
 type SortDirection = 'asc' | 'desc';
 
-export function InventarioTable({ 
-  items, 
-  getMargin, 
-  onEditPrice, 
-  onAdjustStock,
-  onToggleActive 
-}: InventarioTableProps) {
+export function InventarioTable({ items, getMargin, onEditPrice, onAdjustStock, onToggleActive }: InventarioTableProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>('nombre');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -68,29 +46,16 @@ export function InventarioTable({
     .sort((a, b) => {
       let comparison = 0;
       switch (sortField) {
-        case 'nombre':
-          comparison = a.nombre.localeCompare(b.nombre);
-          break;
-        case 'stock':
-          comparison = a.stock - b.stock;
-          break;
-        case 'precioVenta':
-          comparison = a.precioVenta - b.precioVenta;
-          break;
-        case 'margin':
-          comparison = getMargin(a) - getMargin(b);
-          break;
+        case 'nombre': comparison = a.nombre.localeCompare(b.nombre); break;
+        case 'stock': comparison = a.stock - b.stock; break;
+        case 'precioVenta': comparison = a.precioVenta - b.precioVenta; break;
+        case 'margin': comparison = getMargin(a) - getMargin(b); break;
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="-ml-3 h-8"
-      onClick={() => handleSort(field)}
-    >
+    <Button variant="ghost" size="sm" className="-ml-3 h-8" onClick={() => handleSort(field)}>
       {children}
       <ArrowUpDown className="ml-2 h-4 w-4" />
     </Button>
@@ -98,50 +63,40 @@ export function InventarioTable({
 
   return (
     <div className="space-y-4">
-      {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nombre o SKU..."
+          placeholder={t('inventarioTable.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9"
         />
       </div>
 
-      {/* Table */}
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">Imagen</TableHead>
-              <TableHead>
-                <SortButton field="nombre">Producto</SortButton>
-              </TableHead>
-              <TableHead>
-                <SortButton field="stock">Stock</SortButton>
-              </TableHead>
+              <TableHead className="w-[80px]">{t('inventarioTable.image')}</TableHead>
+              <TableHead><SortButton field="nombre">{t('inventarioTable.product')}</SortButton></TableHead>
+              <TableHead><SortButton field="stock">{t('inventarioTable.stock')}</SortButton></TableHead>
               <TableHead className="text-right">
                 <div className="flex flex-col items-end">
-                  <span>Costo Total</span>
-                  <span className="text-xs text-muted-foreground font-normal">(B2B + Logística)</span>
+                  <span>{t('inventarioTable.totalCost')}</span>
+                  <span className="text-xs text-muted-foreground font-normal">{t('inventarioTable.totalCostSub')}</span>
                 </div>
               </TableHead>
-              <TableHead className="text-right">
-                <SortButton field="precioVenta">Precio Venta</SortButton>
-              </TableHead>
-              <TableHead className="text-right">
-                <SortButton field="margin">Margen</SortButton>
-              </TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="w-[80px]">Acciones</TableHead>
+              <TableHead className="text-right"><SortButton field="precioVenta">{t('inventarioTable.salePrice')}</SortButton></TableHead>
+              <TableHead className="text-right"><SortButton field="margin">{t('inventarioTable.margin')}</SortButton></TableHead>
+              <TableHead>{t('inventarioTable.status')}</TableHead>
+              <TableHead className="w-[80px]">{t('inventarioTable.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedItems.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {searchQuery ? "No se encontraron productos" : "No tienes productos en tu inventario"}
+                  {searchQuery ? t('inventarioTable.noResults') : t('inventarioTable.noProducts')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -154,11 +109,7 @@ export function InventarioTable({
                   <TableRow key={item.id}>
                     <TableCell>
                       {item.images[0] ? (
-                        <img
-                          src={item.images[0]}
-                          alt={item.nombre}
-                          className="w-12 h-12 object-cover rounded"
-                        />
+                        <img src={item.images[0]} alt={item.nombre} className="w-12 h-12 object-cover rounded" />
                       ) : (
                         <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
                           <Package className="h-6 w-6 text-muted-foreground" />
@@ -184,9 +135,7 @@ export function InventarioTable({
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium text-right">
-                      ${item.precioVenta.toFixed(2)}
-                    </TableCell>
+                    <TableCell className="font-medium text-right">${item.precioVenta.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center gap-1">
                         {isLoss ? (
@@ -202,33 +151,29 @@ export function InventarioTable({
                     <TableCell>
                       <Badge variant={item.isActive ? "default" : "secondary"}>
                         {item.isActive ? (
-                          <><Eye className="h-3 w-3 mr-1" /> Publicado</>
+                          <><Eye className="h-3 w-3 mr-1" /> {t('inventarioTable.published')}</>
                         ) : (
-                          <><EyeOff className="h-3 w-3 mr-1" /> Oculto</>
+                          <><EyeOff className="h-3 w-3 mr-1" /> {t('inventarioTable.hidden')}</>
                         )}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => onEditPrice(item)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar Precio
+                            <Edit className="h-4 w-4 mr-2" />{t('inventarioTable.editPrice')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onAdjustStock(item)}>
-                            <Package className="h-4 w-4 mr-2" />
-                            Ajustar Stock
+                            <Package className="h-4 w-4 mr-2" />{t('inventarioTable.adjustStock')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onToggleActive(item.id)}>
                             {item.isActive ? (
-                              <><EyeOff className="h-4 w-4 mr-2" /> Ocultar</>
+                              <><EyeOff className="h-4 w-4 mr-2" /> {t('inventarioTable.hide')}</>
                             ) : (
-                              <><Eye className="h-4 w-4 mr-2" /> Publicar</>
+                              <><Eye className="h-4 w-4 mr-2" /> {t('inventarioTable.publish')}</>
                             )}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -242,9 +187,8 @@ export function InventarioTable({
         </Table>
       </div>
 
-      {/* Results count */}
       <p className="text-sm text-muted-foreground">
-        {filteredAndSortedItems.length} de {items.length} productos
+        {t('inventarioTable.ofProducts', { filtered: filteredAndSortedItems.length, total: items.length })}
       </p>
     </div>
   );

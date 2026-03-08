@@ -1,6 +1,5 @@
 /**
  * Cart Lock Banner Component
- * Shows when cart is locked due to pending payment
  */
 
 import { Link } from 'react-router-dom';
@@ -8,8 +7,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Lock, Clock, ArrowRight } from 'lucide-react';
 import { useOrderPaymentState } from '@/hooks/useOrderPaymentState';
+import { useTranslation } from 'react-i18next';
 
 export const CartLockBanner = () => {
+  const { t } = useTranslation();
   const { activeOrder, isCartLocked, timeRemaining, cancelOrder } = useOrderPaymentState();
 
   if (!isCartLocked || !activeOrder) return null;
@@ -21,9 +22,7 @@ export const CartLockBanner = () => {
   };
 
   const handleCancel = async () => {
-    if (activeOrder) {
-      await cancelOrder(activeOrder.id);
-    }
+    if (activeOrder) await cancelOrder(activeOrder.id);
   };
 
   return (
@@ -32,7 +31,7 @@ export const CartLockBanner = () => {
       <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-yellow-800">
-            <strong>Carrito bloqueado:</strong> Tienes un pago pendiente
+            <strong>{t('cartLock.cartLocked')}</strong> {t('cartLock.pendingPayment')}
           </span>
           {timeRemaining !== null && (
             <span className="flex items-center gap-1 text-sm text-yellow-700">
@@ -42,21 +41,12 @@ export const CartLockBanner = () => {
           )}
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleCancel}
-            className="border-yellow-500 text-yellow-700 hover:bg-yellow-100"
-          >
-            Cancelar
+          <Button variant="outline" size="sm" onClick={handleCancel} className="border-yellow-500 text-yellow-700 hover:bg-yellow-100">
+            {t('common.cancel')}
           </Button>
-          <Button 
-            asChild
-            size="sm"
-            className="bg-yellow-600 hover:bg-yellow-700 text-white"
-          >
+          <Button asChild size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">
             <Link to="/checkout">
-              Retomar Pago
+              {t('cartLock.resumePayment')}
               <ArrowRight className="h-3 w-3 ml-1" />
             </Link>
           </Button>
