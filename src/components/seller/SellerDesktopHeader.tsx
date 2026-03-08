@@ -253,7 +253,7 @@ const SellerDesktopHeader = ({
 
       if (finalTranscript) {
         setSearchQuery(finalTranscript);
-        toast.success(`Buscando: "${finalTranscript}"`);
+        toast.success(t('header.searching', { query: finalTranscript }));
         if (onSearch) {
           onSearch(finalTranscript.trim());
         }
