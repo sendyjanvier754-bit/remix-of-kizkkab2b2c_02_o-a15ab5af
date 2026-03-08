@@ -703,7 +703,7 @@ const CheckoutPage = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-[#071d7f]" />
-                    Dirección de Envío
+                    {t('checkout.shippingAddress')}
                   </h2>
                   <Button 
                     variant="outline" 
