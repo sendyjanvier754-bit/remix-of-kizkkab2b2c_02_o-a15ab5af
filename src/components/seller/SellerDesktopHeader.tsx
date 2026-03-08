@@ -498,7 +498,7 @@ const SellerDesktopHeader = ({
                     : "text-gray-700 hover:text-[#071d7f] hover:bg-gray-50 border-transparent"
                 )}
               >
-                Todos
+                {t('header.allCategories')}
               </button>
 
               {rootCategories.map((cat) => (
