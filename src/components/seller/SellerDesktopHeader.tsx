@@ -460,15 +460,15 @@ const SellerDesktopHeader = ({
             <div className="flex items-center gap-6">
               <Link to="/tendencias" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <Flame className="w-6 h-6" />
-                <span className="text-xs">Tendencias</span>
+                <span className="text-xs">{t('header.trends')}</span>
               </Link>
               <Link to="/admin/soporte-chat" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <MessageCircle className="w-6 h-6" />
-                <span className="text-xs">Soporte</span>
+                <span className="text-xs">{t('header.support')}</span>
               </Link>
               <Link to="/seller/favoritos" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <Heart className="w-6 h-6" />
-                <span className="text-xs">Favoritos</span>
+                <span className="text-xs">{t('header.favorites')}</span>
               </Link>
               <Link to="/seller/cuenta" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <User className="w-6 h-6" />
