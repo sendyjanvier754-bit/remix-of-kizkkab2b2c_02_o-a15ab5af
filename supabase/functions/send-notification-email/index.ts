@@ -45,6 +45,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Missing required fields: recipientEmail, subject, title, message");
     }
 
+    // HTML-escape helper to prevent injection
+    const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g, '&#39;');
+
+    // Validate ctaUrl if provided
+    const safeCtaUrl = ctaUrl && /^https?:\/\//i.test(ctaUrl) ? esc(ctaUrl) : null;
+
     // Build email HTML
     const emailHtml = `
 <!DOCTYPE html>
@@ -52,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${subject}</title>
+  <title>${esc(subject)}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
