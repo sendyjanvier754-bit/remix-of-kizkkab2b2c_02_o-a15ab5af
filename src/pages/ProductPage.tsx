@@ -1027,7 +1027,7 @@ const ProductPage = () => {
 
                 <AccordionItem value="valoraciones" className="border border-gray-200 rounded-lg overflow-hidden mt-3">
                   <AccordionTrigger className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between">
-                    <span>Valoraciones</span>
+                    <span>{t('productPage.productReviews')}</span>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4 bg-white border-t border-gray-200">
                     <ProductReviews productId={product?.source_product?.id || product?.id} productName={product?.nombre} />
