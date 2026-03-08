@@ -169,7 +169,7 @@ const AdminCatalogo = () => {
           </Card>
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Alertas Bajo MOQ</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('adminCatalog.lowMOQAlerts')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
