@@ -20,6 +20,7 @@ import ProductsWithoutWeightAlert from '@/components/admin/ProductsWithoutWeight
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminCatalogo = () => {
+  const { t } = useTranslation();
   const { useProducts, useCategories, useSuppliers, useCatalogKPIs } = useCatalog();
   const [filters, setFilters] = useState<ProductFilters>({ stockStatus: 'all' });
   const [searchTerm, setSearchTerm] = useState('');
