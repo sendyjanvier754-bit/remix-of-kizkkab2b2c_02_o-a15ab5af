@@ -372,7 +372,7 @@ export default function AdminPOMasterPage() {
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedMarket?.active_po_number} — {selectedMarket?.market_name}
+              {viewingPONumber || selectedMarket?.active_po_number} — {selectedMarket?.market_name}
             </DialogTitle>
           </DialogHeader>
 
