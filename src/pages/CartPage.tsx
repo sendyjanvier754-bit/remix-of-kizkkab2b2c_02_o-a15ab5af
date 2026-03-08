@@ -495,7 +495,7 @@ const CartPage = () => {
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-600">
-                        {selectedItems.length} de {items.length} seleccionados
+                        {selectedItems.length} {t('common.of')} {items.length} {t('common.selected')}
                       </span>
                       <button
                         onClick={handleClearCart}
