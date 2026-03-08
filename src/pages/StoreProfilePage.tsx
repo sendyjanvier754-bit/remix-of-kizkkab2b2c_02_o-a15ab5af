@@ -445,8 +445,8 @@ const StoreProfilePage = () => {
                       <span className="text-[#071d7f]/60 text-xs">Sin reseñas</span>
                     )}
                   </div>
-                  {/* Productos */}
-                  <div className="bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[#071d7f] text-xs md:text-sm">
+                  {/* Productos - hidden on mobile, shown in action icons row */}
+                  <div className="hidden md:block bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[#071d7f] text-xs md:text-sm">
                     <span className="font-semibold">{store.productsCount}</span> prod.
                   </div>
                   {/* Seguidores - hidden on mobile, shown next to rating badge */}
