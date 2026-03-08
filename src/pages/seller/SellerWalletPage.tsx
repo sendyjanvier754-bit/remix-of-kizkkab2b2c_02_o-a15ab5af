@@ -219,7 +219,7 @@ const SellerWalletPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <TrendingUp className="h-4 w-4 text-green-600" />
-                        <span className="text-xs md:text-sm font-medium text-gray-600">Total Ganado</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-600">{t('sellerWallet.totalEarned')}</span>
                       </div>
                       <p className="text-lg md:text-2xl font-bold text-gray-900">
                         ${(wallet?.total_earned || 0).toLocaleString("es-DO", {
