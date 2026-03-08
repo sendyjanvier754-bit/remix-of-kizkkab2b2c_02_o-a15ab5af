@@ -225,7 +225,7 @@ const SellerMobileHeader = ({
 
     recognition.onstart = () => {
       setIsListening(true);
-      toast.info("Escuchando...", { duration: 2000 });
+      toast.info(t('header.listening'), { duration: 2000 });
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
