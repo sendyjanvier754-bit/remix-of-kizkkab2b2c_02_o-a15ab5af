@@ -1086,8 +1086,8 @@ const ProductPage = () => {
               <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                 <Shield className="w-5 h-5 text-green-600" />
                 <div className="text-xs">
-                  <p className="font-semibold text-gray-900">Compra Segura</p>
-                  <p className="text-gray-500">Protección total</p>
+                  <p className="font-semibold text-gray-900">{t('productPage.buyerProtection')}</p>
+                  <p className="text-gray-500">{t('productPage.buyerProtectionDesc')}</p>
                 </div>
               </div>
             </div>
