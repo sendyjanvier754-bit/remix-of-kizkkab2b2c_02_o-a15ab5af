@@ -158,8 +158,8 @@ const SellerWalletPage = () => {
               <Wallet className="h-6 w-6 text-[#071d7f]" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Mi Billetera</h1>
-              <p className="text-sm text-gray-500">Gestiona tu saldo y retiros</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{t('sellerWallet.title')}</h1>
+              <p className="text-sm text-gray-500">{t('sellerWallet.subtitle')}</p>
             </div>
           </div>
         </div>
