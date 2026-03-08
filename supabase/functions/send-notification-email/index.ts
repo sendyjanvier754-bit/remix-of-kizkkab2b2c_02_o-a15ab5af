@@ -139,11 +139,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Update notification if ID provided
     if (notificationId) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      await supabase
+      await serviceClient
+        .from("notifications")
+        .update({ is_email_sent: true })
+        .eq("id", notificationId);
+    }
         .from("notifications")
         .update({ is_email_sent: true })
         .eq("id", notificationId);
