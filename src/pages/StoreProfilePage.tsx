@@ -395,7 +395,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="flex items-center gap-4 flex-wrap text-sm mb-3">
+                <div className="flex items-center gap-2 md:gap-4 flex-wrap text-sm mb-1.5 md:mb-3">
                   {/* Rating */}
                   <div className="flex items-center gap-1 bg-white px-2 py-1 rounded">
                     <div className="flex text-yellow-400">
