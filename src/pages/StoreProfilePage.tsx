@@ -361,23 +361,25 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Location + Ver Descripción */}
-                <div className="flex items-center gap-3 mb-1.5 md:mb-3">
+                <div className="flex items-center gap-2 mb-1 md:mb-3">
                   {store.description && (
                     <Button
                       onClick={() => setShowProfileModal(true)}
                       variant="outline"
                       size="sm"
-                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
+                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-7 md:h-9 px-2 md:px-3"
                     >
                       Ver Descripción
                     </Button>
                   )}
-                  {store.location && (
-                    <div className="flex items-center gap-1 text-sm text-white/90">
-                      <MapPin className="w-4 h-4 text-white/70 flex-shrink-0" />
-                      <span className="font-medium text-white">{store.location}</span>
-                    </div>
-                  )}
+                  <div className="hidden md:flex items-center gap-1 text-sm text-white/90">
+                    {store.location && (
+                      <>
+                        <MapPin className="w-4 h-4 text-white/70 flex-shrink-0" />
+                        <span className="font-medium text-white">{store.location}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {/* Badges + Store ID */}
