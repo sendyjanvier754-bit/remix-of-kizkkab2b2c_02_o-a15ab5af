@@ -181,7 +181,7 @@ export default function AdminAgentOrders() {
               <AgentDraftList
                 drafts={drafts}
                 activeDraftId={activeDraft?.id || null}
-                onSelect={selectDraft}
+                onSelect={(d) => selectDraft(d as any)}
                 onCancel={cancelDraft}
               />
             </div>
