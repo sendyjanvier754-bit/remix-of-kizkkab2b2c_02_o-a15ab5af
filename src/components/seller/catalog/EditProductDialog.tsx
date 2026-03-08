@@ -95,7 +95,7 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
         <div className="space-y-6">
           {/* Precio de Venta */}
           <div className="space-y-2">
-            <Label htmlFor="precio">Precio de Venta</Label>
+            <Label htmlFor="precio">{t('editProductDialog.salePrice')}</Label>
             <div className="flex items-center">
               <span className="text-lg font-bold mr-2">$</span>
               <Input
