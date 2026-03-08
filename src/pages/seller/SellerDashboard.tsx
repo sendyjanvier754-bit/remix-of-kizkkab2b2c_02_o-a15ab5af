@@ -92,7 +92,7 @@ const SellerDashboard = () => {
           <div className="bg-card border border-border rounded-lg md:mt-14">
             <div className="p-3">
               <div className="border-b pb-2 mb-3">
-                <h1 className="text-lg font-bold text-foreground">Mi Actividad</h1>
+                <h1 className="text-lg font-bold text-foreground">{t('sellerDashboard.myActivity')}</h1>
               </div>
               <div className="grid grid-cols-4 gap-1 w-full">
                 {/* Total Compras - Azul */}
