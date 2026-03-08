@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, X, Flame } from "lucide-react";
+import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, X, Flame, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
