@@ -292,6 +292,14 @@ const AppContent = () => {
               } 
             />
             <Route 
+              path="/admin/popups" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminPopupsPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/descuentos-usuarios" 
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
