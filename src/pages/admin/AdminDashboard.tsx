@@ -36,11 +36,11 @@ const getStatusBadge = (status: string, t: any) => {
   }
 };
 
-const getMethodLabel = (method: string) => {
+const getMethodLabel = (method: string, t: any) => {
   switch (method) {
     case "stripe": return "Stripe";
     case "moncash": return "Mon Cash";
-    case "transfer": return "Transferencia";
+    case "transfer": return t('common.transfer');
     default: return method;
   }
 };
