@@ -574,7 +574,7 @@ const CheckoutPage = () => {
             <Card className={`p-6 ${hasFieldError(validationErrors, 'deliveryMethod') ? 'border-red-500 border-2' : ''}`}>
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Truck className="h-5 w-5 text-[#071d7f]" />
-                Opción de Entrega
+                {t('checkout.deliveryOption')}
               </h2>
               {hasFieldError(validationErrors, 'deliveryMethod') && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
