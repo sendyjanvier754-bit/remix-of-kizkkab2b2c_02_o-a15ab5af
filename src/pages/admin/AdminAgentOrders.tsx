@@ -150,7 +150,7 @@ export default function AdminAgentOrders() {
             <AgentDraftList
               drafts={drafts}
               activeDraftId={activeDraft?.id || null}
-              onSelect={(d) => { selectDraft(d); setStep('workspace'); }}
+              onSelect={(d) => { selectDraft(d as any); setStep('workspace'); }}
               onCancel={cancelDraft}
             />
           </div>
