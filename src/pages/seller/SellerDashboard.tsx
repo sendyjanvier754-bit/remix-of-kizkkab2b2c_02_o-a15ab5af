@@ -73,13 +73,13 @@ const SellerDashboard = () => {
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-orange-900 mb-1">Verificación KYC Pendiente</h3>
+                  <h3 className="font-semibold text-orange-900 mb-1">{t('sellerDashboard.kycPendingTitle')}</h3>
                   <p className="text-sm text-orange-700 mb-3">
-                    Completa tu verificación para acceder a todas las funcionalidades y maximizar tu crédito.
+                    {t('sellerDashboard.kycPendingMessage')}
                   </p>
                   <Button asChild size="sm" className="bg-orange-600 hover:bg-orange-700">
                     <Link to="/seller/cuenta">
-                      Completar Verificación
+                      {t('sellerDashboard.completeVerification')}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
