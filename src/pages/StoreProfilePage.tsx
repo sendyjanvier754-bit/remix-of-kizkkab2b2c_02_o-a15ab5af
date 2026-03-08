@@ -383,7 +383,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Badges + Store ID */}
-                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1.5 md:mb-3">
+                <div className="flex flex-wrap items-center gap-1 md:gap-2 mb-1 md:mb-3">
                   {store.badges.map((badge) => (
                     <span
                       key={badge}
