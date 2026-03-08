@@ -77,9 +77,9 @@ const handler = async (req: Request): Promise<Response> => {
       <h1>Silver Market Haiti</h1>
     </div>
     <div class="content">
-      <p class="title">${title}</p>
-      <p class="message">${message}</p>
-      ${ctaUrl ? `<p><a href="${ctaUrl}" class="cta">${ctaText || 'Ver más'}</a></p>` : ''}
+      <p class="title">${esc(title)}</p>
+      <p class="message">${esc(message)}</p>
+      ${safeCtaUrl ? `<p><a href="${safeCtaUrl}" class="cta">${esc(ctaText || 'Ver más')}</a></p>` : ''}
     </div>
     <div class="footer">
       <p>Este es un mensaje automático de Silver Market Haiti.</p>
