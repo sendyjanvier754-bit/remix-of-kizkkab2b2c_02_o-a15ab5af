@@ -27,6 +27,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const SellerDashboard = () => {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { data: orders, isLoading: ordersLoading } = useBuyerOrders();
   const { credit, availableCredit } = useSellerCredits();
