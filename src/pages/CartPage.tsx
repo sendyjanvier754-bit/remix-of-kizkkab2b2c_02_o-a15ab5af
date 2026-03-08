@@ -134,7 +134,7 @@ const CartPage = () => {
   const clearCart = async () => {
     try {
       if (!user?.id) {
-        toast.error('Usuario no identificado');
+        toast.error(t('cart.userNotIdentified'));
         return;
       }
 
