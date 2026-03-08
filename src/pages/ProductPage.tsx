@@ -1011,7 +1011,7 @@ const ProductPage = () => {
               <Accordion type="single" collapsible defaultValue="descripcion" className="w-full mt-10">
                 <AccordionItem value="descripcion" className="border border-gray-200 rounded-lg overflow-hidden">
                   <AccordionTrigger className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between">
-                    <span>Descripción</span>
+                    <span>{t('common.description')}</span>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4 bg-white border-t border-gray-200">
                     <div 
