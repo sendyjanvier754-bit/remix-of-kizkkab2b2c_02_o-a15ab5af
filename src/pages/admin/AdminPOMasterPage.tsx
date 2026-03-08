@@ -642,6 +642,7 @@ export default function AdminPOMasterPage() {
                 <TableHead>Monto</TableHead>
                 <TableHead>Razón Cierre</TableHead>
                 <TableHead>Cerrada</TableHead>
+                <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
