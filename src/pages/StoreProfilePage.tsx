@@ -339,12 +339,19 @@ const StoreProfilePage = () => {
                   <span className="text-lg md:text-3xl font-bold text-[#071d7f]">{store.name.substring(0, 2).toUpperCase()}</span>
                 )}
               </div>
-              <div className="md:hidden">
-                <h1 className="text-lg font-bold text-white leading-tight">{store.name}</h1>
+              <div className="md:hidden flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h1 className="text-base font-bold text-white leading-tight truncate">{store.name}</h1>
+                  {store.is_active && (
+                    <button onClick={() => setShowProfileModal(true)} title="Tienda verificada">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    </button>
+                  )}
+                </div>
                 {store.location && (
                   <div className="flex items-center gap-1 text-xs text-white/80">
                     <MapPin className="w-3 h-3" />
-                    <span>{store.location}</span>
+                    <span className="truncate">{store.location}</span>
                   </div>
                 )}
               </div>
