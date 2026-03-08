@@ -45,6 +45,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Missing required fields: recipientEmail, subject, title, message");
     }
 
+    // HTML-escape helper to prevent injection
+    const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g, '&#39;');
+
+    // Validate ctaUrl if provided
+    const safeCtaUrl = ctaUrl && /^https?:\/\//i.test(ctaUrl) ? esc(ctaUrl) : null;
+
     // Build email HTML
     const emailHtml = `
 <!DOCTYPE html>
@@ -52,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${subject}</title>
+  <title>${esc(subject)}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -71,9 +77,9 @@ const handler = async (req: Request): Promise<Response> => {
       <h1>Silver Market Haiti</h1>
     </div>
     <div class="content">
-      <p class="title">${title}</p>
-      <p class="message">${message}</p>
-      ${ctaUrl ? `<p><a href="${ctaUrl}" class="cta">${ctaText || 'Ver más'}</a></p>` : ''}
+      <p class="title">${esc(title)}</p>
+      <p class="message">${esc(message)}</p>
+      ${safeCtaUrl ? `<p><a href="${safeCtaUrl}" class="cta">${esc(ctaText || 'Ver más')}</a></p>` : ''}
     </div>
     <div class="footer">
       <p>Este es un mensaje automático de Silver Market Haiti.</p>
