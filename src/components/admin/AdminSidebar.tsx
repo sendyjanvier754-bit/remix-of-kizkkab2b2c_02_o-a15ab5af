@@ -58,7 +58,7 @@ const mainNavItems = [
   { title: "Config. Precios", url: "/admin/precios", icon: Calculator },
   { title: "Vendedores", url: "/admin/vendedores", icon: Users },
   { title: "Banners", url: "/admin/banners", icon: ImageIcon },
-];
+  { title: "Pedidos por Agente", url: "/admin/agente-pedidos", icon: Headset },
 
 const analyticsItems = [
   { title: "PO Maestra", url: "/admin/po-master", icon: Package },
