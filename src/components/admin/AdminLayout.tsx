@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
-import { Menu } from "lucide-react";
+import { Menu, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import NotificationBell from "@/components/notifications/NotificationBell";
 
 interface AdminLayoutProps {
