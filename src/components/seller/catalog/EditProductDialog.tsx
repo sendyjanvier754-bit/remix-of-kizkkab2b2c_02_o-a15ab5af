@@ -141,7 +141,7 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Cancelar
+            {t('editProductDialog.cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -151,12 +151,12 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Guardando...
+                {t('editProductDialog.saving')}
               </>
             ) : (
               <>
                 <Check className="h-4 w-4" />
-                Guardar
+                {t('editProductDialog.save')}
               </>
             )}
           </Button>
