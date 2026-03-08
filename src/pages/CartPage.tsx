@@ -681,7 +681,7 @@ const CartPage = () => {
                     <span className="font-semibold text-gray-900">${totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-600">Promociones:</span>
+                    <span className="text-gray-600">{t('common.promotions')}:</span>
                     <span className="font-semibold text-red-600">—</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
