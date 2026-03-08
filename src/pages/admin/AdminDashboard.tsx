@@ -355,11 +355,11 @@ const AdminDashboard = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg">Pagos Recientes B2B</CardTitle>
-            <p className="text-sm text-muted-foreground">Últimas transacciones para verificar</p>
+            <CardTitle className="text-lg">{t('adminDashboard.recentPaymentsB2B')}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t('adminDashboard.lastTransactions')}</p>
           </div>
           <Button variant="outline" asChild>
-            <Link to="/admin/conciliacion">Ver Todos</Link>
+            <Link to="/admin/conciliacion">{t('common.viewAll')}</Link>
           </Button>
         </CardHeader>
         <CardContent>
