@@ -288,7 +288,7 @@ const SellerDesktopHeader = ({
     if (!file) return;
 
     setIsImageSearching(true);
-    toast.info("Cargando modelo de IA... Esto puede tomar unos segundos la primera vez.");
+    toast.info(t('header.loadingAI'));
 
     try {
       const results = await searchProductsByImage(file);
