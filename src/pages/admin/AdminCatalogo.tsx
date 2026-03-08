@@ -257,14 +257,14 @@ const AdminCatalogo = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border hover:bg-muted/50">
-                    <TableHead className="text-muted-foreground">SKU Interno</TableHead>
-                    <TableHead className="text-muted-foreground">Producto</TableHead>
-                    <TableHead className="text-muted-foreground text-right">Precio B2B</TableHead>
-                    <TableHead className="text-muted-foreground text-center">MOQ</TableHead>
-                    <TableHead className="text-muted-foreground text-center">Stock</TableHead>
-                    <TableHead className="text-muted-foreground text-center">Estado</TableHead>
-                    <TableHead className="text-muted-foreground">Proveedor</TableHead>
-                    <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
+                    <TableHead className="text-muted-foreground">{t('adminCatalog.skuInterno')}</TableHead>
+                    <TableHead className="text-muted-foreground">{t('adminCatalog.product')}</TableHead>
+                    <TableHead className="text-muted-foreground text-right">{t('adminCatalog.priceB2B')}</TableHead>
+                    <TableHead className="text-muted-foreground text-center">{t('adminCatalog.moq')}</TableHead>
+                    <TableHead className="text-muted-foreground text-center">{t('adminCatalog.stock')}</TableHead>
+                    <TableHead className="text-muted-foreground text-center">{t('common.status')}</TableHead>
+                    <TableHead className="text-muted-foreground">{t('adminCatalog.supplier')}</TableHead>
+                    <TableHead className="text-muted-foreground text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
