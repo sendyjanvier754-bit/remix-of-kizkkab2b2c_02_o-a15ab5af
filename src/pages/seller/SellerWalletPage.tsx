@@ -188,7 +188,7 @@ const SellerWalletPage = () => {
                       <DollarSign className="h-4 w-4 text-[#071d7f] flex-shrink-0" />
                       <div className="min-w-0">
                         <Badge variant="outline" className="text-xs bg-white text-gray-700 border-gray-300 mb-1">
-                          Saldo Disponible
+                          {t('sellerWallet.availableBalance')}
                         </Badge>
                         <div className="text-xl md:text-2xl font-bold text-[#071d7f] truncate">
                           ${(wallet?.available_balance || 0).toLocaleString("es-DO", {
