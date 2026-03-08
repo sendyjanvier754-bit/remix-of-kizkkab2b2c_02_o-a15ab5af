@@ -341,14 +341,14 @@ const CheckoutPage = () => {
         <main className="flex-1 container mx-auto px-4 flex items-center justify-center">
           <Card className="p-8 text-center max-w-md">
             <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-4">Carrito Vacío</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('checkout.emptyCartTitle')}</h1>
             <p className="text-muted-foreground mb-6">
-              No tienes productos en tu carrito.
+              {t('checkout.emptyCartMessage')}
             </p>
             <Button asChild className="bg-[#071d7f] hover:bg-[#0a2a9f]">
               <Link to="/">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Ir a Comprar
+                {t('checkout.goShopping')}
               </Link>
             </Button>
           </Card>
