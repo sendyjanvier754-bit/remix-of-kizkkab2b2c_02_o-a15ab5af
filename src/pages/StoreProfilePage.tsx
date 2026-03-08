@@ -488,7 +488,7 @@ const StoreProfilePage = () => {
 
             {/* Payment Methods Section */}
             {storeData?.metadata && (
-              <div className="mt-4 pt-4 md:mt-8 md:pt-8 border-t border-white/20">
+              <div className="mt-2 pt-2 md:mt-8 md:pt-8 border-t border-white/20">
                 <PaymentMethodsDisplay
                   paymentData={storeData.metadata as PaymentMethodsData}
                   title="Métodos de Pago Aceptados"
