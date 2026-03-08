@@ -197,7 +197,7 @@ const SellerDashboard = () => {
                           </div>
                           <div className="flex items-center justify-between">
                             <p className="text-sm">
-                              <span className="text-muted-foreground">{order.total_quantity} productos - </span>
+                              <span className="text-muted-foreground">{t('sellerDashboard.productsCount', { count: order.total_quantity })} - </span>
                               <span className="font-semibold text-foreground">
                                 ${order.total_amount.toFixed(2)}
                               </span>
