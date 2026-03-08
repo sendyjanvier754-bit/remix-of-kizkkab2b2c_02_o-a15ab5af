@@ -399,13 +399,13 @@ const CheckoutPage = () => {
                   <Check className="w-10 h-10 text-green-600" />
                 </div>
               </div>
-              <h1 className="text-2xl font-bold mb-2">¡Pedido Enviado!</h1>
+              <h1 className="text-2xl font-bold mb-2">{t('checkout.orderSent')}</h1>
               <p className="text-muted-foreground mb-4">
-                Tu pedido ha sido recibido. Completa el pago según las instrucciones.
+                {t('checkout.orderReceivedMessage')}
               </p>
               {orderId && (
                 <div className="bg-muted p-4 rounded-lg mb-6">
-                  <p className="text-sm text-muted-foreground">Número de Pedido</p>
+                  <p className="text-sm text-muted-foreground">{t('checkout.orderNumberLabel')}</p>
                   <p className="font-mono font-bold text-lg">{orderId}</p>
                 </div>
               )}
@@ -414,7 +414,7 @@ const CheckoutPage = () => {
                 <div className="text-left bg-blue-50 p-4 rounded-lg mb-6">
                   <p className="font-semibold text-sm mb-2 flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    Dirección de Envío
+                    {t('checkout.shippingAddress')}
                   </p>
                   <p className="text-sm">{selectedAddressData.full_name}</p>
                   <p className="text-sm text-muted-foreground">{selectedAddressData.street_address}</p>
@@ -426,19 +426,19 @@ const CheckoutPage = () => {
 
               {paymentMethod !== 'stripe' && (
                 <div className="text-left bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
-                  <p className="font-semibold text-yellow-800">Pendiente de Verificación</p>
+                  <p className="font-semibold text-yellow-800">{t('checkout.pendingVerification')}</p>
                   <p className="text-sm text-yellow-700 mt-1">
-                    Tu pedido está pendiente de verificación de pago. Te notificaremos una vez confirmado.
+                    {t('checkout.pendingVerificationMessage')}
                   </p>
                 </div>
               )}
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild variant="outline">
-                  <Link to="/mis-compras">Ver Mis Pedidos</Link>
+                  <Link to="/mis-compras">{t('checkout.viewMyOrders')}</Link>
                 </Button>
                 <Button asChild className="bg-[#071d7f] hover:bg-[#0a2a9f]">
-                  <Link to="/">Seguir Comprando</Link>
+                  <Link to="/">{t('checkout.continueShopping')}</Link>
                 </Button>
               </div>
             </Card>
