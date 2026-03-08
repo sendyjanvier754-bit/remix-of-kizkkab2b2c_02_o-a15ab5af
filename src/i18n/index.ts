@@ -26,9 +26,9 @@ i18n
     fallbackLng: 'es',
     supportedLngs: ['es', 'en', 'fr'],
     detection: {
-      // Detection order: localStorage first, then browser language
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'i18n_language',
+      caches: ['localStorage'],
     },
     interpolation: {
       // React already escapes by default
