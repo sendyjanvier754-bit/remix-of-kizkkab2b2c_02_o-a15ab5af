@@ -1184,7 +1184,7 @@ const CheckoutPage = () => {
                     </div>
                     {shippingCalculation.insuranceCost > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Seguro</span>
+                        <span className="text-muted-foreground">{t('checkout.insurance')}</span>
                         <span>${shippingCalculation.insuranceCost.toFixed(2)}</span>
                       </div>
                     )}
