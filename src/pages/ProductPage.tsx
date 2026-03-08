@@ -1126,14 +1126,14 @@ const ProductPage = () => {
 
         {/* Recomendados - Full Width */}
         <div id="section-recs" ref={recsRef} className="mt-12 pt-8 border-t border-gray-200 scroll-mt-20">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Recomendados</h3>
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('products.seeMore')}</h3>
           {loadingRecommended ? (
             <ProductGrid products={[]} isLoading={true} skeletonCount={20} />
           ) : recommendedProducts.length > 0 ? (
             <ProductGrid products={recommendedProducts} isLoading={false} />
           ) : (
             <div className="bg-gray-50 border rounded-lg p-6 text-center text-gray-400">
-              No hay productos recomendados disponibles.
+              {t('products.noProducts')}
             </div>
           )}
         </div>
