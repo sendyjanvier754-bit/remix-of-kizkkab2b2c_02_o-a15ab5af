@@ -833,7 +833,7 @@ const CheckoutPage = () => {
             <Card className="p-6">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Package className="h-5 w-5 text-[#071d7f]" />
-                Resumen del Pedido ({totalItems} productos)
+                {t('common.orderSummary')} ({totalItems} {t('common.products')})
               </h2>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {items.map((item) => (
