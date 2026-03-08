@@ -127,7 +127,7 @@ const SellerDashboard = () => {
                   <CardContent className="p-1.5 text-center">
                     <CreditCard className="h-3 w-3 text-purple-600 mx-auto mb-0.5" />
                     <div className="text-base md:text-lg font-bold text-purple-600">${availableCredit.toFixed(0)}</div>
-                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">Crédito</p>
+                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">{t('sellerDashboard.credit')}</p>
                   </CardContent>
                 </Card>
               </div>
