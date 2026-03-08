@@ -165,7 +165,7 @@ const CartPage = () => {
       setShowClearCartDialog(false);
     } catch (error) {
       console.error('Error clearing cart:', error);
-      toast.error('No se pudo vaciar el carrito');
+      toast.error(t('cart.clearError'));
     }
   };
 
