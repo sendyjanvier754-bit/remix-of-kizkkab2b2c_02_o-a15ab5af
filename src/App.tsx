@@ -386,6 +386,22 @@ const AppContent = () => {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/soporte-chat" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_AGENT]}>
+                  <LazyRoute><AdminSupportChats /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/notificaciones" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_AGENT]}>
+                  <LazyRoute><NotificationsPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/admin" element={<AdminLogin />} />
             
             {/* ========== SELLER ROUTES (B2B) ========== */}
