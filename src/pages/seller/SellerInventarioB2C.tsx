@@ -215,14 +215,14 @@ export default function SellerInventarioB2C() {
         {inventario.length === 0 ? (
           <div className="text-center py-12 bg-muted/50 rounded-lg">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Sin productos en inventario</h3>
+            <h3 className="text-lg font-medium mb-2">{t('sellerInventory.noProductsTitle')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Los productos de tus pedidos B2B pagados aparecerán aquí
+              {t('sellerInventory.noProductsDesc')}
             </p>
             <Button asChild>
               <a href="/seller/adquisicion-lotes">
                 <ShoppingCart className="h-4 w-4 mr-2" />
-                Ver Catálogo B2B
+                {t('sellerInventory.viewB2BCatalog')}
               </a>
             </Button>
           </div>

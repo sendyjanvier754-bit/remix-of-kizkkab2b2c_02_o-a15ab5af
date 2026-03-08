@@ -173,7 +173,7 @@ const SellerPedidosPage = () => {
         <div className="bg-card border border-border rounded-lg md:mt-14">
           <div className="p-3">
             <div className="border-b pb-2 mb-3">
-              <h1 className="text-lg font-bold text-foreground">Mis Ventas B2C</h1>
+              <h1 className="text-lg font-bold text-foreground">{t('sellerOrders.title')}</h1>
             </div>
             <div className="grid grid-cols-5 gap-1 w-full">
               <Card className="bg-card border-border">

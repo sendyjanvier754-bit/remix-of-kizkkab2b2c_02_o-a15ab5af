@@ -241,7 +241,7 @@ const AdminVendedores = () => {
   const verifiedSellers = filteredSellers.filter((s) => s.is_verified);
 
   return (
-    <AdminLayout title="Gestión de Vendedores" subtitle="Verifica y gestiona las cuentas de vendedores">
+    <AdminLayout title={t('adminSellers.title')} subtitle={t('adminSellers.subtitle')}>
       <div className="space-y-6">
         <div className="flex justify-end">
           <Button variant="outline" onClick={fetchSellers} disabled={isLoading}>

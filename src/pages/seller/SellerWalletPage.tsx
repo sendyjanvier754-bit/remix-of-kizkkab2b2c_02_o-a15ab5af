@@ -286,7 +286,7 @@ const SellerWalletPage = () => {
               {/* Recent Transactions Preview */}
               <Card className="border border-gray-200">
                 <CardHeader className="pb-3 md:pb-4">
-                  <h3 className="text-lg md:text-xl font-bold text-gray-900">Últimos Movimientos</h3>
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900">{t('sellerWallet.recentMovements')}</h3>
                 </CardHeader>
                 <CardContent>
                   {filteredTransactions.length === 0 ? (
