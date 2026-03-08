@@ -11,6 +11,7 @@ interface Draft {
   created_at: string;
   updated_at: string;
   target_profile?: { full_name: string; email: string };
+  [key: string]: any;
 }
 
 interface AgentDraftListProps {
