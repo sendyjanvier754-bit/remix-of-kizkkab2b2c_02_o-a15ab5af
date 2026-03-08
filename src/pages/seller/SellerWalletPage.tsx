@@ -205,7 +205,7 @@ const SellerWalletPage = () => {
                       className="bg-[#94111f] hover:bg-[#7a0d1a] text-white font-semibold text-xs md:text-sm px-2.5 md:px-3 py-1.5 md:py-2 flex-shrink-0 h-fit whitespace-nowrap"
                     >
                       <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
-                      Retiro
+                      {t('sellerWallet.withdrawal')}
                     </Button>
                   </div>
                 </CardContent>
