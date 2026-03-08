@@ -8032,6 +8032,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_popup_clicks: { Args: { popup_id: string }; Returns: undefined }
+      increment_popup_views: { Args: { popup_id: string }; Returns: undefined }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       refresh_market_is_ready: {
         Args: { p_market_id: string }
