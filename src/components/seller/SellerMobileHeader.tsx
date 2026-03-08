@@ -295,7 +295,7 @@ const SellerMobileHeader = ({
       }
     } catch (error) {
       console.error("Image search error:", error);
-      toast.error("Error al buscar por imagen");
+      toast.error(t('header.imageSearchError'));
     } finally {
       setIsImageSearching(false);
       if (imageInputRef.current) {
