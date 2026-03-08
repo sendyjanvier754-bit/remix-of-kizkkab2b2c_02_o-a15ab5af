@@ -1276,7 +1276,7 @@ const CheckoutPage = () => {
 
               {deliveryMethod === 'address' && selectedAddressData && (
                 <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Enviar a:</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t('checkout.sendTo')}:</p>
                   <p className="text-sm font-medium">{selectedAddressData.full_name}</p>
                   <p className="text-xs text-muted-foreground">{selectedAddressData.city}, {selectedAddressData.country}</p>
                 </div>
