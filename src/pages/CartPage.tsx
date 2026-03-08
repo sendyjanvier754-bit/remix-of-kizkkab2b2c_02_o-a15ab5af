@@ -719,7 +719,7 @@ const CartPage = () => {
                       style={{ backgroundColor: '#071d7f' }}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Comprar ({totalQuantity})
+                      {t('common.buy')} ({totalQuantity})
                     </Link>
                   ) : (
                     <button
