@@ -698,7 +698,7 @@ const CartPage = () => {
                       ${totalPrice.toFixed(2)}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Se confirma el precio final en confirmar pedido</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('cart.priceConfirmNote')}</p>
                 </div>
 
                 {/* Checkout Button and Support */}
