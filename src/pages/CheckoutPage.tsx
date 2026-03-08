@@ -608,8 +608,8 @@ const CheckoutPage = () => {
                   <div className="flex items-center gap-3 flex-1">
                     <Truck className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-semibold">Envío a Domicilio</p>
-                      <p className="text-sm text-muted-foreground">Recibirás tu pedido en la dirección que indiques</p>
+                      <p className="font-semibold">{t('checkout.homeDelivery')}</p>
+                      <p className="text-sm text-muted-foreground">{t('checkout.homeDeliveryDesc')}</p>
                     </div>
                   </div>
                 </div>
