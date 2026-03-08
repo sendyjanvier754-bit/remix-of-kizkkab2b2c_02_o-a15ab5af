@@ -8,15 +8,14 @@ import AgentDraftList from '@/components/agent/AgentDraftList';
 import AgentProductSelector from '@/components/agent/AgentProductSelector';
 import AgentCartDraft from '@/components/agent/AgentCartDraft';
 import AgentShippingConfig from '@/components/agent/AgentShippingConfig';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Headset, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 
 type Step = 'search' | 'otp' | 'workspace';
 
 export default function AdminAgentOrders() {
-  const navigate = useNavigate();
   const [step, setStep] = useState<Step>('search');
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
   const [pendingUserName, setPendingUserName] = useState('');
@@ -90,30 +89,16 @@ export default function AdminAgentOrders() {
   const effectiveStep = activeSession ? 'workspace' : step;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/dashboard')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <Headset className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Pedidos por Agente</h1>
-          </div>
-          {activeSession && targetUser && (
-            <div className="ml-auto">
-              <AgentSessionTimer
-                targetUserName={targetUser.full_name}
-                timeRemaining={timeRemaining}
-                onClose={handleCloseSession}
-              />
-            </div>
-          )}
+    <AdminLayout title="Pedidos por Agente" subtitle="Crea pedidos en nombre de los usuarios">
+      {activeSession && targetUser && (
+        <div className="mb-4">
+          <AgentSessionTimer
+            targetUserName={targetUser.full_name}
+            timeRemaining={timeRemaining}
+            onClose={handleCloseSession}
+          />
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      )}
         {effectiveStep === 'search' && (
           <div className="max-w-lg mx-auto space-y-6">
             <Card>
@@ -221,7 +206,6 @@ export default function AdminAgentOrders() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </AdminLayout>
   );
 }

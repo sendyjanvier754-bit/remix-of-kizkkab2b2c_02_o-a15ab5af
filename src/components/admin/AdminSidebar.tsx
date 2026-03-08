@@ -21,7 +21,8 @@ import {
   BarChart3,
   LayoutGrid,
   Globe,
-  Store
+  Store,
+  Headset
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -57,6 +58,7 @@ const mainNavItems = [
   { title: "Config. Precios", url: "/admin/precios", icon: Calculator },
   { title: "Vendedores", url: "/admin/vendedores", icon: Users },
   { title: "Banners", url: "/admin/banners", icon: ImageIcon },
+  { title: "Pedidos por Agente", url: "/admin/agente-pedidos", icon: Headset },
 ];
 
 const analyticsItems = [
