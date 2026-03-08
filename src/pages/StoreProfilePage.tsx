@@ -344,8 +344,8 @@ const StoreProfilePage = () => {
             <div className="flex flex-col md:flex-row md:items-start md:gap-6">
               {/* Main Info */}
               <div className="flex-1 mb-4 md:mb-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white">
+                <div className="flex items-center gap-2 mb-1 md:mb-2">
+                  <h1 className="text-xl md:text-3xl font-bold text-white">
                     {store.name}
                   </h1>
                   {store.is_active && <CheckCircle className="w-6 h-6 text-white" />}
