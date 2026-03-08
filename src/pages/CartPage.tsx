@@ -693,7 +693,7 @@ const CartPage = () => {
                 {/* Total Price */}
                 <div className="p-2 bg-gradient-to-b from-gray-50 to-white border-b border-gray-200">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">Precio Estimado:</span>
+                    <span className="text-sm font-medium text-gray-700">{t('common.estimatedPrice')}:</span>
                     <span className="text-lg font-bold" style={{ color: '#071d7f' }}>
                       ${totalPrice.toFixed(2)}
                     </span>
