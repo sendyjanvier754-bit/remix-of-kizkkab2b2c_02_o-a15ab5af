@@ -226,7 +226,7 @@ const AdminCatalogo = () => {
                   <SelectValue placeholder="Proveedor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los Proveedores</SelectItem>
+                  <SelectItem value="all">{t('adminCatalog.allSuppliers')}</SelectItem>
                   {suppliers?.map((sup) => (
                     <SelectItem key={sup.id} value={sup.id}>{sup.name}</SelectItem>
                   ))}
