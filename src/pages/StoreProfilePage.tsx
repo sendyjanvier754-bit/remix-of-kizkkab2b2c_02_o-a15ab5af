@@ -339,12 +339,19 @@ const StoreProfilePage = () => {
                   <span className="text-lg md:text-3xl font-bold text-[#071d7f]">{store.name.substring(0, 2).toUpperCase()}</span>
                 )}
               </div>
-              <div className="md:hidden">
-                <h1 className="text-lg font-bold text-white leading-tight">{store.name}</h1>
+              <div className="md:hidden flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h1 className="text-base font-bold text-white leading-tight truncate">{store.name}</h1>
+                  {store.is_active && (
+                    <button onClick={() => setShowProfileModal(true)} title="Tienda verificada">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    </button>
+                  )}
+                </div>
                 {store.location && (
                   <div className="flex items-center gap-1 text-xs text-white/80">
                     <MapPin className="w-3 h-3" />
-                    <span>{store.location}</span>
+                    <span className="truncate">{store.location}</span>
                   </div>
                 )}
               </div>
@@ -360,17 +367,22 @@ const StoreProfilePage = () => {
                   {store.is_active && <CheckCircle className="w-6 h-6 text-white" />}
                 </div>
 
-                {/* Location + Ver Descripción */}
-                <div className="flex items-center gap-2 mb-0.5 md:mb-3">
+                {/* Location + Ver Descripción + Store ID */}
+                <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-3 flex-wrap">
                   {store.description && (
                     <Button
                       onClick={() => setShowProfileModal(true)}
                       variant="outline"
                       size="sm"
-                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-7 md:h-9 px-2 md:px-3"
+                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-6 md:h-9 px-2 md:px-3"
                     >
                       Ver Descripción
                     </Button>
+                  )}
+                  {store.slug && (
+                    <span className="text-xs text-[#071d7f] font-mono bg-white px-1.5 py-0.5 md:px-2 md:py-1 rounded select-all font-semibold">
+                      {store.slug}
+                    </span>
                   )}
                   <div className="hidden md:flex items-center gap-1 text-sm text-white/90">
                     {store.location && (
@@ -382,23 +394,18 @@ const StoreProfilePage = () => {
                   </div>
                 </div>
 
-                {/* Badges + Store ID */}
+                {/* Badges */}
                 <div className="flex flex-wrap items-center gap-1 md:gap-2 mb-1 md:mb-3">
                   {store.badges.map((badge) => (
                     <span
                       key={badge}
-                      className="bg-white text-[#071d7f] text-xs px-3 py-1 rounded-full font-semibold"
+                      className="bg-white text-[#071d7f] text-xs px-2 md:px-3 py-0.5 md:py-1 rounded-full font-semibold"
                     >
                       {badge}
                     </span>
                   ))}
-                  {store.slug && (
-                    <span className="text-xs text-[#071d7f] font-mono bg-white px-2 py-1 rounded select-all font-semibold">
-                      {store.slug}
-                    </span>
-                  )}
                   {(totalSales30Days || 0) >= 1500 && (
-                    <span className="bg-white text-[#071d7f] text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1">
+                    <span className="bg-white text-[#071d7f] text-xs px-2 md:px-3 py-0.5 md:py-1 rounded-full font-semibold flex items-center gap-1">
                       <TrendingUp className="h-3 w-3" />
                       ~{approxSales24h} ventas (24h)
                     </span>
@@ -407,9 +414,12 @@ const StoreProfilePage = () => {
 
                 {/* Stats */}
                 <div className="flex items-center gap-1.5 md:gap-4 flex-wrap text-sm mb-1 md:mb-3">
-                  {/* Rating */}
-                  <div className="flex items-center gap-1 bg-white px-2 py-1 rounded">
-                    <div className="flex text-yellow-400">
+                  {/* Rating - compact on mobile */}
+                  <div className="flex items-center gap-1 bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs md:text-sm">
+                    {/* Mobile: single star */}
+                    <Star className="w-3.5 h-3.5 md:hidden text-yellow-400 fill-current" />
+                    {/* Desktop: 5 stars */}
+                    <div className="hidden md:flex text-yellow-400">
                       {[1,2,3,4,5].map(i => (
                         <Star key={i} className={`w-4 h-4 ${store.rating !== null && i <= Math.round(store.rating!) ? 'fill-current' : 'text-gray-300'}`} />
                       ))}
@@ -417,19 +427,19 @@ const StoreProfilePage = () => {
                     {store.rating !== null ? (
                       <>
                         <span className="font-semibold text-[#071d7f]">{store.rating}</span>
-                        <span className="text-[#071d7f]/70">({store.reviews} reseñas)</span>
+                        <span className="text-[#071d7f]/70 hidden md:inline">({store.reviews} reseñas)</span>
                       </>
                     ) : (
                       <span className="text-[#071d7f]/60 text-xs">Sin reseñas</span>
                     )}
                   </div>
                   {/* Productos */}
-                  <div className="bg-white px-2 py-1 rounded text-[#071d7f]">
-                    <span className="font-semibold text-[#071d7f]">{store.productsCount}</span> productos
+                  <div className="bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[#071d7f] text-xs md:text-sm">
+                    <span className="font-semibold">{store.productsCount}</span> prod.
                   </div>
                   {/* Seguidores */}
-                  <div className="bg-white px-2 py-1 rounded text-[#071d7f]">
-                    <span className="font-semibold text-[#071d7f]">{store.followers}</span> seguidores
+                  <div className="bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[#071d7f] text-xs md:text-sm">
+                    <span className="font-semibold">{store.followers}</span> seg.
                   </div>
                 </div>
 
@@ -458,30 +468,30 @@ const StoreProfilePage = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons - icons only on mobile */}
               <div className="flex flex-row md:flex-col gap-1 md:gap-2 w-full md:w-auto">
                 <Button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className="flex-1 md:flex-none md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0 text-sm py-1.5 md:text-base md:py-2"
+                  className="flex-1 md:flex-none md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0 h-8 md:h-auto text-sm md:text-base"
                 >
-                  <Heart className={`w-4 h-4 mr-1.5 md:mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
-                  {isFollowing ? "Siguiendo" : "Seguir"}
+                  <Heart className={`w-4 h-4 md:mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+                  <span className="hidden md:inline">{isFollowing ? "Siguiendo" : "Seguir"}</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm py-1.5 md:text-base md:py-2"
+                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold h-8 md:h-auto text-sm md:text-base"
                 >
-                  <MessageCircle className="w-4 h-4 mr-1.5 md:mr-2 text-[#071d7f]" />
-                  Contactar
+                  <MessageCircle className="w-4 h-4 md:mr-2 text-[#071d7f]" />
+                  <span className="hidden md:inline">Contactar</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm py-1.5 md:text-base md:py-2"
+                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold h-8 md:h-auto text-sm md:text-base"
                   onClick={handleShare}
                 >
-                  <Share2 className="w-4 h-4 mr-1.5 md:mr-2 text-[#071d7f]" />
-                  Compartir
+                  <Share2 className="w-4 h-4 md:mr-2 text-[#071d7f]" />
+                  <span className="hidden md:inline">Compartir</span>
                 </Button>
               </div>
             </div>
