@@ -121,7 +121,7 @@ const CartPage = () => {
       toast.success(t('cart.quantityUpdated'));
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('No se pudo actualizar la cantidad');
+      toast.error(t('cart.quantityError'));
     }
   };
 
