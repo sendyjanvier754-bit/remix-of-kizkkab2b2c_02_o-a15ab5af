@@ -921,6 +921,14 @@ const SellerMisComprasPage = () => {
                     </Link>
                   </Button>
 
+                  <OpenChatButton
+                    orderId={selectedOrder.id}
+                    orderType="b2b"
+                    orderLabel={`Pedido #${selectedOrder.id.slice(0, 8).toUpperCase()}`}
+                    fullWidth
+                    navigateTo="seller"
+                  />
+
                   {['placed', 'paid'].includes(selectedOrder.status) && (
                     <Button 
                       variant="ghost" 

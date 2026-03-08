@@ -471,6 +471,13 @@ const SellerPedidosPage = () => {
 
               {/* Actions */}
               <div className="flex justify-end gap-2">
+                <OpenChatButton
+                  orderId={selectedOrder.id}
+                  orderType={(selectedOrder.metadata as any)?.order_type === 'b2b' ? 'b2b' : 'b2c'}
+                  orderLabel={`Pedido #${selectedOrder.id.slice(0, 8).toUpperCase()}`}
+                  navigateTo="seller"
+                  size="sm"
+                />
                 {selectedOrder.payment_status === 'pending_validation' && (
                   <>
                     <Button
