@@ -277,7 +277,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/cuenta">
                         <User className="h-3 w-3 mr-2" />
-                        Verificación
+                        {t('sellerDashboard.verification')}
                       </Link>
                     </Button>
                   </div>
