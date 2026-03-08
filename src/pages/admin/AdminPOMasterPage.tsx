@@ -50,6 +50,8 @@ export default function AdminPOMasterPage() {
   const [chinaTracking, setChinaTracking] = useState('');
   const [ordersDialog, setOrdersDialog] = useState(false);
   const [historyDialog, setHistoryDialog] = useState(false);
+  const [viewingPOId, setViewingPOId] = useState<string | null>(null);
+  const [viewingPONumber, setViewingPONumber] = useState<string>('');
 
   // Settings form state
   const [settingsForm, setSettingsForm] = useState({
@@ -61,7 +63,8 @@ export default function AdminPOMasterPage() {
     close_cron_expression: '',
   });
 
-  const { data: poOrders, isLoading: poOrdersLoading } = usePOOrders(selectedMarket?.active_po_id || null);
+  const effectivePOId = viewingPOId || selectedMarket?.active_po_id || null;
+  const { data: poOrders, isLoading: poOrdersLoading } = usePOOrders(effectivePOId);
   const { data: closedPOs } = useClosedPOs(selectedMarket?.market_id || null);
   const { data: marketSettings } = useMarketSettings(selectedMarket?.market_id || null);
 
@@ -187,7 +190,7 @@ export default function AdminPOMasterPage() {
               onClose={() => { setSelectedMarket(market); setCloseConfirmDialog(true); }}
               onTracking={() => { setSelectedMarket(market); setTrackingDialog(true); }}
               onSettings={() => handleOpenSettings(market)}
-              onViewOrders={() => { setSelectedMarket(market); setOrdersDialog(true); }}
+              onViewOrders={() => { setSelectedMarket(market); setViewingPOId(market.active_po_id); setViewingPONumber(market.active_po_number); setOrdersDialog(true); }}
               onViewHistory={() => { setSelectedMarket(market); setHistoryDialog(true); }}
             />
           ))}
@@ -369,7 +372,7 @@ export default function AdminPOMasterPage() {
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedMarket?.active_po_number} — {selectedMarket?.market_name}
+              {viewingPONumber || selectedMarket?.active_po_number} — {selectedMarket?.market_name}
             </DialogTitle>
           </DialogHeader>
 
@@ -469,7 +472,7 @@ export default function AdminPOMasterPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => generatePOBuyingListExcel({
-                          po_number: selectedMarket?.active_po_number || '',
+                          po_number: viewingPONumber || selectedMarket?.active_po_number || '',
                           market_name: selectedMarket?.market_name || '',
                           generated_at: new Date().toISOString(),
                           items: rows.map(r => ({
@@ -490,7 +493,7 @@ export default function AdminPOMasterPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => generatePOBuyingListPDF({
-                          po_number: selectedMarket?.active_po_number || '',
+                          po_number: viewingPONumber || selectedMarket?.active_po_number || '',
                           market_name: selectedMarket?.market_name || '',
                           generated_at: new Date().toISOString(),
                           items: rows.map(r => ({
@@ -639,6 +642,7 @@ export default function AdminPOMasterPage() {
                 <TableHead>Monto</TableHead>
                 <TableHead>Razón Cierre</TableHead>
                 <TableHead>Cerrada</TableHead>
+                <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -655,10 +659,25 @@ export default function AdminPOMasterPage() {
                   <TableCell className="text-xs text-muted-foreground">
                     {po.closed_at ? format(new Date(po.closed_at), 'dd/MM/yy HH:mm', { locale: es }) : '—'}
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setViewingPOId(po.id);
+                        setViewingPONumber(po.po_number);
+                        setHistoryDialog(false);
+                        setOrdersDialog(true);
+                      }}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Ver
+                    </Button>
+                  </TableCell>
                 </TableRow>
               )) || (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Sin historial
                   </TableCell>
                 </TableRow>
