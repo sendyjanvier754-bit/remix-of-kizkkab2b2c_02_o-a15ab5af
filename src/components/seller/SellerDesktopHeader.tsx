@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { searchProductsByImage } from "@/services/api/imageSearch";
+import { useTranslation } from "react-i18next";
 
 interface SearchResult {
   id: string;
@@ -93,6 +94,7 @@ const SellerDesktopHeader = ({
   const { data: categories = [] } = useCategories();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Root categories
   const rootCategories = categories.filter((c) => !c.parent_id);
@@ -213,7 +215,7 @@ const SellerDesktopHeader = ({
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognitionAPI) {
-      toast.error("Búsqueda por voz no soportada en este navegador");
+      toast.error(t('header.voiceNotSupported'));
       return;
     }
 
@@ -229,7 +231,7 @@ const SellerDesktopHeader = ({
 
     recognition.onstart = () => {
       setIsListening(true);
-      toast.info("Escuchando...", { duration: 2000 });
+      toast.info(t('header.listening'), { duration: 2000 });
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -251,7 +253,7 @@ const SellerDesktopHeader = ({
 
       if (finalTranscript) {
         setSearchQuery(finalTranscript);
-        toast.success(`Buscando: "${finalTranscript}"`);
+        toast.success(t('header.searching', { query: finalTranscript }));
         if (onSearch) {
           onSearch(finalTranscript.trim());
         }
@@ -263,13 +265,13 @@ const SellerDesktopHeader = ({
       setIsListening(false);
       
       if (event.error === 'no-speech') {
-        toast.error("No se detectó ninguna voz. Intenta de nuevo.");
+        toast.error(t('header.noSpeech'));
       } else if (event.error === 'audio-capture') {
-        toast.error("No se pudo acceder al micrófono.");
+        toast.error(t('header.noMicrophone'));
       } else if (event.error === 'not-allowed') {
-        toast.error("Permiso de micrófono denegado.");
+        toast.error(t('header.micDenied'));
       } else {
-        toast.error("Error al reconocer voz. Intenta de nuevo.");
+        toast.error(t('header.voiceError'));
       }
     };
 
@@ -286,20 +288,20 @@ const SellerDesktopHeader = ({
     if (!file) return;
 
     setIsImageSearching(true);
-    toast.info("Cargando modelo de IA... Esto puede tomar unos segundos la primera vez.");
+    toast.info(t('header.loadingAI'));
 
     try {
       const results = await searchProductsByImage(file);
       if (results && results.length > 0) {
         sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
         navigate('/seller/adquisicion-lotes?source=image');
-        toast.success(`Se encontraron ${results.length} productos similares`);
+        toast.success(t('header.similarFound', { count: results.length }));
       } else {
-        toast.info("No se encontraron productos similares");
+        toast.info(t('header.noSimilarFound'));
       }
     } catch (error) {
       console.error("Image search error:", error);
-      toast.error("Error al buscar por imagen");
+      toast.error(t('header.imageSearchError'));
     } finally {
       setIsImageSearching(false);
       if (imageInputRef.current) {
@@ -316,16 +318,16 @@ const SellerDesktopHeader = ({
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-8 text-xs text-gray-600">
               <div className="flex items-center gap-4">
-                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">Envío desde el extranjero</span>
+                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">{t('header.shippingAbroad')}</span>
                 <Link to="/tendencias" className="flex items-center gap-1 hover:text-[#071d7f] transition-colors">
                   <Flame className="w-3 h-3" />
-                  Tendencias
+                  {t('header.trends')}
                 </Link>
-                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">Devolución Gratis</span>
+                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">{t('header.freeReturns')}</span>
               </div>
               <div className="flex items-center gap-4">
-                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">Centro de Ayuda</span>
-                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">Vender</span>
+                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">{t('header.helpCenter')}</span>
+                <span className="cursor-pointer hover:text-[#071d7f] transition-colors">{t('header.sell')}</span>
               </div>
             </div>
           </div>
@@ -347,7 +349,7 @@ const SellerDesktopHeader = ({
               <form onSubmit={handleSearch} className="relative w-full flex items-center">
                 <Input
                   type="text"
-                  placeholder="Buscar productos..."
+                  placeholder={t('header.searchProducts')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
@@ -427,7 +429,7 @@ const SellerDesktopHeader = ({
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                Sin img
+                                {t('common.noImage')}
                               </div>
                             )}
                           </div>
@@ -442,12 +444,12 @@ const SellerDesktopHeader = ({
                         onClick={handleSearch}
                         className="w-full p-3 text-center text-sm font-medium text-green-600 hover:bg-green-50 transition-colors"
                       >
-                        Ver todos los resultados para "{searchQuery}"
+                        {t('common.seeAllResults', { query: searchQuery })}
                       </button>
                     </>
                   ) : (
                     <div className="p-4 text-center text-gray-500 text-sm">
-                      No se encontraron productos para "{searchQuery}"
+                      {t('common.noProductsFor', { query: searchQuery })}
                     </div>
                   )}
                 </div>
@@ -458,23 +460,23 @@ const SellerDesktopHeader = ({
             <div className="flex items-center gap-6">
               <Link to="/tendencias" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <Flame className="w-6 h-6" />
-                <span className="text-xs">Tendencias</span>
+                <span className="text-xs">{t('header.trends')}</span>
               </Link>
               <Link to="/admin/soporte-chat" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <MessageCircle className="w-6 h-6" />
-                <span className="text-xs">Soporte</span>
+                <span className="text-xs">{t('header.support')}</span>
               </Link>
               <Link to="/seller/favoritos" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <Heart className="w-6 h-6" />
-                <span className="text-xs">Favoritos</span>
+                <span className="text-xs">{t('header.favorites')}</span>
               </Link>
               <Link to="/seller/cuenta" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <User className="w-6 h-6" />
-                <span className="text-xs">Cuenta</span>
+                <span className="text-xs">{t('header.account')}</span>
               </Link>
               <Link to="/seller/carrito" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <ShoppingBag className="w-6 h-6" />
-                <span className="text-xs">Carrito</span>
+                <span className="text-xs">{t('header.cart')}</span>
               </Link>
             </div>
           </div>
@@ -496,7 +498,7 @@ const SellerDesktopHeader = ({
                     : "text-gray-700 hover:text-[#071d7f] hover:bg-gray-50 border-transparent"
                 )}
               >
-                Todos
+                {t('header.allCategories')}
               </button>
 
               {rootCategories.map((cat) => (
