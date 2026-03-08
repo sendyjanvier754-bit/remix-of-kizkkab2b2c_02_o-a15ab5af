@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { Menu } from "lucide-react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -27,6 +28,10 @@ export function AdminLayout({ children, title, subtitle }: AdminLayoutProps) {
                 {subtitle && (
                   <p className="text-sm text-muted-foreground hidden sm:block">{subtitle}</p>
                 )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <NotificationBell />
               </div>
             </div>
           </header>
