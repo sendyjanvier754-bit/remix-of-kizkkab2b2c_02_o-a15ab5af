@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, User } from "lucide-react";
+import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, User, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/useCategories";
 
@@ -427,6 +427,11 @@ const SellerMobileHeader = ({
         {/* Account User */}
         <Link to="/seller/cuenta" className="relative flex-shrink-0">
           <User className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
+        </Link>
+
+        {/* Support Chat */}
+        <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
+          <MessageCircle className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
         </Link>
 
         {/* Favorites heart */}

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, X, Flame } from "lucide-react";
+import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, X, Flame, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
@@ -459,6 +459,10 @@ const SellerDesktopHeader = ({
               <Link to="/tendencias" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <Flame className="w-6 h-6" />
                 <span className="text-xs">Tendencias</span>
+              </Link>
+              <Link to="/admin/soporte-chat" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
+                <MessageCircle className="w-6 h-6" />
+                <span className="text-xs">Soporte</span>
               </Link>
               <Link to="/seller/favoritos" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <Heart className="w-6 h-6" />

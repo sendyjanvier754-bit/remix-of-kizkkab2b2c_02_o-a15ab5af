@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
-import { Menu } from "lucide-react";
+import { Menu, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import NotificationBell from "@/components/notifications/NotificationBell";
 
 interface AdminLayoutProps {
@@ -31,6 +32,9 @@ export function AdminLayout({ children, title, subtitle }: AdminLayoutProps) {
               </div>
 
               <div className="flex items-center gap-2">
+                <Link to="/admin/soporte-chat" className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                  <MessageCircle className="h-5 w-5" />
+                </Link>
                 <NotificationBell />
               </div>
             </div>

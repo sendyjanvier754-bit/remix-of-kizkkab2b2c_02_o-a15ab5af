@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, ShoppingBag, Search, Heart, User, Mail, Camera, Loader2, TrendingUp, Flame, Mic, MicOff, Eye, EyeOff } from "lucide-react";
+import { Menu, X, ShoppingBag, Search, Heart, User, Mail, Camera, Loader2, TrendingUp, Flame, Mic, MicOff, Eye, EyeOff, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
@@ -326,6 +326,10 @@ const Header = ({
               </button>
             </div>
 
+            {/* Support Chat */}
+            <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
+              <MessageCircle className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
+            </Link>
             {/* Favorites heart */}
             <Link to={favoritesLink} className="relative flex-shrink-0">
               <Heart className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
@@ -475,6 +479,10 @@ const Header = ({
             <Link to="/tendencias" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <Flame className="w-6 h-6" />
               <span className="text-xs">Tendencias</span>
+            </Link>
+            <Link to="/admin/soporte-chat" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
+              <MessageCircle className="w-6 h-6" />
+              <span className="text-xs">Soporte</span>
             </Link>
             <Link to={favoritesLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <Heart className="w-6 h-6" />
