@@ -21,7 +21,8 @@ import {
   BarChart3,
   LayoutGrid,
   Globe,
-  Store
+  Store,
+  Headset
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
