@@ -1179,7 +1179,7 @@ const CheckoutPage = () => {
                       <span>${shippingCalculation.chinaUsaCost.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Envío (USA → Haití)</span>
+                      <span className="text-muted-foreground">{t('shipping.cost')} (USA → Haití)</span>
                       <span>${shippingCalculation.usaHaitiCost.toFixed(2)}</span>
                     </div>
                     {shippingCalculation.insuranceCost > 0 && (
