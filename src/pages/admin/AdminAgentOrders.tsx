@@ -16,7 +16,6 @@ import { Plus } from 'lucide-react';
 type Step = 'search' | 'otp' | 'workspace';
 
 export default function AdminAgentOrders() {
-  const navigate = useNavigate();
   const [step, setStep] = useState<Step>('search');
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
   const [pendingUserName, setPendingUserName] = useState('');
