@@ -711,7 +711,7 @@ const CheckoutPage = () => {
                     onClick={() => setShowAddressDialog(true)}
                   >
                     <Pencil className="h-4 w-4 mr-1" />
-                    Gestionar
+                    {t('checkout.manage')}
                   </Button>
                 </div>
 
