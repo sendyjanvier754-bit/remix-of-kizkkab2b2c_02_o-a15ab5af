@@ -118,7 +118,7 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
 
           {/* Stock Disponible */}
           <div className="space-y-2">
-            <Label htmlFor="stock">Stock Disponible</Label>
+            <Label htmlFor="stock">{t('editProductDialog.availableStock')}</Label>
             <Input
               id="stock"
               type="number"
