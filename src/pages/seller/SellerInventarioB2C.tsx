@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useInventarioB2C, InventarioB2CItem, InventarioB2CVariante } from "@/hooks/useInventarioB2C";
