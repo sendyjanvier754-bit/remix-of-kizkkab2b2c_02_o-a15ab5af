@@ -502,7 +502,7 @@ const CartPage = () => {
                         className="text-red-600 hover:text-red-700 text-sm font-medium flex items-center gap-1.5 transition"
                       >
                         <Trash2 className="w-4 h-4" />
-                        Vaciar
+                        {t('common.empty')}
                       </button>
                     </div>
                   </div>
