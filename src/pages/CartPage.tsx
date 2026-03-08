@@ -735,7 +735,7 @@ const CartPage = () => {
 
                 {/* Payment Methods */}
                 <div className="p-2 bg-gray-50 border-t border-gray-200">
-                  <p className="text-xs font-semibold text-gray-700 mb-1.5">Aceptamos:</p>
+                  <p className="text-xs font-semibold text-gray-700 mb-1.5">{t('common.weAccept')}:</p>
                   <div className="grid grid-cols-5 gap-1">
                     {/* Credit Cards Section - Show individual card types */}
                     {paymentMethods.includes('Tarjetas') && (
