@@ -526,7 +526,7 @@ const CartPage = () => {
                             <button
                               onClick={() => handleNegotiate(storeItems)}
                               className="p-1.5 hover:bg-green-100 rounded transition"
-                              title={`Contactar a ${storeName}`}
+                              title={t('common.contactStore', { store: storeName })}
                             >
                               <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
                             </button>
