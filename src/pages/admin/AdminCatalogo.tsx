@@ -147,7 +147,7 @@ const AdminCatalogo = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">SKUs Activos</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('adminCatalog.activeSKUs')}</CardTitle>
               <Package className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
