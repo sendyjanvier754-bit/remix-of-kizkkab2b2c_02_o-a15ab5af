@@ -126,7 +126,7 @@ const AdminCatalogo = () => {
           <div className="flex flex-wrap gap-2">
             <Button variant="default" onClick={() => setSmartImportOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
-              Importar Productos
+              {t('adminCatalog.importProducts')}
             </Button>
             <Button variant="outline" onClick={() => setBulkPriceOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
