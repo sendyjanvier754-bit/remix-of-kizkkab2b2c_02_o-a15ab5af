@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingBag, ArrowLeft, Eye, EyeOff, UserPlus, LogIn } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Eye, EyeOff, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,22 +19,17 @@ const authSchema = z.object({
 const AdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, session, role, isLoading: authLoading, signIn, signUp } = useAuth();
+  const { user, session, role, isLoading: authLoading, signIn } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Redirect if already logged in based on role
   useEffect(() => {
-    // Wait for auth to finish loading
     if (authLoading) return;
-    
-    // If there's a session, user is logged in - redirect based on role
     if (session) {
       if (role === 'admin') {
         navigate("/admin/dashboard", { replace: true });
@@ -48,10 +43,7 @@ const AdminLogin = () => {
 
   const validateForm = () => {
     try {
-      const data = isSignUp 
-        ? { email, password, fullName } 
-        : { email, password };
-      authSchema.parse(data);
+      authSchema.parse({ email, password });
       setErrors({});
       return true;
     } catch (error) {
@@ -68,91 +60,35 @@ const AdminLogin = () => {
     }
   };
 
-  const assignAdminRole = async (userId: string) => {
-    const { error } = await supabase
-      .from('user_roles')
-      .insert({ user_id: userId, role: 'admin' });
-    
-    if (error) {
-      console.error('Error assigning admin role:', error);
-      // If error is about duplicate, it's fine
-      if (!error.message.includes('duplicate')) {
-        throw error;
-      }
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await signUp(email, password, fullName);
-        
-        if (error) {
-          let message = "Error al crear la cuenta";
-          if (error.message.includes("already registered")) {
-            message = "Este email ya está registrado";
-          } else if (error.message.includes("invalid")) {
-            message = "Email o contraseña inválidos";
-          }
-          
-          toast({
-            title: "Error",
-            description: message,
-            variant: "destructive",
-          });
-          return;
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        let message = "Credenciales incorrectas";
+        if (error.message.includes("Invalid login")) {
+          message = "Email o contraseña incorrectos";
+        } else if (error.message.includes("Email not confirmed")) {
+          message = "Por favor confirma tu email primero";
         }
-
-        // Get the newly created user to assign admin role
-        const { data: { user: newUser } } = await supabase.auth.getUser();
         
-        if (newUser) {
-          try {
-            await assignAdminRole(newUser.id);
-            toast({
-              title: "¡Cuenta creada!",
-              description: "Ahora eres administrador del sistema",
-            });
-            navigate("/admin");
-          } catch (roleError) {
-            toast({
-              title: "Cuenta creada",
-              description: "Pero no se pudo asignar rol de admin. Contacta soporte.",
-              variant: "destructive",
-            });
-          }
-        }
-      } else {
-        const { error } = await signIn(email, password);
-        
-        if (error) {
-          let message = "Credenciales incorrectas";
-          if (error.message.includes("Invalid login")) {
-            message = "Email o contraseña incorrectos";
-          } else if (error.message.includes("Email not confirmed")) {
-            message = "Por favor confirma tu email primero";
-          }
-          
-          toast({
-            title: "Error de acceso",
-            description: message,
-            variant: "destructive",
-          });
-          return;
-        }
-
         toast({
-          title: "Acceso exitoso",
-          description: "Bienvenido al panel de administración",
+          title: "Error de acceso",
+          description: message,
+          variant: "destructive",
         });
-        navigate("/admin");
+        return;
       }
+
+      toast({
+        title: "Acceso exitoso",
+        description: "Bienvenido al panel de administración",
+      });
+      navigate("/admin");
     } catch (error) {
       toast({
         title: "Error",
@@ -174,12 +110,10 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen bg-hero-gradient flex items-center justify-center p-4">
-      {/* Decorative Elements */}
       <div className="absolute top-1/4 right-0 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-72 h-72 bg-teal/20 rounded-full blur-3xl" />
       
       <div className="w-full max-w-md relative z-10">
-        {/* Back Link */}
         <Link 
           to="/" 
           className="inline-flex items-center gap-2 text-primary-foreground/70 hover:text-primary-foreground mb-8 transition-colors"
@@ -193,35 +127,13 @@ const AdminLogin = () => {
             <div className="w-16 h-16 rounded-2xl bg-hero-gradient flex items-center justify-center mx-auto mb-4">
               <ShoppingBag className="w-8 h-8 text-primary-foreground" />
             </div>
-            <CardTitle className="text-2xl">
-              {isSignUp ? "Crear cuenta Admin" : "Panel de Administración"}
-            </CardTitle>
+            <CardTitle className="text-2xl">Panel de Administración</CardTitle>
             <CardDescription>
-              {isSignUp 
-                ? "Registra la primera cuenta de administrador" 
-                : "Ingresa tus credenciales para acceder"}
+              Ingresa tus credenciales para acceder
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Nombre completo</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Tu nombre"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className={errors.fullName ? "border-destructive" : ""}
-                    required
-                  />
-                  {errors.fullName && (
-                    <p className="text-sm text-destructive">{errors.fullName}</p>
-                  )}
-                </div>
-              )}
-              
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico</Label>
                 <Input
@@ -267,35 +179,18 @@ const AdminLogin = () => {
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-                    {isSignUp ? "Creando cuenta..." : "Ingresando..."}
+                    Ingresando...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    {isSignUp ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
-                    {isSignUp ? "Crear cuenta" : "Ingresar"}
+                    <LogIn className="w-4 h-4" />
+                    Ingresar
                   </span>
                 )}
               </Button>
             </form>
 
-            <div className="mt-6 pt-6 border-t">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setErrors({});
-                }}
-                className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {isSignUp ? (
-                  <>¿Ya tienes cuenta? <span className="text-primary font-medium">Inicia sesión</span></>
-                ) : (
-                  <>¿Primera vez? <span className="text-primary font-medium">Crear cuenta admin</span></>
-                )}
-              </button>
-            </div>
-
-            <p className="text-center text-sm text-muted-foreground mt-4">
+            <p className="text-center text-sm text-muted-foreground mt-6">
               ¿Problemas para acceder?{" "}
               <a href="mailto:soporte@sivermarket509.com" className="text-primary hover:underline">
                 Contactar soporte
