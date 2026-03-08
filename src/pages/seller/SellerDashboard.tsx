@@ -265,7 +265,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/wallet">
                         <CreditCard className="h-3 w-3 mr-2" />
-                        Billetera
+                        {t('sellerDashboard.wallet')}
                       </Link>
                     </Button>
 
