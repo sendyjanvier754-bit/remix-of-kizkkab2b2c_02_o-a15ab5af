@@ -161,7 +161,7 @@ const CartPage = () => {
       if (deleteError) throw deleteError;
 
       await refetch(false);
-      toast.success('Carrito vaciado');
+      toast.success(t('cart.cartCleared'));
       setShowClearCartDialog(false);
     } catch (error) {
       console.error('Error clearing cart:', error);
