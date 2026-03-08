@@ -22,7 +22,9 @@ import {
   LayoutGrid,
   Globe,
   Store,
-  Headset
+  Headset,
+  Bell,
+  MessageCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -59,6 +61,8 @@ const mainNavItems = [
   { title: "Vendedores", url: "/admin/vendedores", icon: Users },
   { title: "Banners", url: "/admin/banners", icon: ImageIcon },
   { title: "Pedidos por Agente", url: "/admin/agente-pedidos", icon: Headset },
+  { title: "Live Chat", url: "/admin/soporte-chat", icon: MessageCircle },
+  { title: "Notificaciones", url: "/admin/notificaciones", icon: Bell },
 ];
 
 const analyticsItems = [
