@@ -782,7 +782,7 @@ const CheckoutPage = () => {
               <Card className="p-6">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <Store className="h-5 w-5 text-[#071d7f]" />
-                  Punto de Retiro
+                  {t('checkout.pickupPointTitle')}
                 </h2>
 
                 {pickupPoints.length === 0 ? (
