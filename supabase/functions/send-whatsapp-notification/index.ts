@@ -22,6 +22,46 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // --- Authorization: require admin or seller role ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const userId = claimsData.claims.sub;
+    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: isAdmin } = await serviceClient.rpc("has_role", { _user_id: userId, _role: "admin" });
+    const { data: isSeller } = await serviceClient.rpc("has_role", { _user_id: userId, _role: "seller" });
+
+    if (!isAdmin && !isSeller) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    // --- End authorization ---
+
     const {
       notificationId,
       phone,
@@ -41,14 +81,11 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (!whatsappApiKey || !whatsappPhoneId) {
       console.log("WhatsApp not configured - logging message instead");
-      console.log(`Would send to ${phone}: ${message}`);
-      
-      // Return success but indicate WhatsApp not configured
+
       return new Response(
         JSON.stringify({ 
           success: true, 
           message: "WhatsApp not configured - message logged",
-          logged: { phone, message }
         }),
         {
           status: 200,
@@ -61,7 +98,6 @@ const handler = async (req: Request): Promise<Response> => {
     const formattedPhone = phone.replace(/[+\s-]/g, '');
 
     // Build WhatsApp API request
-    // Using WhatsApp Business API format
     const whatsappPayload = templateName
       ? {
           messaging_product: "whatsapp",
@@ -113,11 +149,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Update notification if ID provided
     if (notificationId) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      await supabase
+      await serviceClient
         .from("notifications")
         .update({ is_whatsapp_sent: true })
         .eq("id", notificationId);
