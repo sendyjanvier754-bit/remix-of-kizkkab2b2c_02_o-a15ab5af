@@ -382,8 +382,8 @@ const AdminDashboard = () => {
                       <td className="py-3 px-4 text-sm font-mono text-foreground">{payment.payment_number}</td>
                       <td className="py-3 px-4 text-sm text-foreground">{payment.seller?.name || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm font-semibold text-foreground">${payment.amount.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">{getMethodLabel(payment.method)}</td>
-                      <td className="py-3 px-4">{getStatusBadge(payment.status)}</td>
+                      <td className="py-3 px-4 text-sm text-muted-foreground">{getMethodLabel(payment.method, t)}</td>
+                      <td className="py-3 px-4">{getStatusBadge(payment.status, t)}</td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
                         {new Date(payment.created_at).toLocaleDateString("es-HT", {
                           day: "2-digit",
