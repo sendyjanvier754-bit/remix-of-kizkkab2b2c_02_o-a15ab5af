@@ -56,6 +56,7 @@ type DeliveryMethod = 'address' | 'pickup';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, role, isLoading: authLoading } = useAuth();
   const { items: allItems, isLoading: cartLoading } = useB2CCartItems();
   const { b2cSelectedIds } = useCartSelectionStore();
