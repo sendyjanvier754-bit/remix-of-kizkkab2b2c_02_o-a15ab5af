@@ -459,7 +459,7 @@ const StoreProfilePage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-row md:flex-col gap-1.5 md:gap-2 w-full md:w-auto">
+              <div className="flex flex-row md:flex-col gap-1 md:gap-2 w-full md:w-auto">
                 <Button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
