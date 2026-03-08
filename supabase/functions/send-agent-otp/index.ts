@@ -107,39 +107,14 @@ Deno.serve(async (req) => {
       .eq("id", target_user_id)
       .single();
 
-    // Send notification to user (in-app)
-    const { data: notification } = await supabase.from("notifications").insert({
+    // Send notification to user (in-app only)
+    await supabase.from("notifications").insert({
       user_id: target_user_id,
       title: "Código de verificación de agente",
       message: `Tu código de verificación es: ${code}. Compártelo con el agente para que pueda asistirte. Expira en 10 minutos.`,
       type: "agent_otp",
       data: { type: "agent_otp", session_id: session.id },
-    }).select("id").single();
-
-    // Send OTP via email
-    if (targetProfile?.email) {
-      try {
-        const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${serviceKey}`,
-            "apikey": serviceKey,
-          },
-          body: JSON.stringify({
-            notificationId: notification?.id,
-            recipientEmail: targetProfile.email,
-            recipientName: targetProfile.full_name || "Usuario",
-            subject: "Tu código de verificación - Silver Market",
-            title: "Código de verificación de agente",
-            message: `Un agente necesita acceso a tu cuenta para asistirte. Tu código de verificación es: <strong style="font-size: 24px; letter-spacing: 4px; color: #071d7f;">${code}</strong><br><br>Este código expira en 10 minutos. No lo compartas si no solicitaste asistencia.`,
-          }),
-        });
-        console.log("Email OTP sent:", await emailResponse.json());
-      } catch (emailErr) {
-        console.error("Failed to send OTP email (non-blocking):", emailErr);
-      }
-    }
+    });
 
     return new Response(
       JSON.stringify({
