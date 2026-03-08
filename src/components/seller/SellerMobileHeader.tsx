@@ -289,9 +289,9 @@ const SellerMobileHeader = ({
       if (results && results.length > 0) {
         sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
         navigate('/seller/adquisicion-lotes?source=image');
-        toast.success(`Se encontraron ${results.length} productos similares`);
+        toast.success(t('header.similarFound', { count: results.length }));
       } else {
-        toast.info("No se encontraron productos similares");
+        toast.info(t('header.noSimilarFound'));
       }
     } catch (error) {
       console.error("Image search error:", error);
