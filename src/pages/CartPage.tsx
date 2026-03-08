@@ -488,9 +488,9 @@ const CartPage = () => {
                         className="data-[state=checked]:bg-[#071d7f] data-[state=checked]:border-[#071d7f]"
                       />
                       <ShoppingCart className="w-5 h-5" />
-                      <h2 className="font-bold text-lg text-gray-900">Mi Carrito</h2>
+                      <h2 className="font-bold text-lg text-gray-900">{t('cart.title')}</h2>
                       <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full font-semibold">
-                        {items.length} productos
+                        {items.length} {t('common.products')}
                       </span>
                     </div>
                     <div className="flex items-center gap-4">
