@@ -347,6 +347,15 @@ const StoreProfilePage = () => {
                       <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
                     </button>
                   )}
+                  {/* Rating pill - right aligned on mobile */}
+                  <div className="ml-auto flex items-center gap-1 bg-white px-1.5 py-0.5 rounded text-xs flex-shrink-0">
+                    <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                    {store.rating !== null ? (
+                      <span className="font-semibold text-[#071d7f]">{store.rating}</span>
+                    ) : (
+                      <span className="text-[#071d7f]/60 text-xs">Sin reseñas</span>
+                    )}
+                  </div>
                 </div>
                 {store.location && (
                   <div className="flex items-center gap-1 text-xs text-white/80">
