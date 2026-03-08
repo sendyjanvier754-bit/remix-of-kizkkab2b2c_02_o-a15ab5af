@@ -1096,7 +1096,7 @@ const ProductPage = () => {
 
           {/* Related Products */}
         {relatedProducts.length > 0 && <div className="mt-12">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Productos Relacionados</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">{t('products.seeMore')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {relatedProducts.map(p => <Link key={p.id} to={`/producto/${p.sku}`} className="group">
                   <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all">
