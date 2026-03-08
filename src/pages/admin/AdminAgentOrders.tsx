@@ -206,7 +206,7 @@ export default function AdminAgentOrders() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+      )}
+    </AdminLayout>
   );
 }
