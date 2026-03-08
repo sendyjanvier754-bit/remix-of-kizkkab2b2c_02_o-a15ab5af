@@ -129,7 +129,7 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
               className="text-lg"
             />
             <p className="text-xs text-muted-foreground">
-              Unidades disponibles en tu inventario
+              {t('editProductDialog.stockHelp')}
             </p>
           </div>
         </div>
