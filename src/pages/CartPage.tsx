@@ -26,6 +26,7 @@ import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const CartPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { items, isLoading, refetch } = useB2CCartItems();
   const { isCartLocked } = useActiveB2COrder();
