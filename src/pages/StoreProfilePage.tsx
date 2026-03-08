@@ -326,12 +326,12 @@ const StoreProfilePage = () => {
           <div className="absolute inset-0 bg-black/50" />
 
           {/* Content — sits above the banner */}
-          <div className="relative z-10 px-3 py-2 md:px-6 md:py-6">
+          <div className="relative z-10 px-3 py-1.5 md:px-6 md:py-6">
             {/* Logo + Title inline on mobile */}
-            <div className="flex items-center gap-2.5 md:gap-4 mb-1.5 md:mb-4">
+            <div className="flex items-center gap-2 md:gap-4 mb-1 md:mb-4">
               <div
                 onClick={() => setShowProfileModal(true)}
-                className="w-11 h-11 md:w-28 md:h-28 rounded-lg md:rounded-xl border-2 md:border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+                className="w-10 h-10 md:w-28 md:h-28 rounded-lg md:rounded-xl border-2 md:border-4 border-white/80 shadow-lg bg-white overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
               >
                 {store.logo ? (
                   <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
@@ -350,9 +350,9 @@ const StoreProfilePage = () => {
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-start md:gap-6">
+              <div className="flex flex-col md:flex-row md:items-start md:gap-6">
               {/* Main Info */}
-              <div className="flex-1 mb-2 md:mb-0">
+              <div className="flex-1 mb-1 md:mb-0">
                 <div className="hidden md:flex items-center gap-2 mb-2">
                   <h1 className="text-3xl font-bold text-white">
                     {store.name}
@@ -361,7 +361,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Location + Ver Descripción */}
-                <div className="flex items-center gap-2 mb-1 md:mb-3">
+                <div className="flex items-center gap-2 mb-0.5 md:mb-3">
                   {store.description && (
                     <Button
                       onClick={() => setShowProfileModal(true)}
@@ -383,7 +383,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Badges + Store ID */}
-                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1.5 md:mb-3">
+                <div className="flex flex-wrap items-center gap-1 md:gap-2 mb-1 md:mb-3">
                   {store.badges.map((badge) => (
                     <span
                       key={badge}
@@ -406,7 +406,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="flex items-center gap-2 md:gap-4 flex-wrap text-sm mb-1.5 md:mb-3">
+                <div className="flex items-center gap-1.5 md:gap-4 flex-wrap text-sm mb-1 md:mb-3">
                   {/* Rating */}
                   <div className="flex items-center gap-1 bg-white px-2 py-1 rounded">
                     <div className="flex text-yellow-400">
@@ -459,7 +459,7 @@ const StoreProfilePage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-row md:flex-col gap-1.5 md:gap-2 w-full md:w-auto">
+              <div className="flex flex-row md:flex-col gap-1 md:gap-2 w-full md:w-auto">
                 <Button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
@@ -488,7 +488,7 @@ const StoreProfilePage = () => {
 
             {/* Payment Methods Section */}
             {storeData?.metadata && (
-              <div className="mt-4 pt-4 md:mt-8 md:pt-8 border-t border-white/20">
+              <div className="mt-2 pt-2 md:mt-8 md:pt-8 border-t border-white/20">
                 <PaymentMethodsDisplay
                   paymentData={storeData.metadata as PaymentMethodsData}
                   title="Métodos de Pago Aceptados"
