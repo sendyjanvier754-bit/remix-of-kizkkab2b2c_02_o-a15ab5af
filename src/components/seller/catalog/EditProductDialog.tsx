@@ -68,9 +68,9 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Editar Producto</DialogTitle>
+          <DialogTitle>{t('editProductDialog.title')}</DialogTitle>
           <DialogDescription>
-            Actualiza el precio y stock del producto
+            {t('editProductDialog.subtitle')}
           </DialogDescription>
         </DialogHeader>
 
