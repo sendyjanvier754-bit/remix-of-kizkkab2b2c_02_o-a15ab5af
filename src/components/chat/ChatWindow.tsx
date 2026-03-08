@@ -12,13 +12,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  waiting: { label: 'En espera', color: 'bg-amber-500/20 text-amber-600 border-amber-500/30', icon: <Clock className="h-3 w-3" /> },
-  active: { label: 'Activo', color: 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30', icon: <MessageCircle className="h-3 w-3" /> },
-  paused: { label: 'Pausado', color: 'bg-muted text-muted-foreground', icon: <Pause className="h-3 w-3" /> },
-  closed: { label: 'Cerrado', color: 'bg-destructive/20 text-destructive', icon: <X className="h-3 w-3" /> },
-};
+import { useTranslation } from 'react-i18next';
 
 interface ChatWindowProps {
   chatId: string;
@@ -27,6 +21,7 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ chatId, isStaff = false, onClose }: ChatWindowProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const {
     chat, messages, isLoading,
@@ -37,6 +32,13 @@ export function ChatWindow({ chatId, isStaff = false, onClose }: ChatWindowProps
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+    waiting: { label: t('chat.waiting'), color: 'bg-amber-500/20 text-amber-600 border-amber-500/30', icon: <Clock className="h-3 w-3" /> },
+    active: { label: t('chat.active'), color: 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30', icon: <MessageCircle className="h-3 w-3" /> },
+    paused: { label: t('chat.paused'), color: 'bg-muted text-muted-foreground', icon: <Pause className="h-3 w-3" /> },
+    closed: { label: t('chat.closed'), color: 'bg-destructive/20 text-destructive', icon: <X className="h-3 w-3" /> },
+  };
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -98,22 +100,22 @@ export function ChatWindow({ chatId, isStaff = false, onClose }: ChatWindowProps
           <div className="flex items-center gap-1">
             {isStaff && isWaiting && (
               <Button size="sm" onClick={joinChat} className="gap-1 text-xs h-7">
-                <LogIn className="h-3 w-3" /> Unirse
+                <LogIn className="h-3 w-3" /> {t('chat.join')}
               </Button>
             )}
             {!isClosed && !isWaiting && (
               <>
                 {isPaused ? (
                   <Button size="sm" variant="outline" onClick={resumeChat} className="gap-1 text-xs h-7">
-                    <Play className="h-3 w-3" /> Reanudar
+                    <Play className="h-3 w-3" /> {t('chat.resume')}
                   </Button>
                 ) : (
                   <Button size="sm" variant="outline" onClick={pauseChat} className="gap-1 text-xs h-7">
-                    <Pause className="h-3 w-3" /> Pausar
+                    <Pause className="h-3 w-3" /> {t('chat.pause')}
                   </Button>
                 )}
                 <Button size="sm" variant="destructive" onClick={() => closeChat()} className="gap-1 text-xs h-7">
-                  <X className="h-3 w-3" /> Cerrar
+                  <X className="h-3 w-3" /> {t('chat.close')}
                 </Button>
               </>
             )}
@@ -129,10 +131,10 @@ export function ChatWindow({ chatId, isStaff = false, onClose }: ChatWindowProps
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (
-          <div className="text-center text-muted-foreground text-sm py-8">Cargando mensajes...</div>
+          <div className="text-center text-muted-foreground text-sm py-8">{t('chat.loadingMessages')}</div>
         ) : messages.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-8">
-            {isWaiting ? 'Esperando a un miembro del equipo...' : 'No hay mensajes aún'}
+            {isWaiting ? t('chat.waitingForStaff') : t('chat.noMessages')}
           </div>
         ) : (
           messages.map((msg) => (
@@ -147,11 +149,11 @@ export function ChatWindow({ chatId, isStaff = false, onClose }: ChatWindowProps
           {isWaiting && !isStaff ? (
             <div className="text-center text-sm text-muted-foreground py-2">
               <Clock className="h-4 w-4 inline mr-1" />
-              Esperando a un miembro del equipo...
+              {t('chat.waitingMessage')}
             </div>
           ) : isPaused ? (
             <div className="text-center text-sm text-muted-foreground py-2">
-              Chat pausado. Reanuda para enviar mensajes.
+              {t('chat.pausedMessage')}
             </div>
           ) : (
             <div className="flex gap-2">
@@ -160,7 +162,7 @@ export function ChatWindow({ chatId, isStaff = false, onClose }: ChatWindowProps
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Escribe un mensaje..."
+                placeholder={t('chat.placeholder')}
                 disabled={!canSend || sending}
                 className="flex-1"
               />

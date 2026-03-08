@@ -13,6 +13,7 @@ import { useB2CCartItems } from "@/hooks/useB2CCartItems";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -69,6 +70,7 @@ const Header = ({
   selectedCategoryId = null,
   onCategorySelect
 }: HeaderProps) => {
+  const { t } = useTranslation();
   const { canToggle, toggleViewMode, isClientPreview } = useViewMode();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState(null);
@@ -173,24 +175,22 @@ const Header = ({
     if (!file) return;
 
     setIsImageSearching(true);
-    toast.info("Cargando modelo de IA... Esto puede tomar unos segundos la primera vez.");
+    toast.info(t('header.loadingAI'));
 
     try {
       const results = await searchProductsByImage(file);
       if (results && results.length > 0) {
-        // Store results in sessionStorage and navigate
         sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
         navigate('/productos?source=image');
-        toast.success(`Se encontraron ${results.length} productos similares`);
+        toast.success(t('header.similarFound', { count: results.length }));
       } else {
-        toast.info("No se encontraron productos similares");
+        toast.info(t('header.noSimilarFound'));
       }
     } catch (error) {
       console.error("Image search error:", error);
-      toast.error("Error al buscar por imagen");
+      toast.error(t('header.imageSearchError'));
     } finally {
       setIsImageSearching(false);
-      // Reset input
       if (imageInputRef.current) {
         imageInputRef.current.value = '';
       }
@@ -201,7 +201,7 @@ const Header = ({
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognitionAPI) {
-      toast.error("Búsqueda por voz no soportada en este navegador");
+      toast.error(t('header.voiceNotSupported'));
       return;
     }
 
@@ -217,7 +217,7 @@ const Header = ({
 
     recognition.onstart = () => {
       setIsListening(true);
-      toast.info("Escuchando...", { duration: 2000 });
+      toast.info(t('header.listening'), { duration: 2000 });
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -239,7 +239,7 @@ const Header = ({
 
       if (finalTranscript) {
         setSearchQuery(finalTranscript);
-        toast.success(`Buscando: "${finalTranscript}"`);
+        toast.success(t('header.searching', { query: finalTranscript }));
         navigate(`/productos?q=${encodeURIComponent(finalTranscript.trim())}`);
       }
     };
@@ -249,13 +249,13 @@ const Header = ({
       setIsListening(false);
       
       if (event.error === 'no-speech') {
-        toast.error("No se detectó ninguna voz. Intenta de nuevo.");
+        toast.error(t('header.noSpeech'));
       } else if (event.error === 'audio-capture') {
-        toast.error("No se pudo acceder al micrófono.");
+        toast.error(t('header.noMicrophone'));
       } else if (event.error === 'not-allowed') {
-        toast.error("Permiso de micrófono denegado.");
+        toast.error(t('header.micDenied'));
       } else {
-        toast.error("Error al reconocer voz. Intenta de nuevo.");
+        toast.error(t('header.voiceError'));
       }
     };
 
@@ -284,7 +284,7 @@ const Header = ({
             <div className="flex-1 max-w-[55%] flex items-center bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
               <input
                 type="text"
-                placeholder="Buscar productos..."
+                placeholder={t('header.searchProducts')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-500 px-4 py-2 outline-none"
@@ -362,7 +362,7 @@ const Header = ({
                 selectedCategoryId === null ? "text-white border-b border-white" : "text-gray-300 hover:text-white"
               )}
             >
-              Todo
+              {t('header.allCategories')}
             </button>
             {rootCategories.map((cat) => (
               <button
@@ -391,17 +391,17 @@ const Header = ({
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-10 text-xs text-gray-600">
             <div className="flex items-center gap-4">
-              <span>Envío desde el extranjero</span>
+              <span>{t('header.shippingAbroad')}</span>
               <Link to="/tendencias" className="flex items-center gap-1 hover:text-[#071d7f] transition-colors">
                 <TrendingUp className="w-3 h-3" />
-                <span>Tendencias</span>
+                <span>{t('header.trends')}</span>
               </Link>
-              <span>Devolución Gratis</span>
+              <span>{t('header.freeReturns')}</span>
             </div>
             <div className="flex items-center gap-4">
-              <button>Centro de Ayuda</button>
+              <button>{t('header.helpCenter')}</button>
               <span></span>
-              <Link to="/admin/login">Vender</Link>
+              <Link to="/admin/login">{t('header.sell')}</Link>
             </div>
           </div>
         </div>
@@ -423,7 +423,7 @@ const Header = ({
             <div className="relative w-full flex items-center">
               <Input
                 type="text"
-                placeholder="Buscar productos..."
+                placeholder={t('header.searchProducts')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-4 pr-20 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#071d7f]"
@@ -478,19 +478,19 @@ const Header = ({
           <div className="hidden md:flex items-center gap-6">
             <Link to="/tendencias" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <Flame className="w-6 h-6" />
-              <span className="text-xs">Tendencias</span>
+              <span className="text-xs">{t('header.trends')}</span>
             </Link>
             <Link to="/admin/soporte-chat" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <MessageCircle className="w-6 h-6" />
-              <span className="text-xs">Soporte</span>
+              <span className="text-xs">{t('header.support')}</span>
             </Link>
             <Link to={favoritesLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <Heart className="w-6 h-6" />
-              <span className="text-xs">Favoritos</span>
+              <span className="text-xs">{t('header.favorites')}</span>
             </Link>
             <Link to={user ? accountLink : "/cuenta"} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <User className="w-6 h-6" />
-              <span className="text-xs">Cuenta</span>
+              <span className="text-xs">{t('header.account')}</span>
             </Link>
             {isB2B && (
               <Link to="/seller/adquisicion-lotes" className="flex flex-col items-center gap-1 text-white bg-[#071d7f] hover:bg-[#0a3a9f] px-3 py-1 rounded-md transition">
@@ -501,7 +501,7 @@ const Header = ({
             <LanguageSwitcher compact variant="ghost" />
             <Link to={cartLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
               <ShoppingBag className="w-6 h-6" />
-              <span className="text-xs">Carrito</span>
+              <span className="text-xs">{t('header.cart')}</span>
               {cartCount > 0 && (
                 <span className={cn(
                   "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1",
@@ -530,7 +530,7 @@ const Header = ({
         <div className="hidden lg:block border-t border-gray-200 relative">
           <div ref={catBarRef} className="flex items-center gap-0 h-12 overflow-hidden whitespace-nowrap pl-12 pr-12">
           {categoriesLoading ? (
-            <div className="px-4 py-3 text-sm text-gray-500">Cargando categorías...</div>
+            <div className="px-4 py-3 text-sm text-gray-500">{t('header.loadingCategories')}</div>
           ) : (
             <>
               <button
@@ -543,7 +543,7 @@ const Header = ({
                     : "text-gray-700 hover:text-[#071d7f] hover:bg-gray-50 border-transparent hover:border-[#071d7f]"
                 )}
               >
-                Todo
+                {t('header.allCategories')}
               </button>
               {rootCategories.map((cat) => {
                 const subs = getSubcategories(cat.id);
@@ -623,21 +623,21 @@ const Header = ({
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="container mx-auto px-4 py-4">
-            <Input type="text" placeholder="Buscar..." className="w-full mb-4 rounded-full" />
+            <Input type="text" placeholder={t('header.searchPlaceholder')} className="w-full mb-4 rounded-full" />
 
             <nav className="flex flex-col gap-2">
               <div className="flex items-center justify-around py-4 border-b border-gray-100">
                 <Link to={favoritesLink} className="flex flex-col items-center gap-1 text-gray-700" onClick={() => setIsMenuOpen(false)}>
                   <Heart className="w-6 h-6" />
-                  <span className="text-xs">Favoritos</span>
+                  <span className="text-xs">{t('header.favorites')}</span>
                 </Link>
                 <Link to={accountLink} className="flex flex-col items-center gap-1 text-gray-700" onClick={() => setIsMenuOpen(false)}>
                   <User className="w-6 h-6" />
-                  <span className="text-xs">Cuenta</span>
+                  <span className="text-xs">{t('header.account')}</span>
                 </Link>
                 <Link to="/carrito" className="flex flex-col items-center gap-1 text-gray-700" onClick={() => setIsMenuOpen(false)}>
                   <ShoppingBag className="w-6 h-6" />
-                  <span className="text-xs">Carrito</span>
+                  <span className="text-xs">{t('header.cart')}</span>
                 </Link>
               </div>
               {rootCategories.map((cat) => {
@@ -647,7 +647,7 @@ const Header = ({
                   <div key={cat.id} className="border-b border-gray-100">
                     <div className="flex items-center justify-between w-full">
                       <button onClick={() => { setOpenMobileCategory(isOpen ? null : cat.id); }} className="w-full text-left py-3 px-2 text-gray-800 hover:bg-gray-50 font-medium">{cat.name}</button>
-                      <button onClick={() => { setIsMenuOpen(false); handleCategoryClick(cat); }} className="px-3 py-2 text-gray-600">Ir</button>
+                      <button onClick={() => { setIsMenuOpen(false); handleCategoryClick(cat); }} className="px-3 py-2 text-gray-600">{t('common.go')}</button>
                     </div>
 
                     {isOpen && subs.length > 0 && (
@@ -686,4 +686,3 @@ const Header = ({
 };
 
 export default Header;
-

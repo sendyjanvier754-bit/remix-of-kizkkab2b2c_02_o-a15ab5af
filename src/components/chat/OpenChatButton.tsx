@@ -4,6 +4,7 @@ import { MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCreateChat } from '@/hooks/useSupportChat';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface OpenChatButtonProps {
   orderId: string;
@@ -13,7 +14,6 @@ interface OpenChatButtonProps {
   size?: 'default' | 'sm' | 'lg';
   className?: string;
   fullWidth?: boolean;
-  /** Where to navigate after creating the chat */
   navigateTo?: 'admin' | 'seller' | 'buyer';
 }
 
@@ -27,6 +27,7 @@ export function OpenChatButton({
   fullWidth = false,
   navigateTo = 'buyer',
 }: OpenChatButtonProps) {
+  const { t } = useTranslation();
   const [isCreating, setIsCreating] = useState(false);
   const { createChat } = useCreateChat();
   const navigate = useNavigate();
@@ -38,17 +39,16 @@ export function OpenChatButton({
       const title = `Soporte - ${label} (${orderType.toUpperCase()})`;
       const chat = await createChat(title, orderId, orderType);
 
-      toast.success('Chat de soporte creado');
+      toast.success(t('common.success'));
 
-      // Navigate to the chat
       const routes: Record<string, string> = {
         admin: '/admin/soporte-chat',
-        seller: '/admin/soporte-chat', // sellers use the same route for now
+        seller: '/admin/soporte-chat',
         buyer: '/admin/soporte-chat',
       };
       navigate(`${routes[navigateTo]}?chat=${chat.id}`);
     } catch (error: any) {
-      toast.error('Error al crear el chat: ' + (error.message || 'Intenta de nuevo'));
+      toast.error(t('errors.generic'));
     } finally {
       setIsCreating(false);
     }
@@ -67,7 +67,7 @@ export function OpenChatButton({
       ) : (
         <MessageCircle className="h-4 w-4 mr-2" />
       )}
-      Abrir Chat de Soporte
+      {t('chat.openSupport')}
     </Button>
   );
 }

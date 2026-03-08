@@ -55,7 +55,35 @@
     "noResults": "Sin resultados",
     "pageOf": "Página {{current}} de {{total}}",
     "showing": "Mostrando {{from}}-{{to}} de {{total}} registros",
-    "perPage": "Por página"
+    "perPage": "Por página",
+    "go": "Ir"
+  },
+
+  "header": {
+    "shippingAbroad": "Envío desde el extranjero",
+    "trends": "Tendencias",
+    "freeReturns": "Devolución Gratis",
+    "helpCenter": "Centro de Ayuda",
+    "sell": "Vender",
+    "searchProducts": "Buscar productos...",
+    "searchPlaceholder": "Buscar...",
+    "support": "Soporte",
+    "favorites": "Favoritos",
+    "account": "Cuenta",
+    "cart": "Carrito",
+    "allCategories": "Todo",
+    "loadingCategories": "Cargando categorías...",
+    "loadingAI": "Cargando modelo de IA... Esto puede tomar unos segundos la primera vez.",
+    "similarFound": "Se encontraron {{count}} productos similares",
+    "noSimilarFound": "No se encontraron productos similares",
+    "imageSearchError": "Error al buscar por imagen",
+    "voiceNotSupported": "Búsqueda por voz no soportada en este navegador",
+    "listening": "Escuchando...",
+    "searching": "Buscando: \"{{query}}\"",
+    "noSpeech": "No se detectó ninguna voz. Intenta de nuevo.",
+    "noMicrophone": "No se pudo acceder al micrófono.",
+    "micDenied": "Permiso de micrófono denegado.",
+    "voiceError": "Error al reconocer voz. Intenta de nuevo."
   },
 
   "nav": {
@@ -272,6 +300,24 @@
     "requestQuote": "Solicitar Cotización",
     "approvedBuyer": "Comprador Aprobado",
     "pendingApproval": "Pendiente de Aprobación"
+  },
+
+  "chat": {
+    "waiting": "En espera",
+    "active": "Activo",
+    "paused": "Pausado",
+    "closed": "Cerrado",
+    "join": "Unirse",
+    "resume": "Reanudar",
+    "pause": "Pausar",
+    "close": "Cerrar",
+    "loadingMessages": "Cargando mensajes...",
+    "waitingForStaff": "Esperando a un miembro del equipo...",
+    "noMessages": "No hay mensajes aún",
+    "waitingMessage": "Esperando a un miembro del equipo...",
+    "pausedMessage": "Chat pausado. Reanuda para enviar mensajes.",
+    "placeholder": "Escribe un mensaje...",
+    "openSupport": "Abrir Chat de Soporte"
   },
 
   "language": {

@@ -55,7 +55,35 @@
     "noResults": "No results",
     "pageOf": "Page {{current}} of {{total}}",
     "showing": "Showing {{from}}-{{to}} of {{total}} entries",
-    "perPage": "Per page"
+    "perPage": "Per page",
+    "go": "Go"
+  },
+
+  "header": {
+    "shippingAbroad": "International Shipping",
+    "trends": "Trending",
+    "freeReturns": "Free Returns",
+    "helpCenter": "Help Center",
+    "sell": "Sell",
+    "searchProducts": "Search products...",
+    "searchPlaceholder": "Search...",
+    "support": "Support",
+    "favorites": "Favorites",
+    "account": "Account",
+    "cart": "Cart",
+    "allCategories": "All",
+    "loadingCategories": "Loading categories...",
+    "loadingAI": "Loading AI model... This may take a few seconds the first time.",
+    "similarFound": "Found {{count}} similar products",
+    "noSimilarFound": "No similar products found",
+    "imageSearchError": "Error searching by image",
+    "voiceNotSupported": "Voice search not supported in this browser",
+    "listening": "Listening...",
+    "searching": "Searching: \"{{query}}\"",
+    "noSpeech": "No speech detected. Try again.",
+    "noMicrophone": "Could not access microphone.",
+    "micDenied": "Microphone permission denied.",
+    "voiceError": "Voice recognition error. Try again."
   },
 
   "nav": {
@@ -272,6 +300,24 @@
     "requestQuote": "Request Quote",
     "approvedBuyer": "Approved Buyer",
     "pendingApproval": "Pending Approval"
+  },
+
+  "chat": {
+    "waiting": "Waiting",
+    "active": "Active",
+    "paused": "Paused",
+    "closed": "Closed",
+    "join": "Join",
+    "resume": "Resume",
+    "pause": "Pause",
+    "close": "Close",
+    "loadingMessages": "Loading messages...",
+    "waitingForStaff": "Waiting for a team member...",
+    "noMessages": "No messages yet",
+    "waitingMessage": "Waiting for a team member...",
+    "pausedMessage": "Chat paused. Resume to send messages.",
+    "placeholder": "Type a message...",
+    "openSupport": "Open Support Chat"
   },
 
   "language": {

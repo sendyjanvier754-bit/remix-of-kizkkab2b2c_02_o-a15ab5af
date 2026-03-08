@@ -55,7 +55,35 @@
     "noResults": "Aucun résultat",
     "pageOf": "Page {{current}} sur {{total}}",
     "showing": "Affichage de {{from}}-{{to}} sur {{total}} entrées",
-    "perPage": "Par page"
+    "perPage": "Par page",
+    "go": "Aller"
+  },
+
+  "header": {
+    "shippingAbroad": "Livraison internationale",
+    "trends": "Tendances",
+    "freeReturns": "Retours gratuits",
+    "helpCenter": "Centre d'aide",
+    "sell": "Vendre",
+    "searchProducts": "Rechercher des produits...",
+    "searchPlaceholder": "Rechercher...",
+    "support": "Support",
+    "favorites": "Favoris",
+    "account": "Compte",
+    "cart": "Panier",
+    "allCategories": "Tout",
+    "loadingCategories": "Chargement des catégories...",
+    "loadingAI": "Chargement du modèle IA... Cela peut prendre quelques secondes la première fois.",
+    "similarFound": "{{count}} produits similaires trouvés",
+    "noSimilarFound": "Aucun produit similaire trouvé",
+    "imageSearchError": "Erreur lors de la recherche par image",
+    "voiceNotSupported": "Recherche vocale non prise en charge dans ce navigateur",
+    "listening": "Écoute en cours...",
+    "searching": "Recherche : \"{{query}}\"",
+    "noSpeech": "Aucune voix détectée. Réessayez.",
+    "noMicrophone": "Impossible d'accéder au microphone.",
+    "micDenied": "Permission du microphone refusée.",
+    "voiceError": "Erreur de reconnaissance vocale. Réessayez."
   },
 
   "nav": {
@@ -272,6 +300,24 @@
     "requestQuote": "Demander un Devis",
     "approvedBuyer": "Acheteur Approuvé",
     "pendingApproval": "En Attente d'Approbation"
+  },
+
+  "chat": {
+    "waiting": "En attente",
+    "active": "Actif",
+    "paused": "En pause",
+    "closed": "Fermé",
+    "join": "Rejoindre",
+    "resume": "Reprendre",
+    "pause": "Pause",
+    "close": "Fermer",
+    "loadingMessages": "Chargement des messages...",
+    "waitingForStaff": "En attente d'un membre de l'équipe...",
+    "noMessages": "Aucun message pour l'instant",
+    "waitingMessage": "En attente d'un membre de l'équipe...",
+    "pausedMessage": "Chat en pause. Reprenez pour envoyer des messages.",
+    "placeholder": "Écrivez un message...",
+    "openSupport": "Ouvrir le chat de support"
   },
 
   "language": {
