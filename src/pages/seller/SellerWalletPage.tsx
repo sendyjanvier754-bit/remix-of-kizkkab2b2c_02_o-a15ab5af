@@ -255,7 +255,7 @@ const SellerWalletPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-amber-600" />
-                        <span className="text-xs md:text-sm font-medium text-gray-600">Pendiente Liberar</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-600">{t('sellerWallet.pendingRelease')}</span>
                       </div>
                       <p className="text-lg md:text-2xl font-bold text-gray-900">
                         ${(wallet?.pending_balance || 0).toLocaleString("es-DO", {
