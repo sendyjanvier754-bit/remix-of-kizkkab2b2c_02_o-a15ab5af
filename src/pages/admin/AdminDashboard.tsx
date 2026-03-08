@@ -23,14 +23,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCoverageAlerts } from "@/hooks/useCoverageAlerts";
 import { useTranslation } from "react-i18next";
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string, t: any) => {
   switch (status) {
     case "verified":
-      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-teal/10 text-teal"><CheckCircle2 className="w-3 h-3" />Verificado</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-teal/10 text-teal"><CheckCircle2 className="w-3 h-3" />{t('common.verified')}</span>;
     case "pending":
-      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500"><Clock className="w-3 h-3" />Pendiente</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500"><Clock className="w-3 h-3" />{t('common.pending')}</span>;
     case "rejected":
-      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive"><AlertTriangle className="w-3 h-3" />Rechazado</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive"><AlertTriangle className="w-3 h-3" />{t('common.rejected')}</span>;
     default:
       return null;
   }
