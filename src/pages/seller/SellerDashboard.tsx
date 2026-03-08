@@ -109,7 +109,7 @@ const SellerDashboard = () => {
                   <CardContent className="p-1.5 text-center">
                     <DollarSign className="h-3 w-3 text-green-600 mx-auto mb-0.5" />
                     <div className="text-base md:text-lg font-bold text-green-600">${totalSpent.toFixed(0)}</div>
-                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">Inversión</p>
+                    <p className="text-[8px] md:text-xs text-muted-foreground leading-tight">{t('sellerDashboard.investment')}</p>
                   </CardContent>
                 </Card>
 
