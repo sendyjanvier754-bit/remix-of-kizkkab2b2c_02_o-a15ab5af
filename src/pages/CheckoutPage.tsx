@@ -725,13 +725,13 @@ const CheckoutPage = () => {
                 {addresses.length === 0 ? (
                   <div className="text-center py-6 bg-muted/50 rounded-lg">
                     <MapPin className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-3">No tienes direcciones guardadas</p>
+                    <p className="text-muted-foreground mb-3">{t('checkout.noAddresses')}</p>
                     <Button 
                       onClick={() => setShowAddressDialog(true)}
                       className="bg-[#071d7f] hover:bg-[#0a2a9f]"
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Agregar Dirección
+                      {t('checkout.addAddress')}
                     </Button>
                   </div>
                 ) : (
