@@ -425,8 +425,8 @@ const CartPage = () => {
                                   {item.size}
                                 </span>
                               )}
-                              <span className="text-xs text-gray-600">
-                                Cant: {item.quantity}
+                               <span className="text-xs text-gray-600">
+                                {t('common.qty')}: {item.quantity}
                               </span>
                             </div>
                             
