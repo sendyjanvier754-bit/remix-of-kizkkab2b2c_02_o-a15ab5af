@@ -326,6 +326,10 @@ const Header = ({
               </button>
             </div>
 
+            {/* Support Chat */}
+            <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
+              <MessageCircle className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
+            </Link>
             {/* Favorites heart */}
             <Link to={favoritesLink} className="relative flex-shrink-0">
               <Heart className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
