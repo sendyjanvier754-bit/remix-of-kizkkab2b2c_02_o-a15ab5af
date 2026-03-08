@@ -253,7 +253,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/inventario">
                         <Package className="h-3 w-3 mr-2" />
-                        Inventario
+                        {t('sellerDashboard.inventoryAction')}
                       </Link>
                     </Button>
 
