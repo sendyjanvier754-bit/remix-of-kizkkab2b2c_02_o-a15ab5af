@@ -472,7 +472,7 @@ export default function AdminPOMasterPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => generatePOBuyingListExcel({
-                          po_number: selectedMarket?.active_po_number || '',
+                          po_number: viewingPONumber || selectedMarket?.active_po_number || '',
                           market_name: selectedMarket?.market_name || '',
                           generated_at: new Date().toISOString(),
                           items: rows.map(r => ({
