@@ -150,7 +150,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
   });
 };
 const ProductPage = () => {
-  // Sticky nav state
+  const { t } = useTranslation();
   const [showStickyNav, setShowStickyNav] = useState(false);
   const [showCompactHeader, setShowCompactHeader] = useState(false);
   const [showFloatingCart, setShowFloatingCart] = useState(false);
