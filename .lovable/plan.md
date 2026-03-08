@@ -1,75 +1,155 @@
+## Plan: Módulo de Creación de Pedidos por Agente
 
+### Resumen
 
-## Problem Analysis
+Sistema que permite a admin/seller/agente de venta (crea el rol de agente de venta) armar el carrito de un usuario de forma remota, con autenticación delegada vía OTP, interfaz espejo del módulo de Adquisición de Lotes, soporte multitarea con borradores, y configuración de envío en nombre del usuario.
 
-There are **two separate issues** to address:
+---
 
-### Issue 1: Build Error in AdminLogisticsPage.tsx
-Lines 100-104 contain orphaned destructuring code (`updateCategoryShippingRate, createShipmentTracking, generateHybridTrackingId, markLabelPrinted, } = useLogisticsEngine();`) that duplicates the already-existing destructuring at lines 71-84. This was likely left behind from a bad merge. Fix: remove lines 100-104 and add the missing properties to the existing destructuring at lines 71-84.
+### 1. Esquema de Base de Datos (Migración SQL)
 
-### Issue 2: Seller Catalog Product/Variant Consolidation
+**Nueva tabla `agent_sessions**` — sesiones de asistencia remota:
 
-**Current State (broken)**:
-- `seller_catalog` has **duplicate rows per product** (one per variant purchased, or one per order). Example: `source_product_id = 4a53679c` has 2 rows in `seller_catalog`.
-- `seller_catalog_variants` table **exists** in the DB with correct schema (`id, seller_catalog_id, variant_id, sku, stock, precio_override, is_available, availability_status`).
-- A trigger function `auto_add_to_seller_catalog_on_complete()` exists and **correctly** consolidates: 1 `seller_catalog` row per product, N `seller_catalog_variants` rows per variant. But the old data has duplicates from before the trigger was created.
-- A view `v_seller_catalog_with_variants` exists in the DB that aggregates variants per product.
-- The frontend `useSellerCatalog` hook does NOT use `seller_catalog_variants` at all -- it reads flat rows from `seller_catalog` and groups them client-side via `groupByProduct()` using `sourceProductId`.
-
-**Target State (like Amazon/Alibaba)**:
-- 1 `seller_catalog` row per unique product per seller store
-- N `seller_catalog_variants` rows under each catalog entry (one per variant purchased)
-- Stock lives on `seller_catalog_variants.stock`, NOT on `seller_catalog.stock`
-- Frontend reads from the `v_seller_catalog_with_variants` view or queries `seller_catalog` + `seller_catalog_variants` joined
-
-### Plan
-
-**Step 1: Fix AdminLogisticsPage.tsx build error**
-- Remove duplicate destructuring lines 100-104
-- Add missing properties (`updateCategoryShippingRate, createShipmentTracking, generateHybridTrackingId, markLabelPrinted`) to the existing destructuring block at lines 71-84
-
-**Step 2: Data cleanup migration**
-- SQL migration to consolidate duplicate `seller_catalog` rows:
-  - For each `(seller_store_id, source_product_id)` group with multiple rows, keep one canonical row and merge the others' data into `seller_catalog_variants`
-  - Delete the duplicate `seller_catalog` rows
-- Add a UNIQUE constraint on `seller_catalog(seller_store_id, source_product_id)` to prevent future duplicates
-
-**Step 3: Add `seller_catalog_variants` to TypeScript types**
-- Update `src/integrations/supabase/types.ts` to include the `seller_catalog_variants` table definition
-
-**Step 4: Update `useSellerCatalog` hook**
-- Change `fetchCatalog` to query `seller_catalog` joined with `seller_catalog_variants` (or use `v_seller_catalog_with_variants`)
-- Stock = SUM of `seller_catalog_variants.stock` per product
-- Each variant carries its own SKU, availability_status, stock
-- Remove the client-side `groupByProduct` N+1 query pattern (currently makes individual `products` and `product_variants` queries per group)
-- Update `SellerCatalogItem` and `ProductoConVariantes` interfaces to reflect variant-level data from `seller_catalog_variants`
-
-**Step 5: Update seller catalog UI components**
-- `MiCatalogTable.tsx` and `SellerMiCatalogoPage.tsx` already use `ProductoConVariantes` -- ensure they render variant data from the DB rather than from the flat grouping
-- Stock updates should target `seller_catalog_variants` rows, not `seller_catalog.stock`
-
-**Step 6: Verify trigger handles future orders correctly**
-- The existing `auto_add_to_seller_catalog_on_complete()` trigger already follows the correct pattern (1 product row, N variant rows). Confirm it works with the unique constraint.
-
-### Technical Details
-
-```text
-BEFORE (current):
-seller_catalog
-┌─────────┬──────────────────┬────────┐
-│ id      │ source_product_id │ stock  │
-├─────────┼──────────────────┼────────┤
-│ row-1   │ product-A         │ 12     │  ← variant Negro-2XL
-│ row-2   │ product-A         │ 25     │  ← variant Negro-3XL (DUPLICATE!)
-└─────────┴──────────────────┴────────┘
-
-AFTER (target):
-seller_catalog                          seller_catalog_variants
-┌─────────┬──────────────────┐         ┌──────────────┬────────────┬───────┐
-│ id      │ source_product_id │         │ catalog_id   │ variant_id │ stock │
-├─────────┼──────────────────┤         ├──────────────┼────────────┼───────┤
-│ row-1   │ product-A         │   ──►  │ row-1        │ Negro-2XL  │ 12    │
-│         │                   │         │ row-1        │ Negro-3XL  │ 25    │
-└─────────┴──────────────────┘         └──────────────┴────────────┴───────┘
+```sql
+CREATE TABLE public.agent_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  verification_code TEXT NOT NULL,
+  code_expires_at TIMESTAMPTZ NOT NULL,
+  verified_at TIMESTAMPTZ,
+  session_expires_at TIMESTAMPTZ, -- set on verification (e.g. +2h)
+  status TEXT NOT NULL DEFAULT 'pending_verification'
+    CHECK (status IN ('pending_verification','active','expired','closed')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.agent_sessions ENABLE ROW LEVEL SECURITY;
 ```
 
+**Nueva tabla `agent_cart_drafts**` — borradores de carritos creados por agentes:
+
+```sql
+CREATE TABLE public.agent_cart_drafts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_session_id UUID REFERENCES public.agent_sessions(id) ON DELETE SET NULL,
+  agent_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  label TEXT DEFAULT 'Borrador',
+  status TEXT NOT NULL DEFAULT 'draft'
+    CHECK (status IN ('draft','sent_to_checkout','completed','cancelled')),
+  shipping_address JSONB,
+  market_country TEXT,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.agent_cart_drafts ENABLE ROW LEVEL SECURITY;
+```
+
+**Nueva tabla `agent_cart_draft_items**` — items de cada borrador:
+
+```sql
+CREATE TABLE public.agent_cart_draft_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  draft_id UUID NOT NULL REFERENCES public.agent_cart_drafts(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL,
+  variant_id UUID,
+  sku TEXT NOT NULL,
+  nombre TEXT NOT NULL,
+  unit_price NUMERIC(12,2) NOT NULL,
+  quantity INT NOT NULL DEFAULT 1,
+  total_price NUMERIC(12,2) NOT NULL,
+  peso_kg NUMERIC(10,4) DEFAULT 0,
+  color TEXT,
+  size TEXT,
+  moq INT DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.agent_cart_draft_items ENABLE ROW LEVEL SECURITY;
+```
+
+**RLS Policies**: Admin/seller can CRUD their own sessions and drafts via `has_role()`. Target users can read drafts where `target_user_id = auth.uid()`.
+
+**Edge Function `send-agent-otp**`: Genera código 6 dígitos, lo almacena en `agent_sessions`, envía notificación al usuario (tabla `notifications` + email vía Supabase).
+
+**DB Function `agent_push_cart_to_user**`: Cuando el agente hace "Enviar al Checkout", copia los items del borrador al carrito real (`b2b_carts`/`b2b_cart_items`) del usuario objetivo, actualiza la dirección de envío, y crea una notificación.
+
+---
+
+### 2. Flujo de Autenticación Delegada
+
+1. Agente navega a `/admin/agente-pedidos` (o `/seller/agente-pedidos`)
+2. Busca/selecciona un usuario de la tabla `profiles` (autocomplete por nombre/email/código)
+3. Clic en "Solicitar Acceso" → llama edge function `send-agent-otp`
+4. Edge function genera código 6 dígitos, guarda en `agent_sessions`, inserta notificación al usuario
+5. Agente ingresa el código → se valida contra `agent_sessions` → si correcto, `status = 'active'`, `session_expires_at = NOW() + 2h`
+6. Timer visible en la UI mostrando tiempo restante de sesión
+
+---
+
+### 3. Archivos a Crear
+
+
+| Archivo                                         | Propósito                                             |
+| ----------------------------------------------- | ----------------------------------------------------- |
+| `src/pages/admin/AdminAgentOrders.tsx`          | Página principal del módulo                           |
+| `src/components/agent/AgentUserSearch.tsx`      | Buscador/selector de usuarios                         |
+| `src/components/agent/AgentOTPVerification.tsx` | Input OTP 6 dígitos (reutiliza `InputOTP`)            |
+| `src/components/agent/AgentSessionTimer.tsx`    | Timer de sesión activa                                |
+| `src/components/agent/AgentDraftList.tsx`       | Lista de borradores activos (multitarea)              |
+| `src/components/agent/AgentProductSelector.tsx` | Espejo de `SellerAcquisicionLotes` adaptado           |
+| `src/components/agent/AgentCartDraft.tsx`       | Vista del borrador actual con items                   |
+| `src/components/agent/AgentShippingConfig.tsx`  | Selector de dirección/país/departamento/comuna        |
+| `src/components/agent/AgentCheckoutConfirm.tsx` | Resumen final + botón "Enviar al Checkout"            |
+| `src/hooks/useAgentSession.ts`                  | Lógica de sesión delegada (crear, verificar, expirar) |
+| `src/hooks/useAgentCartDraft.ts`                | CRUD de borradores y sus items                        |
+| `supabase/functions/send-agent-otp/index.ts`    | Edge function para enviar OTP                         |
+
+
+---
+
+### 4. Interfaz de Selección de Productos
+
+- Reutiliza los componentes `ProductCardB2B`, `FeaturedProductsCarousel`, y el hook `useProductsB2B` existentes
+- El `AgentProductSelector` wrappea la misma UI de Adquisición de Lotes pero en vez de usar `useB2BCartSupabase`, inserta directamente en `agent_cart_draft_items` con el `draft_id` activo
+- Precios se obtienen de `v_productos_con_precio_b2b` respetando el mercado seleccionado
+
+---
+
+### 5. Gestión Multitarea
+
+- `AgentDraftList` muestra tabs/cards con cada borrador abierto (draft status)
+- Cada borrador tiene: label editable, usuario target, cantidad de items, subtotal
+- El agente puede cambiar entre borradores sin perder estado
+- "Guardar Borrador" es automático (cada operación persiste en DB)
+
+---
+
+### 6. Checkout y Notificación
+
+1. Agente configura dirección vía `AgentShippingConfig` (usa `useCountriesRoutes` + selector departamento/comuna existentes)
+2. Dirección se guarda en `agent_cart_drafts.shipping_address`
+3. Clic "Confirmar y Enviar al Checkout":
+  - Llama RPC `agent_push_cart_to_user` que copia items al carrito real del usuario
+  - Inserta notificación: "Tu carrito ha sido preparado. Revisa y procede al pago"
+  - Draft status → `sent_to_checkout`
+4. El usuario al entrar ve su carrito lleno y la dirección preconfigurada
+5. El usuario puede modificar/eliminar items libremente (usa su propio `useB2BCartSupabase`)
+
+---
+
+### 7. Ruta y Navegación
+
+- Agregar ruta `/admin/agente-pedidos` en `App.tsx` protegida con roles `[ADMIN, SELLER]`
+- Agregar enlace en el menú lateral de admin
+
+---
+
+### 8. Seguridad
+
+- OTP expira en 10 minutos, sesión activa en 2 horas
+- Cada operación de escritura en draft valida que la sesión esté activa y no expirada
+- RLS en todas las tablas nuevas
+- El agente NO inicia sesión como el usuario — solo escribe en tablas intermedias
+- El usuario mantiene control total de su carrito final
