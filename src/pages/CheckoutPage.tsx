@@ -1167,7 +1167,7 @@ const CheckoutPage = () => {
               
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal ({totalItems} productos)</span>
+                  <span className="text-muted-foreground">{t('common.subtotal')} ({totalItems} {t('common.products')})</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 
