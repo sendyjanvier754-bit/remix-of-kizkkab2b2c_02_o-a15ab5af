@@ -468,30 +468,30 @@ const StoreProfilePage = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons - icons only on mobile */}
               <div className="flex flex-row md:flex-col gap-1 md:gap-2 w-full md:w-auto">
                 <Button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className="flex-1 md:flex-none md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0 text-sm py-1.5 md:text-base md:py-2"
+                  className="flex-1 md:flex-none md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0 h-8 md:h-auto text-sm md:text-base"
                 >
-                  <Heart className={`w-4 h-4 mr-1.5 md:mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
-                  {isFollowing ? "Siguiendo" : "Seguir"}
+                  <Heart className={`w-4 h-4 md:mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+                  <span className="hidden md:inline">{isFollowing ? "Siguiendo" : "Seguir"}</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm py-1.5 md:text-base md:py-2"
+                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold h-8 md:h-auto text-sm md:text-base"
                 >
-                  <MessageCircle className="w-4 h-4 mr-1.5 md:mr-2 text-[#071d7f]" />
-                  Contactar
+                  <MessageCircle className="w-4 h-4 md:mr-2 text-[#071d7f]" />
+                  <span className="hidden md:inline">Contactar</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-sm py-1.5 md:text-base md:py-2"
+                  className="flex-1 md:flex-none md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold h-8 md:h-auto text-sm md:text-base"
                   onClick={handleShare}
                 >
-                  <Share2 className="w-4 h-4 mr-1.5 md:mr-2 text-[#071d7f]" />
-                  Compartir
+                  <Share2 className="w-4 h-4 md:mr-2 text-[#071d7f]" />
+                  <span className="hidden md:inline">Compartir</span>
                 </Button>
               </div>
             </div>
