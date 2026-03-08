@@ -1004,7 +1004,7 @@ const ProductPage = () => {
                   className="w-full border-2 text-sm font-semibold"
                   style={{ borderColor: '#94111f', color: '#94111f' }}
                 >
-                  Ver Descripción
+                  {t('productPage.productDescription')}
                 </Button>
               </div>
             ) : (
