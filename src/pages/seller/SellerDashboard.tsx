@@ -229,7 +229,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/adquisicion-lotes">
                         <ShoppingCart className="h-3 w-3 mr-2" />
-                        Comprar Lotes
+                        {t('sellerDashboard.buyLots')}
                       </Link>
                     </Button>
 
