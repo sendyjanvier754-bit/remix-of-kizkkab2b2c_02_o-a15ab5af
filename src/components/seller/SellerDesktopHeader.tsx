@@ -472,11 +472,11 @@ const SellerDesktopHeader = ({
               </Link>
               <Link to="/seller/cuenta" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <User className="w-6 h-6" />
-                <span className="text-xs">Cuenta</span>
+                <span className="text-xs">{t('header.account')}</span>
               </Link>
               <Link to="/seller/carrito" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <ShoppingBag className="w-6 h-6" />
-                <span className="text-xs">Carrito</span>
+                <span className="text-xs">{t('header.cart')}</span>
               </Link>
             </div>
           </div>
