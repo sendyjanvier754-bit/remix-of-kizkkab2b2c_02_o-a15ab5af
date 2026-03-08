@@ -659,6 +659,21 @@ export default function AdminPOMasterPage() {
                   <TableCell className="text-xs text-muted-foreground">
                     {po.closed_at ? format(new Date(po.closed_at), 'dd/MM/yy HH:mm', { locale: es }) : '—'}
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setViewingPOId(po.id);
+                        setViewingPONumber(po.po_number);
+                        setHistoryDialog(false);
+                        setOrdersDialog(true);
+                      }}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Ver
+                    </Button>
+                  </TableCell>
                 </TableRow>
               )) || (
                 <TableRow>
