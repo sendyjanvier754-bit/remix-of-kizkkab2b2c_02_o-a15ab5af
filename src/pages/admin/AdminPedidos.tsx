@@ -79,6 +79,7 @@ const carrierOptions = [
 ];
 
 const AdminPedidos = () => {
+  const { t } = useTranslation();
   const { useAllOrders, useOrderStats, usePaidOrdersForManifest, updateOrderStatus, updateOrderTracking, updateLogisticsStage, cancelOrder, confirmManualPayment, rejectManualPayment } = useOrders();
   
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
