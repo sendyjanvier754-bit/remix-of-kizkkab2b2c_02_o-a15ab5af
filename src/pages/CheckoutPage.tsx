@@ -689,7 +689,7 @@ const CheckoutPage = () => {
                     )}
                     <Separator className="my-2" />
                     <div className="flex justify-between font-semibold">
-                      <span>Total Envío</span>
+                      <span>{t('checkout.totalShipping')}</span>
                       <span className="text-primary">${shippingCalculation.totalShippingCost.toFixed(2)}</span>
                     </div>
                   </div>
