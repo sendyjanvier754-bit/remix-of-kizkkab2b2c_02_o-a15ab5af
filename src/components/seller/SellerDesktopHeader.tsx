@@ -444,7 +444,7 @@ const SellerDesktopHeader = ({
                         onClick={handleSearch}
                         className="w-full p-3 text-center text-sm font-medium text-green-600 hover:bg-green-50 transition-colors"
                       >
-                        Ver todos los resultados para "{searchQuery}"
+                        {t('common.seeAllResults', { query: searchQuery })}
                       </button>
                     </>
                   ) : (
