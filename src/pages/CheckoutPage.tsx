@@ -1197,9 +1197,9 @@ const CheckoutPage = () => {
                   </>
                 ) : (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Envío</span>
+                    <span className="text-muted-foreground">{t('shipping.cost')}</span>
                     <span className="text-muted-foreground italic text-xs">
-                      {deliveryMethod === 'pickup' ? 'Retiro gratis' : 'Selecciona zona'}
+                      {deliveryMethod === 'pickup' ? t('cart.freeShipping') : t('checkout.deliveryZone')}
                     </span>
                   </div>
                 )}
