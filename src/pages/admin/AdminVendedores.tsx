@@ -67,6 +67,7 @@ interface Seller {
 }
 
 const AdminVendedores = () => {
+  const { t } = useTranslation();
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
