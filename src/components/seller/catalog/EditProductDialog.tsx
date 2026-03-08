@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ interface EditProductDialogProps {
 }
 
 export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProductDialogProps) {
+  const { t } = useTranslation();
   const [precio, setPrecio] = useState(item?.precioVenta.toString() || '');
   const [stock, setStock] = useState(item?.stock.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -35,12 +37,12 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
     const stockNum = parseInt(stock, 10);
 
     if (isNaN(precioNum) || precioNum < 0) {
-      toast.error('Ingresa un precio válido');
+      toast.error(t('editProductDialog.invalidPrice'));
       return;
     }
 
     if (isNaN(stockNum) || stockNum < 0) {
-      toast.error('Ingresa un stock válido');
+      toast.error(t('editProductDialog.invalidStock'));
       return;
     }
 
@@ -66,9 +68,9 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Editar Producto</DialogTitle>
+          <DialogTitle>{t('editProductDialog.title')}</DialogTitle>
           <DialogDescription>
-            Actualiza el precio y stock del producto
+            {t('editProductDialog.subtitle')}
           </DialogDescription>
         </DialogHeader>
 
@@ -93,7 +95,7 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
         <div className="space-y-6">
           {/* Precio de Venta */}
           <div className="space-y-2">
-            <Label htmlFor="precio">Precio de Venta</Label>
+            <Label htmlFor="precio">{t('editProductDialog.salePrice')}</Label>
             <div className="flex items-center">
               <span className="text-lg font-bold mr-2">$</span>
               <Input
@@ -108,15 +110,15 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
               />
             </div>
             <div className="text-xs text-muted-foreground space-y-1 mt-2 p-2 bg-muted/30 rounded">
-              <p>💰 Costo: ${item.precioCosto.toFixed(2)}</p>
-              <p>📊 Margen actual: {margen.toFixed(1)}%</p>
-              <p className="text-amber-600 font-medium">💡 Margen sugerido (30%): ${margenSugerido.toFixed(2)}</p>
+              <p>💰 {t('editProductDialog.cost')}: ${item.precioCosto.toFixed(2)}</p>
+              <p>📊 {t('editProductDialog.currentMargin')}: {margen.toFixed(1)}%</p>
+              <p className="text-amber-600 font-medium">💡 {t('editProductDialog.suggestedMargin')}: ${margenSugerido.toFixed(2)}</p>
             </div>
           </div>
 
           {/* Stock Disponible */}
           <div className="space-y-2">
-            <Label htmlFor="stock">Stock Disponible</Label>
+            <Label htmlFor="stock">{t('editProductDialog.availableStock')}</Label>
             <Input
               id="stock"
               type="number"
@@ -127,7 +129,7 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
               className="text-lg"
             />
             <p className="text-xs text-muted-foreground">
-              Unidades disponibles en tu inventario
+              {t('editProductDialog.stockHelp')}
             </p>
           </div>
         </div>
@@ -139,7 +141,7 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Cancelar
+            {t('editProductDialog.cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -149,12 +151,12 @@ export function EditProductDialog({ open, onOpenChange, item, onSave }: EditProd
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Guardando...
+                {t('editProductDialog.saving')}
               </>
             ) : (
               <>
                 <Check className="h-4 w-4" />
-                Guardar
+                {t('editProductDialog.save')}
               </>
             )}
           </Button>

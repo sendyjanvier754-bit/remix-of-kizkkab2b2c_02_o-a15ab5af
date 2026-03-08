@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const CartPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { items, isLoading, refetch } = useB2CCartItems();
   const { isCartLocked } = useActiveB2COrder();
@@ -85,12 +87,12 @@ const CartPage = () => {
       if (error) throw error;
       await refetch(false);
 
-      toast.success('Producto eliminado del carrito');
+      toast.success(t('cart.productRemoved'));
       setShowRemoveItemDialog(false);
       setItemToRemove(null);
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('No se pudo eliminar el producto');
+      toast.error(t('cart.removeError'));
     }
   };
 
@@ -117,10 +119,10 @@ const CartPage = () => {
 
       if (error) throw error;
       await refetch(false);
-      toast.success('Cantidad actualizada');
+      toast.success(t('cart.quantityUpdated'));
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('No se pudo actualizar la cantidad');
+      toast.error(t('cart.quantityError'));
     }
   };
 
@@ -133,7 +135,7 @@ const CartPage = () => {
   const clearCart = async () => {
     try {
       if (!user?.id) {
-        toast.error('Usuario no identificado');
+        toast.error(t('cart.userNotIdentified'));
         return;
       }
 
@@ -148,7 +150,7 @@ const CartPage = () => {
         .maybeSingle();
 
       if (cartError || !cartData?.id) {
-        toast.error('No se encontró un carrito abierto');
+        toast.error(t('cart.noOpenCart'));
         return;
       }
 
@@ -160,11 +162,11 @@ const CartPage = () => {
       if (deleteError) throw deleteError;
 
       await refetch(false);
-      toast.success('Carrito vaciado');
+      toast.success(t('cart.cartCleared'));
       setShowClearCartDialog(false);
     } catch (error) {
       console.error('Error clearing cart:', error);
-      toast.error('No se pudo vaciar el carrito');
+      toast.error(t('cart.clearError'));
     }
   };
 
@@ -289,7 +291,7 @@ const CartPage = () => {
               className="text-gray-900 p-1.5 rounded-lg flex items-center gap-1.5 bg-white border-b border-gray-200"
             >
               <ShoppingCart className="w-4 h-4" />
-              <h1 className="font-bold text-sm">Mi Carrito</h1>
+              <h1 className="font-bold text-sm">{t('cart.title')}</h1>
               <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-bold">
                 {items.length}
               </span>
@@ -299,11 +301,11 @@ const CartPage = () => {
             <div className="mt-2 flex items-center justify-between text-xs bg-gray-50 p-2 rounded-lg border border-gray-200">
               <div className="flex gap-4">
                 <div>
-                  <span className="text-gray-900">Total Items:</span>
+                  <span className="text-gray-900">{t('cart.totalItems')}:</span>
                   <span className="font-bold ml-1 text-gray-900">{items.length}</span>
                 </div>
                 <div>
-                  <span className="text-gray-900">Unidades:</span>
+                  <span className="text-gray-900">{t('common.units')}:</span>
                   <span className="font-bold ml-1 text-gray-900">{totalQuantity}</span>
                 </div>
               </div>
@@ -324,10 +326,10 @@ const CartPage = () => {
         {items.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium mb-2">Tu carrito está vacío</p>
-            <p className="text-xs text-gray-500 mb-4">Explora el catálogo para encontrar productos</p>
+            <p className="text-gray-600 font-medium mb-2">{t('cart.empty')}</p>
+            <p className="text-xs text-gray-500 mb-4">{t('cart.emptyMessage')}</p>
             <Button asChild style={{ backgroundColor: '#071d7f' }} className="text-white hover:opacity-90">
-              <Link to="/">Ir al Catálogo</Link>
+              <Link to="/">{t('cart.goToCatalog')}</Link>
             </Button>
           </div>
         ) : isMobile ? (
@@ -350,8 +352,8 @@ const CartPage = () => {
                       </div>
                       <button
                         onClick={() => handleNegotiate(storeItems)}
-                        className="p-1.5 hover:bg-green-100 rounded transition flex-shrink-0"
-                        title={`Contactar a ${storeName}`}
+                       className="p-1.5 hover:bg-green-100 rounded transition flex-shrink-0"
+                        title={t('common.contactStore', { store: storeName })}
                       >
                         <MessageCircle className="w-5 h-5" style={{ color: '#29892a' }} />
                       </button>
@@ -424,8 +426,8 @@ const CartPage = () => {
                                   {item.size}
                                 </span>
                               )}
-                              <span className="text-xs text-gray-600">
-                                Cant: {item.quantity}
+                               <span className="text-xs text-gray-600">
+                                {t('common.qty')}: {item.quantity}
                               </span>
                             </div>
                             
@@ -487,21 +489,21 @@ const CartPage = () => {
                         className="data-[state=checked]:bg-[#071d7f] data-[state=checked]:border-[#071d7f]"
                       />
                       <ShoppingCart className="w-5 h-5" />
-                      <h2 className="font-bold text-lg text-gray-900">Mi Carrito</h2>
+                      <h2 className="font-bold text-lg text-gray-900">{t('cart.title')}</h2>
                       <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full font-semibold">
-                        {items.length} productos
+                        {items.length} {t('common.products')}
                       </span>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-600">
-                        {selectedItems.length} de {items.length} seleccionados
+                        {selectedItems.length} {t('common.of')} {items.length} {t('common.selected')}
                       </span>
                       <button
                         onClick={handleClearCart}
                         className="text-red-600 hover:text-red-700 text-sm font-medium flex items-center gap-1.5 transition"
                       >
                         <Trash2 className="w-4 h-4" />
-                        Vaciar
+                        {t('common.empty')}
                       </button>
                     </div>
                   </div>
@@ -525,7 +527,7 @@ const CartPage = () => {
                             <button
                               onClick={() => handleNegotiate(storeItems)}
                               className="p-1.5 hover:bg-green-100 rounded transition"
-                              title={`Contactar a ${storeName}`}
+                              title={t('common.contactStore', { store: storeName })}
                             >
                               <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
                             </button>
@@ -582,7 +584,7 @@ const CartPage = () => {
                                       handleRemoveItem(item.id, item.name);
                                     }}
                                     className="text-gray-400 hover:text-red-600 transition flex-shrink-0 p-1 hover:bg-red-50 rounded"
-                                    title="Eliminar del carrito"
+                                    title={t('cart.removeFromCart')}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -600,8 +602,8 @@ const CartPage = () => {
                                       {item.size}
                                     </span>
                                   )}
-                                  <span className="text-xs text-gray-600">
-                                    Cant: {item.quantity}
+                                   <span className="text-xs text-gray-600">
+                                    {t('common.qty')}: {item.quantity}
                                   </span>
                                 </div>
 
@@ -637,7 +639,7 @@ const CartPage = () => {
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-24">
                 {/* Summary Header */}
                 <div className="bg-gray-50 border-b border-gray-200 p-3">
-                  <h2 className="font-bold text-base text-gray-900">Resumen del Pedido</h2>
+                  <h2 className="font-bold text-base text-gray-900">{t('common.orderSummary')}</h2>
                   <p className="text-xs text-gray-600 mt-1">Procesa descuentos y asientos luego confirmar precio final</p>
                 </div>
 
@@ -676,11 +678,11 @@ const CartPage = () => {
                 {/* Pricing Details */}
                 <div className="p-2 space-y-2 border-b border-gray-200">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-600">Precio Retail:</span>
+                    <span className="text-gray-600">{t('common.retailPrice')}:</span>
                     <span className="font-semibold text-gray-900">${totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-600">Promociones:</span>
+                    <span className="text-gray-600">{t('common.promotions')}:</span>
                     <span className="font-semibold text-red-600">—</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
@@ -692,12 +694,12 @@ const CartPage = () => {
                 {/* Total Price */}
                 <div className="p-2 bg-gradient-to-b from-gray-50 to-white border-b border-gray-200">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">Precio Estimado:</span>
+                    <span className="text-sm font-medium text-gray-700">{t('common.estimatedPrice')}:</span>
                     <span className="text-lg font-bold" style={{ color: '#071d7f' }}>
                       ${totalPrice.toFixed(2)}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Se confirma el precio final en confirmar pedido</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('cart.priceConfirmNote')}</p>
                 </div>
 
                 {/* Checkout Button and Support */}
@@ -709,7 +711,7 @@ const CartPage = () => {
                     title="Contactar por WhatsApp"
                   >
                     <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
-                    Soporte
+                    {t('common.support')}
                   </button>
                   {someSelected ? (
                     <Link
@@ -718,7 +720,7 @@ const CartPage = () => {
                       style={{ backgroundColor: '#071d7f' }}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Comprar ({totalQuantity})
+                      {t('common.buy')} ({totalQuantity})
                     </Link>
                   ) : (
                     <button
@@ -727,14 +729,14 @@ const CartPage = () => {
                       style={{ backgroundColor: '#071d7f' }}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Selecciona productos
+                      {t('common.selectProducts')}
                     </button>
                   )}
                 </div>
 
                 {/* Payment Methods */}
                 <div className="p-2 bg-gray-50 border-t border-gray-200">
-                  <p className="text-xs font-semibold text-gray-700 mb-1.5">Aceptamos:</p>
+                  <p className="text-xs font-semibold text-gray-700 mb-1.5">{t('common.weAccept')}:</p>
                   <div className="grid grid-cols-5 gap-1">
                     {/* Credit Cards Section - Show individual card types */}
                     {paymentMethods.includes('Tarjetas') && (
