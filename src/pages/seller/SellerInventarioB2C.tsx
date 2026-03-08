@@ -159,7 +159,7 @@ export default function SellerInventarioB2C() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Unidades
+                {t('sellerInventory.totalUnits')}
               </CardTitle>
             </CardHeader>
             <CardContent>
