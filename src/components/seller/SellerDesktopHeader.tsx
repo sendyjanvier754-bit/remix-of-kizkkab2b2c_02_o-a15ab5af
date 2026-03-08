@@ -94,6 +94,7 @@ const SellerDesktopHeader = ({
   const { data: categories = [] } = useCategories();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Root categories
   const rootCategories = categories.filter((c) => !c.parent_id);
