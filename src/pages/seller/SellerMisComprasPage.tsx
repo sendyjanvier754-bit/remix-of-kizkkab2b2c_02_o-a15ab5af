@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { OpenChatButton } from '@/components/chat/OpenChatButton';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -919,6 +920,14 @@ const SellerMisComprasPage = () => {
                       Volver a Comprar
                     </Link>
                   </Button>
+
+                  <OpenChatButton
+                    orderId={selectedOrder.id}
+                    orderType="b2b"
+                    orderLabel={`Pedido #${selectedOrder.id.slice(0, 8).toUpperCase()}`}
+                    fullWidth
+                    navigateTo="seller"
+                  />
 
                   {['placed', 'paid'].includes(selectedOrder.status) && (
                     <Button 

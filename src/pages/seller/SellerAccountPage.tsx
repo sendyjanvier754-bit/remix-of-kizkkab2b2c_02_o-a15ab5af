@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { OpenChatButton } from "@/components/chat/OpenChatButton";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -2287,6 +2288,14 @@ const SellerAccountPage = () => {
                       Volver a Comprar
                     </Link>
                   </Button>
+
+                  <OpenChatButton
+                    orderId={selectedOrder.id}
+                    orderType="b2b"
+                    orderLabel={`Pedido #${selectedOrder.id.slice(0, 8).toUpperCase()}`}
+                    fullWidth
+                    navigateTo="seller"
+                  />
 
                   {['placed', 'paid'].includes(selectedOrder.status) && (
                     <Button 

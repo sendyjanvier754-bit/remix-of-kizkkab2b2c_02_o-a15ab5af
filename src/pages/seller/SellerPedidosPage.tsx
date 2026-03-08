@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { OpenChatButton } from '@/components/chat/OpenChatButton';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -470,6 +471,13 @@ const SellerPedidosPage = () => {
 
               {/* Actions */}
               <div className="flex justify-end gap-2">
+                <OpenChatButton
+                  orderId={selectedOrder.id}
+                  orderType={(selectedOrder.metadata as any)?.order_type === 'b2b' ? 'b2b' : 'b2c'}
+                  orderLabel={`Pedido #${selectedOrder.id.slice(0, 8).toUpperCase()}`}
+                  navigateTo="seller"
+                  size="sm"
+                />
                 {selectedOrder.payment_status === 'pending_validation' && (
                   <>
                     <Button

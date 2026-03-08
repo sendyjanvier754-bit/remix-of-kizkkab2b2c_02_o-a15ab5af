@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { OpenChatButton } from '@/components/chat/OpenChatButton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -869,7 +870,14 @@ const AdminPedidos = () => {
               )}
 
               {/* Actions */}
-              <DialogFooter>
+              <DialogFooter className="flex-row gap-2">
+                <OpenChatButton
+                  orderId={selectedOrder.id}
+                  orderType={(selectedOrder.metadata as any)?.order_type === 'b2b' ? 'b2b' : 'b2c'}
+                  orderLabel={`Pedido #${selectedOrder.id.slice(0, 8).toUpperCase()}`}
+                  navigateTo="admin"
+                  size="sm"
+                />
                 {selectedOrder.status !== 'cancelled' && (
                   <Button
                     variant="destructive"

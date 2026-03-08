@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { OpenChatButton } from "@/components/chat/OpenChatButton";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -503,6 +504,14 @@ const OrderDetailDialog = ({
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Volver a Comprar
               </Button>}
+
+            <OpenChatButton
+              orderId={order.id}
+              orderType={isB2B ? 'b2b' : 'b2c'}
+              orderLabel={`Pedido #${order.id.slice(0, 8).toUpperCase()}`}
+              fullWidth
+              navigateTo="buyer"
+            />
 
             {/* Cancel Button - Only for placed/paid orders */}
             {canCancel && <Button onClick={() => onCancelClick(order)} variant="outline" className="w-full border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700" size="lg">
