@@ -349,7 +349,7 @@ const SellerDesktopHeader = ({
               <form onSubmit={handleSearch} className="relative w-full flex items-center">
                 <Input
                   type="text"
-                  placeholder="Buscar productos..."
+                  placeholder={t('header.searchProducts')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
