@@ -212,7 +212,7 @@ const AdminCatalogo = () => {
                   <SelectValue placeholder="Categoría" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas las Categorías</SelectItem>
+                  <SelectItem value="all">{t('adminCatalog.allCategories')}</SelectItem>
                   {categories?.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                   ))}
