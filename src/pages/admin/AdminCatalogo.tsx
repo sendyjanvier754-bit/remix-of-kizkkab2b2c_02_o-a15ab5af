@@ -90,11 +90,11 @@ const AdminCatalogo = () => {
   const getStockBadge = (status: string) => {
     switch (status) {
       case 'in_stock':
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">En Stock</Badge>;
+        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{t('adminCatalog.inStock')}</Badge>;
       case 'low_stock':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Bajo MOQ</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{t('adminCatalog.lowStock')}</Badge>;
       case 'out_of_stock':
-        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Agotado</Badge>;
+        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{t('adminCatalog.outOfStock')}</Badge>;
       default:
         return null;
     }
