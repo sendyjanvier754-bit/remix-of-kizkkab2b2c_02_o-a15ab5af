@@ -241,7 +241,7 @@ const SellerDashboard = () => {
                     >
                       <Link to="/seller/catalogo">
                         <Package className="h-3 w-3 mr-2" />
-                        Mi Catálogo
+                        {t('sellerDashboard.myCatalog')}
                       </Link>
                     </Button>
 
