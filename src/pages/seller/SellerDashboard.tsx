@@ -217,7 +217,7 @@ const SellerDashboard = () => {
                 <div className="p-6">
                   <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                     <Zap className="h-4 w-4 text-[#071d7f]" />
-                    Acciones Rápidas
+                    {t('sellerDashboard.quickActions')}
                   </h2>
 
                   <div className="space-y-2">
