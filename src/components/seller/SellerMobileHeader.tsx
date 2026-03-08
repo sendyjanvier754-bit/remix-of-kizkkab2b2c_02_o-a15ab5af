@@ -209,7 +209,7 @@ const SellerMobileHeader = ({
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognitionAPI) {
-      toast.error("Búsqueda por voz no soportada en este navegador");
+      toast.error(t('header.voiceNotSupported'));
       return;
     }
 
