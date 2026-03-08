@@ -1175,7 +1175,7 @@ const CheckoutPage = () => {
                 {shippingCalculation ? (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Envío (China → USA)</span>
+                      <span className="text-muted-foreground">{t('shipping.cost')} (China → USA)</span>
                       <span>${shippingCalculation.chinaUsaCost.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
