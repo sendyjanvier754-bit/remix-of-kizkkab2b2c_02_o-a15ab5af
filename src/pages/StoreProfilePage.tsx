@@ -434,7 +434,7 @@ const StoreProfilePage = () => {
                 </div>
 
                 {/* Social Media Links */}
-                <div className="flex gap-3 mt-1 md:mt-2">
+                <div className="hidden md:flex gap-3 mt-1 md:mt-2">
                   {store.social.facebook && (
                     <a href={store.social.facebook} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors">
                       <Facebook className="h-5 w-5" />
