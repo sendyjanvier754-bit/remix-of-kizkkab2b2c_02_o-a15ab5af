@@ -56,7 +56,16 @@
     "pageOf": "Page {{current}} of {{total}}",
     "showing": "Showing {{from}}-{{to}} of {{total}} entries",
     "perPage": "Per page",
-    "go": "Go"
+    "go": "Go",
+    "noImage": "No img",
+    "seeAllResults": "See all results for \"{{query}}\"",
+    "noProductsFor": "No products found for \"{{query}}\"",
+    "allRightsReserved": "© 2024 SIVER Market. All rights reserved.",
+    "termsConditions": "Terms & Conditions",
+    "privacyPolicy": "Privacy Policy",
+    "cookiePolicy": "Cookie Policy",
+    "acceptedPaymentMethods": "Accepted Payment Methods:",
+    "transfer": "Transfer"
   },
 
   "header": {
@@ -84,6 +93,32 @@
     "noMicrophone": "Could not access microphone.",
     "micDenied": "Microphone permission denied.",
     "voiceError": "Voice recognition error. Try again."
+  },
+
+  "footer": {
+    "tagline": "Your trusted online shopping store with the best products at the best prices.",
+    "shopping": "SHOPPING",
+    "justForYou": "Just for You",
+    "newArrivals": "New Arrivals",
+    "deals": "Deals",
+    "womenClothing": "Women's Clothing",
+    "menClothing": "Men's Clothing",
+    "categories": "CATEGORIES",
+    "accessories": "Accessories",
+    "shoes": "Shoes",
+    "beauty": "Beauty",
+    "homeLife": "Home & Life",
+    "account": "ACCOUNT",
+    "myAccount": "My Account",
+    "myOrders": "My Orders",
+    "favorites": "Favorites",
+    "contact": "CONTACT",
+    "shippingAbroad": "International Shipping",
+    "shippingDays": "Receive your products in 7-15 days",
+    "freeReturns": "Free Returns",
+    "returnDays": "Easy returns within 30 days",
+    "securePayment": "Secure Payment",
+    "multiplePayments": "Multiple payment options"
   },
 
   "nav": {
@@ -126,6 +161,8 @@
     "passwordMismatch": "Passwords do not match",
     "alreadyHaveAccount": "Already have an account?",
     "dontHaveAccount": "Don't have an account?",
+    "createAccount": "Create Account",
+    "needAccount": "You need an account to add products to your cart and place orders.",
     "roles": {
       "buyer": "Buyer",
       "seller": "Seller",
@@ -165,6 +202,12 @@
     "searchProducts": "Search products...",
     "filterByCategory": "Filter by category",
     "sortBy": "Sort by",
+    "available": "available",
+    "priceRange": "Price:",
+    "min": "Min",
+    "max": "Max",
+    "color": "Color",
+    "size": "Size",
     "sortOptions": {
       "newest": "Newest",
       "priceAsc": "Price: Low to High",
@@ -197,14 +240,17 @@
 
   "orders": {
     "title": "My Orders",
+    "myPurchases": "My Purchases",
     "orderNumber": "Order Number",
     "orderDate": "Order Date",
     "orderStatus": "Order Status",
     "orderTotal": "Order Total",
     "viewOrder": "View Order",
+    "viewOrders": "View My Orders",
     "cancelOrder": "Cancel Order",
     "trackOrder": "Track Order",
     "noOrders": "You have no orders yet",
+    "noPurchases": "You have no purchases yet",
     "statuses": {
       "pending": "Pending",
       "confirmed": "Confirmed",
@@ -249,7 +295,8 @@
     "proofUploaded": "Proof Uploaded",
     "confirmPayment": "Confirm Payment",
     "paymentConfirmed": "Payment Confirmed",
-    "paymentPending": "Payment Pending"
+    "paymentPending": "Payment Pending",
+    "accountLabel": "Account:"
   },
 
   "profile": {
@@ -261,6 +308,66 @@
     "defaultAddress": "Default Address",
     "saveChanges": "Save Changes",
     "profileUpdated": "Profile updated successfully"
+  },
+
+  "adminSidebar": {
+    "main": "Main",
+    "dashboard": "Dashboard",
+    "approvals": "Approvals",
+    "quotes": "Quotes",
+    "ordersB2B": "B2B Orders",
+    "refunds": "Refunds",
+    "conciliation": "B2B Conciliation",
+    "catalog": "Catalog",
+    "categories": "Categories",
+    "suppliers": "Suppliers",
+    "priceConfig": "Price Config",
+    "sellers": "Sellers",
+    "banners": "Banners",
+    "agentOrders": "Agent Orders",
+    "liveChat": "Live Chat",
+    "notifications": "Notifications",
+    "analytics": "Analytics",
+    "poMaster": "PO Master",
+    "inventoryOptimization": "Inventory Optimization",
+    "inventoryManagement": "Inventory Management",
+    "discounts": "Discounts",
+    "discountCodes": "Discount Codes",
+    "userDiscounts": "User Discounts",
+    "system": "System",
+    "markets": "Markets",
+    "globalLogistics": "Global Logistics",
+    "marketplaceSections": "Marketplace Sections",
+    "localLogistics": "Local Logistics",
+    "pickupPoints": "Pickup Points",
+    "commissions": "Commissions",
+    "paymentMethods": "Payment Methods",
+    "b2bWholesale": "B2B Wholesale",
+    "b2bPortal": "B2B Portal",
+    "logoutSession": "Log Out"
+  },
+
+  "sellerSidebar": {
+    "dashboard": "Dashboard",
+    "buyLots": "Buy Lots",
+    "myPurchases": "My Purchases",
+    "mySales": "My Sales",
+    "inventoryB2C": "B2C Inventory",
+    "marketing": "Marketing",
+    "analytics": "Analytics",
+    "myCatalog": "My Catalog",
+    "cartB2B": "B2B Cart",
+    "wishlist": "Wishlist",
+    "myWallet": "My Wallet",
+    "credits": "Credits",
+    "myCodes": "My Codes",
+    "customerDiscounts": "Customer Discounts",
+    "myAccount": "My Account",
+    "backToStore": "Back to Store",
+    "viewMyStore": "View My Store",
+    "sellerHub": "Seller Hub",
+    "new": "New",
+    "b2b": "B2B"
   },
 
   "admin": {
@@ -287,7 +394,8 @@
     "myCatalog": "My Catalog",
     "earnings": "Earnings",
     "inventory": "Inventory",
-    "addProduct": "Add Product"
+    "addProduct": "Add Product",
+    "seller": "Seller"
   },
 
   "b2b": {
@@ -317,7 +425,19 @@
     "waitingMessage": "Waiting for a team member...",
     "pausedMessage": "Chat paused. Resume to send messages.",
     "placeholder": "Type a message...",
-    "openSupport": "Open Support Chat"
+    "openSupport": "Open Support Chat",
+    "supportChats": "Support Chats"
+  },
+
+  "settings": {
+    "orderUpdates": "Order Updates",
+    "orderNotifications": "Notifications about your purchases",
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete My Account",
+    "deleteAccountWarning": "Account deletion is permanent and cannot be undone.",
+    "sessionClosed": "Session closed",
+    "deleteContactSupport": "To completely delete your account, please contact support.",
+    "goToStore": "Account → My Store"
   },
 
   "language": {
@@ -336,6 +456,7 @@
     "networkError": "Network error",
     "reload": "Reload Page",
     "tryAgain": "Try again",
-    "goHome": "Go Home"
+    "goHome": "Go Home",
+    "loginRequired": "Please log in to view your purchases."
   }
 }

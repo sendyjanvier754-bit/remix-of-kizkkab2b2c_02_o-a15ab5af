@@ -56,7 +56,16 @@
     "pageOf": "Página {{current}} de {{total}}",
     "showing": "Mostrando {{from}}-{{to}} de {{total}} registros",
     "perPage": "Por página",
-    "go": "Ir"
+    "go": "Ir",
+    "noImage": "Sin img",
+    "seeAllResults": "Ver todos los resultados para \"{{query}}\"",
+    "noProductsFor": "No se encontraron productos para \"{{query}}\"",
+    "allRightsReserved": "© 2024 SIVER Market. Todos los derechos reservados.",
+    "termsConditions": "Términos y Condiciones",
+    "privacyPolicy": "Política de Privacidad",
+    "cookiePolicy": "Política de Cookies",
+    "acceptedPaymentMethods": "Métodos de Pago Aceptados:",
+    "transfer": "Transferencia"
   },
 
   "header": {
@@ -84,6 +93,32 @@
     "noMicrophone": "No se pudo acceder al micrófono.",
     "micDenied": "Permiso de micrófono denegado.",
     "voiceError": "Error al reconocer voz. Intenta de nuevo."
+  },
+
+  "footer": {
+    "tagline": "Tu tienda de compras en línea confiable con los mejores productos a los mejores precios.",
+    "shopping": "COMPRAS",
+    "justForYou": "Solo para ti",
+    "newArrivals": "Novedades",
+    "deals": "Ofertas",
+    "womenClothing": "Ropa de mujer",
+    "menClothing": "Ropa de hombre",
+    "categories": "CATEGORÍAS",
+    "accessories": "Accesorios",
+    "shoes": "Zapatos",
+    "beauty": "Belleza",
+    "homeLife": "Hogar y Vida",
+    "account": "CUENTA",
+    "myAccount": "Mi Cuenta",
+    "myOrders": "Mis Pedidos",
+    "favorites": "Favoritos",
+    "contact": "CONTACTO",
+    "shippingAbroad": "Envío desde el extranjero",
+    "shippingDays": "Recibe tus productos en 7-15 días",
+    "freeReturns": "Devolución Gratis",
+    "returnDays": "Devuelve fácilmente en 30 días",
+    "securePayment": "Pago Seguro",
+    "multiplePayments": "Múltiples opciones de pago"
   },
 
   "nav": {
@@ -126,6 +161,8 @@
     "passwordMismatch": "Las contraseñas no coinciden",
     "alreadyHaveAccount": "¿Ya tienes cuenta?",
     "dontHaveAccount": "¿No tienes cuenta?",
+    "createAccount": "Crear Cuenta",
+    "needAccount": "Necesitas una cuenta para agregar productos al carrito y realizar pedidos.",
     "roles": {
       "buyer": "Comprador",
       "seller": "Vendedor",
@@ -165,6 +202,12 @@
     "searchProducts": "Buscar productos...",
     "filterByCategory": "Filtrar por categoría",
     "sortBy": "Ordenar por",
+    "available": "disponibles",
+    "priceRange": "Precio:",
+    "min": "Min",
+    "max": "Máx",
+    "color": "Color",
+    "size": "Talla",
     "sortOptions": {
       "newest": "Más recientes",
       "priceAsc": "Precio: Menor a Mayor",
@@ -197,14 +240,17 @@
 
   "orders": {
     "title": "Mis Pedidos",
+    "myPurchases": "Mis Compras",
     "orderNumber": "Número de Pedido",
     "orderDate": "Fecha del Pedido",
     "orderStatus": "Estado del Pedido",
     "orderTotal": "Total del Pedido",
     "viewOrder": "Ver Pedido",
+    "viewOrders": "Ver Mis Pedidos",
     "cancelOrder": "Cancelar Pedido",
     "trackOrder": "Rastrear Pedido",
     "noOrders": "No tienes pedidos aún",
+    "noPurchases": "No tienes compras aún",
     "statuses": {
       "pending": "Pendiente",
       "confirmed": "Confirmado",
@@ -249,7 +295,8 @@
     "proofUploaded": "Comprobante subido",
     "confirmPayment": "Confirmar Pago",
     "paymentConfirmed": "Pago Confirmado",
-    "paymentPending": "Pago Pendiente"
+    "paymentPending": "Pago Pendiente",
+    "accountLabel": "Cuenta:"
   },
 
   "profile": {
@@ -261,6 +308,66 @@
     "defaultAddress": "Dirección Principal",
     "saveChanges": "Guardar Cambios",
     "profileUpdated": "Perfil actualizado correctamente"
+  },
+
+  "adminSidebar": {
+    "main": "Principal",
+    "dashboard": "Dashboard",
+    "approvals": "Aprobaciones",
+    "quotes": "Cotizaciones",
+    "ordersB2B": "Pedidos B2B",
+    "refunds": "Reembolsos",
+    "conciliation": "Conciliación B2B",
+    "catalog": "Catálogo",
+    "categories": "Categorías",
+    "suppliers": "Proveedores",
+    "priceConfig": "Config. Precios",
+    "sellers": "Vendedores",
+    "banners": "Banners",
+    "agentOrders": "Pedidos por Agente",
+    "liveChat": "Live Chat",
+    "notifications": "Notificaciones",
+    "analytics": "Analytics",
+    "poMaster": "PO Maestra",
+    "inventoryOptimization": "Optimización Inventario",
+    "inventoryManagement": "Gestión Inventario",
+    "discounts": "Descuentos",
+    "discountCodes": "Códigos de Descuento",
+    "userDiscounts": "Descuentos por Usuario",
+    "system": "Sistema",
+    "markets": "Markets",
+    "globalLogistics": "Logística Global",
+    "marketplaceSections": "Secciones Marketplace",
+    "localLogistics": "Logística Local",
+    "pickupPoints": "Puntos de Retiro",
+    "commissions": "Comisiones",
+    "paymentMethods": "Métodos de Pago",
+    "b2bWholesale": "B2B Mayorista",
+    "b2bPortal": "Portal B2B",
+    "logoutSession": "Cerrar Sesión"
+  },
+
+  "sellerSidebar": {
+    "dashboard": "Dashboard",
+    "buyLots": "Comprar Lotes",
+    "myPurchases": "Mis Compras",
+    "mySales": "Mis Ventas",
+    "inventoryB2C": "Inventario B2C",
+    "marketing": "Marketing",
+    "analytics": "Analytics",
+    "myCatalog": "Mi Catálogo",
+    "cartB2B": "Carrito B2B",
+    "wishlist": "Lista de Deseos",
+    "myWallet": "Mi Billetera",
+    "credits": "Créditos",
+    "myCodes": "Mis Códigos",
+    "customerDiscounts": "Desc. Clientes",
+    "myAccount": "Mi Cuenta",
+    "backToStore": "Volver a la Tienda",
+    "viewMyStore": "Ver mi Tienda",
+    "sellerHub": "Seller Hub",
+    "new": "Nuevo",
+    "b2b": "B2B"
   },
 
   "admin": {
@@ -287,7 +394,8 @@
     "myCatalog": "Mi Catálogo",
     "earnings": "Ganancias",
     "inventory": "Inventario",
-    "addProduct": "Agregar Producto"
+    "addProduct": "Agregar Producto",
+    "seller": "Vendedor"
   },
 
   "b2b": {
@@ -317,7 +425,19 @@
     "waitingMessage": "Esperando a un miembro del equipo...",
     "pausedMessage": "Chat pausado. Reanuda para enviar mensajes.",
     "placeholder": "Escribe un mensaje...",
-    "openSupport": "Abrir Chat de Soporte"
+    "openSupport": "Abrir Chat de Soporte",
+    "supportChats": "Chats de Soporte"
+  },
+
+  "settings": {
+    "orderUpdates": "Actualizaciones de Pedidos",
+    "orderNotifications": "Notificaciones sobre tus compras",
+    "dangerZone": "Zona de Peligro",
+    "deleteAccount": "Eliminar mi Cuenta",
+    "deleteAccountWarning": "La eliminación de tu cuenta es permanente y no se puede deshacer.",
+    "sessionClosed": "Sesión cerrada",
+    "deleteContactSupport": "Para eliminar tu cuenta completamente, por favor contacta a soporte.",
+    "goToStore": "Cuenta → Mi Tienda"
   },
 
   "language": {
@@ -336,6 +456,7 @@
     "networkError": "Error de conexión",
     "reload": "Recargar Página",
     "tryAgain": "Intentar de nuevo",
-    "goHome": "Ir al Inicio"
+    "goHome": "Ir al Inicio",
+    "loginRequired": "Por favor inicia sesión para ver tus compras."
   }
 }
