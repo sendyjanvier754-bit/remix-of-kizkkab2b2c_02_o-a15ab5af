@@ -989,7 +989,7 @@ const ProductPage = () => {
                       ref={buyButtonRef}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {isB2BUser ? 'Comprar B2B' : 'Comprar'}
+                      {isB2BUser ? t('productPage.buyWholesale') : t('common.buy')}
                     </Button>
                   </div>
                 </div>
