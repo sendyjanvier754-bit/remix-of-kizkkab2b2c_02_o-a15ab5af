@@ -22,7 +22,9 @@ import {
   LayoutGrid,
   Globe,
   Store,
-  Headset
+  Headset,
+  Bell,
+  MessageCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
