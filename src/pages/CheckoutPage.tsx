@@ -139,8 +139,8 @@ const CheckoutPage = () => {
   const paymentMethods = [
     {
       id: 'stripe' as PaymentMethod,
-      name: 'Tarjeta de Crédito',
-      description: 'Visa, Mastercard, American Express',
+      name: t('payments.creditCard'),
+      description: t('checkout.creditCardDesc'),
       icon: CreditCard,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -148,7 +148,7 @@ const CheckoutPage = () => {
     {
       id: 'moncash' as PaymentMethod,
       name: 'MonCash',
-      description: 'Billetera digital haitiana',
+      description: t('checkout.moncashDesc'),
       icon: Smartphone,
       color: 'text-[#94111f]',
       bgColor: 'bg-[#94111f]/10',
@@ -156,15 +156,15 @@ const CheckoutPage = () => {
     {
       id: 'natcash' as PaymentMethod,
       name: 'NatCash',
-      description: 'Billetera digital haitiana',
+      description: t('checkout.natcashDesc'),
       icon: Smartphone,
       color: 'text-[#071d7f]',
       bgColor: 'bg-[#071d7f]/10',
     },
     {
       id: 'transfer' as PaymentMethod,
-      name: 'Transferencia Bancaria',
-      description: 'Transferencia directa',
+      name: t('payments.bankTransfer'),
+      description: t('checkout.bankTransferDesc'),
       icon: Building2,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
