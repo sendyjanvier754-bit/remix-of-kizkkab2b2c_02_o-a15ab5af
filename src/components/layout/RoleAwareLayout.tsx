@@ -22,17 +22,17 @@ export function RoleAwareLayout({ children, title, subtitle }: RoleAwareLayoutPr
     return (
       <AdminLayout title={title} subtitle={subtitle}>
         {children}
-      </AdminLayout>
-    );
+      </AdminLayout>);
+
   }
 
   return (
     <SellerLayout>
       <div className="px-2 md:px-6 py-4">
-        <h1 className="text-lg md:text-xl font-bold text-foreground mb-1">{title}</h1>
+        
         {subtitle && <p className="text-sm text-muted-foreground mb-4">{subtitle}</p>}
         {children}
       </div>
-    </SellerLayout>
-  );
+    </SellerLayout>);
+
 }
