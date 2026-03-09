@@ -998,15 +998,15 @@ const CheckoutPage = () => {
                     </div>
                   )}
 
-                  {/* Manual mode - seller details */}
-                  {paymentMode === 'manual' && moncashManualAvailable && sellerPaymentInfo?.moncash && (
+                  {/* Manual mode - platform details */}
+                  {paymentMode === 'manual' && moncashManualAvailable && platformPaymentInfo?.moncash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#94111f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#94111f' }}>
-                        Datos MonCash - {sellerPaymentInfo.storeName}
+                        Datos MonCash - {platformPaymentInfo.platformName}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#94111f' }}>
-                        <p><span className="font-medium">Número:</span> {sellerPaymentInfo.moncash.phone_number || 'No configurado'}</p>
-                        <p><span className="font-medium">Nombre:</span> {sellerPaymentInfo.moncash.name || 'No configurado'}</p>
+                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.moncash.phone_number || 'No configurado'}</p>
+                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.moncash.name || 'No configurado'}</p>
                       </div>
                       <div className="mt-3">
                         <Label>Código de Transacción *</Label>
