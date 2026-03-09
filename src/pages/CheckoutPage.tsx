@@ -974,9 +974,9 @@ const CheckoutPage = () => {
                             {paymentMode === 'manual' && <Check className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">Pago Manual al Vendedor</span>
+                            <span className="font-medium">Pago Manual</span>
                             <p className="text-xs text-muted-foreground">
-                              Pague directamente al vendedor y proporcione el código
+                              Pague y proporcione el código de transacción
                             </p>
                           </div>
                         </div>
