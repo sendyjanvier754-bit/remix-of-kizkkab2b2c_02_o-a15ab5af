@@ -289,7 +289,18 @@ const CheckoutPage = () => {
     });
   }, [selectedCommune, totalWeightGrams, subtotal, shippingRates, communes, categoryRates, deliveryMethod, calculateShipping]);
   
-  const shippingCost = shippingCalculation?.totalShippingCost || 0;
+  // Calculate shipping: seller options take priority, fallback to centralized system
+  const selectedSellerShipping = sellerShippingOptions.find(o => o.id === selectedShippingOptionId);
+  const sellerShippingCost = useMemo(() => {
+    if (!hasSellerShipping || !selectedSellerShipping) return 0;
+    // Check if free shipping threshold is met
+    if (selectedSellerShipping.is_free_above && subtotal >= Number(selectedSellerShipping.is_free_above)) {
+      return 0;
+    }
+    return selectedSellerShipping.shipping_cost;
+  }, [hasSellerShipping, selectedSellerShipping, subtotal]);
+
+  const shippingCost = hasSellerShipping ? sellerShippingCost : (shippingCalculation?.totalShippingCost || 0);
   const discountAmount = appliedDiscount?.discountAmount || 0;
   const totalWithShipping = subtotal + shippingCost - discountAmount;
 
