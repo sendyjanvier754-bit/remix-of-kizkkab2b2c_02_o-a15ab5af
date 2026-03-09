@@ -15,8 +15,13 @@ import {
   ChevronRight,
   Bell,
   HelpCircle,
+  Shield,
+  Info,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
+import { AboutModal } from "@/components/legal/AboutModal";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -30,6 +35,8 @@ export function UserProfilePage() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [showLegal, setShowLegal] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -191,7 +198,7 @@ export function UserProfilePage() {
         </div>
 
         {/* Logout Button */}
-        <div className="px-4 py-4 mb-8">
+        <div className="px-4 py-4">
           <Button
             onClick={handleLogout}
             disabled={isLoading}
@@ -202,12 +209,33 @@ export function UserProfilePage() {
           </Button>
         </div>
 
+        {/* Legal & About Modals */}
+        <div className="px-4 pb-4">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">Información Legal</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowLegal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs text-gray-600 transition-colors"
+            >
+              <Shield className="h-3.5 w-3.5 text-[#071d7f]" /> Términos Legales
+            </button>
+            <button
+              onClick={() => setShowAbout(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs text-gray-600 transition-colors"
+            >
+              <Info className="h-3.5 w-3.5 text-[#071d7f]" /> Acerca de
+            </button>
+          </div>
+        </div>
+
         {/* Footer Info */}
         <div className="px-4 py-4 text-center text-xs text-gray-500 border-t bg-gray-50">
           <p>Silver Market Haiti v1.0</p>
           <p className="mt-1">© 2026 Todos los derechos reservados</p>
         </div>
       </div>
+      <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />
+      <AboutModal open={showAbout} onOpenChange={setShowAbout} />
     </PageWrapper>
   );
 }

@@ -9,6 +9,7 @@ import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { searchProductsByImage } from "@/services/api/imageSearch";
 import { toast } from "sonner";
 import { useViewMode } from "@/contexts/ViewModeContext";
+import { useBranding } from "@/hooks/useBranding";
 const SEARCH_HISTORY_KEY = 'b2b_search_history';
 const MAX_HISTORY_ITEMS = 8;
 
@@ -82,6 +83,7 @@ const HeaderB2B = ({
   const [showHistory, setShowHistory] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const isMobile = useIsMobile();
+  const { getValue } = useBranding();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -383,13 +385,19 @@ const HeaderB2B = ({
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/seller/catalogo" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-lg text-gray-900">SIVER</span>
-                <span className="text-xs text-blue-600 font-medium -mt-1">MAYORISTA</span>
-              </div>
+              {getValue('logo_url') ? (
+                <img src={getValue('logo_url')} alt={getValue('platform_name')} className="h-10 w-auto max-w-[120px] object-contain" />
+              ) : (
+                <>
+                  <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center">
+                    <Package className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-lg text-gray-900">{getValue('platform_name') || 'SIVER'}</span>
+                    <span className="text-xs text-blue-600 font-medium -mt-1">MAYORISTA</span>
+                  </div>
+                </>
+              )}
             </Link>
 
             {/* Search Bar with History */}

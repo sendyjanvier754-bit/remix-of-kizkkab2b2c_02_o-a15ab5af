@@ -12,6 +12,29 @@ const DEFAULTS: Record<string, string> = {
   favicon_url: '',
   meta_title: '',
   meta_description: '',
+  // Payment method icon defaults — point to the existing static files
+  payment_icon_visa: '/visa.png',
+  payment_icon_mastercard: '/mastercard.png',
+  payment_icon_amex: '/american express.png',
+  payment_icon_applepay: '/apple pay.png',
+  payment_icon_googlepay: '/google pay.png',
+  payment_icon_moncash: '',
+  payment_icon_natcash: '',
+  payment_icon_transfer: '',
+  // Legal page content — empty means use hardcoded default
+  legal_terms: '',
+  legal_privacy: '',
+  legal_cookies: '',
+  // About & affiliate program content — empty means use hardcoded default
+  about_content: '',
+  affiliate_program: '',
+  // Trust/guarantee badges shown in footer
+  trust_badge_1_title: 'Envío desde el extranjero',
+  trust_badge_1_desc: 'Recibe tus productos en 7-15 días',
+  trust_badge_2_title: 'Devolución Gratis',
+  trust_badge_2_desc: 'Devuelve fácilmente en 30 días',
+  trust_badge_3_title: 'Pago Seguro',
+  trust_badge_3_desc: 'Múltiples opciones de pago',
 };
 
 /**

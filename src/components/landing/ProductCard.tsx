@@ -114,6 +114,8 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
       moq: moq,
       stock: b2bData?.stock || product.stock || 0,
       source_product_id: product.source_product_id,
+      storeId: product.storeId,
+      sellerCatalogId: product.id,
     });
   };
 
@@ -121,7 +123,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
     <>
     <div className="bg-card rounded-lg overflow-hidden hover:shadow-lg transition group border border-border h-full flex flex-col">
       {/* Image Container */}
-      <Link to={product.sku ? `/producto/${product.sku}` : '#'} className="relative block">
+      <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'} className="relative block">
         <div className="relative overflow-hidden aspect-square bg-muted">
           {product.image ? (
             <img
@@ -193,7 +195,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
 
       {/* Product Info */}
       <div className="p-1 flex flex-col flex-1">
-        <Link to={product.sku ? `/producto/${product.sku}` : '#'}>
+        <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'}>
           <h3 className="text-sm font-medium text-foreground line-clamp-1 mb-1 hover:text-primary transition h-5">
             {product.name}
           </h3>
@@ -207,7 +209,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
         )}
 
         {/* Precios */}
-        <Link to={product.sku ? `/producto/${product.sku}` : '#'}>
+        <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'}>
           <div className="flex items-baseline gap-2 flex-wrap hover:opacity-80 transition-opacity mb-3">
             {/* Price badge with currency from database */}
             <span className="inline-flex items-center gap-1 bg-[#ef481b] border border-[#ef481b] px-1 py-0.5 rounded-md animate-pulse">

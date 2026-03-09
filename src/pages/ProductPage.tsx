@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+﻿import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,7 @@ import { useStore } from '@/hooks/useStore';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProductVariants } from "@/hooks/useProductVariants";
 import { useRecommendedProducts } from "@/hooks/useMarketplaceData";
+import { useStoreFollow } from "@/hooks/useTrendingStores";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
@@ -39,7 +40,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ChevronRight, ChevronLeft, ShoppingCart, Heart, Store as StoreIcon, Package, TrendingUp, Calculator, Shield, Truck, RotateCcw, Award, MessageCircle, Zap, Info, Star, X, ArrowLeft, Search, Share2, MoreVertical, ZoomIn } from "lucide-react";
+import { ChevronRight, ChevronLeft, ShoppingCart, Heart, Store as StoreIcon, Package, TrendingUp, Calculator, Shield, Truck, RotateCcw, Award, MessageCircle, Zap, Info, Star, X, ArrowLeft, Search, Share2, MoreVertical, ZoomIn, ExternalLink } from "lucide-react";
 
 // Hook to fetch product from both seller_catalog and products table by SKU or catalog ID
 const useProductBySku = (sku: string | undefined, catalogId: string | undefined) => {
@@ -54,7 +55,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
         } = await supabase.from("seller_catalog").select(`
             *,
             store:stores!seller_catalog_seller_store_id_fkey(
-              id, name, logo, whatsapp, is_active
+              id, name, logo, whatsapp, is_active, slug
             ),
             source_product:products!seller_catalog_source_product_id_fkey(
               id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
@@ -92,8 +93,8 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
       } = await supabase.from("seller_catalog").select(`
           *,
           store:stores!seller_catalog_seller_store_id_fkey(
-            id, name, logo, whatsapp, is_active
-          ),
+              id, name, logo, whatsapp, is_active, slug
+            ),
           source_product:products!seller_catalog_source_product_id_fkey(
             id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
             category:categories!products_categoria_id_fkey(id, name, slug)
@@ -255,10 +256,76 @@ const ProductPage = () => {
     data: product,
     isLoading
   } = useProductBySku(sku, catalogId);
-  // Load store profile when product comes from a seller catalog (used to determine currency)
+
+  // ===== SELLER / STORE SECTION =====
+  const [searchParams] = useSearchParams();
+  const sellerParam = searchParams.get('seller'); // store ID from ?seller= URL param
+
+  // Load store profile: prefer the FK-joined store on the product, fall back to ?seller= param
   const {
     data: storeData
-  } = useStore((product as any)?.store?.id);
+  } = useStore((product as any)?.store?.id || sellerParam || undefined);
+
+  // realStore: joined store object OR full storeData fetched via ?seller= param
+  const realStore = ((product as any)?.store || storeData) as { id: string; name: string; logo: string | null; slug: string | null } | null;
+
+  const { followStore, unfollowStore, checkIfFollowing } = useStoreFollow();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  const { data: storeFollowersCount = 0, refetch: refetchStoreFollowers } = useQuery({
+    queryKey: ["store-followers-count-pp", realStore?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("store_followers")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", realStore!.id);
+      return count || 0;
+    },
+    enabled: !!realStore?.id,
+  });
+
+  const { data: storeRatingData } = useQuery({
+    queryKey: ["store-rating-pp", realStore?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("store_reviews")
+        .select("rating")
+        .eq("store_id", realStore!.id);
+      if (!data || data.length === 0) return null;
+      const avg = data.reduce((s, r) => s + r.rating, 0) / data.length;
+      return { avg: Math.round(avg * 10) / 10, count: data.length };
+    },
+    enabled: !!realStore?.id,
+  });
+
+  useEffect(() => {
+    if (!user || !realStore?.id) return;
+    checkIfFollowing(realStore.id, user.id).then(setIsFollowing);
+  }, [user, realStore?.id]);
+
+  const handleStoreFollowToggle = async () => {
+    if (!user) {
+      sessionStorage.setItem('post_login_redirect', window.location.pathname);
+      navigate('/cuenta');
+      return;
+    }
+    if (!realStore?.id) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await unfollowStore(realStore.id, user.id);
+        setIsFollowing(false);
+      } else {
+        await followStore(realStore.id, user.id);
+        setIsFollowing(true);
+      }
+      refetchStoreFollowers();
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+  // ===== END SELLER SECTION =====
 
   // Fetch recommended products based on current product's category
   const categoryId = product?.source_product?.categoria_id || null;
@@ -268,7 +335,7 @@ const ProductPage = () => {
     100
   );
 
-  // ✅ Fetch product variants with B2B prices if user is seller
+  // Fetch product variants with B2B prices if user is seller
   const { data: variants = [] } = useProductVariants(product?.source_product?.id, isB2BUser);
 
   // Local state
@@ -370,7 +437,7 @@ const ProductPage = () => {
     // If B2B enforce MOQ sum
     if (isB2BUser && totalSelectedQty > 0 && totalSelectedQty < currentMoq) {
       toast({
-        title: 'Cantidad mínima',
+        title: 'Cantidad mÃ­nima',
         description: `El pedido total debe ser al menos ${currentMoq} unidades.`,
         className: 'bg-yellow-100'
       });
@@ -487,7 +554,7 @@ const ProductPage = () => {
       // trackView(product.id, "product_page"); // Assuming trackView exists or will be implemented
       setViewTracked(true);
     }
-    // Decide whether to show the "Mostrar más" toggle for long titles (>60 chars)
+    // Decide whether to show the "Mostrar mÃ¡s" toggle for long titles (>60 chars)
     if (product && product.nombre) {
       setShowTitleToggle(product.nombre.length > 60);
     }
@@ -540,7 +607,7 @@ const ProductPage = () => {
       }
       toast({
         title: "Producto agregado",
-        description: `${product.nombre} (x${quantity}) se agregó al carrito`
+        description: `${product.nombre} (x${quantity}) se agregÃ³ al carrito`
       });
     }
   };
@@ -554,7 +621,7 @@ const ProductPage = () => {
       // Enforce MOQ for B2B
       if (isB2BUser && totalSelectedQty < currentMoq) {
         toast({
-          title: 'Cantidad mínima',
+          title: 'Cantidad mÃ­nima',
           description: `El pedido total debe ser al menos ${currentMoq} unidades.`,
           className: 'bg-yellow-100'
         });
@@ -710,7 +777,7 @@ const ProductPage = () => {
         </div>
       )}
 
-      {/* Sticky Nav Tabs: reemplaza la barra de categorías */}
+      {/* Sticky Nav Tabs: reemplaza la barra de categorÃ­as */}
       {/* REMOVED: Desktop sticky nav replaced with Accordion component */}
 
       <main className={`container mx-auto ${isMobile ? 'px-0 pb-12' : 'px-4 pb-12'} py-4`}>
@@ -817,7 +884,7 @@ const ProductPage = () => {
                       {selectedImage === index && (
                         <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
                           <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">✓</span>
+                            <span className="text-white text-xs font-bold">âœ“</span>
                           </div>
                         </div>
                       )}
@@ -906,7 +973,7 @@ const ProductPage = () => {
                     B2B
                   </span>}
                 {isB2BUser && dynamicPrice !== null && <span className="text-xs font-medium text-white bg-blue-600 px-2 py-0.5 rounded">
-                    Motor Dinámico ⚡
+                    Motor DinÃ¡mico âš¡
                   </span>}
               </div>
 
@@ -946,7 +1013,7 @@ const ProductPage = () => {
                       {selectedImage === index && (
                         <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
                           <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">✓</span>
+                            <span className="text-white text-xs font-bold">âœ“</span>
                           </div>
                         </div>
                       )}
@@ -1008,7 +1075,43 @@ const ProductPage = () => {
                 </Button>
               </div>
             ) : (
-              <Accordion type="single" collapsible defaultValue="descripcion" className="w-full mt-10">
+              <>
+              {/* Sección del Vendedor - Desktop (visible siempre, encima de los accordions) */}
+              {realStore && (
+                <div className="bg-white rounded-xl p-5 mt-6 mb-4 border border-gray-200 shadow-sm">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Vendido por</p>
+                  <div className="flex items-center gap-4">
+                    <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center hover:opacity-90 transition">
+                      {realStore.logo
+                        ? <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" />
+                        : <span className="text-lg font-bold text-[#071d7f]">{realStore.name.substring(0, 2).toUpperCase()}</span>}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="font-bold text-gray-900 hover:text-[#071d7f] transition-colors flex items-center gap-1.5 text-base">
+                        {realStore.name}<ExternalLink className="w-3.5 h-3.5 opacity-40" />
+                      </button>
+                      <div className="flex items-center gap-2 mt-1">
+                        {storeRatingData
+                          ? <>
+                              <div className="flex">
+                                {[1,2,3,4,5].map(i => <Star key={i} className={`w-3.5 h-3.5 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}
+                              </div>
+                              <span className="text-sm font-semibold text-gray-800">{storeRatingData.avg}</span>
+                              <span className="text-sm text-gray-400">({storeRatingData.count} reseñas)</span>
+                            </>
+                          : <span className="text-sm text-gray-400">Sin reseñas aún</span>}
+                      </div>
+                    </div>
+                    <button type="button" onClick={handleStoreFollowToggle} disabled={followLoading} className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition disabled:opacity-50 ${isFollowing ? 'bg-red-50 border-red-300 text-red-600' : 'bg-[#071d7f] border-[#071d7f] text-white'}`}>
+                      <Heart className={`w-4 h-4 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
+                      {storeFollowersCount > 0 && <span>{storeFollowersCount}</span>}
+                      <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <Accordion type="single" collapsible defaultValue="descripcion" className="w-full mt-4">
                 <AccordionItem value="descripcion" className="border border-gray-200 rounded-lg overflow-hidden">
                   <AccordionTrigger className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between">
                     <span>{t('common.description')}</span>
@@ -1034,6 +1137,7 @@ const ProductPage = () => {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+              </>
             )}
 
             {/* Description Drawer for Mobile */}
@@ -1068,10 +1172,36 @@ const ProductPage = () => {
 
             {/* Valoraciones - Using ProductReviews component */}
             {isMobile && (
-              <div id="section-reviews" ref={reviewsRef} className="mt-10 scroll-mt-20">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('productPage.productReviews')}</h3>
-                <ProductReviews productId={product.source_product?.id || product.id} productName={product.nombre} />
-              </div>
+              <>
+                {/* Sección del Vendedor - Mobile */}
+                {realStore && (
+                  <div className="bg-white rounded-xl p-4 mt-6 mb-2 border border-gray-100 shadow-sm">
+                    <h2 className="text-sm font-bold text-gray-700 mb-3">Vendido por</h2>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
+                        {realStore.logo ? <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" /> : <span className="text-base font-bold text-[#071d7f]">{realStore.name.substring(0, 2).toUpperCase()}</span>}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="font-semibold text-gray-900 hover:text-[#071d7f] transition-colors flex items-center gap-1 text-sm">
+                          {realStore.name}<ExternalLink className="w-3 h-3 opacity-40" />
+                        </button>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {storeRatingData ? <><div className="flex">{[1,2,3,4,5].map(i => <Star key={i} className={`w-3 h-3 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}</div><span className="text-xs font-semibold text-gray-700">{storeRatingData.avg}</span><span className="text-xs text-gray-400">({storeRatingData.count})</span></> : <span className="text-xs text-gray-400">Sin reseñas</span>}
+                        </div>
+                      </div>
+                      <button type="button" onClick={handleStoreFollowToggle} disabled={followLoading} className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border disabled:opacity-50 ${isFollowing ? 'bg-red-50 border-red-300 text-red-600' : 'bg-[#071d7f] border-[#071d7f] text-white'}`}>
+                        <Heart className={`w-3.5 h-3.5 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
+                        {storeFollowersCount > 0 && <span>{storeFollowersCount}</span>}
+                        <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div id="section-reviews" ref={reviewsRef} className="mt-6 scroll-mt-20">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('productPage.productReviews')}</h3>
+                  <ProductReviews productId={product.source_product?.id || product.id} productName={product.nombre} />
+                </div>
+              </>
             )}
 
             {/* Trust Badges */}

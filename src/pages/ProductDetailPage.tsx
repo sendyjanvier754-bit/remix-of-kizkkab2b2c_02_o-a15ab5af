@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -24,7 +24,9 @@ import {
   Award,
   ThumbsUp,
   CheckCircle,
+  ExternalLink,
 } from "lucide-react";
+import { useStoreFollow } from "@/hooks/useTrendingStores";
 
 interface ProductDetail {
   sku: string;
@@ -58,6 +60,8 @@ interface ProductDetail {
 
 const ProductPage = () => {
   const { sku } = useParams<{ sku: string }>();
+  const [searchParams] = useSearchParams();
+  const sellerParam = searchParams.get('seller'); // storeId passed from store page
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -78,19 +82,81 @@ const ProductPage = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   // Real catalog item by SKU (to get the id for reviews)
+  // If ?seller=storeId is in the URL (navigated from a store page), filter to that seller's catalog entry
   const { data: catalogItem } = useQuery({
-    queryKey: ["catalog-item-by-sku", sku],
+    queryKey: ["catalog-item-by-sku", sku, sellerParam],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("seller_catalog")
-        .select("id, nombre, source_product_id, seller_store_id, stores(id, name, logo)")
-        .eq("sku", sku!)
-        .maybeSingle();
+        .select("id, nombre, source_product_id, seller_store_id, stores(id, name, logo, sku)")
+        .eq("sku", sku!);
+      if (sellerParam) {
+        query = query.eq("seller_store_id", sellerParam);
+      }
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       return data;
     },
     enabled: !!sku,
   });
+
+  const realStore = catalogItem?.stores as { id: string; name: string; logo: string | null; sku: string | null } | null;
+  const { followStore, unfollowStore, checkIfFollowing } = useStoreFollow();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  const { data: storeFollowersCount = 0, refetch: refetchStoreFollowers } = useQuery({
+    queryKey: ["store-followers-count-pdp", realStore?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("store_followers")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", realStore!.id);
+      return count || 0;
+    },
+    enabled: !!realStore?.id,
+  });
+
+  const { data: storeRatingData } = useQuery({
+    queryKey: ["store-rating-pdp", realStore?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("store_reviews")
+        .select("rating")
+        .eq("store_id", realStore!.id);
+      if (!data || data.length === 0) return null;
+      const avg = data.reduce((s, r) => s + r.rating, 0) / data.length;
+      return { avg: Math.round(avg * 10) / 10, count: data.length };
+    },
+    enabled: !!realStore?.id,
+  });
+
+  useEffect(() => {
+    if (!user || !realStore?.id) return;
+    checkIfFollowing(realStore.id, user.id).then(setIsFollowing);
+  }, [user, realStore?.id]);
+
+  const handleStoreFollowToggle = async () => {
+    if (!user) {
+      sessionStorage.setItem('post_login_redirect', window.location.pathname);
+      navigate('/cuenta');
+      return;
+    }
+    if (!realStore?.id) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await unfollowStore(realStore.id, user.id);
+        setIsFollowing(false);
+      } else {
+        await followStore(realStore.id, user.id);
+        setIsFollowing(true);
+      }
+      refetchStoreFollowers();
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   // Real product reviews
   const { data: reviews = [], refetch: refetchReviews } = useQuery({
@@ -501,34 +567,6 @@ const ProductPage = () => {
                 Añadir a Favoritos
               </Button>
             </div>
-
-            {/* Vendedor */}
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Vendido por:</h3>
-              <div className="flex items-center gap-4">
-                <img
-                  src={product.seller.logo}
-                  alt={product.seller.name}
-                  className="w-16 h-16 rounded-lg object-cover"
-                />
-                <div className="flex-1">
-                  <h4
-                    className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer"
-                    onClick={() => navigate(`/tienda/${product.seller.id}`)}
-                  >
-                    {product.seller.name}
-                  </h4>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-gray-700">{product.seller.rating}</span>
-                    <span className="text-gray-500">• {product.seller.responseTime}</span>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                  <MessageCircle className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -602,6 +640,72 @@ const ProductPage = () => {
             </div>
           </div>
         </div>
+
+        {/* ===== SECCIÓN DEL VENDEDOR ===== */}
+        {realStore && (
+          <div className="bg-white rounded-xl p-5 mb-6 border border-gray-100 shadow-sm">
+            <h2 className="text-base font-bold text-gray-800 mb-4">Vendido por</h2>
+            <div className="flex items-center gap-4">
+              {/* Store logo / avatar */}
+              <button
+                type="button"
+                onClick={() => navigate(`/tienda/${realStore.sku || realStore.id}`)}
+                className="flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-100 shadow bg-white flex items-center justify-center hover:opacity-90 transition"
+              >
+                {realStore.logo ? (
+                  <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl font-bold text-[#071d7f]">{realStore.name.substring(0, 2).toUpperCase()}</span>
+                )}
+              </button>
+
+              {/* Store details */}
+              <div className="flex-1 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/tienda/${realStore.sku || realStore.id}`)}
+                  className="font-bold text-gray-900 hover:text-[#071d7f] transition-colors flex items-center gap-1.5 text-base"
+                >
+                  {realStore.name}
+                  <ExternalLink className="w-4 h-4 opacity-40" />
+                </button>
+
+                {/* Rating row */}
+                <div className="flex items-center gap-2 mt-1">
+                  {storeRatingData ? (
+                    <>
+                      <div className="flex items-center gap-0.5">
+                        {[1,2,3,4,5].map(i => (
+                          <Star key={i} className={`w-4 h-4 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
+                        ))}
+                      </div>
+                      <span className="text-sm font-semibold text-gray-800">{storeRatingData.avg}</span>
+                      <span className="text-sm text-gray-400">({storeRatingData.count} reseñas)</span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-400">Sin reseñas aún</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Follow pill */}
+              <button
+                type="button"
+                onClick={handleStoreFollowToggle}
+                disabled={followLoading}
+                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-colors disabled:opacity-50 border ${
+                  isFollowing
+                    ? 'bg-red-50 border-red-300 text-red-600 hover:bg-red-100'
+                    : 'bg-[#071d7f] border-[#071d7f] text-white hover:bg-[#071d7f]/90'
+                }`}
+              >
+                <Heart className={`w-4 h-4 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
+                <span>{storeFollowersCount}</span>
+                <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ===== SECCIÓN DE RESEÑAS ===== */}
         <div className="bg-white rounded-lg p-6 mb-8">

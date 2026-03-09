@@ -326,7 +326,7 @@ const StoreProfilePage = () => {
           <div className="absolute inset-0 bg-black/50" />
 
           {/* Content — sits above the banner */}
-          <div className="relative z-10 px-3 py-4 md:px-6 md:py-6">
+          <div className="relative z-10 px-3 py-8 md:px-6 md:py-12">
             {/* Logo + Title inline on mobile */}
             <div className="flex items-center gap-2 md:gap-4 mb-1 md:mb-4">
               <div
@@ -463,16 +463,18 @@ const StoreProfilePage = () => {
                   <span className="text-[#071d7f]/60">Sin reseñas</span>
                 )}
               </div>
-              <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs">
-                <span className="font-semibold text-[#071d7f]">{store.followers}</span>
-                <span className="text-[#071d7f]/70">seg.</span>
-              </div>
               <button
                 onClick={handleFollowToggle}
                 disabled={followLoading}
-                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 border ${
+                  isFollowing
+                    ? 'bg-red-50 border-red-300 text-red-600'
+                    : 'bg-[#071d7f] border-[#071d7f] text-white'
+                }`}
               >
-                <Heart className={`w-4 h-4 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+                <Heart className={`w-3.5 h-3.5 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
+                <span>{store.followers}</span>
+                <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
               </button>
               <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
                 <MessageCircle className="w-4 h-4 text-[#071d7f]" />
@@ -509,23 +511,23 @@ const StoreProfilePage = () => {
                   <span className="text-[#071d7f]/60 text-sm ml-1">Sin reseñas</span>
                 )}
               </div>
-              <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded text-sm">
-                <span className="font-semibold text-[#071d7f]">{store.followers}</span>
-                <span className="text-[#071d7f]/70">seguidores</span>
-              </div>
             </div>
 
             {/* Desktop: Action buttons */}
             <div className="hidden md:flex items-center gap-2">
-              <Button
+              <button
                 onClick={handleFollowToggle}
                 disabled={followLoading}
-                size="sm"
-                className="bg-[#071d7f] hover:bg-[#071d7f]/90 text-white font-semibold"
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-colors disabled:opacity-50 border ${
+                  isFollowing
+                    ? 'bg-red-50 border-red-300 text-red-600 hover:bg-red-100'
+                    : 'bg-[#071d7f] border-[#071d7f] text-white hover:bg-[#071d7f]/90'
+                }`}
               >
-                <Heart className={`w-4 h-4 mr-1 ${isFollowing ? "fill-white" : ""}`} />
-                {isFollowing ? "Siguiendo" : "Seguir"}
-              </Button>
+                <Heart className={`w-4 h-4 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
+                <span>{store.followers}</span>
+                <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
+              </button>
               <Button
                 variant="outline"
                 size="sm"
@@ -549,40 +551,42 @@ const StoreProfilePage = () => {
 
         {/* Products Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Productos de {store.name}</h2>
 
           {/* Search & Filter */}
-          <div className="bg-white rounded-lg p-4 mb-6 shadow">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Buscar en esta tienda..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+          <div className="bg-white rounded-lg px-4 py-3 mb-6 shadow">
+            <div className="flex items-center gap-2">
+              {/* Search icon button + expandable input */}
+              <div className="flex items-center gap-2 flex-1">
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery(searchQuery === '' ? ' ' : '')}
+                  className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  aria-label="Buscar"
+                >
+                  <Search className="w-5 h-5 text-gray-500" />
+                </button>
+                <input
+                  type="text"
+                  placeholder="Buscar en esta tienda..."
+                  value={searchQuery.trim()}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400 border-b border-gray-200 focus:border-blue-500 py-1 transition-colors"
+                />
               </div>
 
               {/* Category Filter */}
-              <div className="md:w-48">
-                <select
-                  value={selectedCategory || ""}
-                  onChange={(e) => setSelectedCategory(e.target.value || null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Todas las categorías</option>
-                  {store.categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select
+                value={selectedCategory || ""}
+                onChange={(e) => setSelectedCategory(e.target.value || null)}
+                className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">Todas las categorías</option>
+                {store.categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

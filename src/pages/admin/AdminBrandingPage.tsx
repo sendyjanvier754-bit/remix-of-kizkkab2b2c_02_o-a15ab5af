@@ -1,41 +1,36 @@
 import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { BrandingImageUpload } from '@/components/admin/BrandingImageUpload';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, Palette, Globe, Share2, Search } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Save, Palette, Globe, Share2, Search, CreditCard, FileText, Image, ShieldCheck } from 'lucide-react';
 
-const FIELDS = {
-  identity: [
-    { key: 'platform_name', label: 'Nombre de la Plataforma', placeholder: 'Ej: Mi Marketplace' },
-    { key: 'platform_slogan', label: 'Slogan', placeholder: 'Tu slogan aquí' },
-    { key: 'logo_url', label: 'URL del Logo', placeholder: 'https://...' },
-    { key: 'favicon_url', label: 'URL del Favicon', placeholder: 'https://...' },
-  ],
-  colors: [
-    { key: 'primary_color', label: 'Color Primario', placeholder: '#3B82F6' },
-    { key: 'secondary_color', label: 'Color Secundario', placeholder: '#10B981' },
-  ],
-  contact: [
-    { key: 'contact_email', label: 'Email de Contacto', placeholder: 'info@tuempresa.com' },
-    { key: 'contact_phone', label: 'Teléfono', placeholder: '+509 ...' },
-  ],
-  social: [
-    { key: 'social_facebook', label: 'Facebook', placeholder: 'https://facebook.com/...' },
-    { key: 'social_instagram', label: 'Instagram', placeholder: 'https://instagram.com/...' },
-    { key: 'social_whatsapp', label: 'WhatsApp', placeholder: '+509...' },
-  ],
-  seo: [
-    { key: 'meta_title', label: 'Meta Título (SEO)', placeholder: 'Título para buscadores' },
-    { key: 'meta_description', label: 'Meta Descripción (SEO)', placeholder: 'Descripción para buscadores', multiline: true },
-  ],
-};
+const PAYMENT_ICONS = [
+  { key: 'payment_icon_visa',       label: 'VISA',                default: '/visa.png' },
+  { key: 'payment_icon_mastercard', label: 'Mastercard',          default: '/mastercard.png' },
+  { key: 'payment_icon_amex',       label: 'American Express',    default: '/american express.png' },
+  { key: 'payment_icon_applepay',   label: 'Apple Pay',           default: '/apple pay.png' },
+  { key: 'payment_icon_googlepay',  label: 'Google Pay',          default: '/google pay.png' },
+  { key: 'payment_icon_moncash',    label: 'MonCash',             default: '' },
+  { key: 'payment_icon_natcash',    label: 'NatCash',             default: '' },
+  { key: 'payment_icon_transfer',   label: 'Transferencia Bancaria', default: '' },
+];
+
+const LEGAL_FIELDS = [
+  { key: 'legal_terms',       label: 'Términos y Condiciones' },
+  { key: 'legal_privacy',     label: 'Política de Privacidad' },
+  { key: 'legal_cookies',     label: 'Política de Cookies' },
+  { key: 'about_content',     label: 'Sobre Nosotros' },
+  { key: 'affiliate_program', label: 'Programa de Afiliados' },
+];
 
 export default function AdminBrandingPage() {
-  const { settings, isLoading, getValue, updateMultiple } = useBrandingSettings();
+  const { settings, isLoading, updateMultiple } = useBrandingSettings();
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -47,9 +42,8 @@ export default function AdminBrandingPage() {
     }
   }, [settings]);
 
-  const handleChange = (key: string, value: string) => {
+  const set = (key: string, value: string) =>
     setForm(prev => ({ ...prev, [key]: value }));
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -57,29 +51,23 @@ export default function AdminBrandingPage() {
     setSaving(false);
   };
 
-  const renderFields = (fields: typeof FIELDS.identity) => (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {fields.map(f => (
-        <div key={f.key} className="space-y-2">
-          <Label htmlFor={f.key}>{f.label}</Label>
-          {'multiline' in f && f.multiline ? (
-            <Textarea
-              id={f.key}
-              value={form[f.key] || ''}
-              onChange={e => handleChange(f.key, e.target.value)}
-              placeholder={f.placeholder}
-              rows={3}
-            />
-          ) : (
-            <Input
-              id={f.key}
-              value={form[f.key] || ''}
-              onChange={e => handleChange(f.key, e.target.value)}
-              placeholder={f.placeholder}
-            />
-          )}
-        </div>
-      ))}
+  const field = (key: string, label: string, placeholder = '', multiline = false) => (
+    <div key={key} className="space-y-2">
+      <Label htmlFor={key}>{label}</Label>
+      {multiline ? (
+        <Textarea id={key} value={form[key] || ''} onChange={e => set(key, e.target.value)} placeholder={placeholder} rows={3} />
+      ) : (
+        <Input id={key} value={form[key] || ''} onChange={e => set(key, e.target.value)} placeholder={placeholder} />
+      )}
+    </div>
+  );
+
+  const SaveButton = () => (
+    <div className="flex justify-end pt-2">
+      <Button onClick={handleSave} disabled={saving} size="lg">
+        {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        Guardar Cambios
+      </Button>
     </div>
   );
 
@@ -96,67 +84,178 @@ export default function AdminBrandingPage() {
   return (
     <AdminLayout title="Identidad de la Plataforma" subtitle="Configura nombre, logo, colores y más">
       <div className="max-w-4xl space-y-6">
-        {/* Preview */}
-        {(form.logo_url || form.platform_name) && (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="flex items-center gap-4 py-4">
-              {form.logo_url && (
-                <img src={form.logo_url} alt="Logo" className="h-12 w-12 rounded-lg object-contain" />
-              )}
-              <div>
-                <h2 className="text-xl font-bold text-foreground">{form.platform_name || 'Tu Plataforma'}</h2>
-                <p className="text-sm text-muted-foreground">{form.platform_slogan || ''}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
+        {/* Live preview */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="flex items-center gap-4 py-4">
+            {form.logo_url && (
+              <img src={form.logo_url} alt="Logo" className="h-12 w-12 rounded-lg object-contain bg-white p-1" />
+            )}
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{form.platform_name || 'Tu Plataforma'}</h2>
+              <p className="text-sm text-muted-foreground">{form.platform_slogan || ''}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Identity ── */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Globe className="h-5 w-5" /> Identidad</CardTitle>
             <CardDescription>Nombre, slogan, logo y favicon de la plataforma</CardDescription>
           </CardHeader>
-          <CardContent>{renderFields(FIELDS.identity)}</CardContent>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {field('platform_name', 'Nombre de la Plataforma', 'Ej: Mi Marketplace')}
+              {field('platform_slogan', 'Slogan', 'Tu slogan aquí')}
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <BrandingImageUpload id="logo_url" label="Logo" value={form.logo_url || ''} onChange={v => set('logo_url', v)} previewSize="lg" />
+              <BrandingImageUpload id="favicon_url" label="Favicon" value={form.favicon_url || ''} onChange={v => set('favicon_url', v)} previewSize="sm" />
+            </div>
+          </CardContent>
         </Card>
 
+        {/* ── Colors ── */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5" /> Colores de Marca</CardTitle>
             <CardDescription>Colores principales para la identidad visual</CardDescription>
           </CardHeader>
-          <CardContent>{renderFields(FIELDS.colors)}</CardContent>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {field('primary_color', 'Color Primario', '#3B82F6')}
+              {field('secondary_color', 'Color Secundario', '#10B981')}
+            </div>
+          </CardContent>
         </Card>
 
+        {/* ── Contact ── */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Globe className="h-5 w-5" /> Contacto</CardTitle>
-            <CardDescription>Información de contacto visible en la plataforma</CardDescription>
+            <CardDescription>Información de contacto visible en la plataforma, facturas y páginas legales</CardDescription>
           </CardHeader>
-          <CardContent>{renderFields(FIELDS.contact)}</CardContent>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {field('contact_email', 'Email de Contacto', 'info@tuempresa.com')}
+              {field('contact_phone', 'Teléfono', '+509 ...')}
+            </div>
+          </CardContent>
         </Card>
 
+        {/* ── Social ── */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Share2 className="h-5 w-5" /> Redes Sociales</CardTitle>
             <CardDescription>Enlaces a tus redes sociales</CardDescription>
           </CardHeader>
-          <CardContent>{renderFields(FIELDS.social)}</CardContent>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {field('social_facebook', 'Facebook', 'https://facebook.com/...')}
+              {field('social_instagram', 'Instagram', 'https://instagram.com/...')}
+              {field('social_whatsapp', 'WhatsApp', '+509...')}
+            </div>
+          </CardContent>
         </Card>
 
+        {/* ── SEO ── */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Search className="h-5 w-5" /> SEO</CardTitle>
             <CardDescription>Optimización para motores de búsqueda</CardDescription>
           </CardHeader>
-          <CardContent>{renderFields(FIELDS.seo)}</CardContent>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {field('meta_title', 'Meta Título', 'Título para buscadores')}
+              {field('meta_description', 'Meta Descripción', 'Descripción para buscadores', true)}
+            </div>
+          </CardContent>
         </Card>
 
-        <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={saving} size="lg">
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Guardar Cambios
-          </Button>
-        </div>
+        {/* ── Payment Method Icons ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> Iconos de Métodos de Pago</CardTitle>
+            <CardDescription>
+              Sube el logo de cada método de pago. Se mostrará en el footer, carrito y checkout.
+              Deja en blanco para usar el badge de texto por defecto.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4">
+              {PAYMENT_ICONS.map(p => (
+                <BrandingImageUpload
+                  key={p.key}
+                  id={p.key}
+                  label={p.label}
+                  value={form[p.key] ?? p.default}
+                  onChange={v => set(p.key, v)}
+                  previewSize="md"
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Trust Badges ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5" /> Garantías / Banners de Confianza</CardTitle>
+            <CardDescription>Los 3 mensajes de confianza que aparecen en el footer del sitio</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { t: 'trust_badge_1_title', d: 'trust_badge_1_desc', label: 'Garantía 1', tph: 'Ej: Envío desde el extranjero', dph: 'Ej: Recibe tus productos en 7-15 días' },
+                { t: 'trust_badge_2_title', d: 'trust_badge_2_desc', label: 'Garantía 2', tph: 'Ej: Devolución Gratis', dph: 'Ej: Devuelve fácilmente en 30 días' },
+                { t: 'trust_badge_3_title', d: 'trust_badge_3_desc', label: 'Garantía 3', tph: 'Ej: Pago Seguro', dph: 'Ej: Múltiples opciones de pago' },
+              ].map(b => (
+                <div key={b.t} className="grid gap-3 sm:grid-cols-2 p-3 border rounded-lg">
+                  <div className="sm:col-span-2 text-sm font-medium text-muted-foreground">{b.label}</div>
+                  {field(b.t, 'Título', b.tph)}
+                  {field(b.d, 'Descripción', b.dph)}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Legal Content ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Contenido Legal</CardTitle>
+            <CardDescription>
+              Personaliza el texto de las páginas legales. Si lo dejas vacío se mostrará el texto genérico del sistema.
+              Puedes usar HTML básico (h2, p, ul, li, strong).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="legal_terms">
+              <TabsList className="mb-4">
+                {LEGAL_FIELDS.map(lf => (
+                  <TabsTrigger key={lf.key} value={lf.key}>{lf.label}</TabsTrigger>
+                ))}
+              </TabsList>
+              {LEGAL_FIELDS.map(lf => (
+                <TabsContent key={lf.key} value={lf.key}>
+                  <Textarea
+                    value={form[lf.key] || ''}
+                    onChange={e => set(lf.key, e.target.value)}
+                    placeholder={`Pega aquí el HTML del contenido de "${lf.label}"...`}
+                    rows={16}
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Vacío = contenido por defecto. Con contenido = reemplaza todo el cuerpo de la página.
+                  </p>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        <SaveButton />
       </div>
     </AdminLayout>
   );

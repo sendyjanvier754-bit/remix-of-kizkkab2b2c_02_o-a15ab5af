@@ -60,7 +60,7 @@
     "noImage": "Pas d'img",
     "seeAllResults": "Voir tous les résultats pour \"{{query}}\"",
     "noProductsFor": "Aucun produit trouvé pour \"{{query}}\"",
-    "allRightsReserved": "© 2024 SIVER Market. Tous droits réservés.",
+    "allRightsReserved": "© {{year}} {{name}}. Tous droits réservés.",
     "termsConditions": "Conditions Générales",
     "privacyPolicy": "Politique de Confidentialité",
     "cookiePolicy": "Politique de Cookies",

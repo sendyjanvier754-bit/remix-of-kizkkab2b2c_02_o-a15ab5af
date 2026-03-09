@@ -2,20 +2,24 @@ import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Globe, Users, TrendingUp, ShoppingBag, Truck } from "lucide-react";
+import { useBranding } from '@/hooks/useBranding';
 
 const AboutPage = () => {
+  const { getValue } = useBranding();
+  const platformName = getValue('platform_name') || 'SIVER Market';
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <GlobalHeader />
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-2 text-foreground">Sobre SIVER Market</h1>
+        <h1 className="text-3xl font-bold mb-2 text-foreground">Sobre {platformName}</h1>
         <p className="text-muted-foreground mb-8">Conectando el comercio global con el Caribe.</p>
 
         <div className="space-y-8">
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">Nuestra Misión</h2>
             <p className="text-foreground/90 leading-relaxed">
-              SIVER Market nació con la misión de democratizar el acceso a productos internacionales de calidad para los consumidores del Caribe. Conectamos fabricantes y proveedores globales con emprendedores y clientes finales en Haití y la región, eliminando las barreras del comercio internacional.
+              {platformName} nació con la misión de democratizar el acceso a productos internacionales de calidad para los consumidores del Caribe. Conectamos fabricantes y proveedores globales con emprendedores y clientes finales en Haití y la región, eliminando las barreras del comercio internacional.
             </p>
           </section>
 

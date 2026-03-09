@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { generateUniqueStoreSlug } from "@/utils/storeSlugGenerator";
+import { useBranding } from "@/hooks/useBranding";
 
 const sellerRegistrationSchema = z.object({
   storeName: z.string().min(2, "El nombre de la tienda debe tener al menos 2 caracteres").max(100),
@@ -33,6 +34,8 @@ const linkAccountSchema = z.object({
 });
 
 const SellerRegistrationPage = () => {
+  const { getValue } = useBranding();
+  const platformName = getValue('platform_name');
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -327,7 +330,7 @@ const SellerRegistrationPage = () => {
             <div className="w-10 h-10 rounded bg-[#071d7f] flex items-center justify-center">
               <span className="text-white font-bold">S</span>
             </div>
-            <span className="font-bold text-lg">SIVER Market</span>
+            <span className="font-bold text-lg">{platformName}</span>
           </Link>
           <Link to="/" className="text-gray-700 hover:text-gray-900">
             Volver al inicio
@@ -342,7 +345,7 @@ const SellerRegistrationPage = () => {
             Crecimiento B2B Garantizado
           </h1>
           <p className="text-xl text-gray-700 max-w-2xl mx-auto mb-8">
-            Únete a SIVER Market y vende tus productos a mayoristas.
+            Únete a {platformName} y vende tus productos a mayoristas.
             Plataforma segura, pagos anticipados y acceso a nuevos mercados.
           </p>
         </div>
@@ -367,7 +370,7 @@ const SellerRegistrationPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Left side - Value prop */}
           <div className="flex flex-col justify-center">
-            <h2 className="text-3xl font-bold mb-6">¿Por qué unirse a SIVER?</h2>
+            <h2 className="text-3xl font-bold mb-6">¿Por qué unirse a {platformName}?</h2>
 
             <ul className="space-y-4">
               {[
@@ -637,7 +640,7 @@ const SellerRegistrationPage = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white mt-16">
         <div className="container mx-auto px-4 py-8 text-center">
-          <p>&copy; 2024 SIVER Market. Plataforma B2B de Comercio Mayorista.</p>
+          <p>&copy; {new Date().getFullYear()} {platformName}. Plataforma B2B de Comercio Mayorista.</p>
         </div>
       </footer>
     </div>

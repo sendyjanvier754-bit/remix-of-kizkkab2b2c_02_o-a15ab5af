@@ -3,6 +3,12 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 
+// Module-level branding name — set via setBrandingName() from BrandingApplier
+let _platformBrandName = 'SIVER MARKET 509';
+export const setBrandingName = (name: string) => {
+  if (name) _platformBrandName = name;
+};
+
 // Types for PDF data
 interface OrderItem {
   sku: string;
@@ -124,7 +130,7 @@ export const generatePurchaseOrderPDF = (data: ConsolidationData) => {
     </head>
     <body>
       <div class="header">
-        <div class="logo">SIVER MARKET 509</div>
+        <div class="logo">${_platformBrandName}</div>
         <div class="subtitle">Purchase Order / Orden de Compra</div>
         <div class="po-number">${data.consolidation_number}</div>
       </div>
@@ -176,7 +182,7 @@ export const generatePurchaseOrderPDF = (data: ConsolidationData) => {
       </div>
       
       <div class="footer">
-        <p>SIVER MARKET 509 - Puerto Príncipe, Haití</p>
+        <p>${_platformBrandName} - Puerto Príncipe, Haití</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>
@@ -208,7 +214,7 @@ export const generateArrivalManifestPDF = (items: ManifestItem[], containerInfo:
     <body>
       <div class="header">
         <div class="logo">MANIFIESTO DE LLEGADA</div>
-        <div class="subtitle">SIVER MARKET 509 - Almacén Haití</div>
+        <div class="subtitle">${_platformBrandName} - Almacén Haití</div>
       </div>
       
       <div class="section">
@@ -314,7 +320,7 @@ export const generateInvoicePDF = (order: OrderData) => {
     </head>
     <body>
       <div class="header">
-        <div class="logo">SIVER MARKET 509</div>
+        <div class="logo">${_platformBrandName}</div>
         <div class="subtitle">Factura / Guía de Entrega</div>
       </div>
       
@@ -392,7 +398,7 @@ export const generateInvoicePDF = (order: OrderData) => {
       </div>
       
       <div class="footer">
-        <p>¡Gracias por su compra! - SIVER MARKET 509</p>
+        <p>¡Gracias por su compra! - ${_platformBrandName}</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>
@@ -788,7 +794,7 @@ export const generatePickingManifestPDF = (data: PickingManifestData) => {
     <body>
       <div class="manifest-header">
         <div class="manifest-title">📋 MANIFIESTO DE PICKING</div>
-        <div class="manifest-subtitle">Hub Siver Market - Documento de Separación por Destinatario</div>
+        <div class="manifest-subtitle">Hub ${_platformBrandName} - Documento de Separación por Destinatario</div>
         <div class="manifest-info">
           <div class="manifest-info-item">
             <div class="manifest-info-label">TRACKING CHINA</div>
@@ -834,7 +840,7 @@ export const generatePickingManifestPDF = (data: PickingManifestData) => {
       </div>
       
       <div class="footer">
-        <p>SIVER MARKET 509 - Hub Haití</p>
+        <p>${_platformBrandName} - Hub Haití</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>
@@ -1126,7 +1132,7 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
     <body>
       <div class="manifest-header">
         <div class="manifest-title">📦 MANIFIESTO DE CONSOLIDACIÓN PO</div>
-        <div class="manifest-subtitle">Hub Siver Market - Separación Visual por Dueño</div>
+        <div class="manifest-subtitle">Hub ${_platformBrandName} - Separación Visual por Dueño</div>
         <div class="manifest-info">
           <div class="manifest-info-item">
             <div class="manifest-info-label">ORDEN DE COMPRA</div>
@@ -1183,7 +1189,7 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
       </div>
       
       <div class="footer">
-        <p>SIVER MARKET 509 - Hub Haití</p>
+        <p>${_platformBrandName} - Hub Haití</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>
@@ -1228,7 +1234,7 @@ export const generatePOBuyingListPDF = (data: {
     </head>
     <body>
       <div class="header">
-        <div class="logo">SIVER MARKET 509</div>
+        <div class="logo">${_platformBrandName}</div>
         <div class="subtitle">Lista de Artículos a Comprar</div>
         <div class="po-badge">${data.po_number} — ${data.market_name}</div>
       </div>
@@ -1281,7 +1287,7 @@ export const generatePOBuyingListPDF = (data: {
       </div>
 
       <div class="footer">
-        <p>SIVER MARKET 509 - Puerto Príncipe, Haití</p>
+        <p>${_platformBrandName} - Puerto Príncipe, Haití</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>

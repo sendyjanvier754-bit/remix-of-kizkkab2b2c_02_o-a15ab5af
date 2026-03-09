@@ -14,6 +14,7 @@ import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import { useBranding } from "@/hooks/useBranding";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -71,6 +72,7 @@ const Header = ({
   onCategorySelect
 }: HeaderProps) => {
   const { t } = useTranslation();
+  const { getValue } = useBranding();
   const { canToggle, toggleViewMode, isClientPreview } = useViewMode();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState(null);
@@ -273,11 +275,21 @@ const Header = ({
         <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
           <div className="flex items-center gap-3 px-3 py-2.5">
             {/* Notification/Mail icon */}
-            <button className="relative flex-shrink-0">
+            <button
+              type="button"
+              className="relative flex-shrink-0"
+              onClick={(e) => {
+                e.preventDefault();
+                if (user) {
+                  navigate('/admin/soporte-chat');
+                } else {
+                  sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+                  navigate('/cuenta');
+                }
+              }}
+              aria-label="Chat de soporte"
+            >
               <Mail className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                5
-              </span>
             </button>
 
             {/* Search input - pill style */}
@@ -327,9 +339,20 @@ const Header = ({
             </div>
 
             {/* Support Chat */}
-            <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
+            <button
+              className="relative flex-shrink-0 bg-transparent border-0 p-0 cursor-pointer"
+              onClick={() => {
+                if (user) {
+                  navigate('/admin/soporte-chat');
+                } else {
+                  sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+                  navigate('/cuenta');
+                }
+              }}
+              aria-label="Chat de soporte"
+            >
               <MessageCircle className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
-            </Link>
+            </button>
             {/* Favorites heart */}
             <Link to={favoritesLink} className="relative flex-shrink-0">
               <Heart className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
@@ -412,10 +435,16 @@ const Header = ({
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-10 h-10 rounded bg-[#071d7f] flex items-center justify-center">
-              <ShoppingBag className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-lg text-gray-900">SIVER</span>
+            {getValue('logo_url') ? (
+              <img src={getValue('logo_url')} alt={getValue('platform_name')} className="h-10 w-auto max-w-[120px] object-contain" />
+            ) : (
+              <>
+                <div className="w-10 h-10 rounded bg-[#071d7f] flex items-center justify-center">
+                  <ShoppingBag className="w-6 h-6 text-white" />
+                </div>
+                <span className="font-bold text-lg text-gray-900">{getValue('platform_name') || 'SIVER'}</span>
+              </>
+            )}
           </Link>
 
           {/* Search Bar - Desktop */}
@@ -480,10 +509,20 @@ const Header = ({
               <Flame className="w-6 h-6" />
               <span className="text-xs">{t('header.trends')}</span>
             </Link>
-            <Link to="/admin/soporte-chat" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
+            <button
+              className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition bg-transparent border-0 cursor-pointer"
+              onClick={() => {
+                if (user) {
+                  navigate('/admin/soporte-chat');
+                } else {
+                  sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+                  navigate('/cuenta');
+                }
+              }}
+            >
               <MessageCircle className="w-6 h-6" />
               <span className="text-xs">{t('header.support')}</span>
-            </Link>
+            </button>
             <Link to={favoritesLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <Heart className="w-6 h-6" />
               <span className="text-xs">{t('header.favorites')}</span>

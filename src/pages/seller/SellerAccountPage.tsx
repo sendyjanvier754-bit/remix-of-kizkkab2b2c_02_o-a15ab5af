@@ -16,8 +16,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  User, Store, Mail, Calendar, Shield, LogOut, Settings, Bell, Edit, Phone, MessageCircle, Eye, EyeOff, CheckCircle, CreditCard, Package, Clock, Truck, XCircle, DollarSign, ShoppingCart, AlertCircle, ExternalLink, MapPin, RefreshCw, AlertTriangle, Ban, ChevronRight, Loader2, Save, Star, Users, BarChart3, Smartphone, Camera, TrendingUp, Activity, Globe
+  User, Store, Mail, Calendar, Shield, LogOut, Settings, Bell, Edit, Phone, MessageCircle, Eye, EyeOff, CheckCircle, CreditCard, Package, Clock, Truck, XCircle, DollarSign, ShoppingCart, AlertCircle, ExternalLink, MapPin, RefreshCw, AlertTriangle, Ban, ChevronRight, Loader2, Save, Star, Users, BarChart3, Smartphone, Camera, TrendingUp, Activity, Globe, Info
 } from "lucide-react";
+import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
+import { AboutModal } from "@/components/legal/AboutModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMarkets } from "@/hooks/useMarkets";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +48,8 @@ const SellerAccountPage = () => {
   
   // States for dialogs
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'informacion');
+  const [showLegal, setShowLegal] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   // Scroll to section if requested via URL param
   useEffect(() => {
@@ -1253,6 +1257,25 @@ const SellerAccountPage = () => {
                         >
                           <LogOut className="h-5 w-5" />
                         </button>
+                      </div>
+
+                      {/* Legal & About Modals */}
+                      <div className="pt-2 border-t border-gray-100">
+                        <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">Información Legal</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setShowLegal(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs text-gray-600 transition-colors"
+                          >
+                            <Shield className="h-3.5 w-3.5 text-[#071d7f]" /> Términos Legales
+                          </button>
+                          <button
+                            onClick={() => setShowAbout(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs text-gray-600 transition-colors"
+                          >
+                            <Info className="h-3.5 w-3.5 text-[#071d7f]" /> Acerca de
+                          </button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -3115,6 +3138,8 @@ const SellerAccountPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />
+      <AboutModal open={showAbout} onOpenChange={setShowAbout} />
     </SellerLayout>
   );
 };

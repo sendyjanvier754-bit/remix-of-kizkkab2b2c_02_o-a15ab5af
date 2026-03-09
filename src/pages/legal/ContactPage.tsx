@@ -4,8 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock, MessageCircle, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useBranding } from '@/hooks/useBranding';
 
 const ContactPage = () => {
+  const { getValue } = useBranding();
+  const contactEmail = getValue('contact_email') || 'contacto@empresa.com';
+  const contactPhone = getValue('contact_phone') || '+509 3234-5678';
+  const whatsappHref = `https://wa.me/${contactPhone.replace(/[^0-9]/g, '')}`;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <GlobalHeader />
@@ -23,8 +29,8 @@ const ContactPage = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-2">Para consultas generales y soporte:</p>
-              <a href="mailto:contacto@siver.com" className="text-primary hover:underline font-medium">
-                contacto@siver.com
+              <a href={`mailto:${contactEmail}`} className="text-primary hover:underline font-medium">
+                {contactEmail}
               </a>
               <p className="text-xs text-muted-foreground mt-2">Respondemos en un plazo de 24-48 horas.</p>
             </CardContent>
@@ -39,8 +45,8 @@ const ContactPage = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-2">Llámanos directamente:</p>
-              <a href="tel:+15093234567" className="text-primary hover:underline font-medium">
-                +1 (509) 3234-5678
+              <a href={`tel:${contactPhone.replace(/[^0-9+]/g, '')}`} className="text-primary hover:underline font-medium">
+                {contactPhone}
               </a>
               <p className="text-xs text-muted-foreground mt-2">Lunes a Sábado, 8:00 AM - 6:00 PM</p>
             </CardContent>
@@ -56,12 +62,12 @@ const ContactPage = () => {
             <CardContent>
               <p className="text-sm text-muted-foreground mb-2">Escríbenos por WhatsApp:</p>
               <a 
-                href="https://wa.me/15093234567" 
+                href={whatsappHref}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline font-medium"
               >
-                +1 (509) 3234-5678
+                {contactPhone}
               </a>
               <p className="text-xs text-muted-foreground mt-2">Respuesta rápida en horario laboral.</p>
             </CardContent>

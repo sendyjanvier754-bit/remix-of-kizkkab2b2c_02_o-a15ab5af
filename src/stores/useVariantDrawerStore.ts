@@ -12,6 +12,10 @@ export interface VariantDrawerProduct {
   stock?: number;
   source_product_id?: string;
   description?: string;
+  /** ID de la tienda vendedora (para atribución de venta) */
+  storeId?: string;
+  /** ID del registro en seller_catalog (para atribución de venta) */
+  sellerCatalogId?: string;
 }
 
 type State = {

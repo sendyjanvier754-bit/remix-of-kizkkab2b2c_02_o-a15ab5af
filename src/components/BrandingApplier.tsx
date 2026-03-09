@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useBranding } from '@/hooks/useBranding';
+import { setBrandingName } from '@/services/pdfGenerators';
 
 /**
  * Invisible component mounted once at app root.
@@ -28,6 +29,7 @@ export function BrandingApplier() {
   // Update default document title
   useEffect(() => {
     if (platformName) {
+      setBrandingName(platformName);
       // Only set if no page has already set a custom title (i.e. title equals the bare html default)
       if (!document.title || document.title === 'Vite App') {
         document.title = platformName;

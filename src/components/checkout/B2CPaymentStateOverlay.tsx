@@ -16,6 +16,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useBranding } from '@/hooks/useBranding';
 
 interface B2CPaymentStateOverlayProps {
   order: {
@@ -35,6 +36,8 @@ export const B2CPaymentStateOverlay = ({
   onCancelOrder 
 }: B2CPaymentStateOverlayProps) => {
   const navigate = useNavigate();
+  const { getValue } = useBranding();
+  const platformName = getValue('platform_name');
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
@@ -50,14 +53,14 @@ export const B2CPaymentStateOverlay = ({
   };
 
   const moncashDetails = {
-    number: '+509 3XXX XXXX',
-    name: 'Siver Market 509',
+    number: getValue('contact_phone') || '+509 3XXX XXXX',
+    name: platformName,
   };
 
   const bankDetails = {
     bank: 'Banco Nacional de Haití',
     account: '001-234567-89',
-    beneficiary: 'Siver Market 509 SRL',
+    beneficiary: `${platformName} SRL`,
   };
 
   // Pending - Stripe (waiting for bank confirmation)

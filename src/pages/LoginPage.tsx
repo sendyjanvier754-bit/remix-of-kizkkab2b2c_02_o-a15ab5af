@@ -10,10 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound, ChevronRight, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound, ChevronRight, ArrowLeft, Shield, Info } from "lucide-react";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { useBranding } from "@/hooks/useBranding";
+import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
+import { AboutModal } from "@/components/legal/AboutModal";
 
 const LoginPage = () => {
   const { getValue } = useBranding();
@@ -38,6 +40,9 @@ const LoginPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   // Account type step: null = not chosen yet
   const [accountType, setAccountType] = useState<'buyer' | 'seller' | null>(null);
+  // Info modals
+  const [showLegal, setShowLegal] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   
   const { signIn, signUp, user, role, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -481,12 +486,34 @@ const LoginPage = () => {
                     </Link>
                   </Button>
                 </div>
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowLegal(true)}
+                  >
+                    <Shield className="h-3.5 w-3.5" />
+                    Términos Legales
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowAbout(true)}
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                    Acerca de
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
       <Footer />
+      <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />
+      <AboutModal open={showAbout} onOpenChange={setShowAbout} />
     </div>
   );
 };

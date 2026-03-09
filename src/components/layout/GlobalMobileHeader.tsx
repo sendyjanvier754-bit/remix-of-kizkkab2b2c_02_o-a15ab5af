@@ -350,9 +350,22 @@ const GlobalMobileHeader = ({
       {/* Top search bar */}
       <div className="flex items-center gap-2 px-2 py-2 bg-[#fff3f3]">
         {/* Logo/Icon - cambia según el modo */}
-        <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
+        <button
+          type="button"
+          className="relative flex-shrink-0 bg-transparent border-0 p-0 cursor-pointer"
+          onClick={(e) => {
+            e.preventDefault();
+            if (user) {
+              navigate('/admin/soporte-chat');
+            } else {
+              sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+              navigate('/cuenta');
+            }
+          }}
+          aria-label="Chat de soporte"
+        >
           <Mail className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
-        </Link>
+        </button>
 
         {/* Search input with dropdown */}
         <div ref={searchRef} className="flex-1 relative min-w-0">

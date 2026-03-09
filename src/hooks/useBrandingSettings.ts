@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,6 +14,7 @@ export interface BrandingSetting {
 
 export const useBrandingSettings = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [settings, setSettings] = useState<BrandingSetting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,11 +43,11 @@ export const useBrandingSettings = () => {
     try {
       const { error } = await supabase
         .from('branding_settings')
-        .update({ value, updated_at: new Date().toISOString() } as any)
-        .eq('key', key);
+        .upsert({ key, value, updated_at: new Date().toISOString() } as any, { onConflict: 'key' });
 
       if (error) throw error;
       await fetchSettings();
+      queryClient.invalidateQueries({ queryKey: ['branding-settings'] });
 
       toast({
         title: 'Configuración actualizada',
@@ -68,10 +70,10 @@ export const useBrandingSettings = () => {
       for (const [key, value] of Object.entries(updates)) {
         await supabase
           .from('branding_settings')
-          .update({ value, updated_at: new Date().toISOString() } as any)
-          .eq('key', key);
+          .upsert({ key, value, updated_at: new Date().toISOString() } as any, { onConflict: 'key' });
       }
       await fetchSettings();
+      queryClient.invalidateQueries({ queryKey: ['branding-settings'] });
       toast({
         title: 'Identidad actualizada',
         description: 'Todos los valores han sido guardados',

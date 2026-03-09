@@ -219,7 +219,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
               if (needsRedirect) {
                 console.log('📍 Redirecting to default page for role:', userRole);
-                if (userRole === UserRole.SELLER) {
+                // Check for a pending post-login redirect (e.g. chat button clicked while logged out)
+                const pendingRedirect = sessionStorage.getItem('post_login_redirect');
+                if (pendingRedirect) {
+                  sessionStorage.removeItem('post_login_redirect');
+                  console.log('↩️ Using post_login_redirect:', pendingRedirect);
+                  navigate(pendingRedirect, { replace: true });
+                } else if (userRole === UserRole.SELLER) {
                   navigate('/seller/adquisicion-lotes', { replace: true });
                 } else if (userRole === UserRole.ADMIN) {
                   navigate('/admin/dashboard', { replace: true });

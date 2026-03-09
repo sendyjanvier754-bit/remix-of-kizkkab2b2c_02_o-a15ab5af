@@ -241,6 +241,8 @@ const VariantDrawer: React.FC = () => {
             price: matchedVariant?.price ?? product.price ?? 0,
             quantity: qty,
             image: variantImage || matchedVariant?.images?.[0] || product.images?.[0] || undefined,
+            storeId: product.storeId || null,
+            sellerCatalogId: product.sellerCatalogId || null,
             variant: {
               variantId: sel.variantId,
               color,
@@ -272,6 +274,8 @@ const VariantDrawer: React.FC = () => {
           price: product.price || 0,
           quantity: totalQty,
           image: product.images?.[0] || undefined,
+          storeId: product.storeId || null,
+          sellerCatalogId: product.sellerCatalogId || null,
         });
         toast({ title: 'Agregado al carrito' });
       }

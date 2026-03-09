@@ -9,7 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Lock, Bell, Shield, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Settings, Lock, Bell, Shield, Loader2, Eye, EyeOff, FileText, Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LegalPagesModal } from '@/components/legal/LegalPagesModal';
+import { AboutModal } from '@/components/legal/AboutModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +58,9 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  // Info modals
+  const [showLegal, setShowLegal] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
@@ -295,6 +301,26 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 </div>
                 
                 <Separator />
+
+                <div className="space-y-2">
+                  <h4 className="font-medium flex items-center gap-2"><FileText className="h-4 w-4" /> Información Legal</h4>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowLegal(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs text-gray-600 transition-colors"
+                    >
+                      <Shield className="h-3.5 w-3.5 text-[#071d7f]" /> Términos Legales
+                    </button>
+                    <button
+                      onClick={() => setShowAbout(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs text-gray-600 transition-colors"
+                    >
+                      <Info className="h-3.5 w-3.5 text-[#071d7f]" /> Acerca de
+                    </button>
+                  </div>
+                </div>
+
+                <Separator />
                 
                 <div className="space-y-2">
                   <h4 className="font-medium text-destructive">Zona de Peligro</h4>
@@ -349,6 +375,8 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />
+      <AboutModal open={showAbout} onOpenChange={setShowAbout} />
     </>
   );
 };

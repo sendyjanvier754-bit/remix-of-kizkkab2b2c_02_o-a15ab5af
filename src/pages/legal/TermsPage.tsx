@@ -1,9 +1,14 @@
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { useTranslation } from "react-i18next";
+import { useBranding } from '@/hooks/useBranding';
 
 const TermsPage = () => {
   const { t } = useTranslation();
+  const { getValue } = useBranding();
+  const platformName = getValue('platform_name') || 'SIVER Market';
+  const contactEmail = getValue('contact_email') || 'legal@empresa.com';
+  const contactPhone = getValue('contact_phone') || '+509 3234-5678';
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -15,12 +20,12 @@ const TermsPage = () => {
         <div className="prose prose-sm max-w-none space-y-6 text-foreground/90">
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">1. Aceptación de los Términos</h2>
-            <p>Al acceder y utilizar la plataforma SIVER Market ("la Plataforma"), usted acepta estar sujeto a estos Términos y Condiciones. Si no está de acuerdo con alguno de estos términos, no debe utilizar nuestros servicios.</p>
+            <p>Al acceder y utilizar la plataforma {platformName} ("la Plataforma"), usted acepta estar sujeto a estos Términos y Condiciones. Si no está de acuerdo con alguno de estos términos, no debe utilizar nuestros servicios.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">2. Descripción del Servicio</h2>
-            <p>SIVER Market es una plataforma de comercio electrónico que conecta compradores con vendedores, facilitando la compra y venta de productos tanto al por mayor (B2B) como al detalle (B2C). Operamos como intermediarios entre proveedores internacionales y consumidores finales en Haití y el Caribe.</p>
+            <p>{platformName} es una plataforma de comercio electrónico que conecta compradores con vendedores, facilitando la compra y venta de productos tanto al por mayor (B2B) como al detalle (B2C). Operamos como intermediarios entre proveedores internacionales y consumidores finales en Haití y el Caribe.</p>
           </section>
 
           <section>
@@ -45,7 +50,7 @@ const TermsPage = () => {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">5. Envíos y Entregas</h2>
-            <p>Los tiempos de entrega son estimados y pueden variar según la disponibilidad del producto, el destino de envío y factores logísticos. SIVER Market no se hace responsable de retrasos causados por aduanas, condiciones climáticas u otros factores fuera de nuestro control.</p>
+            <p>Los tiempos de entrega son estimados y pueden variar según la disponibilidad del producto, el destino de envío y factores logísticos. {platformName} no se hace responsable de retrasos causados por aduanas, condiciones climáticas u otros factores fuera de nuestro control.</p>
           </section>
 
           <section>
@@ -60,12 +65,12 @@ const TermsPage = () => {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">7. Propiedad Intelectual</h2>
-            <p>Todo el contenido de la plataforma, incluyendo textos, gráficos, logos, imágenes y software, es propiedad de SIVER Market o sus licenciantes y está protegido por leyes de propiedad intelectual.</p>
+            <p>Todo el contenido de la plataforma, incluyendo textos, gráficos, logos, imágenes y software, es propiedad de {platformName} o sus licenciantes y está protegido por leyes de propiedad intelectual.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">8. Limitación de Responsabilidad</h2>
-            <p>SIVER Market no será responsable por daños indirectos, incidentales, especiales o consecuentes derivados del uso de la plataforma. Nuestra responsabilidad máxima se limita al monto pagado por el producto o servicio en cuestión.</p>
+            <p>{platformName} no será responsable por daños indirectos, incidentales, especiales o consecuentes derivados del uso de la plataforma. Nuestra responsabilidad máxima se limita al monto pagado por el producto o servicio en cuestión.</p>
           </section>
 
           <section>
@@ -77,8 +82,8 @@ const TermsPage = () => {
             <h2 className="text-xl font-semibold text-foreground mb-3">10. Contacto</h2>
             <p>Para consultas sobre estos términos, contáctenos en:</p>
             <ul className="list-none space-y-1 mt-2">
-              <li>📧 Email: legal@siver.com</li>
-              <li>📞 Teléfono: +1 (509) 3234-5678</li>
+              <li>📧 Email: {contactEmail}</li>
+              <li>📞 Teléfono: {contactPhone}</li>
               <li>📍 Dirección: Puerto Príncipe, Haití</li>
             </ul>
           </section>

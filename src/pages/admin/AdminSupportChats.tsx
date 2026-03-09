@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { RoleAwareLayout } from '@/components/layout/RoleAwareLayout';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatWindow } from '@/components/chat/ChatWindow';
@@ -12,9 +12,18 @@ import { Button } from '@/components/ui/button';
 export default function AdminSupportChats() {
   const [searchParams] = useSearchParams();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const isAdmin = user?.role === UserRole.ADMIN;
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  // Guard: redirect unauthenticated users to login
+  useEffect(() => {
+    if (!authLoading && !user) {
+      sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+      navigate('/cuenta', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     const chatFromUrl = searchParams.get('chat');
@@ -22,6 +31,9 @@ export default function AdminSupportChats() {
   }, [searchParams]);
 
   const handleBack = () => setSelectedChatId(null);
+
+  // Don't render while checking auth
+  if (authLoading || !user) return null;
 
   // Mobile: show either list or chat window (not both)
   if (isMobile) {

@@ -1,7 +1,12 @@
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
+import { useBranding } from '@/hooks/useBranding';
 
 const CookiesPage = () => {
+  const { getValue } = useBranding();
+  const contactEmail = getValue('contact_email') || 'privacidad@empresa.com';
+  const contactPhone = getValue('contact_phone') || '+509 3234-5678';
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <GlobalHeader />
@@ -76,8 +81,8 @@ const CookiesPage = () => {
             <h2 className="text-xl font-semibold text-foreground mb-3">7. Contacto</h2>
             <p>Si tiene preguntas sobre nuestra política de cookies:</p>
             <ul className="list-none space-y-1 mt-2">
-              <li>📧 Email: privacidad@siver.com</li>
-              <li>📞 Teléfono: +1 (509) 3234-5678</li>
+              <li>📧 Email: {contactEmail}</li>
+              <li>📞 Teléfono: {contactPhone}</li>
             </ul>
           </section>
         </div>
