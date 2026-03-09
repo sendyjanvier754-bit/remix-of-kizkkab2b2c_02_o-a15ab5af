@@ -419,7 +419,7 @@ const AppContent = () => {
             <Route 
               path="/agente-compra" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRoles={[UserRole.PURCHASING_AGENT, UserRole.ADMIN]}>
                   <LazyRoute><PurchasingAgentDashboard /></LazyRoute>
                 </ProtectedRoute>
               } 

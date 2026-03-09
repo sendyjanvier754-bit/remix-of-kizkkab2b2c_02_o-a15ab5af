@@ -99,7 +99,7 @@ export function ChatWindow({ chatId, isStaff = false, onClose }: ChatWindowProps
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {isStaff && isWaiting && (
+            {isStaff && isWaiting && !isChatCreator && (
               <Button size="sm" onClick={joinChat} className="gap-1 text-xs h-7">
                 <LogIn className="h-3 w-3" /> {t('chat.join')}
               </Button>
