@@ -76,6 +76,7 @@ export function ChatWindow({ chatId, isStaff = false, onClose }: ChatWindowProps
   const isClosed = chat?.status === 'closed';
   const isPaused = chat?.status === 'paused';
   const isWaiting = chat?.status === 'waiting';
+  const isChatCreator = chat?.created_by === user?.id;
   const canSend = chat?.status === 'active' || (isStaff && isWaiting);
 
   return (
