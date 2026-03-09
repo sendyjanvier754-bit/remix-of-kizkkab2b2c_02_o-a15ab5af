@@ -553,7 +553,12 @@ const CartPage = () => {
 
                               {/* Product Image */}
                               <div 
-                                onClick={() => navigate(`/producto/${item.sku}`)}
+                                onClick={() => {
+                                  const url = item.sellerCatalogId
+                                    ? `/producto/catalogo/${item.sellerCatalogId}${item.storeId ? `?seller=${item.storeId}` : ''}`
+                                    : `/producto/${item.sku}`;
+                                  navigate(url);
+                                }}
                                 className="flex-shrink-0 rounded-lg bg-gray-100 overflow-hidden cursor-pointer hover:shadow-md transition w-24 h-24"
                               >
                                 {item.image ? (
@@ -573,7 +578,12 @@ const CartPage = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-start gap-2 mb-2">
                                   <p 
-                                    onClick={() => navigate(`/producto/${item.sku}`)}
+                                    onClick={() => {
+                                      const url = item.sellerCatalogId
+                                        ? `/producto/catalogo/${item.sellerCatalogId}${item.storeId ? `?seller=${item.storeId}` : ''}`
+                                        : `/producto/${item.sku}`;
+                                      navigate(url);
+                                    }}
                                     className="font-medium text-gray-900 line-clamp-1 cursor-pointer hover:text-blue-600 transition"
                                   >
                                     {item.name}
