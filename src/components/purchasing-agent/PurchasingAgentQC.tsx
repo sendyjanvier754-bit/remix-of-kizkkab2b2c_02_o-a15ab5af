@@ -52,14 +52,11 @@ export function PurchasingAgentQC({ agentProfile, selectedPOId, onSelectPO }: Pu
 
     for (const file of Array.from(files)) {
       try {
-        const result = await uploadFile.mutateAsync({
-          file,
-          folder: `qc/${selectedItem?.id}`,
-        });
+        const url = await uploadFile(file, `qc/${selectedItem?.id}`);
         if (type === 'photo') {
-          setUploadedPhotos(prev => [...prev, result.url]);
+          setUploadedPhotos(prev => [...prev, url]);
         } else {
-          setUploadedVideos(prev => [...prev, result.url]);
+          setUploadedVideos(prev => [...prev, url]);
         }
         toast.success('Archivo subido');
       } catch (error) {
