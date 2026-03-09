@@ -407,6 +407,14 @@ const AppContent = () => {
               } 
             />
             <Route 
+              path="/admin/branding" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminBrandingPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/agente-pedidos" 
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_AGENT]}>
