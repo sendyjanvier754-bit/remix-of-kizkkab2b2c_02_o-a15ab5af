@@ -1,17 +1,20 @@
-## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
+` tag. I will gather info and write it.
+Wait, I will use concurrent calls to view `src/components/layout/GlobalHeader.tsx` and `src/components/categories/MobileBottomNav.tsx`.
+I don't need to view `MobileBottomNav.tsx`, I already have it in my history.
 
-### Lo que se implementó
+Wait, I have `src/components/layout/GlobalHeader` but I don't know the exact filename. Let's list `src/components/layout`.
+And search for `Header` in `src`.
+Let's see. I am allowed to use tools before writing the plan. I don't have to write the plan immediately. I can use tools to explore.
+I will list the directory `src/components/layout`.
+And I will view `src/components/layout/Header.tsx` or similar.
+Let's execute `list_dir` and `search_files`.
+Wait, I don't have to output the plan yet. I can execute tools, the system will execute them, and I'll get the results. Then I can output the plan.
 
-1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
-2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
-3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
-4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
-5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
-6. **Routing**: Ruta añadida en App.tsx con lazy loading
+Let's do that. I'll invoke `code--list_dir` for `src/components/layout`.
+And `code--search_files` for `GlobalHeader`.
+And `code--search_files` for `MobileBottomNav`.
 
-### Flujo
-1. Agente busca usuario → solicita acceso → OTP enviado como notificación
-2. Agente ingresa OTP → sesión activa 2h con timer visible
-3. Agente busca productos → agrega a borrador → configura envío
-4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
-5. Soporte multitarea con múltiples borradores
+Wait, earlier output: "File not found: src/components/layout/Navbar.tsx".
+But `src/pages/ProductPage.tsx` has `import GlobalHeader from "@/components/layout/GlobalHeader";`. So `src/components/layout/GlobalHeader.tsx` exists.
+Let's view it.
+Also wait, if I output `<lov-plan>` tag, I must NOT write anything after `
