@@ -7,6 +7,7 @@ import {
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CheckSquare, Megaphone } from "lucide-react";
@@ -22,6 +23,21 @@ export function AdminSidebar() {
   const { signOut, user } = useAuth();
   const isCollapsed = state === "collapsed";
 
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const isSalesAgent = user?.role === UserRole.SALES_AGENT;
+
+  // Items visible to all roles that can enter /admin routes
+  const sharedNavItems = [
+    { title: t('adminSidebar.liveChat'), url: "/admin/soporte-chat", icon: MessageCircle },
+    { title: t('adminSidebar.notifications'), url: "/admin/notificaciones", icon: Bell },
+  ];
+
+  // Items visible to admins and sales agents
+  const agentNavItems = [
+    { title: t('adminSidebar.agentOrders'), url: "/admin/agente-pedidos", icon: Headset },
+  ];
+
+  // Admin-only navigation groups
   const mainNavItems = [
     { title: t('adminSidebar.dashboard'), url: "/admin", icon: LayoutDashboard },
     { title: t('adminSidebar.approvals'), url: "/admin/aprobaciones", icon: CheckSquare },
@@ -99,7 +115,9 @@ export function AdminSidebar() {
             {!isCollapsed && (
               <div className="flex flex-col">
                 <span className="font-bold text-sm text-foreground">Siver Market</span>
-                <span className="text-xs text-accent font-semibold">Admin 509</span>
+                <span className="text-xs text-accent font-semibold">
+                  {isAdmin ? "Admin 509" : isSalesAgent ? "Agente" : "Panel"}
+                </span>
               </div>
             )}
           </div>
@@ -110,26 +128,37 @@ export function AdminSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {renderGroup(t('adminSidebar.main'), mainNavItems)}
-        {renderGroup(t('adminSidebar.analytics'), analyticsItems)}
-        {renderGroup(t('adminSidebar.discounts'), discountItems)}
-        {renderGroup(t('adminSidebar.system'), settingsItems)}
+        {/* Admins see the full sidebar */}
+        {isAdmin && (
+          <>
+            {renderGroup(t('adminSidebar.main'), mainNavItems)}
+            {renderGroup(t('adminSidebar.analytics'), analyticsItems)}
+            {renderGroup(t('adminSidebar.discounts'), discountItems)}
+            {renderGroup(t('adminSidebar.system'), settingsItems)}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>{t('adminSidebar.b2bWholesale')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={t('adminSidebar.b2bPortal')}>
-                  <Link to="/seller/adquisicion-lotes" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-                    <ShoppingCart className="h-5 w-5 flex-shrink-0" />
-                    {!isCollapsed && <span>{t('adminSidebar.b2bPortal')}</span>}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>{t('adminSidebar.b2bWholesale')}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip={t('adminSidebar.b2bPortal')}>
+                      <Link to="/seller/adquisicion-lotes" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                        <ShoppingCart className="h-5 w-5 flex-shrink-0" />
+                        {!isCollapsed && <span>{t('adminSidebar.b2bPortal')}</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
+
+        {/* Sales agents see agente-pedidos + shared items */}
+        {!isAdmin && isSalesAgent && renderGroup(t('adminSidebar.main'), [...agentNavItems, ...sharedNavItems])}
+
+        {/* Sellers and other roles only see shared items (chat + notifications) */}
+        {!isAdmin && !isSalesAgent && renderGroup(t('adminSidebar.main'), sharedNavItems)}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-border">

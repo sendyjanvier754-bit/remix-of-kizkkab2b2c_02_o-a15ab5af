@@ -385,15 +385,15 @@ export default function AdminPOMasterPage() {
             let estimatedPurchaseCost = 0;
 
             (poOrders || []).forEach((order: any) => {
-              // Shipping paid by customer
-              totalShippingPaid += Number(order.shipping_cost_total_usd || order.shipping_cost || 0);
+              // Shipping paid by customer (global logistics cost on the order)
+              totalShippingPaid += Number(order.shipping_cost_total_usd || 0);
               
               (order.order_items_b2b || []).forEach((item: any) => {
                 // Products paid by customer
                 totalProductsPaid += Number(item.precio_total || 0);
                 
-                // Estimated purchase cost (base price from Excel)
-                const basePrice = Number(item.costo_base_usd || item.product?.precio_base || 0);
+                // Estimated purchase cost: costo_base_excel from products table
+                const basePrice = Number(item.product?.costo_base_excel || 0);
                 estimatedPurchaseCost += basePrice * Number(item.cantidad || 1);
               });
             });
