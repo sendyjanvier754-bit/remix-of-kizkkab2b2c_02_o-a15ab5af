@@ -71,11 +71,8 @@ export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectP
     if (!file) return;
 
     try {
-      const result = await uploadFile.mutateAsync({
-        file,
-        folder: 'scale-photos',
-      });
-      setScalePhotoUrl(result.url);
+      const url = await uploadFile(file, 'scale-photos');
+      setScalePhotoUrl(url);
       toast.success('Foto subida');
     } catch (error) {
       toast.error('Error al subir foto');
