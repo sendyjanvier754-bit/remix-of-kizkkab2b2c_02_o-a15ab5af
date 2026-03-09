@@ -86,7 +86,7 @@ export function usePOMasterPerMarket() {
       const orderIds = orders.map((o: any) => o.id);
       const { data: items } = await supabase
         .from('order_items_b2b')
-        .select('id, order_id, nombre, sku, cantidad, precio_unitario, precio_total, color, size, variant_id, product_id, variant_attributes, metadata, image')
+        .select('id, order_id, nombre, sku, cantidad, precio_unitario, precio_total, color, size, variant_id, product_id, variant_attributes, metadata, image, costo_base_usd, shipping_cost_usd')
         .in('order_id', orderIds);
 
       // Step 4: fetch products and variants
