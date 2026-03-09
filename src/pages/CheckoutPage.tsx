@@ -1127,7 +1127,7 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!natcashAutoAvailable && !natcashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">NatCash no está disponible para este vendedor.</p>
+                      <p className="text-sm text-yellow-700">NatCash no está disponible actualmente.</p>
                     </div>
                   )}
                 </div>
