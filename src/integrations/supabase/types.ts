@@ -8711,6 +8711,7 @@ export type Database = {
         | "gestor"
         | "investor"
         | "sales_agent"
+        | "purchasing_agent"
       approval_request_type:
         | "withdrawal"
         | "refund"
@@ -8929,6 +8930,7 @@ export const Constants = {
         "gestor",
         "investor",
         "sales_agent",
+        "purchasing_agent",
       ],
       approval_request_type: [
         "withdrawal",
