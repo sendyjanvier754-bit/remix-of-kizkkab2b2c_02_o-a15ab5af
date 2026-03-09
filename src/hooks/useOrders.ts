@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
-export type OrderStatus = 'draft' | 'placed' | 'paid' | 'shipped' | 'cancelled';
+export type OrderStatus = 'draft' | 'placed' | 'paid' | 'preparing' | 'shipped' | 'cancelled';
 export type PaymentStatus = 'draft' | 'pending' | 'pending_validation' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 export interface OrderItem {
