@@ -70,8 +70,49 @@ export default function AdminPurchasingAgentsPage() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const portalUrl = `${window.location.origin}/agente-compra/login`;
+
+  const handleCopyPortalLink = () => {
+    navigator.clipboard.writeText(portalUrl);
+    toast.success("Link del portal copiado");
+  };
+
   return (
     <AdminLayout title="Portal de Agentes de Compra" subtitle="Gestión de compras internacionales y control de calidad">
+      {/* Portal Link & Create Agent */}
+      <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg border">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">Portal de Agentes:</span>
+        </div>
+        <code className="text-xs bg-background px-2 py-1 rounded border font-mono truncate max-w-sm">
+          {portalUrl}
+        </code>
+        <Button variant="outline" size="sm" onClick={handleCopyPortalLink}>
+          <Copy className="h-3 w-3 mr-1" />
+          Copiar
+        </Button>
+        <a href={portalUrl} target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" size="sm">
+            <ExternalLink className="h-3 w-3 mr-1" />
+            Abrir
+          </Button>
+        </a>
+        <div className="flex-1" />
+        <Button onClick={() => setCreateAgentOpen(true)} className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white">
+          <Plus className="h-4 w-4 mr-2" />
+          Crear Agente
+        </Button>
+      </div>
+
+      <CreateAgentDialog 
+        open={createAgentOpen} 
+        onOpenChange={setCreateAgentOpen}
+        onCreated={() => {
+          // Refetch agents list
+        }}
+      />
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid grid-cols-4 w-full max-w-2xl">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
