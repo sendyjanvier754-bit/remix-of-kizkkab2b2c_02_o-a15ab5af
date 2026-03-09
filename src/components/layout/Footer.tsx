@@ -53,9 +53,9 @@ const Footer = () => {
             <h4 className="font-bold mb-4">{t('footer.contact')}</h4>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="tel:+15093234567" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
-                  <Phone className="w-4 h-4" />+1 (509) 3234-5678
-                </a>
+                 <a href={`tel:${getBranding('contact_phone') || '+15093234567'}`} className="flex items-center gap-2 text-gray-400 hover:text-white transition">
+                   <Phone className="w-4 h-4" />{getBranding('contact_phone') || '+1 (509) 3234-5678'}
+                 </a>
               </li>
               <li>
                 <a href="mailto:contacto@siver.com" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
