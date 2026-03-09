@@ -2,7 +2,7 @@ import {
   LayoutDashboard, CreditCard, Package, Users, MapPin, Settings, LogOut, ShoppingBag,
   ChevronLeft, FolderTree, ShoppingCart, Image as ImageIcon, Truck, ClipboardList,
   Calculator, MessageSquare, RefreshCw, Ticket, UserCheck, BarChart3, LayoutGrid,
-  Globe, Store, Headset, Bell, MessageCircle
+  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -42,6 +42,7 @@ export function AdminSidebar() {
 
   const analyticsItems = [
     { title: t('adminSidebar.poMaster'), url: "/admin/po-master", icon: Package },
+    { title: "Agentes de Compra", url: "/admin/purchasing-agents", icon: ShieldCheck },
     { title: t('adminSidebar.inventoryOptimization'), url: "/admin/cart-analytics", icon: BarChart3 },
     { title: t('adminSidebar.inventoryManagement'), url: "/admin/inventory", icon: Package },
   ];
