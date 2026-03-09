@@ -25,13 +25,6 @@ import { toast } from 'sonner';
 export default function AdminPurchasingAgentsPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [createAgentOpen, setCreateAgentOpen] = useState(false);
-  const [newAgentData, setNewAgentData] = useState({
-    full_name: '',
-    email: '',
-    phone: '',
-    country_code: 'CN',
-    country_name: 'China',
-  });
   
   const {
     useAllAgents,
@@ -41,7 +34,6 @@ export default function AdminPurchasingAgentsPage() {
     validateCart,
     validatePayment,
     validateFreight,
-    createAgent,
   } = usePurchasingAgentAdmin();
 
   const { data: agents, isLoading: agentsLoading } = useAllAgents();
@@ -52,13 +44,6 @@ export default function AdminPurchasingAgentsPage() {
     (pendingValidations?.cartValidations?.length || 0) +
     (pendingValidations?.paymentValidations?.length || 0) +
     (pendingValidations?.freightValidations?.length || 0);
-
-  const handleCreateAgent = async () => {
-    // In a real app, you'd select an existing user or create one
-    // For now, we'll just show the form
-    // createAgent.mutate({ ...newAgentData, user_id: 'selected-user-id' });
-    setCreateAgentOpen(false);
-  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
