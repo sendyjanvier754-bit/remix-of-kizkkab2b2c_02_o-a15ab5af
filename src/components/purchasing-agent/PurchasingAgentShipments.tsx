@@ -86,11 +86,12 @@ export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectP
       await createShipment.mutateAsync({
         poId: selectedPOId,
         agentId: agentProfile.id,
-        actualWeightKg: parseFloat(actualWeight),
+        weightKg: parseFloat(actualWeight),
         lengthCm: parseFloat(lengthCm),
         widthCm: parseFloat(widthCm),
         heightCm: parseFloat(heightCm),
         scalePhotoUrl,
+        dimensionsPhotoUrl: scalePhotoUrl,
       });
       setCreateOpen(false);
       resetCreateForm();
