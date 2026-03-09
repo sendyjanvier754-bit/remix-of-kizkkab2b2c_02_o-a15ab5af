@@ -91,6 +91,7 @@ const AdminSupportChats = lazy(() => import("./pages/admin/AdminSupportChats"));
 const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage"));
 const AdminPurchasingAgentsPage = lazy(() => import("./pages/admin/AdminPurchasingAgentsPage"));
 const PurchasingAgentDashboard = lazy(() => import("./pages/purchasing-agent/PurchasingAgentDashboard"));
+const PurchasingAgentLogin = lazy(() => import("./pages/purchasing-agent/PurchasingAgentLogin"));
 
 // Lazy loaded - Seller Pages
 const SellerAcquisicionLotes = lazy(() => import("./pages/seller/SellerAcquisicionLotes"));
@@ -157,6 +158,7 @@ const AppContent = () => {
             <Route path="/seller/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/agente-compra/login" element={<LazyRoute><PurchasingAgentLogin /></LazyRoute>} />
             
             {/* Seller Registration Landing Page */}
             <Route path="/registro-vendedor" element={<SellerRegistrationPage />} />

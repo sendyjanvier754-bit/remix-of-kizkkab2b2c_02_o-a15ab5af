@@ -12,24 +12,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePurchasingAgentAdmin } from '@/hooks/usePurchasingAgent';
+import { CreateAgentDialog } from '@/components/purchasing-agent/CreateAgentDialog';
 import { 
   Users, Package, ShoppingCart, Truck, CheckCircle2, XCircle, 
   Clock, AlertTriangle, TrendingUp, Play, ExternalLink, Video,
-  Scale, Ruler, DollarSign, FileText, Plus, RefreshCw
+  Scale, Ruler, DollarSign, FileText, Plus, RefreshCw, Copy, ShieldCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 export default function AdminPurchasingAgentsPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [createAgentOpen, setCreateAgentOpen] = useState(false);
-  const [newAgentData, setNewAgentData] = useState({
-    full_name: '',
-    email: '',
-    phone: '',
-    country_code: 'CN',
-    country_name: 'China',
-  });
   
   const {
     useAllAgents,
@@ -39,7 +34,6 @@ export default function AdminPurchasingAgentsPage() {
     validateCart,
     validatePayment,
     validateFreight,
-    createAgent,
   } = usePurchasingAgentAdmin();
 
   const { data: agents, isLoading: agentsLoading } = useAllAgents();
@@ -51,13 +45,6 @@ export default function AdminPurchasingAgentsPage() {
     (pendingValidations?.paymentValidations?.length || 0) +
     (pendingValidations?.freightValidations?.length || 0);
 
-  const handleCreateAgent = async () => {
-    // In a real app, you'd select an existing user or create one
-    // For now, we'll just show the form
-    // createAgent.mutate({ ...newAgentData, user_id: 'selected-user-id' });
-    setCreateAgentOpen(false);
-  };
-
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
       active: { variant: 'default', label: 'Activo' },
@@ -68,8 +55,49 @@ export default function AdminPurchasingAgentsPage() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const portalUrl = `${window.location.origin}/agente-compra/login`;
+
+  const handleCopyPortalLink = () => {
+    navigator.clipboard.writeText(portalUrl);
+    toast.success("Link del portal copiado");
+  };
+
   return (
     <AdminLayout title="Portal de Agentes de Compra" subtitle="Gestión de compras internacionales y control de calidad">
+      {/* Portal Link & Create Agent */}
+      <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg border">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">Portal de Agentes:</span>
+        </div>
+        <code className="text-xs bg-background px-2 py-1 rounded border font-mono truncate max-w-sm">
+          {portalUrl}
+        </code>
+        <Button variant="outline" size="sm" onClick={handleCopyPortalLink}>
+          <Copy className="h-3 w-3 mr-1" />
+          Copiar
+        </Button>
+        <a href={portalUrl} target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" size="sm">
+            <ExternalLink className="h-3 w-3 mr-1" />
+            Abrir
+          </Button>
+        </a>
+        <div className="flex-1" />
+        <Button onClick={() => setCreateAgentOpen(true)} className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white">
+          <Plus className="h-4 w-4 mr-2" />
+          Crear Agente
+        </Button>
+      </div>
+
+      <CreateAgentDialog 
+        open={createAgentOpen} 
+        onOpenChange={setCreateAgentOpen}
+        onCreated={() => {
+          // Refetch agents list
+        }}
+      />
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid grid-cols-4 w-full max-w-2xl">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
@@ -190,78 +218,10 @@ export default function AdminPurchasingAgentsPage() {
         <TabsContent value="agents" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Agentes de Compra</h3>
-            <Dialog open={createAgentOpen} onOpenChange={setCreateAgentOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Agente
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Crear Agente de Compra</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label>Nombre Completo</Label>
-                    <Input 
-                      value={newAgentData.full_name}
-                      onChange={(e) => setNewAgentData(prev => ({ ...prev, full_name: e.target.value }))}
-                      placeholder="Nombre del agente"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input 
-                      type="email"
-                      value={newAgentData.email}
-                      onChange={(e) => setNewAgentData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="email@ejemplo.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Teléfono</Label>
-                    <Input 
-                      value={newAgentData.phone}
-                      onChange={(e) => setNewAgentData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="+86 123 456 7890"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>País de Operación</Label>
-                    <Select 
-                      value={newAgentData.country_code}
-                      onValueChange={(value) => {
-                        const countries: Record<string, string> = {
-                          CN: 'China',
-                          US: 'Estados Unidos',
-                          MX: 'México',
-                          CO: 'Colombia',
-                        };
-                        setNewAgentData(prev => ({ 
-                          ...prev, 
-                          country_code: value,
-                          country_name: countries[value] || value,
-                        }));
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="CN">China</SelectItem>
-                        <SelectItem value="US">Estados Unidos</SelectItem>
-                        <SelectItem value="MX">México</SelectItem>
-                        <SelectItem value="CO">Colombia</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={handleCreateAgent} className="w-full">
-                    Crear Agente
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setCreateAgentOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Agente
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

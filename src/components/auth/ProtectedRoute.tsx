@@ -45,6 +45,8 @@ export const getRoleRedirectPath = (role: UserRole): string => {
   switch (role) {
     case UserRole.ADMIN:
       return "/admin/dashboard";
+    case UserRole.PURCHASING_AGENT:
+      return "/agente-compra";
     case UserRole.SELLER:
       return "/seller/adquisicion-lotes";
     case UserRole.USER:
