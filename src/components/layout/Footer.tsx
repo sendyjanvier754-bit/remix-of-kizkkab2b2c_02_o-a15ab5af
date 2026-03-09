@@ -58,9 +58,9 @@ const Footer = () => {
                  </a>
               </li>
               <li>
-                <a href="mailto:contacto@siver.com" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
-                  <Mail className="w-4 h-4" />contacto@siver.com
-                </a>
+                 <a href={`mailto:${getBranding('contact_email') || 'contacto@siver.com'}`} className="flex items-center gap-2 text-gray-400 hover:text-white transition">
+                   <Mail className="w-4 h-4" />{getBranding('contact_email') || 'contacto@siver.com'}
+                 </a>
               </li>
               <li className="flex items-center gap-2 text-gray-400">
                 <MapPin className="w-4 h-4" />Puerto Príncipe, Haití
