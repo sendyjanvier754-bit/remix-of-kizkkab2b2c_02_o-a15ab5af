@@ -3524,6 +3524,72 @@ export type Database = {
         }
         Relationships: []
       }
+      po_agent_assignments: {
+        Row: {
+          agent_id: string
+          assigned_at: string | null
+          assigned_by: string | null
+          assignment_type: string | null
+          completed_at: string | null
+          created_at: string | null
+          dispatch_hours: number | null
+          id: string
+          metadata: Json | null
+          notes: string | null
+          po_id: string
+          started_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          assigned_at?: string | null
+          assigned_by?: string | null
+          assignment_type?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          dispatch_hours?: number | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          po_id: string
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          assigned_at?: string | null
+          assigned_by?: string | null
+          assignment_type?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          dispatch_hours?: number | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          po_id?: string
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_agent_assignments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "purchasing_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_agent_assignments_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "master_purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       po_market_settings: {
         Row: {
           auto_close_enabled: boolean | null
@@ -3705,6 +3771,197 @@ export type Database = {
             columns: ["po_order_link_id"]
             isOneToOne: false
             referencedRelation: "po_order_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      po_purchase_items: {
+        Row: {
+          created_at: string | null
+          expected_unit_cost_usd: number | null
+          hybrid_tracking_id: string | null
+          id: string
+          metadata: Json | null
+          nombre: string
+          order_item_id: string | null
+          product_id: string | null
+          purchase_id: string
+          qc_notes: string | null
+          qc_photos: string[] | null
+          qc_reviewed_at: string | null
+          qc_reviewed_by: string | null
+          qc_status: string | null
+          qc_videos: string[] | null
+          quantity: number
+          rebuy_purchase_id: string | null
+          rejection_reason: string | null
+          requires_rebuy: boolean | null
+          sku: string
+          total_price_usd: number | null
+          unit_price_cny: number | null
+          unit_price_usd: number | null
+          updated_at: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expected_unit_cost_usd?: number | null
+          hybrid_tracking_id?: string | null
+          id?: string
+          metadata?: Json | null
+          nombre: string
+          order_item_id?: string | null
+          product_id?: string | null
+          purchase_id: string
+          qc_notes?: string | null
+          qc_photos?: string[] | null
+          qc_reviewed_at?: string | null
+          qc_reviewed_by?: string | null
+          qc_status?: string | null
+          qc_videos?: string[] | null
+          quantity?: number
+          rebuy_purchase_id?: string | null
+          rejection_reason?: string | null
+          requires_rebuy?: boolean | null
+          sku: string
+          total_price_usd?: number | null
+          unit_price_cny?: number | null
+          unit_price_usd?: number | null
+          updated_at?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expected_unit_cost_usd?: number | null
+          hybrid_tracking_id?: string | null
+          id?: string
+          metadata?: Json | null
+          nombre?: string
+          order_item_id?: string | null
+          product_id?: string | null
+          purchase_id?: string
+          qc_notes?: string | null
+          qc_photos?: string[] | null
+          qc_reviewed_at?: string | null
+          qc_reviewed_by?: string | null
+          qc_status?: string | null
+          qc_videos?: string[] | null
+          quantity?: number
+          rebuy_purchase_id?: string | null
+          rejection_reason?: string | null
+          requires_rebuy?: boolean | null
+          sku?: string
+          total_price_usd?: number | null
+          unit_price_cny?: number | null
+          unit_price_usd?: number | null
+          updated_at?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_purchase_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "po_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      po_purchases: {
+        Row: {
+          actual_cost_usd: number | null
+          agent_id: string
+          cart_screencast_uploaded_at: string | null
+          cart_screencast_url: string | null
+          cart_validated: boolean | null
+          cart_validated_at: string | null
+          cart_validated_by: string | null
+          created_at: string | null
+          expected_cost_usd: number | null
+          id: string
+          items_count: number | null
+          metadata: Json | null
+          notes: string | null
+          payment_link: string | null
+          payment_proof_url: string | null
+          payment_status: string | null
+          payment_validated_at: string | null
+          payment_validated_by: string | null
+          po_id: string
+          purchase_number: string
+          source_platform: string
+          status: string | null
+          supplier_link: string | null
+          supplier_order_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_cost_usd?: number | null
+          agent_id: string
+          cart_screencast_uploaded_at?: string | null
+          cart_screencast_url?: string | null
+          cart_validated?: boolean | null
+          cart_validated_at?: string | null
+          cart_validated_by?: string | null
+          created_at?: string | null
+          expected_cost_usd?: number | null
+          id?: string
+          items_count?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          payment_link?: string | null
+          payment_proof_url?: string | null
+          payment_status?: string | null
+          payment_validated_at?: string | null
+          payment_validated_by?: string | null
+          po_id: string
+          purchase_number: string
+          source_platform: string
+          status?: string | null
+          supplier_link?: string | null
+          supplier_order_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_cost_usd?: number | null
+          agent_id?: string
+          cart_screencast_uploaded_at?: string | null
+          cart_screencast_url?: string | null
+          cart_validated?: boolean | null
+          cart_validated_at?: string | null
+          cart_validated_by?: string | null
+          created_at?: string | null
+          expected_cost_usd?: number | null
+          id?: string
+          items_count?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          payment_link?: string | null
+          payment_proof_url?: string | null
+          payment_status?: string | null
+          payment_validated_at?: string | null
+          payment_validated_by?: string | null
+          po_id?: string
+          purchase_number?: string
+          source_platform?: string
+          status?: string | null
+          supplier_link?: string | null
+          supplier_order_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_purchases_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "purchasing_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_purchases_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "master_purchase_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -4522,6 +4779,81 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_code?: string | null
+        }
+        Relationships: []
+      }
+      purchasing_agents: {
+        Row: {
+          agent_code: string
+          avg_dispatch_hours: number | null
+          bank_info: Json | null
+          country_code: string
+          country_name: string | null
+          created_at: string | null
+          current_active_pos: number | null
+          email: string | null
+          full_name: string
+          id: string
+          max_concurrent_pos: number | null
+          metadata: Json | null
+          notes: string | null
+          phone: string | null
+          quality_score: number | null
+          specializations: string[] | null
+          status: string
+          total_items_processed: number | null
+          total_pos_completed: number | null
+          updated_at: string | null
+          user_id: string
+          warehouse_address: Json | null
+        }
+        Insert: {
+          agent_code: string
+          avg_dispatch_hours?: number | null
+          bank_info?: Json | null
+          country_code?: string
+          country_name?: string | null
+          created_at?: string | null
+          current_active_pos?: number | null
+          email?: string | null
+          full_name: string
+          id?: string
+          max_concurrent_pos?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          phone?: string | null
+          quality_score?: number | null
+          specializations?: string[] | null
+          status?: string
+          total_items_processed?: number | null
+          total_pos_completed?: number | null
+          updated_at?: string | null
+          user_id: string
+          warehouse_address?: Json | null
+        }
+        Update: {
+          agent_code?: string
+          avg_dispatch_hours?: number | null
+          bank_info?: Json | null
+          country_code?: string
+          country_name?: string | null
+          created_at?: string | null
+          current_active_pos?: number | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          max_concurrent_pos?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          phone?: string | null
+          quality_score?: number | null
+          specializations?: string[] | null
+          status?: string
+          total_items_processed?: number | null
+          total_pos_completed?: number | null
+          updated_at?: string | null
+          user_id?: string
+          warehouse_address?: Json | null
         }
         Relationships: []
       }
