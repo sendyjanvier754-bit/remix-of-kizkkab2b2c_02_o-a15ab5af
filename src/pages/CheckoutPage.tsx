@@ -1098,15 +1098,15 @@ const CheckoutPage = () => {
                     </div>
                   )}
 
-                  {/* Manual mode - seller details */}
-                  {paymentMode === 'manual' && natcashManualAvailable && sellerPaymentInfo?.natcash && (
+                  {/* Manual mode - platform details */}
+                  {paymentMode === 'manual' && natcashManualAvailable && platformPaymentInfo?.natcash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#071d7f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#071d7f' }}>
-                        Datos NatCash - {sellerPaymentInfo.storeName}
+                        Datos NatCash - {platformPaymentInfo.platformName}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#071d7f' }}>
-                        <p><span className="font-medium">Número:</span> {sellerPaymentInfo.natcash.phone_number || 'No configurado'}</p>
-                        <p><span className="font-medium">Nombre:</span> {sellerPaymentInfo.natcash.name || 'No configurado'}</p>
+                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.natcash.phone_number || 'No configurado'}</p>
+                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.natcash.name || 'No configurado'}</p>
                       </div>
                       <div className="mt-3">
                         <Label>Código de Transacción *</Label>
