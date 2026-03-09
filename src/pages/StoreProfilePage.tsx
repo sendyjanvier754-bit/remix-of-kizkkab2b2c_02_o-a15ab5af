@@ -426,50 +426,6 @@ const StoreProfilePage = () => {
                   )}
                 </div>
               </div>
-
-              {/* Action Buttons - icon-only on mobile, full buttons on desktop */}
-              <div className="flex flex-row md:flex-col gap-3 md:gap-2 w-auto md:w-auto items-center justify-start md:justify-start">
-                <button
-                  onClick={handleFollowToggle}
-                  disabled={followLoading}
-                  className="md:hidden p-0 bg-transparent border-0 cursor-pointer disabled:opacity-50"
-                >
-                  <Heart className={`w-5 h-5 ${isFollowing ? "fill-red-500 text-red-500" : "text-white"}`} />
-                </button>
-                <button className="md:hidden p-0 bg-transparent border-0 cursor-pointer">
-                  <MessageCircle className="w-5 h-5 text-white" />
-                </button>
-                <button onClick={handleShare} className="md:hidden p-0 bg-transparent border-0 cursor-pointer">
-                  <Share2 className="w-5 h-5 text-white" />
-                </button>
-                {/* Productos badge - mobile only, right-aligned */}
-                <div className="md:hidden ml-auto bg-white px-1.5 py-0.5 rounded text-[#071d7f] text-xs">
-                  <span className="font-semibold">{store.productsCount}</span> prod.
-                </div>
-                <Button
-                  onClick={handleFollowToggle}
-                  disabled={followLoading}
-                  className="hidden md:inline-flex md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0"
-                >
-                  <Heart className={`w-4 h-4 mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
-                  {isFollowing ? "Siguiendo" : "Seguir"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="hidden md:inline-flex md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2 text-[#071d7f]" />
-                  Contactar
-                </Button>
-                <Button
-                  variant="outline"
-                  className="hidden md:inline-flex md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
-                  onClick={handleShare}
-                >
-                  <Share2 className="w-4 h-4 mr-2 text-[#071d7f]" />
-                  Compartir
-                </Button>
-              </div>
             </div>
 
             {/* Payment Methods Section */}
