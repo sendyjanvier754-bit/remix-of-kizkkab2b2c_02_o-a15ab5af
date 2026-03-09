@@ -34,14 +34,13 @@ const SellerDashboard = () => {
   const { data: orders, isLoading: ordersLoading } = useBuyerOrders();
   const { credit, availableCredit } = useSellerCredits();
   const { isVerified } = useKYC();
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [orderPage, setOrderPage] = useState(0);
+  const ORDERS_PER_PAGE = 5;
 
-  useEffect(() => {
-    if (orders && orders.length > 0) {
-      // Get last 5 orders
-      setRecentOrders(orders.slice(0, 5));
-    }
-  }, [orders]);
+  const totalPages = orders ? Math.ceil(orders.length / ORDERS_PER_PAGE) : 0;
+  const paginatedOrders = orders
+    ? orders.slice(orderPage * ORDERS_PER_PAGE, (orderPage + 1) * ORDERS_PER_PAGE)
+    : [];
 
   if (authLoading || ordersLoading) {
     return (
