@@ -7,11 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar, SidebarSeparator } from "@/components/ui/sidebar";
 import { useTranslation } from "react-i18next";
+import { useBranding } from "@/hooks/useBranding";
 
 export function SellerSidebar() {
   const { t } = useTranslation();
   const { state, toggleSidebar } = useSidebar();
   const { user, signOut } = useAuth();
+  const { getValue } = useBranding();
   const isCollapsed = state === "collapsed";
   const location = useLocation();
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export function SellerSidebar() {
               <ShoppingBag className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-sm text-foreground tracking-tight">Siver Market</span>
+              <span className="font-bold text-sm text-foreground tracking-tight">{getValue('platform_name')}</span>
               <span className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">{t('sellerSidebar.sellerHub')}</span>
             </div>
           </div>

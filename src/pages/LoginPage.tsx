@@ -13,8 +13,10 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound, ChevronRight, ArrowLeft } from "lucide-react";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
+import { useBranding } from "@/hooks/useBranding";
 
 const LoginPage = () => {
+  const { getValue } = useBranding();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -193,8 +195,8 @@ const LoginPage = () => {
       <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center pb-24 md:pb-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Bienvenido a Siver Market</h1>
-            <p className="text-muted-foreground">Tu marketplace de confianza</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Bienvenido a {getValue('platform_name')}</h1>
+            <p className="text-muted-foreground">{getValue('platform_slogan')}</p>
           </div>
 
           <Card>
@@ -463,7 +465,7 @@ const LoginPage = () => {
 
               <div className="mt-6 pt-6 border-t space-y-3">
                 <p className="text-sm text-center text-muted-foreground mb-4">
-                  ¿Quieres vender en Siver Market?
+                  ¿Quieres vender en {getValue('platform_name')}?
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <Button variant="outline" asChild className="gap-2">

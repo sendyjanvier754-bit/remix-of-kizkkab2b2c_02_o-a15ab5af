@@ -16,11 +16,13 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
+import { useBranding } from "@/hooks/useBranding";
 
 export function AdminSidebar() {
   const { t } = useTranslation();
   const { state, toggleSidebar } = useSidebar();
   const { signOut, user } = useAuth();
+  const { getValue } = useBranding();
   const isCollapsed = state === "collapsed";
 
   const isAdmin = user?.role === UserRole.ADMIN;
@@ -115,7 +117,7 @@ export function AdminSidebar() {
             </div>
             {!isCollapsed && (
               <div className="flex flex-col">
-                <span className="font-bold text-sm text-foreground">Siver Market</span>
+                <span className="font-bold text-sm text-foreground">{getValue('platform_name')}</span>
                 <span className="text-xs text-accent font-semibold">
                   {isAdmin ? "Admin 509" : isSalesAgent ? "Agente" : "Panel"}
                 </span>

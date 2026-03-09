@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useBranding } from "@/hooks/useBranding";
 
 export interface SEOMetadata {
   title: string;
@@ -13,9 +14,12 @@ export interface SEOMetadata {
 }
 
 export const useSEO = (metadata: SEOMetadata) => {
+  const { getValue } = useBranding();
+  const platformName = getValue('platform_name');
+
   useEffect(() => {
     // Title
-    document.title = `${metadata.title} | Siver Market Hub`;
+    document.title = `${metadata.title} | ${platformName}`;
 
     // Meta description
     const descriptionMeta = document.querySelector('meta[name="description"]');
@@ -65,7 +69,7 @@ export const useSEO = (metadata: SEOMetadata) => {
         document.head.removeChild(schemaScript);
       }
     };
-  }, [metadata]);
+  }, [metadata, platformName]);
 };
 
 const setOrCreateMeta = (property: string, content: string) => {
