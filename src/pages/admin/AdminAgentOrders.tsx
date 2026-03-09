@@ -8,7 +8,7 @@ import AgentDraftList from '@/components/agent/AgentDraftList';
 import AgentProductSelector from '@/components/agent/AgentProductSelector';
 import AgentCartDraft from '@/components/agent/AgentCartDraft';
 import AgentShippingConfig from '@/components/agent/AgentShippingConfig';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { RoleAwareLayout } from '@/components/layout/RoleAwareLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
