@@ -26,7 +26,7 @@ export default function AdminSupportChats() {
   // Mobile: show either list or chat window (not both)
   if (isMobile) {
     return (
-      <RoleAwareLayout title="Soporte - Live Chat" subtitle="Gestiona las conversaciones de soporte">
+      <RoleAwareLayout title="Soporte - Live Chat">
         <div className="h-[calc(100vh-10rem)]">
           {selectedChatId ? (
             <div className="h-full flex flex-col">
