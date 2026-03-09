@@ -22,6 +22,8 @@ import {
   Zap,
   Loader2,
   DollarSign,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -32,14 +34,13 @@ const SellerDashboard = () => {
   const { data: orders, isLoading: ordersLoading } = useBuyerOrders();
   const { credit, availableCredit } = useSellerCredits();
   const { isVerified } = useKYC();
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [orderPage, setOrderPage] = useState(0);
+  const ORDERS_PER_PAGE = 5;
 
-  useEffect(() => {
-    if (orders && orders.length > 0) {
-      // Get last 5 orders
-      setRecentOrders(orders.slice(0, 5));
-    }
-  }, [orders]);
+  const totalPages = orders ? Math.ceil(orders.length / ORDERS_PER_PAGE) : 0;
+  const paginatedOrders = orders
+    ? orders.slice(orderPage * ORDERS_PER_PAGE, (orderPage + 1) * ORDERS_PER_PAGE)
+    : [];
 
   if (authLoading || ordersLoading) {
     return (
@@ -152,7 +153,7 @@ const SellerDashboard = () => {
                     </Button>
                   </div>
 
-                  {recentOrders.length === 0 ? (
+                  {paginatedOrders.length === 0 ? (
                     <div className="text-center py-6 md:py-8">
                       <Package className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-3" />
                       <p className="text-muted-foreground text-sm">{t('sellerDashboard.noOrdersYet')}</p>
@@ -163,48 +164,78 @@ const SellerDashboard = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-2 md:space-y-4">
-                      {recentOrders.map((order) => (
-                        <div
-                          key={order.id}
-                          className="p-2.5 md:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="min-w-0">
-                                <p className="font-semibold text-xs md:text-sm truncate">
-                                  {t('sellerDashboard.orderNumber', { id: order.id.slice(0, 8).toUpperCase() })}
-                                </p>
-                                <p className="text-[10px] md:text-xs text-muted-foreground">
-                                  {new Date(order.created_at).toLocaleDateString('es-ES')}
-                                </p>
+                    <>
+                      <div className="space-y-2 md:space-y-4">
+                        {paginatedOrders.map((order) => (
+                          <div
+                            key={order.id}
+                            className="p-2.5 md:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-xs md:text-sm truncate">
+                                    {t('sellerDashboard.orderNumber', { id: order.id.slice(0, 8).toUpperCase() })}
+                                  </p>
+                                  <p className="text-[10px] md:text-xs text-muted-foreground">
+                                    {new Date(order.created_at).toLocaleDateString('es-ES')}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="font-semibold text-xs md:text-sm text-foreground">
+                                  ${order.total_amount.toFixed(2)}
+                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] md:text-xs px-1.5 py-0 md:px-2 md:py-0.5 ${
+                                    order.status === 'paid'
+                                      ? 'bg-green-50 text-green-700 border-green-200'
+                                      : order.status === 'placed'
+                                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                        : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                  }`}
+                                >
+                                  {order.status === 'paid'
+                                    ? t('orders.statuses.paid')
+                                    : order.status === 'placed'
+                                      ? t('orders.statuses.placed')
+                                      : t('orders.statuses.pending')}
+                                </Badge>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className="font-semibold text-xs md:text-sm text-foreground">
-                                ${order.total_amount.toFixed(2)}
-                              </span>
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] md:text-xs px-1.5 py-0 md:px-2 md:py-0.5 ${
-                                  order.status === 'paid'
-                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                    : order.status === 'placed'
-                                      ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                      : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                }`}
-                              >
-                                {order.status === 'paid'
-                                  ? t('orders.statuses.paid')
-                                  : order.status === 'placed'
-                                    ? t('orders.statuses.placed')
-                                    : t('orders.statuses.pending')}
-                              </Badge>
-                            </div>
                           </div>
+                        ))}
+                      </div>
+
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            disabled={orderPage === 0}
+                            onClick={() => setOrderPage(p => p - 1)}
+                          >
+                            <ChevronLeft className="h-3 w-3" />
+                            Anterior
+                          </Button>
+                          <span className="text-[10px] md:text-xs text-muted-foreground">
+                            {orderPage + 1} / {totalPages}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            disabled={orderPage >= totalPages - 1}
+                            onClick={() => setOrderPage(p => p + 1)}
+                          >
+                            Siguiente
+                            <ChevronRight className="h-3 w-3" />
+                          </Button>
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   )}
                 </div>
               </Card>
