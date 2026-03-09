@@ -1,17 +1,19 @@
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useBranding } from "@/hooks/useBranding";
 
 const Footer = () => {
   const { t } = useTranslation();
+  const { getValue: getBranding } = useBranding();
 
   return (
     <footer className="hidden md:block bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           <div>
-            <h4 className="font-bold text-lg mb-4">SIVER</h4>
-            <p className="text-gray-400 text-sm">{t('footer.tagline')}</p>
+            <h4 className="font-bold text-lg mb-4">{getBranding('platform_name')}</h4>
+            <p className="text-gray-400 text-sm">{getBranding('platform_slogan') || t('footer.tagline')}</p>
             <Link to="/sobre-nosotros" className="text-sm text-gray-400 hover:text-white transition mt-3 inline-block">
               Sobre nosotros →
             </Link>
@@ -51,14 +53,14 @@ const Footer = () => {
             <h4 className="font-bold mb-4">{t('footer.contact')}</h4>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="tel:+15093234567" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
-                  <Phone className="w-4 h-4" />+1 (509) 3234-5678
-                </a>
+                 <a href={`tel:${getBranding('contact_phone') || '+15093234567'}`} className="flex items-center gap-2 text-gray-400 hover:text-white transition">
+                   <Phone className="w-4 h-4" />{getBranding('contact_phone') || '+1 (509) 3234-5678'}
+                 </a>
               </li>
               <li>
-                <a href="mailto:contacto@siver.com" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
-                  <Mail className="w-4 h-4" />contacto@siver.com
-                </a>
+                 <a href={`mailto:${getBranding('contact_email') || 'contacto@siver.com'}`} className="flex items-center gap-2 text-gray-400 hover:text-white transition">
+                   <Mail className="w-4 h-4" />{getBranding('contact_email') || 'contacto@siver.com'}
+                 </a>
               </li>
               <li className="flex items-center gap-2 text-gray-400">
                 <MapPin className="w-4 h-4" />Puerto Príncipe, Haití

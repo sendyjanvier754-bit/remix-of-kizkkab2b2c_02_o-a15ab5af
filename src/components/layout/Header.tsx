@@ -14,6 +14,7 @@ import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import { useBranding } from "@/hooks/useBranding";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -72,6 +73,7 @@ const Header = ({
 }: HeaderProps) => {
   const { t } = useTranslation();
   const { canToggle, toggleViewMode, isClientPreview } = useViewMode();
+  const { getValue: getBranding } = useBranding();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -412,10 +414,14 @@ const Header = ({
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-10 h-10 rounded bg-[#071d7f] flex items-center justify-center">
-              <ShoppingBag className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-lg text-gray-900">SIVER</span>
+            {getBranding('logo_url') ? (
+              <img src={getBranding('logo_url')} alt={getBranding('platform_name')} className="h-10 w-auto object-contain" />
+            ) : (
+              <div className="w-10 h-10 rounded bg-[#071d7f] flex items-center justify-center">
+                <ShoppingBag className="w-6 h-6 text-white" />
+              </div>
+            )}
+            <span className="font-bold text-lg text-gray-900">{getBranding('platform_name')}</span>
           </Link>
 
           {/* Search Bar - Desktop */}
