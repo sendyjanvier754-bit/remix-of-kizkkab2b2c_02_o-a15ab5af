@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCreateChat } from '@/hooks/useSupportChat';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
@@ -35,18 +36,31 @@ export function OpenChatButton({
   const handleOpenChat = async () => {
     try {
       setIsCreating(true);
-      const label = orderLabel || `Pedido #${orderId.slice(0, 8).toUpperCase()}`;
-      const title = `Soporte - ${label} (${orderType.toUpperCase()})`;
-      const chat = await createChat(title, orderId, orderType);
 
-      toast.success(t('common.success'));
+      // Check if there's already an open (non-closed) chat for this order
+      const { data: existingChats } = await supabase
+        .from('support_chats')
+        .select('id, status')
+        .eq('order_id', orderId)
+        .neq('status', 'closed')
+        .limit(1);
 
-      const routes: Record<string, string> = {
-        admin: '/admin/soporte-chat',
-        seller: '/admin/soporte-chat',
-        buyer: '/admin/soporte-chat',
-      };
-      navigate(`${routes[navigateTo]}?chat=${chat.id}`);
+      let chatId: string;
+
+      if (existingChats && existingChats.length > 0) {
+        // Navigate to existing chat
+        chatId = existingChats[0].id;
+        toast.info('Ya existe un chat abierto para este pedido');
+      } else {
+        // Create new chat
+        const label = orderLabel || `Pedido #${orderId.slice(0, 8).toUpperCase()}`;
+        const title = `Soporte - ${label} (${orderType.toUpperCase()})`;
+        const chat = await createChat(title, orderId, orderType);
+        chatId = chat.id;
+        toast.success(t('common.success'));
+      }
+
+      navigate(`/admin/soporte-chat?chat=${chatId}`);
     } catch (error: any) {
       toast.error(t('errors.generic'));
     } finally {
