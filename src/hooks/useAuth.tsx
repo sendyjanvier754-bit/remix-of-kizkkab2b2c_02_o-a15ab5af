@@ -56,7 +56,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Priority: admin > seller > user
       const roles = data.map(r => r.role as string);
       if (roles.includes('admin')) return UserRole.ADMIN;
+      if (roles.includes('purchasing_agent')) return UserRole.PURCHASING_AGENT;
       if (roles.includes('seller')) return UserRole.SELLER;
+      if (roles.includes('sales_agent')) return UserRole.SALES_AGENT;
       return UserRole.USER;
     } catch (error) {
       console.error('Error checking user role:', error);

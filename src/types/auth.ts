@@ -13,6 +13,7 @@ export enum UserRole {
   MODERATOR = "moderator", // Moderador
   STAFF_PICKUP = "staff_pickup", // Staff de punto de recogida
   SALES_AGENT = "sales_agent", // Agente de ventas - Creación de pedidos remota
+  PURCHASING_AGENT = "purchasing_agent", // Agente de compra internacional
 }
 
 // Alias para compatibilidad
