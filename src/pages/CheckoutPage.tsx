@@ -903,14 +903,14 @@ const CheckoutPage = () => {
               </div>
 
               {/* Payment Details */}
-              {paymentMethod === 'transfer' && sellerPaymentInfo?.bank && (
+              {paymentMethod === 'transfer' && platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-2">Datos Bancarios - {sellerPaymentInfo.storeName}</h4>
+                  <h4 className="font-semibold text-green-800 mb-2">Datos Bancarios - {platformPaymentInfo.platformName}</h4>
                   <div className="space-y-1 text-sm text-green-700">
-                    <p><span className="font-medium">Banco:</span> {sellerPaymentInfo.bank.bank_name || 'No configurado'}</p>
-                    <p><span className="font-medium">Tipo:</span> {sellerPaymentInfo.bank.account_type || 'No configurado'}</p>
-                    <p><span className="font-medium">Cuenta:</span> {maskNumber(sellerPaymentInfo.bank.account_number)}</p>
-                    <p><span className="font-medium">Beneficiario:</span> {sellerPaymentInfo.bank.account_holder || 'No configurado'}</p>
+                    <p><span className="font-medium">Banco:</span> {platformPaymentInfo.bank.bank_name || 'No configurado'}</p>
+                    <p><span className="font-medium">Tipo:</span> {platformPaymentInfo.bank.account_type || 'No configurado'}</p>
+                    <p><span className="font-medium">Cuenta:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
+                    <p><span className="font-medium">Beneficiario:</span> {platformPaymentInfo.bank.account_holder || 'No configurado'}</p>
                   </div>
                   <div className="mt-3">
                     <Label>Referencia de Transferencia *</Label>
@@ -927,9 +927,9 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {paymentMethod === 'transfer' && !sellerPaymentInfo?.bank && (
+              {paymentMethod === 'transfer' && !platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-700">El vendedor no ha configurado datos bancarios.</p>
+                  <p className="text-sm text-yellow-700">No se han configurado datos bancarios en la plataforma.</p>
                 </div>
               )}
 
