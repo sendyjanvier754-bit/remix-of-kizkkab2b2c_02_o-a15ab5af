@@ -73,6 +73,7 @@ const Header = ({
 }: HeaderProps) => {
   const { t } = useTranslation();
   const { canToggle, toggleViewMode, isClientPreview } = useViewMode();
+  const { getValue: getBranding } = useBranding();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
