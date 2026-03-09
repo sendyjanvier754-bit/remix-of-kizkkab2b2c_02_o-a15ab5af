@@ -2092,6 +2092,47 @@ export type Database = {
           },
         ]
       }
+      investor_qc_access: {
+        Row: {
+          can_view_costs: boolean | null
+          can_view_qc: boolean | null
+          created_at: string | null
+          id: string
+          investor_user_id: string
+          notified_at: string | null
+          purchase_item_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          can_view_costs?: boolean | null
+          can_view_qc?: boolean | null
+          created_at?: string | null
+          id?: string
+          investor_user_id: string
+          notified_at?: string | null
+          purchase_item_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          can_view_costs?: boolean | null
+          can_view_qc?: boolean | null
+          created_at?: string | null
+          id?: string
+          investor_user_id?: string
+          notified_at?: string | null
+          purchase_item_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_qc_access_purchase_item_id_fkey"
+            columns: ["purchase_item_id"]
+            isOneToOne: false
+            referencedRelation: "po_purchase_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_verifications: {
         Row: {
           address_proof_url: string | null
@@ -2530,11 +2571,14 @@ export type Database = {
       }
       master_purchase_orders: {
         Row: {
+          assigned_agent_id: string | null
+          assignment_status: string | null
           auto_close_at: string | null
           china_tracking: string | null
           close_reason: string | null
           close_trigger: string | null
           closed_at: string | null
+          cost_variance_usd: number | null
           country_code: string | null
           created_at: string
           cycle_end_at: string | null
@@ -2553,7 +2597,9 @@ export type Database = {
           quantity_threshold: number | null
           scheduled_close_at: string | null
           status: string | null
+          total_actual_cost_usd: number | null
           total_amount: number | null
+          total_expected_cost_usd: number | null
           total_orders: number | null
           total_quantity: number | null
           transit_tracking: string | null
@@ -2561,11 +2607,14 @@ export type Database = {
           weight_threshold_kg: number | null
         }
         Insert: {
+          assigned_agent_id?: string | null
+          assignment_status?: string | null
           auto_close_at?: string | null
           china_tracking?: string | null
           close_reason?: string | null
           close_trigger?: string | null
           closed_at?: string | null
+          cost_variance_usd?: number | null
           country_code?: string | null
           created_at?: string
           cycle_end_at?: string | null
@@ -2584,7 +2633,9 @@ export type Database = {
           quantity_threshold?: number | null
           scheduled_close_at?: string | null
           status?: string | null
+          total_actual_cost_usd?: number | null
           total_amount?: number | null
+          total_expected_cost_usd?: number | null
           total_orders?: number | null
           total_quantity?: number | null
           transit_tracking?: string | null
@@ -2592,11 +2643,14 @@ export type Database = {
           weight_threshold_kg?: number | null
         }
         Update: {
+          assigned_agent_id?: string | null
+          assignment_status?: string | null
           auto_close_at?: string | null
           china_tracking?: string | null
           close_reason?: string | null
           close_trigger?: string | null
           closed_at?: string | null
+          cost_variance_usd?: number | null
           country_code?: string | null
           created_at?: string
           cycle_end_at?: string | null
@@ -2615,7 +2669,9 @@ export type Database = {
           quantity_threshold?: number | null
           scheduled_close_at?: string | null
           status?: string | null
+          total_actual_cost_usd?: number | null
           total_amount?: number | null
+          total_expected_cost_usd?: number | null
           total_orders?: number | null
           total_quantity?: number | null
           transit_tracking?: string | null
@@ -3524,6 +3580,72 @@ export type Database = {
         }
         Relationships: []
       }
+      po_agent_assignments: {
+        Row: {
+          agent_id: string
+          assigned_at: string | null
+          assigned_by: string | null
+          assignment_type: string | null
+          completed_at: string | null
+          created_at: string | null
+          dispatch_hours: number | null
+          id: string
+          metadata: Json | null
+          notes: string | null
+          po_id: string
+          started_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          assigned_at?: string | null
+          assigned_by?: string | null
+          assignment_type?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          dispatch_hours?: number | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          po_id: string
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          assigned_at?: string | null
+          assigned_by?: string | null
+          assignment_type?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          dispatch_hours?: number | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          po_id?: string
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_agent_assignments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "purchasing_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_agent_assignments_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "master_purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       po_market_settings: {
         Row: {
           auto_close_enabled: boolean | null
@@ -3705,6 +3827,445 @@ export type Database = {
             columns: ["po_order_link_id"]
             isOneToOne: false
             referencedRelation: "po_order_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      po_purchase_items: {
+        Row: {
+          created_at: string | null
+          expected_unit_cost_usd: number | null
+          hybrid_tracking_id: string | null
+          id: string
+          metadata: Json | null
+          nombre: string
+          order_item_id: string | null
+          product_id: string | null
+          purchase_id: string
+          qc_notes: string | null
+          qc_photos: string[] | null
+          qc_reviewed_at: string | null
+          qc_reviewed_by: string | null
+          qc_status: string | null
+          qc_videos: string[] | null
+          quantity: number
+          rebuy_purchase_id: string | null
+          rejection_reason: string | null
+          requires_rebuy: boolean | null
+          sku: string
+          total_price_usd: number | null
+          unit_price_cny: number | null
+          unit_price_usd: number | null
+          updated_at: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expected_unit_cost_usd?: number | null
+          hybrid_tracking_id?: string | null
+          id?: string
+          metadata?: Json | null
+          nombre: string
+          order_item_id?: string | null
+          product_id?: string | null
+          purchase_id: string
+          qc_notes?: string | null
+          qc_photos?: string[] | null
+          qc_reviewed_at?: string | null
+          qc_reviewed_by?: string | null
+          qc_status?: string | null
+          qc_videos?: string[] | null
+          quantity?: number
+          rebuy_purchase_id?: string | null
+          rejection_reason?: string | null
+          requires_rebuy?: boolean | null
+          sku: string
+          total_price_usd?: number | null
+          unit_price_cny?: number | null
+          unit_price_usd?: number | null
+          updated_at?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expected_unit_cost_usd?: number | null
+          hybrid_tracking_id?: string | null
+          id?: string
+          metadata?: Json | null
+          nombre?: string
+          order_item_id?: string | null
+          product_id?: string | null
+          purchase_id?: string
+          qc_notes?: string | null
+          qc_photos?: string[] | null
+          qc_reviewed_at?: string | null
+          qc_reviewed_by?: string | null
+          qc_status?: string | null
+          qc_videos?: string[] | null
+          quantity?: number
+          rebuy_purchase_id?: string | null
+          rejection_reason?: string | null
+          requires_rebuy?: boolean | null
+          sku?: string
+          total_price_usd?: number | null
+          unit_price_cny?: number | null
+          unit_price_usd?: number | null
+          updated_at?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_purchase_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "po_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      po_purchases: {
+        Row: {
+          actual_cost_usd: number | null
+          agent_id: string
+          cart_screencast_uploaded_at: string | null
+          cart_screencast_url: string | null
+          cart_validated: boolean | null
+          cart_validated_at: string | null
+          cart_validated_by: string | null
+          created_at: string | null
+          expected_cost_usd: number | null
+          id: string
+          items_count: number | null
+          metadata: Json | null
+          notes: string | null
+          payment_link: string | null
+          payment_proof_url: string | null
+          payment_status: string | null
+          payment_validated_at: string | null
+          payment_validated_by: string | null
+          po_id: string
+          purchase_number: string
+          source_platform: string
+          status: string | null
+          supplier_link: string | null
+          supplier_order_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_cost_usd?: number | null
+          agent_id: string
+          cart_screencast_uploaded_at?: string | null
+          cart_screencast_url?: string | null
+          cart_validated?: boolean | null
+          cart_validated_at?: string | null
+          cart_validated_by?: string | null
+          created_at?: string | null
+          expected_cost_usd?: number | null
+          id?: string
+          items_count?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          payment_link?: string | null
+          payment_proof_url?: string | null
+          payment_status?: string | null
+          payment_validated_at?: string | null
+          payment_validated_by?: string | null
+          po_id: string
+          purchase_number: string
+          source_platform: string
+          status?: string | null
+          supplier_link?: string | null
+          supplier_order_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_cost_usd?: number | null
+          agent_id?: string
+          cart_screencast_uploaded_at?: string | null
+          cart_screencast_url?: string | null
+          cart_validated?: boolean | null
+          cart_validated_at?: string | null
+          cart_validated_by?: string | null
+          created_at?: string | null
+          expected_cost_usd?: number | null
+          id?: string
+          items_count?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          payment_link?: string | null
+          payment_proof_url?: string | null
+          payment_status?: string | null
+          payment_validated_at?: string | null
+          payment_validated_by?: string | null
+          po_id?: string
+          purchase_number?: string
+          source_platform?: string
+          status?: string | null
+          supplier_link?: string | null
+          supplier_order_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_purchases_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "purchasing_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_purchases_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "master_purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      po_reconciliation: {
+        Row: {
+          can_generate_shipment: boolean | null
+          created_at: string | null
+          id: string
+          is_fully_reconciled: boolean | null
+          items_pending_rebuy: number | null
+          items_purchased: number | null
+          items_qc_approved: number | null
+          items_qc_rejected: number | null
+          items_received: number | null
+          items_requested: number | null
+          last_updated_at: string | null
+          metadata: Json | null
+          po_id: string
+          purchase_completion_percent: number | null
+          qc_approval_percent: number | null
+          reconciliation_percent: number | null
+          total_actual_product_cost_usd: number | null
+          total_actual_shipping_cost_usd: number | null
+          total_expected_product_cost_usd: number | null
+          total_expected_shipping_cost_usd: number | null
+          total_variance_usd: number | null
+        }
+        Insert: {
+          can_generate_shipment?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_fully_reconciled?: boolean | null
+          items_pending_rebuy?: number | null
+          items_purchased?: number | null
+          items_qc_approved?: number | null
+          items_qc_rejected?: number | null
+          items_received?: number | null
+          items_requested?: number | null
+          last_updated_at?: string | null
+          metadata?: Json | null
+          po_id: string
+          purchase_completion_percent?: number | null
+          qc_approval_percent?: number | null
+          reconciliation_percent?: number | null
+          total_actual_product_cost_usd?: number | null
+          total_actual_shipping_cost_usd?: number | null
+          total_expected_product_cost_usd?: number | null
+          total_expected_shipping_cost_usd?: number | null
+          total_variance_usd?: number | null
+        }
+        Update: {
+          can_generate_shipment?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_fully_reconciled?: boolean | null
+          items_pending_rebuy?: number | null
+          items_purchased?: number | null
+          items_qc_approved?: number | null
+          items_qc_rejected?: number | null
+          items_received?: number | null
+          items_requested?: number | null
+          last_updated_at?: string | null
+          metadata?: Json | null
+          po_id?: string
+          purchase_completion_percent?: number | null
+          qc_approval_percent?: number | null
+          reconciliation_percent?: number | null
+          total_actual_product_cost_usd?: number | null
+          total_actual_shipping_cost_usd?: number | null
+          total_expected_product_cost_usd?: number | null
+          total_expected_shipping_cost_usd?: number | null
+          total_variance_usd?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_reconciliation_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: true
+            referencedRelation: "master_purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      po_shipment_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          purchase_item_id: string
+          quantity: number
+          shipment_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          purchase_item_id: string
+          quantity?: number
+          shipment_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          purchase_item_id?: string
+          quantity?: number
+          shipment_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_shipment_items_purchase_item_id_fkey"
+            columns: ["purchase_item_id"]
+            isOneToOne: false
+            referencedRelation: "po_purchase_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_shipment_items_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "po_shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      po_shipments: {
+        Row: {
+          actual_shipping_cost_usd: number | null
+          actual_weight_kg: number
+          agent_id: string
+          arrived_at: string | null
+          billable_weight_kg: number | null
+          carrier_name: string | null
+          created_at: string | null
+          dimensions_photo_url: string | null
+          estimated_arrival: string | null
+          expected_shipping_cost_usd: number | null
+          freight_payment_link: string | null
+          freight_payment_proof_url: string | null
+          freight_payment_status: string | null
+          freight_validated_at: string | null
+          freight_validated_by: string | null
+          height_cm: number | null
+          id: string
+          international_tracking: string | null
+          length_cm: number | null
+          metadata: Json | null
+          notes: string | null
+          package_photos: string[] | null
+          packing_list_generated_at: string | null
+          packing_list_url: string | null
+          po_id: string
+          scale_photo_url: string | null
+          shipment_number: string
+          shipped_at: string | null
+          status: string | null
+          tracking_uploaded_at: string | null
+          updated_at: string | null
+          volumetric_weight_kg: number | null
+          width_cm: number | null
+        }
+        Insert: {
+          actual_shipping_cost_usd?: number | null
+          actual_weight_kg?: number
+          agent_id: string
+          arrived_at?: string | null
+          billable_weight_kg?: number | null
+          carrier_name?: string | null
+          created_at?: string | null
+          dimensions_photo_url?: string | null
+          estimated_arrival?: string | null
+          expected_shipping_cost_usd?: number | null
+          freight_payment_link?: string | null
+          freight_payment_proof_url?: string | null
+          freight_payment_status?: string | null
+          freight_validated_at?: string | null
+          freight_validated_by?: string | null
+          height_cm?: number | null
+          id?: string
+          international_tracking?: string | null
+          length_cm?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          package_photos?: string[] | null
+          packing_list_generated_at?: string | null
+          packing_list_url?: string | null
+          po_id: string
+          scale_photo_url?: string | null
+          shipment_number: string
+          shipped_at?: string | null
+          status?: string | null
+          tracking_uploaded_at?: string | null
+          updated_at?: string | null
+          volumetric_weight_kg?: number | null
+          width_cm?: number | null
+        }
+        Update: {
+          actual_shipping_cost_usd?: number | null
+          actual_weight_kg?: number
+          agent_id?: string
+          arrived_at?: string | null
+          billable_weight_kg?: number | null
+          carrier_name?: string | null
+          created_at?: string | null
+          dimensions_photo_url?: string | null
+          estimated_arrival?: string | null
+          expected_shipping_cost_usd?: number | null
+          freight_payment_link?: string | null
+          freight_payment_proof_url?: string | null
+          freight_payment_status?: string | null
+          freight_validated_at?: string | null
+          freight_validated_by?: string | null
+          height_cm?: number | null
+          id?: string
+          international_tracking?: string | null
+          length_cm?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          package_photos?: string[] | null
+          packing_list_generated_at?: string | null
+          packing_list_url?: string | null
+          po_id?: string
+          scale_photo_url?: string | null
+          shipment_number?: string
+          shipped_at?: string | null
+          status?: string | null
+          tracking_uploaded_at?: string | null
+          updated_at?: string | null
+          volumetric_weight_kg?: number | null
+          width_cm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_shipments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "purchasing_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_shipments_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "master_purchase_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -4301,7 +4862,9 @@ export type Database = {
           length_cm: number | null
           moq: number | null
           nombre: string
+          origin_country: string | null
           origin_country_id: string | null
+          origin_country_name: string | null
           parent_product_id: string | null
           peso_g: number | null
           peso_kg: number | null
@@ -4344,7 +4907,9 @@ export type Database = {
           length_cm?: number | null
           moq?: number | null
           nombre: string
+          origin_country?: string | null
           origin_country_id?: string | null
+          origin_country_name?: string | null
           parent_product_id?: string | null
           peso_g?: number | null
           peso_kg?: number | null
@@ -4387,7 +4952,9 @@ export type Database = {
           length_cm?: number | null
           moq?: number | null
           nombre?: string
+          origin_country?: string | null
           origin_country_id?: string | null
+          origin_country_name?: string | null
           parent_product_id?: string | null
           peso_g?: number | null
           peso_kg?: number | null
@@ -4522,6 +5089,81 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_code?: string | null
+        }
+        Relationships: []
+      }
+      purchasing_agents: {
+        Row: {
+          agent_code: string
+          avg_dispatch_hours: number | null
+          bank_info: Json | null
+          country_code: string
+          country_name: string | null
+          created_at: string | null
+          current_active_pos: number | null
+          email: string | null
+          full_name: string
+          id: string
+          max_concurrent_pos: number | null
+          metadata: Json | null
+          notes: string | null
+          phone: string | null
+          quality_score: number | null
+          specializations: string[] | null
+          status: string
+          total_items_processed: number | null
+          total_pos_completed: number | null
+          updated_at: string | null
+          user_id: string
+          warehouse_address: Json | null
+        }
+        Insert: {
+          agent_code: string
+          avg_dispatch_hours?: number | null
+          bank_info?: Json | null
+          country_code?: string
+          country_name?: string | null
+          created_at?: string | null
+          current_active_pos?: number | null
+          email?: string | null
+          full_name: string
+          id?: string
+          max_concurrent_pos?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          phone?: string | null
+          quality_score?: number | null
+          specializations?: string[] | null
+          status?: string
+          total_items_processed?: number | null
+          total_pos_completed?: number | null
+          updated_at?: string | null
+          user_id: string
+          warehouse_address?: Json | null
+        }
+        Update: {
+          agent_code?: string
+          avg_dispatch_hours?: number | null
+          bank_info?: Json | null
+          country_code?: string
+          country_name?: string | null
+          created_at?: string | null
+          current_active_pos?: number | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          max_concurrent_pos?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          phone?: string | null
+          quality_score?: number | null
+          specializations?: string[] | null
+          status?: string
+          total_items_processed?: number | null
+          total_pos_completed?: number | null
+          updated_at?: string | null
+          user_id?: string
+          warehouse_address?: Json | null
         }
         Relationships: []
       }
@@ -7760,6 +8402,7 @@ export type Database = {
         Returns: Json
       }
       agent_push_cart_to_user: { Args: { p_draft_id: string }; Returns: Json }
+      auto_assign_po_to_agent: { Args: { p_po_id: string }; Returns: Json }
       calculate_b2b_price: {
         Args: {
           p_destination_country_id?: string
@@ -7908,6 +8551,7 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: string
       }
+      get_agent_dashboard: { Args: { p_agent_id: string }; Returns: Json }
       get_cart_shipping_cost: {
         Args: { cart_items: Json; p_shipping_type_id?: string }
         Returns: Json
@@ -8041,9 +8685,17 @@ export type Database = {
       }
       refresh_suggested_pvp_cache: { Args: never; Returns: undefined }
       sync_missing_profiles_and_roles: { Args: never; Returns: undefined }
+      update_agent_dispatch_kpi: {
+        Args: { p_agent_id: string }
+        Returns: undefined
+      }
       update_po_china_tracking: {
         Args: { p_china_tracking: string; p_po_id: string }
         Returns: Json
+      }
+      update_po_reconciliation: {
+        Args: { p_po_id: string }
+        Returns: undefined
       }
       validate_product_for_shipping: {
         Args: { p_product_id: string; p_tier_type?: string }

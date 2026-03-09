@@ -331,7 +331,7 @@ const AdminPedidos = () => {
   };
 
   const getStatusBadge = (status: OrderStatus) => {
-    const config = statusConfig[status] ?? { label: status, color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: Clock };
+    const config = statusConfig[status];
     const Icon = config.icon;
     return (
       <Badge className={`${config.color} gap-1`}>
