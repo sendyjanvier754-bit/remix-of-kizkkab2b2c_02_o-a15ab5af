@@ -418,7 +418,7 @@ const AppContent = () => {
               path="/agente-compra" 
               element={
                 <ProtectedRoute>
-                  <LazyRoute><PurchasingAgentPortal /></LazyRoute>
+                  <LazyRoute><PurchasingAgentDashboard /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
