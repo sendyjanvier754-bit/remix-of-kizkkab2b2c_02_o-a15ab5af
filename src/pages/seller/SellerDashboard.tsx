@@ -59,7 +59,7 @@ const SellerDashboard = () => {
     <SellerLayout>
       <div className="min-h-screen bg-gradient-to-b from-background via-blue-50/30 to-background">
 
-        <main className="container mx-auto px-4 py-6 mt-3">
+        <main className="container mx-auto px-3 md:px-4 py-4 md:py-6 mt-3">
           {/* Welcome Section */}
           <div className="mb-4">
             <h1 className="text-2xl font-bold text-foreground">
