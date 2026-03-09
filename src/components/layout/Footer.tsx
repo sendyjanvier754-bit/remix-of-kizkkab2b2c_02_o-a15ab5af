@@ -12,8 +12,8 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           <div>
-            <h4 className="font-bold text-lg mb-4">SIVER</h4>
-            <p className="text-gray-400 text-sm">{t('footer.tagline')}</p>
+            <h4 className="font-bold text-lg mb-4">{getBranding('platform_name')}</h4>
+            <p className="text-gray-400 text-sm">{getBranding('platform_slogan') || t('footer.tagline')}</p>
             <Link to="/sobre-nosotros" className="text-sm text-gray-400 hover:text-white transition mt-3 inline-block">
               Sobre nosotros →
             </Link>
