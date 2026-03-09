@@ -99,7 +99,7 @@ export function usePOMasterPerMarket() {
 
       const [productsRes, variantsByIdRes, variantsBySkuRes] = await Promise.all([
         productIds.length > 0
-          ? supabase.from('products').select('*').in('id', productIds as string[])
+          ? supabase.from('products').select('*, precio_base').in('id', productIds as string[])
           : Promise.resolve({ data: [] }),
         explicitVariantIds.length > 0
           ? supabase.from('product_variants').select('*').in('id', explicitVariantIds as string[])
