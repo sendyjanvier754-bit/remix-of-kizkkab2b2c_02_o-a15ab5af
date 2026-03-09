@@ -420,8 +420,9 @@ const AppContent = () => {
                 <ProtectedRoute>
                   <LazyRoute><PurchasingAgentPortal /></LazyRoute>
                 </ProtectedRoute>
-              }
-            <Route 
+              } 
+            />
+            <Route
               path="/admin/notificaciones" 
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_AGENT]}>
