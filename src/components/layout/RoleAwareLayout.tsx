@@ -30,7 +30,7 @@ export function RoleAwareLayout({ children, title, subtitle }: RoleAwareLayoutPr
     <SellerLayout>
       <div className="px-2 md:px-6 py-4">
         
-        {subtitle && <p className="text-sm text-muted-foreground mb-4">{subtitle}</p>}
+        {subtitle}
         {children}
       </div>
     </SellerLayout>);
