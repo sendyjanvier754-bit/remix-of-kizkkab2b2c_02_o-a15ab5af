@@ -29,6 +29,7 @@ import { SellerStatusViewer } from "@/components/seller/SellerStatusViewer";
 import { useAdminBanners } from "@/hooks/useAdminBanners";
 import { SellerQuotesHistory } from "@/components/seller/SellerQuotesHistory";
 import { KYCUploadForm } from "@/components/seller/KYCUploadForm";
+import { StoreShippingConfig } from "@/components/seller/StoreShippingConfig";
 import { useBuyerB2BOrders, useCancelBuyerOrder, BuyerOrder, BuyerOrderStatus, RefundStatus } from "@/hooks/useBuyerOrders";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -2104,6 +2105,13 @@ const SellerAccountPage = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Shipping Options */}
+                {store && (
+                  <div className="mt-4">
+                    <StoreShippingConfig storeId={store.id} />
+                  </div>
+                )}
               </TabsContent>
 
               </div>

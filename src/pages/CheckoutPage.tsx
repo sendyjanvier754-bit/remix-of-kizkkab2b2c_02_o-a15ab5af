@@ -15,7 +15,8 @@ import { validateB2CCheckout, getFieldError, hasFieldError, CheckoutValidationEr
 import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
 import { LocationSelector } from '@/components/checkout/LocationSelector';
 import { useApplyDiscount, AppliedDiscount } from '@/hooks/useApplyDiscount';
-import { useStorePaymentMethodsReadOnly, useAdminPaymentMethodsReadOnly } from '@/hooks/usePaymentMethods';
+import { useAdminPaymentMethodsReadOnly } from '@/hooks/usePaymentMethods';
+import { useStoreShippingOptionsReadOnly } from '@/hooks/useStoreShippingOptions';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -171,7 +172,7 @@ const CheckoutPage = () => {
     },
   ];
 
-  // Get first store ID from cart items
+  // Get first store ID and name from cart items
   const firstStoreId = useMemo(() => {
     for (const item of items) {
       if (item.storeId) return item.storeId;
@@ -186,16 +187,21 @@ const CheckoutPage = () => {
     return 'Vendedor';
   }, [items]);
 
-  // Fetch SELLER payment methods (for manual payments - direct to seller)
-  const { 
-    bankMethod: storeBank,
-    moncashMethod: storeMoncash,
-    natcashMethod: storeNatcash,
-    isLoading: paymentMethodsLoading 
-  } = useStorePaymentMethodsReadOnly(firstStoreId);
+  // Fetch seller shipping options (hybrid: seller config + fallback to centralized)
+  const { options: sellerShippingOptions, isLoading: shippingOptionsLoading } = useStoreShippingOptionsReadOnly(firstStoreId);
+  const [selectedShippingOptionId, setSelectedShippingOptionId] = useState<string | null>(null);
+  const hasSellerShipping = sellerShippingOptions.length > 0;
 
-  // Fetch ADMIN payment methods (for automatic payments - via platform API)
+  // Auto-select first shipping option
+  useEffect(() => {
+    if (sellerShippingOptions.length > 0 && !selectedShippingOptionId) {
+      setSelectedShippingOptionId(sellerShippingOptions[0].id);
+    }
+  }, [sellerShippingOptions, selectedShippingOptionId]);
+
+  // Fetch ADMIN payment methods (all B2C payments go through admin/platform)
   const {
+    bankMethod: adminBank,
     moncashMethod: adminMoncash,
     natcashMethod: adminNatcash,
     isLoading: adminPaymentMethodsLoading
@@ -205,9 +211,10 @@ const CheckoutPage = () => {
   const moncashAutoAvailable = adminMoncash?.automatic_enabled && adminMoncash?.is_active;
   const natcashAutoAvailable = adminNatcash?.automatic_enabled && adminNatcash?.is_active;
   
-  // Check if manual payment is available (seller has configured their payment details)
-  const moncashManualAvailable = !!storeMoncash?.phone_number;
-  const natcashManualAvailable = !!storeNatcash?.phone_number;
+  // Check if manual payment is available (admin has configured payment details)
+  const moncashManualAvailable = !!adminMoncash?.phone_number;
+  const natcashManualAvailable = !!adminNatcash?.phone_number;
+  const bankManualAvailable = !!adminBank?.account_number;
 
   // Auto-select payment mode based on availability when payment method changes
   useEffect(() => {
@@ -229,26 +236,26 @@ const CheckoutPage = () => {
     }
   }, [paymentMethod, moncashAutoAvailable, moncashManualAvailable, natcashAutoAvailable, natcashManualAvailable]);
 
-  // Build seller payment info from database (for manual payments)
-  const sellerPaymentInfo = useMemo(() => {
+  // Build platform payment info from admin-configured methods
+  const platformPaymentInfo = useMemo(() => {
     return {
-      storeName: firstStoreName,
-      moncash: storeMoncash ? {
-        phone_number: storeMoncash.phone_number || '',
-        name: storeMoncash.holder_name || '',
+      platformName: 'Plataforma',
+      moncash: adminMoncash ? {
+        phone_number: adminMoncash.phone_number || '',
+        name: adminMoncash.holder_name || '',
       } : null,
-      natcash: storeNatcash ? {
-        phone_number: storeNatcash.phone_number || '',
-        name: storeNatcash.holder_name || '',
+      natcash: adminNatcash ? {
+        phone_number: adminNatcash.phone_number || '',
+        name: adminNatcash.holder_name || '',
       } : null,
-      bank: storeBank ? {
-        bank_name: storeBank.bank_name || '',
-        account_number: storeBank.account_number || '',
-        account_holder: storeBank.account_holder || '',
-        account_type: storeBank.account_type || '',
+      bank: adminBank ? {
+        bank_name: adminBank.bank_name || '',
+        account_number: adminBank.account_number || '',
+        account_holder: adminBank.account_holder || '',
+        account_type: adminBank.account_type || '',
       } : null,
     };
-  }, [firstStoreName, storeBank, storeMoncash, storeNatcash]);
+  }, [adminBank, adminMoncash, adminNatcash]);
 
   // Helper to mask phone/account numbers
   const maskNumber = (num: string | undefined) => {
@@ -282,7 +289,18 @@ const CheckoutPage = () => {
     });
   }, [selectedCommune, totalWeightGrams, subtotal, shippingRates, communes, categoryRates, deliveryMethod, calculateShipping]);
   
-  const shippingCost = shippingCalculation?.totalShippingCost || 0;
+  // Calculate shipping: seller options take priority, fallback to centralized system
+  const selectedSellerShipping = sellerShippingOptions.find(o => o.id === selectedShippingOptionId);
+  const sellerShippingCost = useMemo(() => {
+    if (!hasSellerShipping || !selectedSellerShipping) return 0;
+    // Check if free shipping threshold is met
+    if (selectedSellerShipping.is_free_above && subtotal >= Number(selectedSellerShipping.is_free_above)) {
+      return 0;
+    }
+    return selectedSellerShipping.shipping_cost;
+  }, [hasSellerShipping, selectedSellerShipping, subtotal]);
+
+  const shippingCost = hasSellerShipping ? sellerShippingCost : (shippingCalculation?.totalShippingCost || 0);
   const discountAmount = appliedDiscount?.discountAmount || 0;
   const totalWithShipping = subtotal + shippingCost - discountAmount;
 
@@ -916,14 +934,14 @@ const CheckoutPage = () => {
               </div>
 
               {/* Payment Details */}
-              {paymentMethod === 'transfer' && sellerPaymentInfo?.bank && (
+              {paymentMethod === 'transfer' && platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-2">Datos Bancarios - {sellerPaymentInfo.storeName}</h4>
+                  <h4 className="font-semibold text-green-800 mb-2">Datos Bancarios - {platformPaymentInfo.platformName}</h4>
                   <div className="space-y-1 text-sm text-green-700">
-                    <p><span className="font-medium">Banco:</span> {sellerPaymentInfo.bank.bank_name || 'No configurado'}</p>
-                    <p><span className="font-medium">Tipo:</span> {sellerPaymentInfo.bank.account_type || 'No configurado'}</p>
-                    <p><span className="font-medium">Cuenta:</span> {maskNumber(sellerPaymentInfo.bank.account_number)}</p>
-                    <p><span className="font-medium">Beneficiario:</span> {sellerPaymentInfo.bank.account_holder || 'No configurado'}</p>
+                    <p><span className="font-medium">Banco:</span> {platformPaymentInfo.bank.bank_name || 'No configurado'}</p>
+                    <p><span className="font-medium">Tipo:</span> {platformPaymentInfo.bank.account_type || 'No configurado'}</p>
+                    <p><span className="font-medium">Cuenta:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
+                    <p><span className="font-medium">Beneficiario:</span> {platformPaymentInfo.bank.account_holder || 'No configurado'}</p>
                   </div>
                   <div className="mt-3">
                     <Label>Referencia de Transferencia *</Label>
@@ -940,9 +958,9 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {paymentMethod === 'transfer' && !sellerPaymentInfo?.bank && (
+              {paymentMethod === 'transfer' && !platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-700">El vendedor no ha configurado datos bancarios.</p>
+                  <p className="text-sm text-yellow-700">No se han configurado datos bancarios en la plataforma.</p>
                 </div>
               )}
 
@@ -987,9 +1005,9 @@ const CheckoutPage = () => {
                             {paymentMode === 'manual' && <Check className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">Pago Manual al Vendedor</span>
+                            <span className="font-medium">Pago Manual</span>
                             <p className="text-xs text-muted-foreground">
-                              Pague directamente al vendedor y proporcione el código
+                              Pague y proporcione el código de transacción
                             </p>
                           </div>
                         </div>
@@ -1011,15 +1029,15 @@ const CheckoutPage = () => {
                     </div>
                   )}
 
-                  {/* Manual mode - seller details */}
-                  {paymentMode === 'manual' && moncashManualAvailable && sellerPaymentInfo?.moncash && (
+                  {/* Manual mode - platform details */}
+                  {paymentMode === 'manual' && moncashManualAvailable && platformPaymentInfo?.moncash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#94111f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#94111f' }}>
-                        Datos MonCash - {sellerPaymentInfo.storeName}
+                        Datos MonCash - {platformPaymentInfo.platformName}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#94111f' }}>
-                        <p><span className="font-medium">Número:</span> {sellerPaymentInfo.moncash.phone_number || 'No configurado'}</p>
-                        <p><span className="font-medium">Nombre:</span> {sellerPaymentInfo.moncash.name || 'No configurado'}</p>
+                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.moncash.phone_number || 'No configurado'}</p>
+                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.moncash.name || 'No configurado'}</p>
                       </div>
                       <div className="mt-3">
                         <Label>Código de Transacción *</Label>
@@ -1040,7 +1058,7 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!moncashAutoAvailable && !moncashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">MonCash no está disponible para este vendedor.</p>
+                      <p className="text-sm text-yellow-700">MonCash no está disponible actualmente.</p>
                     </div>
                   )}
                 </div>
@@ -1087,9 +1105,9 @@ const CheckoutPage = () => {
                             {paymentMode === 'manual' && <Check className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">Pago Manual al Vendedor</span>
+                            <span className="font-medium">Pago Manual</span>
                             <p className="text-xs text-muted-foreground">
-                              Pague directamente al vendedor y proporcione el código
+                              Pague y proporcione el código de transacción
                             </p>
                           </div>
                         </div>
@@ -1111,15 +1129,15 @@ const CheckoutPage = () => {
                     </div>
                   )}
 
-                  {/* Manual mode - seller details */}
-                  {paymentMode === 'manual' && natcashManualAvailable && sellerPaymentInfo?.natcash && (
+                  {/* Manual mode - platform details */}
+                  {paymentMode === 'manual' && natcashManualAvailable && platformPaymentInfo?.natcash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#071d7f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#071d7f' }}>
-                        Datos NatCash - {sellerPaymentInfo.storeName}
+                        Datos NatCash - {platformPaymentInfo.platformName}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#071d7f' }}>
-                        <p><span className="font-medium">Número:</span> {sellerPaymentInfo.natcash.phone_number || 'No configurado'}</p>
-                        <p><span className="font-medium">Nombre:</span> {sellerPaymentInfo.natcash.name || 'No configurado'}</p>
+                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.natcash.phone_number || 'No configurado'}</p>
+                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.natcash.name || 'No configurado'}</p>
                       </div>
                       <div className="mt-3">
                         <Label>Código de Transacción *</Label>
@@ -1140,7 +1158,7 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!natcashAutoAvailable && !natcashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">NatCash no está disponible para este vendedor.</p>
+                      <p className="text-sm text-yellow-700">NatCash no está disponible actualmente.</p>
                     </div>
                   )}
                 </div>
