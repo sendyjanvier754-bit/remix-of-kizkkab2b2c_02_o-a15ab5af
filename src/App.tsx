@@ -154,6 +154,13 @@ const AppContent = () => {
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />
             <Route path="/busqueda" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />
             
+            {/* ========== LEGAL & INFO PAGES ========== */}
+            <Route path="/terminos" element={<LazyRoute><TermsPage /></LazyRoute>} />
+            <Route path="/privacidad" element={<LazyRoute><PrivacyPage /></LazyRoute>} />
+            <Route path="/cookies" element={<LazyRoute><CookiesPage /></LazyRoute>} />
+            <Route path="/contacto" element={<LazyRoute><ContactPage /></LazyRoute>} />
+            <Route path="/sobre-nosotros" element={<LazyRoute><AboutPage /></LazyRoute>} />
+            
             {/* ========== SIVER MATCH (B2B2C Ecosystem) ========== */}
             <Route path="/siver-match" element={<LazyRoute><SiverMatchHub /></LazyRoute>} />
             <Route path="/siver-match/investor" element={<LazyRoute><InvestorDashboard /></LazyRoute>} />
