@@ -402,34 +402,6 @@ const StoreProfilePage = () => {
                   )}
                 </div>
 
-                {/* Stats */}
-                <div className="flex items-center gap-1.5 md:gap-4 flex-wrap text-sm mb-1 md:mb-3">
-                  {/* Rating - compact on mobile */}
-                  <div className="hidden md:flex items-center gap-1 bg-white px-2 py-1 rounded text-sm">
-                    <div className="flex text-yellow-400">
-                      {[1,2,3,4,5].map(i => (
-                        <Star key={i} className={`w-4 h-4 ${store.rating !== null && i <= Math.round(store.rating!) ? 'fill-current' : 'text-gray-300'}`} />
-                      ))}
-                    </div>
-                    {store.rating !== null ? (
-                      <>
-                        <span className="font-semibold text-[#071d7f]">{store.rating}</span>
-                        <span className="text-[#071d7f]/70">({store.reviews} reseñas)</span>
-                      </>
-                    ) : (
-                      <span className="text-[#071d7f]/60 text-xs">Sin reseñas</span>
-                    )}
-                  </div>
-                  {/* Productos - hidden on mobile, shown in action icons row */}
-                  <div className="hidden md:block bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[#071d7f] text-xs md:text-sm">
-                    <span className="font-semibold">{store.productsCount}</span> prod.
-                  </div>
-                  {/* Seguidores - hidden on mobile, shown next to rating badge */}
-                  <div className="hidden md:block bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[#071d7f] text-xs md:text-sm">
-                    <span className="font-semibold">{store.followers}</span> seg.
-                  </div>
-                </div>
-
                 {/* Social Media Links */}
                 <div className="hidden md:flex gap-3 mt-1 md:mt-2">
                   {store.social.facebook && (
