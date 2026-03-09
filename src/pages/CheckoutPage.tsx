@@ -16,6 +16,7 @@ import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
 import { LocationSelector } from '@/components/checkout/LocationSelector';
 import { useApplyDiscount, AppliedDiscount } from '@/hooks/useApplyDiscount';
 import { useAdminPaymentMethodsReadOnly } from '@/hooks/usePaymentMethods';
+import { useStoreShippingOptionsReadOnly } from '@/hooks/useStoreShippingOptions';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
