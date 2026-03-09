@@ -2105,6 +2105,13 @@ const SellerAccountPage = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Shipping Options */}
+                {store && (
+                  <div className="mt-4">
+                    <StoreShippingConfig storeId={store.id} />
+                  </div>
+                )}
               </TabsContent>
 
               </div>
