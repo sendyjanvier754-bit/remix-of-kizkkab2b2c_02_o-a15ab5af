@@ -12,8 +12,8 @@ const MobileBottomNav = () => {
   const { items: b2cItems } = useB2CCartItems();
   const { items: b2bItems } = useB2BCartItems();
   
-  // Hide on admin routes only
-  const isAdminRoute = location.pathname.startsWith("/admin");
+  // Hide on admin routes (except support chat)
+  const isAdminRoute = location.pathname.startsWith("/admin") && !location.pathname.startsWith("/admin/soporte-chat");
   
   if (isAdminRoute) {
     return null;
