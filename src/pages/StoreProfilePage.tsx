@@ -365,25 +365,15 @@ const StoreProfilePage = () => {
                     {store.name}
                   </h1>
                   {store.is_active && <CheckCircle className="w-6 h-6 text-white" />}
-                </div>
-
-                {/* Location + Ver Descripción + Store ID */}
-                <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-3 flex-wrap">
-                  {store.description && (
-                    <Button
-                      onClick={() => setShowProfileModal(true)}
-                      variant="outline"
-                      size="sm"
-                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-6 md:h-9 px-2 md:px-3"
-                    >
-                      Ver Descripción
-                    </Button>
-                  )}
                   {store.slug && (
-                    <span className="text-xs text-[#071d7f] font-mono bg-white px-1.5 py-0.5 md:px-2 md:py-1 rounded select-all font-semibold">
+                    <span className="text-sm text-white/90 font-mono bg-white/20 px-2 py-1 rounded select-all">
                       {store.slug}
                     </span>
                   )}
+                </div>
+
+                {/* Location */}
+                <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-3 flex-wrap">
                   <div className="hidden md:flex items-center gap-1 text-sm text-white/90">
                     {store.location && (
                       <>
