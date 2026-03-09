@@ -12,49 +12,61 @@ const Footer = () => {
           <div>
             <h4 className="font-bold text-lg mb-4">SIVER</h4>
             <p className="text-gray-400 text-sm">{t('footer.tagline')}</p>
+            <Link to="/sobre-nosotros" className="text-sm text-gray-400 hover:text-white transition mt-3 inline-block">
+              Sobre nosotros →
+            </Link>
           </div>
 
           <div>
             <h4 className="font-bold mb-4">{t('footer.shopping')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="#" className="hover:text-white transition">{t('footer.justForYou')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.newArrivals')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.deals')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.womenClothing')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.menClothing')}</Link></li>
+              <li><Link to="/marketplace" className="hover:text-white transition">{t('footer.justForYou')}</Link></li>
+              <li><Link to="/tendencias" className="hover:text-white transition">{t('footer.newArrivals')}</Link></li>
+              <li><Link to="/marketplace" className="hover:text-white transition">{t('footer.deals')}</Link></li>
+              <li><Link to="/categorias" className="hover:text-white transition">{t('footer.womenClothing')}</Link></li>
+              <li><Link to="/categorias" className="hover:text-white transition">{t('footer.menClothing')}</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold mb-4">{t('footer.categories')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="#" className="hover:text-white transition">{t('footer.accessories')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.shoes')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.beauty')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.homeLife')}</Link></li>
+              <li><Link to="/categorias" className="hover:text-white transition">{t('footer.accessories')}</Link></li>
+              <li><Link to="/categorias" className="hover:text-white transition">{t('footer.shoes')}</Link></li>
+              <li><Link to="/categorias" className="hover:text-white transition">{t('footer.beauty')}</Link></li>
+              <li><Link to="/categorias" className="hover:text-white transition">{t('footer.homeLife')}</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold mb-4">{t('footer.account')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="#" className="hover:text-white transition">{t('footer.myAccount')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.myOrders')}</Link></li>
-              <li><Link to="#" className="hover:text-white transition">{t('footer.favorites')}</Link></li>
+              <li><Link to="/perfil" className="hover:text-white transition">{t('footer.myAccount')}</Link></li>
+              <li><Link to="/mis-compras" className="hover:text-white transition">{t('footer.myOrders')}</Link></li>
+              <li><Link to="/favoritos" className="hover:text-white transition">{t('footer.favorites')}</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold mb-4">{t('footer.contact')}</h4>
             <ul className="space-y-3 text-sm">
-              <li className="flex items-center gap-2 text-gray-400">
-                <Phone className="w-4 h-4" />+1 (509) 3234-5678
+              <li>
+                <a href="tel:+15093234567" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
+                  <Phone className="w-4 h-4" />+1 (509) 3234-5678
+                </a>
               </li>
-              <li className="flex items-center gap-2 text-gray-400">
-                <Mail className="w-4 h-4" />contacto@siver.com
+              <li>
+                <a href="mailto:contacto@siver.com" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
+                  <Mail className="w-4 h-4" />contacto@siver.com
+                </a>
               </li>
               <li className="flex items-center gap-2 text-gray-400">
                 <MapPin className="w-4 h-4" />Puerto Príncipe, Haití
+              </li>
+              <li>
+                <Link to="/contacto" className="text-gray-400 hover:text-white transition text-xs">
+                  Ver todos los canales →
+                </Link>
               </li>
             </ul>
           </div>
@@ -118,9 +130,9 @@ const Footer = () => {
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
           <p>{t('common.allRightsReserved')}</p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <Link to="#" className="hover:text-white transition">{t('common.termsConditions')}</Link>
-            <Link to="#" className="hover:text-white transition">{t('common.privacyPolicy')}</Link>
-            <Link to="#" className="hover:text-white transition">{t('common.cookiePolicy')}</Link>
+            <Link to="/terminos" className="hover:text-white transition">{t('common.termsConditions')}</Link>
+            <Link to="/privacidad" className="hover:text-white transition">{t('common.privacyPolicy')}</Link>
+            <Link to="/cookies" className="hover:text-white transition">{t('common.cookiePolicy')}</Link>
           </div>
         </div>
       </div>

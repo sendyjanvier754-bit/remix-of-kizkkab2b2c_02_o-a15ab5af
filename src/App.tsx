@@ -52,6 +52,12 @@ const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const EditProfilePage = lazy(() => import("./pages/EditProfilePage"));
 
+// Lazy loaded - Legal & Info Pages
+const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
+const PrivacyPage = lazy(() => import("./pages/legal/PrivacyPage"));
+const CookiesPage = lazy(() => import("./pages/legal/CookiesPage"));
+const ContactPage = lazy(() => import("./pages/legal/ContactPage"));
+const AboutPage = lazy(() => import("./pages/legal/AboutPage"));
 // Lazy loaded - Siver Match Pages (B2B2C Ecosystem)
 const SiverMatchHub = lazy(() => import("./pages/siver-match/SiverMatchHub"));
 const InvestorDashboard = lazy(() => import("./pages/siver-match/InvestorDashboard"));
@@ -147,6 +153,13 @@ const AppContent = () => {
             <Route path="/favoritos" element={<LazyRoute><FavoritesPage /></LazyRoute>} />
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />
             <Route path="/busqueda" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />
+            
+            {/* ========== LEGAL & INFO PAGES ========== */}
+            <Route path="/terminos" element={<LazyRoute><TermsPage /></LazyRoute>} />
+            <Route path="/privacidad" element={<LazyRoute><PrivacyPage /></LazyRoute>} />
+            <Route path="/cookies" element={<LazyRoute><CookiesPage /></LazyRoute>} />
+            <Route path="/contacto" element={<LazyRoute><ContactPage /></LazyRoute>} />
+            <Route path="/sobre-nosotros" element={<LazyRoute><AboutPage /></LazyRoute>} />
             
             {/* ========== SIVER MATCH (B2B2C Ecosystem) ========== */}
             <Route path="/siver-match" element={<LazyRoute><SiverMatchHub /></LazyRoute>} />
