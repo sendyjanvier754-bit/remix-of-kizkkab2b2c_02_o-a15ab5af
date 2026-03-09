@@ -565,8 +565,14 @@ const ProductPage = () => {
     if (product) {
       // eslint-disable-next-line no-console
       console.log('[ProductPage] loaded product:', product.nombre, 'length:', product.nombre?.length);
+      console.log('[ProductPage] product.store:', (product as any)?.store);
     }
   }, [product]);
+
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('[ProductPage] realStore:', realStore, 'isMobile:', isMobile);
+  }, [realStore, isMobile]);
   const handleQuantityChange = (newQty: number) => {
     const validQty = Math.max(minQuantity, Math.min(maxQuantity, newQty));
     setQuantity(validQty);
