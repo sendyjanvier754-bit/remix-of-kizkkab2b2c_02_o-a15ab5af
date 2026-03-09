@@ -42,6 +42,7 @@ export function AdminSidebar() {
 
   const analyticsItems = [
     { title: t('adminSidebar.poMaster'), url: "/admin/po-master", icon: Package },
+    { title: "Agentes de Compra", url: "/admin/purchasing-agents", icon: ShieldCheck },
     { title: t('adminSidebar.inventoryOptimization'), url: "/admin/cart-analytics", icon: BarChart3 },
     { title: t('adminSidebar.inventoryManagement'), url: "/admin/inventory", icon: Package },
   ];
