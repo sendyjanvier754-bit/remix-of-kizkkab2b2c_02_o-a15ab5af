@@ -3203,8 +3203,11 @@ export type Database = {
           metadata: Json | null
           notes: string | null
           order_number: string | null
+          payment_confirmed_at: string | null
           payment_method: string | null
+          payment_reference: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          payment_verified_by: string | null
           pickup_point_id: string | null
           shipping_address: Json | null
           shipping_cost: number | null
@@ -3228,8 +3231,11 @@ export type Database = {
           metadata?: Json | null
           notes?: string | null
           order_number?: string | null
+          payment_confirmed_at?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          payment_verified_by?: string | null
           pickup_point_id?: string | null
           shipping_address?: Json | null
           shipping_cost?: number | null
@@ -3253,8 +3259,11 @@ export type Database = {
           metadata?: Json | null
           notes?: string | null
           order_number?: string | null
+          payment_confirmed_at?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          payment_verified_by?: string | null
           pickup_point_id?: string | null
           shipping_address?: Json | null
           shipping_cost?: number | null
@@ -6911,6 +6920,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "store_reviews_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_shipping_options: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_days_max: number
+          estimated_days_min: number
+          id: string
+          is_active: boolean
+          is_free_above: number | null
+          name: string
+          shipping_cost: number
+          sort_order: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_days_max?: number
+          estimated_days_min?: number
+          id?: string
+          is_active?: boolean
+          is_free_above?: number | null
+          name: string
+          shipping_cost?: number
+          sort_order?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_days_max?: number
+          estimated_days_min?: number
+          id?: string
+          is_active?: boolean
+          is_free_above?: number | null
+          name?: string
+          shipping_cost?: number
+          sort_order?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_shipping_options_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
