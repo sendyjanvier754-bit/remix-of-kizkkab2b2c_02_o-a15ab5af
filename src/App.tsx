@@ -96,6 +96,7 @@ const AdminAgentOrders = lazy(() => import("./pages/admin/AdminAgentOrders"));
 const AdminSupportChats = lazy(() => import("./pages/admin/AdminSupportChats"));
 const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage"));
 const AdminPurchasingAgentsPage = lazy(() => import("./pages/admin/AdminPurchasingAgentsPage"));
+const AdminBrandingPage = lazy(() => import("./pages/admin/AdminBrandingPage"));
 const PurchasingAgentDashboard = lazy(() => import("./pages/purchasing-agent/PurchasingAgentDashboard"));
 const PurchasingAgentLogin = lazy(() => import("./pages/purchasing-agent/PurchasingAgentLogin"));
 
@@ -402,6 +403,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminGlobalLogisticsPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/branding" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminBrandingPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />

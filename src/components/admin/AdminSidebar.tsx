@@ -71,6 +71,7 @@ export function AdminSidebar() {
     { title: t('adminSidebar.pickupPoints'), url: "/admin/pickup-points", icon: MapPin },
     { title: t('adminSidebar.commissions'), url: "/admin/commissions", icon: Settings },
     { title: t('adminSidebar.paymentMethods'), url: "/admin/payment-methods", icon: CreditCard },
+    { title: "Identidad del Sistema", url: "/admin/branding", icon: Globe },
   ];
 
   const discountItems = [
