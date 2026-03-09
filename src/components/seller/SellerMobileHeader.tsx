@@ -428,10 +428,6 @@ const SellerMobileHeader = ({
           <User className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
         </Link>
 
-        {/* Support Chat */}
-        <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
-          <Mail className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
-        </Link>
 
         {/* Favorites heart */}
         <Link to="/seller/favoritos" className="relative flex-shrink-0">
