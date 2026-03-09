@@ -350,28 +350,9 @@ const GlobalMobileHeader = ({
       {/* Top search bar */}
       <div className="flex items-center gap-2 px-2 py-2 bg-[#fff3f3]">
         {/* Logo/Icon - cambia según el modo */}
-        {showB2BStyle ? (
-          <button className="relative flex-shrink-0">
-            <Mail className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-              5
-            </span>
-          </button>
-        ) : isSellerOrAdmin && showAsClient ? (/* Modo preview cliente para seller */
-      <div className="flex items-center gap-1 flex-shrink-0">
-            <button className="relative">
-              <Mail className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                5
-              </span>
-            </button>
-          </div>) : (/* Cliente normal */
-      <button className="relative flex-shrink-0">
-            <Mail className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-              5
-            </span>
-          </button>)}
+        <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
+          <Mail className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
+        </Link>
 
         {/* Search input with dropdown */}
         <div ref={searchRef} className="flex-1 relative min-w-0">

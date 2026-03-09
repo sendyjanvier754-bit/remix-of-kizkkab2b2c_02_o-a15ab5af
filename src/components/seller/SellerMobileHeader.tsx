@@ -433,7 +433,7 @@ const SellerMobileHeader = ({
 
         {/* Support Chat */}
         <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
-          <MessageCircle className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
+          <Mail className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
         </Link>
 
         {/* Favorites heart */}
