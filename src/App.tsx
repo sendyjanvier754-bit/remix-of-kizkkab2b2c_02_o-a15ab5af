@@ -52,6 +52,12 @@ const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const EditProfilePage = lazy(() => import("./pages/EditProfilePage"));
 
+// Lazy loaded - Legal & Info Pages
+const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
+const PrivacyPage = lazy(() => import("./pages/legal/PrivacyPage"));
+const CookiesPage = lazy(() => import("./pages/legal/CookiesPage"));
+const ContactPage = lazy(() => import("./pages/legal/ContactPage"));
+const AboutPage = lazy(() => import("./pages/legal/AboutPage"));
 // Lazy loaded - Siver Match Pages (B2B2C Ecosystem)
 const SiverMatchHub = lazy(() => import("./pages/siver-match/SiverMatchHub"));
 const InvestorDashboard = lazy(() => import("./pages/siver-match/InvestorDashboard"));
