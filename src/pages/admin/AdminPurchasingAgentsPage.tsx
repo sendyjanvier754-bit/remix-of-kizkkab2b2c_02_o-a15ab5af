@@ -233,78 +233,10 @@ export default function AdminPurchasingAgentsPage() {
         <TabsContent value="agents" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Agentes de Compra</h3>
-            <Dialog open={createAgentOpen} onOpenChange={setCreateAgentOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Agente
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Crear Agente de Compra</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label>Nombre Completo</Label>
-                    <Input 
-                      value={newAgentData.full_name}
-                      onChange={(e) => setNewAgentData(prev => ({ ...prev, full_name: e.target.value }))}
-                      placeholder="Nombre del agente"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input 
-                      type="email"
-                      value={newAgentData.email}
-                      onChange={(e) => setNewAgentData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="email@ejemplo.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Teléfono</Label>
-                    <Input 
-                      value={newAgentData.phone}
-                      onChange={(e) => setNewAgentData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="+86 123 456 7890"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>País de Operación</Label>
-                    <Select 
-                      value={newAgentData.country_code}
-                      onValueChange={(value) => {
-                        const countries: Record<string, string> = {
-                          CN: 'China',
-                          US: 'Estados Unidos',
-                          MX: 'México',
-                          CO: 'Colombia',
-                        };
-                        setNewAgentData(prev => ({ 
-                          ...prev, 
-                          country_code: value,
-                          country_name: countries[value] || value,
-                        }));
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="CN">China</SelectItem>
-                        <SelectItem value="US">Estados Unidos</SelectItem>
-                        <SelectItem value="MX">México</SelectItem>
-                        <SelectItem value="CO">Colombia</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={handleCreateAgent} className="w-full">
-                    Crear Agente
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setCreateAgentOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Agente
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
