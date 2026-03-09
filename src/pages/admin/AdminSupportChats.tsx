@@ -61,7 +61,7 @@ export default function AdminSupportChats() {
 
   // Desktop: side-by-side layout
   return (
-    <RoleAwareLayout title="Soporte - Live Chat" subtitle="Gestiona las conversaciones de soporte">
+    <RoleAwareLayout title="Soporte - Live Chat">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-10rem)]">
         <div className="lg:col-span-4 xl:col-span-3">
           <ChatList
