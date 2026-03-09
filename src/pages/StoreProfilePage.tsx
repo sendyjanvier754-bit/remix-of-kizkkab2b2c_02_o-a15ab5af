@@ -440,6 +440,113 @@ const StoreProfilePage = () => {
           </div>
         </div>
 
+        {/* Info Bar - Below Banner */}
+        <div className="bg-white rounded-lg shadow-md px-4 py-3 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+            {/* Mobile: Horizontal layout */}
+            <div className="flex md:hidden items-center gap-2 flex-wrap">
+              {store.description && (
+                <Button
+                  onClick={() => setShowProfileModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold text-xs h-7 px-2"
+                >
+                  Ver Descripción
+                </Button>
+              )}
+              <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs">
+                <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                {store.rating !== null ? (
+                  <span className="font-semibold text-[#071d7f]">{store.rating}</span>
+                ) : (
+                  <span className="text-[#071d7f]/60">Sin reseñas</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs">
+                <span className="font-semibold text-[#071d7f]">{store.followers}</span>
+                <span className="text-[#071d7f]/70">seg.</span>
+              </div>
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+              >
+                <Heart className={`w-4 h-4 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+              </button>
+              <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+                <MessageCircle className="w-4 h-4 text-[#071d7f]" />
+              </button>
+              <button onClick={handleShare} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+                <Share2 className="w-4 h-4 text-[#071d7f]" />
+              </button>
+            </div>
+
+            {/* Desktop: Horizontal layout */}
+            <div className="hidden md:flex items-center gap-6 flex-1">
+              {store.description && (
+                <Button
+                  onClick={() => setShowProfileModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold"
+                >
+                  Ver Descripción
+                </Button>
+              )}
+              <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded">
+                <div className="flex text-yellow-400">
+                  {[1,2,3,4,5].map(i => (
+                    <Star key={i} className={`w-4 h-4 ${store.rating !== null && i <= Math.round(store.rating!) ? 'fill-current' : 'text-gray-300'}`} />
+                  ))}
+                </div>
+                {store.rating !== null ? (
+                  <>
+                    <span className="font-semibold text-[#071d7f] ml-1">{store.rating}</span>
+                    <span className="text-[#071d7f]/70 text-sm">({store.reviews} reseñas)</span>
+                  </>
+                ) : (
+                  <span className="text-[#071d7f]/60 text-sm ml-1">Sin reseñas</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded text-sm">
+                <span className="font-semibold text-[#071d7f]">{store.followers}</span>
+                <span className="text-[#071d7f]/70">seguidores</span>
+              </div>
+            </div>
+
+            {/* Desktop: Action buttons */}
+            <div className="hidden md:flex items-center gap-2">
+              <Button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                size="sm"
+                className="bg-[#071d7f] hover:bg-[#071d7f]/90 text-white font-semibold"
+              >
+                <Heart className={`w-4 h-4 mr-1 ${isFollowing ? "fill-white" : ""}`} />
+                {isFollowing ? "Siguiendo" : "Seguir"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold"
+              >
+                <MessageCircle className="w-4 h-4 mr-1" />
+                Contactar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold"
+                onClick={handleShare}
+              >
+                <Share2 className="w-4 h-4 mr-1" />
+                Compartir
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Products Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Productos de {store.name}</h2>
