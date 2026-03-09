@@ -399,7 +399,7 @@ const AppContent = () => {
             <Route 
               path="/admin/soporte-chat" 
               element={
-                <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_AGENT]}>
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SELLER, UserRole.SALES_AGENT, UserRole.USER]}>
                   <LazyRoute><AdminSupportChats /></LazyRoute>
                 </ProtectedRoute>
               } 

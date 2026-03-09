@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, Package, Eye, EyeOff, User, Home } from "lucide-react";
+import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, Package, Eye, EyeOff, User, Home, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -426,6 +426,11 @@ const GlobalMobileHeader = ({
             <User className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
           </Link>
         )}
+
+        {/* Support Chat */}
+        <Link to="/admin/soporte-chat" className="relative flex-shrink-0">
+          <MessageCircle className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
+        </Link>
 
         {/* Favorites heart */}
         <Link to={favoritesLink} className="relative flex-shrink-0">

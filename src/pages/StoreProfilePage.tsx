@@ -124,6 +124,7 @@ const StoreProfilePage = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [bannerSliding, setBannerSliding] = useState(false);
@@ -266,7 +267,7 @@ const StoreProfilePage = () => {
 
       <main className={`container mx-auto px-4 ${isMobile ? 'pb-20' : 'pb-0'}`}>
         {/* Store Profile Card — banner (7257×2079) covers entire card as background */}
-        <div className="rounded-lg shadow-lg mt-4 relative z-10 mb-8 overflow-hidden">
+        <div className="rounded-lg shadow-lg mt-4 relative z-10 mb-8 overflow-hidden min-h-[220px] md:min-h-0">
           {/* Banner carousel as full-card background — slide right-to-left */}
           {(() => {
             const banners = storeData?.banner_images?.length
@@ -549,40 +550,46 @@ const StoreProfilePage = () => {
 
         {/* Products Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Productos de {store.name}</h2>
-
           {/* Search & Filter */}
-          <div className="bg-white rounded-lg p-4 mb-6 shadow">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Buscar en esta tienda..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
+          <div className="bg-white rounded-lg px-4 py-3 mb-6 shadow">
+            <div className="flex items-center gap-2">
+              {/* Search icon toggle */}
+              <button
+                onClick={() => { setShowSearch(v => !v); if (showSearch) setSearchQuery(""); }}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+                aria-label="Buscar"
+              >
+                <Search className="w-5 h-5 text-gray-500" />
+              </button>
+
+              {/* Expandable search input */}
+              {showSearch && (
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Buscar en esta tienda..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              )}
+
+              {/* Spacer when search is hidden */}
+              {!showSearch && <div className="flex-1" />}
 
               {/* Category Filter */}
-              <div className="md:w-48">
-                <select
-                  value={selectedCategory || ""}
-                  onChange={(e) => setSelectedCategory(e.target.value || null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Todas las categorías</option>
-                  {store.categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select
+                value={selectedCategory || ""}
+                onChange={(e) => setSelectedCategory(e.target.value || null)}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Todas las categorías</option>
+                {store.categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
