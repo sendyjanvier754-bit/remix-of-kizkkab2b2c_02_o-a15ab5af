@@ -107,7 +107,8 @@ export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectP
     try {
       await updateShipmentFreight.mutateAsync({
         shipmentId: selectedShipment.id,
-        freightPaymentUrl,
+        freightPaymentLink: freightPaymentUrl,
+        actualShippingCostUsd: 0,
       });
       setFreightOpen(false);
       setSelectedShipment(null);
