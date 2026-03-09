@@ -347,21 +347,6 @@ const StoreProfilePage = () => {
                       <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
                     </button>
                   )}
-                  {/* Rating + Followers pills - right aligned on mobile */}
-                  <div className="ml-auto flex items-center gap-1 flex-shrink-0">
-                    <div className="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded text-xs">
-                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
-                      {store.rating !== null ? (
-                        <span className="font-semibold text-[#071d7f]">{store.rating}</span>
-                      ) : (
-                        <span className="text-[#071d7f]/60 text-xs">Sin reseñas</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded text-xs">
-                      <span className="font-semibold text-[#071d7f]">{store.followers}</span>
-                      <span className="text-[#071d7f]/70">seg.</span>
-                    </div>
-                  </div>
                 </div>
                 {store.location && (
                   <div className="flex items-center gap-1 text-xs text-white/80">
@@ -380,25 +365,15 @@ const StoreProfilePage = () => {
                     {store.name}
                   </h1>
                   {store.is_active && <CheckCircle className="w-6 h-6 text-white" />}
-                </div>
-
-                {/* Location + Ver Descripción + Store ID */}
-                <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-3 flex-wrap">
-                  {store.description && (
-                    <Button
-                      onClick={() => setShowProfileModal(true)}
-                      variant="outline"
-                      size="sm"
-                      className="bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold text-xs md:text-sm h-6 md:h-9 px-2 md:px-3"
-                    >
-                      Ver Descripción
-                    </Button>
-                  )}
                   {store.slug && (
-                    <span className="text-xs text-[#071d7f] font-mono bg-white px-1.5 py-0.5 md:px-2 md:py-1 rounded select-all font-semibold">
+                    <span className="text-sm text-white/90 font-mono bg-white/20 px-2 py-1 rounded select-all">
                       {store.slug}
                     </span>
                   )}
+                </div>
+
+                {/* Location */}
+                <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-3 flex-wrap">
                   <div className="hidden md:flex items-center gap-1 text-sm text-white/90">
                     {store.location && (
                       <>
@@ -427,34 +402,6 @@ const StoreProfilePage = () => {
                   )}
                 </div>
 
-                {/* Stats */}
-                <div className="flex items-center gap-1.5 md:gap-4 flex-wrap text-sm mb-1 md:mb-3">
-                  {/* Rating - compact on mobile */}
-                  <div className="hidden md:flex items-center gap-1 bg-white px-2 py-1 rounded text-sm">
-                    <div className="flex text-yellow-400">
-                      {[1,2,3,4,5].map(i => (
-                        <Star key={i} className={`w-4 h-4 ${store.rating !== null && i <= Math.round(store.rating!) ? 'fill-current' : 'text-gray-300'}`} />
-                      ))}
-                    </div>
-                    {store.rating !== null ? (
-                      <>
-                        <span className="font-semibold text-[#071d7f]">{store.rating}</span>
-                        <span className="text-[#071d7f]/70">({store.reviews} reseñas)</span>
-                      </>
-                    ) : (
-                      <span className="text-[#071d7f]/60 text-xs">Sin reseñas</span>
-                    )}
-                  </div>
-                  {/* Productos - hidden on mobile, shown in action icons row */}
-                  <div className="hidden md:block bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[#071d7f] text-xs md:text-sm">
-                    <span className="font-semibold">{store.productsCount}</span> prod.
-                  </div>
-                  {/* Seguidores - hidden on mobile, shown next to rating badge */}
-                  <div className="hidden md:block bg-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[#071d7f] text-xs md:text-sm">
-                    <span className="font-semibold">{store.followers}</span> seg.
-                  </div>
-                </div>
-
                 {/* Social Media Links */}
                 <div className="hidden md:flex gap-3 mt-1 md:mt-2">
                   {store.social.facebook && (
@@ -479,50 +426,6 @@ const StoreProfilePage = () => {
                   )}
                 </div>
               </div>
-
-              {/* Action Buttons - icon-only on mobile, full buttons on desktop */}
-              <div className="flex flex-row md:flex-col gap-3 md:gap-2 w-auto md:w-auto items-center justify-start md:justify-start">
-                <button
-                  onClick={handleFollowToggle}
-                  disabled={followLoading}
-                  className="md:hidden p-0 bg-transparent border-0 cursor-pointer disabled:opacity-50"
-                >
-                  <Heart className={`w-5 h-5 ${isFollowing ? "fill-red-500 text-red-500" : "text-white"}`} />
-                </button>
-                <button className="md:hidden p-0 bg-transparent border-0 cursor-pointer">
-                  <MessageCircle className="w-5 h-5 text-white" />
-                </button>
-                <button onClick={handleShare} className="md:hidden p-0 bg-transparent border-0 cursor-pointer">
-                  <Share2 className="w-5 h-5 text-white" />
-                </button>
-                {/* Productos badge - mobile only, right-aligned */}
-                <div className="md:hidden ml-auto bg-white px-1.5 py-0.5 rounded text-[#071d7f] text-xs">
-                  <span className="font-semibold">{store.productsCount}</span> prod.
-                </div>
-                <Button
-                  onClick={handleFollowToggle}
-                  disabled={followLoading}
-                  className="hidden md:inline-flex md:w-40 bg-white hover:bg-white/90 text-[#071d7f] font-semibold border-0"
-                >
-                  <Heart className={`w-4 h-4 mr-2 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
-                  {isFollowing ? "Siguiendo" : "Seguir"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="hidden md:inline-flex md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2 text-[#071d7f]" />
-                  Contactar
-                </Button>
-                <Button
-                  variant="outline"
-                  className="hidden md:inline-flex md:w-40 bg-white border-white text-[#071d7f] hover:bg-white/90 font-semibold"
-                  onClick={handleShare}
-                >
-                  <Share2 className="w-4 h-4 mr-2 text-[#071d7f]" />
-                  Compartir
-                </Button>
-              </div>
             </div>
 
             {/* Payment Methods Section */}
@@ -534,6 +437,113 @@ const StoreProfilePage = () => {
                 />
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Info Bar - Below Banner */}
+        <div className="bg-white rounded-lg shadow-md px-4 py-3 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+            {/* Mobile: Horizontal layout */}
+            <div className="flex md:hidden items-center gap-2 flex-wrap">
+              {store.description && (
+                <Button
+                  onClick={() => setShowProfileModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold text-xs h-7 px-2"
+                >
+                  Ver Descripción
+                </Button>
+              )}
+              <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs">
+                <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                {store.rating !== null ? (
+                  <span className="font-semibold text-[#071d7f]">{store.rating}</span>
+                ) : (
+                  <span className="text-[#071d7f]/60">Sin reseñas</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs">
+                <span className="font-semibold text-[#071d7f]">{store.followers}</span>
+                <span className="text-[#071d7f]/70">seg.</span>
+              </div>
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+              >
+                <Heart className={`w-4 h-4 ${isFollowing ? "fill-red-500 text-red-500" : "text-[#071d7f]"}`} />
+              </button>
+              <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+                <MessageCircle className="w-4 h-4 text-[#071d7f]" />
+              </button>
+              <button onClick={handleShare} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+                <Share2 className="w-4 h-4 text-[#071d7f]" />
+              </button>
+            </div>
+
+            {/* Desktop: Horizontal layout */}
+            <div className="hidden md:flex items-center gap-6 flex-1">
+              {store.description && (
+                <Button
+                  onClick={() => setShowProfileModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold"
+                >
+                  Ver Descripción
+                </Button>
+              )}
+              <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded">
+                <div className="flex text-yellow-400">
+                  {[1,2,3,4,5].map(i => (
+                    <Star key={i} className={`w-4 h-4 ${store.rating !== null && i <= Math.round(store.rating!) ? 'fill-current' : 'text-gray-300'}`} />
+                  ))}
+                </div>
+                {store.rating !== null ? (
+                  <>
+                    <span className="font-semibold text-[#071d7f] ml-1">{store.rating}</span>
+                    <span className="text-[#071d7f]/70 text-sm">({store.reviews} reseñas)</span>
+                  </>
+                ) : (
+                  <span className="text-[#071d7f]/60 text-sm ml-1">Sin reseñas</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded text-sm">
+                <span className="font-semibold text-[#071d7f]">{store.followers}</span>
+                <span className="text-[#071d7f]/70">seguidores</span>
+              </div>
+            </div>
+
+            {/* Desktop: Action buttons */}
+            <div className="hidden md:flex items-center gap-2">
+              <Button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                size="sm"
+                className="bg-[#071d7f] hover:bg-[#071d7f]/90 text-white font-semibold"
+              >
+                <Heart className={`w-4 h-4 mr-1 ${isFollowing ? "fill-white" : ""}`} />
+                {isFollowing ? "Siguiendo" : "Seguir"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold"
+              >
+                <MessageCircle className="w-4 h-4 mr-1" />
+                Contactar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold"
+                onClick={handleShare}
+              >
+                <Share2 className="w-4 h-4 mr-1" />
+                Compartir
+              </Button>
+            </div>
           </div>
         </div>
 
