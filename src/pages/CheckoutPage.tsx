@@ -1027,7 +1027,7 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!moncashAutoAvailable && !moncashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">MonCash no está disponible para este vendedor.</p>
+                      <p className="text-sm text-yellow-700">MonCash no está disponible actualmente.</p>
                     </div>
                   )}
                 </div>
