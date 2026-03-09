@@ -12,13 +12,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePurchasingAgentAdmin } from '@/hooks/usePurchasingAgent';
+import { CreateAgentDialog } from '@/components/purchasing-agent/CreateAgentDialog';
 import { 
   Users, Package, ShoppingCart, Truck, CheckCircle2, XCircle, 
   Clock, AlertTriangle, TrendingUp, Play, ExternalLink, Video,
-  Scale, Ruler, DollarSign, FileText, Plus, RefreshCw
+  Scale, Ruler, DollarSign, FileText, Plus, RefreshCw, Copy, ShieldCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 export default function AdminPurchasingAgentsPage() {
   const [activeTab, setActiveTab] = useState('dashboard');

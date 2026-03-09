@@ -158,6 +158,7 @@ const AppContent = () => {
             <Route path="/seller/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/agente-compra/login" element={<LazyRoute><PurchasingAgentLogin /></LazyRoute>} />
             
             {/* Seller Registration Landing Page */}
             <Route path="/registro-vendedor" element={<SellerRegistrationPage />} />
