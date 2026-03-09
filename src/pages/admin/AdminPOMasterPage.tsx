@@ -377,6 +377,65 @@ export default function AdminPOMasterPage() {
             </DialogTitle>
           </DialogHeader>
 
+          {/* Financial Summary */}
+          {(() => {
+            // Calculate totals from orders
+            let totalShippingPaid = 0;
+            let totalProductsPaid = 0;
+            let estimatedPurchaseCost = 0;
+
+            (poOrders || []).forEach((order: any) => {
+              // Shipping paid by customer
+              totalShippingPaid += Number(order.shipping_cost_total_usd || order.shipping_cost || 0);
+              
+              (order.order_items_b2b || []).forEach((item: any) => {
+                // Products paid by customer
+                totalProductsPaid += Number(item.precio_total || 0);
+                
+                // Estimated purchase cost (base price from Excel)
+                const basePrice = Number(item.costo_base_usd || item.product?.precio_base || 0);
+                estimatedPurchaseCost += basePrice * Number(item.cantidad || 1);
+              });
+            });
+
+            const estimatedProfit = (totalProductsPaid + totalShippingPaid) - estimatedPurchaseCost;
+
+            return (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 p-3 bg-muted/50 rounded-lg">
+                <div className="text-center p-3 bg-background rounded-lg border">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Truck className="h-4 w-4 text-blue-500" />
+                    <span className="text-xs text-muted-foreground">Envío Pagado</span>
+                  </div>
+                  <p className="text-lg font-bold text-blue-600">${totalShippingPaid.toFixed(2)}</p>
+                </div>
+                <div className="text-center p-3 bg-background rounded-lg border">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <DollarSign className="h-4 w-4 text-green-500" />
+                    <span className="text-xs text-muted-foreground">Productos Pagado</span>
+                  </div>
+                  <p className="text-lg font-bold text-green-600">${totalProductsPaid.toFixed(2)}</p>
+                </div>
+                <div className="text-center p-3 bg-background rounded-lg border">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Calculator className="h-4 w-4 text-orange-500" />
+                    <span className="text-xs text-muted-foreground">Costo Compra Est.</span>
+                  </div>
+                  <p className="text-lg font-bold text-orange-600">${estimatedPurchaseCost.toFixed(2)}</p>
+                </div>
+                <div className="text-center p-3 bg-background rounded-lg border">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <span className="text-xs text-muted-foreground">Margen Est.</span>
+                  </div>
+                  <p className={`text-lg font-bold ${estimatedProfit >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                    ${estimatedProfit.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+
           <Tabs defaultValue="articulos">
             <TabsList className="mb-4">
               <TabsTrigger value="articulos">
