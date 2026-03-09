@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useBranding } from "@/hooks/useBranding";
 
 const Footer = () => {
   const { t } = useTranslation();
+  const { getValue: getBranding } = useBranding();
 
   return (
     <footer className="hidden md:block bg-gray-900 text-white">
