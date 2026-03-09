@@ -15,7 +15,7 @@ import { validateB2CCheckout, getFieldError, hasFieldError, CheckoutValidationEr
 import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
 import { LocationSelector } from '@/components/checkout/LocationSelector';
 import { useApplyDiscount, AppliedDiscount } from '@/hooks/useApplyDiscount';
-import { useStorePaymentMethodsReadOnly, useAdminPaymentMethodsReadOnly } from '@/hooks/usePaymentMethods';
+import { useAdminPaymentMethodsReadOnly } from '@/hooks/usePaymentMethods';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
