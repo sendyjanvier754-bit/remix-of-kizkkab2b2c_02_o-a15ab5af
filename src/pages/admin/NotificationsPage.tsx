@@ -1,5 +1,5 @@
 import { useNotifications, DBNotification } from '@/hooks/useNotifications';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { RoleAwareLayout } from '@/components/layout/RoleAwareLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,7 @@ export default function NotificationsPage() {
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <AdminLayout title="Notificaciones" subtitle={`${unreadCount} sin leer`}>
+    <RoleAwareLayout title="Notificaciones" subtitle={`${unreadCount} sin leer`}>
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader className="flex-row items-center justify-between py-4">
@@ -56,7 +56,7 @@ export default function NotificationsPage() {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </RoleAwareLayout>
   );
 }
 

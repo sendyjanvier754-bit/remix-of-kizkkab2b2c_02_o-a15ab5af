@@ -8,7 +8,7 @@ import AgentDraftList from '@/components/agent/AgentDraftList';
 import AgentProductSelector from '@/components/agent/AgentProductSelector';
 import AgentCartDraft from '@/components/agent/AgentCartDraft';
 import AgentShippingConfig from '@/components/agent/AgentShippingConfig';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { RoleAwareLayout } from '@/components/layout/RoleAwareLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -89,7 +89,7 @@ export default function AdminAgentOrders() {
   const effectiveStep = activeSession ? 'workspace' : step;
 
   return (
-    <AdminLayout title="Pedidos por Agente" subtitle="Crea pedidos en nombre de los usuarios">
+    <RoleAwareLayout title="Pedidos por Agente" subtitle="Crea pedidos en nombre de los usuarios">
       {activeSession && targetUser && (
         <div className="mb-4">
           <AgentSessionTimer
@@ -206,6 +206,6 @@ export default function AdminAgentOrders() {
             </div>
           </div>
         )}
-    </AdminLayout>
+    </RoleAwareLayout>
   );
 }
