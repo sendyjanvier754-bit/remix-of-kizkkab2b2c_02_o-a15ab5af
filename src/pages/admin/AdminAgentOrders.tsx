@@ -89,7 +89,7 @@ export default function AdminAgentOrders() {
   const effectiveStep = activeSession ? 'workspace' : step;
 
   return (
-    <AdminLayout title="Pedidos por Agente" subtitle="Crea pedidos en nombre de los usuarios">
+    <RoleAwareLayout title="Pedidos por Agente" subtitle="Crea pedidos en nombre de los usuarios">
       {activeSession && targetUser && (
         <div className="mb-4">
           <AgentSessionTimer
