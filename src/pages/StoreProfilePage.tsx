@@ -326,7 +326,7 @@ const StoreProfilePage = () => {
           <div className="absolute inset-0 bg-black/50" />
 
           {/* Content — sits above the banner */}
-          <div className="relative z-10 px-3 py-1.5 md:px-6 md:py-6">
+          <div className="relative z-10 px-3 py-4 md:px-6 md:py-6">
             {/* Logo + Title inline on mobile */}
             <div className="flex items-center gap-2 md:gap-4 mb-1 md:mb-4">
               <div
