@@ -134,74 +134,73 @@ const SellerDashboard = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 mb-8">
             {/* Recent Orders */}
             <div className="lg:col-span-2">
               <Card>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                      <Package className="h-5 w-5 text-[#071d7f]" />
+                <div className="p-3 md:p-6">
+                  <div className="flex items-center justify-between mb-3 md:mb-6">
+                    <h2 className="text-base md:text-xl font-bold flex items-center gap-2">
+                      <Package className="h-4 w-4 md:h-5 md:w-5 text-[#071d7f]" />
                       {t('sellerDashboard.recentOrders')}
                     </h2>
-                    <Button asChild variant="outline" size="sm">
+                    <Button asChild variant="outline" size="sm" className="text-xs h-7 md:h-9">
                       <Link to="/seller/mis-compras">
                         {t('sellerDashboard.viewAll')}
-                        <ArrowRight className="h-4 w-4 ml-2" />
+                        <ArrowRight className="h-3 w-3 md:h-4 md:w-4 ml-1 md:ml-2" />
                       </Link>
                     </Button>
                   </div>
 
                   {recentOrders.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Package className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground">{t('sellerDashboard.noOrdersYet')}</p>
-                      <Button asChild className="mt-4 bg-[#071d7f] hover:bg-[#0a2a9f]">
+                    <div className="text-center py-6 md:py-8">
+                      <Package className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">{t('sellerDashboard.noOrdersYet')}</p>
+                      <Button asChild className="mt-4 bg-[#071d7f] hover:bg-[#0a2a9f]" size="sm">
                         <Link to="/seller/adquisicion-lotes">
                           {t('sellerDashboard.startBuying')}
                         </Link>
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-2 md:space-y-4">
                       {recentOrders.map((order) => (
                         <div
                           key={order.id}
-                          className="p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                          className="p-2.5 md:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <p className="font-semibold text-sm">
-                                {t('sellerDashboard.orderNumber', { id: order.id.slice(0, 8).toUpperCase() })}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {new Date(order.created_at).toLocaleDateString('es-ES')}
-                              </p>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className={
-                                order.status === 'paid'
-                                  ? 'bg-green-50 text-green-700 border-green-200'
-                                  : order.status === 'placed'
-                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                    : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                              }
-                            >
-                              {order.status === 'paid'
-                                ? t('orders.statuses.paid')
-                                : order.status === 'placed'
-                                  ? t('orders.statuses.placed')
-                                  : t('orders.statuses.pending')}
-                            </Badge>
-                          </div>
                           <div className="flex items-center justify-between">
-                            <p className="text-sm">
-                              <span className="text-muted-foreground">{t('sellerDashboard.productsCount', { count: order.total_quantity })} - </span>
-                              <span className="font-semibold text-foreground">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="min-w-0">
+                                <p className="font-semibold text-xs md:text-sm truncate">
+                                  {t('sellerDashboard.orderNumber', { id: order.id.slice(0, 8).toUpperCase() })}
+                                </p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground">
+                                  {new Date(order.created_at).toLocaleDateString('es-ES')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="font-semibold text-xs md:text-sm text-foreground">
                                 ${order.total_amount.toFixed(2)}
                               </span>
-                            </p>
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] md:text-xs px-1.5 py-0 md:px-2 md:py-0.5 ${
+                                  order.status === 'paid'
+                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                    : order.status === 'placed'
+                                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                      : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                }`}
+                              >
+                                {order.status === 'paid'
+                                  ? t('orders.statuses.paid')
+                                  : order.status === 'placed'
+                                    ? t('orders.statuses.placed')
+                                    : t('orders.statuses.pending')}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
                       ))}
