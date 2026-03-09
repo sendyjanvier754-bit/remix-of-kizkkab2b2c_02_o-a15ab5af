@@ -52,6 +52,7 @@ const MyPurchasesPage = lazy(() => import("./pages/MyPurchasesPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const EditProfilePage = lazy(() => import("./pages/EditProfilePage"));
+const UserSupportPage = lazy(() => import("./pages/UserSupportPage"));
 
 // Lazy loaded - Legal & Info Pages
 const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
@@ -155,6 +156,7 @@ const AppContent = () => {
             <Route path="/favoritos" element={<LazyRoute><FavoritesPage /></LazyRoute>} />
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />
             <Route path="/busqueda" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />
+            <Route path="/soporte" element={<ProtectedRoute><LazyRoute><UserSupportPage /></LazyRoute></ProtectedRoute>} />
             
             {/* ========== LEGAL & INFO PAGES ========== */}
             <Route path="/terminos" element={<LazyRoute><TermsPage /></LazyRoute>} />

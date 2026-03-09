@@ -100,6 +100,9 @@ const Header = ({
   // Determine which cart to use
   const isB2B = role === UserRole.SELLER || role === UserRole.ADMIN;
   const showB2B = isB2B && !isClientPreview && !isHomePage;
+  const supportChatPath = (role === UserRole.ADMIN || role === UserRole.SELLER || role === UserRole.SALES_AGENT)
+    ? '/admin/soporte-chat'
+    : '/soporte';
   const cartItems = showB2B ? b2bItems : b2cItems;
   const cartCount = cartItems.reduce((sum, item) => sum + ('quantity' in item ? item.quantity : item.cantidad), 0);
   const cartLink = showB2B ? "/seller/carrito" : "/carrito";
@@ -282,9 +285,9 @@ const Header = ({
               onClick={(e) => {
                 e.preventDefault();
                 if (user) {
-                  navigate('/admin/soporte-chat');
+                  navigate(supportChatPath);
                 } else {
-                  sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+                  sessionStorage.setItem('post_login_redirect', '/soporte');
                   navigate('/cuenta');
                 }
               }}
@@ -344,9 +347,9 @@ const Header = ({
               className="relative flex-shrink-0 bg-transparent border-0 p-0 cursor-pointer"
               onClick={() => {
                 if (user) {
-                  navigate('/admin/soporte-chat');
+                  navigate(supportChatPath);
                 } else {
-                  sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+                  sessionStorage.setItem('post_login_redirect', '/soporte');
                   navigate('/cuenta');
                 }
               }}
@@ -514,9 +517,9 @@ const Header = ({
               className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition bg-transparent border-0 cursor-pointer"
               onClick={() => {
                 if (user) {
-                  navigate('/admin/soporte-chat');
+                  navigate(supportChatPath);
                 } else {
-                  sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+                  sessionStorage.setItem('post_login_redirect', '/soporte');
                   navigate('/cuenta');
                 }
               }}
