@@ -23,7 +23,7 @@ export default function NotificationsPage() {
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <AdminLayout title="Notificaciones" subtitle={`${unreadCount} sin leer`}>
+    <RoleAwareLayout title="Notificaciones" subtitle={`${unreadCount} sin leer`}>
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader className="flex-row items-center justify-between py-4">
