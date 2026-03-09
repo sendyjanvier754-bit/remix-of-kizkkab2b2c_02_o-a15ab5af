@@ -86,7 +86,7 @@ export function usePOMasterPerMarket() {
       const orderIds = orders.map((o: any) => o.id);
       const { data: items } = await supabase
         .from('order_items_b2b')
-        .select('id, order_id, nombre, sku, cantidad, precio_unitario, precio_total, color, size, variant_id, product_id, variant_attributes, metadata, image')
+        .select('id, order_id, nombre, sku, cantidad, precio_unitario, precio_total, color, size, variant_id, product_id, variant_attributes, metadata, image, costo_base_usd, shipping_cost_usd')
         .in('order_id', orderIds);
 
       // Step 4: fetch products and variants
@@ -99,7 +99,7 @@ export function usePOMasterPerMarket() {
 
       const [productsRes, variantsByIdRes, variantsBySkuRes] = await Promise.all([
         productIds.length > 0
-          ? supabase.from('products').select('*').in('id', productIds as string[])
+          ? supabase.from('products').select('*, precio_base').in('id', productIds as string[])
           : Promise.resolve({ data: [] }),
         explicitVariantIds.length > 0
           ? supabase.from('product_variants').select('*').in('id', explicitVariantIds as string[])
