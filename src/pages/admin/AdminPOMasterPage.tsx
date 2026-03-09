@@ -15,7 +15,8 @@ import { usePOMasterPerMarket, MarketPODashboardItem } from '@/hooks/usePOMaster
 import { 
   Globe, Package, PlayCircle, StopCircle, Settings, Truck, 
   Clock, AlertTriangle, CheckCircle, BarChart3, Eye,
-  ArrowRight, Plane, Building2, Hash, Timer, ExternalLink, ShoppingBag, FileDown
+  ArrowRight, Plane, Building2, Hash, Timer, ExternalLink, ShoppingBag, FileDown,
+  DollarSign, Calculator
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
