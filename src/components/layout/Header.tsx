@@ -14,6 +14,7 @@ import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import { useBranding } from "@/hooks/useBranding";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
