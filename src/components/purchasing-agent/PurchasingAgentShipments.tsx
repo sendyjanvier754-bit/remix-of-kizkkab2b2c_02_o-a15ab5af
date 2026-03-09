@@ -127,7 +127,8 @@ export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectP
     try {
       await uploadTracking.mutateAsync({
         shipmentId,
-        trackingNumber,
+        internationalTracking: trackingNumber,
+        carrierName: '',
       });
       setTrackingNumber('');
       toast.success('Tracking actualizado');

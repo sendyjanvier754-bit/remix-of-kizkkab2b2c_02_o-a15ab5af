@@ -73,8 +73,8 @@ export function PurchasingAgentPurchases({ agentProfile, selectedPOId, onSelectP
       await updatePurchaseCart.mutateAsync({
         purchaseId: selectedPurchase.id,
         cartScreencastUrl,
-        paymentLinkUrl,
-        supplierOrderId,
+        paymentLink: paymentLinkUrl,
+        actualCostUsd: 0,
       });
       setCartLinkOpen(false);
       setSelectedPurchase(null);

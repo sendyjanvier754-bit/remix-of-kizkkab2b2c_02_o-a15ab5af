@@ -71,7 +71,7 @@ export function PurchasingAgentQC({ agentProfile, selectedPOId, onSelectPO }: Pu
     try {
       await updateItemQC.mutateAsync({
         itemId: selectedItem.id,
-        status: decision,
+        qcStatus: decision,
         qcPhotos: uploadedPhotos,
         qcVideos: uploadedVideos,
         qcNotes,
