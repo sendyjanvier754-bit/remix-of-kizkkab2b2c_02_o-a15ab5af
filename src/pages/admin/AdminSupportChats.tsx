@@ -3,21 +3,63 @@ import { useSearchParams } from 'react-router-dom';
 import { RoleAwareLayout } from '@/components/layout/RoleAwareLayout';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatWindow } from '@/components/chat/ChatWindow';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 export default function AdminSupportChats() {
   const [searchParams] = useSearchParams();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const { user } = useAuth();
   const isAdmin = user?.role === UserRole.ADMIN;
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const chatFromUrl = searchParams.get('chat');
     if (chatFromUrl) setSelectedChatId(chatFromUrl);
   }, [searchParams]);
 
+  const handleBack = () => setSelectedChatId(null);
+
+  // Mobile: show either list or chat window (not both)
+  if (isMobile) {
+    return (
+      <RoleAwareLayout title="Soporte - Live Chat" subtitle="Gestiona las conversaciones de soporte">
+        <div className="h-[calc(100vh-10rem)]">
+          {selectedChatId ? (
+            <div className="h-full flex flex-col">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                className="self-start mb-2 gap-1 text-muted-foreground"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Volver a chats
+              </Button>
+              <div className="flex-1 min-h-0">
+                <ChatWindow
+                  chatId={selectedChatId}
+                  isStaff={isAdmin}
+                  onClose={handleBack}
+                />
+              </div>
+            </div>
+          ) : (
+            <ChatList
+              onSelectChat={setSelectedChatId}
+              selectedChatId={selectedChatId}
+              isStaff={isAdmin}
+            />
+          )}
+        </div>
+      </RoleAwareLayout>
+    );
+  }
+
+  // Desktop: side-by-side layout
   return (
     <RoleAwareLayout title="Soporte - Live Chat" subtitle="Gestiona las conversaciones de soporte">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-10rem)]">
