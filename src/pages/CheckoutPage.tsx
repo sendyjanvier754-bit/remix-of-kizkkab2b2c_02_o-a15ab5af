@@ -171,14 +171,7 @@ const CheckoutPage = () => {
     },
   ];
 
-  // Get first store ID from cart items
-  const firstStoreId = useMemo(() => {
-    for (const item of items) {
-      if (item.storeId) return item.storeId;
-    }
-    return undefined;
-  }, [items]);
-
+  // Get first store name from cart items (for display only)
   const firstStoreName = useMemo(() => {
     for (const item of items) {
       if (item.storeName) return item.storeName;
@@ -186,16 +179,9 @@ const CheckoutPage = () => {
     return 'Vendedor';
   }, [items]);
 
-  // Fetch SELLER payment methods (for manual payments - direct to seller)
-  const { 
-    bankMethod: storeBank,
-    moncashMethod: storeMoncash,
-    natcashMethod: storeNatcash,
-    isLoading: paymentMethodsLoading 
-  } = useStorePaymentMethodsReadOnly(firstStoreId);
-
-  // Fetch ADMIN payment methods (for automatic payments - via platform API)
+  // Fetch ADMIN payment methods (all B2C payments go through admin/platform)
   const {
+    bankMethod: adminBank,
     moncashMethod: adminMoncash,
     natcashMethod: adminNatcash,
     isLoading: adminPaymentMethodsLoading
@@ -205,9 +191,10 @@ const CheckoutPage = () => {
   const moncashAutoAvailable = adminMoncash?.automatic_enabled && adminMoncash?.is_active;
   const natcashAutoAvailable = adminNatcash?.automatic_enabled && adminNatcash?.is_active;
   
-  // Check if manual payment is available (seller has configured their payment details)
-  const moncashManualAvailable = !!storeMoncash?.phone_number;
-  const natcashManualAvailable = !!storeNatcash?.phone_number;
+  // Check if manual payment is available (admin has configured payment details)
+  const moncashManualAvailable = !!adminMoncash?.phone_number;
+  const natcashManualAvailable = !!adminNatcash?.phone_number;
+  const bankManualAvailable = !!adminBank?.account_number;
 
   // Auto-select payment mode based on availability when payment method changes
   useEffect(() => {
@@ -229,26 +216,26 @@ const CheckoutPage = () => {
     }
   }, [paymentMethod, moncashAutoAvailable, moncashManualAvailable, natcashAutoAvailable, natcashManualAvailable]);
 
-  // Build seller payment info from database (for manual payments)
-  const sellerPaymentInfo = useMemo(() => {
+  // Build platform payment info from admin-configured methods
+  const platformPaymentInfo = useMemo(() => {
     return {
-      storeName: firstStoreName,
-      moncash: storeMoncash ? {
-        phone_number: storeMoncash.phone_number || '',
-        name: storeMoncash.holder_name || '',
+      platformName: 'Plataforma',
+      moncash: adminMoncash ? {
+        phone_number: adminMoncash.phone_number || '',
+        name: adminMoncash.holder_name || '',
       } : null,
-      natcash: storeNatcash ? {
-        phone_number: storeNatcash.phone_number || '',
-        name: storeNatcash.holder_name || '',
+      natcash: adminNatcash ? {
+        phone_number: adminNatcash.phone_number || '',
+        name: adminNatcash.holder_name || '',
       } : null,
-      bank: storeBank ? {
-        bank_name: storeBank.bank_name || '',
-        account_number: storeBank.account_number || '',
-        account_holder: storeBank.account_holder || '',
-        account_type: storeBank.account_type || '',
+      bank: adminBank ? {
+        bank_name: adminBank.bank_name || '',
+        account_number: adminBank.account_number || '',
+        account_holder: adminBank.account_holder || '',
+        account_type: adminBank.account_type || '',
       } : null,
     };
-  }, [firstStoreName, storeBank, storeMoncash, storeNatcash]);
+  }, [adminBank, adminMoncash, adminNatcash]);
 
   // Helper to mask phone/account numbers
   const maskNumber = (num: string | undefined) => {
