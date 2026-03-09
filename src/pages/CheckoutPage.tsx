@@ -172,13 +172,32 @@ const CheckoutPage = () => {
     },
   ];
 
-  // Get first store name from cart items (for display only)
+  // Get first store ID and name from cart items
+  const firstStoreId = useMemo(() => {
+    for (const item of items) {
+      if (item.storeId) return item.storeId;
+    }
+    return undefined;
+  }, [items]);
+
   const firstStoreName = useMemo(() => {
     for (const item of items) {
       if (item.storeName) return item.storeName;
     }
     return 'Vendedor';
   }, [items]);
+
+  // Fetch seller shipping options (hybrid: seller config + fallback to centralized)
+  const { options: sellerShippingOptions, isLoading: shippingOptionsLoading } = useStoreShippingOptionsReadOnly(firstStoreId);
+  const [selectedShippingOptionId, setSelectedShippingOptionId] = useState<string | null>(null);
+  const hasSellerShipping = sellerShippingOptions.length > 0;
+
+  // Auto-select first shipping option
+  useEffect(() => {
+    if (sellerShippingOptions.length > 0 && !selectedShippingOptionId) {
+      setSelectedShippingOptionId(sellerShippingOptions[0].id);
+    }
+  }, [sellerShippingOptions, selectedShippingOptionId]);
 
   // Fetch ADMIN payment methods (all B2C payments go through admin/platform)
   const {
