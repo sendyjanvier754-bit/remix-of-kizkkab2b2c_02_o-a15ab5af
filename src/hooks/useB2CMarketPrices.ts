@@ -132,7 +132,7 @@ export const calculateCartProfit = async (
   }>
 ): Promise<CartProfitProjection | null> => {
   try {
-    const { data, error } = await supabase.rpc('calculate_cart_projected_profit', {
+    const { data, error } = await (supabase.rpc as any)('calculate_cart_projected_profit', {
       p_cart_items: cartItems,
     });
 
