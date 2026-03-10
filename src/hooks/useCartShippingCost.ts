@@ -100,10 +100,10 @@ export const useCartShippingCost = (
         }
 
         setSummary({
-          weight_rounded_kg: parseFloat(data[0].weight_rounded_kg),
-          base_cost: parseFloat(data[0].base_cost),
-          extra_cost: parseFloat(data[0].extra_cost),
-          total_cost_with_type: parseFloat(data[0].total_cost_with_type),
+          weight_rounded_kg: parseFloat(String(data[0].weight_rounded_kg)),
+          base_cost: parseFloat(String(data[0].base_cost)),
+          extra_cost: parseFloat(String(data[0].extra_cost)),
+          total_cost_with_type: parseFloat(String(data[0].total_cost_with_type)),
           shipping_type_name: data[0].shipping_type_name,
           shipping_type_display: data[0].shipping_type_display,
           eta_min: selectedTier ? selectedTier.tramo_a_eta_min + selectedTier.tramo_b_eta_min : undefined,
@@ -161,10 +161,10 @@ export const useCartShippingCost = (
         }
 
         const result: CartShippingSummary = {
-          weight_rounded_kg: parseFloat(data[0].weight_rounded_kg),
-          base_cost: parseFloat(data[0].base_cost),
-          extra_cost: parseFloat(data[0].extra_cost),
-          total_cost_with_type: parseFloat(data[0].total_cost_with_type),
+          weight_rounded_kg: parseFloat(String(data[0].weight_rounded_kg)),
+          base_cost: parseFloat(String(data[0].base_cost)),
+          extra_cost: parseFloat(String(data[0].extra_cost)),
+          total_cost_with_type: parseFloat(String(data[0].total_cost_with_type)),
           shipping_type_name: data[0].shipping_type_name,
           shipping_type_display: data[0].shipping_type_display,
         };

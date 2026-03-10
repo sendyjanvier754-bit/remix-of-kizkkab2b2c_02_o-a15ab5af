@@ -39,7 +39,7 @@ export const useB2CMarketPrices = (productIds?: string[]) => {
         return new Map<string, B2CMarketPrice>();
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('b2c_max_prices')
         .select('*')
         .in('source_product_id', productIds);
@@ -51,7 +51,7 @@ export const useB2CMarketPrices = (productIds?: string[]) => {
 
       // Create a map for quick lookup by product ID
       const priceMap = new Map<string, B2CMarketPrice>();
-      (data || []).forEach(item => {
+      (data || []).forEach((item: any) => {
         if (item.source_product_id) {
           priceMap.set(item.source_product_id, item as B2CMarketPrice);
         }
@@ -71,7 +71,7 @@ export const useProductsB2BEnriched = (productIds?: string[]) => {
   return useQuery({
     queryKey: ['products-b2b-enriched', productIds],
     queryFn: async () => {
-      let query = supabase
+      let query = (supabase as any)
         .from('products_b2b_enriched')
         .select('*');
 
@@ -102,7 +102,7 @@ export const getProductPVPReference = async (
   fallbackPrice?: number
 ): Promise<ProductPVPReference | null> => {
   try {
-    const { data, error } = await supabase.rpc('get_reference_pvp', {
+    const { data, error } = await (supabase.rpc as any)('get_reference_pvp', {
       p_product_id: productId,
       p_product_sku: productSku || null,
       p_fallback_price: fallbackPrice || null,
@@ -132,7 +132,7 @@ export const calculateCartProfit = async (
   }>
 ): Promise<CartProfitProjection | null> => {
   try {
-    const { data, error } = await supabase.rpc('calculate_cart_projected_profit', {
+    const { data, error } = await (supabase.rpc as any)('calculate_cart_projected_profit', {
       p_cart_items: cartItems,
     });
 
@@ -141,7 +141,7 @@ export const calculateCartProfit = async (
       return null;
     }
 
-    return data?.[0] || null;
+    return (data as any)?.[0] || null;
   } catch (error) {
     console.error('Error in calculateCartProfit:', error);
     return null;

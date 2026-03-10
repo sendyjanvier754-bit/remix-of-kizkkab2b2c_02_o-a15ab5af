@@ -51,7 +51,7 @@ export const useConsolidationEngine = () => {
   const useConsolidationStats = () => useQuery({
     queryKey: ['consolidation-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_consolidation_stats');
+      const { data, error } = await (supabase.rpc as any)('get_consolidation_stats');
       if (error) throw error;
       return data as unknown as ConsolidationStats;
     },
@@ -80,7 +80,7 @@ export const useConsolidationEngine = () => {
       quantity_threshold?: number;
       is_active?: boolean;
     }) => {
-      const { data, error } = await supabase.rpc('update_consolidation_settings', {
+      const { data, error } = await (supabase.rpc as any)('update_consolidation_settings', {
         p_mode: params.mode || null,
         p_time_hours: params.time_hours || null,
         p_quantity_threshold: params.quantity_threshold || null,
@@ -100,7 +100,7 @@ export const useConsolidationEngine = () => {
   // Manual close PO
   const manualClosePO = useMutation({
     mutationFn: async (poId: string) => {
-      const { data, error } = await supabase.rpc('auto_close_po', {
+      const { data, error } = await (supabase.rpc as any)('auto_close_po', {
         p_po_id: poId,
         p_close_reason: 'manual',
       });
@@ -121,7 +121,7 @@ export const useConsolidationEngine = () => {
   // Check for auto-close (can be called manually or on interval)
   const checkAutoClose = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('check_po_auto_close');
+      const { data, error } = await (supabase.rpc as any)('check_po_auto_close');
       if (error) throw error;
       return data;
     },
@@ -139,7 +139,7 @@ export const useConsolidationEngine = () => {
   // Create/ensure active PO exists
   const ensureActivePO = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('get_or_create_active_po');
+      const { data, error } = await (supabase.rpc as any)('get_or_create_active_po');
       if (error) throw error;
       return data;
     },

@@ -62,7 +62,19 @@ export const useAddresses = () => {
       const { data, error } = await supabase
         .from('addresses')
         .insert({
-          ...input,
+          city: input.city,
+          country: input.country,
+          full_name: input.full_name,
+          label: input.label,
+          street_address: input.street_address,
+          phone: input.phone ?? null,
+          state: input.state ?? null,
+          postal_code: input.postal_code ?? null,
+          is_default: input.is_default,
+          notes: input.notes ?? null,
+          department_id: input.department_id ?? null,
+          commune_id: input.commune_id ?? null,
+          destination_country_id: (input as any).destination_country_id || '',
           user_id: user.id,
         })
         .select()

@@ -40,7 +40,7 @@ export const useDeliveryValidation = () => {
     setValidationResult(null);
 
     try {
-      const { data, error } = await supabase.rpc('validate_courier_delivery', {
+      const { data, error } = await (supabase.rpc as any)('validate_courier_delivery', {
         p_qr_code: qrCode.toUpperCase(),
         p_security_pin: securityPin
       });
@@ -98,7 +98,7 @@ export const useDeliveryValidation = () => {
         throw new Error('Debe iniciar sesión para confirmar entregas');
       }
 
-      const { data, error } = await supabase.rpc('confirm_pickup_point_delivery', {
+      const { data, error } = await (supabase.rpc as any)('confirm_pickup_point_delivery', {
         p_qr_code: qrCode.toUpperCase(),
         p_physical_pin: physicalPin,
         p_operator_id: user.id
@@ -187,7 +187,7 @@ export const useDeliveryValidation = () => {
     preferredPickupPointId?: string
   ): Promise<string | null> => {
     try {
-      const { data, error } = await supabase.rpc('create_order_delivery_with_assignment', {
+      const { data, error } = await (supabase.rpc as any)('create_order_delivery_with_assignment', {
         p_order_id: orderId,
         p_order_type: orderType,
         p_delivery_method: deliveryMethod,
@@ -202,7 +202,7 @@ export const useDeliveryValidation = () => {
         description: 'Se asignó punto de recogida automáticamente',
       });
 
-      return data;
+      return data as string;
     } catch (error: any) {
       console.error('Error creating delivery:', error);
       toast({

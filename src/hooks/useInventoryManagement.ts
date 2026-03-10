@@ -108,7 +108,7 @@ export const useInventoryManagement = () => {
   const useStockInTransit = () => useQuery({
     queryKey: ['stock-in-transit'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('stock_in_transit')
         .select('*, products(nombre, sku_interno), product_variants(option_value), suppliers(name)')
         .order('created_at', { ascending: false });
@@ -121,7 +121,7 @@ export const useInventoryManagement = () => {
   const useStockBalance = () => useQuery({
     queryKey: ['stock-balance'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('stock_balance_view')
         .select('*')
         .order('product_name');
@@ -134,7 +134,7 @@ export const useInventoryManagement = () => {
   const useRotationAlerts = () => useQuery({
     queryKey: ['rotation-alerts'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('stock_rotation_alerts')
         .select('*')
         .order('days_without_sale', { ascending: false });
@@ -147,7 +147,7 @@ export const useInventoryManagement = () => {
   const useConsolidations = () => useQuery({
     queryKey: ['purchase-consolidations'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('purchase_consolidations')
         .select('*, suppliers(name)')
         .order('created_at', { ascending: false });
@@ -160,7 +160,7 @@ export const useInventoryManagement = () => {
   const useConsolidationItems = (consolidationId: string) => useQuery({
     queryKey: ['consolidation-items', consolidationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('purchase_consolidation_items')
         .select('*')
         .eq('consolidation_id', consolidationId)
@@ -280,7 +280,7 @@ export const useInventoryManagement = () => {
   // Create stock in transit
   const createStockInTransit = useMutation({
     mutationFn: async (data: Omit<StockInTransit, 'id' | 'created_at'>) => {
-      const { error } = await supabase.from('stock_in_transit').insert(data);
+      const { error } = await (supabase as any).from('stock_in_transit').insert(data);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -294,7 +294,7 @@ export const useInventoryManagement = () => {
   // Update stock in transit status
   const updateTransitStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('stock_in_transit')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id);
@@ -312,11 +312,11 @@ export const useInventoryManagement = () => {
   const createConsolidation = useMutation({
     mutationFn: async (data: { supplier_id?: string; notes?: string; items: Omit<ConsolidationItem, 'id' | 'consolidation_id'>[] }) => {
       // Generate consolidation number
-      const { data: numData } = await supabase.rpc('generate_consolidation_number');
+      const { data: numData } = await (supabase.rpc as any)('generate_consolidation_number');
       const consolidationNumber = numData || `CON-${Date.now()}`;
 
       // Create consolidation
-      const { data: consolidation, error: consError } = await supabase
+      const { data: consolidation, error: consError } = await (supabase as any)
         .from('purchase_consolidations')
         .insert({
           consolidation_number: consolidationNumber,
@@ -337,7 +337,7 @@ export const useInventoryManagement = () => {
         consolidation_id: consolidation.id,
       }));
 
-      const { error: itemsError } = await supabase
+      const { error: itemsError } = await (supabase as any)
         .from('purchase_consolidation_items')
         .insert(itemsToInsert);
 
@@ -361,7 +361,7 @@ export const useInventoryManagement = () => {
       if (status === 'ordered') updates.ordered_at = new Date().toISOString();
       if (status === 'received') updates.received_at = new Date().toISOString();
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('purchase_consolidations')
         .update(updates)
         .eq('id', id);
@@ -378,14 +378,13 @@ export const useInventoryManagement = () => {
   const allocateStockToOrder = useMutation({
     mutationFn: async (allocation: Omit<OrderStockAllocation, 'id'>) => {
       // Calculate allocation based on availability
-      const { data: balance } = await supabase
+      const { data: balance } = await (supabase as any)
         .from('stock_balance_view')
         .select('stock_haiti, stock_in_transit')
         .eq('variant_id', allocation.variant_id)
         .single();
-
-      const stockHaiti = balance?.stock_haiti || 0;
-      const stockTransit = balance?.stock_in_transit || 0;
+      const stockHaiti = (balance as any)?.stock_haiti || 0;
+      const stockTransit = (balance as any)?.stock_in_transit || 0;
       let remaining = allocation.quantity_ordered;
 
       // Allocate from Haiti first
@@ -399,7 +398,7 @@ export const useInventoryManagement = () => {
       // Rest is pending purchase
       const pendingPurchase = remaining;
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('order_stock_allocations')
         .insert({
           ...allocation,

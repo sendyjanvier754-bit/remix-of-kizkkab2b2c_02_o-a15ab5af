@@ -56,7 +56,7 @@ export function useB2BPricingEngine() {
         console.error('Error fetching products with base price:', error);
         throw error;
       }
-      return (data || []) as ProductBasePrice[];
+      return (data || []) as unknown as ProductBasePrice[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
@@ -73,7 +73,7 @@ export function useB2BPricingEngine() {
       console.error(`Error fetching product ${productId}:`, error);
       return null;
     }
-    return data as ProductBasePrice;
+    return data as unknown as ProductBasePrice;
   };
 
   // Obtener productos por categoría (con precio base)
@@ -88,7 +88,7 @@ export function useB2BPricingEngine() {
       console.error(`Error fetching products for category ${categoryId}:`, error);
       return [];
     }
-    return (data || []) as ProductBasePrice[];
+    return (data || []) as unknown as ProductBasePrice[];
   };
 
   // Calcular desglose de precios (para UI)

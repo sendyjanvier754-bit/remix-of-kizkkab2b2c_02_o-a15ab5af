@@ -77,7 +77,7 @@ export const useBuyerOrders = (statusFilter?: BuyerOrderStatus | 'all') => {
 
       if (error) throw error;
 
-      let filteredData = data as BuyerOrder[];
+      let filteredData = data as unknown as BuyerOrder[];
 
       if (statusFilter && statusFilter !== 'all') {
         filteredData = filteredData.filter(order => order.status === statusFilter);
@@ -108,7 +108,7 @@ export const useBuyerOrder = (orderId: string) => {
         .single();
 
       if (error) throw error;
-      return data as BuyerOrder;
+      return data as unknown as BuyerOrder;
     },
     enabled: !!user?.id && !!orderId,
   });

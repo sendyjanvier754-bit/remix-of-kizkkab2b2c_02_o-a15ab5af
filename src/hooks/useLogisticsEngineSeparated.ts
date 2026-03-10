@@ -61,7 +61,7 @@ export function useLogisticsEngine() {
   const { data: routes = [], isLoading: loadingRoutes } = useQuery({
     queryKey: ['shipping-routes'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('v_rutas_logistica')
         .select('*')
         .eq('is_active', true);
@@ -101,7 +101,7 @@ export function useLogisticsEngine() {
         return null;
       }
 
-      return data as LogisticsCostResult;
+      return data as unknown as LogisticsCostResult;
     } catch (error) {
       console.error('Exception in calculateLogisticsCost:', error);
       return null;

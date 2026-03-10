@@ -116,10 +116,9 @@ export function useB2BPricing() {
           'calculate_b2b_price_multitramo',
           {
             p_product_id: productId,
-            p_address_id: addressId,
-            p_tier_type: 'standard',
+            p_shipping_zone_id: addressId,
             p_quantity: quantity,
-          }
+          } as any
         );
 
         if (rpcError) {
@@ -127,25 +126,26 @@ export function useB2BPricing() {
           return null;
         }
 
-        if (!data.valid) {
-          setError(data.error || 'Error calculating price');
+        const r = data as any;
+        if (!r.valid) {
+          setError(r.error || 'Error calculating price');
           return null;
         }
 
         // Extraer componentes del desglose
-        const costoBase = data.desglose.costo_fabrica;
-        const tramoA = data.desglose.tramo_a_china_usa_kg;
-        const tramoB = data.desglose.tramo_b_usa_destino_lb;
-        const recargoSensible = data.desglose.recargo_sensible;
-        const recargoOversize = data.desglose.recargo_oversize;
-        const recargoZona = data.desglose.recargo_zona;
-        const platformFee = data.desglose.platform_fee_12pct;
+        const costoBase = r.desglose.costo_fabrica;
+        const tramoA = r.desglose.tramo_a_china_usa_kg;
+        const tramoB = r.desglose.tramo_b_usa_destino_lb;
+        const recargoSensible = r.desglose.recargo_sensible;
+        const recargoOversize = r.desglose.recargo_oversize;
+        const recargoZona = r.desglose.recargo_zona;
+        const platformFee = r.desglose.platform_fee_12pct;
 
         // LOGÍSTICA = Tramo A + Tramo B (LO QUE SE RESTA)
         const logisticaCosto = tramoA + tramoB;
 
         // PRECIO SIN LOGÍSTICA = precio_aterrizado - logística
-        const precioB2BSinLogistica = data.precio_aterrizado - logisticaCosto;
+        const precioB2BSinLogistica = (r as any).precio_aterrizado - logisticaCosto;
 
         return {
           precio_b2b: Math.round(precioB2BSinLogistica * 100) / 100,
@@ -181,10 +181,9 @@ export function useB2BPricing() {
           'calculate_b2b_price_multitramo',
           {
             p_product_id: productId,
-            p_address_id: addressId,
-            p_tier_type: tier,
+            p_shipping_zone_id: addressId,
             p_quantity: quantity,
-          }
+          } as any
         );
 
         if (rpcError) {
@@ -192,12 +191,13 @@ export function useB2BPricing() {
           return null;
         }
 
-        if (!data.valid) {
-          setError(data.error || 'Error calculating price');
+        const d2 = data as any;
+        if (!d2.valid) {
+          setError(d2.error || 'Error calculating price');
           return null;
         }
 
-        return data as PriceBreakdown;
+        return d2 as unknown as PriceBreakdown;
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
         setError(errorMsg);
@@ -227,7 +227,7 @@ export function useB2BPricing() {
           return { valid: false, errors: [rpcError.message] };
         }
 
-        return data;
+        return data as unknown as { valid: boolean; errors: string[] };
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
         return { valid: false, errors: [errorMsg] };
@@ -291,7 +291,7 @@ export function useB2BCheckout() {
     setError(null);
     try {
       // Query: v_shipping_options_by_country
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await (supabase as any)
         .from('v_shipping_options_by_country')
         .select('*')
         .eq('destination_country_id', address.country_id);
@@ -442,7 +442,7 @@ export function usePOMaster() {
 
       try {
         // 1. Crear PO Maestra
-        const { data: poData, error: poError } = await supabase
+        const { data: poData, error: poError } = await (supabase as any)
           .from('master_purchase_orders')
           .insert({
             investor_id: investorId,
@@ -481,7 +481,7 @@ export function usePOMaster() {
           is_oversize: item.product?.is_oversize || false,
         }));
 
-        const { error: itemsError } = await supabase
+        const { error: itemsError } = await (supabase as any)
           .from('po_items')
           .insert(poItems);
 
@@ -509,7 +509,7 @@ export function usePOMaster() {
     setError(null);
 
     try {
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await (supabase as any)
         .from('v_open_pos_by_investor')
         .select('*')
         .eq('investor_id', investorId);
@@ -577,7 +577,7 @@ export function useB2BProducts() {
     setError(null);
 
     try {
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await (supabase as any)
         .from('v_products_b2b')
         .select('*');
 

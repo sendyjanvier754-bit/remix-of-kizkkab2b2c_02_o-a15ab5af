@@ -415,7 +415,7 @@ export const useLogisticsEngine = () => {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('shipment_tracking')
-        .update({ label_printed_at: new Date().toISOString() })
+        .update({ label_printed_at: new Date().toISOString() } as any)
         .eq('id', id);
       if (error) throw error;
     },

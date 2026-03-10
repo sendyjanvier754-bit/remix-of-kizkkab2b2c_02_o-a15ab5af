@@ -120,7 +120,7 @@ export function useMarketingAssets(storeId: string | null) {
       }
 
       // 2. Insert row in seller_marketing_assets
-      const { data, error: insertError } = await supabase
+      const { data, error: insertError } = await (supabase as any)
         .from('seller_marketing_assets')
         .insert({
           seller_id: sellerId,

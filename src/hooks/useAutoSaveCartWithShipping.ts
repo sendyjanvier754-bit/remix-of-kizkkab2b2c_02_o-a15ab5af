@@ -114,7 +114,7 @@ export function useAutoSaveCartWithShipping(
     setIsCalculatingShipping(true);
 
     try {
-      const { data, error } = await supabase.rpc('get_user_cart_shipping_cost', {
+      const { data, error } = await (supabase.rpc as any)('get_user_cart_shipping_cost', {
         p_user_id: user.id,
         p_shipping_type_id: selectedShippingTypeId
       });
@@ -125,7 +125,7 @@ export function useAutoSaveCartWithShipping(
         throw error;
       }
 
-      setShippingCost(data);
+      setShippingCost(data as unknown as ShippingCost);
     } catch (err) {
       // Solo log en consola - no mensaje visible al usuario
       console.error('Error calculating shipping:', err);
