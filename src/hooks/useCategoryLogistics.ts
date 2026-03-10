@@ -83,7 +83,7 @@ export const useCategoryLogisticsItem = (productId?: string, variantId?: string)
         setIsLoading(true);
         setError(null);
 
-        let query = supabase
+        let query = (supabase as any)
           .from('v_category_logistics')
           .select('*')
           .eq('product_id', productId)

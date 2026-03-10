@@ -108,7 +108,7 @@ export const useBuyerOrder = (orderId: string) => {
         .single();
 
       if (error) throw error;
-      return data as BuyerOrder;
+      return data as unknown as BuyerOrder;
     },
     enabled: !!user?.id && !!orderId,
   });

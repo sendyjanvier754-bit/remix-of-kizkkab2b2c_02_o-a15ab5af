@@ -577,7 +577,7 @@ export function useB2BProducts() {
     setError(null);
 
     try {
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await (supabase as any)
         .from('v_products_b2b')
         .select('*');
 

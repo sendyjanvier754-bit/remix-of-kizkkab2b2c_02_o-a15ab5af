@@ -38,7 +38,7 @@ export function useB2BPricingEngineV2() {
     setError(null);
     
     try {
-      const { data, error: rpcError } = await supabase.rpc(
+      const { data, error: rpcError } = await (supabase.rpc as any)(
         'calculate_b2b_price_multitramo',
         {
           p_product_id: productId,

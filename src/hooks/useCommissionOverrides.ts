@@ -42,7 +42,7 @@ export const useCommissionOverrides = () => {
             .eq('id', override.seller_id)
             .maybeSingle();
 
-          return {
+          const sellerData = sellerResult as any;
             ...override,
             seller_name: sellerData?.business_name || sellerData?.name,
           };

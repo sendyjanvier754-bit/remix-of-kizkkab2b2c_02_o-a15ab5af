@@ -225,7 +225,7 @@ export const useCatalog = () => {
       // Update product
       const { data, error } = await supabase
         .from('products')
-        .update(updates)
+        .update({ ...updates, dimensiones_cm: updates.dimensiones_cm as any })
         .eq('id', id)
         .select()
         .single();
