@@ -40,7 +40,7 @@ export const useDeliveryValidation = () => {
     setValidationResult(null);
 
     try {
-      const { data, error } = await supabase.rpc('validate_courier_delivery', {
+      const { data, error } = await (supabase.rpc as any)('validate_courier_delivery', {
         p_qr_code: qrCode.toUpperCase(),
         p_security_pin: securityPin
       });
