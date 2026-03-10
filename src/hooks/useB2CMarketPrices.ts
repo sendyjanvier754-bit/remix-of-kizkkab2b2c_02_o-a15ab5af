@@ -51,7 +51,7 @@ export const useB2CMarketPrices = (productIds?: string[]) => {
 
       // Create a map for quick lookup by product ID
       const priceMap = new Map<string, B2CMarketPrice>();
-      (data || []).forEach(item => {
+      (data || []).forEach((item: any) => {
         if (item.source_product_id) {
           priceMap.set(item.source_product_id, item as B2CMarketPrice);
         }
