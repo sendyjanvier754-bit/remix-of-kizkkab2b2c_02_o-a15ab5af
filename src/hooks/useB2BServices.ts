@@ -509,7 +509,7 @@ export function usePOMaster() {
     setError(null);
 
     try {
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await (supabase as any)
         .from('v_open_pos_by_investor')
         .select('*')
         .eq('investor_id', investorId);
