@@ -170,7 +170,7 @@ export const useCatalog = () => {
     mutationFn: async (product: Omit<Partial<Product>, 'categories' | 'suppliers'> & { sku_interno: string; nombre: string }) => {
       const { data, error } = await supabase
         .from('products')
-        .insert([product])
+        .insert([{ ...product, dimensiones_cm: product.dimensiones_cm as any }])
         .select()
         .single();
       if (error) throw error;
