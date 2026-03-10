@@ -442,7 +442,7 @@ export function usePOMaster() {
 
       try {
         // 1. Crear PO Maestra
-        const { data: poData, error: poError } = await supabase
+        const { data: poData, error: poError } = await (supabase as any)
           .from('master_purchase_orders')
           .insert({
             investor_id: investorId,
