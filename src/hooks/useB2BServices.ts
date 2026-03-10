@@ -117,9 +117,8 @@ export function useB2BPricing() {
           {
             p_product_id: productId,
             p_shipping_zone_id: addressId,
-            p_tier_type: 'standard',
             p_quantity: quantity,
-          }
+          } as any
         );
 
         if (rpcError) {
