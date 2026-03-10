@@ -101,7 +101,7 @@ export function useLogisticsEngine() {
         return null;
       }
 
-      return data as LogisticsCostResult;
+      return data as unknown as LogisticsCostResult;
     } catch (error) {
       console.error('Exception in calculateLogisticsCost:', error);
       return null;

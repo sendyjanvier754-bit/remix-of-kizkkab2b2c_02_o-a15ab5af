@@ -560,7 +560,7 @@ export const useMarketValidation = () => {
       .eq('payment_method_count', 0);
     
     if (error) throw error;
-    return data as MarketDashboard[];
+    return data as unknown as MarketDashboard[];
   };
 
   return {

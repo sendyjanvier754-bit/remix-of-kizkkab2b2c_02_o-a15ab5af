@@ -398,7 +398,7 @@ export const useInventoryManagement = () => {
       // Rest is pending purchase
       const pendingPurchase = remaining;
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('order_stock_allocations')
         .insert({
           ...allocation,

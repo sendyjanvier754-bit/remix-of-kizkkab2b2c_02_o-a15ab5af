@@ -36,7 +36,7 @@ export const useKYC = () => {
         .maybeSingle();
       
       if (error) throw error;
-      return data as KYCVerification | null;
+      return data as unknown as KYCVerification | null;
     },
     enabled: !!user?.id,
   });
