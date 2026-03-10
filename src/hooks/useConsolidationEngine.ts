@@ -100,7 +100,7 @@ export const useConsolidationEngine = () => {
   // Manual close PO
   const manualClosePO = useMutation({
     mutationFn: async (poId: string) => {
-      const { data, error } = await supabase.rpc('auto_close_po', {
+      const { data, error } = await (supabase.rpc as any)('auto_close_po', {
         p_po_id: poId,
         p_close_reason: 'manual',
       });
