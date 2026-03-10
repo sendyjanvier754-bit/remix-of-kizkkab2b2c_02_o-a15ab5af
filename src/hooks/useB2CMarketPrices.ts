@@ -71,7 +71,7 @@ export const useProductsB2BEnriched = (productIds?: string[]) => {
   return useQuery({
     queryKey: ['products-b2b-enriched', productIds],
     queryFn: async () => {
-      let query = supabase
+      let query = (supabase as any)
         .from('products_b2b_enriched')
         .select('*');
 
