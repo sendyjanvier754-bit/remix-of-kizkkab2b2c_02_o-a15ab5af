@@ -312,7 +312,7 @@ export const useInventoryManagement = () => {
   const createConsolidation = useMutation({
     mutationFn: async (data: { supplier_id?: string; notes?: string; items: Omit<ConsolidationItem, 'id' | 'consolidation_id'>[] }) => {
       // Generate consolidation number
-      const { data: numData } = await supabase.rpc('generate_consolidation_number');
+      const { data: numData } = await (supabase.rpc as any)('generate_consolidation_number');
       const consolidationNumber = numData || `CON-${Date.now()}`;
 
       // Create consolidation
