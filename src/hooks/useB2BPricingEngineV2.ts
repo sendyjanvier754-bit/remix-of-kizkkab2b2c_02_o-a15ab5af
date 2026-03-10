@@ -89,12 +89,13 @@ export function useB2BPricingEngineV2() {
         return null;
       }
 
-      if (!data?.valid) {
-        setError(data?.error || 'Sin cobertura');
-        return data as ShippingOptionsResponse;
+      const result2 = data as any;
+      if (!result2?.valid) {
+        setError(result2?.error || 'Sin cobertura');
+        return result2 as unknown as ShippingOptionsResponse;
       }
 
-      return data as ShippingOptionsResponse;
+      return result2 as unknown as ShippingOptionsResponse;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMsg);
