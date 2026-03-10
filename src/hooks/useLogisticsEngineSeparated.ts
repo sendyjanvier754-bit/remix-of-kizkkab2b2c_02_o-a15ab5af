@@ -61,7 +61,7 @@ export function useLogisticsEngine() {
   const { data: routes = [], isLoading: loadingRoutes } = useQuery({
     queryKey: ['shipping-routes'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('v_rutas_logistica')
         .select('*')
         .eq('is_active', true);
