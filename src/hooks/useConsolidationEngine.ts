@@ -139,7 +139,7 @@ export const useConsolidationEngine = () => {
   // Create/ensure active PO exists
   const ensureActivePO = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('get_or_create_active_po');
+      const { data, error } = await (supabase.rpc as any)('get_or_create_active_po');
       if (error) throw error;
       return data;
     },

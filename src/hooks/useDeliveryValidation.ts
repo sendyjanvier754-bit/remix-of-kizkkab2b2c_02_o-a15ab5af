@@ -202,7 +202,7 @@ export const useDeliveryValidation = () => {
         description: 'Se asignó punto de recogida automáticamente',
       });
 
-      return data;
+      return data as string;
     } catch (error: any) {
       console.error('Error creating delivery:', error);
       toast({

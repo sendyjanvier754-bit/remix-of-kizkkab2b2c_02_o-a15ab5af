@@ -83,7 +83,7 @@ export const useEnsureSellerStore = () => {
             return;
           }
           
-          const { data: newStore, error: createError } = await supabase
+          const { data: newStore, error: createError } = await (supabase as any)
             .from('stores')
             .insert({
               owner_user_id: user.id,

@@ -193,7 +193,7 @@ export const useInventarioB2CResumen = () => {
         );
 
         if (error) throw error;
-        setResumen(data);
+        setResumen(data as any);
       } catch (err) {
         console.error('Error al cargar resumen:', err);
       } finally {

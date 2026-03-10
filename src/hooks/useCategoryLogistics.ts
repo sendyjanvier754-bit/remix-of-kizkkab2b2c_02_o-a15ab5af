@@ -140,7 +140,7 @@ export const useCategoryLogisticsBatch = (productIds: string[]) => {
         setIsLoading(true);
         setError(null);
 
-        const { data, error: err } = await supabase
+        const { data, error: err } = await (supabase as any)
           .from('v_category_logistics')
           .select('*')
           .in('product_id', productIds)

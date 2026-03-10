@@ -316,7 +316,7 @@ export const useInventoryManagement = () => {
       const consolidationNumber = numData || `CON-${Date.now()}`;
 
       // Create consolidation
-      const { data: consolidation, error: consError } = await supabase
+      const { data: consolidation, error: consError } = await (supabase as any)
         .from('purchase_consolidations')
         .insert({
           consolidation_number: consolidationNumber,
