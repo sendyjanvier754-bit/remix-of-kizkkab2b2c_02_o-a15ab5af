@@ -105,7 +105,7 @@ export const useMarkets = () => {
         .order('sort_order', { ascending: true });
       
       if (error) throw error;
-      return data as MarketDashboard[];
+      return data as unknown as MarketDashboard[];
     },
   });
 
