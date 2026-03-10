@@ -361,7 +361,7 @@ export const useInventoryManagement = () => {
       if (status === 'ordered') updates.ordered_at = new Date().toISOString();
       if (status === 'received') updates.received_at = new Date().toISOString();
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('purchase_consolidations')
         .update(updates)
         .eq('id', id);
