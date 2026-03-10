@@ -56,7 +56,7 @@ export function useB2BPricingEngine() {
         console.error('Error fetching products with base price:', error);
         throw error;
       }
-      return (data || []) as ProductBasePrice[];
+      return (data || []) as unknown as ProductBasePrice[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
