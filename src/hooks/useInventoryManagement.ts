@@ -378,14 +378,13 @@ export const useInventoryManagement = () => {
   const allocateStockToOrder = useMutation({
     mutationFn: async (allocation: Omit<OrderStockAllocation, 'id'>) => {
       // Calculate allocation based on availability
-      const { data: balance } = await supabase
+      const { data: balance } = await (supabase as any)
         .from('stock_balance_view')
         .select('stock_haiti, stock_in_transit')
         .eq('variant_id', allocation.variant_id)
         .single();
-
-      const stockHaiti = balance?.stock_haiti || 0;
-      const stockTransit = balance?.stock_in_transit || 0;
+      const stockHaiti = (balance as any)?.stock_haiti || 0;
+      const stockTransit = (balance as any)?.stock_in_transit || 0;
       let remaining = allocation.quantity_ordered;
 
       // Allocate from Haiti first
