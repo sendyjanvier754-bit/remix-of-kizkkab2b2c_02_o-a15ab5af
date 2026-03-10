@@ -51,7 +51,7 @@ export const useConsolidationEngine = () => {
   const useConsolidationStats = () => useQuery({
     queryKey: ['consolidation-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_consolidation_stats');
+      const { data, error } = await (supabase.rpc as any)('get_consolidation_stats');
       if (error) throw error;
       return data as unknown as ConsolidationStats;
     },
