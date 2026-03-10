@@ -108,7 +108,7 @@ export const useInventoryManagement = () => {
   const useStockInTransit = () => useQuery({
     queryKey: ['stock-in-transit'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('stock_in_transit')
         .select('*, products(nombre, sku_interno), product_variants(option_value), suppliers(name)')
         .order('created_at', { ascending: false });
