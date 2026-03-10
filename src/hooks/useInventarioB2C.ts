@@ -102,8 +102,8 @@ export const useInventarioB2C = (options: UseInventarioB2COptions = {}) => {
         // No es crítico, continuar sin resumen
       }
 
-      setInventario(inventarioData || []);
-      setResumen(resumenData || null);
+      setInventario((inventarioData || []) as any);
+      setResumen((resumenData || null) as any);
     } catch (err: any) {
       console.error('Error en useInventarioB2C:', err);
       setError(err.message || 'Error al cargar inventario');
