@@ -48,7 +48,7 @@ export const useBusinessPanelDataWithShipping = (productId?: string, variantId?:
         setIsLoading(true);
         setError(null);
 
-        let query = supabase
+        let query = (supabase as any)
           .from('v_business_panel_with_shipping_functions')
           .select('*')
           .eq('product_id', productId);
