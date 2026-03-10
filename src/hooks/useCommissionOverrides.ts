@@ -36,13 +36,14 @@ export const useCommissionOverrides = () => {
       // Fetch seller names separately
       const overridesWithNames = await Promise.all(
         (data || []).map(async (override: any) => {
-          const { data: sellerData } = await supabase
+          const { data: sellerResult } = await (supabase as any)
             .from('sellers')
             .select('name, business_name')
             .eq('id', override.seller_id)
             .maybeSingle();
-
           const sellerData = sellerResult as any;
+
+          return {
             ...override,
             seller_name: sellerData?.business_name || sellerData?.name,
           };
