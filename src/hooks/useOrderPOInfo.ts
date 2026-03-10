@@ -43,7 +43,7 @@ export const useOrderPOInfo = (orderId: string | undefined) => {
       if (!link) return null;
 
       // Get the PO details
-      const { data: po, error: poError } = await supabase
+      const { data: po, error: poError } = await (supabase as any)
         .from('master_purchase_orders')
         .select(`
           id,
@@ -55,7 +55,7 @@ export const useOrderPOInfo = (orderId: string | undefined) => {
           shipped_to_haiti_at,
           arrived_hub_at
         `)
-        .eq('id', link.po_id)
+        .eq('id', (link as any).po_id)
         .single();
 
       if (poError) throw poError;
