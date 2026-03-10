@@ -292,7 +292,7 @@ export function useB2BCheckout() {
     setError(null);
     try {
       // Query: v_shipping_options_by_country
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await (supabase as any)
         .from('v_shipping_options_by_country')
         .select('*')
         .eq('destination_country_id', address.country_id);
