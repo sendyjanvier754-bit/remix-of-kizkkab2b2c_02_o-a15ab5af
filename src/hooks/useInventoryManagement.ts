@@ -121,7 +121,7 @@ export const useInventoryManagement = () => {
   const useStockBalance = () => useQuery({
     queryKey: ['stock-balance'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('stock_balance_view')
         .select('*')
         .order('product_name');
