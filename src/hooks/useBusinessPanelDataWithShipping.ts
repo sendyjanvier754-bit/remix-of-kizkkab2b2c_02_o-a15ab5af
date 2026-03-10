@@ -103,7 +103,7 @@ export const useBusinessPanelDataWithShippingBatch = (
         setIsLoading(true);
         setError(null);
 
-        const { data: results, error: err } = await supabase
+        const { data: results, error: err } = await (supabase as any)
           .from('v_business_panel_with_shipping_functions')
           .select('*')
           .in('product_id', items.map(i => i.productId));

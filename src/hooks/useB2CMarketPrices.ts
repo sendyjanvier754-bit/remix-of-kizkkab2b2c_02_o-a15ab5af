@@ -141,7 +141,7 @@ export const calculateCartProfit = async (
       return null;
     }
 
-    return data?.[0] || null;
+    return (data as any)?.[0] || null;
   } catch (error) {
     console.error('Error in calculateCartProfit:', error);
     return null;

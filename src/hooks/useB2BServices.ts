@@ -145,7 +145,7 @@ export function useB2BPricing() {
         const logisticaCosto = tramoA + tramoB;
 
         // PRECIO SIN LOGÍSTICA = precio_aterrizado - logística
-        const precioB2BSinLogistica = data.precio_aterrizado - logisticaCosto;
+        const precioB2BSinLogistica = (r as any).precio_aterrizado - logisticaCosto;
 
         return {
           precio_b2b: Math.round(precioB2BSinLogistica * 100) / 100,
