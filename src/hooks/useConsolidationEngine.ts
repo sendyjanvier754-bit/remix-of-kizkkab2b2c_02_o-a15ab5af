@@ -80,7 +80,7 @@ export const useConsolidationEngine = () => {
       quantity_threshold?: number;
       is_active?: boolean;
     }) => {
-      const { data, error } = await supabase.rpc('update_consolidation_settings', {
+      const { data, error } = await (supabase.rpc as any)('update_consolidation_settings', {
         p_mode: params.mode || null,
         p_time_hours: params.time_hours || null,
         p_quantity_threshold: params.quantity_threshold || null,
