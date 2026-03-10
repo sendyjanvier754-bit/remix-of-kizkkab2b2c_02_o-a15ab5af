@@ -42,7 +42,7 @@ export function useB2BPricingEngineV2() {
         'calculate_b2b_price_multitramo',
         {
           p_product_id: productId,
-          p_address_id: addressId,
+          p_shipping_zone_id: addressId,
           p_tier_type: tierType,
           p_quantity: quantity,
         }
@@ -53,12 +53,13 @@ export function useB2BPricingEngineV2() {
         return null;
       }
 
-      if (!data?.valid) {
-        setError(data?.error || 'Error calculando precio');
+      const result = data as any;
+      if (!result?.valid) {
+        setError(result?.error || 'Error calculando precio');
         return null;
       }
 
-      return data as MultitramoPrice;
+      return result as unknown as MultitramoPrice;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMsg);
