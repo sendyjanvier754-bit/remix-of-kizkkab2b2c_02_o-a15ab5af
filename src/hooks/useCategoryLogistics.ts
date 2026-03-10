@@ -35,7 +35,7 @@ export const useCategoryLogistics = () => {
         setIsLoading(true);
         setError(null);
 
-        const { data, error: err } = await supabase
+        const { data, error: err } = await (supabase as any)
           .from('v_category_logistics')
           .select('*')
           .eq('is_active', true);
