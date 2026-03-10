@@ -98,7 +98,7 @@ export const useDeliveryValidation = () => {
         throw new Error('Debe iniciar sesión para confirmar entregas');
       }
 
-      const { data, error } = await supabase.rpc('confirm_pickup_point_delivery', {
+      const { data, error } = await (supabase.rpc as any)('confirm_pickup_point_delivery', {
         p_qr_code: qrCode.toUpperCase(),
         p_physical_pin: physicalPin,
         p_operator_id: user.id
