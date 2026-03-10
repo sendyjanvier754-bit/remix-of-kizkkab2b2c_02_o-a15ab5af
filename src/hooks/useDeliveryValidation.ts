@@ -187,7 +187,7 @@ export const useDeliveryValidation = () => {
     preferredPickupPointId?: string
   ): Promise<string | null> => {
     try {
-      const { data, error } = await supabase.rpc('create_order_delivery_with_assignment', {
+      const { data, error } = await (supabase.rpc as any)('create_order_delivery_with_assignment', {
         p_order_id: orderId,
         p_order_type: orderType,
         p_delivery_method: deliveryMethod,
