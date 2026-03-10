@@ -39,7 +39,7 @@ export const useB2CMarketPrices = (productIds?: string[]) => {
         return new Map<string, B2CMarketPrice>();
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('b2c_max_prices')
         .select('*')
         .in('source_product_id', productIds);
