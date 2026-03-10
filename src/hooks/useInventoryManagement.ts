@@ -337,7 +337,7 @@ export const useInventoryManagement = () => {
         consolidation_id: consolidation.id,
       }));
 
-      const { error: itemsError } = await supabase
+      const { error: itemsError } = await (supabase as any)
         .from('purchase_consolidation_items')
         .insert(itemsToInsert);
 
