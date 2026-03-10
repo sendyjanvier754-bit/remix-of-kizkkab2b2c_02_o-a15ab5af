@@ -182,10 +182,9 @@ export function useB2BPricing() {
           'calculate_b2b_price_multitramo',
           {
             p_product_id: productId,
-            p_address_id: addressId,
-            p_tier_type: tier,
+            p_shipping_zone_id: addressId,
             p_quantity: quantity,
-          }
+          } as any
         );
 
         if (rpcError) {
@@ -193,12 +192,13 @@ export function useB2BPricing() {
           return null;
         }
 
-        if (!data.valid) {
-          setError(data.error || 'Error calculating price');
+        const d2 = data as any;
+        if (!d2.valid) {
+          setError(d2.error || 'Error calculating price');
           return null;
         }
 
-        return data as PriceBreakdown;
+        return d2 as unknown as PriceBreakdown;
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
         setError(errorMsg);
