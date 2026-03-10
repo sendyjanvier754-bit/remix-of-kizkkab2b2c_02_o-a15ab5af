@@ -62,7 +62,7 @@ export default function AgentProductSelector({ onAddProduct }: AgentProductSelec
         .or(`nombre.ilike.%${query}%,sku_interno.ilike.%${query}%`)
         .eq('is_active', true)
         .limit(20);
-      setProducts((data || []) as Product[]);
+      setProducts((data || []) as unknown as Product[]);
     } finally {
       setLoading(false);
     }
