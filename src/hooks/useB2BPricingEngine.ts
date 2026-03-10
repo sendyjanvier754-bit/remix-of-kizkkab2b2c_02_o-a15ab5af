@@ -73,7 +73,7 @@ export function useB2BPricingEngine() {
       console.error(`Error fetching product ${productId}:`, error);
       return null;
     }
-    return data as ProductBasePrice;
+    return data as unknown as ProductBasePrice;
   };
 
   // Obtener productos por categoría (con precio base)
