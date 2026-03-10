@@ -147,7 +147,7 @@ export const useInventoryManagement = () => {
   const useConsolidations = () => useQuery({
     queryKey: ['purchase-consolidations'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('purchase_consolidations')
         .select('*, suppliers(name)')
         .order('created_at', { ascending: false });
