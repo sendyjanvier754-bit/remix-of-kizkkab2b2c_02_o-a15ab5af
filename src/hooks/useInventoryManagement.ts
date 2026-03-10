@@ -134,7 +134,7 @@ export const useInventoryManagement = () => {
   const useRotationAlerts = () => useQuery({
     queryKey: ['rotation-alerts'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('stock_rotation_alerts')
         .select('*')
         .order('days_without_sale', { ascending: false });
