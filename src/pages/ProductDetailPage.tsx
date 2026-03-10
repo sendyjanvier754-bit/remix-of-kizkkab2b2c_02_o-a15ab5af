@@ -100,7 +100,7 @@ const ProductPage = () => {
     enabled: !!sku,
   });
 
-  const realStore = catalogItem?.stores as { id: string; name: string; logo: string | null; sku: string | null } | null;
+  const realStore = (Array.isArray(catalogItem?.stores) ? catalogItem?.stores[0] : catalogItem?.stores) as { id: string; name: string; logo: string | null; sku: string | null } | null;
   const { followStore, unfollowStore, checkIfFollowing } = useStoreFollow();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
