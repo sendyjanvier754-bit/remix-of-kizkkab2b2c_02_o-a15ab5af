@@ -132,7 +132,7 @@ export function useB2BPricingEngineV2() {
         };
       }
 
-      return data as ProductShippingValidation;
+      return data as unknown as ProductShippingValidation;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       return {

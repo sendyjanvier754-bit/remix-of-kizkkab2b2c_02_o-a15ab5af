@@ -116,7 +116,7 @@ export function useB2BPricing() {
           'calculate_b2b_price_multitramo',
           {
             p_product_id: productId,
-            p_address_id: addressId,
+            p_shipping_zone_id: addressId,
             p_tier_type: 'standard',
             p_quantity: quantity,
           }
@@ -127,19 +127,20 @@ export function useB2BPricing() {
           return null;
         }
 
-        if (!data.valid) {
-          setError(data.error || 'Error calculating price');
+        const r = data as any;
+        if (!r.valid) {
+          setError(r.error || 'Error calculating price');
           return null;
         }
 
         // Extraer componentes del desglose
-        const costoBase = data.desglose.costo_fabrica;
-        const tramoA = data.desglose.tramo_a_china_usa_kg;
-        const tramoB = data.desglose.tramo_b_usa_destino_lb;
-        const recargoSensible = data.desglose.recargo_sensible;
-        const recargoOversize = data.desglose.recargo_oversize;
-        const recargoZona = data.desglose.recargo_zona;
-        const platformFee = data.desglose.platform_fee_12pct;
+        const costoBase = r.desglose.costo_fabrica;
+        const tramoA = r.desglose.tramo_a_china_usa_kg;
+        const tramoB = r.desglose.tramo_b_usa_destino_lb;
+        const recargoSensible = r.desglose.recargo_sensible;
+        const recargoOversize = r.desglose.recargo_oversize;
+        const recargoZona = r.desglose.recargo_zona;
+        const platformFee = r.desglose.platform_fee_12pct;
 
         // LOGÍSTICA = Tramo A + Tramo B (LO QUE SE RESTA)
         const logisticaCosto = tramoA + tramoB;

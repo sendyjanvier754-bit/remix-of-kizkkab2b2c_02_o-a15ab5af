@@ -88,7 +88,7 @@ export function useB2BPricingEngine() {
       console.error(`Error fetching products for category ${categoryId}:`, error);
       return [];
     }
-    return (data || []) as ProductBasePrice[];
+    return (data || []) as unknown as ProductBasePrice[];
   };
 
   // Calcular desglose de precios (para UI)

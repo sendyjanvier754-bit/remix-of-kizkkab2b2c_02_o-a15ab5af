@@ -79,7 +79,7 @@ export default function AgentProductSelector({ onAddProduct }: AgentProductSelec
       .select('id, sku, color, size, stock, price_override')
       .eq('product_id', productId)
       .eq('is_active', true);
-    setVariants((data || []) as Variant[]);
+    setVariants((data || []) as unknown as Variant[]);
   };
 
   const handleAddProduct = (product: Product, variant?: Variant) => {

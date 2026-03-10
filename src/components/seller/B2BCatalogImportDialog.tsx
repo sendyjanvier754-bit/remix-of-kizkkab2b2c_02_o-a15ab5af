@@ -187,10 +187,11 @@ export function B2BCatalogImportDialog({
       // Now create default variants in seller_catalog_variants for each inserted product
       // Get product_variants for these products
       const sourceProductIds = insertedCatalog.map(c => c.source_product_id);
-      const { data: productVariants, error: variantsError } = await supabase
+      const { data: productVariantsRaw, error: variantsError } = await supabase
         .from('product_variants')
-        .select('id, product_id, sku, nombre, price')
+        .select('id, product_id, sku, price')
         .in('product_id', sourceProductIds);
+      const productVariants = productVariantsRaw as unknown as Array<{ id: string; product_id: string; sku: string; price: number | null }>;
 
       if (variantsError) throw variantsError;
 
