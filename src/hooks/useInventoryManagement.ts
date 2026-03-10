@@ -294,7 +294,7 @@ export const useInventoryManagement = () => {
   // Update stock in transit status
   const updateTransitStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('stock_in_transit')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id);
