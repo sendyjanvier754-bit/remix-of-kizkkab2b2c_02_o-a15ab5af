@@ -160,7 +160,7 @@ export const useInventoryManagement = () => {
   const useConsolidationItems = (consolidationId: string) => useQuery({
     queryKey: ['consolidation-items', consolidationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('purchase_consolidation_items')
         .select('*')
         .eq('consolidation_id', consolidationId)
