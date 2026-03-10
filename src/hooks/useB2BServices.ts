@@ -228,7 +228,7 @@ export function useB2BPricing() {
           return { valid: false, errors: [rpcError.message] };
         }
 
-        return data;
+        return data as unknown as { valid: boolean; errors: string[] };
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
         return { valid: false, errors: [errorMsg] };
