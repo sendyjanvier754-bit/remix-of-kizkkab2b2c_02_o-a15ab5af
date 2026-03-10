@@ -280,7 +280,7 @@ export const useInventoryManagement = () => {
   // Create stock in transit
   const createStockInTransit = useMutation({
     mutationFn: async (data: Omit<StockInTransit, 'id' | 'created_at'>) => {
-      const { error } = await supabase.from('stock_in_transit').insert(data);
+      const { error } = await (supabase as any).from('stock_in_transit').insert(data);
       if (error) throw error;
     },
     onSuccess: () => {
