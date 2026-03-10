@@ -102,7 +102,7 @@ export const getProductPVPReference = async (
   fallbackPrice?: number
 ): Promise<ProductPVPReference | null> => {
   try {
-    const { data, error } = await supabase.rpc('get_reference_pvp', {
+    const { data, error } = await (supabase.rpc as any)('get_reference_pvp', {
       p_product_id: productId,
       p_product_sku: productSku || null,
       p_fallback_price: fallbackPrice || null,
