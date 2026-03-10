@@ -121,7 +121,7 @@ export const useConsolidationEngine = () => {
   // Check for auto-close (can be called manually or on interval)
   const checkAutoClose = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('check_po_auto_close');
+      const { data, error } = await (supabase.rpc as any)('check_po_auto_close');
       if (error) throw error;
       return data;
     },
