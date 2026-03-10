@@ -481,7 +481,7 @@ export function usePOMaster() {
           is_oversize: item.product?.is_oversize || false,
         }));
 
-        const { error: itemsError } = await supabase
+        const { error: itemsError } = await (supabase as any)
           .from('po_items')
           .insert(poItems);
 
