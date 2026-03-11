@@ -364,7 +364,7 @@ export const useSiverMatch = () => {
   // Publish stock lot
   const publishStockLot = useMutation({
     mutationFn: async (lotId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('siver_match_stock_lots')
         .update({ status: 'published', updated_at: new Date().toISOString() })
         .eq('id', lotId);
