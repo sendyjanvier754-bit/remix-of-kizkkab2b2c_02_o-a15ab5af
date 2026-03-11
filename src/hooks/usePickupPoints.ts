@@ -176,7 +176,7 @@ export const useDeliveryScanner = (pickupPointId?: string) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setPendingDeliveries(data || []);
+      setPendingDeliveries((data || []) as unknown as OrderDelivery[]);
     } catch (error: any) {
       console.error('Error fetching deliveries:', error);
     } finally {
