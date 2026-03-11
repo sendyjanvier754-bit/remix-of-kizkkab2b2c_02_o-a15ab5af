@@ -231,7 +231,7 @@ export const useAdminWallets = () => {
   ) => {
     try {
       // Use secure server-side function for withdrawal processing
-      const { data, error } = await supabase.rpc('process_withdrawal_completion', {
+      const { data, error } = await (supabase as any).rpc('process_withdrawal_completion', {
         p_withdrawal_id: withdrawalId,
         p_action: action,
         p_admin_notes: notes || null

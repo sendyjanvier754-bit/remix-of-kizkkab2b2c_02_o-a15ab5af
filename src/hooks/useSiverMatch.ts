@@ -174,7 +174,7 @@ export const useSiverMatch = () => {
           .eq('user_id', user.id);
         
         if (error) throw error;
-        return data as SiverMatchProfile[];
+        return data as unknown as SiverMatchProfile[];
       },
       enabled: !!user?.id,
     });
@@ -199,7 +199,7 @@ export const useSiverMatch = () => {
           .maybeSingle();
         
         if (error) throw error;
-        return data as SiverMatchProfile | null;
+        return data as unknown as SiverMatchProfile | null;
       },
       enabled: !!user?.id,
     });
@@ -227,7 +227,7 @@ export const useSiverMatch = () => {
         
         const { data, error } = await query;
         if (error) throw error;
-        return data as SiverMatchProfile[];
+        return data as unknown as SiverMatchProfile[];
       },
     });
   };

@@ -164,7 +164,7 @@ export const useShippingCostCalculationForCart = (items: CartItem[]) => {
 
           if (routeData) {
             // Get standard tier costs for this route
-            const { data: tierData } = await supabase
+          const { data: tierData } = await (supabase as any)
               .from('shipping_tiers')
               .select('tramo_a_cost_per_kg, tramo_b_cost_per_lb')
               .eq('shipping_route_id', routeData.id)

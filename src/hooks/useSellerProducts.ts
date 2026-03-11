@@ -179,7 +179,7 @@ export const useSellerProductsByCategory = (categoryId: string | undefined, limi
         return [];
       }
 
-      return data as SellerProduct[];
+      return data as unknown as SellerProduct[];
     },
     enabled: !!categoryId,
   });
