@@ -190,7 +190,7 @@ export const usePurchaseOrders = () => {
   // Link pending orders from ALL sources (B2B, B2C, Siver Match) to PO
   const linkOrdersToPO = useMutation({
     mutationFn: async (poId: string) => {
-      const { data, error } = await supabase.rpc('link_mixed_orders_to_po', { p_po_id: poId });
+      const { data, error } = await (supabase as any).rpc('link_mixed_orders_to_po', { p_po_id: poId });
       if (error) throw error;
       return data;
     },
