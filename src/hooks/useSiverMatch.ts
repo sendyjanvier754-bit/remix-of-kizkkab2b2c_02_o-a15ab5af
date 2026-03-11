@@ -565,18 +565,14 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!gestorProfile?.id) return [];
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_sales')
-          .select(`
-            *,
-            department:departments(name),
-            commune:communes(name)
-          `)
+          .select(`*, department:departments(name), commune:communes(name)`)
           .eq('gestor_id', gestorProfile.id)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as MatchSale[];
+        return data as unknown as MatchSale[];
       },
       enabled: !!gestorProfile?.id,
     });
