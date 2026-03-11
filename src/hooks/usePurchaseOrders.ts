@@ -125,7 +125,7 @@ export const usePurchaseOrders = () => {
         .order('customer_name');
       if (linksError) throw linksError;
 
-      return { po: po as MasterPurchaseOrder, links: links as POOrderLink[] };
+      return { po: po as unknown as MasterPurchaseOrder, links: links as POOrderLink[] };
     },
     enabled: !!poId,
   });
