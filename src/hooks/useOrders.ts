@@ -79,7 +79,7 @@ export const useOrders = () => {
           query = query.eq('status', filters.status);
         }
         if (filters?.paymentStatus && filters.paymentStatus !== 'all') {
-          query = query.eq('payment_status', filters.paymentStatus);
+          query = query.eq('payment_status', filters.paymentStatus as any);
         }
         if (filters?.dateFrom) {
           query = query.gte('created_at', filters.dateFrom);
