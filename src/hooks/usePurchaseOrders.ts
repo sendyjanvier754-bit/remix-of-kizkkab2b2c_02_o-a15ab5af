@@ -383,7 +383,7 @@ export const usePurchaseOrders = () => {
   // Process wallet splits on delivery confirmation (Siver Match only)
   const processDeliveryWalletSplits = useMutation({
     mutationFn: async (poId: string) => {
-      const { data, error } = await supabase.rpc('process_delivery_wallet_splits', { p_po_id: poId });
+      const { data, error } = await (supabase as any).rpc('process_delivery_wallet_splits', { p_po_id: poId });
       if (error) throw error;
       return data;
     },

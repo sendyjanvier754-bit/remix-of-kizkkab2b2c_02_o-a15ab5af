@@ -63,13 +63,14 @@ export function useSellerStatuses(storeId: string | null) {
         .getPublicUrl(fileName);
 
       // Create status record
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('seller_statuses')
         .insert({
           store_id: storeId,
+          seller_id: storeId,
           image_url: publicUrl.publicUrl,
           caption: caption || null,
-        })
+        } as any)
         .select()
         .single();
 

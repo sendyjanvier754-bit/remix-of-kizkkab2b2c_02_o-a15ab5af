@@ -81,7 +81,7 @@ export const useSellerWallet = (sellerId?: string) => {
           .order('created_at', { ascending: false })
           .limit(50);
 
-        setTransactions(txData || []);
+        setTransactions((txData || []) as any[]);
 
         const { data: withdrawalData } = await supabase
           .from('withdrawal_requests')
