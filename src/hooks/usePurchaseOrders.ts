@@ -157,7 +157,7 @@ export const usePurchaseOrders = () => {
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as MasterPurchaseOrder | null;
+      return data as unknown as MasterPurchaseOrder | null;
     },
   });
 
