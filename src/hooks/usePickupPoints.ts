@@ -53,7 +53,7 @@ export const usePickupPoints = () => {
         .order('name');
 
       if (error) throw error;
-      setPickupPoints(data || []);
+      setPickupPoints((data || []) as unknown as PickupPoint[]);
     } catch (error: any) {
       console.error('Error fetching pickup points:', error);
     } finally {
