@@ -89,7 +89,7 @@ export const useSellerWallet = (sellerId?: string) => {
           .eq('wallet_id', walletData.id)
           .order('created_at', { ascending: false });
 
-        setWithdrawals(withdrawalData || []);
+        setWithdrawals((withdrawalData || []) as any[]);
       }
     } catch (error: any) {
       console.error('Error fetching wallet:', error);
