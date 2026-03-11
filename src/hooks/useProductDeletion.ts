@@ -60,7 +60,7 @@ export function useProductDeletion() {
         throw new Error(error.message);
       }
 
-      const result = data as DeleteProductResult;
+      const result = data as unknown as DeleteProductResult;
 
       if (!result.success) {
         throw new Error(result.error || 'Error eliminando producto');
