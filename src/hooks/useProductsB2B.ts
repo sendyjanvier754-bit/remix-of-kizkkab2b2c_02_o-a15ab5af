@@ -132,7 +132,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           .in("product_id", productIds)
           .eq("is_active", true),
         supabase
-          .from("b2c_max_prices")
+          .from("b2c_max_prices" as any)
           .select("source_product_id, max_b2c_price, num_sellers, min_b2c_price")
           .in("source_product_id", productIds),
         supabase
