@@ -170,8 +170,9 @@ export const useShippingTypes = (routeId?: string, countryId?: string) => {
                 return;
               }
 
-              const mappedTypes: ShippingType[] = (data || []).map(tier => ({
+              const mappedTypes: ShippingType[] = (data || []).map((tier: any) => ({
                 ...tier,
+                transport_type: tier.transport_type as 'aereo' | 'maritimo' | 'terrestre',
                 display_name: tier.custom_tier_name || tier.tier_name,
                 extra_cost_fixed: 0,
                 extra_cost_percent: 0,
