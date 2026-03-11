@@ -164,9 +164,9 @@ export const usePurchaseOrders = () => {
   // Create new PO
   const createPO = useMutation({
     mutationFn: async (notes?: string) => {
-      const { data: poNumber } = await supabase.rpc('generate_po_number');
+      const { data: poNumber } = await (supabase as any).rpc('generate_po_number');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('master_purchase_orders')
         .insert({
           po_number: poNumber || `PO${Date.now()}`,
@@ -177,7 +177,7 @@ export const usePurchaseOrders = () => {
         .single();
       
       if (error) throw error;
-      return data as MasterPurchaseOrder;
+      return data as unknown as MasterPurchaseOrder;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['master-purchase-orders'] });
