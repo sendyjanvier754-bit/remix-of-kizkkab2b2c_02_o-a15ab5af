@@ -516,7 +516,7 @@ export const useSiverMatch = () => {
         updates.investor_notes = notes;
       }
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('siver_match_assignments')
         .update(updates)
         .eq('id', assignmentId);
@@ -525,7 +525,7 @@ export const useSiverMatch = () => {
       
       // If accepted, update gestor pending count
       if (accept) {
-        const { data: assignment } = await supabase
+        const { data: assignment } = await (supabase as any)
           .from('siver_match_assignments')
           .select('gestor_id')
           .eq('id', assignmentId)
@@ -533,17 +533,17 @@ export const useSiverMatch = () => {
         
         // Update pending orders count - increment by 1
         if (assignment) {
-          const { data: profile } = await supabase
+          const { data: profile } = await (supabase as any)
             .from('siver_match_profiles')
             .select('current_pending_orders')
-            .eq('id', assignment.gestor_id)
+            .eq('id', (assignment as any).gestor_id)
             .single();
           
           if (profile) {
-            await supabase
+            await (supabase as any)
               .from('siver_match_profiles')
-              .update({ current_pending_orders: (profile.current_pending_orders || 0) + 1 })
-              .eq('id', assignment.gestor_id);
+              .update({ current_pending_orders: ((profile as any).current_pending_orders || 0) + 1 })
+              .eq('id', (assignment as any).gestor_id);
           }
         }
       }
