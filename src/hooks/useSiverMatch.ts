@@ -669,16 +669,16 @@ export const useSiverMatch = () => {
       if (error) throw error;
       
       // Update assignment quantities
-      await supabase
+      await (supabase as any)
         .from('siver_match_assignments')
         .update({
-          quantity_sold: assignment.quantity_sold + sale.quantity,
-          quantity_available: assignment.quantity_available - sale.quantity,
+          quantity_sold: (assignment as any).quantity_sold + sale.quantity,
+          quantity_available: (assignment as any).quantity_available - sale.quantity,
         })
         .eq('id', sale.assignment_id);
       
       // Update stock lot quantities
-      await supabase
+      await (supabase as any)
         .from('siver_match_stock_lots')
         .update({
           sold_quantity: stockLot.sold_quantity + sale.quantity,
