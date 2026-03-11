@@ -97,8 +97,9 @@ export const useShippingTypes = (routeId?: string, countryId?: string) => {
         console.log('🔄 Shipping tiers fetched from DB:', data);  // Debug log
 
         // Map shipping_tiers to ShippingType format
-        const mappedTypes: ShippingType[] = (data || []).map(tier => ({
+        const mappedTypes: ShippingType[] = (data || []).map((tier: any) => ({
           ...tier,
+          transport_type: tier.transport_type as 'aereo' | 'maritimo' | 'terrestre',
           display_name: tier.custom_tier_name || tier.tier_name,
           extra_cost_fixed: 0, // Legacy - no longer used
           extra_cost_percent: 0, // Legacy - no longer used
