@@ -374,7 +374,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           stock_fisico: finalStock,
           imagen_principal: imagen,
           categoria_id: p.categoria_id || "",
-          rating: p.rating,
+          rating: (p as any).rating,
           variant_count: variants.length,
           variant_ids: variants.map(v => v.id),
           variants: variantInfos,
