@@ -264,7 +264,7 @@ export const usePurchaseOrders = () => {
   // Generate pickup QR for confirmed payment orders
   const generatePickupQR = useMutation({
     mutationFn: async (orderLinkId: string) => {
-      const { data, error } = await supabase.rpc('generate_po_pickup_qr', {
+      const { data, error } = await (supabase as any).rpc('generate_po_pickup_qr', {
         p_order_link_id: orderLinkId,
       });
       if (error) throw error;

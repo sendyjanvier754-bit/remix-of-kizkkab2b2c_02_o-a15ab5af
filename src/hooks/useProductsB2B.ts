@@ -506,7 +506,7 @@ export const useFeaturedProductsB2B = (limit = 6) => {
           stock_fisico: totalStock > 0 ? totalStock : p.stock_fisico || 0,
           imagen_principal: imagen,
           categoria_id: p.categoria_id || "",
-          rating: p.rating,
+          rating: (p as any).rating,
           variant_count: variants.length,
           variant_ids: variants.map(v => v.id),
           variants: variantInfos,
