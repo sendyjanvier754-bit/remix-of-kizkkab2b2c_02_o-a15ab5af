@@ -216,7 +216,7 @@ export const useAdminWallets = () => {
         .in('status', ['pending', 'processing'])
         .order('created_at', { ascending: true });
 
-      setPendingWithdrawals(withdrawalsData || []);
+      setPendingWithdrawals((withdrawalsData || []) as any[]);
     } catch (error: any) {
       console.error('Error fetching admin wallets:', error);
     } finally {
