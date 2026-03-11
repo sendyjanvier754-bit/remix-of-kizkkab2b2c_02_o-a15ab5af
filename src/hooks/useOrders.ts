@@ -125,7 +125,7 @@ export const useOrders = () => {
           .order('created_at', { ascending: false });
 
         if (filters?.paymentStatus && filters.paymentStatus !== 'all') {
-          query = query.eq('payment_status', filters.paymentStatus);
+          query = query.eq('payment_status', filters.paymentStatus as any);
         }
         if (filters?.status && filters.status !== 'all') {
           query = query.eq('status', filters.status);
