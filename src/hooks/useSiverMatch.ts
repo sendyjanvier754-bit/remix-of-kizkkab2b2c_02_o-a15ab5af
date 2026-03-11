@@ -445,7 +445,7 @@ export const useSiverMatch = () => {
       quantity: number;
       notes?: string;
     }) => {
-      const { data: gestorProfile } = await supabase
+      const { data: gestorProfile } = await (supabase as any)
         .from('siver_match_profiles')
         .select('id, current_pending_orders, max_pending_orders')
         .eq('user_id', user?.id)
@@ -455,28 +455,28 @@ export const useSiverMatch = () => {
       if (!gestorProfile) throw new Error('No tienes perfil de gestor');
       
       // Check capacity
-      if (gestorProfile.current_pending_orders >= gestorProfile.max_pending_orders) {
+      if ((gestorProfile as any).current_pending_orders >= (gestorProfile as any).max_pending_orders) {
         throw new Error('Has alcanzado tu límite de órdenes pendientes');
       }
       
       // Get stock lot
-      const { data: lot } = await supabase
+      const { data: lot } = await (supabase as any)
         .from('siver_match_stock_lots')
         .select('investor_id, available_quantity')
         .eq('id', stockLotId)
         .single();
       
       if (!lot) throw new Error('Lote no encontrado');
-      if (quantity > lot.available_quantity) {
+      if (quantity > (lot as any).available_quantity) {
         throw new Error('Cantidad solicitada excede disponibilidad');
       }
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_assignments')
         .insert({
           stock_lot_id: stockLotId,
-          gestor_id: gestorProfile.id,
-          investor_id: lot.investor_id,
+          gestor_id: (gestorProfile as any).id,
+          investor_id: (lot as any).investor_id,
           quantity_assigned: quantity,
           quantity_available: quantity,
           initiated_by: 'gestor',
