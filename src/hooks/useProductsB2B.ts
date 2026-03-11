@@ -443,15 +443,15 @@ export const useFeaturedProductsB2B = (limit = 6) => {
 
       // Fetch variants from B2B pricing view
       const productIds = parentProducts.map(p => p.id);
-      const { data: variantsData } = await supabase
+      const { data: variantsData } = await (supabase as any)
         .from("v_variantes_con_precio_b2b")
-        .select("id, product_id, sku, name, option_type, option_value, price, precio_b2b_final, stock, moq, attribute_combination, is_active")
+        .select("id, product_id, sku, name, price, precio_b2b_final, stock, moq, attribute_combination, is_active")
         .in("product_id", productIds)
         .eq("is_active", true);
 
       // Group variants
       const variantsByProduct = new Map<string, ProductVariantEAV[]>();
-      (variantsData || []).forEach(v => {
+      (variantsData || []).forEach((v: any) => {
         if (!variantsByProduct.has(v.product_id)) {
           variantsByProduct.set(v.product_id, []);
         }
