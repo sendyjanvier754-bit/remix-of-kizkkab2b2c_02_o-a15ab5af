@@ -238,7 +238,7 @@ export const usePurchaseOrders = () => {
   // Update PO logistics stage for ALL source types (B2B, B2C, Siver Match)
   const updatePOStage = useMutation({
     mutationFn: async ({ poId, newStatus }: { poId: string; newStatus: string }) => {
-      const { data, error } = await supabase.rpc('update_mixed_po_logistics_stage', {
+      const { data, error } = await (supabase as any).rpc('update_mixed_po_logistics_stage', {
         p_po_id: poId,
         p_new_status: newStatus,
       });
