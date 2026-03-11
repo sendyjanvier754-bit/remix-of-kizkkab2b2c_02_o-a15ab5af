@@ -15,8 +15,8 @@ export interface OrderItem {
   nombre: string;
   cantidad: number;
   precio_unitario: number;
-  descuento_percent: number | null;
-  subtotal: number;
+  descuento_percent?: number | null;
+  subtotal?: number | null;
   precio_total?: number | null;
   image?: string | null;
   color?: string | null;
@@ -79,7 +79,7 @@ export const useOrders = () => {
           query = query.eq('status', filters.status);
         }
         if (filters?.paymentStatus && filters.paymentStatus !== 'all') {
-          query = query.eq('payment_status', filters.paymentStatus);
+          query = query.eq('payment_status', filters.paymentStatus as any);
         }
         if (filters?.dateFrom) {
           query = query.gte('created_at', filters.dateFrom);
@@ -125,7 +125,7 @@ export const useOrders = () => {
           .order('created_at', { ascending: false });
 
         if (filters?.paymentStatus && filters.paymentStatus !== 'all') {
-          query = query.eq('payment_status', filters.paymentStatus);
+          query = query.eq('payment_status', filters.paymentStatus as any);
         }
         if (filters?.status && filters.status !== 'all') {
           query = query.eq('status', filters.status);
@@ -392,7 +392,7 @@ export const useOrders = () => {
   // Reject manual payment via SECURITY DEFINER RPC
   const rejectManualPayment = useMutation({
     mutationFn: async ({ orderId, rejectionReason }: { orderId: string; rejectionReason?: string }) => {
-      const { data, error } = await supabase.rpc('admin_reject_payment', {
+      const { data, error } = await (supabase as any).rpc('admin_reject_payment', {
         p_order_id: orderId,
         p_admin_user_id: user?.id,
         p_rejection_reason: rejectionReason || 'Pago no verificado',

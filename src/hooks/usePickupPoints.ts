@@ -53,7 +53,7 @@ export const usePickupPoints = () => {
         .order('name');
 
       if (error) throw error;
-      setPickupPoints(data || []);
+      setPickupPoints((data || []) as unknown as PickupPoint[]);
     } catch (error: any) {
       console.error('Error fetching pickup points:', error);
     } finally {
@@ -152,7 +152,7 @@ export const usePickupPointsByCommune = (communeId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as PickupPoint[];
+      return (data || []) as unknown as PickupPoint[];
     },
   });
 };
@@ -176,7 +176,7 @@ export const useDeliveryScanner = (pickupPointId?: string) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setPendingDeliveries(data || []);
+      setPendingDeliveries((data || []) as unknown as OrderDelivery[]);
     } catch (error: any) {
       console.error('Error fetching deliveries:', error);
     } finally {
@@ -211,7 +211,7 @@ export const useDeliveryScanner = (pickupPointId?: string) => {
         .eq('key', 'escrow_release_hours')
         .single();
 
-      const escrowHours = settings?.value || 48;
+      const escrowHours = Number(settings?.value) || 48;
       const releaseAt = new Date();
       releaseAt.setHours(releaseAt.getHours() + escrowHours);
 

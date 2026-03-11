@@ -52,9 +52,9 @@ export const useProductReviews = (productId: string | undefined) => {
             .eq("product_id", productId)
             .order("created_at", { ascending: false });
 
-          if (err2) throw err2;
+      if (err2) throw err2;
 
-          return (reviewsOnly || []).map((r) => ({
+          return (reviewsOnly || []).map((r: any) => ({
             ...r,
             images: Array.isArray(r.images) ? (r.images as string[]) : [],
             user_name: r.is_anonymous ? "Usuario Anónimo" : "Usuario",

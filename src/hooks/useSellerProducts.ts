@@ -76,7 +76,7 @@ export const useSellerProduct = (sku: string | undefined) => {
         return null;
       }
 
-      return data as SellerProduct;
+      return data as unknown as SellerProduct;
     },
     enabled: !!sku,
   });
@@ -86,41 +86,41 @@ export const useSellerProducts = (limit = 20) => {
   return useQuery({
     queryKey: ["seller-products", limit],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("seller_catalog")
-        .select(`
-          *,
-          store:stores!seller_catalog_seller_store_id_fkey(
-            id,
-            name,
-            logo,
-            whatsapp,
-            is_active
-          ),
-          source_product:products!seller_catalog_source_product_id_fkey(
-            id,
-            categoria_id,
-            precio_mayorista,
-            precio_sugerido_venta,
-            moq,
-            stock_fisico,
-            category:categories!products_categoria_id_fkey(
-              id,
-              name,
-              slug
-            )
-          )
-        `)
-        .eq("is_active", true)
-        .limit(limit)
-        .order("imported_at", { ascending: false });
+      const { data, error } = await (supabase as any)
+         .from("seller_catalog")
+         .select(`
+           *,
+           store:stores!seller_catalog_seller_store_id_fkey(
+             id,
+             name,
+             logo,
+             whatsapp,
+             is_active
+           ),
+           source_product:products!seller_catalog_source_product_id_fkey(
+             id,
+             categoria_id,
+             precio_mayorista,
+             precio_sugerido_venta,
+             moq,
+             stock_fisico,
+             category:categories!products_categoria_id_fkey(
+               id,
+               name,
+               slug
+             )
+           )
+         `)
+         .eq("is_active", true)
+         .limit(limit)
+         .order("imported_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching products:", error);
         return [];
       }
 
-      return data as SellerProduct[];
+      return data as unknown as SellerProduct[];
     },
   });
 };
@@ -179,7 +179,7 @@ export const useSellerProductsByCategory = (categoryId: string | undefined, limi
         return [];
       }
 
-      return data as SellerProduct[];
+      return data as unknown as SellerProduct[];
     },
     enabled: !!categoryId,
   });

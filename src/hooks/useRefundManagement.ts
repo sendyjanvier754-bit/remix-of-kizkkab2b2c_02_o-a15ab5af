@@ -155,7 +155,7 @@ export function useRefundManagement() {
 
       if (error) throw error;
 
-      const result = data as ChangeStatusResult;
+      const result = data as unknown as ChangeStatusResult;
       if (!result.success) {
         throw new Error(result.error || 'Error desconocido');
       }

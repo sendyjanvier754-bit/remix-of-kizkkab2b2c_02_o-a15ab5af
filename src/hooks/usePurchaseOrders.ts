@@ -103,7 +103,7 @@ export const usePurchaseOrders = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as MasterPurchaseOrder[];
+      return data as unknown as MasterPurchaseOrder[];
     },
   });
 
@@ -125,7 +125,7 @@ export const usePurchaseOrders = () => {
         .order('customer_name');
       if (linksError) throw linksError;
 
-      return { po: po as MasterPurchaseOrder, links: links as POOrderLink[] };
+      return { po: po as unknown as MasterPurchaseOrder, links: links as POOrderLink[] };
     },
     enabled: !!poId,
   });
@@ -140,7 +140,7 @@ export const usePurchaseOrders = () => {
         .eq('po_id', poId)
         .order('product_name');
       if (error) throw error;
-      return data as POPickingItem[];
+      return data as unknown as POPickingItem[];
     },
     enabled: !!poId,
   });
@@ -157,16 +157,16 @@ export const usePurchaseOrders = () => {
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as MasterPurchaseOrder | null;
+      return data as unknown as MasterPurchaseOrder | null;
     },
   });
 
   // Create new PO
   const createPO = useMutation({
     mutationFn: async (notes?: string) => {
-      const { data: poNumber } = await supabase.rpc('generate_po_number');
+      const { data: poNumber } = await (supabase as any).rpc('generate_po_number');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('master_purchase_orders')
         .insert({
           po_number: poNumber || `PO${Date.now()}`,
@@ -177,7 +177,7 @@ export const usePurchaseOrders = () => {
         .single();
       
       if (error) throw error;
-      return data as MasterPurchaseOrder;
+      return data as unknown as MasterPurchaseOrder;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['master-purchase-orders'] });
@@ -190,7 +190,7 @@ export const usePurchaseOrders = () => {
   // Link pending orders from ALL sources (B2B, B2C, Siver Match) to PO
   const linkOrdersToPO = useMutation({
     mutationFn: async (poId: string) => {
-      const { data, error } = await supabase.rpc('link_mixed_orders_to_po', { p_po_id: poId });
+      const { data, error } = await (supabase as any).rpc('link_mixed_orders_to_po', { p_po_id: poId });
       if (error) throw error;
       return data;
     },
@@ -212,7 +212,7 @@ export const usePurchaseOrders = () => {
   // Enter China tracking and generate hybrid IDs for ALL source types
   const enterChinaTracking = useMutation({
     mutationFn: async ({ poId, chinaTracking }: { poId: string; chinaTracking: string }) => {
-      const { data, error } = await supabase.rpc('process_mixed_po_china_tracking', {
+      const { data, error } = await (supabase as any).rpc('process_mixed_po_china_tracking', {
         p_po_id: poId,
         p_china_tracking: chinaTracking,
       });
@@ -238,7 +238,7 @@ export const usePurchaseOrders = () => {
   // Update PO logistics stage for ALL source types (B2B, B2C, Siver Match)
   const updatePOStage = useMutation({
     mutationFn: async ({ poId, newStatus }: { poId: string; newStatus: string }) => {
-      const { data, error } = await supabase.rpc('update_mixed_po_logistics_stage', {
+      const { data, error } = await (supabase as any).rpc('update_mixed_po_logistics_stage', {
         p_po_id: poId,
         p_new_status: newStatus,
       });
@@ -264,7 +264,7 @@ export const usePurchaseOrders = () => {
   // Generate pickup QR for confirmed payment orders
   const generatePickupQR = useMutation({
     mutationFn: async (orderLinkId: string) => {
-      const { data, error } = await supabase.rpc('generate_po_pickup_qr', {
+      const { data, error } = await (supabase as any).rpc('generate_po_pickup_qr', {
         p_order_link_id: orderLinkId,
       });
       if (error) throw error;
@@ -322,8 +322,8 @@ export const usePurchaseOrders = () => {
 
     // For Siver Match, fetch gestor/investor names
     const siverLinks = links?.filter(l => l.source_type === 'siver_match') || [];
-    const gestorIds = [...new Set(siverLinks.map(l => l.gestor_user_id).filter(Boolean))];
-    const investorIds = [...new Set(siverLinks.map(l => l.investor_user_id).filter(Boolean))];
+    const gestorIds = [...new Set(siverLinks.map(l => (l as any).gestor_user_id).filter(Boolean))];
+    const investorIds = [...new Set(siverLinks.map(l => (l as any).investor_user_id).filter(Boolean))];
     
     let gestorNames: Record<string, string> = {};
     let investorNames: Record<string, string> = {};
@@ -368,14 +368,14 @@ export const usePurchaseOrders = () => {
         department_code: link.department_code,
         commune_code: link.commune_code,
         source_type: (link.source_type as POSourceType) || 'b2c',
-        gestor_name: link.gestor_user_id ? gestorNames[link.gestor_user_id] : null,
-        investor_name: link.investor_user_id ? investorNames[link.investor_user_id] : null,
-        items: customerItems,
+        gestor_name: (link as any).gestor_user_id ? gestorNames[(link as any).gestor_user_id] : null,
+        investor_name: (link as any).investor_user_id ? investorNames[(link as any).investor_user_id] : null,
+        items: customerItems as unknown as POPickingItem[],
       });
     });
 
     return {
-      po: po as MasterPurchaseOrder,
+      po: po as unknown as MasterPurchaseOrder,
       customers: Array.from(customerMap.values()),
     };
   };
@@ -383,7 +383,7 @@ export const usePurchaseOrders = () => {
   // Process wallet splits on delivery confirmation (Siver Match only)
   const processDeliveryWalletSplits = useMutation({
     mutationFn: async (poId: string) => {
-      const { data, error } = await supabase.rpc('process_delivery_wallet_splits', { p_po_id: poId });
+      const { data, error } = await (supabase as any).rpc('process_delivery_wallet_splits', { p_po_id: poId });
       if (error) throw error;
       return data;
     },

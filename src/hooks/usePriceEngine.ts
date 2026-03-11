@@ -83,7 +83,7 @@ export const usePriceEngine = () => {
     mutationFn: async (expense: Omit<DynamicExpense, 'id' | 'sort_order'>) => {
       const { error } = await supabase
         .from('dynamic_expenses')
-        .insert(expense);
+        .insert(expense as any);
       if (error) throw error;
     },
     onSuccess: () => {

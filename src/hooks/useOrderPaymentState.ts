@@ -81,19 +81,20 @@ export const useOrderPaymentState = (): OrderPaymentStateResult => {
       if (error) throw error;
 
       if (data) {
+        const rawData = data as any;
         setActiveOrder({
-          id: data.id,
-          payment_status: data.payment_status as PaymentStatus,
-          status: data.status,
-          total_amount: Number(data.total_amount),
-          total_quantity: data.total_quantity,
-          payment_method: data.payment_method,
-          reserved_at: data.reserved_at,
-          reservation_expires_at: data.reservation_expires_at,
-          stock_reserved: data.stock_reserved,
-          checkout_session_id: data.checkout_session_id,
-          metadata: data.metadata as Record<string, any> | null,
-          created_at: data.created_at,
+          id: rawData.id,
+          payment_status: rawData.payment_status as PaymentStatus,
+          status: rawData.status,
+          total_amount: Number(rawData.total_amount),
+          total_quantity: rawData.total_quantity,
+          payment_method: rawData.payment_method,
+          reserved_at: rawData.reserved_at ?? null,
+          reservation_expires_at: rawData.reservation_expires_at ?? null,
+          stock_reserved: rawData.stock_reserved,
+          checkout_session_id: rawData.checkout_session_id ?? null,
+          metadata: rawData.metadata as Record<string, any> | null,
+          created_at: rawData.created_at,
         });
       } else {
         setActiveOrder(null);
@@ -170,7 +171,7 @@ export const useOrderPaymentState = (): OrderPaymentStateResult => {
       const { error } = await supabase
         .from('orders_b2b')
         .update({ 
-          payment_status: paymentStatus,
+          payment_status: paymentStatus as any,
           payment_method: paymentMethod,
         })
         .eq('id', orderId);
@@ -216,7 +217,7 @@ export const useOrderPaymentState = (): OrderPaymentStateResult => {
       const { error } = await supabase
         .from('orders_b2b')
         .update({ 
-          payment_status: 'cancelled',
+          payment_status: 'cancelled' as any,
           status: 'cancelled',
         })
         .eq('id', orderId);
@@ -239,12 +240,10 @@ export const useOrderPaymentState = (): OrderPaymentStateResult => {
       const { error } = await supabase
         .from('orders_b2b')
         .update({ 
-          payment_status: 'draft',
+          payment_status: 'pending' as any, // reset to pending instead of draft (not in DB enum)
           status: 'draft',
           stock_reserved: false,
-          reserved_at: null,
-          reservation_expires_at: null,
-        })
+        } as any)
         .eq('id', orderId);
 
       if (error) throw error;

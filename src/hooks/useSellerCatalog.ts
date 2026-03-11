@@ -202,14 +202,14 @@ export const useSellerCatalog = (showAll: boolean = false, sourceType: SellerCat
       // Also fetch available admin variants for each product (batch)
       let adminVariantsMap: Record<string, Array<{ id: string; nombre: string; sku: string; weight_kg: number | null }>> = {};
       if (sourceProductIds.length > 0) {
-        const { data: allAdminVariants } = await supabase
+        const { data: allAdminVariants } = await (supabase as any)
           .from('product_variants')
           .select('id, product_id, nombre, sku, weight_kg')
           .in('product_id', sourceProductIds);
         for (const v of (allAdminVariants || [])) {
           const pid = (v as any).product_id;
           if (!adminVariantsMap[pid]) adminVariantsMap[pid] = [];
-          adminVariantsMap[pid].push({ id: v.id, nombre: v.nombre, sku: v.sku, weight_kg: v.weight_kg });
+          adminVariantsMap[pid].push({ id: (v as any).id, nombre: (v as any).nombre, sku: (v as any).sku, weight_kg: (v as any).weight_kg });
         }
       }
 

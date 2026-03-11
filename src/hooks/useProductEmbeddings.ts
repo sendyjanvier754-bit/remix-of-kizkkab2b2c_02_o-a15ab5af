@@ -34,7 +34,7 @@ export const useProductEmbeddings = () => {
     
     try {
       // Fetch products - only those with images
-      let query = supabase
+      let query = (supabase as any)
         .from('products')
         .select('id, nombre, imagen_principal, embedding')
         .not('imagen_principal', 'is', null)
@@ -85,7 +85,7 @@ export const useProductEmbeddings = () => {
           const embeddingString = `[${embedding.join(',')}]`;
 
           // Update product with embedding
-          const { error: updateError } = await supabase
+          const { error: updateError } = await (supabase as any)
             .from('products')
             .update({ embedding: embeddingString })
             .eq('id', product.id);

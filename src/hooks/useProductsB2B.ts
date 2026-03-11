@@ -132,7 +132,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           .in("product_id", productIds)
           .eq("is_active", true),
         supabase
-          .from("b2c_max_prices")
+          .from("b2c_max_prices" as any)
           .select("source_product_id, max_b2c_price, num_sellers, min_b2c_price")
           .in("source_product_id", productIds),
         supabase
@@ -188,7 +188,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
 
       // Create B2C market price lookup map
       const marketPriceMap = new Map<string, { max_b2c_price: number; num_sellers: number; min_b2c_price: number }>();
-      (marketPricesResult.data || []).forEach(mp => {
+      (marketPricesResult.data || []).forEach((mp: any) => {
         if (mp.source_product_id) {
           marketPriceMap.set(mp.source_product_id, {
             max_b2c_price: mp.max_b2c_price,
@@ -283,8 +283,8 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
         }
         
         // Use precio_b2b from vista (already includes market margins and fees)
-        const factoryCost = p.costo_base_excel || p.precio_mayorista_base || 0; // Base cost from Excel
-        const finalB2BPrice = p.precio_b2b || minVariantPrice || 0; // Final calculated price from vista
+        const factoryCost = (p as any).costo_base_excel || (p as any).precio_mayorista_base || 0; // Base cost from Excel
+        const finalB2BPrice = (p as any).precio_b2b || minVariantPrice || 0; // Final calculated price from vista
         const imagen = p.imagen_principal || "/placeholder.svg";
         
         // Logistics cost from v_business_panel_data (uses user's market country → same as Mi Catálogo)
@@ -374,7 +374,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           stock_fisico: finalStock,
           imagen_principal: imagen,
           categoria_id: p.categoria_id || "",
-          rating: p.rating,
+          rating: (p as any).rating,
           variant_count: variants.length,
           variant_ids: variants.map(v => v.id),
           variants: variantInfos,
@@ -443,15 +443,15 @@ export const useFeaturedProductsB2B = (limit = 6) => {
 
       // Fetch variants from B2B pricing view
       const productIds = parentProducts.map(p => p.id);
-      const { data: variantsData } = await supabase
+      const { data: variantsData } = await (supabase as any)
         .from("v_variantes_con_precio_b2b")
-        .select("id, product_id, sku, name, option_type, option_value, price, precio_b2b_final, stock, moq, attribute_combination, is_active")
+        .select("id, product_id, sku, name, price, precio_b2b_final, stock, moq, attribute_combination, is_active")
         .in("product_id", productIds)
         .eq("is_active", true);
 
       // Group variants
       const variantsByProduct = new Map<string, ProductVariantEAV[]>();
-      (variantsData || []).forEach(v => {
+      (variantsData || []).forEach((v: any) => {
         if (!variantsByProduct.has(v.product_id)) {
           variantsByProduct.set(v.product_id, []);
         }
@@ -506,7 +506,7 @@ export const useFeaturedProductsB2B = (limit = 6) => {
           stock_fisico: totalStock > 0 ? totalStock : p.stock_fisico || 0,
           imagen_principal: imagen,
           categoria_id: p.categoria_id || "",
-          rating: p.rating,
+          rating: (p as any).rating,
           variant_count: variants.length,
           variant_ids: variants.map(v => v.id),
           variants: variantInfos,

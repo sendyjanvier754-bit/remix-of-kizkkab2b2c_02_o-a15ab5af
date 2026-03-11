@@ -39,12 +39,12 @@ export const usePlatformSettings = () => {
 
       if (error) throw error;
 
-      setSettings(data || []);
+      setSettings((data || []) as unknown as PlatformSetting[]);
       
       // Parse into config object
       const configMap: Record<string, number> = {};
-      (data || []).forEach((s: PlatformSetting) => {
-        configMap[s.key] = s.value;
+      (data || []).forEach((s: any) => {
+        configMap[s.key] = Number(s.value);
       });
 
       setConfig({
@@ -64,7 +64,7 @@ export const usePlatformSettings = () => {
     try {
       const { error } = await supabase
         .from('platform_settings')
-        .update({ value, updated_at: new Date().toISOString() })
+        .update({ value: String(value), updated_at: new Date().toISOString() } as any)
         .eq('key', key);
 
       if (error) throw error;
@@ -93,7 +93,7 @@ export const usePlatformSettings = () => {
       for (const [key, value] of Object.entries(updates)) {
         await supabase
           .from('platform_settings')
-          .update({ value, updated_at: new Date().toISOString() })
+          .update({ value: String(value), updated_at: new Date().toISOString() } as any)
           .eq('key', key);
       }
 

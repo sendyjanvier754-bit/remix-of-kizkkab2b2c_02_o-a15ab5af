@@ -174,7 +174,7 @@ export const useSiverMatch = () => {
           .eq('user_id', user.id);
         
         if (error) throw error;
-        return data as SiverMatchProfile[];
+        return data as unknown as SiverMatchProfile[];
       },
       enabled: !!user?.id,
     });
@@ -199,7 +199,7 @@ export const useSiverMatch = () => {
           .maybeSingle();
         
         if (error) throw error;
-        return data as SiverMatchProfile | null;
+        return data as unknown as SiverMatchProfile | null;
       },
       enabled: !!user?.id,
     });
@@ -227,7 +227,7 @@ export const useSiverMatch = () => {
         
         const { data, error } = await query;
         if (error) throw error;
-        return data as SiverMatchProfile[];
+        return data as unknown as SiverMatchProfile[];
       },
     });
   };
@@ -244,12 +244,12 @@ export const useSiverMatch = () => {
     }) => {
       if (!user?.id) throw new Error('No autenticado');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_profiles')
         .insert({
           user_id: user.id,
           ...profile,
-        })
+        } as any)
         .select()
         .single();
       
@@ -276,14 +276,14 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!investorProfile?.id) return [];
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_stock_lots')
           .select('*')
           .eq('investor_id', investorProfile.id)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as StockLot[];
+        return data as unknown as StockLot[];
       },
       enabled: !!investorProfile?.id,
     });
@@ -294,7 +294,7 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-available-lots'],
       queryFn: async () => {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_stock_lots')
           .select(`
             *,
@@ -307,7 +307,7 @@ export const useSiverMatch = () => {
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as StockLot[];
+        return data as unknown as StockLot[];
       },
     });
   };
@@ -329,7 +329,7 @@ export const useSiverMatch = () => {
       gestor_commission_per_unit: number;
       notes?: string;
     }) => {
-      const { data: profile } = await supabase
+      const { data: profile } = await (supabase as any)
         .from('siver_match_profiles')
         .select('id')
         .eq('user_id', user?.id)
@@ -338,10 +338,10 @@ export const useSiverMatch = () => {
       
       if (!profile) throw new Error('No tienes perfil de inversor');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_stock_lots')
         .insert({
-          investor_id: profile.id,
+          investor_id: (profile as any).id,
           available_quantity: lot.total_quantity,
           status: 'draft',
           ...lot,
@@ -364,7 +364,7 @@ export const useSiverMatch = () => {
   // Publish stock lot
   const publishStockLot = useMutation({
     mutationFn: async (lotId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('siver_match_stock_lots')
         .update({ status: 'published', updated_at: new Date().toISOString() })
         .eq('id', lotId);
@@ -390,7 +390,7 @@ export const useSiverMatch = () => {
       if (logisticsStage) updates.logistics_stage = logisticsStage;
       if (logisticsStage === 'in_hub') updates.arrived_at_hub_at = new Date().toISOString();
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('siver_match_stock_lots')
         .update(updates)
         .eq('id', lotId);
@@ -416,7 +416,7 @@ export const useSiverMatch = () => {
         
         const column = role === 'gestor' ? 'gestor_id' : 'investor_id';
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_assignments')
           .select(`
             *,
@@ -432,7 +432,7 @@ export const useSiverMatch = () => {
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as Assignment[];
+        return data as unknown as Assignment[];
       },
       enabled: !!profile?.id,
     });
@@ -445,7 +445,7 @@ export const useSiverMatch = () => {
       quantity: number;
       notes?: string;
     }) => {
-      const { data: gestorProfile } = await supabase
+      const { data: gestorProfile } = await (supabase as any)
         .from('siver_match_profiles')
         .select('id, current_pending_orders, max_pending_orders')
         .eq('user_id', user?.id)
@@ -455,28 +455,28 @@ export const useSiverMatch = () => {
       if (!gestorProfile) throw new Error('No tienes perfil de gestor');
       
       // Check capacity
-      if (gestorProfile.current_pending_orders >= gestorProfile.max_pending_orders) {
+      if ((gestorProfile as any).current_pending_orders >= (gestorProfile as any).max_pending_orders) {
         throw new Error('Has alcanzado tu límite de órdenes pendientes');
       }
       
       // Get stock lot
-      const { data: lot } = await supabase
+      const { data: lot } = await (supabase as any)
         .from('siver_match_stock_lots')
         .select('investor_id, available_quantity')
         .eq('id', stockLotId)
         .single();
       
       if (!lot) throw new Error('Lote no encontrado');
-      if (quantity > lot.available_quantity) {
+      if (quantity > (lot as any).available_quantity) {
         throw new Error('Cantidad solicitada excede disponibilidad');
       }
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_assignments')
         .insert({
           stock_lot_id: stockLotId,
-          gestor_id: gestorProfile.id,
-          investor_id: lot.investor_id,
+          gestor_id: (gestorProfile as any).id,
+          investor_id: (lot as any).investor_id,
           quantity_assigned: quantity,
           quantity_available: quantity,
           initiated_by: 'gestor',
@@ -516,7 +516,7 @@ export const useSiverMatch = () => {
         updates.investor_notes = notes;
       }
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('siver_match_assignments')
         .update(updates)
         .eq('id', assignmentId);
@@ -525,7 +525,7 @@ export const useSiverMatch = () => {
       
       // If accepted, update gestor pending count
       if (accept) {
-        const { data: assignment } = await supabase
+        const { data: assignment } = await (supabase as any)
           .from('siver_match_assignments')
           .select('gestor_id')
           .eq('id', assignmentId)
@@ -533,17 +533,17 @@ export const useSiverMatch = () => {
         
         // Update pending orders count - increment by 1
         if (assignment) {
-          const { data: profile } = await supabase
+          const { data: profile } = await (supabase as any)
             .from('siver_match_profiles')
             .select('current_pending_orders')
-            .eq('id', assignment.gestor_id)
+            .eq('id', (assignment as any).gestor_id)
             .single();
           
           if (profile) {
-            await supabase
+            await (supabase as any)
               .from('siver_match_profiles')
-              .update({ current_pending_orders: (profile.current_pending_orders || 0) + 1 })
-              .eq('id', assignment.gestor_id);
+              .update({ current_pending_orders: ((profile as any).current_pending_orders || 0) + 1 })
+              .eq('id', (assignment as any).gestor_id);
           }
         }
       }
@@ -565,18 +565,14 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!gestorProfile?.id) return [];
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_sales')
-          .select(`
-            *,
-            department:departments(name),
-            commune:communes(name)
-          `)
+          .select(`*, department:departments(name), commune:communes(name)`)
           .eq('gestor_id', gestorProfile.id)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as MatchSale[];
+        return data as unknown as MatchSale[];
       },
       enabled: !!gestorProfile?.id,
     });
@@ -591,21 +587,14 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!investorProfile?.id) return [];
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_sales')
-          .select(`
-            *,
-            gestor:siver_match_profiles!siver_match_sales_gestor_id_fkey(
-              id, display_name, avatar_url, phone
-            ),
-            department:departments(name),
-            commune:communes(name)
-          `)
+          .select(`*, gestor:siver_match_profiles!siver_match_sales_gestor_id_fkey(id, display_name, avatar_url, phone), department:departments(name), commune:communes(name)`)
           .eq('investor_id', investorProfile.id)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as MatchSale[];
+        return data as unknown as MatchSale[];
       },
       enabled: !!investorProfile?.id,
     });
@@ -625,21 +614,18 @@ export const useSiverMatch = () => {
       unit_price: number;
     }) => {
       // Get assignment details
-      const { data: assignment } = await supabase
+      const { data: assignment } = await (supabase as any)
         .from('siver_match_assignments')
-        .select(`
-          *,
-          stock_lot:siver_match_stock_lots(*)
-        `)
+        .select(`*, stock_lot:siver_match_stock_lots(*)`)
         .eq('id', sale.assignment_id)
         .single();
       
       if (!assignment) throw new Error('Asignación no encontrada');
-      if (sale.quantity > assignment.quantity_available) {
+      if (sale.quantity > (assignment as any).quantity_available) {
         throw new Error('Cantidad excede disponibilidad');
       }
       
-      const stockLot = assignment.stock_lot as StockLot;
+      const stockLot = (assignment as any).stock_lot as StockLot;
       
       // Calculate financial split
       const totalAmount = sale.quantity * sale.unit_price;
@@ -649,19 +635,19 @@ export const useSiverMatch = () => {
       const investorAmount = totalAmount - gestorCommission - siverFee;
       
       // Generate sale number
-      const { data: saleNumber } = await supabase.rpc('generate_match_sale_number');
+      const { data: saleNumber } = await (supabase as any).rpc('generate_match_sale_number');
       
       // Generate pickup code
-      const { data: pickupCode } = await supabase.rpc('generate_pickup_code');
+      const { data: pickupCode } = await (supabase as any).rpc('generate_pickup_code');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_sales')
         .insert({
           sale_number: saleNumber,
           assignment_id: sale.assignment_id,
-          stock_lot_id: assignment.stock_lot_id,
-          gestor_id: assignment.gestor_id,
-          investor_id: assignment.investor_id,
+          stock_lot_id: (assignment as any).stock_lot_id,
+          gestor_id: (assignment as any).gestor_id,
+          investor_id: (assignment as any).investor_id,
           customer_name: sale.customer_name,
           customer_phone: sale.customer_phone,
           customer_email: sale.customer_email,
@@ -683,16 +669,16 @@ export const useSiverMatch = () => {
       if (error) throw error;
       
       // Update assignment quantities
-      await supabase
+      await (supabase as any)
         .from('siver_match_assignments')
         .update({
-          quantity_sold: assignment.quantity_sold + sale.quantity,
-          quantity_available: assignment.quantity_available - sale.quantity,
+          quantity_sold: (assignment as any).quantity_sold + sale.quantity,
+          quantity_available: (assignment as any).quantity_available - sale.quantity,
         })
         .eq('id', sale.assignment_id);
       
       // Update stock lot quantities
-      await supabase
+      await (supabase as any)
         .from('siver_match_stock_lots')
         .update({
           sold_quantity: stockLot.sold_quantity + sale.quantity,

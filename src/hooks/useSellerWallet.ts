@@ -81,7 +81,7 @@ export const useSellerWallet = (sellerId?: string) => {
           .order('created_at', { ascending: false })
           .limit(50);
 
-        setTransactions(txData || []);
+        setTransactions((txData || []) as any[]);
 
         const { data: withdrawalData } = await supabase
           .from('withdrawal_requests')
@@ -89,7 +89,7 @@ export const useSellerWallet = (sellerId?: string) => {
           .eq('wallet_id', walletData.id)
           .order('created_at', { ascending: false });
 
-        setWithdrawals(withdrawalData || []);
+        setWithdrawals((withdrawalData || []) as any[]);
       }
     } catch (error: any) {
       console.error('Error fetching wallet:', error);
@@ -216,7 +216,7 @@ export const useAdminWallets = () => {
         .in('status', ['pending', 'processing'])
         .order('created_at', { ascending: true });
 
-      setPendingWithdrawals(withdrawalsData || []);
+      setPendingWithdrawals((withdrawalsData || []) as any[]);
     } catch (error: any) {
       console.error('Error fetching admin wallets:', error);
     } finally {
@@ -231,7 +231,7 @@ export const useAdminWallets = () => {
   ) => {
     try {
       // Use secure server-side function for withdrawal processing
-      const { data, error } = await supabase.rpc('process_withdrawal_completion', {
+      const { data, error } = await (supabase as any).rpc('process_withdrawal_completion', {
         p_withdrawal_id: withdrawalId,
         p_action: action,
         p_admin_notes: notes || null

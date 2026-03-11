@@ -97,8 +97,9 @@ export const useShippingTypes = (routeId?: string, countryId?: string) => {
         console.log('🔄 Shipping tiers fetched from DB:', data);  // Debug log
 
         // Map shipping_tiers to ShippingType format
-        const mappedTypes: ShippingType[] = (data || []).map(tier => ({
+        const mappedTypes: ShippingType[] = (data || []).map((tier: any) => ({
           ...tier,
+          transport_type: tier.transport_type as 'aereo' | 'maritimo' | 'terrestre',
           display_name: tier.custom_tier_name || tier.tier_name,
           extra_cost_fixed: 0, // Legacy - no longer used
           extra_cost_percent: 0, // Legacy - no longer used
@@ -169,8 +170,9 @@ export const useShippingTypes = (routeId?: string, countryId?: string) => {
                 return;
               }
 
-              const mappedTypes: ShippingType[] = (data || []).map(tier => ({
+              const mappedTypes: ShippingType[] = (data || []).map((tier: any) => ({
                 ...tier,
+                transport_type: tier.transport_type as 'aereo' | 'maritimo' | 'terrestre',
                 display_name: tier.custom_tier_name || tier.tier_name,
                 extra_cost_fixed: 0,
                 extra_cost_percent: 0,
@@ -256,10 +258,10 @@ export const useShippingTypes = (routeId?: string, countryId?: string) => {
         }
 
         return {
-          weight_rounded_kg: parseFloat(data[0].weight_rounded_kg),
-          base_cost: parseFloat(data[0].base_cost),
-          extra_cost: parseFloat(data[0].extra_cost),
-          total_cost_with_type: parseFloat(data[0].total_cost_with_type),
+          weight_rounded_kg: parseFloat(String(data[0].weight_rounded_kg)),
+          base_cost: parseFloat(String(data[0].base_cost)),
+          extra_cost: parseFloat(String(data[0].extra_cost)),
+          total_cost_with_type: parseFloat(String(data[0].total_cost_with_type)),
           shipping_type_name: data[0].shipping_type_name,
           shipping_type_display: data[0].shipping_type_display,
         };
