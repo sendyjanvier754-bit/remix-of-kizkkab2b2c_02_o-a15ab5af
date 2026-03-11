@@ -212,7 +212,7 @@ export const usePurchaseOrders = () => {
   // Enter China tracking and generate hybrid IDs for ALL source types
   const enterChinaTracking = useMutation({
     mutationFn: async ({ poId, chinaTracking }: { poId: string; chinaTracking: string }) => {
-      const { data, error } = await supabase.rpc('process_mixed_po_china_tracking', {
+      const { data, error } = await (supabase as any).rpc('process_mixed_po_china_tracking', {
         p_po_id: poId,
         p_china_tracking: chinaTracking,
       });
