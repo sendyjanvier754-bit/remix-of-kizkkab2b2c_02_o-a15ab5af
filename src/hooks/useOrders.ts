@@ -15,8 +15,8 @@ export interface OrderItem {
   nombre: string;
   cantidad: number;
   precio_unitario: number;
-  descuento_percent: number | null;
-  subtotal: number;
+  descuento_percent?: number | null;
+  subtotal?: number | null;
   precio_total?: number | null;
   image?: string | null;
   color?: string | null;

@@ -25,7 +25,7 @@ export const useOrderPOInfo = (orderId: string | undefined) => {
       if (!orderId) return null;
 
       // Get the po_order_link for this order along with PO info
-      const { data: link, error: linkError } = await supabase
+      const { data: link, error: linkError } = await (supabase as any)
         .from('po_order_links')
         .select(`
           id,
@@ -55,25 +55,25 @@ export const useOrderPOInfo = (orderId: string | undefined) => {
           shipped_to_haiti_at,
           arrived_hub_at
         `)
-        .eq('id', (link as any).po_id)
+        .eq('id', link.po_id)
         .single();
 
       if (poError) throw poError;
 
       return {
-        po_id: (po as any).id,
-        po_number: (po as any).po_number,
-        po_status: (po as any).status,
-        hybrid_tracking_id: (link as any).hybrid_tracking_id,
-        short_order_id: (link as any).short_order_id,
-        current_status: (link as any).current_status,
-        pickup_point_code: (link as any).pickup_point_code,
-        delivery_confirmed_at: (link as any).delivery_confirmed_at,
-        shipped_from_china_at: (po as any).shipped_from_china_at,
-        arrived_usa_at: (po as any).arrived_usa_at,
-        shipped_to_haiti_at: (po as any).shipped_to_haiti_at,
-        arrived_hub_at: (po as any).arrived_hub_at,
-        china_tracking_number: (po as any).china_tracking_number,
+        po_id: po.id,
+        po_number: po.po_number,
+        po_status: po.status,
+        hybrid_tracking_id: link.hybrid_tracking_id,
+        short_order_id: link.short_order_id,
+        current_status: link.current_status,
+        pickup_point_code: link.pickup_point_code,
+        delivery_confirmed_at: link.delivery_confirmed_at,
+        shipped_from_china_at: po.shipped_from_china_at,
+        arrived_usa_at: po.arrived_usa_at,
+        shipped_to_haiti_at: po.shipped_to_haiti_at,
+        arrived_hub_at: po.arrived_hub_at,
+        china_tracking_number: po.china_tracking_number,
       } as OrderPOInfo;
     },
     enabled: !!orderId,
@@ -88,7 +88,7 @@ export const useOrdersPOInfo = (orderIds: string[]) => {
       if (orderIds.length === 0) return {};
 
       // Get all po_order_links for these orders
-      const { data: links, error: linksError } = await supabase
+      const { data: links, error: linksError } = await (supabase as any)
         .from('po_order_links')
         .select(`
           id,
@@ -106,10 +106,10 @@ export const useOrdersPOInfo = (orderIds: string[]) => {
       if (!links || links.length === 0) return {};
 
       // Get unique PO IDs
-      const poIds = [...new Set(links.map(l => l.po_id))];
+      const poIds = [...new Set((links as any[]).map((l: any) => l.po_id))];
 
       // Get PO details
-      const { data: pos, error: posError } = await supabase
+      const { data: pos, error: posError } = await (supabase as any)
         .from('master_purchase_orders')
         .select(`
           id,
@@ -126,11 +126,11 @@ export const useOrdersPOInfo = (orderIds: string[]) => {
       if (posError) throw posError;
 
       // Create a map of PO info by order ID
-      const poMap = new Map(pos?.map(po => [po.id, po]) || []);
+      const poMap = new Map((pos as any[] || []).map((po: any) => [po.id, po]));
       const result: Record<string, OrderPOInfo> = {};
 
-      for (const link of links) {
-        const po = poMap.get(link.po_id);
+      for (const link of links as any[]) {
+        const po = poMap.get(link.po_id) as any;
         if (po) {
           result[link.order_id] = {
             po_id: po.id,
