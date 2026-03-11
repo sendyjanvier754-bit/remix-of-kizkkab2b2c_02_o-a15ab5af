@@ -152,7 +152,7 @@ export const usePickupPointsByCommune = (communeId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as PickupPoint[];
+      return (data || []) as unknown as PickupPoint[];
     },
   });
 };
