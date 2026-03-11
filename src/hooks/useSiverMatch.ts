@@ -244,12 +244,12 @@ export const useSiverMatch = () => {
     }) => {
       if (!user?.id) throw new Error('No autenticado');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_profiles')
         .insert({
           user_id: user.id,
           ...profile,
-        })
+        } as any)
         .select()
         .single();
       
