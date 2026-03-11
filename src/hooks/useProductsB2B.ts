@@ -283,8 +283,8 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
         }
         
         // Use precio_b2b from vista (already includes market margins and fees)
-        const factoryCost = p.costo_base_excel || p.precio_mayorista_base || 0; // Base cost from Excel
-        const finalB2BPrice = p.precio_b2b || minVariantPrice || 0; // Final calculated price from vista
+        const factoryCost = (p as any).costo_base_excel || (p as any).precio_mayorista_base || 0; // Base cost from Excel
+        const finalB2BPrice = (p as any).precio_b2b || minVariantPrice || 0; // Final calculated price from vista
         const imagen = p.imagen_principal || "/placeholder.svg";
         
         // Logistics cost from v_business_panel_data (uses user's market country → same as Mi Catálogo)
