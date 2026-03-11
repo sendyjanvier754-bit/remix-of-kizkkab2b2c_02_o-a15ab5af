@@ -329,7 +329,7 @@ export const useSiverMatch = () => {
       gestor_commission_per_unit: number;
       notes?: string;
     }) => {
-      const { data: profile } = await supabase
+      const { data: profile } = await (supabase as any)
         .from('siver_match_profiles')
         .select('id')
         .eq('user_id', user?.id)
@@ -338,10 +338,10 @@ export const useSiverMatch = () => {
       
       if (!profile) throw new Error('No tienes perfil de inversor');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_stock_lots')
         .insert({
-          investor_id: profile.id,
+          investor_id: (profile as any).id,
           available_quantity: lot.total_quantity,
           status: 'draft',
           ...lot,
