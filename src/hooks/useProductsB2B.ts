@@ -188,7 +188,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
 
       // Create B2C market price lookup map
       const marketPriceMap = new Map<string, { max_b2c_price: number; num_sellers: number; min_b2c_price: number }>();
-      (marketPricesResult.data || []).forEach(mp => {
+      (marketPricesResult.data || []).forEach((mp: any) => {
         if (mp.source_product_id) {
           marketPriceMap.set(mp.source_product_id, {
             max_b2c_price: mp.max_b2c_price,
