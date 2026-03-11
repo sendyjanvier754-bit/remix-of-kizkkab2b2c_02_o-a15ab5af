@@ -85,7 +85,7 @@ export const useProductEmbeddings = () => {
           const embeddingString = `[${embedding.join(',')}]`;
 
           // Update product with embedding
-          const { error: updateError } = await supabase
+          const { error: updateError } = await (supabase as any)
             .from('products')
             .update({ embedding: embeddingString })
             .eq('id', product.id);

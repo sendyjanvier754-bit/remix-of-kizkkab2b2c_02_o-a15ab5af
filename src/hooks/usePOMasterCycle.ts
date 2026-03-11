@@ -111,9 +111,10 @@ export function usePOMasterCycle() {
         return null;
       }
 
-      if (!data?.success) {
-        setError(data?.error || 'Error al cerrar PO');
-        toast.error(data?.error || 'Error al cerrar PO');
+      const result = data as any;
+      if (!result?.success) {
+        setError(result?.error || 'Error al cerrar PO');
+        toast.error(result?.error || 'Error al cerrar PO');
         return null;
       }
 
@@ -122,9 +123,9 @@ export function usePOMasterCycle() {
       await queryClient.invalidateQueries({ queryKey: ['closed-po-masters'] });
       await queryClient.invalidateQueries({ queryKey: ['orders-in-active-po'] });
 
-      toast.success(`PO ${data.closed_po_number} cerrada. ${data.orders_transitioned} órdenes en preparación. Nueva PO: ${data.new_po_number}`);
+      toast.success(`PO ${result.closed_po_number} cerrada. ${result.orders_transitioned} órdenes en preparación. Nueva PO: ${result.new_po_number}`);
       
-      return data as POCloseResult;
+      return result as unknown as POCloseResult;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMsg);

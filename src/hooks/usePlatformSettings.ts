@@ -93,7 +93,7 @@ export const usePlatformSettings = () => {
       for (const [key, value] of Object.entries(updates)) {
         await supabase
           .from('platform_settings')
-          .update({ value, updated_at: new Date().toISOString() })
+          .update({ value: String(value), updated_at: new Date().toISOString() } as any)
           .eq('key', key);
       }
 

@@ -211,7 +211,7 @@ export const useDeliveryScanner = (pickupPointId?: string) => {
         .eq('key', 'escrow_release_hours')
         .single();
 
-      const escrowHours = settings?.value || 48;
+      const escrowHours = Number(settings?.value) || 48;
       const releaseAt = new Date();
       releaseAt.setHours(releaseAt.getHours() + escrowHours);
 

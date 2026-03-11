@@ -124,8 +124,8 @@ export function useProductDeletion() {
 
       if (error) throw error;
 
-      if (data?.images_cleaned > 0) {
-        toast.info(`${data.images_cleaned} imágenes marcadas como limpiadas`);
+      if ((data as any)?.images_cleaned > 0) {
+        toast.info(`${(data as any).images_cleaned} imágenes marcadas como limpiadas`);
       }
 
       return data;

@@ -44,9 +44,9 @@ export function usePOMasterPerMarket() {
   const useDashboard = () => useQuery({
     queryKey: ['po-market-dashboard'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_market_po_dashboard');
+      const { data, error } = await (supabase as any).rpc('get_market_po_dashboard');
       if (error) throw error;
-      return (data || []) as MarketPODashboardItem[];
+      return (data || []) as unknown as MarketPODashboardItem[];
     },
     refetchInterval: 30000,
   });
