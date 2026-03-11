@@ -48,7 +48,7 @@ export const useProductVariants = (productId: string | undefined, isB2B: boolean
         ? "id, product_id, sku, name, price, precio_b2b_final, stock, moq, images, is_active, attribute_combination"
         : "*";
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from(table)
         .select(selectFields)
         .eq("product_id", productId)

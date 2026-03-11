@@ -14,7 +14,7 @@ export const useProducts = (page = 0, limit = 12) => {
         .order("created_at", { ascending: false });
 
       if (error) throw new Error(error.message);
-      return { products: data as Product[], total: count || 0 };
+      return { products: data as unknown as Product[], total: count || 0 };
     },
   });
 };
@@ -30,7 +30,7 @@ export const useProductBySku = (sku: string) => {
         .single();
 
       if (error) throw new Error(error.message);
-      return data as Product;
+      return data as unknown as Product;
     },
     enabled: !!sku,
   });
@@ -51,7 +51,7 @@ export const useProductsByCategory = (categoryId: string | null, page = 0, limit
         .order("created_at", { ascending: false });
 
       if (error) throw new Error(error.message);
-      return { products: data as Product[], total: count || 0 };
+      return { products: data as unknown as Product[], total: count || 0 };
     },
     enabled: !!categoryId,
   });
@@ -72,7 +72,7 @@ export const useSearchProducts = (query: string, page = 0, limit = 12) => {
         .range(page * limit, (page + 1) * limit - 1);
 
       if (error) throw new Error(error.message);
-      return { products: data as Product[], total: count || 0 };
+      return { products: data as unknown as Product[], total: count || 0 };
     },
     enabled: !!query,
   });
@@ -91,7 +91,7 @@ export const useInfiniteProducts = (limit = 12) => {
 
       if (error) throw new Error(error.message);
       return {
-        products: data as Product[],
+        products: data as unknown as Product[],
         nextPage: (pageParam + 1) * limit < (count || 0) ? pageParam + 1 : undefined,
       };
     },

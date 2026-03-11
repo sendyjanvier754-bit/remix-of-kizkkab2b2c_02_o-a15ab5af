@@ -48,7 +48,7 @@ export const useProductShippingCosts = (productIds?: string[]) => {
         const ids = productIdString.split(',');
         
         // Consultar la vista v_product_shipping_costs
-        const { data, error: queryError } = await supabase
+        const { data, error: queryError } = await (supabase as any)
           .from('v_product_shipping_costs')
           .select('*')
           .in('product_id', ids);
