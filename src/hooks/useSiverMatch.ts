@@ -276,14 +276,14 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!investorProfile?.id) return [];
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_stock_lots')
           .select('*')
           .eq('investor_id', investorProfile.id)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as StockLot[];
+        return data as unknown as StockLot[];
       },
       enabled: !!investorProfile?.id,
     });
