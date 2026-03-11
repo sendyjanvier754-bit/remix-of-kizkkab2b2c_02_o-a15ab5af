@@ -76,7 +76,7 @@ export const useSellerProduct = (sku: string | undefined) => {
         return null;
       }
 
-      return data as SellerProduct;
+      return data as unknown as SellerProduct;
     },
     enabled: !!sku,
   });

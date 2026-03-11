@@ -368,9 +368,9 @@ export const usePurchaseOrders = () => {
         department_code: link.department_code,
         commune_code: link.commune_code,
         source_type: (link.source_type as POSourceType) || 'b2c',
-        gestor_name: link.gestor_user_id ? gestorNames[link.gestor_user_id] : null,
-        investor_name: link.investor_user_id ? investorNames[link.investor_user_id] : null,
-        items: customerItems,
+        gestor_name: (link as any).gestor_user_id ? gestorNames[(link as any).gestor_user_id] : null,
+        investor_name: (link as any).investor_user_id ? investorNames[(link as any).investor_user_id] : null,
+        items: customerItems as unknown as POPickingItem[],
       });
     });
 
