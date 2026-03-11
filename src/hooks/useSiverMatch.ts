@@ -416,7 +416,7 @@ export const useSiverMatch = () => {
         
         const column = role === 'gestor' ? 'gestor_id' : 'investor_id';
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_assignments')
           .select(`
             *,
@@ -432,7 +432,7 @@ export const useSiverMatch = () => {
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as Assignment[];
+        return data as unknown as Assignment[];
       },
       enabled: !!profile?.id,
     });
