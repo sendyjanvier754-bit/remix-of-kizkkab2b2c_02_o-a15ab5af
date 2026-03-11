@@ -294,7 +294,7 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-available-lots'],
       queryFn: async () => {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_stock_lots')
           .select(`
             *,
@@ -307,7 +307,7 @@ export const useSiverMatch = () => {
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as StockLot[];
+        return data as unknown as StockLot[];
       },
     });
   };
