@@ -39,12 +39,12 @@ export const usePlatformSettings = () => {
 
       if (error) throw error;
 
-      setSettings(data || []);
+      setSettings((data || []) as unknown as PlatformSetting[]);
       
       // Parse into config object
       const configMap: Record<string, number> = {};
-      (data || []).forEach((s: PlatformSetting) => {
-        configMap[s.key] = s.value;
+      (data || []).forEach((s: any) => {
+        configMap[s.key] = Number(s.value);
       });
 
       setConfig({
