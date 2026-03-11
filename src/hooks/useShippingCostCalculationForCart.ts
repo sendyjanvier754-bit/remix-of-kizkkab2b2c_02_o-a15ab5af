@@ -155,7 +155,7 @@ export const useShippingCostCalculationForCart = (items: CartItem[]) => {
 
         try {
           // Get the default shipping route (Haiti from China)
-          const { data: routeData } = await supabase
+          const { data: routeData } = await (supabase as any)
             .from('shipping_routes')
             .select('id')
             .eq('origin', 'CHINA')

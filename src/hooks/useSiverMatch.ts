@@ -390,7 +390,7 @@ export const useSiverMatch = () => {
       if (logisticsStage) updates.logistics_stage = logisticsStage;
       if (logisticsStage === 'in_hub') updates.arrived_at_hub_at = new Date().toISOString();
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('siver_match_stock_lots')
         .update(updates)
         .eq('id', lotId);
