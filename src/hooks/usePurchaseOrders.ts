@@ -140,7 +140,7 @@ export const usePurchaseOrders = () => {
         .eq('po_id', poId)
         .order('product_name');
       if (error) throw error;
-      return data as POPickingItem[];
+      return data as unknown as POPickingItem[];
     },
     enabled: !!poId,
   });
