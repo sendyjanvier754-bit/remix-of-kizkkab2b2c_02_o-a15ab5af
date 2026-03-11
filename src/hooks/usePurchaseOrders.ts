@@ -375,7 +375,7 @@ export const usePurchaseOrders = () => {
     });
 
     return {
-      po: po as MasterPurchaseOrder,
+      po: po as unknown as MasterPurchaseOrder,
       customers: Array.from(customerMap.values()),
     };
   };
