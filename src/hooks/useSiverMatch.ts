@@ -614,21 +614,18 @@ export const useSiverMatch = () => {
       unit_price: number;
     }) => {
       // Get assignment details
-      const { data: assignment } = await supabase
+      const { data: assignment } = await (supabase as any)
         .from('siver_match_assignments')
-        .select(`
-          *,
-          stock_lot:siver_match_stock_lots(*)
-        `)
+        .select(`*, stock_lot:siver_match_stock_lots(*)`)
         .eq('id', sale.assignment_id)
         .single();
       
       if (!assignment) throw new Error('Asignación no encontrada');
-      if (sale.quantity > assignment.quantity_available) {
+      if (sale.quantity > (assignment as any).quantity_available) {
         throw new Error('Cantidad excede disponibilidad');
       }
       
-      const stockLot = assignment.stock_lot as StockLot;
+      const stockLot = (assignment as any).stock_lot as StockLot;
       
       // Calculate financial split
       const totalAmount = sale.quantity * sale.unit_price;
@@ -638,19 +635,19 @@ export const useSiverMatch = () => {
       const investorAmount = totalAmount - gestorCommission - siverFee;
       
       // Generate sale number
-      const { data: saleNumber } = await supabase.rpc('generate_match_sale_number');
+      const { data: saleNumber } = await (supabase as any).rpc('generate_match_sale_number');
       
       // Generate pickup code
-      const { data: pickupCode } = await supabase.rpc('generate_pickup_code');
+      const { data: pickupCode } = await (supabase as any).rpc('generate_pickup_code');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_sales')
         .insert({
           sale_number: saleNumber,
           assignment_id: sale.assignment_id,
-          stock_lot_id: assignment.stock_lot_id,
-          gestor_id: assignment.gestor_id,
-          investor_id: assignment.investor_id,
+          stock_lot_id: (assignment as any).stock_lot_id,
+          gestor_id: (assignment as any).gestor_id,
+          investor_id: (assignment as any).investor_id,
           customer_name: sale.customer_name,
           customer_phone: sale.customer_phone,
           customer_email: sale.customer_email,
