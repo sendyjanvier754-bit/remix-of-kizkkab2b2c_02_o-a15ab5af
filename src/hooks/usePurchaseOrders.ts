@@ -322,8 +322,8 @@ export const usePurchaseOrders = () => {
 
     // For Siver Match, fetch gestor/investor names
     const siverLinks = links?.filter(l => l.source_type === 'siver_match') || [];
-    const gestorIds = [...new Set(siverLinks.map(l => l.gestor_user_id).filter(Boolean))];
-    const investorIds = [...new Set(siverLinks.map(l => l.investor_user_id).filter(Boolean))];
+    const gestorIds = [...new Set(siverLinks.map(l => (l as any).gestor_user_id).filter(Boolean))];
+    const investorIds = [...new Set(siverLinks.map(l => (l as any).investor_user_id).filter(Boolean))];
     
     let gestorNames: Record<string, string> = {};
     let investorNames: Record<string, string> = {};
