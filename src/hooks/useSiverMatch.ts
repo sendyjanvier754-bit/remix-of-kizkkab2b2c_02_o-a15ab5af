@@ -587,21 +587,14 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!investorProfile?.id) return [];
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_sales')
-          .select(`
-            *,
-            gestor:siver_match_profiles!siver_match_sales_gestor_id_fkey(
-              id, display_name, avatar_url, phone
-            ),
-            department:departments(name),
-            commune:communes(name)
-          `)
+          .select(`*, gestor:siver_match_profiles!siver_match_sales_gestor_id_fkey(id, display_name, avatar_url, phone), department:departments(name), commune:communes(name)`)
           .eq('investor_id', investorProfile.id)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as MatchSale[];
+        return data as unknown as MatchSale[];
       },
       enabled: !!investorProfile?.id,
     });
