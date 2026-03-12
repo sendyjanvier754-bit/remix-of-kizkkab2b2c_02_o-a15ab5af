@@ -1094,36 +1094,15 @@ const CheckoutPage = () => {
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 
-                {/* Shipping cost breakdown */}
-                {shippingCalculation ? (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('shipping.cost')} (China → USA)</span>
-                      <span>${shippingCalculation.chinaUsaCost.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('shipping.cost')} (USA → Haití)</span>
-                      <span>${shippingCalculation.usaHaitiCost.toFixed(2)}</span>
-                    </div>
-                    {shippingCalculation.insuranceCost > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t('checkout.insurance')}</span>
-                        <span>${shippingCalculation.insuranceCost.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {(shippingCalculation.deliveryFee + shippingCalculation.operationalFee) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t('checkout.localCharges')}</span>
-                        <span>${(shippingCalculation.deliveryFee + shippingCalculation.operationalFee).toFixed(2)}</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
+                {/* Shipping cost */}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t('shipping.cost')}</span>
-                    <span className="text-muted-foreground italic text-xs">
-                      {deliveryMethod === 'pickup' ? t('cart.freeShipping') : t('checkout.deliveryZone')}
-                    </span>
+                    {shippingCost > 0 ? (
+                      <span>${shippingCost.toFixed(2)}</span>
+                    ) : (
+                      <span className="text-green-600 text-xs font-medium">{t('cart.freeShipping')}</span>
+                    )}
+                  </div>
                   </div>
                 )}
                 
