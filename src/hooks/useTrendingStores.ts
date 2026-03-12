@@ -14,7 +14,7 @@ export interface StoreReview {
   user_id: string;
   rating: number;
   comment: string | null;
-  is_anonymous: boolean;
+  is_anonymous?: boolean;
   created_at: string;
   user_name?: string;
 }
