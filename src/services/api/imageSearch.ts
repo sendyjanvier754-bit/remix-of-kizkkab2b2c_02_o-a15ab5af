@@ -29,7 +29,7 @@ export const searchProductsByImage = async (file: File): Promise<Product[]> => {
     const embeddingString = `[${embedding.join(',')}]`;
 
     // Call Supabase RPC to find similar products
-    const { data: products, error } = await supabase.rpc('match_products', {
+    const { data: products, error } = await (supabase as any).rpc('match_products', {
       query_embedding: embeddingString,
       match_threshold: 0.3,
       match_count: 12
