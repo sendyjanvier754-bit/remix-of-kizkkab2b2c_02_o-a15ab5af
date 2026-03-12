@@ -14,7 +14,7 @@ export interface StoreReview {
   user_id: string;
   rating: number;
   comment: string | null;
-  is_anonymous: boolean;
+  is_anonymous?: boolean;
   created_at: string;
   user_name?: string;
 }
@@ -66,13 +66,13 @@ export const useTrendingStores = (limit = 5) => {
             .eq("store_id", store.id);
 
           // Fetch most recent review with user profile
-          const { data: reviews } = await supabase
+          const { data: reviews } = await (supabase as any)
             .from("store_reviews")
             .select("id, user_id, comment, is_anonymous, created_at")
             .eq("store_id", store.id)
             .not("comment", "is", null)
             .order("created_at", { ascending: false })
-            .limit(1);
+            .limit(1) as { data: any[] | null };
 
           // Get user name for review if not anonymous
           let recentReview: TrendingStore["recentReview"] = null;
