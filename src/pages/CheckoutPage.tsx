@@ -100,23 +100,6 @@ const CheckoutPage = () => {
   const [validationErrors, setValidationErrors] = useState<CheckoutValidationError[]>([]);
   const [discountCode, setDiscountCode] = useState('');
   
-  // Logistics state
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
-  const [selectedCommune, setSelectedCommune] = useState<string | null>(null);
-  
-  // Logistics hooks
-  const {
-    useCommunes,
-    useShippingRates,
-    useCategoryShippingRates,
-    calculateShipping,
-    getRateValue,
-  } = useLogisticsEngine();
-  
-  const { data: communes } = useCommunes(selectedDepartment || undefined);
-  const { data: shippingRates } = useShippingRates();
-  const { data: categoryRates } = useCategoryShippingRates();
-
   // Redirect after hooks are called
   if (isB2BUser && !authLoading) {
     return <Navigate to="/seller/checkout" replace />;
