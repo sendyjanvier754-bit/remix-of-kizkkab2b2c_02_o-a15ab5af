@@ -790,17 +790,17 @@ export const useSiverMatch = () => {
         if (!user?.id) return [];
         
         // Get my profiles
-        const { data: profiles } = await supabase
+        const { data: profiles } = await (supabase as any)
           .from('siver_match_profiles')
           .select('id, role')
           .eq('user_id', user.id);
         
         if (!profiles?.length) return [];
         
-        const profileIds = profiles.map(p => p.id);
+        const profileIds = (profiles as any[]).map((p: any) => p.id);
         
         // Get delivered sales where I haven't reviewed yet
-        const { data: sales } = await supabase
+        const { data: sales } = await (supabase as any)
           .from('siver_match_sales')
           .select(`
             id, sale_number, gestor_id, investor_id, delivered_at,
