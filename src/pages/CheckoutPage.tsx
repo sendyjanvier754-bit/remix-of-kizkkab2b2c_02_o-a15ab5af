@@ -620,65 +620,6 @@ const CheckoutPage = () => {
               </RadioGroup>
             </Card>
 
-            {/* Location Selector - Department/Commune */}
-            {deliveryMethod === 'address' && (
-              <Card className="p-6">
-                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-[#071d7f]" />
-                  {t('checkout.deliveryZone')}
-                </h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {t('checkout.selectDeptCommune')}
-                </p>
-                <LocationSelector
-                  departmentId={selectedDepartment}
-                  communeId={selectedCommune}
-                  onDepartmentChange={setSelectedDepartment}
-                  onCommuneChange={setSelectedCommune}
-                />
-                
-                {/* Shipping cost preview */}
-                {shippingCalculation && (
-                  <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <Plane className="h-4 w-4 text-blue-500" />
-                        China → USA ({shippingCalculation.weightKg.toFixed(2)} kg)
-                      </span>
-                      <span>${shippingCalculation.chinaUsaCost.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <Truck className="h-4 w-4 text-green-500" />
-                        USA → Haití ({shippingCalculation.weightLb.toFixed(2)} lb)
-                      </span>
-                      <span>${shippingCalculation.usaHaitiCost.toFixed(2)}</span>
-                    </div>
-                    {shippingCalculation.insuranceCost > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-purple-500" />
-                           {t('checkout.insurance')}
-                        </span>
-                        <span>${shippingCalculation.insuranceCost.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {(shippingCalculation.deliveryFee > 0 || shippingCalculation.operationalFee > 0) && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{t('checkout.localCharges')}</span>
-                        <span>${(shippingCalculation.deliveryFee + shippingCalculation.operationalFee).toFixed(2)}</span>
-                      </div>
-                    )}
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-semibold">
-                      <span>{t('checkout.totalShipping')}</span>
-                      <span className="text-primary">${shippingCalculation.totalShippingCost.toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            )}
-
             {/* Shipping Address */}
             {deliveryMethod === 'address' && (
               <Card className={`p-6 ${hasFieldError(validationErrors, 'selectedAddress') ? 'border-red-500 border-2' : ''}`}>
