@@ -12,8 +12,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useCreateB2COrder, useCompleteB2CCart, useActiveB2COrder, useConfirmB2CPayment, useCancelB2COrder } from '@/hooks/useB2COrders';
 import { B2CPaymentStateOverlay } from '@/components/checkout/B2CPaymentStateOverlay';
 import { validateB2CCheckout, getFieldError, hasFieldError, CheckoutValidationError } from '@/services/checkoutValidation';
-import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
-import { LocationSelector } from '@/components/checkout/LocationSelector';
 import { useApplyDiscount, AppliedDiscount } from '@/hooks/useApplyDiscount';
 import { useAdminPaymentMethodsReadOnly } from '@/hooks/usePaymentMethods';
 import { useStoreShippingOptionsReadOnly } from '@/hooks/useStoreShippingOptions';
@@ -44,8 +42,6 @@ import {
   Truck,
   Store,
   AlertCircle,
-  Plane,
-  Shield,
   Tag,
   X,
 } from 'lucide-react';
