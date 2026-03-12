@@ -761,7 +761,7 @@ export const useSiverMatch = () => {
   // Confirm delivery (triggers wallet split)
   const confirmDelivery = useMutation({
     mutationFn: async (saleId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('siver_match_sales')
         .update({
           status: 'delivered',
@@ -772,7 +772,7 @@ export const useSiverMatch = () => {
       if (error) throw error;
       
       // Trigger wallet split
-      await supabase.rpc('process_siver_match_wallet_split', { p_sale_id: saleId });
+      await (supabase as any).rpc('process_siver_match_wallet_split', { p_sale_id: saleId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siver-match-sales'] });
