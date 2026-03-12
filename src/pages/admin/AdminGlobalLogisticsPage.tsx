@@ -439,7 +439,7 @@ export default function AdminGlobalLogisticsPage() {
         if (error) throw error;
         return data;
       } else {
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('shipping_tiers')
           .insert([tier])
           .select()

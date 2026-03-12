@@ -126,7 +126,7 @@ export default function AdminLogisticaRutas() {
         return data;
       } else {
         // Tier now includes route_id in the form
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('shipping_tiers')
           .insert([tier])
           .select()

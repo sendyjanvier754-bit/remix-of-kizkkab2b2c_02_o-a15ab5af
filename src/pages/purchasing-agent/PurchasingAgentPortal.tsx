@@ -485,7 +485,7 @@ export default function PurchasingAgentPortal() {
                             <ShipmentForm 
                               poId={selectedPOId!}
                               agentId={agentProfile.id}
-                              onSubmit={async (data) => { await createShipment.mutateAsync(data); }}
+                              onSubmit={createShipment.mutateAsync}
                               uploadFile={uploadFile}
                             />
                           </div>

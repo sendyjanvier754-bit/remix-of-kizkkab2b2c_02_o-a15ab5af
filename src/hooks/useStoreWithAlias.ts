@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 export async function resolveStoreBySlug(slug: string): Promise<string | null> {
   try {
     // Intentar con función SQL que maneja alias
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .rpc('resolve_store_by_slug', { p_slug: slug });
     
     if (error) {
@@ -15,7 +15,7 @@ export async function resolveStoreBySlug(slug: string): Promise<string | null> {
       return null;
     }
     
-    return data as string | null;
+    return data;
   } catch (err) {
     console.error('Exception resolving store:', err);
     return null;
@@ -29,7 +29,7 @@ export async function resolveStoreBySlug(slug: string): Promise<string | null> {
 export async function getStoreBySlugOrAlias(slug: string) {
   try {
     // 1. Intentar búsqueda directa por slug principal
-    const { data: store } = await supabase
+    let { data: store, error } = await supabase
       .from('stores')
       .select('*')
       .eq('slug', slug)
@@ -38,19 +38,18 @@ export async function getStoreBySlugOrAlias(slug: string) {
     if (store) return store;
     
     // 2. Si no encuentra, buscar en alias
-    const { data: alias } = await (supabase as any)
+    const { data: alias } = await supabase
       .from('store_slug_aliases')
       .select('store_id')
       .eq('slug_alias', slug)
       .maybeSingle();
     
-    const aliasData = alias as any;
-    if (aliasData?.store_id) {
+    if (alias?.store_id) {
       // Obtener la tienda por ID
       const { data: storeFromAlias } = await supabase
         .from('stores')
         .select('*')
-        .eq('id', aliasData.store_id)
+        .eq('id', alias.store_id)
         .single();
       
       return storeFromAlias;

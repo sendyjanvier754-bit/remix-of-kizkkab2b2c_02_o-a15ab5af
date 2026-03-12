@@ -187,7 +187,7 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!user?.id) return null;
         
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('siver_match_profiles')
           .select(`
             *,
@@ -210,7 +210,7 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-gestors', departmentId],
       queryFn: async () => {
-        let query = (supabase as any)
+        let query = supabase
           .from('siver_match_profiles')
           .select(`
             *,
@@ -761,7 +761,7 @@ export const useSiverMatch = () => {
   // Confirm delivery (triggers wallet split)
   const confirmDelivery = useMutation({
     mutationFn: async (saleId: string) => {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('siver_match_sales')
         .update({
           status: 'delivered',
@@ -772,7 +772,7 @@ export const useSiverMatch = () => {
       if (error) throw error;
       
       // Trigger wallet split
-      await (supabase as any).rpc('process_siver_match_wallet_split', { p_sale_id: saleId });
+      await supabase.rpc('process_siver_match_wallet_split', { p_sale_id: saleId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siver-match-sales'] });
@@ -790,17 +790,17 @@ export const useSiverMatch = () => {
         if (!user?.id) return [];
         
         // Get my profiles
-        const { data: profiles } = await (supabase as any)
+        const { data: profiles } = await supabase
           .from('siver_match_profiles')
           .select('id, role')
           .eq('user_id', user.id);
         
         if (!profiles?.length) return [];
         
-        const profileIds = (profiles as any[]).map((p: any) => p.id);
+        const profileIds = profiles.map(p => p.id);
         
         // Get delivered sales where I haven't reviewed yet
-        const { data: sales } = await (supabase as any)
+        const { data: sales } = await supabase
           .from('siver_match_sales')
           .select(`
             id, sale_number, gestor_id, investor_id, delivered_at,
@@ -850,27 +850,25 @@ export const useSiverMatch = () => {
       if (!sale) throw new Error('Venta no encontrada');
       
       // Get my profile
-      const { data: profiles } = await (supabase as any)
+      const { data: profiles } = await supabase
         .from('siver_match_profiles')
         .select('id, role')
         .eq('user_id', user?.id);
       
       if (!profiles?.length) throw new Error('No tienes perfil');
       
-      const typedProfiles = profiles as any[];
-      
       // Determine reviewer and reviewed
-      let reviewerProfile = typedProfiles[0];
+      let reviewerProfile = profiles[0];
       let reviewedId: string;
       
-      if (typedProfiles.some((p: any) => p.id === (sale as any).gestor_id)) {
+      if (profiles.some(p => p.id === sale.gestor_id)) {
         // I'm the gestor, reviewing investor
-        reviewerProfile = typedProfiles.find((p: any) => p.id === (sale as any).gestor_id)!;
-        reviewedId = (sale as any).investor_id;
+        reviewerProfile = profiles.find(p => p.id === sale.gestor_id)!;
+        reviewedId = sale.investor_id;
       } else {
         // I'm the investor, reviewing gestor
-        reviewerProfile = typedProfiles.find((p: any) => p.id === (sale as any).investor_id)!;
-        reviewedId = (sale as any).gestor_id;
+        reviewerProfile = profiles.find(p => p.id === sale.investor_id)!;
+        reviewedId = sale.gestor_id;
       }
       
       const { data, error } = await supabase
@@ -905,14 +903,14 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-badges'],
       queryFn: async () => {
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('siver_match_badges')
           .select('*')
           .eq('is_active', true)
           .order('sort_order');
         
         if (error) throw error;
-        return (data || []) as Badge[];
+        return data as Badge[];
       },
     });
   };

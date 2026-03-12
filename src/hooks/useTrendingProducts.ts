@@ -17,7 +17,7 @@ export const useTrendingProducts = (daysBack: number = 7, limit: number = 20) =>
   return useQuery({
     queryKey: ["trending-products", daysBack, limit],
     queryFn: async (): Promise<TrendingProduct[]> => {
-      const { data, error } = await (supabase as any).rpc("get_trending_products", {
+      const { data, error } = await supabase.rpc("get_trending_products", {
         days_back: daysBack,
         limit_count: limit,
       });
@@ -36,10 +36,8 @@ export const useTrendingProducts = (daysBack: number = 7, limit: number = 20) =>
         return (fallbackData || []).map((p) => ({ ...p, view_count: 0 }));
       }
 
-      const trendingData = data as any[];
-
       // If no trending data, fallback to recent products
-      if (!trendingData || trendingData.length === 0) {
+      if (!data || data.length === 0) {
         const { data: fallbackData, error: fallbackError } = await supabase
           .from("v_productos_con_precio_b2b")
           .select("id, nombre, precio_b2b, precio_sugerido_venta, imagen_principal, categoria_id, sku_interno, stock_status")
@@ -51,7 +49,7 @@ export const useTrendingProducts = (daysBack: number = 7, limit: number = 20) =>
         return (fallbackData || []).map((p) => ({ ...p, view_count: 0 }));
       }
 
-      return trendingData.map((item: any) => {
+      return data.map((item: { product_id: string; view_count: number; product_data: unknown }) => {
         const productData = item.product_data as TrendingProduct;
         return {
           ...productData,

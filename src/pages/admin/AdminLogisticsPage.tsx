@@ -262,12 +262,11 @@ const AdminLogisticsPage = () => {
   };
   
   // Filter tracking records
-  const filteredTracking = trackingRecords?.filter(t => {
-    const anyT = t as any;
-    return anyT.hybrid_tracking_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      anyT.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (anyT.china_tracking_number || anyT.china_tracking || '')?.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filteredTracking = trackingRecords?.filter(t => 
+    t.hybrid_tracking_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.china_tracking_number.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <AdminLayout title="Gestión Logística" subtitle="Administra tarifas de envío, zonas geográficas y trazabilidad">
