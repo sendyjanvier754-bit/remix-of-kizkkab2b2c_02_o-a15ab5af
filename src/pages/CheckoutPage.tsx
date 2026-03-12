@@ -252,23 +252,7 @@ const CheckoutPage = () => {
     return sum + (itemWeight * item.quantity);
   }, 0);
   
-  // Calculate shipping cost based on selected location
-  const shippingCalculation = useMemo(() => {
-    if (!selectedCommune || deliveryMethod !== 'address') {
-      return null;
-    }
-    
-    return calculateShipping({
-      weightGrams: totalWeightGrams,
-      referencePrice: subtotal,
-      communeId: selectedCommune,
-      rates: shippingRates,
-      communes: communes,
-      categoryRates: categoryRates,
-    });
-  }, [selectedCommune, totalWeightGrams, subtotal, shippingRates, communes, categoryRates, deliveryMethod, calculateShipping]);
-  
-  // Calculate shipping: seller options take priority, fallback to centralized system
+  // Calculate shipping: seller options take priority, fallback to 0 for local B2C
   const selectedSellerShipping = sellerShippingOptions.find(o => o.id === selectedShippingOptionId);
   const sellerShippingCost = useMemo(() => {
     if (!hasSellerShipping || !selectedSellerShipping) return 0;
@@ -279,7 +263,8 @@ const CheckoutPage = () => {
     return selectedSellerShipping.shipping_cost;
   }, [hasSellerShipping, selectedSellerShipping, subtotal]);
 
-  const shippingCost = hasSellerShipping ? sellerShippingCost : (shippingCalculation?.totalShippingCost || 0);
+  // B2C uses local logistics only — no global China/USA chain
+  const shippingCost = sellerShippingCost;
   const discountAmount = appliedDiscount?.discountAmount || 0;
   const totalWithShipping = subtotal + shippingCost - discountAmount;
 
