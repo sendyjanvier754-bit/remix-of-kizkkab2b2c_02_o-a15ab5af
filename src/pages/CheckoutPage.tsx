@@ -1095,16 +1095,14 @@ const CheckoutPage = () => {
                 </div>
                 
                 {/* Shipping cost */}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t('shipping.cost')}</span>
-                    {shippingCost > 0 ? (
-                      <span>${shippingCost.toFixed(2)}</span>
-                    ) : (
-                      <span className="text-green-600 text-xs font-medium">{t('cart.freeShipping')}</span>
-                    )}
-                  </div>
-                  </div>
-                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('shipping.cost')}</span>
+                  {shippingCost > 0 ? (
+                    <span>${shippingCost.toFixed(2)}</span>
+                  ) : (
+                    <span className="text-green-600 text-xs font-medium">{t('cart.freeShipping')}</span>
+                  )}
+                </div>
                 
                 {/* Discount Code Section */}
                 <div className="pt-3">
