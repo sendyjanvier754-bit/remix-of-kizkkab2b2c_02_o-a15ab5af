@@ -850,25 +850,27 @@ export const useSiverMatch = () => {
       if (!sale) throw new Error('Venta no encontrada');
       
       // Get my profile
-      const { data: profiles } = await supabase
+      const { data: profiles } = await (supabase as any)
         .from('siver_match_profiles')
         .select('id, role')
         .eq('user_id', user?.id);
       
       if (!profiles?.length) throw new Error('No tienes perfil');
       
+      const typedProfiles = profiles as any[];
+      
       // Determine reviewer and reviewed
-      let reviewerProfile = profiles[0];
+      let reviewerProfile = typedProfiles[0];
       let reviewedId: string;
       
-      if (profiles.some(p => p.id === sale.gestor_id)) {
+      if (typedProfiles.some((p: any) => p.id === (sale as any).gestor_id)) {
         // I'm the gestor, reviewing investor
-        reviewerProfile = profiles.find(p => p.id === sale.gestor_id)!;
-        reviewedId = sale.investor_id;
+        reviewerProfile = typedProfiles.find((p: any) => p.id === (sale as any).gestor_id)!;
+        reviewedId = (sale as any).investor_id;
       } else {
         // I'm the investor, reviewing gestor
-        reviewerProfile = profiles.find(p => p.id === sale.investor_id)!;
-        reviewedId = sale.gestor_id;
+        reviewerProfile = typedProfiles.find((p: any) => p.id === (sale as any).investor_id)!;
+        reviewedId = (sale as any).gestor_id;
       }
       
       const { data, error } = await supabase
