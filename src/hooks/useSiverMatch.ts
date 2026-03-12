@@ -210,7 +210,7 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-gestors', departmentId],
       queryFn: async () => {
-        let query = supabase
+        let query = (supabase as any)
           .from('siver_match_profiles')
           .select(`
             *,
