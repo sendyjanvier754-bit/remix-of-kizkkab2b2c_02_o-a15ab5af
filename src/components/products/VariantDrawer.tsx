@@ -26,6 +26,8 @@ const VariantDrawer: React.FC = () => {
   const [totalQty, setTotalQty] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [variantImage, setVariantImage] = useState<string | null>(null);
+  const [isVariantValid, setIsVariantValid] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [basePriceFromDb, setBasePriceFromDb] = useState<number | null>(null);
   const [variantPrices, setVariantPrices] = useState<Record<string, number>>({});
   const [b2cVariantPrices, setB2cVariantPrices] = useState<Record<string, number>>({});
@@ -121,6 +123,8 @@ const VariantDrawer: React.FC = () => {
       setTotalPrice(0);
       setVariantImage(null);
       setSelectedVariantId(null);
+      setIsVariantValid(false);
+      setValidationErrors([]);
     }
   }, [isOpen]);
 
@@ -443,10 +447,12 @@ const VariantDrawer: React.FC = () => {
             isB2B={isB2BUser}
             variantPrices={variantPrices}
             b2cVariantPrices={b2cVariantPrices}
-            onSelectionChange={(list, qty, price) => {
+            onSelectionChange={(list, qty, price, _variant, isValid, errors) => {
               setSelections(list);
               setTotalQty(qty);
               setTotalPrice(price);
+              setIsVariantValid(isValid ?? qty > 0);
+              setValidationErrors(errors ?? []);
               // Track the first selected variant for price display
               const firstSelected = list.find((s: any) => s.quantity > 0);
               setSelectedVariantId(firstSelected ? firstSelected.variantId : null);
@@ -477,7 +483,8 @@ const VariantDrawer: React.FC = () => {
             <Button 
               onClick={handleConfirm} 
               className="h-10 px-4"
-              disabled={totalQty === 0}
+              disabled={!isVariantValid}
+              title={validationErrors.length > 0 ? validationErrors.join(', ') : undefined}
             >
               🛒 Agregar ({totalQty})
             </Button>
