@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OpenChatButton } from '@/components/chat/OpenChatButton';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useOrders, OrderStatus, Order } from '@/hooks/useOrders';
 import { PDFGenerators, generatePickingManifestPDF } from '@/services/pdfGenerators';
 import { 
@@ -35,11 +36,14 @@ import {
   Warehouse,
   Ship,
   PackageCheck,
-  ClipboardList
+  ClipboardList,
+  Store,
+  Upload,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
+import { toast } from 'sonner';
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: React.ElementType }> = {
   draft: { label: 'Borrador', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: Clock },
@@ -81,15 +85,126 @@ const carrierOptions = [
 
 const AdminPedidos = () => {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { useAllOrders, useOrderStats, usePaidOrdersForManifest, updateOrderStatus, updateOrderTracking, updateLogisticsStage, cancelOrder, confirmManualPayment, rejectManualPayment } = useOrders();
   
+  const [mainTab, setMainTab] = useState<'b2b' | 'b2c'>('b2b');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus | ''>('');
   const [logisticsStage, setLogisticsStage] = useState('');
   const [chinaTracking, setChinaTracking] = useState('');
-  
+
+  // B2C orders state
+  const [b2cSearch, setB2cSearch] = useState('');
+  const [b2cStatusFilter, setB2cStatusFilter] = useState<string>('all');
+  const [selectedB2COrder, setSelectedB2COrder] = useState<any>(null);
+  const [b2cPaymentNotes, setB2cPaymentNotes] = useState('');
+  const [b2cRejectionReason, setB2cRejectionReason] = useState('');
+
+  // Fetch all B2C orders (admin)
+  const { data: b2cOrders = [], isLoading: isLoadingB2C, refetch: refetchB2C } = useQuery({
+    queryKey: ['admin-b2c-orders', b2cStatusFilter],
+    queryFn: async () => {
+      let q = supabase
+        .from('orders_b2c')
+        .select(`
+          *,
+          order_items_b2c (*),
+          store:stores (name)
+        `)
+        .order('created_at', { ascending: false });
+      if (b2cStatusFilter !== 'all') {
+        q = q.eq('payment_status', b2cStatusFilter as any);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Live query for selected B2C order — always fresh metadata
+  const { data: liveB2COrder } = useQuery({
+    queryKey: ['admin-b2c-order-live', selectedB2COrder?.id],
+    enabled: !!selectedB2COrder?.id,
+    refetchInterval: 5000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orders_b2c')
+        .select('*, order_items_b2c (*), store:stores (name)')
+        .eq('id', selectedB2COrder!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const dialogB2COrder = liveB2COrder ? { ...selectedB2COrder, ...liveB2COrder } : selectedB2COrder;
+
+  // Confirm B2C payment
+  const confirmB2CPayment = useMutation({
+    mutationFn: async ({ orderId, notes }: { orderId: string; notes?: string }) => {
+      const { error } = await supabase
+        .from('orders_b2c')
+        .update({
+          payment_status: 'paid' as any,
+          status: 'paid',
+          payment_confirmed_at: new Date().toISOString(),
+          metadata: {
+            ...(selectedB2COrder?.metadata || {}),
+            payment_confirmation_notes: notes || null,
+          } as any,
+        })
+        .eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Pago B2C confirmado');
+      queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
+      setSelectedB2COrder(null);
+      setB2cPaymentNotes('');
+    },
+    onError: (e: any) => toast.error('Error al confirmar: ' + e.message),
+  });
+
+  // Reject B2C payment
+  const rejectB2CPayment = useMutation({
+    mutationFn: async ({ orderId, reason }: { orderId: string; reason: string }) => {
+      const { error } = await supabase
+        .from('orders_b2c')
+        .update({
+          payment_status: 'failed' as any,
+          status: 'placed',
+          metadata: {
+            ...(selectedB2COrder?.metadata || {}),
+            rejection_reason: reason,
+          } as any,
+        })
+        .eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.error('Pago B2C rechazado');
+      queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
+      setSelectedB2COrder(null);
+      setB2cRejectionReason('');
+    },
+    onError: (e: any) => toast.error('Error al rechazar: ' + e.message),
+  });
+
+  const filteredB2COrders = useMemo(() => {
+    if (!b2cSearch) return b2cOrders;
+    const s = b2cSearch.toLowerCase();
+    return b2cOrders.filter((o: any) =>
+      o.id.toLowerCase().includes(s) ||
+      o.payment_reference?.toLowerCase().includes(s) ||
+      o.store?.name?.toLowerCase().includes(s)
+    );
+  }, [b2cOrders, b2cSearch]);
+
   // Manifest dialog state
   const [showManifestDialog, setShowManifestDialog] = useState(false);
   const [manifestChinaTracking, setManifestChinaTracking] = useState('');
@@ -104,7 +219,7 @@ const AdminPedidos = () => {
   const [paymentConfirmationNotes, setPaymentConfirmationNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
 
-  // Live query for selected order — ensures metadata (e.g. payment_proof_url) is always fresh
+  // Live query for selected B2B order — ensures metadata (e.g. payment_proof_url) is always fresh
   const { data: liveSelectedOrder } = useQuery({
     queryKey: ['admin-order-live', selectedOrder?.id],
     enabled: !!selectedOrder?.id,
@@ -344,7 +459,208 @@ const AdminPedidos = () => {
 
   return (
     <AdminLayout title={t('adminOrders.title')} subtitle={t('adminOrders.subtitle')}>
-      <div className="space-y-6">
+      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'b2b' | 'b2c')} className="mb-4">
+        <TabsList>
+          <TabsTrigger value="b2b">Pedidos B2B (Mayoristas)</TabsTrigger>
+          <TabsTrigger value="b2c" className="relative">
+            Pedidos B2C (Compradores)
+            {b2cOrders.filter((o: any) => o.payment_status === 'pending_validation').length > 0 && (
+              <span className="ml-2 bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
+                {b2cOrders.filter((o: any) => o.payment_status === 'pending_validation').length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ── B2C Tab ──────────────────────────────────────────── */}
+        <TabsContent value="b2c">
+          <div className="space-y-4 mt-4">
+            {/* Filters */}
+            <Card className="bg-card border-border">
+              <CardContent className="pt-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Buscar por ID, referencia o tienda..." className="pl-10" value={b2cSearch} onChange={e => setB2cSearch(e.target.value)} />
+                  </div>
+                  <Select value={b2cStatusFilter} onValueChange={setB2cStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-[220px]">
+                      <SelectValue placeholder="Filtrar por estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="pending_validation">Por Validar</SelectItem>
+                      <SelectItem value="paid">Pagados</SelectItem>
+                      <SelectItem value="failed">Rechazados</SelectItem>
+                      <SelectItem value="cancelled">Cancelados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* B2C Orders Table */}
+            <Card className="bg-card border-border">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border">
+                        <TableHead>ID</TableHead>
+                        <TableHead>Tienda</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Método</TableHead>
+                        <TableHead>Referencia</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-center">Estado Pago</TableHead>
+                        <TableHead className="text-center">Comprobante</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingB2C ? (
+                        <TableRow><TableCell colSpan={9} className="text-center py-10"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></TableCell></TableRow>
+                      ) : filteredB2COrders.length === 0 ? (
+                        <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No hay pedidos B2C</TableCell></TableRow>
+                      ) : filteredB2COrders.map((order: any) => {
+                        const proof = order.metadata?.payment_proof_url;
+                        const ps = order.payment_status;
+                        const psLabel: Record<string, { label: string; color: string }> = {
+                          pending_validation: { label: 'Por Validar', color: 'bg-amber-500/20 text-amber-600 border-amber-400' },
+                          paid: { label: 'Confirmado', color: 'bg-green-500/20 text-green-600 border-green-400' },
+                          failed: { label: 'Rechazado', color: 'bg-red-500/20 text-red-600 border-red-400' },
+                          cancelled: { label: 'Cancelado', color: 'bg-gray-500/20 text-gray-500' },
+                          pending: { label: 'Pendiente', color: 'bg-blue-500/20 text-blue-600' },
+                        };
+                        const cfg = psLabel[ps] || { label: ps, color: 'bg-muted text-muted-foreground' };
+                        return (
+                          <TableRow key={order.id} className={`border-border hover:bg-muted/50 ${ps === 'pending_validation' ? 'bg-amber-500/5' : ''}`}>
+                            <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}…</TableCell>
+                            <TableCell className="text-sm">{order.store?.name || '—'}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{format(new Date(order.created_at), 'dd MMM yyyy', { locale: es })}</TableCell>
+                            <TableCell className="capitalize text-sm">{order.payment_method}</TableCell>
+                            <TableCell className="font-mono text-xs">{order.payment_reference || '—'}</TableCell>
+                            <TableCell className="text-right font-semibold">${Number(order.total_amount).toFixed(2)}</TableCell>
+                            <TableCell className="text-center"><Badge className={cfg.color}>{cfg.label}</Badge></TableCell>
+                            <TableCell className="text-center">
+                              {proof ? (
+                                <a href={proof} target="_blank" rel="noopener noreferrer" className="text-primary text-xs underline flex items-center justify-center gap-1">
+                                  <FileText className="h-3.5 w-3.5" />Ver
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="sm" onClick={() => setSelectedB2COrder(order)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* B2C Order Detail Dialog */}
+      <Dialog open={!!selectedB2COrder} onOpenChange={open => !open && setSelectedB2COrder(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5" />
+              Pedido B2C #{dialogB2COrder?.id?.slice(0, 8).toUpperCase()}
+            </DialogTitle>
+          </DialogHeader>
+          {dialogB2COrder && (
+            <div className="space-y-5">
+              {/* Basic info */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><p className="text-muted-foreground">Tienda</p><p className="font-medium">{dialogB2COrder.store?.name || '—'}</p></div>
+                <div><p className="text-muted-foreground">Fecha</p><p>{format(new Date(dialogB2COrder.created_at), 'dd MMMM yyyy, HH:mm', { locale: es })}</p></div>
+                <div><p className="text-muted-foreground">Método de pago</p><p className="capitalize font-medium">{dialogB2COrder.payment_method}</p></div>
+                <div><p className="text-muted-foreground">Referencia</p><p className="font-mono text-xs">{dialogB2COrder.payment_reference || '—'}</p></div>
+                <div><p className="text-muted-foreground">Estado pago</p>
+                  <Badge className={dialogB2COrder.payment_status === 'paid' ? 'bg-green-500/20 text-green-600' : dialogB2COrder.payment_status === 'pending_validation' ? 'bg-amber-500/20 text-amber-600' : 'bg-red-500/20 text-red-600'}>
+                    {dialogB2COrder.payment_status === 'paid' ? 'Confirmado' : dialogB2COrder.payment_status === 'pending_validation' ? 'Por Validar' : dialogB2COrder.payment_status}
+                  </Badge>
+                </div>
+                <div><p className="text-muted-foreground">Total</p><p className="text-xl font-bold text-primary">${Number(dialogB2COrder.total_amount).toFixed(2)}</p></div>
+              </div>
+
+              <Separator />
+
+              {/* Comprobante */}
+              <div className="space-y-2">
+                <p className="text-sm font-semibold flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Comprobante de Pago
+                  {dialogB2COrder.metadata?.payment_proof_url
+                    ? <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Subido</span>
+                    : <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Pendiente</span>}
+                </p>
+                <PaymentProofUpload
+                  orderId={dialogB2COrder.id}
+                  existingUrl={dialogB2COrder.metadata?.payment_proof_url ?? null}
+                  orderTable="orders_b2c"
+                  onUploaded={() => { queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] }); queryClient.invalidateQueries({ queryKey: ['admin-b2c-order-live', dialogB2COrder.id] }); }}
+                />
+              </div>
+
+              {/* Confirm / Reject for pending_validation */}
+              {dialogB2COrder.payment_status === 'pending_validation' && (
+                <div className="p-4 bg-amber-500/10 border border-amber-400/30 rounded-lg space-y-4">
+                  <p className="text-sm font-semibold text-amber-700 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    Verificar Pago — {dialogB2COrder.payment_method?.toUpperCase()}
+                  </p>
+                  <div className="space-y-2">
+                    <Label>Notas de confirmación (opcional)</Label>
+                    <Input placeholder="Ej: Verificado en cuenta MonCash..." value={b2cPaymentNotes} onChange={e => setB2cPaymentNotes(e.target.value)} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button className="flex-1 bg-green-600 hover:bg-green-700" disabled={confirmB2CPayment.isPending} onClick={() => confirmB2CPayment.mutate({ orderId: dialogB2COrder.id, notes: b2cPaymentNotes })}>
+                      {confirmB2CPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                      Confirmar Pago
+                    </Button>
+                    <Button variant="destructive" className="flex-1" disabled={rejectB2CPayment.isPending} onClick={() => rejectB2CPayment.mutate({ orderId: dialogB2COrder.id, reason: b2cRejectionReason || 'Pago no verificado' })}>
+                      {rejectB2CPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
+                      Rechazar
+                    </Button>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Motivo rechazo (opcional)</Label>
+                    <Input placeholder="Ej: Referencia no encontrada" value={b2cRejectionReason} onChange={e => setB2cRejectionReason(e.target.value)} />
+                  </div>
+                </div>
+              )}
+
+              {/* Items */}
+              <div>
+                <p className="text-sm font-semibold mb-2">Productos</p>
+                <div className="space-y-2">
+                  {dialogB2COrder.order_items_b2c?.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg text-sm">
+                      <div>
+                        <p className="font-medium">{item.product_name}</p>
+                        <p className="text-xs text-muted-foreground">SKU: {item.sku} • Cant: {item.quantity}</p>
+                      </div>
+                      <p className="font-semibold">${Number(item.total_price).toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <div className={`space-y-6 ${mainTab === 'b2c' ? 'hidden' : ''}`}>
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
           <Card className="bg-card border-border">
