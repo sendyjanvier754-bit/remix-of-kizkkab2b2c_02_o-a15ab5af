@@ -255,12 +255,13 @@ const OrderCard = ({
                 {firstItem?.nombre} {itemCount > 1 && `y ${itemCount - 1} más`}
               </p>
               {/* B2C: hint to upload proof when still pending */}
-              {!isB2B && (order.payment_status === 'placed' || order.payment_status === 'pending') && (
+              {!isB2B && ((order.payment_status as string) === 'placed' || order.payment_status === 'pending') && (
                 <p className="text-xs text-orange-600 mt-1 flex items-center gap-1 font-medium">
                   <Upload className="h-3 w-3" />
                   Toca para subir tu comprobante de pago
                 </p>
               )}
+
               {!isB2B && order.payment_status === 'pending_validation' && (
                 <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                   <Clock className="h-3 w-3" />
