@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Package, Eye, EyeOff, Search, ArrowUpDown, TrendingUp, TrendingDown } from "lucide-react";
+import { MoreHorizontal, Edit, Package, Eye, EyeOff, Search, ArrowUpDown, TrendingUp, TrendingDown, Layers } from "lucide-react";
 import { SellerCatalogItem } from "@/hooks/useSellerCatalog";
 import { useTranslation } from "react-i18next";
+import { VariantPublicationPanel } from "./VariantPublicationPanel";
 
 interface InventarioTableProps {
   items: SellerCatalogItem[];
