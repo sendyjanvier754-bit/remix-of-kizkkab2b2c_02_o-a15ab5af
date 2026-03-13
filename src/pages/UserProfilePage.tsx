@@ -1,29 +1,12 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
-  User,
-  ShoppingBag,
-  Heart,
-  MapPin,
-  CreditCard,
-  Settings,
-  LogOut,
-  ChevronRight,
-  Bell,
-  HelpCircle,
-  Shield,
-  Info,
-  Package,
-  Truck,
-  RefreshCw,
-  MessageSquare,
-  Clock,
-  CheckCircle,
-  Minus,
+  User, ShoppingBag, Heart, MapPin, CreditCard, Settings,
+  LogOut, ChevronRight, Bell, HelpCircle, Shield, Info, Package,
 } from "lucide-react";
 import { toast } from "sonner";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
@@ -33,68 +16,42 @@ import { useBuyerB2COrders } from "@/hooks/useBuyerB2COrders";
 import { useBuyerOrders } from "@/hooks/useBuyerOrders";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
-
-// ── Status helpers ────────────────────────────────────────────────────────────
-const ORDER_STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  pending:    { label: "Por pagar",    icon: Clock,        color: "text-amber-500" },
-  placed:     { label: "Por pagar",    icon: Clock,        color: "text-amber-500" },
-  paid:       { label: "Procesando",   icon: Package,      color: "text-blue-500"  },
-  preparing:  { label: "Procesando",   icon: Package,      color: "text-blue-500"  },
-  in_transit: { label: "Enviado",      icon: Truck,        color: "text-indigo-500" },
-  shipped:    { label: "Enviado",      icon: Truck,        color: "text-indigo-500" },
-  delivered:  { label: "Entregado",    icon: CheckCircle,  color: "text-green-500" },
-  cancelled:  { label: "Cancelado",    icon: Minus,        color: "text-red-400"   },
-};
+import { InlineOrdersPanel } from "@/components/profile/InlineOrdersPanel";
 
 // ── Sidebar nav ───────────────────────────────────────────────────────────────
 interface NavItem { label: string; href: string; icon?: React.ElementType }
-
 const LEFT_NAV: { group: string; items: NavItem[] }[] = [
   {
     group: "Mi Cuenta",
     items: [
-      { label: "Mi perfil",           href: "/editar-perfil",   icon: User      },
-      { label: "Mis direcciones",     href: "/mis-direcciones", icon: MapPin    },
-      { label: "Métodos de pago",     href: "/metodos-pago",    icon: CreditCard },
-      { label: "Configuración",       href: "/configuracion",   icon: Settings  },
+      { label: "Mi perfil",        href: "/editar-perfil",   icon: User       },
+      { label: "Mis direcciones",  href: "/mis-direcciones", icon: MapPin     },
+      { label: "Métodos de pago",  href: "/metodos-pago",    icon: CreditCard },
+      { label: "Configuración",    href: "/configuracion",   icon: Settings   },
     ],
   },
   {
     group: "Mis Pedidos",
-    items: [
-      { label: "Ver todos",           href: "/mis-compras",     icon: ShoppingBag },
-    ],
+    items: [{ label: "Ver todos", href: "/mis-compras", icon: ShoppingBag }],
   },
   {
     group: "Mis Intereses",
-    items: [
-      { label: "Favoritos",           href: "/favoritos",       icon: Heart },
-    ],
+    items: [{ label: "Favoritos",  href: "/favoritos",   icon: Heart }],
   },
   {
     group: "Servicio al Cliente",
     items: [
-      { label: "Centro de ayuda",     href: "/ayuda",           icon: HelpCircle },
-      { label: "Notificaciones",      href: "/notificaciones",  icon: Bell       },
-      { label: "Soporte",             href: "/soporte",         icon: MessageSquare },
+      { label: "Centro de ayuda", href: "/ayuda",          icon: HelpCircle   },
+      { label: "Notificaciones",  href: "/notificaciones", icon: Bell         },
     ],
   },
   {
     group: "Política",
     items: [
-      { label: "Términos y condiciones", href: "#legal",  icon: Shield },
-      { label: "Acerca de",             href: "#about",  icon: Info   },
+      { label: "Términos y condiciones", href: "#legal", icon: Shield },
+      { label: "Acerca de",             href: "#about", icon: Info   },
     ],
   },
-];
-
-// ── Order status quick-links (center panel, below greeting) ──────────────────
-const ORDER_QUICK: { label: string; status: string; icon: React.ElementType }[] = [
-  { label: "Por pagar",  status: "placed",     icon: Clock       },
-  { label: "Procesando", status: "preparing",  icon: Package     },
-  { label: "Enviado",    status: "in_transit", icon: Truck       },
-  { label: "Comentarios",status: "delivered",  icon: MessageSquare },
-  { label: "Devolución", status: "cancelled",  icon: RefreshCw   },
 ];
 
 export function UserProfilePage() {
@@ -105,13 +62,14 @@ export function UserProfilePage() {
   const [showAbout, setShowAbout] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Mi Cuenta": true,
+    "Mis Pedidos": true,
   });
 
-  // Data
+  // Data for stats
   const { items: favorites = [] } = useB2CFavorites();
   const { data: b2cOrders = [] } = useBuyerB2COrders();
   const { data: b2bOrders = [] } = useBuyerOrders();
-  const allOrders = [...b2cOrders, ...b2bOrders];
+  const totalOrders = b2cOrders.length + (b2bOrders?.length ?? 0);
 
   const handleLogout = async () => {
     try {
@@ -119,8 +77,7 @@ export function UserProfilePage() {
       await signOut();
       toast.success("Sesión cerrada");
       navigate("/");
-    } catch (error) {
-      console.error("Error logging out:", error);
+    } catch {
       toast.error("Error al cerrar sesión");
     } finally {
       setIsLoading(false);
@@ -141,17 +98,7 @@ export function UserProfilePage() {
     navigate(href);
   };
 
-  // Count orders by status group
-  const countByStatus = (statuses: string[]) =>
-    allOrders.filter(o => {
-      const s = (o as any).status ?? "";
-      return statuses.includes(s);
-    }).length;
-
-  // Recent orders for center panel
-  const recentOrders = allOrders.slice(0, 5);
-
-  // ── Mobile layout (unchanged) ─────────────────────────────────────────────
+  // ── Mobile layout ─────────────────────────────────────────────────────────
   const MobileLayout = () => (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
@@ -175,7 +122,7 @@ export function UserProfilePage() {
       <div className="px-4 py-4 bg-white mb-2">
         <div className="grid grid-cols-3 gap-3">
           <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="text-xl font-bold text-primary">{allOrders.length}</div>
+            <div className="text-xl font-bold text-primary">{totalOrders}</div>
             <div className="text-xs text-muted-foreground mt-1">Compras</div>
           </div>
           <div className="text-center p-3 bg-pink-50 rounded-lg">
@@ -190,11 +137,11 @@ export function UserProfilePage() {
       </div>
       <div className="px-4 py-3 space-y-2">
         {[
-          { icon: <ShoppingBag className="w-6 h-6"/>, label: "Mis Compras",    action: () => navigate("/mis-compras") },
-          { icon: <Heart className="w-6 h-6"/>,        label: "Favoritos",      action: () => navigate("/favoritos") },
-          { icon: <MapPin className="w-6 h-6"/>,        label: "Mis Direcciones",action: () => navigate("/mis-direcciones") },
-          { icon: <Bell className="w-6 h-6"/>,          label: "Notificaciones", action: () => navigate("/notificaciones") },
-          { icon: <HelpCircle className="w-6 h-6"/>,    label: "Centro de Ayuda",action: () => navigate("/ayuda") },
+          { icon: <ShoppingBag className="w-6 h-6"/>, label: "Mis Compras",     action: () => navigate("/mis-compras")     },
+          { icon: <Heart className="w-6 h-6"/>,        label: "Favoritos",       action: () => navigate("/favoritos")       },
+          { icon: <MapPin className="w-6 h-6"/>,        label: "Mis Direcciones", action: () => navigate("/mis-direcciones") },
+          { icon: <Bell className="w-6 h-6"/>,          label: "Notificaciones",  action: () => navigate("/notificaciones")  },
+          { icon: <HelpCircle className="w-6 h-6"/>,    label: "Centro de Ayuda", action: () => navigate("/ayuda")           },
         ].map((item, i) => (
           <button key={i} onClick={item.action}
             className="w-full bg-white border border-border rounded-lg p-4 hover:bg-muted/40 transition-colors flex items-center justify-between">
@@ -213,7 +160,7 @@ export function UserProfilePage() {
           {isLoading ? "Cerrando sesión..." : "Cerrar Sesión"}
         </Button>
       </div>
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-6">
         <div className="flex gap-2">
           <button onClick={() => setShowLegal(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-muted/50 hover:bg-muted text-xs text-muted-foreground transition-colors">
@@ -228,15 +175,15 @@ export function UserProfilePage() {
     </div>
   );
 
-  // ── Desktop layout (SHEIN-style 3 columns) ────────────────────────────────
+  // ── Desktop layout ────────────────────────────────────────────────────────
   const DesktopLayout = () => (
     <div className="min-h-screen bg-muted/30">
       <GlobalHeader />
 
       <div className="max-w-[1200px] mx-auto px-4 py-6 grid grid-cols-[220px_1fr_220px] gap-5">
 
-        {/* ── LEFT SIDEBAR ── */}
-        <aside className="space-y-0 bg-background border border-border rounded-md overflow-hidden self-start">
+        {/* LEFT SIDEBAR */}
+        <aside className="bg-background border border-border rounded-md overflow-hidden self-start">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="text-sm font-bold text-foreground">Centro personal</h2>
           </div>
@@ -272,7 +219,6 @@ export function UserProfilePage() {
               </div>
             );
           })}
-          {/* Logout */}
           <button
             onClick={handleLogout}
             disabled={isLoading}
@@ -283,8 +229,8 @@ export function UserProfilePage() {
           </button>
         </aside>
 
-        {/* ── CENTER ── */}
-        <main className="space-y-4">
+        {/* CENTER — greeting + InlineOrdersPanel */}
+        <main className="space-y-4 min-w-0">
 
           {/* Greeting card */}
           <div className="bg-background border border-border rounded-md px-5 py-4">
@@ -311,96 +257,31 @@ export function UserProfilePage() {
               </button>
             </div>
 
-            {/* Quick stats row */}
+            {/* Quick stats */}
             <div className="mt-4 grid grid-cols-3 divide-x divide-border border border-border rounded-md">
-              <div className="flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors" onClick={() => navigate("/mis-compras")}>
-                <span className="text-xl font-bold text-foreground">{allOrders.length}</span>
+              <div className="flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors">
+                <span className="text-xl font-bold text-foreground">{totalOrders}</span>
                 <span className="text-[11px] text-muted-foreground">Pedidos</span>
               </div>
               <div className="flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors" onClick={() => navigate("/favoritos")}>
                 <span className="text-xl font-bold text-foreground">{favorites.length}</span>
                 <span className="text-[11px] text-muted-foreground">Favoritos</span>
               </div>
-              <div className="flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors">
+              <div className="flex flex-col items-center py-3 gap-0.5">
                 <span className="text-xl font-bold text-foreground">0</span>
                 <span className="text-[11px] text-muted-foreground">Puntos</span>
               </div>
             </div>
           </div>
 
-          {/* Mis Pedidos */}
-          <div className="bg-background border border-border rounded-md">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
-              <h2 className="text-sm font-bold text-foreground">Mis Pedidos</h2>
-              <Link to="/mis-compras" className="text-xs text-primary hover:underline flex items-center gap-0.5">
-                Ver todo <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+          {/* ── Full inline orders panel ── */}
+          <InlineOrdersPanel />
 
-            {/* Status quick filters */}
-            <div className="grid grid-cols-5 divide-x divide-border border-b border-border">
-              {ORDER_QUICK.map(({ label, status, icon: Icon }) => {
-                const count = countByStatus([status]);
-                return (
-                  <button
-                    key={status}
-                    onClick={() => navigate("/mis-compras")}
-                    className="flex flex-col items-center gap-1.5 py-4 hover:bg-muted/40 transition-colors relative"
-                  >
-                    <Icon className="w-6 h-6 text-muted-foreground" />
-                    {count > 0 && (
-                      <span className="absolute top-2.5 right-[calc(50%-14px)] bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                        {count}
-                      </span>
-                    )}
-                    <span className="text-[11px] text-muted-foreground">{label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Recent orders list or empty state */}
-            {recentOrders.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
-                <ShoppingBag className="w-10 h-10 opacity-30" />
-                <p className="text-sm">Sin pedidos todavía</p>
-              </div>
-            ) : (
-              <ul className="divide-y divide-border">
-                {recentOrders.slice(0, 3).map((order: any) => {
-                  const statusKey = order.status ?? "placed";
-                  const cfg = ORDER_STATUS_CONFIG[statusKey] || ORDER_STATUS_CONFIG["placed"];
-                  const StatusIcon = cfg.icon;
-                  const total = order.total_amount ?? order.total ?? 0;
-                  const date = order.created_at ? new Date(order.created_at).toLocaleDateString("es", { day: "2-digit", month: "short", year: "numeric" }) : "";
-                  return (
-                    <li key={order.id}
-                      onClick={() => navigate("/mis-compras")}
-                      className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 cursor-pointer transition-colors">
-                      <div className="flex items-center gap-3">
-                        <StatusIcon className={`w-4 h-4 ${cfg.color}`} />
-                        <div>
-                          <p className="text-xs font-medium text-foreground">#{order.id.slice(0, 8).toUpperCase()}</p>
-                          <p className="text-[11px] text-muted-foreground">{date}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[11px] font-medium ${cfg.color}`}>{cfg.label}</span>
-                        <span className="text-xs font-semibold text-foreground">${Number(total).toFixed(2)}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
         </main>
 
-        {/* ── RIGHT SIDEBAR ── */}
+        {/* RIGHT SIDEBAR */}
         <aside className="space-y-4 self-start">
 
-          {/* Servicio al Cliente */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
             <div className="px-4 py-2.5 border-b border-border">
               <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Servicio Al Cliente</h3>
@@ -411,7 +292,7 @@ export function UserProfilePage() {
                 <Bell className="w-5 h-5 text-muted-foreground" />
                 <span className="text-[10px] text-muted-foreground leading-tight text-center">Mis<br/>Notificaciones</span>
               </button>
-              <button onClick={() => navigate("/soporte")}
+              <button onClick={() => navigate("/ayuda")}
                 className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors">
                 <HelpCircle className="w-5 h-5 text-muted-foreground" />
                 <span className="text-[10px] text-muted-foreground leading-tight text-center">Centro<br/>de Ayuda</span>
@@ -419,12 +300,9 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* Favoritos count */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
-            <button
-              onClick={() => navigate("/favoritos")}
-              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors"
-            >
+            <button onClick={() => navigate("/favoritos")}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
               <div className="flex items-center gap-2">
                 <Heart className="w-4 h-4 text-pink-500" />
                 <span className="text-xs font-semibold text-foreground">Favoritos</span>
@@ -434,22 +312,15 @@ export function UserProfilePage() {
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </button>
-            <button
-              onClick={() => navigate("/mis-compras")}
-              className="w-full flex items-center justify-between px-4 py-3 border-t border-border hover:bg-muted/40 transition-colors"
-            >
+            <div className="border-t border-border px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Package className="w-4 h-4 text-primary" />
                 <span className="text-xs font-semibold text-foreground">Mis Pedidos</span>
               </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-xs">{allOrders.length} pedido{allOrders.length !== 1 ? "s" : ""}</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </div>
-            </button>
+              <span className="text-xs text-muted-foreground">{totalOrders} total</span>
+            </div>
           </div>
 
-          {/* Legal */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
             <button onClick={() => setShowLegal(true)}
               className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors border-b border-border">
@@ -469,15 +340,8 @@ export function UserProfilePage() {
 
   return (
     <PageWrapper seo={{ title: "Mi Cuenta", description: "Gestiona tu cuenta y perfil" }}>
-      {/* Mobile */}
-      <div className="md:hidden">
-        <MobileLayout />
-      </div>
-      {/* Desktop */}
-      <div className="hidden md:block">
-        <DesktopLayout />
-      </div>
-
+      <div className="md:hidden"><MobileLayout /></div>
+      <div className="hidden md:block"><DesktopLayout /></div>
       <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />
       <AboutModal open={showAbout} onOpenChange={setShowAbout} />
     </PageWrapper>
