@@ -111,6 +111,10 @@ const SellerMisComprasPage = () => {
       ? rawOrders?.filter(o => o.status === 'preparing' || o.status === 'in_transit')
       : rawOrders?.filter(o => o.status === statusFilter);
   const cancelOrder = useCancelBuyerOrder();
+  const createReturnRequest = useCreateReturnRequest();
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnReasonType, setReturnReasonType] = useState('');
 
   // Get order IDs to fetch PO info
   const orderIds = useMemo(() => orders?.map(o => o.id) || [], [orders]);
