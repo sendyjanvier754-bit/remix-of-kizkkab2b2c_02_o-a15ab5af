@@ -1166,14 +1166,14 @@ const CartPage = () => {
         <div className="fixed left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 bottom-10 z-40 flex justify-center">
           <div className="rounded-lg p-1 border border-gray-300 shadow-md w-full" style={{ backgroundColor: '#efefef' }}>
             <div className="flex gap-1 justify-between items-center">
-              {/* Botón WhatsApp */}
+              {/* Botón Compartir */}
               <button
-                onClick={handleWhatsAppSupport}
-                className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center"
-                style={{ color: 'white', backgroundColor: '#29892a' }}
-                title="Contactar Soporte"
+                onClick={handleShareCart}
+                disabled={isSharing}
+                className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center border border-border bg-muted hover:bg-muted/80"
+                title="Compartir carrito"
               >
-                <MessageCircle className="w-5 h-5" />
+                {isSharing ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : <Share2 className="w-5 h-5 text-foreground" />}
               </button>
 
               <div className="flex-1" />
