@@ -3367,6 +3367,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "orders_b2c_buyer_user_id_fkey"
+            columns: ["buyer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "orders_b2c_pickup_point_id_fkey"
             columns: ["pickup_point_id"]
             isOneToOne: false
