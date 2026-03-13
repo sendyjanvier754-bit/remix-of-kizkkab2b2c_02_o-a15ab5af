@@ -695,6 +695,7 @@ export const InlineOrdersPanel = () => {
   const [statusFilter, setStatusFilter] = useState<BuyerOrderStatus | 'all'>('all');
   const [selectedOrder, setSelectedOrder] = useState<BuyerOrder | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<BuyerOrder | null>(null);
+  const [orderForReturn, setOrderForReturn] = useState<BuyerOrder | null>(null);
 
   const { data: b2bOrdersRaw = [], isLoading } = useBuyerOrders(statusFilter);
   const { data: b2cOrdersRaw = [], isLoading: isLoadingB2C } = useBuyerB2COrders();
