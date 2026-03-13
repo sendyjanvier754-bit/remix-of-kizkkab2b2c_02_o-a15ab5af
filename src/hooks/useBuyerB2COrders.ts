@@ -57,13 +57,21 @@ export const useBuyerB2COrders = () => {
         .select(`
           *,
           order_items_b2c (*),
-          store:stores (name, logo_url)
+          store:stores (name, logo)
         `)
         .eq('buyer_user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return (data || []) as unknown as BuyerB2COrder[];
+      if (error) {
+        console.error('[useBuyerB2COrders] query error:', error);
+        throw error;
+      }
+      // Normalize store: map logo → logo_url for consistent interface
+      const normalized = (data || []).map((o: any) => ({
+        ...o,
+        store: o.store ? { name: o.store.name, logo_url: o.store.logo } : null,
+      }));
+      return normalized as unknown as BuyerB2COrder[];
     },
   });
 
