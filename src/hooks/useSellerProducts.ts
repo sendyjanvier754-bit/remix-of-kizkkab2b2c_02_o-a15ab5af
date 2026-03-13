@@ -125,26 +125,37 @@ export const useSellerProducts = (limit = 20) => {
   });
 };
 
-export const useSellerProductsByCategory = (categoryId: string | undefined, limit = 20) => {
+export const useSellerProductsByCategory = (categoryId: string | undefined, allCategories: { id: string; parent_id: string | null }[] = [], limit = 50) => {
   return useQuery({
     queryKey: ["seller-products-category", categoryId, limit],
     queryFn: async () => {
       if (!categoryId) return [];
 
-      // First get products with this category from products table
+      // Collect category + all descendant category IDs
+      const collectDescendants = (parentId: string): string[] => {
+        const children = allCategories.filter(c => c.parent_id === parentId);
+        return children.reduce<string[]>((acc, child) => [...acc, child.id, ...collectDescendants(child.id)], []);
+      };
+      const categoryIds = [categoryId, ...collectDescendants(categoryId)];
+
+      // Query seller_catalog directly by category_id OR via source_product category
+      // Strategy: get products from products table with matching categories, then find their seller_catalog entries
       const { data: productIds, error: productError } = await supabase
         .from("products")
         .select("id")
-        .eq("categoria_id", categoryId)
+        .in("categoria_id", categoryIds)
         .eq("is_active", true);
 
-      if (productError || !productIds?.length) {
+      if (productError) {
+        console.error("Error fetching product IDs by category:", productError);
         return [];
       }
 
-      const ids = productIds.map(p => p.id);
+      const sourceIds = (productIds || []).map(p => p.id);
 
-      const { data, error } = await supabase
+      // Also query seller_catalog entries that have category_id directly set
+      // Build OR filter: category_id in categoryIds OR source_product_id in sourceIds
+      let query = supabase
         .from("seller_catalog")
         .select(`
           *,
@@ -170,16 +181,33 @@ export const useSellerProductsByCategory = (categoryId: string | undefined, limi
           )
         `)
         .eq("is_active", true)
-        .in("source_product_id", ids)
         .limit(limit)
         .order("imported_at", { ascending: false });
 
+      // Build filter: match by direct category_id OR by source_product_id
+      if (sourceIds.length > 0) {
+        query = query.or(`category_id.in.(${categoryIds.join(',')}),source_product_id.in.(${sourceIds.join(',')})`);
+      } else {
+        query = query.in("category_id", categoryIds);
+      }
+
+      const { data, error } = await query;
+
       if (error) {
-        console.error("Error fetching products by category:", error);
+        console.error("Error fetching seller products by category:", error);
         return [];
       }
 
-      return data as unknown as SellerProduct[];
+      // Deduplicate by source_product_id (keep first/newest per product)
+      const seen = new Set<string>();
+      const deduped = (data as unknown as SellerProduct[]).filter(item => {
+        const key = item.source_product_id || item.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      return deduped;
     },
     enabled: !!categoryId,
   });
