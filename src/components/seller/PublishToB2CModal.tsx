@@ -21,8 +21,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCategories } from '@/hooks/useCategories';
-import { InventarioB2CItem, InventarioB2CVariante } from '@/hooks/useInventarioB2C';
-import { ShoppingCart, Package, DollarSign, Truck, Clock } from 'lucide-react';
+import { InventarioB2CItem } from '@/hooks/useInventarioB2C';
+import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
+import { ShoppingCart, Package, DollarSign, Truck, Clock, TrendingUp, AlertCircle } from 'lucide-react';
 
 interface PublishToB2CModalProps {
   open: boolean;
@@ -36,15 +37,15 @@ export interface VariantePublish {
   sku: string;
   color: string;
   size: string;
-  stock_total: number; // Stock total disponible
-  stock_a_publicar: number; // Cantidad que se publicará
+  stock_total: number;
+  stock_a_publicar: number;
   precio_original: number;
   precio_venta: number;
 }
 
 export interface PublishData {
   productId: string;
-  orderId: string; // order_id del inventario B2B
+  orderId: string;
   nombre: string;
   descripcion: string;
   categoryId: string | null;
@@ -52,7 +53,7 @@ export interface PublishData {
   variantes: VariantePublish[];
   delivery_time_days: number;
   shipping_cost: number;
-  is_preorder: boolean; // true si availability_status = 'pending'
+  is_preorder: boolean;
 }
 
 interface VarianteSelection {
@@ -67,7 +68,12 @@ export function PublishToB2CModal({
   onPublish,
 }: PublishToB2CModalProps) {
   const { data: categories, isLoading: loadingCategories } = useCategories(true);
-  
+
+  // Cargar datos del business panel para mostrar PVP sugerido
+  const { data: businessData } = useBusinessPanelData(
+    open ? item?.product_id : undefined
+  );
+
   // Estado del formulario
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -82,44 +88,40 @@ export function PublishToB2CModal({
     if (open && item) {
       setNombre(item.producto_nombre);
       setDescripcion(item.descripcion_corta || '');
-      
-      // Pre-seleccionar la categoría original si existe
+
       if (item.categoria_id) {
         setCategoryId(item.categoria_id);
       } else {
         setCategoryId('');
       }
-      
-      // Pre-seleccionar todas las variantes con precio sugerido (20% margen) y stock completo
+
+      // Pre-seleccionar todas las variantes con PVP sugerido del business panel (o 0 si no hay)
       const initialSelection = new Map<string, VarianteSelection>();
       item.variantes.forEach(v => {
-        const precioSugerido = v.precio_original * 1.2;
+        // Usar PVP sugerido del business panel si existe, si no dejar en 0 para forzar al seller
+        const pvpSugerido = businessData?.suggested_pvp_per_unit ?? 0;
         initialSelection.set(v.variant_id, {
-          precio: parseFloat(precioSugerido.toFixed(2)),
-          cantidad: v.stock, // Por defecto todo el stock
+          precio: pvpSugerido > 0 ? parseFloat(pvpSugerido.toFixed(2)) : 0,
+          cantidad: v.stock,
         });
       });
       setSelectedVariantes(initialSelection);
-      
-      // Configuración por defecto
+
       setDeliveryTimeDays('7');
       setShippingCost('5.00');
     }
-  }, [open, item]);
+  }, [open, item, businessData]);
 
   const toggleVariante = (variantId: string, stockTotal: number) => {
     const newSelection = new Map(selectedVariantes);
     if (newSelection.has(variantId)) {
       newSelection.delete(variantId);
     } else {
-      const variante = item.variantes.find(v => v.variant_id === variantId);
-      if (variante) {
-        const precioSugerido = variante.precio_original * 1.2;
-        newSelection.set(variantId, {
-          precio: parseFloat(precioSugerido.toFixed(2)),
-          cantidad: stockTotal, // Por defecto todo el stock
-        });
-      }
+      const pvpSugerido = businessData?.suggested_pvp_per_unit ?? 0;
+      newSelection.set(variantId, {
+        precio: pvpSugerido > 0 ? parseFloat(pvpSugerido.toFixed(2)) : 0,
+        cantidad: stockTotal,
+      });
     }
     setSelectedVariantes(newSelection);
   };
@@ -137,7 +139,6 @@ export function PublishToB2CModal({
     const newSelection = new Map(selectedVariantes);
     const current = newSelection.get(variantId);
     if (current) {
-      // Limitar al stock máximo disponible
       const cantidadValida = Math.min(Math.max(1, cantidad), maxStock);
       newSelection.set(variantId, { ...current, cantidad: cantidadValida });
       setSelectedVariantes(newSelection);
@@ -155,10 +156,10 @@ export function PublishToB2CModal({
       return;
     }
 
-    // Validar que todos los precios y cantidades sean válidos
-    for (const [variantId, selection] of selectedVariantes) {
-      if (selection.precio <= 0) {
-        alert('Todos los precios deben ser mayores a $0');
+    // Validar que TODOS los precios sean válidos — obligatorio
+    for (const [, selection] of selectedVariantes) {
+      if (!selection.precio || selection.precio <= 0) {
+        alert('El precio de venta es obligatorio para publicar. Ingresa un precio mayor a $0 en todas las variantes seleccionadas.');
         return;
       }
       if (selection.cantidad <= 0) {
@@ -170,7 +171,6 @@ export function PublishToB2CModal({
     setIsPublishing(true);
 
     try {
-      // Construir array de variantes a publicar
       const variantesToPublish: VariantePublish[] = item.variantes
         .filter(v => selectedVariantes.has(v.variant_id))
         .map(v => {
@@ -210,8 +210,11 @@ export function PublishToB2CModal({
     }
   };
 
-  // Categorías raíz (sin parent_id)
   const rootCategories = categories?.filter(c => !c.parent_id) || [];
+
+  const pvpSugerido = businessData?.suggested_pvp_per_unit;
+  const costoB2B = businessData?.cost_per_unit;
+  const noPvpAvailable = !pvpSugerido || pvpSugerido === 0;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -260,6 +263,44 @@ export function PublishToB2CModal({
                 </p>
               </div>
             </div>
+
+            {/* Panel de análisis de precios del business panel */}
+            {costoB2B && costoB2B > 0 ? (
+              <div className="mt-3 pt-3 border-t border-border/50">
+                <div className="flex items-center gap-1 mb-2">
+                  <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs font-semibold text-primary">Análisis de precios</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-background rounded p-2">
+                    <p className="text-xs text-muted-foreground">Tu costo B2B</p>
+                    <p className="text-sm font-bold">${costoB2B.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-background rounded p-2">
+                    <p className="text-xs text-muted-foreground">Costo de envío</p>
+                    <p className="text-sm font-bold">
+                      {businessData?.shipping_cost_per_unit != null
+                        ? `$${businessData.shipping_cost_per_unit.toFixed(2)}`
+                        : '—'}
+                    </p>
+                  </div>
+                  <div className="bg-primary/10 border border-primary/30 rounded p-2">
+                    <p className="text-xs text-primary font-medium">PVP sugerido</p>
+                    <p className="text-sm font-bold text-primary">
+                      {pvpSugerido ? `$${pvpSugerido.toFixed(2)}` : '—'}
+                    </p>
+                  </div>
+                </div>
+                {noPvpAvailable && (
+                  <div className="flex items-start gap-1.5 mt-2 bg-amber-50 border border-amber-200 rounded p-2">
+                    <AlertCircle className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-700">
+                      No hay mercado configurado. Ingresa manualmente tu precio de venta para cada variante.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
 
           {/* Nombre del producto */}
@@ -295,17 +336,23 @@ export function PublishToB2CModal({
               {item.variantes.map((variante) => {
                 const isSelected = selectedVariantes.has(variante.variant_id);
                 const selection = selectedVariantes.get(variante.variant_id);
-                const precioVenta = selection?.precio || variante.precio_original * 1.2;
+                const precioVenta = selection?.precio ?? 0;
                 const cantidadAPublicar = selection?.cantidad || variante.stock;
-                
+                const precioValido = precioVenta > 0;
+
                 return (
-                  <div key={variante.variant_id} className="flex items-start gap-3 p-3 rounded-md border bg-card">
+                  <div
+                    key={variante.variant_id}
+                    className={`flex items-start gap-3 p-3 rounded-md border bg-card transition-colors ${
+                      isSelected && !precioValido ? 'border-destructive/50 bg-destructive/5' : ''
+                    }`}
+                  >
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => toggleVariante(variante.variant_id, variante.stock)}
                       className="mt-1"
                     />
-                    
+
                     <div className="flex-1 space-y-2">
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
@@ -328,11 +375,11 @@ export function PublishToB2CModal({
                             Stock total: {variante.stock} unidades
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Tu costo: ${variante.precio_original.toFixed(2)}/unidad
+                            Tu costo B2B: ${variante.precio_original.toFixed(2)}/unidad
                           </p>
                         </div>
                       </div>
-                      
+
                       {isSelected && (
                         <div className="grid grid-cols-2 gap-3">
                           {/* Cantidad a publicar */}
@@ -347,7 +394,7 @@ export function PublishToB2CModal({
                               max={variante.stock}
                               value={cantidadAPublicar}
                               onChange={(e) => updateVarianteCantidad(
-                                variante.variant_id, 
+                                variante.variant_id,
                                 parseInt(e.target.value) || 1,
                                 variante.stock
                               )}
@@ -357,11 +404,11 @@ export function PublishToB2CModal({
                               Máx: {variante.stock}
                             </p>
                           </div>
-                          
-                          {/* Precio de venta */}
+
+                          {/* Precio de venta — obligatorio */}
                           <div className="space-y-1">
-                            <Label htmlFor={`precio-${variante.variant_id}`} className="text-xs">
-                              Precio Venta (USD)
+                            <Label htmlFor={`precio-${variante.variant_id}`} className="text-xs font-semibold">
+                              Precio de Venta (USD) *
                             </Label>
                             <div className="relative">
                               <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
@@ -369,26 +416,40 @@ export function PublishToB2CModal({
                                 id={`precio-${variante.variant_id}`}
                                 type="number"
                                 step="0.01"
-                                min="0"
-                                value={precioVenta}
-                                onChange={(e) => updateVariantePrice(variante.variant_id, parseFloat(e.target.value))}
-                                className="pl-7 h-8 text-sm"
+                                min="0.01"
+                                value={precioVenta || ''}
+                                placeholder={pvpSugerido ? pvpSugerido.toFixed(2) : '0.00'}
+                                onChange={(e) => updateVariantePrice(variante.variant_id, parseFloat(e.target.value) || 0)}
+                                className={`pl-7 h-8 text-sm ${!precioValido ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                               />
                             </div>
-                            {precioVenta > variante.precio_original && (
+                            {/* Hint con PVP sugerido */}
+                            {pvpSugerido && pvpSugerido > 0 && (
+                              <p className="text-xs text-primary font-medium">
+                                Sugerido: ${pvpSugerido.toFixed(2)}
+                              </p>
+                            )}
+                            {/* Error si no tiene precio */}
+                            {!precioValido && (
+                              <p className="text-xs text-destructive font-medium">
+                                ⚠ Precio requerido
+                              </p>
+                            )}
+                            {/* Ganancia si el precio es válido */}
+                            {precioValido && precioVenta > variante.precio_original && (
                               <p className="text-xs text-green-600 font-medium">
-                                +${(precioVenta - variante.precio_original).toFixed(2)}/u 
+                                +${(precioVenta - variante.precio_original).toFixed(2)}/u
                                 ({(((precioVenta - variante.precio_original) / variante.precio_original) * 100).toFixed(0)}%)
                               </p>
                             )}
                           </div>
                         </div>
                       )}
-                      
+
                       {isSelected && cantidadAPublicar < variante.stock && (
                         <div className="bg-blue-50 border border-blue-200 rounded p-2">
                           <p className="text-xs text-blue-800">
-                            📦 Publicarás {cantidadAPublicar} de {variante.stock} unidades. 
+                            📦 Publicarás {cantidadAPublicar} de {variante.stock} unidades.
                             Las {variante.stock - cantidadAPublicar} restantes quedarán en inventario privado.
                           </p>
                         </div>
@@ -422,7 +483,7 @@ export function PublishToB2CModal({
                 Días estimados para entregar al comprador
               </p>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="shipping-cost" className="flex items-center gap-2">
                 <Truck className="h-4 w-4" />
@@ -462,9 +523,7 @@ export function PublishToB2CModal({
                 ) : (
                   <>
                     {rootCategories.map((category) => {
-                      // Categorías hijas
                       const children = categories?.filter(c => c.parent_id === category.id) || [];
-                      
                       return (
                         <div key={category.id}>
                           <SelectItem value={category.id}>
@@ -501,14 +560,14 @@ export function PublishToB2CModal({
           {item.availability_status === 'pending' ? (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
               <p className="text-sm text-amber-800">
-                <strong>⏳ Preventa:</strong> El producto se publicará como "Preventa" porque aún no ha sido entregado. 
+                <strong>⏳ Preventa:</strong> El producto se publicará como "Preventa" porque aún no ha sido entregado.
                 Cambiará automáticamente a "Disponible" cuando recibas el pedido.
               </p>
             </div>
           ) : (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <p className="text-sm text-green-800">
-                <strong>✅ Disponible:</strong> El producto se publicará como "Disponible para envío inmediato". 
+                <strong>✅ Disponible:</strong> El producto se publicará como "Disponible para envío inmediato".
                 Las ventas descontarán del stock automáticamente.
               </p>
             </div>
@@ -519,7 +578,10 @@ export function PublishToB2CModal({
           <Button variant="outline" onClick={onClose} disabled={isPublishing}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={isPublishing}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isPublishing}
+          >
             {isPublishing ? (
               <>Publicando...</>
             ) : (
