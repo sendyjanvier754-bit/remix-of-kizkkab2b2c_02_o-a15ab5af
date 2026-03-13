@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   User, ShoppingBag, Heart, MapPin, CreditCard, Settings,
   LogOut, ChevronRight, Bell, HelpCircle, Shield, Info, Package,
-  RotateCcw,
+  RotateCcw, MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
@@ -26,6 +26,7 @@ import { InlineSettingsPanel } from "@/components/profile/InlineSettingsPanel";
 import { InlineReturnsPanel } from "@/components/profile/InlineReturnsPanel";
 import { SupportMenuPopover } from "@/components/profile/SupportMenuPopover";
 import { useMyReturnRequests } from "@/hooks/useOrderReturnRequests";
+import { useUnreadChatCount } from "@/hooks/useSupportChat";
 
 type ActiveSection = 'orders' | 'favorites' | 'addresses' | 'payment' | 'settings' | 'returns';
 
@@ -40,7 +41,7 @@ export function UserProfilePage() {
     "Mi Cuenta": true,
     "Mis Pedidos": true,
     "Mis Intereses": false,
-    "Servicio al Cliente": false,
+    "Centro de Ayuda": true,
     "Política": false,
   });
 
@@ -48,6 +49,7 @@ export function UserProfilePage() {
   const { data: b2cOrders = [] } = useBuyerB2COrders();
   const { data: b2bOrders = [] } = useBuyerOrders();
   const { data: myReturns = [] } = useMyReturnRequests();
+  const unreadChats = useUnreadChatCount();
   const totalOrders = b2cOrders.length + (b2bOrders?.length ?? 0);
   const pendingReturns = myReturns.filter(r => r.status === 'pending').length;
 
@@ -115,7 +117,7 @@ export function UserProfilePage() {
           { icon: <Heart className="w-6 h-6"/>,        label: "Favoritos",       action: () => navigate("/favoritos")       },
           { icon: <MapPin className="w-6 h-6"/>,        label: "Mis Direcciones", action: () => navigate("/mis-direcciones") },
           { icon: <Bell className="w-6 h-6"/>,          label: "Notificaciones",  action: () => navigate("/notificaciones")  },
-          { icon: <HelpCircle className="w-6 h-6"/>,    label: "Centro de Ayuda", action: () => navigate("/soporte")         },
+          { icon: <MessageCircle className="w-6 h-6"/>, label: "Live Chat",       action: () => navigate("/soporte"), badge: unreadChats },
         ].map((item, i) => (
           <button key={i} onClick={item.action}
             className="w-full bg-white border border-border rounded-lg p-4 hover:bg-muted/40 transition-colors flex items-center justify-between">
@@ -123,7 +125,12 @@ export function UserProfilePage() {
               <div className="text-primary">{item.icon}</div>
               <span className="font-medium text-sm">{item.label}</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <div className="flex items-center gap-2">
+              {item.badge !== undefined && item.badge > 0 && (
+                <Badge className="h-5 min-w-5 px-1.5 text-[10px] bg-destructive text-destructive-foreground">{item.badge}</Badge>
+              )}
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
           </button>
         ))}
       </div>
@@ -249,14 +256,19 @@ export function UserProfilePage() {
             )}
           </div>
 
-          {/* Servicio al Cliente group */}
+          {/* Centro de Ayuda group */}
           <div className="border-b border-border">
-            <button onClick={() => toggleGroup("Servicio al Cliente")}
+            <button onClick={() => toggleGroup("Centro de Ayuda")}
               className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
-              <span className="text-sm font-semibold text-foreground">Servicio al Cliente</span>
-              <span className="text-muted-foreground text-xs">{expandedGroups["Servicio al Cliente"] ? "−" : "+"}</span>
+              <span className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                Centro de Ayuda
+                {unreadChats > 0 && (
+                  <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{unreadChats}</Badge>
+                )}
+              </span>
+              <span className="text-muted-foreground text-xs">{expandedGroups["Centro de Ayuda"] ? "−" : "+"}</span>
             </button>
-            {expandedGroups["Servicio al Cliente"] && (
+            {expandedGroups["Centro de Ayuda"] && (
               <ul className="pb-1">
                 <li>
                   <button
@@ -267,11 +279,16 @@ export function UserProfilePage() {
                   </button>
                 </li>
                 <li>
-                  <SupportMenuPopover>
-                    <button className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
-                      <HelpCircle className="w-3.5 h-3.5" /> Centro de ayuda
-                    </button>
-                  </SupportMenuPopover>
+                  <button
+                    onClick={() => navigate("/soporte")}
+                    className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span className="flex-1 text-left">Live Chat</span>
+                    {unreadChats > 0 && (
+                      <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{unreadChats}</Badge>
+                    )}
+                  </button>
                 </li>
               </ul>
             )}
@@ -391,20 +408,24 @@ export function UserProfilePage() {
           {/* Support widget */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
             <div className="px-4 py-2.5 border-b border-border">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Servicio Al Cliente</h3>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Centro de Ayuda</h3>
             </div>
             <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
               <button onClick={() => navigate("/notificaciones")}
                 className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors">
                 <Bell className="w-5 h-5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground leading-tight text-center">Mis<br/>Notificaciones</span>
+                <span className="text-[10px] text-muted-foreground leading-tight text-center">Notificaciones</span>
               </button>
-              <SupportMenuPopover>
-                <button className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors w-full">
-                  <HelpCircle className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground leading-tight text-center">Centro<br/>de Ayuda</span>
-                </button>
-              </SupportMenuPopover>
+              <button onClick={() => navigate("/soporte")}
+                className="relative flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors w-full">
+                <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground leading-tight text-center">Live Chat</span>
+                {unreadChats > 0 && (
+                  <span className="absolute top-1.5 right-3 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                    {unreadChats}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 
