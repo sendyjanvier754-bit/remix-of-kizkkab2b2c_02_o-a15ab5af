@@ -39,8 +39,9 @@ import { es } from "date-fns/locale";
 import {
   Package, ShoppingBag, Truck, CheckCircle, XCircle, Clock, ExternalLink,
   ChevronRight, RefreshCw, AlertTriangle, Loader2, Ban, DollarSign,
-  Plane, Ship, Warehouse, PackageCheck, Boxes, Store, MapPin, Calendar,
+  Plane, Ship, Warehouse, PackageCheck, Boxes, Store, MapPin, Calendar, RotateCcw,
 } from "lucide-react";
+import { useMyReturnRequests, RETURN_STATUS_CONFIG } from "@/hooks/useOrderReturnRequests";
 
 // ── status config (mirrors MyPurchasesPage) ──────────────────────────────────
 const statusConfig: Record<BuyerOrderStatus, { label: string; color: string; icon: React.ReactNode; bgColor: string }> = {
@@ -114,7 +115,8 @@ const OrderCard = ({
   order,
   onClick,
   poInfo,
-}: { order: BuyerOrder; onClick: () => void; poInfo?: OrderPOInfo }) => {
+  returnStatus,
+}: { order: BuyerOrder; onClick: () => void; poInfo?: OrderPOInfo; returnStatus?: string | null }) => {
   const status = statusConfig[order.status] || statusConfig.draft;
   const itemCount = order.order_items_b2b?.length || 0;
   const firstItem = order.order_items_b2b?.[0];
@@ -126,6 +128,8 @@ const OrderCard = ({
     placed: 'border-l-blue-500',
     cancelled: 'border-l-red-500',
   }[order.status] || 'border-l-gray-300';
+
+  const returnCfg = returnStatus ? RETURN_STATUS_CONFIG[returnStatus as keyof typeof RETURN_STATUS_CONFIG] : null;
 
   return (
     <Card
@@ -153,6 +157,13 @@ const OrderCard = ({
                 ) : (
                   <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
                     <Store className="h-3 w-3 mr-1" />B2C
+                  </Badge>
+                )}
+                {/* Return request status badge */}
+                {returnCfg && (
+                  <Badge variant="outline" className={`${returnCfg.color} border-current text-xs gap-1`}>
+                    <RotateCcw className="h-2.5 w-2.5" />
+                    {returnCfg.label}
                   </Badge>
                 )}
               </div>
@@ -549,6 +560,14 @@ export const InlineOrdersPanel = () => {
   const { data: b2cOrdersRaw = [], isLoading: isLoadingB2C } = useBuyerB2COrders();
   const cancelMutation = useCancelBuyerOrder();
 
+  // Fetch user's return requests to build a map by order_id
+  const { data: myReturns = [] } = useMyReturnRequests();
+  const returnStatusByOrderId = useMemo(() => {
+    const map: Record<string, string> = {};
+    myReturns.forEach(r => { map[r.order_id] = r.status; });
+    return map;
+  }, [myReturns]);
+
   // Normalize B2C → BuyerOrder
   const normalizedB2C: BuyerOrder[] = useMemo(() =>
     b2cOrdersRaw.map((o: BuyerB2COrder) => ({
@@ -685,6 +704,7 @@ export const InlineOrdersPanel = () => {
               order={order}
               onClick={() => setSelectedOrder(order)}
               poInfo={poInfoMap?.[order.id]}
+              returnStatus={returnStatusByOrderId[order.id] || null}
             />
           ))
         ) : (

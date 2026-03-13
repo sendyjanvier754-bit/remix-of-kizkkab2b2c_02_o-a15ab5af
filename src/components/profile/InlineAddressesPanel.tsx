@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAddresses, AddressInput } from "@/hooks/useAddresses";
+import { useLogisticsEngine } from "@/hooks/useLogisticsEngine";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   MapPin, Plus, Pencil, Trash2, Star, Loader2, Home, Building2,
@@ -28,10 +30,30 @@ const EMPTY_FORM: AddressInput = {
 
 export function InlineAddressesPanel() {
   const { addresses, isLoading, createAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddresses();
+  const logistics = useLogisticsEngine();
+  const { data: departments = [] } = logistics.useDepartments();
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AddressInput>(EMPTY_FORM);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  // Load communes based on selected department
+  const { data: communes = [] } = logistics.useCommunes(form.department_id || undefined);
+
+  // When department changes, clear commune
+  const handleDepartmentChange = (deptId: string) => {
+    setForm(f => ({ ...f, department_id: deptId, commune_id: null, state: "" }));
+  };
+
+  const handleCommuneChange = (communeId: string) => {
+    const commune = communes.find(c => c.id === communeId);
+    setForm(f => ({
+      ...f,
+      commune_id: communeId,
+      city: commune?.name || f.city,
+    }));
+  };
 
   const openCreate = () => {
     setEditingId(null);
@@ -59,8 +81,16 @@ export function InlineAddressesPanel() {
   };
 
   const handleSave = async () => {
-    if (!form.full_name || !form.street_address || !form.city) {
-      toast.error("Nombre, dirección y ciudad son requeridos");
+    if (!form.full_name || !form.street_address) {
+      toast.error("Nombre y dirección son requeridos");
+      return;
+    }
+    if (!form.department_id) {
+      toast.error("Selecciona un departamento");
+      return;
+    }
+    if (!form.commune_id) {
+      toast.error("Selecciona una comuna");
       return;
     }
     if (editingId) {
@@ -133,7 +163,6 @@ export function InlineAddressesPanel() {
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {addr.street_address}, {addr.city}
                     {addr.state && `, ${addr.state}`}
-                    {addr.postal_code && ` ${addr.postal_code}`}
                   </p>
                   {addr.phone && <p className="text-xs text-muted-foreground">{addr.phone}</p>}
                 </div>
@@ -173,6 +202,7 @@ export function InlineAddressesPanel() {
             <DialogTitle>{editingId ? "Editar dirección" : "Nueva dirección"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 mt-2">
+            {/* Label + Country row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Etiqueta *</Label>
@@ -193,6 +223,8 @@ export function InlineAddressesPanel() {
                 />
               </div>
             </div>
+
+            {/* Full name */}
             <div>
               <Label className="text-xs">Nombre completo *</Label>
               <Input
@@ -202,6 +234,8 @@ export function InlineAddressesPanel() {
                 className="h-9 mt-1"
               />
             </div>
+
+            {/* Phone */}
             <div>
               <Label className="text-xs">Teléfono</Label>
               <Input
@@ -211,6 +245,42 @@ export function InlineAddressesPanel() {
                 className="h-9 mt-1"
               />
             </div>
+
+            {/* Department */}
+            <div>
+              <Label className="text-xs">Departamento *</Label>
+              <Select value={form.department_id || ""} onValueChange={handleDepartmentChange}>
+                <SelectTrigger className="h-9 mt-1">
+                  <SelectValue placeholder="Seleccionar departamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map(d => (
+                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Commune */}
+            <div>
+              <Label className="text-xs">Comuna *</Label>
+              <Select
+                value={form.commune_id || ""}
+                onValueChange={handleCommuneChange}
+                disabled={!form.department_id}
+              >
+                <SelectTrigger className="h-9 mt-1">
+                  <SelectValue placeholder={form.department_id ? "Seleccionar comuna" : "Selecciona un departamento primero"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {communes.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Street address */}
             <div>
               <Label className="text-xs">Dirección *</Label>
               <Input
@@ -220,26 +290,8 @@ export function InlineAddressesPanel() {
                 className="h-9 mt-1"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Ciudad *</Label>
-                <Input
-                  value={form.city}
-                  onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))}
-                  placeholder="Port-au-Prince"
-                  className="h-9 mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Departamento</Label>
-                <Input
-                  value={form.state ?? ""}
-                  onChange={(e) => setForm(f => ({ ...f, state: e.target.value }))}
-                  placeholder="Ouest"
-                  className="h-9 mt-1"
-                />
-              </div>
-            </div>
+
+            {/* Notes */}
             <div>
               <Label className="text-xs">Notas de entrega</Label>
               <Textarea
@@ -249,6 +301,8 @@ export function InlineAddressesPanel() {
                 className="mt-1 min-h-[70px] resize-none"
               />
             </div>
+
+            {/* Default checkbox */}
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
