@@ -1284,7 +1284,6 @@ const CartPage = () => {
                             {options.map(value => {
                               const isSelected = selected === value;
                               const img = drawerImageMap[type]?.[value];
-                              const hex = getHex(value);
                               const variantForOpt = catalogVariants.find(v => v.color === value);
                               const outOfStock = variantForOpt ? variantForOpt.stock === 0 : false;
 
@@ -1305,14 +1304,8 @@ const CartPage = () => {
                                   )}
                                   title={`${value}${outOfStock ? ' - Sin stock' : ''}`}
                                 >
-                                  {img ? (
+                                  {img && (
                                     <img src={img} alt={value} className="w-full h-full object-cover" loading="lazy" />
-                                  ) : hex ? (
-                                    <div className="w-full h-full" style={{ backgroundColor: hex }} />
-                                  ) : (
-                                    <span className="text-[11px] font-bold uppercase text-muted-foreground flex items-center justify-center h-full">
-                                      {value.charAt(0)}
-                                    </span>
                                   )}
                                   {isSelected && (
                                     <div className="absolute inset-0 bg-primary/25 flex items-center justify-center">
