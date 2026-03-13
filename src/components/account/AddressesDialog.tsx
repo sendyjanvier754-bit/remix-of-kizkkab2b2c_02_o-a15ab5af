@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,9 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAddresses, Address, AddressInput } from '@/hooks/useAddresses';
+import { supabase } from '@/integrations/supabase/client';
 import { Plus, MapPin, Pencil, Trash2, Star, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -20,6 +22,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+
+interface Country { id: string; name: string; code: string; }
+interface Department { id: string; name: string; code: string; }
+interface Commune { id: string; name: string; code: string; }
 
 interface AddressesDialogProps {
   open: boolean;
@@ -34,7 +40,7 @@ const emptyAddress: AddressInput = {
   city: '',
   state: '',
   postal_code: '',
-  country: 'Haiti',
+  country: '',
   is_default: false,
   notes: '',
   department_id: null,
@@ -48,9 +54,93 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
   const [formData, setFormData] = useState<AddressInput>(emptyAddress);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
+  // Location data
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [communes, setCommunes] = useState<Commune[]>([]);
+  const [selectedCountryId, setSelectedCountryId] = useState('');
+  const [selectedDeptId, setSelectedDeptId] = useState('');
+  const [selectedCommuneId, setSelectedCommuneId] = useState('');
+  const [loadingDepts, setLoadingDepts] = useState(false);
+  const [loadingCommunes, setLoadingCommunes] = useState(false);
+
+  // Load destination countries on mount
+  useEffect(() => {
+    supabase
+      .from('destination_countries')
+      .select('id, name, code')
+      .eq('is_active', true)
+      .order('name')
+      .then(({ data }) => setCountries((data || []) as Country[]));
+  }, []);
+
+  // Load departments when country changes
+  useEffect(() => {
+    if (!selectedCountryId) {
+      setDepartments([]);
+      setSelectedDeptId('');
+      setCommunes([]);
+      setSelectedCommuneId('');
+      return;
+    }
+    setLoadingDepts(true);
+    supabase
+      .from('departments')
+      .select('id, name, code')
+      .eq('is_active', true)
+      .order('name')
+      .then(({ data }) => {
+        setDepartments((data || []) as Department[]);
+        setLoadingDepts(false);
+      });
+  }, [selectedCountryId]);
+
+  // Load communes when department changes
+  useEffect(() => {
+    if (!selectedDeptId) {
+      setCommunes([]);
+      setSelectedCommuneId('');
+      return;
+    }
+    setLoadingCommunes(true);
+    supabase
+      .from('communes')
+      .select('id, name, code')
+      .eq('department_id', selectedDeptId)
+      .eq('is_active', true)
+      .order('name')
+      .then(({ data }) => {
+        setCommunes((data || []) as Commune[]);
+        setLoadingCommunes(false);
+      });
+  }, [selectedDeptId]);
+
+  // Sync location selectors → formData
+  useEffect(() => {
+    const country = countries.find(c => c.id === selectedCountryId);
+    const dept = departments.find(d => d.id === selectedDeptId);
+    setFormData(prev => ({
+      ...prev,
+      country: country?.name ?? '',
+      state: dept?.name ?? '',
+      department_id: selectedDeptId || null,
+      commune_id: selectedCommuneId || null,
+      city: communes.find(c => c.id === selectedCommuneId)?.name ?? prev.city,
+    }));
+  }, [selectedCountryId, selectedDeptId, selectedCommuneId, countries, departments, communes]);
+
+  const resetLocation = () => {
+    setSelectedCountryId('');
+    setSelectedDeptId('');
+    setSelectedCommuneId('');
+    setDepartments([]);
+    setCommunes([]);
+  };
+
   const handleNewAddress = () => {
     setEditingAddress(null);
     setFormData(emptyAddress);
+    resetLocation();
     setIsEditing(true);
   };
 
@@ -70,6 +160,11 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
       department_id: address.department_id || null,
       commune_id: address.commune_id || null,
     });
+    // Pre-select selectors from saved IDs — we need to resolve the country from name
+    const matchCountry = countries.find(c => c.name === address.country);
+    setSelectedCountryId(matchCountry?.id ?? '');
+    setSelectedDeptId(address.department_id ?? '');
+    setSelectedCommuneId(address.commune_id ?? '');
     setIsEditing(true);
   };
 
@@ -82,6 +177,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
     setIsEditing(false);
     setEditingAddress(null);
     setFormData(emptyAddress);
+    resetLocation();
   };
 
   const handleDelete = async (id: string) => {
@@ -94,6 +190,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
   };
 
   const isSaving = createAddress.isPending || updateAddress.isPending;
+  const canSave = !!formData.full_name && !!formData.street_address && !!selectedCountryId && !!selectedDeptId && !!selectedCommuneId;
 
   if (isEditing) {
     return (
@@ -104,11 +201,11 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
               {editingAddress ? 'Editar Dirección' : 'Nueva Dirección'}
             </DialogTitle>
           </DialogHeader>
-          
-          {/* Extra bottom padding for mobile keyboard */}
+
           <div className="space-y-4 pb-16">
+            {/* Label + Phone */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Etiqueta</Label>
                 <Input
                   value={formData.label}
@@ -116,7 +213,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                   placeholder="Casa, Trabajo, etc."
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Teléfono</Label>
                 <Input
                   value={formData.phone || ''}
@@ -125,18 +222,20 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 />
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label>Nombre completo *</Label>
+
+            {/* Full name */}
+            <div className="space-y-1.5">
+              <Label>Nombre completo <span className="text-destructive">*</span></Label>
               <Input
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 placeholder="Nombre de quien recibe"
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label>Dirección *</Label>
+
+            {/* Street */}
+            <div className="space-y-1.5">
+              <Label>Dirección <span className="text-destructive">*</span></Label>
               <Textarea
                 value={formData.street_address}
                 onChange={(e) => setFormData({ ...formData, street_address: e.target.value })}
@@ -144,46 +243,88 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 rows={2}
               />
             </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Ciudad *</Label>
-                <Input
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  placeholder="Ciudad"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Departamento</Label>
-                <Input
-                  value={formData.state || ''}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  placeholder="Departamento"
-                />
-              </div>
+
+            {/* País */}
+            <div className="space-y-1.5">
+              <Label>País <span className="text-destructive">*</span></Label>
+              <Select
+                value={selectedCountryId}
+                onValueChange={(val) => {
+                  setSelectedCountryId(val);
+                  setSelectedDeptId('');
+                  setSelectedCommuneId('');
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un país" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Código Postal</Label>
-                <Input
-                  value={formData.postal_code || ''}
-                  onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                  placeholder="Código postal"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>País</Label>
-                <Input
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  placeholder="País"
-                />
-              </div>
+
+            {/* Departamento */}
+            <div className="space-y-1.5">
+              <Label>Departamento <span className="text-destructive">*</span></Label>
+              <Select
+                value={selectedDeptId}
+                onValueChange={(val) => {
+                  setSelectedDeptId(val);
+                  setSelectedCommuneId('');
+                }}
+                disabled={!selectedCountryId || loadingDepts}
+              >
+                <SelectTrigger>
+                  {loadingDepts
+                    ? <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Cargando...</span>
+                    : <SelectValue placeholder={selectedCountryId ? 'Selecciona un departamento' : 'Primero selecciona un país'} />
+                  }
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map(d => (
+                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            
-            <div className="space-y-2">
+
+            {/* Comuna */}
+            <div className="space-y-1.5">
+              <Label>Comuna / Ciudad <span className="text-destructive">*</span></Label>
+              <Select
+                value={selectedCommuneId}
+                onValueChange={setSelectedCommuneId}
+                disabled={!selectedDeptId || loadingCommunes}
+              >
+                <SelectTrigger>
+                  {loadingCommunes
+                    ? <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Cargando...</span>
+                    : <SelectValue placeholder={selectedDeptId ? 'Selecciona una comuna' : 'Primero selecciona un departamento'} />
+                  }
+                </SelectTrigger>
+                <SelectContent className="max-h-[220px]">
+                  {communes.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Código postal */}
+            <div className="space-y-1.5">
+              <Label>Código Postal</Label>
+              <Input
+                value={formData.postal_code || ''}
+                onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                placeholder="Opcional"
+              />
+            </div>
+
+            {/* Notas */}
+            <div className="space-y-1.5">
               <Label>Notas adicionales</Label>
               <Textarea
                 value={formData.notes || ''}
@@ -192,8 +333,9 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 rows={2}
               />
             </div>
-            
-            <div className="flex items-center justify-between pt-2">
+
+            {/* Default switch */}
+            <div className="flex items-center justify-between pt-1">
               <div className="flex items-center gap-2">
                 <Switch
                   checked={formData.is_default}
@@ -202,19 +344,20 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 <Label className="cursor-pointer">Usar como predeterminada</Label>
               </div>
             </div>
-            
-            <div className="flex gap-2 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsEditing(false)}
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => { setIsEditing(false); resetLocation(); }}
                 className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button 
+              <Button
                 onClick={handleSave}
-                disabled={!formData.full_name || !formData.street_address || !formData.city || isSaving}
-                className="flex-1 bg-[#071d7f] hover:bg-[#0a2a9f]"
+                disabled={!canSave || isSaving}
+                className="flex-1"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Guardar
@@ -232,23 +375,20 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-[#071d7f]" />
+              <MapPin className="h-5 w-5 text-primary" />
               Mis Direcciones
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
-            <Button 
-              onClick={handleNewAddress}
-              className="w-full bg-[#071d7f] hover:bg-[#0a2a9f]"
-            >
+            <Button onClick={handleNewAddress} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Agregar Nueva Dirección
             </Button>
-            
+
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-[#071d7f]" />
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : addresses.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -283,7 +423,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                               <p className="text-sm text-muted-foreground">Tel: {address.phone}</p>
                             )}
                           </div>
-                          
+
                           <div className="flex flex-col gap-1">
                             <Button
                               variant="ghost"
