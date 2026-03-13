@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { generateInvoicePDF } from '@/services/pdfGenerators';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
+import { useCreateReturnRequest } from '@/hooks/useOrderReturnRequests';
 import { 
   Package, 
   Clock, 
@@ -41,7 +42,7 @@ import {
   ChevronRight,
   Printer,
   FileText,
-  
+  RotateCcw,
   Boxes,
   Ship,
   Plane,
