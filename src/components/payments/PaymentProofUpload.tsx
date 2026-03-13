@@ -4,29 +4,37 @@ import { Button } from '@/components/ui/button';
 import { Upload, CheckCircle, ExternalLink, Loader2, FileImage, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
+type OrderTable = 'orders_b2b' | 'orders_b2c';
+
 interface PaymentProofUploadProps {
   orderId: string;
   existingUrl?: string | null;
   onUploaded?: (url: string) => void;
-  /** When true, only shows a link to view the proof (admin view) */
+  /** When true, also allows upload (admin uploading on behalf of buyer) */
   readOnly?: boolean;
+  /** Which table to patch. Defaults to orders_b2b */
+  orderTable?: OrderTable;
 }
 
 /**
  * Reusable component to upload/view a payment proof (comprobante de pago).
- * The URL is stored in metadata.payment_proof_url on the orders_b2b table.
+ * Supports both orders_b2b and orders_b2c tables.
  *
- * Usage – seller upload:
- *   <PaymentProofUpload orderId={order.id} existingUrl={order.metadata?.payment_proof_url} onUploaded={...} />
+ * Usage – buyer/seller upload:
+ *   <PaymentProofUpload orderId={order.id} existingUrl={...} orderTable="orders_b2c" onUploaded={...} />
  *
  * Usage – admin read-only view:
- *   <PaymentProofUpload orderId={order.id} existingUrl={order.metadata?.payment_proof_url} readOnly />
+ *   <PaymentProofUpload orderId={order.id} existingUrl={...} orderTable="orders_b2c" readOnly />
+ *
+ * Usage – admin can upload on behalf of buyer:
+ *   <PaymentProofUpload orderId={order.id} existingUrl={...} orderTable="orders_b2c" />
  */
 export const PaymentProofUpload = ({
   orderId,
   existingUrl,
   onUploaded,
   readOnly = false,
+  orderTable = 'orders_b2b',
 }: PaymentProofUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [proofUrl, setProofUrl] = useState<string | null>(existingUrl ?? null);
@@ -63,7 +71,7 @@ export const PaymentProofUpload = ({
 
       // Patch metadata.payment_proof_url on the order
       const { data: orderRow } = await supabase
-        .from('orders_b2b')
+        .from(orderTable)
         .select('metadata')
         .eq('id', orderId)
         .single();
@@ -71,7 +79,7 @@ export const PaymentProofUpload = ({
       const existingMeta = (orderRow?.metadata as Record<string, unknown>) ?? {};
 
       const { error: updateError } = await supabase
-        .from('orders_b2b')
+        .from(orderTable)
         .update({ metadata: { ...existingMeta, payment_proof_url: publicUrl } })
         .eq('id', orderId);
 
@@ -85,7 +93,6 @@ export const PaymentProofUpload = ({
       toast.error('Error al subir el comprobante: ' + (err.message ?? 'Intenta de nuevo'));
     } finally {
       setIsUploading(false);
-      // Reset input so the same file can be re-selected if needed
       if (inputRef.current) inputRef.current.value = '';
     }
   };
@@ -127,7 +134,7 @@ export const PaymentProofUpload = ({
     );
   }
 
-  // ── Upload (seller) view ────────────────────────────────────────────────────
+  // ── Upload view ─────────────────────────────────────────────────────────────
   return (
     <div className="space-y-3">
       <input
