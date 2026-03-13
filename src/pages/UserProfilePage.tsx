@@ -205,14 +205,6 @@ export function UserProfilePage() {
             {expandedGroups["Mi Cuenta"] && (
               <ul className="pb-1">
                 <li><NavButton icon={User} label="Mi perfil" section={undefined} /></li>
-                <li>
-                  <button
-                    onClick={() => navigate("/editar-perfil")}
-                    className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    <User className="w-3.5 h-3.5" /> Mi perfil
-                  </button>
-                </li>
                 <li><NavButton icon={MapPin} label="Mis direcciones" section="addresses" /></li>
                 <li><NavButton icon={CreditCard} label="Métodos de pago" section="payment" /></li>
                 <li><NavButton icon={Settings} label="Configuración" section="settings" /></li>
