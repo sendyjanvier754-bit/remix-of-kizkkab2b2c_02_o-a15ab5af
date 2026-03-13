@@ -587,27 +587,30 @@ export const useOrders = () => {
       queryKey: ['b2c-sales-stats', user?.id],
       queryFn: async () => {
         if (!user?.id) return null;
+
+        // Get seller's store first
+        const { data: store } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('owner_user_id', user.id)
+          .maybeSingle();
+
+        if (!store?.id) return { total: 0, pending_validation: 0, paid: 0, shipped: 0, cancelled: 0, totalRevenue: 0 };
         
         const { data, error } = await supabase
-          .from('orders_b2b')
-          .select('status, payment_status, total_amount, metadata')
-          .eq('seller_id', user.id);
+          .from('orders_b2c')
+          .select('status, payment_status, total_amount')
+          .eq('store_id', store.id);
         
         if (error) throw error;
 
-        // Filter B2C orders only
-        const b2cOrders = data.filter(o => {
-          const metadata = o.metadata as Record<string, any> | null;
-          return metadata?.order_type === 'b2c';
-        });
-
         return {
-          total: b2cOrders.length,
-          pending_validation: b2cOrders.filter(o => o.payment_status === 'pending_validation').length,
-          paid: b2cOrders.filter(o => o.status === 'paid' || o.payment_status === 'paid').length,
-          shipped: b2cOrders.filter(o => o.status === 'shipped').length,
-          cancelled: b2cOrders.filter(o => o.status === 'cancelled').length,
-          totalRevenue: b2cOrders.filter(o => o.status === 'paid' || o.status === 'shipped')
+          total: data.length,
+          pending_validation: data.filter(o => o.payment_status === 'pending_validation').length,
+          paid: data.filter(o => o.status === 'paid' || o.payment_status === 'paid').length,
+          shipped: data.filter(o => o.status === 'shipped').length,
+          cancelled: data.filter(o => o.status === 'cancelled').length,
+          totalRevenue: data.filter(o => o.status === 'paid' || o.status === 'shipped')
             .reduce((sum, o) => sum + Number(o.total_amount), 0),
         };
       },
