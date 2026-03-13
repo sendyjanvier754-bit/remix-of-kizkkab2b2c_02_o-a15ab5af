@@ -116,63 +116,7 @@ const CheckoutPage = () => {
 
   const selectedAddressData = addresses.find(a => a.id === selectedAddress);
 
-  // Build payment methods list dynamically from admin-configured active methods
-  const paymentMethods = useMemo(() => {
-    const list: Array<{
-      id: PaymentMethod;
-      name: string;
-      description: string;
-      icon: typeof CreditCard;
-      color: string;
-      bgColor: string;
-    }> = [];
-    if (adminPaymentMethodsLoading) return list;
-    // Stripe / Credit Card
-    if (methods.some(m => m.method_type === 'stripe' && m.is_active)) {
-      list.push({
-        id: 'stripe',
-        name: t('payments.creditCard'),
-        description: t('checkout.creditCardDesc'),
-        icon: CreditCard,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50',
-      });
-    }
-    // MonCash
-    if (adminMoncash?.is_active) {
-      list.push({
-        id: 'moncash',
-        name: adminMoncash.display_name || 'MonCash',
-        description: t('checkout.moncashDesc'),
-        icon: Smartphone,
-        color: 'text-[#94111f]',
-        bgColor: 'bg-[#94111f]/10',
-      });
-    }
-    // NatCash
-    if (adminNatcash?.is_active) {
-      list.push({
-        id: 'natcash',
-        name: adminNatcash.display_name || 'NatCash',
-        description: t('checkout.natcashDesc'),
-        icon: Smartphone,
-        color: 'text-[#071d7f]',
-        bgColor: 'bg-[#071d7f]/10',
-      });
-    }
-    // Bank transfer
-    if (adminBank?.is_active) {
-      list.push({
-        id: 'transfer',
-        name: adminBank.display_name || t('payments.bankTransfer'),
-        description: t('checkout.bankTransferDesc'),
-        icon: Building2,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-      });
-    }
-    return list;
-  }, [adminPaymentMethodsLoading, methods, adminMoncash, adminNatcash, adminBank, t]);
+  // placeholder — paymentMethods built after admin hook below
 
   // Get unique store IDs from cart items for multi-vendor shipping
   const storeIds = useMemo(() =>
