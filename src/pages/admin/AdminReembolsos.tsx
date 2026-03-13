@@ -209,6 +209,7 @@ const AdminReembolsos = () => {
 
   return (
     <AdminLayout title="Gestión de Reembolsos" subtitle="Sistema de estados: pending → under_review → approved → processing → completed">
+
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
