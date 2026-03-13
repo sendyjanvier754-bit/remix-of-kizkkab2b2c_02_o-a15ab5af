@@ -443,6 +443,8 @@ const CartPage = () => {
       toast.success('Carrito actualizado');
       setSelectedItemForVariants(null);
       setVariantQtys({});
+      setSelectedAttrs({});
+      setActivePreviewImage(null);
       await refetch(false);
     } catch (err) {
       console.error('Error updating variants:', err);
