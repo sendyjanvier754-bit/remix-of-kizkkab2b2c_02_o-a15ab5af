@@ -234,6 +234,39 @@ export function useSupportChat(chatId: string | null) {
   };
 }
 
+// Hook: total unread messages for the current (non-staff) user
+export function useUnreadChatCount() {
+  const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchCount = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('support_chats')
+      .select('unread_customer')
+      .eq('created_by', user.id)
+      .neq('status', 'closed');
+    if (data) {
+      const total = data.reduce((sum: number, c: any) => sum + (c.unread_customer ?? 0), 0);
+      setUnreadCount(total);
+    }
+  }, [user]);
+
+  useEffect(() => { fetchCount(); }, [fetchCount]);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('unread-chat-count-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_chats' }, () => fetchCount())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, () => fetchCount())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchCount]);
+
+  return unreadCount;
+}
+
 // Hook to list all chats
 export function useChatList(filter: 'all' | 'waiting' | 'active' | 'mine' | 'closed' = 'all') {
   const { user } = useAuth();
