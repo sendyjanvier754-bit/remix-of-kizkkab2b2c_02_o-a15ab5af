@@ -899,42 +899,6 @@ const SellerPedidosPage = () => {
 
 
 
-      {/* ── Reject Payment Dialog ── */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <XCircle className="h-5 w-5" />Rechazar Pago
-            </DialogTitle>
-            <DialogDescription>El pedido será cancelado y el stock se liberará.</DialogDescription>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-4">
-              <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20">
-                <p className="text-sm text-destructive">
-                  Esta acción cancelará el pedido #{selectedOrder.id.substring(0, 8)} por ${Number(selectedOrder.total_amount).toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Motivo del rechazo</label>
-                <Textarea
-                  placeholder="Ej: No se recibió el pago, monto incorrecto, etc."
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleRejectPayment} disabled={rejectManualPayment.isPending}>
-              {rejectManualPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <X className="h-4 w-4 mr-2" />}
-              Rechazar Pago
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* ── Return Action Dialog ── */}
       <Dialog open={!!returnActionOrder} onOpenChange={() => setReturnActionOrder(null)}>
