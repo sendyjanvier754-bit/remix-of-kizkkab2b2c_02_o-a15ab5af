@@ -197,6 +197,16 @@ export function InventarioTable({ items, getMargin, onEditPrice, onAdjustStock, 
       <p className="text-sm text-muted-foreground">
         {t('inventarioTable.ofProducts', { filtered: filteredAndSortedItems.length, total: items.length })}
       </p>
+
+      {/* Variant Publication Panel */}
+      <VariantPublicationPanel
+        open={!!variantPanelItem}
+        onOpenChange={(open) => { if (!open) setVariantPanelItem(null); }}
+        catalogId={variantPanelItem?.catalogId ?? null}
+        sourceProductId={variantPanelItem?.sourceProductId ?? null}
+        productName={variantPanelItem?.nombre ?? ""}
+        defaultPrice={variantPanelItem?.precioVenta ?? 0}
+      />
     </div>
   );
 }
