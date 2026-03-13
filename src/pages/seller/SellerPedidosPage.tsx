@@ -128,30 +128,8 @@ const SellerPedidosPage = () => {
     return Object.values(map).sort((a, b) => b.revenue - a.revenue);
   }, [orders]);
 
-  const handleConfirmPayment = async () => {
-    if (selectedOrder) {
-      await confirmManualPayment.mutateAsync({ orderId: selectedOrder.id, paymentNotes });
-      setConfirmDialogOpen(false);
-      setSelectedOrder(null);
-      setPaymentNotes('');
-    }
-  };
+  // Payment actions are admin-only for B2C orders; seller is read-only
 
-  const handleRejectPayment = async () => {
-    if (selectedOrder) {
-      await rejectManualPayment.mutateAsync({ orderId: selectedOrder.id, rejectionReason });
-      setRejectDialogOpen(false);
-      setSelectedOrder(null);
-      setRejectionReason('');
-    }
-  };
-
-  const handleCancelOrder = async (orderId: string) => {
-    if (confirm('¿Estás seguro de cancelar este pedido? Los productos se restaurarán al carrito del cliente.')) {
-      await cancelOrderWithRestore.mutateAsync({ orderId, restoreToCart: true });
-      setSelectedOrder(null);
-    }
-  };
 
   const getStatusBadge = (status: OrderStatus) => {
     const config = statusConfig[status];
