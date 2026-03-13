@@ -117,7 +117,7 @@ export function UserProfilePage() {
           { icon: <Heart className="w-6 h-6"/>,        label: "Favoritos",       action: () => navigate("/favoritos")       },
           { icon: <MapPin className="w-6 h-6"/>,        label: "Mis Direcciones", action: () => navigate("/mis-direcciones") },
           { icon: <Bell className="w-6 h-6"/>,          label: "Notificaciones",  action: () => navigate("/notificaciones")  },
-          { icon: <HelpCircle className="w-6 h-6"/>,    label: "Centro de Ayuda", action: () => navigate("/soporte")         },
+          { icon: <MessageCircle className="w-6 h-6"/>, label: "Live Chat",       action: () => navigate("/soporte"), badge: unreadChats },
         ].map((item, i) => (
           <button key={i} onClick={item.action}
             className="w-full bg-white border border-border rounded-lg p-4 hover:bg-muted/40 transition-colors flex items-center justify-between">
@@ -125,7 +125,12 @@ export function UserProfilePage() {
               <div className="text-primary">{item.icon}</div>
               <span className="font-medium text-sm">{item.label}</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <div className="flex items-center gap-2">
+              {item.badge !== undefined && item.badge > 0 && (
+                <Badge className="h-5 min-w-5 px-1.5 text-[10px] bg-destructive text-destructive-foreground">{item.badge}</Badge>
+              )}
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
           </button>
         ))}
       </div>
