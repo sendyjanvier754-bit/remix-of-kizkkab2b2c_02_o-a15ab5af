@@ -78,29 +78,108 @@ const CartPage = () => {
   const [selectedItemForVariants, setSelectedItemForVariants] = useState<B2CCartItem | null>(null);
   const [variantQtys, setVariantQtys] = useState<Record<string, number>>({});
   const [isAddingVariant, setIsAddingVariant] = useState(false);
+  // B2B-style attribute selectors: { color: 'Rojo', size: 'M' }
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
+  const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
 
   const { data: catalogVariants = [], isLoading: isLoadingVariants } = useB2CCatalogVariants(
     selectedItemForVariants?.sellerCatalogId ?? null
   );
 
-  // Pre-fill variant quantities from current cart when drawer opens
-  useEffect(() => {
-    if (!selectedItemForVariants) { setVariantQtys({}); return; }
-    // Build a map from productVariantId → qty so we can pre-fill the drawer.
-    // We need catalogVariants to be loaded before we can fill by seller_catalog_variants.id.
-    // Using productVariantId as an intermediate key here.
-    const pvIdToQty: Record<string, number> = {};
-    items
-      .filter(i => i.sellerCatalogId === selectedItemForVariants.sellerCatalogId)
-      .forEach(i => { if (i.variantId) pvIdToQty[i.variantId] = (pvIdToQty[i.variantId] || 0) + i.quantity; });
-    // catalogVariants may not be loaded yet; do a best-effort fill using productVariantId → id mapping
-    // This effect runs again after catalogVariants loads because selectedItemForVariants is in the dep array.
-    const map: Record<string, number> = {};
+  // Build B2B-style attribute options from catalogVariants
+  const drawerAttrOptions = useMemo(() => {
+    const opts: Record<string, Set<string>> = {};
     catalogVariants.forEach(v => {
-      if (pvIdToQty[v.productVariantId] != null) map[v.id] = pvIdToQty[v.productVariantId];
+      const attrs = v.variantAttributes || {};
+      if (v.color) { if (!opts.color) opts.color = new Set(); opts.color.add(v.color); }
+      if (v.size)  { if (!opts.size)  opts.size  = new Set(); opts.size.add(v.size);  }
+      Object.entries(attrs).forEach(([k, val]) => {
+        if (val && k !== 'color' && k !== 'size') {
+          if (!opts[k]) opts[k] = new Set();
+          opts[k].add(String(val));
+        }
+      });
     });
-    setVariantQtys(map);
-  }, [selectedItemForVariants, items, catalogVariants]);
+    const result: Record<string, string[]> = {};
+    Object.entries(opts).forEach(([k, s]) => { result[k] = Array.from(s).sort(); });
+    return result;
+  }, [catalogVariants]);
+
+  const drawerAttrTypes = useMemo(() =>
+    Object.keys(drawerAttrOptions).sort((a, b) =>
+      (ATTR_CONFIG[a]?.order ?? 99) - (ATTR_CONFIG[b]?.order ?? 99)
+    ),
+  [drawerAttrOptions]);
+
+  // Build image map: attrType → value → imageUrl
+  const drawerImageMap = useMemo(() => {
+    const map: Record<string, Record<string, string>> = {};
+    catalogVariants.forEach(v => {
+      const img = v.images?.[0];
+      if (!img) return;
+      if (v.color) { if (!map.color) map.color = {}; if (!map.color[v.color]) map.color[v.color] = img; }
+      if (v.size)  { if (!map.size)  map.size  = {}; if (!map.size[v.size])   map.size[v.size]   = img; }
+    });
+    return map;
+  }, [catalogVariants]);
+
+  // Find the variant that matches current attribute selection
+  const matchingVariant = useMemo((): B2CCatalogVariant | null => {
+    if (drawerAttrTypes.length === 0) return null;
+    return catalogVariants.find(v => {
+      return drawerAttrTypes.every(type => {
+        const sel = selectedAttrs[type];
+        if (!sel) return false;
+        if (type === 'color') return v.color === sel;
+        if (type === 'size' || type === 'talla') return v.size === sel;
+        return v.variantAttributes?.[type] === sel;
+      });
+    }) ?? null;
+  }, [selectedAttrs, catalogVariants, drawerAttrTypes]);
+
+  // Update preview image when matching variant changes
+  useEffect(() => {
+    if (matchingVariant?.images?.[0]) setActivePreviewImage(matchingVariant.images[0]);
+  }, [matchingVariant]);
+
+  // Auto-select first option for each type when drawer opens
+  useEffect(() => {
+    if (!selectedItemForVariants || catalogVariants.length === 0) { setSelectedAttrs({}); return; }
+    if (Object.keys(selectedAttrs).length > 0) return;
+    // Try to pre-select the attributes of the currently clicked item
+    const current = items.find(i => i.id === selectedItemForVariants.id);
+    const firstDefaults: Record<string, string> = {};
+    drawerAttrTypes.forEach(type => {
+      const firstOpt = drawerAttrOptions[type]?.[0];
+      if (firstOpt) firstDefaults[type] = firstOpt;
+    });
+    if (current?.color && drawerAttrOptions.color?.includes(current.color)) firstDefaults.color = current.color;
+    if (current?.size && drawerAttrOptions.size?.includes(current.size)) firstDefaults.size = current.size;
+    setSelectedAttrs(firstDefaults);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItemForVariants, catalogVariants]);
+
+  // Reset drawer fully when closed
+  useEffect(() => {
+    if (!selectedItemForVariants) {
+      setVariantQtys({});
+      setSelectedAttrs({});
+      setActivePreviewImage(null);
+    }
+  }, [selectedItemForVariants]);
+
+  // Pre-fill qty for the matching variant from existing cart
+  useEffect(() => {
+    if (!matchingVariant) return;
+    const existingItem = items.find(
+      i => i.sellerCatalogId === selectedItemForVariants?.sellerCatalogId
+        && i.variantId === matchingVariant.productVariantId
+    );
+    setVariantQtys(prev => ({
+      ...prev,
+      [matchingVariant.id]: prev[matchingVariant.id] ?? (existingItem?.quantity ?? 0),
+    }));
+  }, [matchingVariant, items, selectedItemForVariants]);
 
   const [isNegotiating, setIsNegotiating] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
