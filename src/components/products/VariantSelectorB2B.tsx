@@ -65,7 +65,17 @@ interface VariantSelectorB2BProps {
 const ATTRIBUTE_CONFIG: Record<string, { icon: typeof Palette; displayName: string; order: number }> = {
   color: { icon: Palette, displayName: 'Color', order: 1 },
   size: { icon: Ruler, displayName: 'Talla', order: 2 },
+  talla: { icon: Ruler, displayName: 'Talla', order: 2 },
   age: { icon: Ruler, displayName: 'Edad', order: 3 },
+};
+
+// Normalize attribute key to canonical type
+const normalizeAttributeType = (key: string): string => {
+  const lower = key.toLowerCase();
+  if (lower.includes('color')) return 'color';
+  if (lower.includes('talla') || lower.includes('size')) return 'size';
+  if (lower.includes('age') || lower.includes('edad')) return 'age';
+  return key;
 };
 
 // Parse color string to hex
