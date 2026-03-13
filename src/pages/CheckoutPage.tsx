@@ -823,17 +823,14 @@ const CheckoutPage = () => {
                     <p><span className="font-medium">Cuenta:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
                     <p><span className="font-medium">Beneficiario:</span> {platformPaymentInfo.bank.account_holder || 'No configurado'}</p>
                   </div>
-                  <div className="mt-3">
-                    <Label>Referencia de Transferencia *</Label>
+                   <div className="mt-3">
+                    <Label>Referencia de Transferencia <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarla al subir el comprobante)</span></Label>
                     <Input
                       value={paymentReference}
                       onChange={(e) => setPaymentReference(e.target.value)}
-                      placeholder="Número de referencia"
-                      className={`mt-1 ${hasFieldError(validationErrors, 'paymentReference') ? 'border-red-500' : ''}`}
+                      placeholder="Número de referencia (opcional)"
+                      className="mt-1"
                     />
-                    {hasFieldError(validationErrors, 'paymentReference') && (
-                      <p className="text-sm text-red-600 mt-1">{getFieldError(validationErrors, 'paymentReference')}</p>
-                    )}
                   </div>
                 </div>
               )}
