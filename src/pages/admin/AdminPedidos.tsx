@@ -85,15 +85,126 @@ const carrierOptions = [
 
 const AdminPedidos = () => {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { useAllOrders, useOrderStats, usePaidOrdersForManifest, updateOrderStatus, updateOrderTracking, updateLogisticsStage, cancelOrder, confirmManualPayment, rejectManualPayment } = useOrders();
   
+  const [mainTab, setMainTab] = useState<'b2b' | 'b2c'>('b2b');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus | ''>('');
   const [logisticsStage, setLogisticsStage] = useState('');
   const [chinaTracking, setChinaTracking] = useState('');
-  
+
+  // B2C orders state
+  const [b2cSearch, setB2cSearch] = useState('');
+  const [b2cStatusFilter, setB2cStatusFilter] = useState<string>('all');
+  const [selectedB2COrder, setSelectedB2COrder] = useState<any>(null);
+  const [b2cPaymentNotes, setB2cPaymentNotes] = useState('');
+  const [b2cRejectionReason, setB2cRejectionReason] = useState('');
+
+  // Fetch all B2C orders (admin)
+  const { data: b2cOrders = [], isLoading: isLoadingB2C, refetch: refetchB2C } = useQuery({
+    queryKey: ['admin-b2c-orders', b2cStatusFilter],
+    queryFn: async () => {
+      let q = supabase
+        .from('orders_b2c')
+        .select(`
+          *,
+          order_items_b2c (*),
+          store:stores (name)
+        `)
+        .order('created_at', { ascending: false });
+      if (b2cStatusFilter !== 'all') {
+        q = q.eq('payment_status', b2cStatusFilter);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Live query for selected B2C order — always fresh metadata
+  const { data: liveB2COrder } = useQuery({
+    queryKey: ['admin-b2c-order-live', selectedB2COrder?.id],
+    enabled: !!selectedB2COrder?.id,
+    refetchInterval: 5000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orders_b2c')
+        .select('*, order_items_b2c (*), store:stores (name)')
+        .eq('id', selectedB2COrder!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const dialogB2COrder = liveB2COrder ? { ...selectedB2COrder, ...liveB2COrder } : selectedB2COrder;
+
+  // Confirm B2C payment
+  const confirmB2CPayment = useMutation({
+    mutationFn: async ({ orderId, notes }: { orderId: string; notes?: string }) => {
+      const { error } = await supabase
+        .from('orders_b2c')
+        .update({
+          payment_status: 'paid' as any,
+          status: 'paid',
+          payment_confirmed_at: new Date().toISOString(),
+          metadata: {
+            ...(selectedB2COrder?.metadata || {}),
+            payment_confirmation_notes: notes || null,
+          } as any,
+        })
+        .eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Pago B2C confirmado');
+      queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
+      setSelectedB2COrder(null);
+      setB2cPaymentNotes('');
+    },
+    onError: (e: any) => toast.error('Error al confirmar: ' + e.message),
+  });
+
+  // Reject B2C payment
+  const rejectB2CPayment = useMutation({
+    mutationFn: async ({ orderId, reason }: { orderId: string; reason: string }) => {
+      const { error } = await supabase
+        .from('orders_b2c')
+        .update({
+          payment_status: 'failed' as any,
+          status: 'placed',
+          metadata: {
+            ...(selectedB2COrder?.metadata || {}),
+            rejection_reason: reason,
+          } as any,
+        })
+        .eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.error('Pago B2C rechazado');
+      queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
+      setSelectedB2COrder(null);
+      setB2cRejectionReason('');
+    },
+    onError: (e: any) => toast.error('Error al rechazar: ' + e.message),
+  });
+
+  const filteredB2COrders = useMemo(() => {
+    if (!b2cSearch) return b2cOrders;
+    const s = b2cSearch.toLowerCase();
+    return b2cOrders.filter((o: any) =>
+      o.id.toLowerCase().includes(s) ||
+      o.payment_reference?.toLowerCase().includes(s) ||
+      o.store?.name?.toLowerCase().includes(s)
+    );
+  }, [b2cOrders, b2cSearch]);
+
   // Manifest dialog state
   const [showManifestDialog, setShowManifestDialog] = useState(false);
   const [manifestChinaTracking, setManifestChinaTracking] = useState('');
@@ -108,7 +219,7 @@ const AdminPedidos = () => {
   const [paymentConfirmationNotes, setPaymentConfirmationNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
 
-  // Live query for selected order — ensures metadata (e.g. payment_proof_url) is always fresh
+  // Live query for selected B2B order — ensures metadata (e.g. payment_proof_url) is always fresh
   const { data: liveSelectedOrder } = useQuery({
     queryKey: ['admin-order-live', selectedOrder?.id],
     enabled: !!selectedOrder?.id,
