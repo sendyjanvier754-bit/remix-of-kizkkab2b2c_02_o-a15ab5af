@@ -1206,7 +1206,7 @@ const CartPage = () => {
           {/* Overlay */}
           <div
             className="fixed inset-0 bg-black/50 z-[60]"
-            onClick={() => { setSelectedItemForVariants(null); setVariantQtys({}); }}
+            onClick={() => setSelectedItemForVariants(null)}
           />
 
           {/* Responsive Panel */}
@@ -1214,26 +1214,43 @@ const CartPage = () => {
             onClick={(e) => e.stopPropagation()}
             className="fixed bg-background shadow-2xl flex flex-col z-[61]
                        bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl
-                       md:top-0 md:bottom-auto md:left-auto md:right-0 md:rounded-none md:border-l md:w-[400px] md:h-screen md:max-h-screen"
+                       md:top-0 md:bottom-auto md:left-auto md:right-0 md:rounded-none md:border-l md:w-[420px] md:h-screen md:max-h-screen"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-              <div>
-                <h3 className="text-lg font-bold">Cambiar variante</h3>
-                <p className="text-sm text-muted-foreground truncate max-w-[250px]">{selectedItemForVariants.name}</p>
+            {/* Header with dynamic preview image */}
+            <div className="flex items-center gap-3 p-4 border-b flex-shrink-0">
+              <div className="relative flex-shrink-0">
+                {(activePreviewImage || selectedItemForVariants.image) ? (
+                  <img
+                    src={activePreviewImage || selectedItemForVariants.image!}
+                    alt={selectedItemForVariants.name}
+                    className="w-16 h-16 rounded-xl object-cover border border-border/50 shadow-sm transition-all duration-300"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center">
+                    <Package className="h-7 w-7 text-muted-foreground/50" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold leading-tight line-clamp-2">{selectedItemForVariants.name}</h3>
+                {matchingVariant && (
+                  <p className="text-sm font-semibold text-primary mt-0.5">
+                    ${matchingVariant.price.toFixed(2)}
+                  </p>
+                )}
               </div>
               <button
-                onClick={() => { setSelectedItemForVariants(null); setVariantQtys({}); }}
-                className="p-1 hover:bg-muted rounded-full transition"
+                onClick={() => setSelectedItemForVariants(null)}
+                className="p-1.5 hover:bg-muted rounded-full transition flex-shrink-0"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Variant List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Variant content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
               {isLoadingVariants ? (
-                <div className="flex items-center justify-center py-8">
+                <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : catalogVariants.length === 0 ? (
@@ -1241,51 +1258,195 @@ const CartPage = () => {
                   No hay variantes disponibles
                 </p>
               ) : (
-                catalogVariants.map((variant) => {
-                  const qty = variantQtys[variant.id] ?? 0;
-                  const label =
-                    [variant.color, variant.size].filter(Boolean).join(' / ') || variant.sku;
-                  return (
-                    <div
-                      key={variant.id}
-                      className="flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-white"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{label}</p>
-                        <p className="text-sm font-bold mt-0.5" style={{ color: '#29892a' }}>
-                          ${variant.price.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Stock: {variant.stock}</p>
+                <>
+                  {/* ── B2B-style attribute selectors ───────────────────── */}
+                  {drawerAttrTypes.map((type) => {
+                    const config = ATTR_CONFIG[type] || { icon: Package, displayName: type, order: 99 };
+                    const Icon = config.icon;
+                    const options = drawerAttrOptions[type] || [];
+                    const selected = selectedAttrs[type];
+
+                    return (
+                      <div key={type} className="p-3 bg-muted/30 rounded-xl border border-border/50">
+                        <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <Icon className="w-4 h-4 text-primary" />
+                          {config.displayName}
+                          <Badge variant="secondary" className="text-[10px]">
+                            {options.length} opciones
+                          </Badge>
+                        </h4>
+
+                        {type === 'color' ? (
+                          /* Color swatches with images */
+                          <div className="flex flex-wrap gap-2.5">
+                            {options.map(value => {
+                              const isSelected = selected === value;
+                              const img = drawerImageMap[type]?.[value];
+                              const hex = getHex(value);
+                              const variantForOpt = catalogVariants.find(v => v.color === value);
+                              const outOfStock = variantForOpt ? variantForOpt.stock === 0 : false;
+
+                              return (
+                                <button
+                                  key={value}
+                                  onClick={() => {
+                                    setSelectedAttrs(prev => ({ ...prev, [type]: value }));
+                                    if (img) setActivePreviewImage(img);
+                                  }}
+                                  disabled={outOfStock}
+                                  className={cn(
+                                    "relative w-14 h-14 rounded-xl border-2 transition-all overflow-hidden group",
+                                    isSelected
+                                      ? "border-primary ring-2 ring-primary/30 scale-105 shadow-md"
+                                      : "border-border hover:border-primary/60 hover:scale-102",
+                                    outOfStock && "opacity-30 cursor-not-allowed"
+                                  )}
+                                  title={`${value}${outOfStock ? ' - Sin stock' : ''}`}
+                                >
+                                  {img ? (
+                                    <img src={img} alt={value} className="w-full h-full object-cover" loading="lazy" />
+                                  ) : hex ? (
+                                    <div className="w-full h-full" style={{ backgroundColor: hex }} />
+                                  ) : (
+                                    <span className="text-[11px] font-bold uppercase text-muted-foreground flex items-center justify-center h-full">
+                                      {value.charAt(0)}
+                                    </span>
+                                  )}
+                                  {isSelected && (
+                                    <div className="absolute inset-0 bg-primary/25 flex items-center justify-center">
+                                      <Check className="w-5 h-5 text-primary drop-shadow" />
+                                    </div>
+                                  )}
+                                  {outOfStock && (
+                                    <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                                      <div className="w-7 h-0.5 bg-destructive rotate-45 rounded" />
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-x-0 -bottom-5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    <span className="text-[9px] text-muted-foreground capitalize truncate block text-center px-1">{value}</span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          /* Size / other attribute pill buttons */
+                          <div className="flex flex-wrap gap-2">
+                            {options.map(value => {
+                              const isSelected = selected === value;
+                              const variantForOpt = catalogVariants.find(v =>
+                                (type === 'size' || type === 'talla') ? v.size === value : v.variantAttributes?.[type] === value
+                              );
+                              const outOfStock = variantForOpt ? variantForOpt.stock === 0 : false;
+
+                              return (
+                                <button
+                                  key={value}
+                                  onClick={() => setSelectedAttrs(prev => ({ ...prev, [type]: value }))}
+                                  disabled={outOfStock}
+                                  className={cn(
+                                    "px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium min-w-[44px]",
+                                    isSelected
+                                      ? "border-primary bg-primary/10 text-primary shadow-sm"
+                                      : "border-border bg-background hover:border-primary/60",
+                                    outOfStock && "opacity-30 cursor-not-allowed line-through"
+                                  )}
+                                  title={`${value}${outOfStock ? ' - Sin stock' : ''}`}
+                                >
+                                  {value}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                      <QuantitySelector
-                        value={qty}
-                        onChange={(newQty) =>
-                          setVariantQtys((prev) => ({ ...prev, [variant.id]: newQty }))
-                        }
-                        min={0}
-                        max={variant.stock}
-                        size="sm"
-                      />
+                    );
+                  })}
+
+                  {/* ── Quantity + stock for matching variant ──────────── */}
+                  {matchingVariant && (
+                    <div className={cn(
+                      "p-4 rounded-xl border-2 transition-all",
+                      variantQtys[matchingVariant.id] > 0
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-muted/20"
+                    )}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">
+                            {[matchingVariant.color, matchingVariant.size].filter(Boolean).join(' / ') || matchingVariant.sku}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-base font-bold text-primary">
+                              ${matchingVariant.price.toFixed(2)}
+                            </span>
+                            <Badge
+                              variant={matchingVariant.stock > 0 ? "secondary" : "destructive"}
+                              className="text-[10px]"
+                            >
+                              {matchingVariant.stock > 0 ? `${matchingVariant.stock} disp.` : 'Sin stock'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition disabled:opacity-40"
+                            onClick={() => setVariantQtys(prev => ({
+                              ...prev,
+                              [matchingVariant.id]: Math.max(0, (prev[matchingVariant.id] ?? 0) - 1)
+                            }))}
+                            disabled={(variantQtys[matchingVariant.id] ?? 0) <= 0}
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="text-sm font-bold w-8 text-center">
+                            {variantQtys[matchingVariant.id] ?? 0}
+                          </span>
+                          <button
+                            className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition disabled:opacity-40"
+                            onClick={() => setVariantQtys(prev => ({
+                              ...prev,
+                              [matchingVariant.id]: Math.min(matchingVariant.stock, (prev[matchingVariant.id] ?? 0) + 1)
+                            }))}
+                            disabled={(variantQtys[matchingVariant.id] ?? 0) >= matchingVariant.stock || matchingVariant.stock === 0}
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  );
-                })
+                  )}
+
+                  {!matchingVariant && drawerAttrTypes.length > 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                      Selecciona todas las opciones para ver disponibilidad
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t flex-shrink-0">
+            <div className="p-4 border-t flex-shrink-0 space-y-2">
+              {matchingVariant && (variantQtys[matchingVariant.id] ?? 0) > 0 && (
+                <div className="flex items-center justify-between text-sm font-medium text-muted-foreground bg-muted/40 px-3 py-2 rounded-lg">
+                  <span>Total seleccionado</span>
+                  <span className="text-primary font-bold">
+                    ${(matchingVariant.price * (variantQtys[matchingVariant.id] ?? 0)).toFixed(2)}
+                  </span>
+                </div>
+              )}
               <button
                 onClick={handleAddVariantsToCart}
-                disabled={isAddingVariant}
-                className="w-full py-3 rounded-lg font-semibold text-white flex items-center justify-center gap-2 transition hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: '#071d7f' }}
+                disabled={isAddingVariant || !matchingVariant || (variantQtys[matchingVariant?.id ?? ''] ?? 0) === 0}
+                className="w-full py-3 rounded-xl font-semibold bg-primary text-primary-foreground flex items-center justify-center gap-2 transition hover:opacity-90 disabled:opacity-40"
               >
                 {isAddingVariant ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <ShoppingCart className="h-4 w-4" />
                 )}
-                Actualizar carrito
+                Agregar al carrito
               </button>
             </div>
           </aside>
@@ -1296,3 +1457,4 @@ const CartPage = () => {
 };
 
 export default CartPage;
+
