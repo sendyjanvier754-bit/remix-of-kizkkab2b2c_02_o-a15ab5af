@@ -873,7 +873,15 @@ export const InlineOrdersPanel = () => {
         onClose={() => setSelectedOrder(null)}
         onReorder={handleReorder}
         onCancelClick={handleCancelClick}
+        onRequestReturn={handleRequestReturn}
         poInfo={selectedOrder ? poInfoMap?.[selectedOrder.id] : undefined}
+        returnStatus={selectedOrder ? (returnStatusByOrderId[selectedOrder.id] || null) : null}
+      />
+      <ReturnRequestDialog
+        order={orderForReturn}
+        open={!!orderForReturn}
+        onClose={() => setOrderForReturn(null)}
+        existingReturnStatus={orderForReturn ? (returnStatusByOrderId[orderForReturn.id] || null) : null}
       />
       <CancelOrderDialog
         order={orderToCancel}
