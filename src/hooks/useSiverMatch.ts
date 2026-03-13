@@ -210,7 +210,7 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-gestors', departmentId],
       queryFn: async () => {
-        let query = supabase
+        const baseQuery = (supabase as any)
           .from('siver_match_profiles')
           .select(`
             *,
@@ -221,11 +221,7 @@ export const useSiverMatch = () => {
           .eq('is_active', true)
           .order('average_rating', { ascending: false });
         
-        if (departmentId) {
-          query = query.eq('department_id', departmentId);
-        }
-        
-        const { data, error } = await query;
+        const { data, error } = await (departmentId ? baseQuery.eq('department_id', departmentId) : baseQuery);
         if (error) throw error;
         return data as unknown as SiverMatchProfile[];
       },
