@@ -4,9 +4,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   User, ShoppingBag, Heart, MapPin, CreditCard, Settings,
   LogOut, ChevronRight, Bell, HelpCircle, Shield, Info, Package,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
@@ -17,42 +19,15 @@ import { useBuyerOrders } from "@/hooks/useBuyerOrders";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { InlineOrdersPanel } from "@/components/profile/InlineOrdersPanel";
+import { InlineFavoritesPanel } from "@/components/profile/InlineFavoritesPanel";
+import { InlineAddressesPanel } from "@/components/profile/InlineAddressesPanel";
+import { InlinePaymentPanel } from "@/components/profile/InlinePaymentPanel";
+import { InlineSettingsPanel } from "@/components/profile/InlineSettingsPanel";
+import { InlineReturnsPanel } from "@/components/profile/InlineReturnsPanel";
+import { SupportMenuPopover } from "@/components/profile/SupportMenuPopover";
+import { useMyReturnRequests } from "@/hooks/useOrderReturnRequests";
 
-// ── Sidebar nav ───────────────────────────────────────────────────────────────
-interface NavItem { label: string; href: string; icon?: React.ElementType }
-const LEFT_NAV: { group: string; items: NavItem[] }[] = [
-  {
-    group: "Mi Cuenta",
-    items: [
-      { label: "Mi perfil",        href: "/editar-perfil",   icon: User       },
-      { label: "Mis direcciones",  href: "/mis-direcciones", icon: MapPin     },
-      { label: "Métodos de pago",  href: "/metodos-pago",    icon: CreditCard },
-      { label: "Configuración",    href: "/configuracion",   icon: Settings   },
-    ],
-  },
-  {
-    group: "Mis Pedidos",
-    items: [{ label: "Ver todos", href: "/mis-compras", icon: ShoppingBag }],
-  },
-  {
-    group: "Mis Intereses",
-    items: [{ label: "Favoritos",  href: "/favoritos",   icon: Heart }],
-  },
-  {
-    group: "Servicio al Cliente",
-    items: [
-      { label: "Centro de ayuda", href: "/ayuda",          icon: HelpCircle   },
-      { label: "Notificaciones",  href: "/notificaciones", icon: Bell         },
-    ],
-  },
-  {
-    group: "Política",
-    items: [
-      { label: "Términos y condiciones", href: "#legal", icon: Shield },
-      { label: "Acerca de",             href: "#about", icon: Info   },
-    ],
-  },
-];
+type ActiveSection = 'orders' | 'favorites' | 'addresses' | 'payment' | 'settings' | 'returns';
 
 export function UserProfilePage() {
   const { user, signOut } = useAuth();
@@ -60,16 +35,21 @@ export function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [activeSection, setActiveSection] = useState<ActiveSection>('orders');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Mi Cuenta": true,
     "Mis Pedidos": true,
+    "Mis Intereses": false,
+    "Servicio al Cliente": false,
+    "Política": false,
   });
 
-  // Data for stats
   const { items: favorites = [] } = useB2CFavorites();
   const { data: b2cOrders = [] } = useBuyerB2COrders();
   const { data: b2bOrders = [] } = useBuyerOrders();
+  const { data: myReturns = [] } = useMyReturnRequests();
   const totalOrders = b2cOrders.length + (b2bOrders?.length ?? 0);
+  const pendingReturns = myReturns.filter(r => r.status === 'pending').length;
 
   const handleLogout = async () => {
     try {
@@ -91,12 +71,6 @@ export function UserProfilePage() {
 
   const toggleGroup = (group: string) =>
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
-
-  const handleNavClick = (href: string) => {
-    if (href === "#legal") { setShowLegal(true); return; }
-    if (href === "#about") { setShowAbout(true); return; }
-    navigate(href);
-  };
 
   // ── Mobile layout ─────────────────────────────────────────────────────────
   const MobileLayout = () => (
@@ -141,7 +115,7 @@ export function UserProfilePage() {
           { icon: <Heart className="w-6 h-6"/>,        label: "Favoritos",       action: () => navigate("/favoritos")       },
           { icon: <MapPin className="w-6 h-6"/>,        label: "Mis Direcciones", action: () => navigate("/mis-direcciones") },
           { icon: <Bell className="w-6 h-6"/>,          label: "Notificaciones",  action: () => navigate("/notificaciones")  },
-          { icon: <HelpCircle className="w-6 h-6"/>,    label: "Centro de Ayuda", action: () => navigate("/ayuda")           },
+          { icon: <HelpCircle className="w-6 h-6"/>,    label: "Centro de Ayuda", action: () => navigate("/soporte")         },
         ].map((item, i) => (
           <button key={i} onClick={item.action}
             className="w-full bg-white border border-border rounded-lg p-4 hover:bg-muted/40 transition-colors flex items-center justify-between">
@@ -175,6 +149,32 @@ export function UserProfilePage() {
     </div>
   );
 
+  // ── Nav item helper ────────────────────────────────────────────────────────
+  const NavButton = ({
+    icon: Icon,
+    label,
+    section,
+    badge,
+  }: { icon?: React.ElementType; label: string; section?: ActiveSection; badge?: number }) => {
+    const isActive = section && activeSection === section;
+    return (
+      <button
+        onClick={() => section && setActiveSection(section)}
+        className={`w-full flex items-center gap-2 px-6 py-1.5 text-[13px] transition-colors
+          ${isActive
+            ? "text-primary bg-primary/8 font-medium"
+            : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+          }`}
+      >
+        {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" />}
+        <span className="flex-1 text-left">{label}</span>
+        {badge !== undefined && badge > 0 && (
+          <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{badge}</Badge>
+        )}
+      </button>
+    );
+  };
+
   // ── Desktop layout ────────────────────────────────────────────────────────
   const DesktopLayout = () => (
     <div className="min-h-screen bg-muted/30">
@@ -183,42 +183,126 @@ export function UserProfilePage() {
       <div className="max-w-[1200px] mx-auto px-4 py-6 grid grid-cols-[220px_1fr_220px] gap-5">
 
         {/* LEFT SIDEBAR */}
-        <aside className="bg-background border border-border rounded-md overflow-hidden self-start">
+        <aside className="bg-background border border-border rounded-md overflow-hidden self-start sticky top-4">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="text-sm font-bold text-foreground">Centro personal</h2>
           </div>
-          {LEFT_NAV.map((group) => {
-            const isOpen = expandedGroups[group.group] ?? false;
-            return (
-              <div key={group.group} className="border-b border-border last:border-b-0">
-                <button
-                  onClick={() => toggleGroup(group.group)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors"
-                >
-                  <span className="text-sm font-semibold text-foreground">{group.group}</span>
-                  <span className="text-muted-foreground text-xs">{isOpen ? "−" : "+"}</span>
-                </button>
-                {isOpen && (
-                  <ul className="pb-1">
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <li key={item.label}>
-                          <button
-                            onClick={() => handleNavClick(item.href)}
-                            className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
-                          >
-                            {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" />}
-                            {item.label}
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
+
+          {/* Mi Cuenta group */}
+          <div className="border-b border-border">
+            <button onClick={() => toggleGroup("Mi Cuenta")}
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
+              <span className="text-sm font-semibold text-foreground">Mi Cuenta</span>
+              <span className="text-muted-foreground text-xs">{expandedGroups["Mi Cuenta"] ? "−" : "+"}</span>
+            </button>
+            {expandedGroups["Mi Cuenta"] && (
+              <ul className="pb-1">
+                <li><NavButton icon={User} label="Mi perfil" section={undefined} /></li>
+                <li>
+                  <button
+                    onClick={() => navigate("/editar-perfil")}
+                    className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <User className="w-3.5 h-3.5" /> Mi perfil
+                  </button>
+                </li>
+                <li><NavButton icon={MapPin} label="Mis direcciones" section="addresses" /></li>
+                <li><NavButton icon={CreditCard} label="Métodos de pago" section="payment" /></li>
+                <li><NavButton icon={Settings} label="Configuración" section="settings" /></li>
+              </ul>
+            )}
+          </div>
+
+          {/* Mis Pedidos group */}
+          <div className="border-b border-border">
+            <button onClick={() => toggleGroup("Mis Pedidos")}
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
+              <span className="text-sm font-semibold text-foreground">Mis Pedidos</span>
+              <span className="text-muted-foreground text-xs">{expandedGroups["Mis Pedidos"] ? "−" : "+"}</span>
+            </button>
+            {expandedGroups["Mis Pedidos"] && (
+              <ul className="pb-1">
+                <li><NavButton icon={ShoppingBag} label="Ver todos" section="orders" /></li>
+                <li>
+                  <NavButton
+                    icon={RotateCcw}
+                    label="Mis devoluciones"
+                    section="returns"
+                    badge={pendingReturns}
+                  />
+                </li>
+              </ul>
+            )}
+          </div>
+
+          {/* Mis Intereses group */}
+          <div className="border-b border-border">
+            <button onClick={() => toggleGroup("Mis Intereses")}
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
+              <span className="text-sm font-semibold text-foreground">Mis Intereses</span>
+              <span className="text-muted-foreground text-xs">{expandedGroups["Mis Intereses"] ? "−" : "+"}</span>
+            </button>
+            {expandedGroups["Mis Intereses"] && (
+              <ul className="pb-1">
+                <li><NavButton icon={Heart} label="Favoritos" section="favorites" /></li>
+              </ul>
+            )}
+          </div>
+
+          {/* Servicio al Cliente group */}
+          <div className="border-b border-border">
+            <button onClick={() => toggleGroup("Servicio al Cliente")}
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
+              <span className="text-sm font-semibold text-foreground">Servicio al Cliente</span>
+              <span className="text-muted-foreground text-xs">{expandedGroups["Servicio al Cliente"] ? "−" : "+"}</span>
+            </button>
+            {expandedGroups["Servicio al Cliente"] && (
+              <ul className="pb-1">
+                <li>
+                  <button
+                    onClick={() => navigate("/notificaciones")}
+                    className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <Bell className="w-3.5 h-3.5" /> Notificaciones
+                  </button>
+                </li>
+                <li>
+                  <SupportMenuPopover>
+                    <button className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
+                      <HelpCircle className="w-3.5 h-3.5" /> Centro de ayuda
+                    </button>
+                  </SupportMenuPopover>
+                </li>
+              </ul>
+            )}
+          </div>
+
+          {/* Política group */}
+          <div className="border-b border-border">
+            <button onClick={() => toggleGroup("Política")}
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
+              <span className="text-sm font-semibold text-foreground">Política</span>
+              <span className="text-muted-foreground text-xs">{expandedGroups["Política"] ? "−" : "+"}</span>
+            </button>
+            {expandedGroups["Política"] && (
+              <ul className="pb-1">
+                <li>
+                  <button onClick={() => setShowLegal(true)}
+                    className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
+                    <Shield className="w-3.5 h-3.5" /> Términos y condiciones
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setShowAbout(true)}
+                    className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
+                    <Info className="w-3.5 h-3.5" /> Acerca de
+                  </button>
+                </li>
+              </ul>
+            )}
+          </div>
+
+          {/* Logout */}
           <button
             onClick={handleLogout}
             disabled={isLoading}
@@ -229,10 +313,10 @@ export function UserProfilePage() {
           </button>
         </aside>
 
-        {/* CENTER — greeting + InlineOrdersPanel */}
+        {/* CENTER */}
         <main className="space-y-4 min-w-0">
 
-          {/* Greeting card */}
+          {/* Greeting card — always visible */}
           <div className="bg-background border border-border rounded-md px-5 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -253,20 +337,38 @@ export function UserProfilePage() {
                 onClick={() => navigate("/editar-perfil")}
                 className="text-xs text-primary hover:underline flex items-center gap-1"
               >
-                Mi perfil <ChevronRight className="w-3.5 h-3.5" />
+                Editar perfil <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Quick stats */}
-            <div className="mt-4 grid grid-cols-3 divide-x divide-border border border-border rounded-md">
-              <div className="flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors">
+            <div className="mt-4 grid grid-cols-4 divide-x divide-border border border-border rounded-md">
+              <button
+                onClick={() => setActiveSection('orders')}
+                className={`flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors ${activeSection === 'orders' ? 'bg-primary/5' : ''}`}
+              >
                 <span className="text-xl font-bold text-foreground">{totalOrders}</span>
                 <span className="text-[11px] text-muted-foreground">Pedidos</span>
-              </div>
-              <div className="flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors" onClick={() => navigate("/favoritos")}>
+              </button>
+              <button
+                onClick={() => setActiveSection('favorites')}
+                className={`flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors ${activeSection === 'favorites' ? 'bg-primary/5' : ''}`}
+              >
                 <span className="text-xl font-bold text-foreground">{favorites.length}</span>
                 <span className="text-[11px] text-muted-foreground">Favoritos</span>
-              </div>
+              </button>
+              <button
+                onClick={() => setActiveSection('returns')}
+                className={`flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors relative ${activeSection === 'returns' ? 'bg-primary/5' : ''}`}
+              >
+                <span className="text-xl font-bold text-foreground">{myReturns.length}</span>
+                <span className="text-[11px] text-muted-foreground">Devoluciones</span>
+                {pendingReturns > 0 && (
+                  <span className="absolute top-1 right-2 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                    {pendingReturns}
+                  </span>
+                )}
+              </button>
               <div className="flex flex-col items-center py-3 gap-0.5">
                 <span className="text-xl font-bold text-foreground">0</span>
                 <span className="text-[11px] text-muted-foreground">Puntos</span>
@@ -274,14 +376,19 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* ── Full inline orders panel ── */}
-          <InlineOrdersPanel />
-
+          {/* Active section panel */}
+          {activeSection === 'orders'    && <InlineOrdersPanel />}
+          {activeSection === 'favorites' && <InlineFavoritesPanel />}
+          {activeSection === 'addresses' && <InlineAddressesPanel />}
+          {activeSection === 'payment'   && <InlinePaymentPanel />}
+          {activeSection === 'settings'  && <InlineSettingsPanel />}
+          {activeSection === 'returns'   && <InlineReturnsPanel />}
         </main>
 
         {/* RIGHT SIDEBAR */}
-        <aside className="space-y-4 self-start">
+        <aside className="space-y-4 self-start sticky top-4">
 
+          {/* Support widget */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
             <div className="px-4 py-2.5 border-b border-border">
               <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Servicio Al Cliente</h3>
@@ -292,19 +399,23 @@ export function UserProfilePage() {
                 <Bell className="w-5 h-5 text-muted-foreground" />
                 <span className="text-[10px] text-muted-foreground leading-tight text-center">Mis<br/>Notificaciones</span>
               </button>
-              <button onClick={() => navigate("/ayuda")}
-                className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors">
-                <HelpCircle className="w-5 h-5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground leading-tight text-center">Centro<br/>de Ayuda</span>
-              </button>
+              <SupportMenuPopover>
+                <button className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors w-full">
+                  <HelpCircle className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground leading-tight text-center">Centro<br/>de Ayuda</span>
+                </button>
+              </SupportMenuPopover>
             </div>
           </div>
 
+          {/* Quick access cards */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
-            <button onClick={() => navigate("/favoritos")}
-              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
+            <button
+              onClick={() => setActiveSection('favorites')}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors border-b border-border"
+            >
               <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-pink-500" />
+                <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
                 <span className="text-xs font-semibold text-foreground">Favoritos</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
@@ -312,15 +423,34 @@ export function UserProfilePage() {
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </button>
-            <div className="border-t border-border px-4 py-3 flex items-center justify-between">
+            <button
+              onClick={() => setActiveSection('orders')}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors border-b border-border"
+            >
               <div className="flex items-center gap-2">
                 <Package className="w-4 h-4 text-primary" />
                 <span className="text-xs font-semibold text-foreground">Mis Pedidos</span>
               </div>
               <span className="text-xs text-muted-foreground">{totalOrders} total</span>
-            </div>
+            </button>
+            <button
+              onClick={() => setActiveSection('returns')}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <RotateCcw className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-semibold text-foreground">Devoluciones</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {pendingReturns > 0 && (
+                  <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{pendingReturns}</Badge>
+                )}
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+              </div>
+            </button>
           </div>
 
+          {/* Legal */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
             <button onClick={() => setShowLegal(true)}
               className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors border-b border-border">
