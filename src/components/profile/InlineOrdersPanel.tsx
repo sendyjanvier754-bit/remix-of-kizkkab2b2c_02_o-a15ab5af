@@ -115,7 +115,8 @@ const OrderCard = ({
   order,
   onClick,
   poInfo,
-}: { order: BuyerOrder; onClick: () => void; poInfo?: OrderPOInfo }) => {
+  returnStatus,
+}: { order: BuyerOrder; onClick: () => void; poInfo?: OrderPOInfo; returnStatus?: string | null }) => {
   const status = statusConfig[order.status] || statusConfig.draft;
   const itemCount = order.order_items_b2b?.length || 0;
   const firstItem = order.order_items_b2b?.[0];
@@ -127,6 +128,8 @@ const OrderCard = ({
     placed: 'border-l-blue-500',
     cancelled: 'border-l-red-500',
   }[order.status] || 'border-l-gray-300';
+
+  const returnCfg = returnStatus ? RETURN_STATUS_CONFIG[returnStatus as keyof typeof RETURN_STATUS_CONFIG] : null;
 
   return (
     <Card
@@ -154,6 +157,13 @@ const OrderCard = ({
                 ) : (
                   <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
                     <Store className="h-3 w-3 mr-1" />B2C
+                  </Badge>
+                )}
+                {/* Return request status badge */}
+                {returnCfg && (
+                  <Badge variant="outline" className={`${returnCfg.color} border-current text-xs gap-1`}>
+                    <RotateCcw className="h-2.5 w-2.5" />
+                    {returnCfg.label}
                   </Badge>
                 )}
               </div>
