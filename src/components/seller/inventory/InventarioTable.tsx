@@ -29,6 +29,7 @@ export function InventarioTable({ items, getMargin, onEditPrice, onAdjustStock, 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>('nombre');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [variantPanelItem, setVariantPanelItem] = useState<SellerCatalogItem | null>(null);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
