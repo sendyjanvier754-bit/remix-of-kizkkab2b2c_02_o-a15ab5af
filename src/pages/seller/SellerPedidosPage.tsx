@@ -194,12 +194,13 @@ const SellerPedidosPage = () => {
   };
 
   const getBuyerInfo = (order: Order) => {
-    const metadata = order.metadata as Record<string, any> | null;
-    const shippingAddress = metadata?.shipping_address;
+    // orders_b2c stores shipping_address directly on the row (not inside metadata)
+    const shippingAddress = (order as any).shipping_address
+      || (order.metadata as Record<string, any> | null)?.shipping_address;
     return {
       name: shippingAddress?.full_name || order.buyer_profile?.full_name || 'Cliente',
       phone: shippingAddress?.phone || '',
-      address: shippingAddress ? `${shippingAddress.street_address}, ${shippingAddress.city}` : '',
+      address: shippingAddress ? `${shippingAddress.street_address || ''}, ${shippingAddress.city || ''}`.replace(/^, |, $/, '') : '',
     };
   };
 
