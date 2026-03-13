@@ -95,10 +95,17 @@ export default function UserSupportPage() {
             </div>
           ) : (
             <div className="flex flex-col h-full gap-3">
+              {/* Encabezado */}
               <div className="flex items-center justify-between px-1">
-                <h1 className="text-lg font-semibold">Mis chats de soporte</h1>
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                  <h1 className="text-lg font-semibold">Soporte</h1>
+                </div>
                 {newChatButton}
               </div>
+              <p className="text-xs text-muted-foreground px-1 -mt-1">
+                Escríbenos, te respondemos a la brevedad.
+              </p>
               <div className="flex-1 min-h-0">
                 <ChatList
                   onSelectChat={setSelectedChatId}
