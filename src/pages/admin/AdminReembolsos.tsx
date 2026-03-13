@@ -27,7 +27,8 @@ import {
   FileText,
   TrendingUp,
   Archive,
-  RotateCcw
+  RotateCcw,
+  ShieldAlert,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -86,7 +87,6 @@ const AdminReembolsos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(null);
   const [dialogType, setDialogType] = useState<'review' | 'approve' | 'reject' | 'process' | 'complete' | null>(null);
-  const [activeTab, setActiveTab] = useState<'refunds' | 'returns'>('refunds');
 
   // Return requests state
   const [returnSearchTerm, setReturnSearchTerm] = useState('');
@@ -117,6 +117,9 @@ const AdminReembolsos = () => {
       || r.reason.toLowerCase().includes(returnSearchTerm.toLowerCase());
   });
   const pendingReturnCount = returnRequests.filter(r => r.status === 'pending' || r.status === 'under_mediation').length;
+  const b2bReturns = filteredReturnRequests.filter(r => r.order_type === 'b2b');
+  const b2cMediations = filteredReturnRequests.filter(r => r.order_type === 'b2c' && r.status === 'under_mediation');
+  const allReturnFiltered = filteredReturnRequests;
 
   // Filter by search term
   const filteredRefunds = refunds?.filter(refund => {
@@ -207,8 +210,96 @@ const AdminReembolsos = () => {
     );
   };
 
+  // ── Returns table renderer ────────────────────────────────────────────────────
+  const ReturnsTable = ({ rows }: { rows: typeof allReturnFiltered }) => (
+    rows.length === 0 ? (
+      <div className="py-10 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+        <RotateCcw className="h-8 w-8 opacity-25" />
+        No hay solicitudes de devolución
+      </div>
+    ) : (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border">
+              <TableHead className="text-muted-foreground">Pedido</TableHead>
+              <TableHead className="text-muted-foreground">Tipo</TableHead>
+              <TableHead className="text-muted-foreground">Motivo</TableHead>
+              <TableHead className="text-muted-foreground">Monto</TableHead>
+              <TableHead className="text-muted-foreground text-center">Estado</TableHead>
+              <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((ret) => {
+              const cfg = RETURN_STATUS_CONFIG[ret.status as keyof typeof RETURN_STATUS_CONFIG];
+              return (
+                <TableRow key={ret.id} className="border-border hover:bg-muted/50">
+                  <TableCell className="font-mono text-xs text-foreground">
+                    {ret.order_id.slice(0, 8).toUpperCase()}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {ret.order_type.toUpperCase()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-xs font-medium text-foreground">{ret.reason_type || '—'}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{ret.reason}</p>
+                  </TableCell>
+                  <TableCell className="text-xs text-foreground">
+                    {ret.amount_requested ? `$${Number(ret.amount_requested).toFixed(2)}` : '—'}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="outline" className={`${cfg?.color} border-current text-xs`}>
+                      {cfg?.label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {(ret.status === 'pending' || ret.status === 'under_mediation') && (
+                      <div className="flex gap-1 justify-end">
+                        <Button
+                          size="sm" variant="outline"
+                          className="h-7 text-xs text-green-600 border-green-300 hover:bg-green-50"
+                          onClick={() => {
+                            setReturnActionItem(ret);
+                            setReturnActionType('accept');
+                            setReturnAmountApproved(ret.amount_requested?.toString() || '');
+                            setReturnActionNotes('');
+                          }}
+                        >
+                          Aceptar
+                        </Button>
+                        <Button
+                          size="sm" variant="outline"
+                          className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50"
+                          onClick={() => {
+                            setReturnActionItem(ret);
+                            setReturnActionType('reject');
+                            setReturnActionNotes('');
+                          }}
+                        >
+                          Rechazar
+                        </Button>
+                      </div>
+                    )}
+                    {ret.status === 'accepted' && (
+                      <Badge variant="outline" className="text-xs text-green-600 border-green-300">
+                        Aceptada
+                      </Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  );
+
   return (
-    <AdminLayout title="Gestión de Reembolsos" subtitle="Sistema de estados: pending → under_review → approved → processing → completed">
+    <AdminLayout title="Gestión de Reembolsos y Devoluciones" subtitle="Reembolsos por cancelación · Solicitudes de devolución B2B/B2C">
 
       <div className="space-y-6">
         {/* Stats Cards */}
@@ -294,166 +385,292 @@ const AdminReembolsos = () => {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card className="bg-card border-border">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por ID, orden, cliente o email..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as RefundStatus | 'all')}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Filtrar por estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="pending">Pendiente</SelectItem>
-                  <SelectItem value="under_review">En Revisión</SelectItem>
-                  <SelectItem value="approved">Aprobado</SelectItem>
-                  <SelectItem value="processing">Procesando</SelectItem>
-                  <SelectItem value="completed">Completado</SelectItem>
-                  <SelectItem value="rejected">Rechazado</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        {/* ── Main Tabs ─────────────────────────────────────────────────────────── */}
+        <Tabs defaultValue="refunds" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="refunds" className="gap-1.5">
+              <DollarSign className="h-3.5 w-3.5" />
+              Reembolsos por Cancelación
+            </TabsTrigger>
+            <TabsTrigger value="returns" className="gap-1.5 relative">
+              <RotateCcw className="h-3.5 w-3.5" />
+              Solicitudes de Devolución
+              {pendingReturnCount > 0 && (
+                <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground ml-1">
+                  {pendingReturnCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Refund Requests Table */}
-        <Card className="bg-card border-border">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border">
-                    <TableHead className="text-muted-foreground">Orden</TableHead>
-                    <TableHead className="text-muted-foreground">Cliente</TableHead>
-                    <TableHead className="text-muted-foreground">Fecha</TableHead>
-                    <TableHead className="text-muted-foreground">Monto</TableHead>
-                    <TableHead className="text-muted-foreground">Razón</TableHead>
-                    <TableHead className="text-muted-foreground text-center">Estado</TableHead>
-                    <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-10">
-                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredRefunds?.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-10">
-                        <Archive className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-muted-foreground">No hay solicitudes de reembolso</p>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredRefunds?.map((refund) => (
-                      <TableRow key={refund.id} className="border-border hover:bg-muted/50">
-                        <TableCell className="font-mono text-sm text-foreground">
-                          {refund.order_number}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-foreground">{refund.buyer_name}</p>
-                            <p className="text-xs text-muted-foreground">{refund.buyer_email}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {format(new Date(refund.created_at), "dd MMM yyyy", { locale: es })}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-semibold text-foreground">${refund.amount.toFixed(2)}</p>
-                            {refund.approved_amount && refund.approved_amount !== refund.amount && (
-                              <p className="text-xs text-green-600">Aprobado: ${refund.approved_amount.toFixed(2)}</p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground max-w-[200px]">
-                          <p className="truncate">{refund.reason}</p>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {getRefundStatusBadge(refund.status)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex gap-1 justify-end">
-                            {refund.status === 'pending' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openDialog(refund, 'review')}
-                                title="Mover a revisión"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {refund.status === 'under_review' && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openDialog(refund, 'approve')}
-                                  title="Aprobar"
-                                  className="text-green-600 hover:text-green-700"
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openDialog(refund, 'reject')}
-                                  title="Rechazar"
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                            {refund.status === 'approved' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openDialog(refund, 'process')}
-                                title="Iniciar procesamiento"
-                                className="text-purple-600 hover:text-purple-700"
-                              >
-                                <RefreshCw className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {refund.status === 'processing' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openDialog(refund, 'complete')}
-                                title="Completar"
-                                className="text-emerald-600 hover:text-emerald-700"
-                              >
-                                <DollarSign className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
+          {/* ── TAB: REEMBOLSOS ─────────────────────────────────────────────────── */}
+          <TabsContent value="refunds" className="space-y-4 mt-4">
+            {/* Filters */}
+            <Card className="bg-card border-border">
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por ID, orden, cliente o email..."
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as RefundStatus | 'all')}>
+                    <SelectTrigger className="w-full sm:w-[200px]">
+                      <SelectValue placeholder="Filtrar por estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los estados</SelectItem>
+                      <SelectItem value="pending">Pendiente</SelectItem>
+                      <SelectItem value="under_review">En Revisión</SelectItem>
+                      <SelectItem value="approved">Aprobado</SelectItem>
+                      <SelectItem value="processing">Procesando</SelectItem>
+                      <SelectItem value="completed">Completado</SelectItem>
+                      <SelectItem value="rejected">Rechazado</SelectItem>
+                      <SelectItem value="cancelled">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Refund Requests Table */}
+            <Card className="bg-card border-border">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border">
+                        <TableHead className="text-muted-foreground">Orden</TableHead>
+                        <TableHead className="text-muted-foreground">Cliente</TableHead>
+                        <TableHead className="text-muted-foreground">Fecha</TableHead>
+                        <TableHead className="text-muted-foreground">Monto</TableHead>
+                        <TableHead className="text-muted-foreground">Razón</TableHead>
+                        <TableHead className="text-muted-foreground text-center">Estado</TableHead>
+                        <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
                       </TableRow>
-                    ))
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-10">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredRefunds?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-10">
+                            <Archive className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                            <p className="text-muted-foreground">No hay solicitudes de reembolso</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredRefunds?.map((refund) => (
+                          <TableRow key={refund.id} className="border-border hover:bg-muted/50">
+                            <TableCell className="font-mono text-sm text-foreground">
+                              {refund.order_number}
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium text-foreground">{refund.buyer_name}</p>
+                                <p className="text-xs text-muted-foreground">{refund.buyer_email}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {format(new Date(refund.created_at), "dd MMM yyyy", { locale: es })}
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-semibold text-foreground">${refund.amount.toFixed(2)}</p>
+                                {refund.approved_amount && refund.approved_amount !== refund.amount && (
+                                  <p className="text-xs text-green-600">Aprobado: ${refund.approved_amount.toFixed(2)}</p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground max-w-[200px]">
+                              <p className="truncate">{refund.reason}</p>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {getRefundStatusBadge(refund.status)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-1 justify-end">
+                                {refund.status === 'pending' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDialog(refund, 'review')}
+                                    title="Mover a revisión"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {refund.status === 'under_review' && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => openDialog(refund, 'approve')}
+                                      title="Aprobar"
+                                      className="text-green-600 hover:text-green-700"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => openDialog(refund, 'reject')}
+                                      title="Rechazar"
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                                {refund.status === 'approved' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDialog(refund, 'process')}
+                                    title="Iniciar procesamiento"
+                                    className="text-purple-600 hover:text-purple-700"
+                                  >
+                                    <RefreshCw className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {refund.status === 'processing' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDialog(refund, 'complete')}
+                                    title="Completar"
+                                    className="text-emerald-600 hover:text-emerald-700"
+                                  >
+                                    <DollarSign className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ── TAB: SOLICITUDES DE DEVOLUCIÓN ──────────────────────────────────── */}
+          <TabsContent value="returns" className="space-y-4 mt-4">
+            {/* Alert banner for pending/mediation */}
+            {pendingReturnCount > 0 && (
+              <Card className="bg-amber-500/10 border-amber-500/30">
+                <CardContent className="py-3 px-4">
+                  <div className="flex items-center gap-3">
+                    <ShieldAlert className="h-5 w-5 text-amber-600" />
+                    <p className="text-sm font-medium text-amber-700">
+                      {pendingReturnCount} solicitud(es) requieren atención
+                      {b2cMediations.length > 0 && ` · ${b2cMediations.length} en mediación B2C`}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Search */}
+            <Card className="bg-card border-border">
+              <CardContent className="pt-6 pb-4">
+                <div className="relative max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por ID de pedido o motivo..."
+                    className="pl-10"
+                    value={returnSearchTerm}
+                    onChange={(e) => setReturnSearchTerm(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sub-tabs: All | B2B | B2C Mediation */}
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all" className="text-xs gap-1">
+                  Todas
+                  <Badge variant="secondary" className="text-[9px] h-4 px-1">{allReturnFiltered.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="b2b" className="text-xs gap-1">
+                  B2B (Sellers)
+                  <Badge variant="secondary" className="text-[9px] h-4 px-1">{b2bReturns.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="b2c_mediation" className="text-xs gap-1">
+                  Mediación B2C
+                  {b2cMediations.length > 0 && (
+                    <Badge className="text-[9px] h-4 px-1 bg-destructive text-destructive-foreground">{b2cMediations.length}</Badge>
                   )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all" className="mt-4">
+                <Card className="bg-card border-border">
+                  <CardContent className="p-0">
+                    {returnsLoading ? (
+                      <div className="py-10 flex justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <ReturnsTable rows={allReturnFiltered} />
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="b2b" className="mt-4">
+                <Card className="bg-card border-border">
+                  <CardContent className="p-0">
+                    {returnsLoading ? (
+                      <div className="py-10 flex justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <ReturnsTable rows={b2bReturns} />
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="b2c_mediation" className="mt-4">
+                {b2cMediations.length === 0 && !returnsLoading ? (
+                  <Card className="bg-card border-border">
+                    <CardContent className="py-12 text-center">
+                      <ShieldAlert className="h-10 w-10 mx-auto text-muted-foreground mb-3 opacity-40" />
+                      <p className="text-sm text-muted-foreground">No hay disputas B2C en mediación actualmente</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="bg-card border-border">
+                    <CardContent className="p-0">
+                      {returnsLoading ? (
+                        <div className="py-10 flex justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <ReturnsTable rows={b2cMediations} />
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Action Dialog */}
+      {/* ── Refund Action Dialog ─────────────────────────────────────────────────── */}
       <Dialog open={!!selectedRefund && !!dialogType} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -475,7 +692,6 @@ const AdminReembolsos = () => {
           
           {selectedRefund && (
             <div className="space-y-4">
-              {/* Refund Info */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div>
                   <p className="text-xs text-muted-foreground">Orden</p>
@@ -495,7 +711,6 @@ const AdminReembolsos = () => {
                 </div>
               </div>
 
-              {/* Reason */}
               <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertCircle className="h-4 w-4 text-yellow-600" />
@@ -504,7 +719,6 @@ const AdminReembolsos = () => {
                 <p className="text-sm text-muted-foreground">{selectedRefund.reason}</p>
               </div>
 
-              {/* Status History */}
               {selectedRefund.status_history && selectedRefund.status_history.length > 0 && (
                 <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
                   <p className="text-sm font-medium text-blue-700 mb-2">Historial de Estados</p>
@@ -521,7 +735,6 @@ const AdminReembolsos = () => {
                 </div>
               )}
 
-              {/* Approved Amount (for approve dialog) */}
               {dialogType === 'approve' && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Monto Aprobado</label>
@@ -536,13 +749,10 @@ const AdminReembolsos = () => {
                       placeholder={selectedRefund.amount.toString()}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Puede modificar el monto si es necesario
-                  </p>
+                  <p className="text-xs text-muted-foreground">Puede modificar el monto si es necesario</p>
                 </div>
               )}
 
-              {/* Rejection Reason (for reject dialog) */}
               {dialogType === 'reject' && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-red-600">Razón de Rechazo *</label>
@@ -556,7 +766,6 @@ const AdminReembolsos = () => {
                 </div>
               )}
 
-              {/* Refund Method (for process dialog) */}
               {dialogType === 'process' && (
                 <>
                   <div className="space-y-2">
@@ -567,8 +776,8 @@ const AdminReembolsos = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="transfer">Transferencia Bancaria</SelectItem>
-                        <SelectItem value="paypal">PayPal</SelectItem>
-                        <SelectItem value="stripe">Stripe</SelectItem>
+                        <SelectItem value="moncash">MonCash</SelectItem>
+                        <SelectItem value="natcash">NatCash</SelectItem>
                         <SelectItem value="cash">Efectivo</SelectItem>
                         <SelectItem value="other">Otro</SelectItem>
                       </SelectContent>
@@ -585,7 +794,6 @@ const AdminReembolsos = () => {
                 </>
               )}
 
-              {/* Notes */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Notas</label>
                 <Textarea
@@ -599,9 +807,7 @@ const AdminReembolsos = () => {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={closeDialog}>Cancelar</Button>
             <Button 
               onClick={handleAction} 
               disabled={refundManagement.isChangingStatus}
@@ -628,79 +834,76 @@ const AdminReembolsos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* ── Solicitudes de Devolución ── */}
-      <Card className="bg-card border-border mt-6">
-        <CardContent className="p-0">
-          <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-2">
-            <RotateCcw className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Solicitudes de Devolución</h2>
-            {pendingReturnCount > 0 && <Badge className="bg-destructive text-destructive-foreground text-xs">{pendingReturnCount}</Badge>}
-          </div>
-          <div className="px-4 py-3 border-b border-border">
-            <Input placeholder="Buscar por ID de pedido…" value={returnSearchTerm} onChange={e => setReturnSearchTerm(e.target.value)} className="max-w-xs h-8 text-sm" />
-          </div>
-          {returnsLoading ? (
-            <div className="py-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-          ) : filteredReturnRequests.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">No hay solicitudes de devolución</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border">
-                    <TableHead>Pedido</TableHead><TableHead>Tipo</TableHead><TableHead>Motivo</TableHead>
-                    <TableHead>Monto</TableHead><TableHead className="text-center">Estado</TableHead><TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredReturnRequests.map((ret) => {
-                    const cfg = RETURN_STATUS_CONFIG[ret.status as keyof typeof RETURN_STATUS_CONFIG];
-                    return (
-                      <TableRow key={ret.id} className="border-border hover:bg-muted/50">
-                        <TableCell className="font-mono text-xs">{ret.order_id.slice(0,8).toUpperCase()}</TableCell>
-                        <TableCell><Badge variant="outline" className="text-xs">{ret.order_type.toUpperCase()}</Badge></TableCell>
-                        <TableCell><p className="text-xs font-medium">{ret.reason_type || '—'}</p><p className="text-xs text-muted-foreground line-clamp-1">{ret.reason}</p></TableCell>
-                        <TableCell className="text-xs">{ret.amount_requested ? `$${ret.amount_requested}` : '—'}</TableCell>
-                        <TableCell className="text-center"><Badge variant="outline" className={`${cfg?.color} border-current text-xs`}>{cfg?.label}</Badge></TableCell>
-                        <TableCell className="text-right">
-                          {(ret.status === 'pending' || ret.status === 'under_mediation') && (
-                            <div className="flex gap-1 justify-end">
-                              <Button size="sm" variant="outline" className="h-7 text-xs text-green-600 border-green-300 hover:bg-green-50"
-                                onClick={() => { setReturnActionItem(ret); setReturnActionType('accept'); setReturnAmountApproved(ret.amount_requested?.toString() || ''); setReturnActionNotes(''); }}>Aceptar</Button>
-                              <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50"
-                                onClick={() => { setReturnActionItem(ret); setReturnActionType('reject'); setReturnActionNotes(''); }}>Rechazar</Button>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
+      {/* ── Return Action Dialog ─────────────────────────────────────────────────── */}
       <Dialog open={!!returnActionItem} onOpenChange={() => setReturnActionItem(null)}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{returnActionType === 'accept' ? 'Aceptar Devolución' : 'Rechazar Devolución'}</DialogTitle></DialogHeader>
-          <div className="space-y-3 mt-2">
-            {returnActionType === 'accept' && (
-              <div><label className="text-xs text-muted-foreground">Monto aprobado</label>
-                <Input type="number" value={returnAmountApproved} onChange={e => setReturnAmountApproved(e.target.value)} className="mt-1 h-9" /></div>
-            )}
-            <div><label className="text-xs text-muted-foreground">{returnActionType === 'reject' ? 'Razón del rechazo *' : 'Notas admin'}</label>
-              <Textarea value={returnActionNotes} onChange={e => setReturnActionNotes(e.target.value)} className="mt-1 min-h-[70px]" /></div>
-          </div>
+          <DialogHeader>
+            <DialogTitle>
+              {returnActionType === 'accept' ? 'Aceptar Devolución' : 'Rechazar Devolución'}
+            </DialogTitle>
+            <DialogDescription>
+              {returnActionType === 'accept'
+                ? 'Aprueba el monto a reembolsar y deja notas para el comprador.'
+                : 'Esta acción rechazará la solicitud de devolución.'}
+            </DialogDescription>
+          </DialogHeader>
+          {returnActionItem && (
+            <div className="space-y-3 mt-2">
+              <div className="p-3 bg-muted/50 rounded-lg text-sm grid grid-cols-2 gap-2">
+                <span className="text-muted-foreground">Pedido:</span>
+                <span className="font-mono">{returnActionItem.order_id.slice(0, 8).toUpperCase()}</span>
+                <span className="text-muted-foreground">Tipo:</span>
+                <Badge variant="outline" className="text-xs w-fit">{returnActionItem.order_type.toUpperCase()}</Badge>
+                <span className="text-muted-foreground">Motivo:</span>
+                <span className="text-xs">{returnActionItem.reason_type || returnActionItem.reason}</span>
+              </div>
+              {returnActionType === 'accept' && (
+                <div>
+                  <label className="text-xs text-muted-foreground">Monto aprobado</label>
+                  <Input
+                    type="number"
+                    value={returnAmountApproved}
+                    onChange={e => setReturnAmountApproved(e.target.value)}
+                    className="mt-1 h-9"
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  {returnActionType === 'reject' ? 'Razón del rechazo *' : 'Notas admin (opcional)'}
+                </label>
+                <Textarea
+                  value={returnActionNotes}
+                  onChange={e => setReturnActionNotes(e.target.value)}
+                  className="mt-1 min-h-[70px]"
+                  placeholder="Escribe aquí…"
+                />
+              </div>
+            </div>
+          )}
           <DialogFooter className="gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setReturnActionItem(null)}>Cancelar</Button>
-            <Button size="sm" disabled={updateReturn.isPending} onClick={async () => {
-              if (!returnActionItem) return;
-              await updateReturn.mutateAsync({ id: returnActionItem.id, status: returnActionType === 'accept' ? 'accepted' : 'rejected', admin_notes: returnActionNotes, amount_approved: returnActionType === 'accept' && returnAmountApproved ? parseFloat(returnAmountApproved) : undefined, resolved_at: new Date().toISOString() });
-              setReturnActionItem(null);
-            }}>
-              {updateReturn.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}Confirmar
+            <Button
+              size="sm"
+              disabled={updateReturn.isPending || (returnActionType === 'reject' && !returnActionNotes.trim())}
+              className={returnActionType === 'accept' ? 'bg-green-600 hover:bg-green-700' : 'bg-destructive hover:bg-destructive/90'}
+              onClick={async () => {
+                if (!returnActionItem) return;
+                await updateReturn.mutateAsync({
+                  id: returnActionItem.id,
+                  status: returnActionType === 'accept' ? 'accepted' : 'rejected',
+                  admin_notes: returnActionNotes,
+                  amount_approved: returnActionType === 'accept' && returnAmountApproved
+                    ? parseFloat(returnAmountApproved) : undefined,
+                  resolved_at: new Date().toISOString(),
+                });
+                setReturnActionItem(null);
+              }}
+            >
+              {updateReturn.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+              {returnActionType === 'accept' ? 'Confirmar Aceptación' : 'Confirmar Rechazo'}
             </Button>
           </DialogFooter>
         </DialogContent>
