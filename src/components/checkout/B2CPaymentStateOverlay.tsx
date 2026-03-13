@@ -202,14 +202,6 @@ export const B2CPaymentStateOverlay = ({
             </p>
           </div>
 
-          {/* If proof already uploaded, show it */}
-          {proofUrl && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-sm text-green-800">
-              <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
-              Comprobante adjunto. El admin verificará tu pago pronto.
-            </div>
-          )}
-
           <div className="flex gap-3">
             <Button
               variant="outline"
