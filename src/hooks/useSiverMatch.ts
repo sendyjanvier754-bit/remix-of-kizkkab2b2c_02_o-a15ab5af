@@ -187,7 +187,7 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!user?.id) return null;
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_profiles')
           .select(`
             *,
