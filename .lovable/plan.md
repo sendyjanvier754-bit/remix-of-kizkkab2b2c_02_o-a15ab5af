@@ -1,70 +1,17 @@
+## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
+### Lo que se implementó
 
-## Problem: Sellers Cannot See B2C Orders — Missing RLS Policies
+1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
+2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
+3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
+4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
+5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
+6. **Routing**: Ruta añadida en App.tsx con lazy loading
 
-### Root Cause
-
-The `orders_b2c` table has RLS policies that only allow:
-- **Admins** to view all orders
-- **Buyers** to view their own orders (`buyer_user_id = auth.uid()`)
-
-There is **no policy allowing sellers to view orders for their store** (`store_id` matching their store). The frontend code in `useSellerB2CSales` correctly queries by `store_id`, but RLS silently returns zero rows.
-
-The same problem exists on `order_items_b2c` — sellers can't see order items either.
-
-### Fix: Add RLS Policies for Sellers
-
-**1. Add SELECT policy on `orders_b2c` for store owners:**
-```sql
-CREATE POLICY "Store owners can view their store b2c orders"
-ON public.orders_b2c FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.stores
-    WHERE stores.id = orders_b2c.store_id
-      AND stores.owner_user_id = auth.uid()
-  )
-);
-```
-
-**2. Add UPDATE policy on `orders_b2c` for store owners** (needed for status updates):
-```sql
-CREATE POLICY "Store owners can update their store b2c orders"
-ON public.orders_b2c FOR UPDATE
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.stores
-    WHERE stores.id = orders_b2c.store_id
-      AND stores.owner_user_id = auth.uid()
-  )
-)
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.stores
-    WHERE stores.id = orders_b2c.store_id
-      AND stores.owner_user_id = auth.uid()
-  )
-);
-```
-
-**3. Add SELECT policy on `order_items_b2c` for store owners:**
-```sql
-CREATE POLICY "Store owners can view their store b2c order items"
-ON public.order_items_b2c FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM orders_b2c
-    JOIN stores ON stores.id = orders_b2c.store_id
-    WHERE orders_b2c.id = order_items_b2c.order_id
-      AND stores.owner_user_id = auth.uid()
-  )
-);
-```
-
-### No Frontend Code Changes Needed
-
-The seller hook (`useSellerB2CSales`) already correctly fetches the store by `owner_user_id` and filters orders by `store_id`. Once RLS allows the reads, orders will appear automatically.
-
+### Flujo
+1. Agente busca usuario → solicita acceso → OTP enviado como notificación
+2. Agente ingresa OTP → sesión activa 2h con timer visible
+3. Agente busca productos → agrega a borrador → configura envío
+4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
+5. Soporte multitarea con múltiples borradores
