@@ -4,8 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/hooks/useAuth";
-import { useBuyerOrders, useCancelBuyerOrder, BuyerOrder, BuyerOrderStatus, RefundStatus } from "@/hooks/useBuyerOrders";
+import { useBuyerOrders, useCancelBuyerOrder, BuyerOrder, BuyerOrderStatus, RefundStatus, PaymentStatus } from "@/hooks/useBuyerOrders";
 import { useOrdersPOInfo, OrderPOInfo } from "@/hooks/useOrderPOInfo";
+import { useBuyerB2COrders, BuyerB2COrder } from "@/hooks/useBuyerB2COrders";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -262,6 +263,22 @@ const OrderDetailDialog = ({
 
   const currentStageFromPO = poInfo ? getLogisticsStageFromPO() : getLogisticsStage(order);
 
+  type B2CStage = 'payment_pending' | 'payment_validated' | 'preparing' | 'shipped' | 'delivered';
+  const b2cStages: { key: B2CStage; label: string; icon: React.ReactNode; description: string }[] = [
+    { key: 'payment_pending', label: 'Pago Pendiente', icon: <Clock className="h-4 w-4" />, description: 'Esperando confirmación de pago' },
+    { key: 'payment_validated', label: 'Pago Confirmado', icon: <CheckCircle className="h-4 w-4" />, description: 'Tu pago fue confirmado' },
+    { key: 'preparing', label: 'En Preparación', icon: <Package className="h-4 w-4" />, description: 'El vendedor está preparando tu pedido' },
+    { key: 'shipped', label: 'Enviado', icon: <Truck className="h-4 w-4" />, description: 'Tu pedido está en camino' },
+    { key: 'delivered', label: 'Entregado', icon: <CheckCircle className="h-4 w-4" />, description: 'Pedido completado' },
+  ];
+  const currentB2CStage: B2CStage = (() => {
+    if (order.status === 'delivered') return 'delivered';
+    if (order.status === 'shipped' || order.status === 'in_transit') return 'shipped';
+    if (order.status === 'preparing') return 'preparing';
+    if (order.payment_status === 'paid' || order.status === 'paid') return 'payment_validated';
+    return 'payment_pending';
+  })();
+
   return <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -343,10 +360,12 @@ const OrderDetailDialog = ({
               </CardHeader>
               <CardContent>
                 <div className="relative">
-                  {logisticsStages.map((stage, index) => {
-                    const currentIndex = logisticsStages.findIndex(s => s.key === currentStageFromPO);
+                  {(isB2B ? logisticsStages : b2cStages).map((stage, index) => {
+                    const stagesArr = isB2B ? logisticsStages : b2cStages;
+                    const currentKey = isB2B ? currentStageFromPO : currentB2CStage;
+                    const currentIndex = stagesArr.findIndex(s => s.key === currentKey);
                     const isCompleted = index <= currentIndex;
-                    const isCurrent = stage.key === currentStageFromPO;
+                    const isCurrent = stage.key === currentKey;
                     
                     return (
                       <div key={stage.key} className="flex items-start gap-3 mb-4 last:mb-0">
@@ -361,7 +380,7 @@ const OrderDetailDialog = ({
                           `}>
                             {stage.icon}
                           </div>
-                          {index < logisticsStages.length - 1 && (
+                          {index < stagesArr.length - 1 && (
                             <div className={`w-0.5 h-8 ${isCompleted ? 'bg-blue-600' : 'bg-gray-200'}`} />
                           )}
                         </div>
@@ -607,6 +626,59 @@ const MyPurchasesPage = () => {
   const { data: orders, isLoading } = useBuyerOrders(statusFilter);
   const cancelOrderMutation = useCancelBuyerOrder();
 
+  // B2C orders from orders_b2c table
+  const { data: b2cOrdersRaw = [], isLoading: isLoadingB2C } = useBuyerB2COrders();
+
+  // Normalize B2C orders to the BuyerOrder shape so we can reuse OrderCard / OrderDetailDialog
+  const normalizedB2COrders: BuyerOrder[] = useMemo(() =>
+    b2cOrdersRaw.map((o: BuyerB2COrder) => ({
+      id: o.id,
+      seller_id: o.store_id || '',
+      buyer_id: o.buyer_user_id,
+      status: (o.status || 'placed') as BuyerOrderStatus,
+      payment_status: (o.payment_status || 'pending') as PaymentStatus,
+      total_amount: o.total_amount || 0,
+      total_quantity: o.order_items_b2c?.reduce((s, i) => s + i.quantity, 0) || 0,
+      currency: o.currency || 'USD',
+      payment_method: o.payment_method,
+      notes: o.notes,
+      metadata: {
+        order_type: 'b2c',
+        store_name: o.store?.name,
+        payment_reference: o.payment_reference,
+        tracking_number: o.tracking_number,
+        ...(o.metadata || {}),
+      },
+      created_at: o.created_at,
+      updated_at: o.updated_at,
+      order_items_b2b: o.order_items_b2c?.map(i => ({
+        id: i.id,
+        order_id: i.order_id,
+        product_id: null,
+        sku: i.sku || '',
+        nombre: i.product_name,
+        cantidad: i.quantity,
+        precio_unitario: i.unit_price,
+        descuento_percent: null,
+        subtotal: i.total_price,
+        image: (i.metadata as any)?.image || null,
+      })) || [],
+    })),
+    [b2cOrdersRaw]
+  );
+
+  // Merge B2B + B2C orders, apply status filter, sort by date desc
+  const allOrders = useMemo(() => {
+    const b2bOrders = orders || [];
+    const merged = [...b2bOrders, ...normalizedB2COrders];
+    const filtered = statusFilter === 'all'
+      ? merged
+      : merged.filter(o => o.status === statusFilter);
+    return filtered.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }, [orders, normalizedB2COrders, statusFilter]);
+
   // Get order IDs to fetch PO info
   const orderIds = useMemo(() => orders?.map(o => o.id) || [], [orders]);
   const { data: poInfoMap } = useOrdersPOInfo(orderIds);
@@ -771,7 +843,7 @@ const MyPurchasesPage = () => {
         </Tabs>
 
         {/* Orders List */}
-        {isLoading ? <div className="space-y-4">
+        {(isLoading || isLoadingB2C) ? <div className="space-y-4">
             {[1, 2, 3].map(i => <Card key={i}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
@@ -784,8 +856,8 @@ const MyPurchasesPage = () => {
                   </div>
                 </CardContent>
               </Card>)}
-          </div> : orders && orders.length > 0 ? <div className="space-y-4">
-            {orders.map(order => <OrderCard key={order.id} order={order} onClick={() => setSelectedOrder(order)} poInfo={poInfoMap?.[order.id]} />)}
+          </div> : allOrders.length > 0 ? <div className="space-y-4">
+            {allOrders.map(order => <OrderCard key={order.id} order={order} onClick={() => setSelectedOrder(order)} poInfo={poInfoMap?.[order.id]} />)}
           </div> : <Card className="text-center py-12">
             <CardContent>
               <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />

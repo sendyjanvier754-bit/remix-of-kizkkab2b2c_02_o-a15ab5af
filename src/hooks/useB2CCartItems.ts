@@ -87,10 +87,7 @@ export const useB2CCartItems = () => {
 
       const { data: cartItems, error: itemsError } = await supabase
         .from('b2c_cart_items')
-        .select(`
-          *,
-          store:store_id(metadata)
-        `)
+        .select('*, store:store_id(metadata)')
         .eq('cart_id', openCart.id)
         .order('created_at', { ascending: false });
 
@@ -100,6 +97,30 @@ export const useB2CCartItems = () => {
       }
 
       console.log('Cart items loaded:', cartItems?.length || 0, 'items');
+
+      // Fetch seller prices separately to avoid PostgREST FK join dependency
+      const variantIds = (cartItems || []).map(i => i.variant_id).filter(Boolean);
+      const catalogIds = (cartItems || []).map(i => i.seller_catalog_id).filter(Boolean);
+
+      const [variantPricesResult, catalogPricesResult] = await Promise.all([
+        variantIds.length > 0
+          ? supabase.from('seller_catalog_variants').select('id, precio_override').in('id', variantIds)
+          : Promise.resolve({ data: [] as { id: string; precio_override: number | null }[], error: null }),
+        catalogIds.length > 0
+          ? supabase.from('seller_catalog').select('id, precio_venta').in('id', catalogIds)
+          : Promise.resolve({ data: [] as { id: string; precio_venta: number | null }[], error: null }),
+      ]);
+
+      const variantPriceMap = new Map<string, number | null>(
+        (variantPricesResult.data || []).map(v => [v.id, v.precio_override])
+      );
+      const catalogPriceMap = new Map<string, number | null>(
+        (catalogPricesResult.data || []).map(c => [c.id, c.precio_venta])
+      );
+
+      // Collect items whose stored price differs from the seller's current price so we can
+      // sync them back to the DB in the background (no await — fire-and-forget).
+      const priceUpdates: Promise<any>[] = [];
 
       const formattedItems: B2CCartItem[] = (cartItems || []).map(item => {
         // Handle store metadata - may be object or array depending on query result
@@ -112,14 +133,35 @@ export const useB2CCartItems = () => {
           }
         }
 
+        // Resolve the seller's current price: variant-level override > catalog-level price > stored price
+        const catalogVariantPrice = item.variant_id ? variantPriceMap.get(item.variant_id) : undefined;
+        const catalogEntryPrice = item.seller_catalog_id ? catalogPriceMap.get(item.seller_catalog_id) : undefined;
+        const currentSellerPrice: number =
+          catalogVariantPrice != null ? Number(catalogVariantPrice) :
+          catalogEntryPrice != null ? Number(catalogEntryPrice) :
+          item.unit_price;
+
+        // If the seller changed the price, sync the cart row silently
+        if (Math.abs(currentSellerPrice - item.unit_price) > 0.001) {
+          priceUpdates.push(
+            supabase
+              .from('b2c_cart_items')
+              .update({
+                unit_price: currentSellerPrice,
+                total_price: currentSellerPrice * item.quantity,
+              })
+              .eq('id', item.id)
+          );
+        }
+
         return {
           id: item.id,
           sellerCatalogId: item.seller_catalog_id,
           sku: item.sku,
           name: item.nombre,
-          price: item.unit_price,
+          price: currentSellerPrice,
           quantity: item.quantity,
-          totalPrice: item.total_price,
+          totalPrice: currentSellerPrice * item.quantity,
           image: item.image,
           storeId: item.store_id,
           storeName: item.store_name,
@@ -132,6 +174,13 @@ export const useB2CCartItems = () => {
           variantAttributes: item.variant_attributes as Record<string, any> | null,
         };
       });
+
+      // Fire-and-forget background price sync
+      if (priceUpdates.length > 0) {
+        Promise.all(priceUpdates).catch(err =>
+          console.warn('Background price sync failed:', err)
+        );
+      }
 
       setItems(formattedItems);
     } catch (err) {

@@ -12,11 +12,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useCreateB2COrder, useCompleteB2CCart, useActiveB2COrder, useConfirmB2CPayment, useCancelB2COrder } from '@/hooks/useB2COrders';
 import { B2CPaymentStateOverlay } from '@/components/checkout/B2CPaymentStateOverlay';
 import { validateB2CCheckout, getFieldError, hasFieldError, CheckoutValidationError } from '@/services/checkoutValidation';
-import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
-import { LocationSelector } from '@/components/checkout/LocationSelector';
 import { useApplyDiscount, AppliedDiscount } from '@/hooks/useApplyDiscount';
 import { useAdminPaymentMethodsReadOnly } from '@/hooks/usePaymentMethods';
-import { useStoreShippingOptionsReadOnly } from '@/hooks/useStoreShippingOptions';
+import { useMultiStoreShippingOptions } from '@/hooks/useStoreShippingOptions';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -44,8 +42,6 @@ import {
   Truck,
   Store,
   AlertCircle,
-  Plane,
-  Shield,
   Tag,
   X,
 } from 'lucide-react';
@@ -103,23 +99,6 @@ const CheckoutPage = () => {
   const [showAddressDialog, setShowAddressDialog] = useState(false);
   const [validationErrors, setValidationErrors] = useState<CheckoutValidationError[]>([]);
   const [discountCode, setDiscountCode] = useState('');
-  
-  // Logistics state
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
-  const [selectedCommune, setSelectedCommune] = useState<string | null>(null);
-  
-  // Logistics hooks
-  const {
-    useCommunes,
-    useShippingRates,
-    useCategoryShippingRates,
-    calculateShipping,
-    getRateValue,
-  } = useLogisticsEngine();
-  
-  const { data: communes } = useCommunes(selectedDepartment || undefined);
-  const { data: shippingRates } = useShippingRates();
-  const { data: categoryRates } = useCategoryShippingRates();
 
   // Redirect after hooks are called
   if (isB2BUser && !authLoading) {
@@ -172,32 +151,14 @@ const CheckoutPage = () => {
     },
   ];
 
-  // Get first store ID and name from cart items
-  const firstStoreId = useMemo(() => {
-    for (const item of items) {
-      if (item.storeId) return item.storeId;
-    }
-    return undefined;
-  }, [items]);
+  // Get unique store IDs from cart items for multi-vendor shipping
+  const storeIds = useMemo(() =>
+    [...new Set(items.map(i => i.storeId).filter(Boolean) as string[])],
+    [items]
+  );
 
-  const firstStoreName = useMemo(() => {
-    for (const item of items) {
-      if (item.storeName) return item.storeName;
-    }
-    return 'Vendedor';
-  }, [items]);
-
-  // Fetch seller shipping options (hybrid: seller config + fallback to centralized)
-  const { options: sellerShippingOptions, isLoading: shippingOptionsLoading } = useStoreShippingOptionsReadOnly(firstStoreId);
-  const [selectedShippingOptionId, setSelectedShippingOptionId] = useState<string | null>(null);
-  const hasSellerShipping = sellerShippingOptions.length > 0;
-
-  // Auto-select first shipping option
-  useEffect(() => {
-    if (sellerShippingOptions.length > 0 && !selectedShippingOptionId) {
-      setSelectedShippingOptionId(sellerShippingOptions[0].id);
-    }
-  }, [sellerShippingOptions, selectedShippingOptionId]);
+  // Fetch active shipping options per store
+  const { data: optionsByStore = {} } = useMultiStoreShippingOptions(storeIds);
 
   // Fetch ADMIN payment methods (all B2C payments go through admin/platform)
   const {
@@ -265,42 +226,25 @@ const CheckoutPage = () => {
 
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  
-  // Calculate total weight from items (assuming weight in grams is available)
-  const totalWeightGrams = items.reduce((sum, item) => {
-    // Use item weight if available, otherwise estimate 200g per item
-    const itemWeight = (item as any).weight_grams || 200;
-    return sum + (itemWeight * item.quantity);
-  }, 0);
-  
-  // Calculate shipping cost based on selected location
-  const shippingCalculation = useMemo(() => {
-    if (!selectedCommune || deliveryMethod !== 'address') {
-      return null;
-    }
-    
-    return calculateShipping({
-      weightGrams: totalWeightGrams,
-      referencePrice: subtotal,
-      communeId: selectedCommune,
-      rates: shippingRates,
-      communes: communes,
-      categoryRates: categoryRates,
-    });
-  }, [selectedCommune, totalWeightGrams, subtotal, shippingRates, communes, categoryRates, deliveryMethod, calculateShipping]);
-  
-  // Calculate shipping: seller options take priority, fallback to centralized system
-  const selectedSellerShipping = sellerShippingOptions.find(o => o.id === selectedShippingOptionId);
-  const sellerShippingCost = useMemo(() => {
-    if (!hasSellerShipping || !selectedSellerShipping) return 0;
-    // Check if free shipping threshold is met
-    if (selectedSellerShipping.is_free_above && subtotal >= Number(selectedSellerShipping.is_free_above)) {
-      return 0;
-    }
-    return selectedSellerShipping.shipping_cost;
-  }, [hasSellerShipping, selectedSellerShipping, subtotal]);
 
-  const shippingCost = hasSellerShipping ? sellerShippingCost : (shippingCalculation?.totalShippingCost || 0);
+  // Per-store shipping costs: auto-select first active option, respect free_above threshold
+  const storeShippingCosts = useMemo(() => {
+    const costs: Record<string, number> = {};
+    for (const storeId of storeIds) {
+      const opts = optionsByStore[storeId] || [];
+      const storeSubtotal = items
+        .filter(i => i.storeId === storeId)
+        .reduce((s, i) => s + i.price * i.quantity, 0);
+      const firstOpt = opts[0];
+      if (!firstOpt) { costs[storeId] = 0; continue; }
+      costs[storeId] = (firstOpt.is_free_above && storeSubtotal >= Number(firstOpt.is_free_above))
+        ? 0
+        : firstOpt.shipping_cost;
+    }
+    return costs;
+  }, [storeIds, optionsByStore, items]);
+
+  const shippingCost = Object.values(storeShippingCosts).reduce((s, c) => s + c, 0);
   const discountAmount = appliedDiscount?.discountAmount || 0;
   const totalWithShipping = subtotal + shippingCost - discountAmount;
 
@@ -524,14 +468,15 @@ const CheckoutPage = () => {
       } : undefined;
 
       // Create the order in database
-      const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
       const order = await createOrder.mutateAsync({
         items: orderItems,
-        total_amount: totalPrice,
-        total_quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+        total_amount: totalWithShipping,
         payment_method: paymentMethod,
         payment_reference: paymentReference || undefined,
         notes: orderNotes || undefined,
+        shipping_cost: shippingCost,
+        discount_amount: discountAmount,
+        store_shipping_costs: storeShippingCosts,
         shipping_address: shippingAddress,
         delivery_method: deliveryMethod,
         pickup_point_id: deliveryMethod === 'pickup' ? selectedPickupPoint : undefined,
@@ -655,65 +600,6 @@ const CheckoutPage = () => {
                 </div>
               </RadioGroup>
             </Card>
-
-            {/* Location Selector - Department/Commune */}
-            {deliveryMethod === 'address' && (
-              <Card className="p-6">
-                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-[#071d7f]" />
-                  {t('checkout.deliveryZone')}
-                </h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {t('checkout.selectDeptCommune')}
-                </p>
-                <LocationSelector
-                  departmentId={selectedDepartment}
-                  communeId={selectedCommune}
-                  onDepartmentChange={setSelectedDepartment}
-                  onCommuneChange={setSelectedCommune}
-                />
-                
-                {/* Shipping cost preview */}
-                {shippingCalculation && (
-                  <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <Plane className="h-4 w-4 text-blue-500" />
-                        China → USA ({shippingCalculation.weightKg.toFixed(2)} kg)
-                      </span>
-                      <span>${shippingCalculation.chinaUsaCost.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <Truck className="h-4 w-4 text-green-500" />
-                        USA → Haití ({shippingCalculation.weightLb.toFixed(2)} lb)
-                      </span>
-                      <span>${shippingCalculation.usaHaitiCost.toFixed(2)}</span>
-                    </div>
-                    {shippingCalculation.insuranceCost > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-purple-500" />
-                           {t('checkout.insurance')}
-                        </span>
-                        <span>${shippingCalculation.insuranceCost.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {(shippingCalculation.deliveryFee > 0 || shippingCalculation.operationalFee > 0) && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{t('checkout.localCharges')}</span>
-                        <span>${(shippingCalculation.deliveryFee + shippingCalculation.operationalFee).toFixed(2)}</span>
-                      </div>
-                    )}
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-semibold">
-                      <span>{t('checkout.totalShipping')}</span>
-                      <span className="text-primary">${shippingCalculation.totalShippingCost.toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            )}
 
             {/* Shipping Address */}
             {deliveryMethod === 'address' && (
@@ -1190,37 +1076,16 @@ const CheckoutPage = () => {
                 </div>
                 
                 {/* Shipping cost breakdown */}
-                {shippingCalculation ? (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('shipping.cost')} (China → USA)</span>
-                      <span>${shippingCalculation.chinaUsaCost.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('shipping.cost')} (USA → Haití)</span>
-                      <span>${shippingCalculation.usaHaitiCost.toFixed(2)}</span>
-                    </div>
-                    {shippingCalculation.insuranceCost > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t('checkout.insurance')}</span>
-                        <span>${shippingCalculation.insuranceCost.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {(shippingCalculation.deliveryFee + shippingCalculation.operationalFee) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t('checkout.localCharges')}</span>
-                        <span>${(shippingCalculation.deliveryFee + shippingCalculation.operationalFee).toFixed(2)}</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t('shipping.cost')}</span>
-                    <span className="text-muted-foreground italic text-xs">
-                      {deliveryMethod === 'pickup' ? t('cart.freeShipping') : t('checkout.deliveryZone')}
-                    </span>
-                  </div>
-                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {t('shipping.cost')}{storeIds.length > 1 ? ` (${storeIds.length} tiendas)` : ''}
+                  </span>
+                  <span>
+                    {deliveryMethod === 'pickup'
+                      ? <span className="text-green-600">{t('cart.freeShipping')}</span>
+                      : `$${shippingCost.toFixed(2)}`}
+                  </span>
+                </div>
                 
                 {/* Discount Code Section */}
                 <div className="pt-3">

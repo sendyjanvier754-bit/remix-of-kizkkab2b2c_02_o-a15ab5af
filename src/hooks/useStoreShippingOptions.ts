@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -176,4 +177,34 @@ export const useStoreShippingOptionsReadOnly = (storeId?: string) => {
   }, [storeId]);
 
   return { options, isLoading };
+};
+
+/**
+ * Fetches active shipping options for multiple stores in a single query.
+ * Returns a map keyed by store_id.
+ */
+export const useMultiStoreShippingOptions = (storeIds: string[]) => {
+  const key = storeIds.slice().sort().join(',');
+
+  return useQuery({
+    queryKey: ['multi-store-shipping-options', key],
+    enabled: storeIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('store_shipping_options')
+        .select('*')
+        .in('store_id', storeIds)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+
+      const byStore: Record<string, StoreShippingOption[]> = {};
+      for (const option of (data || []) as StoreShippingOption[]) {
+        if (!byStore[option.store_id]) byStore[option.store_id] = [];
+        byStore[option.store_id].push(option);
+      }
+      return byStore;
+    },
+  });
 };

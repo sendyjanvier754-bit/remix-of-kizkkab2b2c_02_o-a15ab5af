@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,27 +13,72 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ShoppingCart, Trash2, Package, MessageCircle, CreditCard, Banknote, Wallet, DollarSign, CheckSquare, Square } from "lucide-react";
+import { ShoppingCart, Trash2, Package, MessageCircle, Banknote, Wallet, DollarSign, X, Loader2 } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { useB2CCartItems } from "@/hooks/useB2CCartItems";
+import { useB2CCartItems, B2CCartItem } from "@/hooks/useB2CCartItems";
 import { useActiveB2COrder } from "@/hooks/useB2COrders";
 import { B2CCartLockBanner } from "@/components/checkout/B2CCartLockBanner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
+import { QuantitySelector } from "@/components/ui/quantity-selector";
+import { useB2CCatalogVariants } from "@/hooks/useB2CCatalogVariants";
+import { addItemB2C } from "@/services/cartService";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CartPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { items, isLoading, refetch } = useB2CCartItems();
+  const queryClient = useQueryClient();
+  const { items: rawItems, isLoading, refetch } = useB2CCartItems();
   const { isCartLocked } = useActiveB2COrder();
   const isMobile = useIsMobile();
   const { user, role } = useAuth();
+
+  // ── Optimistic state (same pattern as SellerCartPage) ──────────────────────
+  const [items, setItems] = useState<B2CCartItem[]>(rawItems);
+  const pendingUpdatesRef = useRef(new Set<string>());
+  const lastUpdateTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    const timeSinceLastUpdate = Date.now() - lastUpdateTimeRef.current;
+    if (pendingUpdatesRef.current.size > 0 || timeSinceLastUpdate < 2000) return;
+    setItems(rawItems);
+  }, [rawItems]);
+
+  // ── Variant drawer state ───────────────────────────────────────────────────
+  const [selectedItemForVariants, setSelectedItemForVariants] = useState<B2CCartItem | null>(null);
+  const [variantQtys, setVariantQtys] = useState<Record<string, number>>({});
+  const [isAddingVariant, setIsAddingVariant] = useState(false);
+
+  const { data: catalogVariants = [], isLoading: isLoadingVariants } = useB2CCatalogVariants(
+    selectedItemForVariants?.sellerCatalogId ?? null
+  );
+
+  // Pre-fill variant quantities from current cart when drawer opens
+  useEffect(() => {
+    if (!selectedItemForVariants) { setVariantQtys({}); return; }
+    // Build a map from productVariantId → qty so we can pre-fill the drawer.
+    // We need catalogVariants to be loaded before we can fill by seller_catalog_variants.id.
+    // Using productVariantId as an intermediate key here.
+    const pvIdToQty: Record<string, number> = {};
+    items
+      .filter(i => i.sellerCatalogId === selectedItemForVariants.sellerCatalogId)
+      .forEach(i => { if (i.variantId) pvIdToQty[i.variantId] = (pvIdToQty[i.variantId] || 0) + i.quantity; });
+    // catalogVariants may not be loaded yet; do a best-effort fill using productVariantId → id mapping
+    // This effect runs again after catalogVariants loads because selectedItemForVariants is in the dep array.
+    const map: Record<string, number> = {};
+    catalogVariants.forEach(v => {
+      if (pvIdToQty[v.productVariantId] != null) map[v.id] = pvIdToQty[v.productVariantId];
+    });
+    setVariantQtys(map);
+  }, [selectedItemForVariants, items, catalogVariants]);
+
   const [isNegotiating, setIsNegotiating] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [showRemoveItemDialog, setShowRemoveItemDialog] = useState(false);
@@ -96,33 +142,44 @@ const CartPage = () => {
     }
   };
 
-  // Update item quantity
+  // ── Optimistic quantity update ────────────────────────────────────────────
   const updateQuantity = async (itemId: string, quantity: number) => {
-    if (quantity < 1) {
-      await removeItem(itemId);
+    if (quantity === 0) {
+      const item = items.find(i => i.id === itemId);
+      if (item) { setItemToRemove({ id: item.id, name: item.name }); setShowRemoveItemDialog(true); }
       return;
     }
 
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    pendingUpdatesRef.current.add(itemId);
+    lastUpdateTimeRef.current = Date.now();
+
+    // 1. Update local state immediately
+    const newTotalPrice = item.price * quantity;
+    setItems(prev =>
+      prev.map(i => i.id === itemId ? { ...i, quantity, totalPrice: newTotalPrice } : i)
+    );
+
+    // 2. Persist to DB
     try {
-      const item = items.find(i => i.id === itemId);
-      if (!item) return;
-
-      const newTotalPrice = item.price * quantity;
-
       const { error } = await supabase
         .from('b2c_cart_items')
-        .update({
-          quantity,
-          total_price: newTotalPrice
-        })
+        .update({ quantity, total_price: newTotalPrice })
         .eq('id', itemId);
 
       if (error) throw error;
-      await refetch(false);
-      toast.success(t('cart.quantityUpdated'));
+
+      await queryClient.invalidateQueries({ queryKey: ['b2c-cart-items'] });
+
+      setTimeout(() => { pendingUpdatesRef.current.delete(itemId); }, 500);
     } catch (error) {
       console.error('Error updating quantity:', error);
       toast.error(t('cart.quantityError'));
+      pendingUpdatesRef.current.delete(itemId);
+      lastUpdateTimeRef.current = 0;
+      refetch(false);
     }
   };
 
@@ -231,8 +288,69 @@ const CartPage = () => {
     return methodMap[lowerMethod] || { label: method, color: '#6B7280', abbr: method, icon: 'wallet' };
   };
 
-  const handleNegotiate = (storeItems: typeof items) => {
-    const storeName = storeItems[0]?.storeName || 'Vendedor';
+  // ── Variant drawer: reconcile cart with new qty selections ──────────────
+  const handleAddVariantsToCart = useCallback(async () => {
+    if (!user?.id || !selectedItemForVariants) return;
+    setIsAddingVariant(true);
+    try {
+      // Build map of existing cart rows for this catalog entry (by product_variants.id)
+      const existingByVariantId = new Map<string, { id: string; qty: number; price: number }>();
+      items
+        .filter(i => i.sellerCatalogId === selectedItemForVariants.sellerCatalogId && i.variantId)
+        .forEach(i => {
+          existingByVariantId.set(i.variantId!, { id: i.id, qty: i.quantity, price: i.price });
+        });
+
+      for (const variant of catalogVariants) {
+        const desiredQty = variantQtys[variant.id] ?? 0;
+        // Match by productVariantId (= product_variants.id = b2c_cart_items.variant_id)
+        const existing = existingByVariantId.get(variant.productVariantId);
+
+        if (existing && desiredQty === 0) {
+          // Remove
+          await supabase.from('b2c_cart_items').delete().eq('id', existing.id);
+        } else if (existing && desiredQty !== existing.qty) {
+          // Update qty (use current seller price)
+          await supabase
+            .from('b2c_cart_items')
+            .update({ quantity: desiredQty, unit_price: variant.price, total_price: variant.price * desiredQty })
+            .eq('id', existing.id);
+        } else if (!existing && desiredQty > 0) {
+          // Add new variant row
+          await addItemB2C({
+            userId: user.id,
+            sku: variant.sku,
+            name: `${selectedItemForVariants.name} - ${[variant.color, variant.size].filter(Boolean).join(' / ')}`,
+            price: variant.price,
+            quantity: desiredQty,
+            image: (variant.images?.[0]) ?? selectedItemForVariants.image ?? null,
+            storeId: selectedItemForVariants.storeId,
+            storeName: selectedItemForVariants.storeName,
+            storeWhatsapp: selectedItemForVariants.storeWhatsapp,
+            sellerCatalogId: selectedItemForVariants.sellerCatalogId,
+            variant: {
+              variantId: variant.productVariantId, // must be product_variants.id
+              color: variant.color ?? undefined,
+              size: variant.size ?? undefined,
+              variantAttributes: variant.variantAttributes,
+            },
+          });
+        }
+      }
+
+      toast.success('Carrito actualizado');
+      setSelectedItemForVariants(null);
+      setVariantQtys({});
+      await refetch(false);
+    } catch (err) {
+      console.error('Error updating variants:', err);
+      toast.error('Error al actualizar variantes');
+    } finally {
+      setIsAddingVariant(false);
+    }
+  }, [user?.id, selectedItemForVariants, catalogVariants, variantQtys, items, refetch]);
+
+  const handleNegotiate = (storeItems: typeof items) => {    const storeName = storeItems[0]?.storeName || 'Vendedor';
     const storeWhatsapp = storeItems[0]?.storeWhatsapp;
     const storeTotal = storeItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const storeQty = storeItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -379,8 +497,13 @@ const CartPage = () => {
                               className="data-[state=checked]:bg-[#071d7f] data-[state=checked]:border-[#071d7f]"
                             />
                           </div>
-                          {/* Product Image */}
-                          <div className="flex-shrink-0 rounded-md bg-muted overflow-hidden" style={{ width: '70px', height: '70px' }}>
+                          {/* Product Image – click to open variant drawer */}
+                          <button
+                            onClick={() => setSelectedItemForVariants(item)}
+                            className="flex-shrink-0 rounded-md bg-muted overflow-hidden border-none p-0 hover:opacity-80 transition"
+                            style={{ width: '70px', height: '70px' }}
+                            title="Cambiar variante"
+                          >
                             {item.image ? (
                               <img 
                                 src={item.image} 
@@ -392,7 +515,7 @@ const CartPage = () => {
                                 <Package className="h-5 w-5 text-muted-foreground/50" />
                               </div>
                             )}
-                          </div>
+                          </button>
                           
                           {/* Product Details */}
                           <div className="flex-1 min-w-0">
@@ -414,7 +537,7 @@ const CartPage = () => {
                               </button>
                             </div>
                             
-                            {/* Variant badges and Quantity Info */}
+                            {/* Variant badges and Quantity Selector */}
                             <div className="mt-1 flex items-center gap-1 flex-wrap">
                               {item.color && (
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
@@ -426,20 +549,24 @@ const CartPage = () => {
                                   {item.size}
                                 </span>
                               )}
-                               <span className="text-xs text-gray-600">
-                                {t('common.qty')}: {item.quantity}
-                              </span>
                             </div>
                             
                             {/* Price */}
-                            <div className="mt-2 flex items-center gap-2">
+                            <div className="mt-1">
                               <span className="text-sm font-bold" style={{ color: '#29892a' }}>
                                 ${item.price.toFixed(2)}
                               </span>
                             </div>
-                            
-                            {/* Subtotal */}
-                            <div className="flex items-center justify-end mt-2">
+
+                            {/* Qty selector + subtotal */}
+                            <div className="flex items-center justify-between mt-2">
+                              <QuantitySelector
+                                value={item.quantity}
+                                onChange={(newQty) => updateQuantity(item.id, newQty)}
+                                min={0}
+                                max={999}
+                                size="sm"
+                              />
                               <span className="text-sm font-bold" style={{ color: '#071d7f' }}>
                                 ${(item.price * item.quantity).toFixed(2)}
                               </span>
@@ -469,6 +596,8 @@ const CartPage = () => {
           </>
         ) : (
           // ========== LAYOUT PC (DOS COLUMNAS) ==========
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mt-1">
+            <div className="pt-6 px-6 pb-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20">
             {/* COLUMNA IZQUIERDA - Items */}
             <div className="lg:col-span-2">
@@ -551,15 +680,11 @@ const CartPage = () => {
                                 />
                               </div>
 
-                              {/* Product Image */}
-                              <div 
-                                onClick={() => {
-                                  const url = item.sellerCatalogId
-                                    ? `/producto/catalogo/${item.sellerCatalogId}${item.storeId ? `?seller=${item.storeId}` : ''}`
-                                    : `/producto/${item.sku}`;
-                                  navigate(url);
-                                }}
-                                className="flex-shrink-0 rounded-lg bg-gray-100 overflow-hidden cursor-pointer hover:shadow-md transition w-24 h-24"
+                              {/* Product Image – click to open variant drawer */}
+                              <button
+                                onClick={() => setSelectedItemForVariants(item)}
+                                className="flex-shrink-0 rounded-lg bg-gray-100 overflow-hidden cursor-pointer hover:shadow-md transition w-24 h-24 border-none p-0"
+                                title="Cambiar variante"
                               >
                                 {item.image ? (
                                   <img 
@@ -572,7 +697,7 @@ const CartPage = () => {
                                     <Package className="h-5 w-5 text-muted-foreground/50" />
                                   </div>
                                 )}
-                              </div>
+                              </button>
 
                               {/* Product Info */}
                               <div className="flex-1 min-w-0">
@@ -600,7 +725,7 @@ const CartPage = () => {
                                   </button>
                                 </div>
 
-                                {/* Variant badges and Quantity Info */}
+                                {/* Variant badges */}
                                 <div className="mt-1 flex items-center gap-1 flex-wrap">
                                   {item.color && (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
@@ -609,23 +734,24 @@ const CartPage = () => {
                                   )}
                                   {item.size && (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
-                                      {item.size}
+                                      Talla: {item.size}
                                     </span>
                                   )}
-                                   <span className="text-xs text-gray-600">
-                                    {t('common.qty')}: {item.quantity}
-                                  </span>
                                 </div>
 
-                                {/* Price and Controls Row */}
-                                <div className="flex items-center justify-between">
+                                {/* Price and Qty Controls Row */}
+                                <div className="flex items-center justify-between mt-3">
                                   <div className="flex items-center gap-4">
                                     <span className="text-lg font-bold" style={{ color: '#29892a' }}>
                                       ${item.price.toFixed(2)}
                                     </span>
-                                    <span className="text-sm text-gray-500">
-                                      x{item.quantity}
-                                    </span>
+                                    <QuantitySelector
+                                      value={item.quantity}
+                                      onChange={(newQty) => updateQuantity(item.id, newQty)}
+                                      min={0}
+                                      max={999}
+                                      size="sm"
+                                    />
                                   </div>
                                   <span className="text-lg font-bold" style={{ color: '#071d7f' }}>
                                     ${(item.price * item.quantity).toFixed(2)}
@@ -865,44 +991,67 @@ const CartPage = () => {
               </div>
             </div>
           </div>
+          </div>
+          </div>
         )}
       </main>
 
       {/* Botones Fijos - Solo Mobile */}
       {items.length > 0 && isMobile && (
         <div className="fixed left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 bottom-10 z-40 flex justify-center">
-          <div className="rounded-lg p-2 border border-gray-300 shadow-md w-full" style={{ backgroundColor: '#efefef' }}>
-            <div className="flex gap-2 justify-between">
-              {/* Botón WhatsApp Soporte */}
+          <div className="rounded-lg p-1 border border-gray-300 shadow-md w-full" style={{ backgroundColor: '#efefef' }}>
+            <div className="flex gap-1 justify-between items-center">
+              {/* Botón WhatsApp */}
               <button
                 onClick={handleWhatsAppSupport}
-                className="px-3 py-2 rounded-lg font-semibold text-sm transition border border-gray-300 flex items-center justify-center gap-1.5 bg-transparent"
-                style={{ color: '#29892a' }}
-                title="Contactar por WhatsApp"
+                className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center"
+                style={{ color: 'white', backgroundColor: '#29892a' }}
+                title="Contactar Soporte"
               >
-                <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
-                Soporte
+                <MessageCircle className="w-5 h-5" />
               </button>
 
-              {/* Botón Vaciar Carrito */}
+              <div className="flex-1" />
+
+              {/* Total Badge */}
+              <Badge
+                variant="outline"
+                className="text-sm border-2 px-3 py-1.5 rounded-lg"
+                style={{ borderColor: '#29892a', color: '#29892a' }}
+              >
+                <DollarSign className="w-3.5 h-3.5 mr-1.5" />
+                ${totalPrice.toFixed(2)}
+              </Badge>
+
+              {/* Botón Vaciar */}
               <button
                 onClick={handleClearCart}
-                className="px-3 py-2 rounded-lg font-semibold text-sm transition hover:bg-red-200 border border-gray-300 flex items-center justify-center gap-1.5 text-red-600"
+                className="p-2 rounded-lg transition hover:bg-red-100 border border-gray-300 text-red-600"
                 title="Vaciar carrito"
               >
                 <Trash2 className="w-4 h-4" />
-                Vaciar
               </button>
 
               {/* Botón Comprar */}
-              <Link
-                to="/checkout"
-                className="px-4 py-2 rounded-lg font-semibold text-sm transition shadow-lg hover:opacity-90 flex items-center justify-center gap-1.5 text-white"
-                style={{ backgroundColor: '#071d7f' }}
-              >
-                <ShoppingCart className="w-4 h-4" />
-                Comprar ({totalQuantity})
-              </Link>
+              {someSelected ? (
+                <Link
+                  to="/checkout"
+                  className="px-4 py-2 rounded-lg font-semibold text-sm transition shadow-lg hover:opacity-90 flex items-center justify-center gap-1.5 text-white"
+                  style={{ backgroundColor: '#071d7f' }}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Comprar ({totalQuantity})
+                </Link>
+              ) : (
+                <button
+                  disabled
+                  className="px-4 py-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-1.5 text-white opacity-50 cursor-not-allowed"
+                  style={{ backgroundColor: '#071d7f' }}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Selecciona
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -948,6 +1097,98 @@ const CartPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Variant Selection Drawer ─────────────────────────────────── */}
+      {selectedItemForVariants && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 z-[60]"
+            onClick={() => { setSelectedItemForVariants(null); setVariantQtys({}); }}
+          />
+
+          {/* Responsive Panel */}
+          <aside
+            onClick={(e) => e.stopPropagation()}
+            className="fixed bg-background shadow-2xl flex flex-col z-[61]
+                       bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl
+                       md:top-0 md:bottom-auto md:left-auto md:right-0 md:rounded-none md:border-l md:w-[400px] md:h-screen md:max-h-screen"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
+              <div>
+                <h3 className="text-lg font-bold">Cambiar variante</h3>
+                <p className="text-sm text-muted-foreground truncate max-w-[250px]">{selectedItemForVariants.name}</p>
+              </div>
+              <button
+                onClick={() => { setSelectedItemForVariants(null); setVariantQtys({}); }}
+                className="p-1 hover:bg-muted rounded-full transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Variant List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {isLoadingVariants ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : catalogVariants.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No hay variantes disponibles
+                </p>
+              ) : (
+                catalogVariants.map((variant) => {
+                  const qty = variantQtys[variant.id] ?? 0;
+                  const label =
+                    [variant.color, variant.size].filter(Boolean).join(' / ') || variant.sku;
+                  return (
+                    <div
+                      key={variant.id}
+                      className="flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-white"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{label}</p>
+                        <p className="text-sm font-bold mt-0.5" style={{ color: '#29892a' }}>
+                          ${variant.price.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Stock: {variant.stock}</p>
+                      </div>
+                      <QuantitySelector
+                        value={qty}
+                        onChange={(newQty) =>
+                          setVariantQtys((prev) => ({ ...prev, [variant.id]: newQty }))
+                        }
+                        min={0}
+                        max={variant.stock}
+                        size="sm"
+                      />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t flex-shrink-0">
+              <button
+                onClick={handleAddVariantsToCart}
+                disabled={isAddingVariant}
+                className="w-full py-3 rounded-lg font-semibold text-white flex items-center justify-center gap-2 transition hover:opacity-90 disabled:opacity-50"
+                style={{ backgroundColor: '#071d7f' }}
+              >
+                {isAddingVariant ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ShoppingCart className="h-4 w-4" />
+                )}
+                Actualizar carrito
+              </button>
+            </div>
+          </aside>
+        </>
+      )}
     </div>
   );
 };
