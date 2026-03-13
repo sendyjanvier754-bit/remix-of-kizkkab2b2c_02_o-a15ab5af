@@ -165,20 +165,25 @@ export function InventarioTable({ items, getMargin, onEditPrice, onAdjustStock, 
                           <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onEditPrice(item)}>
-                            <Edit className="h-4 w-4 mr-2" />{t('inventarioTable.editPrice')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onAdjustStock(item)}>
-                            <Package className="h-4 w-4 mr-2" />{t('inventarioTable.adjustStock')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onToggleActive(item.id)}>
-                            {item.isActive ? (
-                              <><EyeOff className="h-4 w-4 mr-2" /> {t('inventarioTable.hide')}</>
-                            ) : (
-                              <><Eye className="h-4 w-4 mr-2" /> {t('inventarioTable.publish')}</>
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
+                           <DropdownMenuItem onClick={() => onEditPrice(item)}>
+                             <Edit className="h-4 w-4 mr-2" />{t('inventarioTable.editPrice')}
+                           </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => onAdjustStock(item)}>
+                             <Package className="h-4 w-4 mr-2" />{t('inventarioTable.adjustStock')}
+                           </DropdownMenuItem>
+                           {item.sourceProductId && (
+                             <DropdownMenuItem onClick={() => setVariantPanelItem(item)}>
+                               <Layers className="h-4 w-4 mr-2" />Gestionar variantes
+                             </DropdownMenuItem>
+                           )}
+                           <DropdownMenuItem onClick={() => onToggleActive(item.id)}>
+                             {item.isActive ? (
+                               <><EyeOff className="h-4 w-4 mr-2" /> {t('inventarioTable.hide')}</>
+                             ) : (
+                               <><Eye className="h-4 w-4 mr-2" /> {t('inventarioTable.publish')}</>
+                             )}
+                           </DropdownMenuItem>
+                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
