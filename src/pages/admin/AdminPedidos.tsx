@@ -459,7 +459,208 @@ const AdminPedidos = () => {
 
   return (
     <AdminLayout title={t('adminOrders.title')} subtitle={t('adminOrders.subtitle')}>
-      <div className="space-y-6">
+      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'b2b' | 'b2c')} className="mb-4">
+        <TabsList>
+          <TabsTrigger value="b2b">Pedidos B2B (Mayoristas)</TabsTrigger>
+          <TabsTrigger value="b2c" className="relative">
+            Pedidos B2C (Compradores)
+            {b2cOrders.filter((o: any) => o.payment_status === 'pending_validation').length > 0 && (
+              <span className="ml-2 bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
+                {b2cOrders.filter((o: any) => o.payment_status === 'pending_validation').length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ── B2C Tab ──────────────────────────────────────────── */}
+        <TabsContent value="b2c">
+          <div className="space-y-4 mt-4">
+            {/* Filters */}
+            <Card className="bg-card border-border">
+              <CardContent className="pt-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Buscar por ID, referencia o tienda..." className="pl-10" value={b2cSearch} onChange={e => setB2cSearch(e.target.value)} />
+                  </div>
+                  <Select value={b2cStatusFilter} onValueChange={setB2cStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-[220px]">
+                      <SelectValue placeholder="Filtrar por estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="pending_validation">Por Validar</SelectItem>
+                      <SelectItem value="paid">Pagados</SelectItem>
+                      <SelectItem value="failed">Rechazados</SelectItem>
+                      <SelectItem value="cancelled">Cancelados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* B2C Orders Table */}
+            <Card className="bg-card border-border">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border">
+                        <TableHead>ID</TableHead>
+                        <TableHead>Tienda</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Método</TableHead>
+                        <TableHead>Referencia</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-center">Estado Pago</TableHead>
+                        <TableHead className="text-center">Comprobante</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingB2C ? (
+                        <TableRow><TableCell colSpan={9} className="text-center py-10"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></TableCell></TableRow>
+                      ) : filteredB2COrders.length === 0 ? (
+                        <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No hay pedidos B2C</TableCell></TableRow>
+                      ) : filteredB2COrders.map((order: any) => {
+                        const proof = order.metadata?.payment_proof_url;
+                        const ps = order.payment_status;
+                        const psLabel: Record<string, { label: string; color: string }> = {
+                          pending_validation: { label: 'Por Validar', color: 'bg-amber-500/20 text-amber-600 border-amber-400' },
+                          paid: { label: 'Confirmado', color: 'bg-green-500/20 text-green-600 border-green-400' },
+                          failed: { label: 'Rechazado', color: 'bg-red-500/20 text-red-600 border-red-400' },
+                          cancelled: { label: 'Cancelado', color: 'bg-gray-500/20 text-gray-500' },
+                          pending: { label: 'Pendiente', color: 'bg-blue-500/20 text-blue-600' },
+                        };
+                        const cfg = psLabel[ps] || { label: ps, color: 'bg-muted text-muted-foreground' };
+                        return (
+                          <TableRow key={order.id} className={`border-border hover:bg-muted/50 ${ps === 'pending_validation' ? 'bg-amber-500/5' : ''}`}>
+                            <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}…</TableCell>
+                            <TableCell className="text-sm">{order.store?.name || '—'}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{format(new Date(order.created_at), 'dd MMM yyyy', { locale: es })}</TableCell>
+                            <TableCell className="capitalize text-sm">{order.payment_method}</TableCell>
+                            <TableCell className="font-mono text-xs">{order.payment_reference || '—'}</TableCell>
+                            <TableCell className="text-right font-semibold">${Number(order.total_amount).toFixed(2)}</TableCell>
+                            <TableCell className="text-center"><Badge className={cfg.color}>{cfg.label}</Badge></TableCell>
+                            <TableCell className="text-center">
+                              {proof ? (
+                                <a href={proof} target="_blank" rel="noopener noreferrer" className="text-primary text-xs underline flex items-center justify-center gap-1">
+                                  <FileText className="h-3.5 w-3.5" />Ver
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="sm" onClick={() => setSelectedB2COrder(order)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* B2C Order Detail Dialog */}
+      <Dialog open={!!selectedB2COrder} onOpenChange={open => !open && setSelectedB2COrder(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5" />
+              Pedido B2C #{dialogB2COrder?.id?.slice(0, 8).toUpperCase()}
+            </DialogTitle>
+          </DialogHeader>
+          {dialogB2COrder && (
+            <div className="space-y-5">
+              {/* Basic info */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><p className="text-muted-foreground">Tienda</p><p className="font-medium">{dialogB2COrder.store?.name || '—'}</p></div>
+                <div><p className="text-muted-foreground">Fecha</p><p>{format(new Date(dialogB2COrder.created_at), 'dd MMMM yyyy, HH:mm', { locale: es })}</p></div>
+                <div><p className="text-muted-foreground">Método de pago</p><p className="capitalize font-medium">{dialogB2COrder.payment_method}</p></div>
+                <div><p className="text-muted-foreground">Referencia</p><p className="font-mono text-xs">{dialogB2COrder.payment_reference || '—'}</p></div>
+                <div><p className="text-muted-foreground">Estado pago</p>
+                  <Badge className={dialogB2COrder.payment_status === 'paid' ? 'bg-green-500/20 text-green-600' : dialogB2COrder.payment_status === 'pending_validation' ? 'bg-amber-500/20 text-amber-600' : 'bg-red-500/20 text-red-600'}>
+                    {dialogB2COrder.payment_status === 'paid' ? 'Confirmado' : dialogB2COrder.payment_status === 'pending_validation' ? 'Por Validar' : dialogB2COrder.payment_status}
+                  </Badge>
+                </div>
+                <div><p className="text-muted-foreground">Total</p><p className="text-xl font-bold text-primary">${Number(dialogB2COrder.total_amount).toFixed(2)}</p></div>
+              </div>
+
+              <Separator />
+
+              {/* Comprobante */}
+              <div className="space-y-2">
+                <p className="text-sm font-semibold flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Comprobante de Pago
+                  {dialogB2COrder.metadata?.payment_proof_url
+                    ? <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Subido</span>
+                    : <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Pendiente</span>}
+                </p>
+                <PaymentProofUpload
+                  orderId={dialogB2COrder.id}
+                  existingUrl={dialogB2COrder.metadata?.payment_proof_url ?? null}
+                  orderTable="orders_b2c"
+                  onUploaded={() => { queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] }); queryClient.invalidateQueries({ queryKey: ['admin-b2c-order-live', dialogB2COrder.id] }); }}
+                />
+              </div>
+
+              {/* Confirm / Reject for pending_validation */}
+              {dialogB2COrder.payment_status === 'pending_validation' && (
+                <div className="p-4 bg-amber-500/10 border border-amber-400/30 rounded-lg space-y-4">
+                  <p className="text-sm font-semibold text-amber-700 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    Verificar Pago — {dialogB2COrder.payment_method?.toUpperCase()}
+                  </p>
+                  <div className="space-y-2">
+                    <Label>Notas de confirmación (opcional)</Label>
+                    <Input placeholder="Ej: Verificado en cuenta MonCash..." value={b2cPaymentNotes} onChange={e => setB2cPaymentNotes(e.target.value)} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button className="flex-1 bg-green-600 hover:bg-green-700" disabled={confirmB2CPayment.isPending} onClick={() => confirmB2CPayment.mutate({ orderId: dialogB2COrder.id, notes: b2cPaymentNotes })}>
+                      {confirmB2CPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                      Confirmar Pago
+                    </Button>
+                    <Button variant="destructive" className="flex-1" disabled={rejectB2CPayment.isPending} onClick={() => rejectB2CPayment.mutate({ orderId: dialogB2COrder.id, reason: b2cRejectionReason || 'Pago no verificado' })}>
+                      {rejectB2CPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
+                      Rechazar
+                    </Button>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Motivo rechazo (opcional)</Label>
+                    <Input placeholder="Ej: Referencia no encontrada" value={b2cRejectionReason} onChange={e => setB2cRejectionReason(e.target.value)} />
+                  </div>
+                </div>
+              )}
+
+              {/* Items */}
+              <div>
+                <p className="text-sm font-semibold mb-2">Productos</p>
+                <div className="space-y-2">
+                  {dialogB2COrder.order_items_b2c?.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg text-sm">
+                      <div>
+                        <p className="font-medium">{item.product_name}</p>
+                        <p className="text-xs text-muted-foreground">SKU: {item.sku} • Cant: {item.quantity}</p>
+                      </div>
+                      <p className="font-semibold">${Number(item.total_price).toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <div className={`space-y-6 ${mainTab === 'b2c' ? 'hidden' : ''}`}>
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
           <Card className="bg-card border-border">
