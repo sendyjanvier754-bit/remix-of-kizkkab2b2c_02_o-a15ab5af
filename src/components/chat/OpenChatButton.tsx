@@ -73,11 +73,9 @@ export function OpenChatButton({
       }
 
       // Navigate based on role
-      const chatRoute = navigateTo === 'admin'
-        ? `/admin/soporte-chat?chat=${chatId}`
-        : navigateTo === 'seller'
-          ? `/seller/soporte-chat?chat=${chatId}`
-          : `/soporte?chat=${chatId}`;
+      const chatRoute = navigateTo === 'buyer'
+        ? `/soporte?chat=${chatId}`
+        : `/admin/soporte-chat?chat=${chatId}`;
       navigate(chatRoute);
     } catch (error: any) {
       toast.error(t('errors.generic'));
