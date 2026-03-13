@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSellerReturnRequests, useUpdateReturnRequest, RETURN_STATUS_CONFIG, ReturnStatus } from '@/hooks/useOrderReturnRequests';
 import { useOrders, OrderStatus, Order, PaymentStatus } from '@/hooks/useOrders';
@@ -35,6 +35,9 @@ import {
   RotateCcw,
   BarChart2,
   TrendingUp,
+  FileText,
+  Store,
+  Info,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -70,23 +73,17 @@ const SellerPedidosPage = () => {
   const { 
     useSellerB2CSales, 
     useB2CSalesStats, 
-    cancelOrderWithRestore, 
-    confirmManualPayment, 
-    rejectManualPayment 
   } = useOrders();
   
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [paymentNotes, setPaymentNotes] = useState('');
   const [returnActionOrder, setReturnActionOrder] = useState<any | null>(null);
   const [returnActionType, setReturnActionType] = useState<'accept' | 'reject' | 'mediate' | null>(null);
   const [returnActionNotes, setReturnActionNotes] = useState('');
   const [returnAmountApproved, setReturnAmountApproved] = useState('');
   const [returnSearchTerm, setReturnSearchTerm] = useState('');
+
 
   const { data: orders = [], isLoading } = useSellerB2CSales({ paymentStatus: paymentStatusFilter });
   const { data: returnRequests = [], isLoading: returnsLoading } = useSellerReturnRequests();
@@ -131,30 +128,8 @@ const SellerPedidosPage = () => {
     return Object.values(map).sort((a, b) => b.revenue - a.revenue);
   }, [orders]);
 
-  const handleConfirmPayment = async () => {
-    if (selectedOrder) {
-      await confirmManualPayment.mutateAsync({ orderId: selectedOrder.id, paymentNotes });
-      setConfirmDialogOpen(false);
-      setSelectedOrder(null);
-      setPaymentNotes('');
-    }
-  };
+  // Payment actions are admin-only for B2C orders; seller is read-only
 
-  const handleRejectPayment = async () => {
-    if (selectedOrder) {
-      await rejectManualPayment.mutateAsync({ orderId: selectedOrder.id, rejectionReason });
-      setRejectDialogOpen(false);
-      setSelectedOrder(null);
-      setRejectionReason('');
-    }
-  };
-
-  const handleCancelOrder = async (orderId: string) => {
-    if (confirm('¿Estás seguro de cancelar este pedido? Los productos se restaurarán al carrito del cliente.')) {
-      await cancelOrderWithRestore.mutateAsync({ orderId, restoreToCart: true });
-      setSelectedOrder(null);
-    }
-  };
 
   const getStatusBadge = (status: OrderStatus) => {
     const config = statusConfig[status];
@@ -272,12 +247,17 @@ const SellerPedidosPage = () => {
           </Card>
         )}
 
-        {/* Main Tabs: Pedidos | Mis Ventas | Devoluciones */}
+        {/* Main Tabs: Pedidos B2C | Mis Ventas | Devoluciones */}
         <Tabs defaultValue="orders" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="orders" className="gap-1.5">
-              <ShoppingCart className="h-3.5 w-3.5" />
-              Pedidos
+              <Store className="h-3.5 w-3.5" />
+              Pedidos B2C
+              {pendingValidationOrders.length > 0 && (
+                <Badge className="h-4 min-w-4 px-1 text-[9px] bg-amber-500 text-white ml-1">
+                  {pendingValidationOrders.length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="ventas" className="gap-1.5">
               <BarChart2 className="h-3.5 w-3.5" />
@@ -392,37 +372,13 @@ const SellerPedidosPage = () => {
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
-                                  {order.payment_status === 'pending_validation' && (
-                                    <>
-                                      <Button
-                                        variant="default"
-                                        size="sm"
-                                        className="bg-green-600 hover:bg-green-700"
-                                        onClick={() => {
-                                          setSelectedOrder(order);
-                                          setConfirmDialogOpen(true);
-                                        }}
-                                      >
-                                        <Check className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => {
-                                          setSelectedOrder(order);
-                                          setRejectDialogOpen(true);
-                                        }}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </>
-                                  )}
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setSelectedOrder(order)}
                                   >
                                     <Eye className="h-4 w-4" />
+
                                   </Button>
                                 </div>
                               </TableCell>
@@ -687,7 +643,8 @@ const SellerPedidosPage = () => {
       </div>
 
       {/* ── Order Detail Dialog ── */}
-      <Dialog open={!!selectedOrder && !confirmDialogOpen && !rejectDialogOpen} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -839,6 +796,40 @@ const SellerPedidosPage = () => {
                   </div>
                 </div>
 
+                {/* Payment proof (read-only for seller) */}
+                {(() => {
+                  const proofUrl = (selectedOrder.metadata as Record<string, any> | null)?.payment_proof_url;
+                  return (
+                    <div className="p-3 bg-muted/30 border border-border rounded-lg space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5" />
+                        Comprobante de pago
+                      </p>
+                      {proofUrl ? (
+                        <a
+                          href={proofUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Ver comprobante adjunto
+                        </a>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">El comprador aún no ha subido el comprobante.</p>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Admin manages payment — info notice */}
+                {selectedOrder.payment_status === 'pending_validation' && (
+                  <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-400/30 rounded-lg text-sm text-amber-700">
+                    <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                    <p>Este pago está pendiente de validación por el <strong>administrador</strong>. Recibirás una notificación cuando sea confirmado o rechazado.</p>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="flex justify-end gap-2 pt-1">
                   <OpenChatButton
@@ -848,32 +839,6 @@ const SellerPedidosPage = () => {
                     navigateTo="seller"
                     size="sm"
                   />
-                  {selectedOrder.payment_status === 'pending_validation' && (
-                    <>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                        onClick={() => setConfirmDialogOpen(true)}
-                      >
-                        <Check className="h-4 w-4 mr-1.5" />Confirmar Pago
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => setRejectDialogOpen(true)}>
-                        <X className="h-4 w-4 mr-1.5" />Rechazar Pago
-                      </Button>
-                    </>
-                  )}
-                  {(selectedOrder.status === 'draft' || selectedOrder.status === 'placed') && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCancelOrder(selectedOrder.id)}
-                      disabled={cancelOrderWithRestore.isPending}
-                    >
-                      {cancelOrderWithRestore.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <XCircle className="h-4 w-4 mr-1.5" />}
-                      Cancelar
-                    </Button>
-                  )}
                 </div>
               </div>
             );
@@ -881,90 +846,8 @@ const SellerPedidosPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Confirm Payment Dialog ── */}
-      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-5 w-5" />Confirmar Pago
-            </DialogTitle>
-            <DialogDescription>¿Has verificado que el pago fue recibido correctamente?</DialogDescription>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Monto:</span>
-                  <span className="font-bold text-lg">${Number(selectedOrder.total_amount).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-muted-foreground">Método:</span>
-                  {getPaymentMethodBadge(selectedOrder.payment_method)}
-                </div>
-                {(selectedOrder.metadata as Record<string, any>)?.payment_reference && (
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-sm text-muted-foreground">Referencia:</span>
-                    <span className="font-mono text-sm">{(selectedOrder.metadata as Record<string, any>).payment_reference}</span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="text-sm font-medium">Notas (opcional)</label>
-                <Textarea
-                  placeholder="Ej: Verificado en MonCash, transacción #12345"
-                  value={paymentNotes}
-                  onChange={(e) => setPaymentNotes(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>Cancelar</Button>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={handleConfirmPayment} disabled={confirmManualPayment.isPending}>
-              {confirmManualPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-              Confirmar Pago
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      {/* ── Reject Payment Dialog ── */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <XCircle className="h-5 w-5" />Rechazar Pago
-            </DialogTitle>
-            <DialogDescription>El pedido será cancelado y el stock se liberará.</DialogDescription>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-4">
-              <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20">
-                <p className="text-sm text-destructive">
-                  Esta acción cancelará el pedido #{selectedOrder.id.substring(0, 8)} por ${Number(selectedOrder.total_amount).toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Motivo del rechazo</label>
-                <Textarea
-                  placeholder="Ej: No se recibió el pago, monto incorrecto, etc."
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleRejectPayment} disabled={rejectManualPayment.isPending}>
-              {rejectManualPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <X className="h-4 w-4 mr-2" />}
-              Rechazar Pago
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
 
       {/* ── Return Action Dialog ── */}
       <Dialog open={!!returnActionOrder} onOpenChange={() => setReturnActionOrder(null)}>
