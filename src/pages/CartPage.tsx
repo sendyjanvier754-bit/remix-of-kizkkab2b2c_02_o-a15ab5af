@@ -1263,7 +1263,50 @@ const CartPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Variant Selection Drawer ─────────────────────────────────── */}
+      {/* Share Cart Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="w-5 h-5" />
+              Compartir carrito
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Comparte este enlace para que otra persona pueda ver y agregar estos productos a su carrito.
+            </p>
+            
+            {/* Link */}
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={shareLink}
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted truncate"
+              />
+              <Button size="sm" variant="outline" onClick={handleCopyShareLink}>
+                {shareCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleShareWhatsApp} className="w-full gap-2" style={{ backgroundColor: '#29892a' }}>
+                <MessageCircle className="w-4 h-4" />
+                Enviar por WhatsApp
+              </Button>
+              <Button variant="outline" onClick={handleCopyShareLink} className="w-full gap-2">
+                <Copy className="w-4 h-4" />
+                {shareCopied ? 'Copiado!' : 'Copiar enlace'}
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">El enlace expira en 7 días</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       {selectedItemForVariants && (
         <>
           {/* Overlay */}
