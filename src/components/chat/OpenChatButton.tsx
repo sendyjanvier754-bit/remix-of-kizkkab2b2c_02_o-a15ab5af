@@ -37,6 +37,12 @@ export function OpenChatButton({
     try {
       setIsCreating(true);
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Debes iniciar sesión');
+        return;
+      }
+
       // Check if there's already an open (non-closed) chat for this order
       const { data: existingChats } = await supabase
         .from('support_chats')
@@ -48,9 +54,15 @@ export function OpenChatButton({
       let chatId: string;
 
       if (existingChats && existingChats.length > 0) {
-        // Navigate to existing chat
         chatId = existingChats[0].id;
-        toast.info('Ya existe un chat abierto para este pedido');
+
+        // Add current user as participant if not already
+        await supabase.from('chat_participants').upsert(
+          { chat_id: chatId, user_id: user.id, role: 'member' },
+          { onConflict: 'chat_id,user_id' }
+        );
+
+        toast.info('Te has unido al chat existente para este pedido');
       } else {
         // Create new chat
         const label = orderLabel || `Pedido #${orderId.slice(0, 8).toUpperCase()}`;
@@ -60,7 +72,13 @@ export function OpenChatButton({
         toast.success(t('common.success'));
       }
 
-      navigate(`/admin/soporte-chat?chat=${chatId}`);
+      // Navigate based on role
+      const chatRoute = navigateTo === 'admin'
+        ? `/admin/soporte-chat?chat=${chatId}`
+        : navigateTo === 'seller'
+          ? `/seller/soporte-chat?chat=${chatId}`
+          : `/soporte?chat=${chatId}`;
+      navigate(chatRoute);
     } catch (error: any) {
       toast.error(t('errors.generic'));
     } finally {

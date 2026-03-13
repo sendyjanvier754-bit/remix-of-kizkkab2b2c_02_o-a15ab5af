@@ -330,6 +330,13 @@ export function useCreateChat() {
       .single();
     if (error) throw error;
 
+    // Add creator as participant
+    await supabase.from('chat_participants').insert({
+      chat_id: data.id,
+      user_id: user.id,
+      role: 'creator',
+    });
+
     // Send initial system message
     await supabase.from('chat_messages').insert({
       chat_id: data.id,
@@ -338,7 +345,6 @@ export function useCreateChat() {
       message_type: 'system',
     });
 
-    // Create notification for admins - they'll see it via the chat list
     return data as unknown as SupportChat;
   }, [user]);
 
