@@ -897,53 +897,7 @@ const SellerPedidosPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Confirm Payment Dialog ── */}
-      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-5 w-5" />Confirmar Pago
-            </DialogTitle>
-            <DialogDescription>¿Has verificado que el pago fue recibido correctamente?</DialogDescription>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Monto:</span>
-                  <span className="font-bold text-lg">${Number(selectedOrder.total_amount).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-muted-foreground">Método:</span>
-                  {getPaymentMethodBadge(selectedOrder.payment_method)}
-                </div>
-                {(selectedOrder.metadata as Record<string, any>)?.payment_reference && (
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-sm text-muted-foreground">Referencia:</span>
-                    <span className="font-mono text-sm">{(selectedOrder.metadata as Record<string, any>).payment_reference}</span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="text-sm font-medium">Notas (opcional)</label>
-                <Textarea
-                  placeholder="Ej: Verificado en MonCash, transacción #12345"
-                  value={paymentNotes}
-                  onChange={(e) => setPaymentNotes(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>Cancelar</Button>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={handleConfirmPayment} disabled={confirmManualPayment.isPending}>
-              {confirmManualPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-              Confirmar Pago
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
 
       {/* ── Reject Payment Dialog ── */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
