@@ -643,7 +643,8 @@ const SellerPedidosPage = () => {
       </div>
 
       {/* ── Order Detail Dialog ── */}
-      <Dialog open={!!selectedOrder && !confirmDialogOpen && !rejectDialogOpen} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
