@@ -1006,13 +1006,13 @@ const CartPage = () => {
                 {/* Checkout Button and Support */}
                 <div className="p-2 flex gap-2 justify-center">
                   <button
-                    onClick={handleWhatsAppSupport}
-                    className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-gray-300"
-                    style={{ color: '#29892a' }}
-                    title="Contactar por WhatsApp"
+                    onClick={handleShareCart}
+                    disabled={isSharing}
+                    className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-border hover:bg-muted"
+                    title="Compartir carrito"
                   >
-                    <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
-                    {t('common.support')}
+                    {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                    Compartir
                   </button>
                   {someSelected ? (
                     <Link
