@@ -704,6 +704,7 @@ export const InlineOrdersPanel = () => {
               order={order}
               onClick={() => setSelectedOrder(order)}
               poInfo={poInfoMap?.[order.id]}
+              returnStatus={returnStatusByOrderId[order.id] || null}
             />
           ))
         ) : (
