@@ -610,6 +610,29 @@ const OrderDetailDialog = ({
               fullWidth
               navigateTo="buyer"
             />
+            {/* Solicitar Devolución — only for delivered orders */}
+            {isDelivered && (
+              returnCfg ? (
+                <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <RotateCcw className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm font-medium text-amber-800">Devolución:</span>
+                  </div>
+                  <Badge variant="outline" className={`${returnCfg.color} border-current text-xs`}>
+                    {returnCfg.label}
+                  </Badge>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => onRequestReturn(order)}
+                  variant="outline"
+                  className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
+                  size="lg"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />Solicitar Devolución
+                </Button>
+              )
+            )}
             {canCancel && (
               <Button onClick={() => onCancelClick(order)} variant="outline"
                 className="w-full border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700" size="lg">
