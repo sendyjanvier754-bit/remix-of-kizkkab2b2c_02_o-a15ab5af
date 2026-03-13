@@ -691,119 +691,193 @@ const SellerPedidosPage = () => {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Detalle del Pedido
+              <Package className="h-5 w-5 text-primary" />
+              Detalle del Pedido B2C
             </DialogTitle>
           </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">ID Pedido</p>
-                  <p className="font-mono text-sm">{selectedOrder.id}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Estado</p>
-                  <div className="flex gap-2 mt-1">
-                    {getStatusBadge(selectedOrder.status as OrderStatus)}
-                    {getPaymentStatusBadge(selectedOrder.payment_status)}
+          {selectedOrder && (() => {
+            const buyer = getBuyerInfo(selectedOrder);
+            const b2cItems = (selectedOrder as any).order_items_b2c as any[] | undefined;
+            const shippingAddr = (selectedOrder as any).shipping_address as Record<string, any> | null;
+            const paymentRef = (selectedOrder as any).payment_reference
+              || (selectedOrder.metadata as Record<string, any> | null)?.payment_reference;
+            return (
+              <div className="space-y-5">
+                {/* IDs + status row */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/40 rounded-lg border border-border">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">ID Pedido</p>
+                    <p className="font-mono text-sm select-all">{selectedOrder.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Fecha</p>
+                    <p className="text-sm">{format(new Date(selectedOrder.created_at), "dd MMM yyyy, HH:mm", { locale: es })}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Estado del pedido</p>
+                    <div className="mt-0.5">{getStatusBadge(selectedOrder.status as OrderStatus)}</div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Estado de pago</p>
+                    <div className="mt-0.5">{getPaymentStatusBadge(selectedOrder.payment_status) ?? <span className="text-muted-foreground text-sm">—</span>}</div>
                   </div>
                 </div>
+
+                {/* Buyer info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cliente</p>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium">{buyer.name}</p>
+                        {selectedOrder.buyer_profile?.email && (
+                          <p className="text-xs text-muted-foreground">{selectedOrder.buyer_profile.email}</p>
+                        )}
+                        {buyer.phone && (
+                          <p className="text-xs text-muted-foreground">{buyer.phone}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Método de pago</p>
+                    <div className="mt-0.5">{getPaymentMethodBadge(selectedOrder.payment_method) ?? <span className="text-muted-foreground text-sm">—</span>}</div>
+                    {paymentRef && (
+                      <p className="text-xs font-mono text-muted-foreground mt-1">Ref: {paymentRef}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Shipping address */}
+                {shippingAddr && (
+                  <div className="p-3 bg-muted/40 rounded-lg border border-border">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
+                      <Truck className="h-3 w-3" /> Dirección de envío
+                    </p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                      {shippingAddr.full_name && <div><span className="text-muted-foreground text-xs">Nombre: </span>{shippingAddr.full_name}</div>}
+                      {shippingAddr.phone && <div><span className="text-muted-foreground text-xs">Tel: </span>{shippingAddr.phone}</div>}
+                      {shippingAddr.street_address && <div className="col-span-2"><span className="text-muted-foreground text-xs">Dirección: </span>{shippingAddr.street_address}</div>}
+                      {(shippingAddr.city || shippingAddr.state) && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground text-xs">Ciudad: </span>
+                          {[shippingAddr.city, shippingAddr.state, shippingAddr.country].filter(Boolean).join(', ')}
+                        </div>
+                      )}
+                      {shippingAddr.postal_code && <div><span className="text-muted-foreground text-xs">CP: </span>{shippingAddr.postal_code}</div>}
+                      {shippingAddr.notes && <div className="col-span-2 text-muted-foreground text-xs italic">{shippingAddr.notes}</div>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Order items */}
                 <div>
-                  <p className="text-sm text-muted-foreground">Cliente</p>
-                  <p className="text-sm font-medium">{getBuyerInfo(selectedOrder).name}</p>
-                  {getBuyerInfo(selectedOrder).phone && (
-                    <p className="text-xs text-muted-foreground">{getBuyerInfo(selectedOrder).phone}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Productos</p>
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border bg-muted/30">
+                          <TableHead className="text-muted-foreground text-xs">Producto</TableHead>
+                          <TableHead className="text-muted-foreground text-xs text-center">Cant.</TableHead>
+                          <TableHead className="text-muted-foreground text-xs text-right">P. Unit.</TableHead>
+                          <TableHead className="text-muted-foreground text-xs text-right">Subtotal</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(!b2cItems || b2cItems.length === 0) ? (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-4 text-muted-foreground text-sm">Sin productos</TableCell>
+                          </TableRow>
+                        ) : b2cItems.map((item: any) => {
+                          const img = item.seller_catalog?.images?.[0] ?? item.image ?? null;
+                          const name = item.product_name || item.seller_catalog?.nombre || item.sku || '—';
+                          const sku = item.sku || item.seller_catalog?.sku || '—';
+                          const variantInfo = item.variant_info as Record<string, any> | null;
+                          return (
+                            <TableRow key={item.id} className="border-border">
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {img && <img src={img} alt={name} className="w-9 h-9 rounded object-cover shrink-0 border border-border" />}
+                                  <div>
+                                    <p className="font-medium text-sm">{name}</p>
+                                    <p className="text-xs text-muted-foreground">SKU: {sku}</p>
+                                    {variantInfo && Object.keys(variantInfo).length > 0 && (
+                                      <p className="text-xs text-muted-foreground">
+                                        {Object.entries(variantInfo).map(([k, v]) => `${k}: ${v}`).join(' · ')}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-center text-sm">{item.quantity}</TableCell>
+                              <TableCell className="text-right text-sm">${Number(item.unit_price).toFixed(2)}</TableCell>
+                              <TableCell className="text-right font-medium text-sm">${Number(item.total_price).toFixed(2)}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                {/* Totals */}
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="flex justify-between items-center px-4 py-2 bg-muted/20 text-sm">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>${(Number(selectedOrder.total_amount) - Number((selectedOrder as any).shipping_cost || 0)).toFixed(2)}</span>
+                  </div>
+                  {Number((selectedOrder as any).shipping_cost) > 0 && (
+                    <div className="flex justify-between items-center px-4 py-2 border-t border-border text-sm">
+                      <span className="text-muted-foreground">Envío</span>
+                      <span>${Number((selectedOrder as any).shipping_cost).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center px-4 py-3 border-t border-border bg-muted/30">
+                    <span className="font-semibold">Total</span>
+                    <span className="text-lg font-bold text-foreground">${Number(selectedOrder.total_amount).toFixed(2)} <span className="text-xs font-normal text-muted-foreground">{selectedOrder.currency}</span></span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2 pt-1">
+                  <OpenChatButton
+                    orderId={selectedOrder.id}
+                    orderType="b2c"
+                    orderLabel={`Pedido #${selectedOrder.id.slice(0, 8).toUpperCase()}`}
+                    navigateTo="seller"
+                    size="sm"
+                  />
+                  {selectedOrder.payment_status === 'pending_validation' && (
+                    <>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={() => setConfirmDialogOpen(true)}
+                      >
+                        <Check className="h-4 w-4 mr-1.5" />Confirmar Pago
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => setRejectDialogOpen(true)}>
+                        <X className="h-4 w-4 mr-1.5" />Rechazar Pago
+                      </Button>
+                    </>
+                  )}
+                  {(selectedOrder.status === 'draft' || selectedOrder.status === 'placed') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCancelOrder(selectedOrder.id)}
+                      disabled={cancelOrderWithRestore.isPending}
+                    >
+                      {cancelOrderWithRestore.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <XCircle className="h-4 w-4 mr-1.5" />}
+                      Cancelar
+                    </Button>
                   )}
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Fecha</p>
-                  <p className="text-sm">{format(new Date(selectedOrder.created_at), "dd MMMM yyyy, HH:mm", { locale: es })}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Método de Pago</p>
-                  {getPaymentMethodBadge(selectedOrder.payment_method)}
-                </div>
-                {getBuyerInfo(selectedOrder).address && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Dirección</p>
-                    <p className="text-sm">{getBuyerInfo(selectedOrder).address}</p>
-                  </div>
-                )}
               </div>
-              {(selectedOrder.metadata as Record<string, any>)?.payment_reference && (
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground">Referencia de pago del cliente:</p>
-                  <p className="font-mono text-sm">{(selectedOrder.metadata as Record<string, any>).payment_reference}</p>
-                </div>
-              )}
-              <div>
-                <h4 className="font-medium mb-3">Productos</h4>
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Producto</TableHead>
-                        <TableHead className="text-center">Cant.</TableHead>
-                        <TableHead className="text-right">Precio</TableHead>
-                        <TableHead className="text-right">Subtotal</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedOrder.order_items_b2b?.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            <p className="font-medium">{item.nombre}</p>
-                            <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
-                          </TableCell>
-                          <TableCell className="text-center">{item.cantidad}</TableCell>
-                          <TableCell className="text-right">${Number(item.precio_unitario).toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">${Number(item.subtotal).toFixed(2)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-                <span className="font-medium">Total</span>
-                <span className="text-xl font-bold">${Number(selectedOrder.total_amount).toFixed(2)} {selectedOrder.currency}</span>
-              </div>
-              <div className="flex justify-end gap-2">
-                <OpenChatButton
-                  orderId={selectedOrder.id}
-                  orderType={(selectedOrder.metadata as any)?.order_type === 'b2b' ? 'b2b' : 'b2c'}
-                  orderLabel={`Pedido #${selectedOrder.id.slice(0, 8).toUpperCase()}`}
-                  navigateTo="seller"
-                  size="sm"
-                />
-                {selectedOrder.payment_status === 'pending_validation' && (
-                  <>
-                    <Button
-                      variant="default"
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => setConfirmDialogOpen(true)}
-                    >
-                      <Check className="h-4 w-4 mr-2" />Confirmar Pago
-                    </Button>
-                    <Button variant="destructive" onClick={() => setRejectDialogOpen(true)}>
-                      <X className="h-4 w-4 mr-2" />Rechazar Pago
-                    </Button>
-                  </>
-                )}
-                {(selectedOrder.status === 'draft' || selectedOrder.status === 'placed') && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleCancelOrder(selectedOrder.id)}
-                    disabled={cancelOrderWithRestore.isPending}
-                  >
-                    {cancelOrderWithRestore.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
-                    Cancelar Pedido
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
