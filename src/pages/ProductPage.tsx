@@ -52,7 +52,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
         const {
           data: sellerProduct,
           error: sellerError
-        } = await supabase.from("seller_catalog").select(`
+        } = await (supabase as any).from("seller_catalog").select(`
             *,
             store:stores!seller_catalog_seller_store_id_fkey(
               id, name, logo, whatsapp, is_active, slug
@@ -61,7 +61,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
               id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
               category:categories!products_categoria_id_fkey(id, name, slug)
             )
-          `).eq("id", catalogId).eq("is_active", true).maybeSingle();
+          `).eq("id", catalogId).eq("is_active", true).maybeSingle() as { data: any; error: any };
         
         if (sellerProduct) {
           return {
