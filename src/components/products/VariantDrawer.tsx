@@ -445,10 +445,12 @@ const VariantDrawer: React.FC = () => {
             isB2B={isB2BUser}
             variantPrices={variantPrices}
             b2cVariantPrices={b2cVariantPrices}
-            onSelectionChange={(list, qty, price) => {
+            onSelectionChange={(list, qty, price, _variant, isValid, errors) => {
               setSelections(list);
               setTotalQty(qty);
               setTotalPrice(price);
+              setIsVariantValid(isValid ?? qty > 0);
+              setValidationErrors(errors ?? []);
               // Track the first selected variant for price display
               const firstSelected = list.find((s: any) => s.quantity > 0);
               setSelectedVariantId(firstSelected ? firstSelected.variantId : null);
