@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { generateInvoicePDF } from '@/services/pdfGenerators';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
+import { useCreateReturnRequest } from '@/hooks/useOrderReturnRequests';
 import { 
   Package, 
   Clock, 
@@ -41,7 +42,7 @@ import {
   ChevronRight,
   Printer,
   FileText,
-  
+  RotateCcw,
   Boxes,
   Ship,
   Plane,
@@ -110,6 +111,10 @@ const SellerMisComprasPage = () => {
       ? rawOrders?.filter(o => o.status === 'preparing' || o.status === 'in_transit')
       : rawOrders?.filter(o => o.status === statusFilter);
   const cancelOrder = useCancelBuyerOrder();
+  const createReturnRequest = useCreateReturnRequest();
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnReasonType, setReturnReasonType] = useState('');
 
   // Get order IDs to fetch PO info
   const orderIds = useMemo(() => orders?.map(o => o.id) || [], [orders]);

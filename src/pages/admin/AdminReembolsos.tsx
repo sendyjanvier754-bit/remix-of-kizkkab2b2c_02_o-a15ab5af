@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import useRefundManagement, { RefundStatus, RefundRequest } from '@/hooks/useRefundManagement';
+import { useAdminReturnRequests, useUpdateReturnRequest, RETURN_STATUS_CONFIG } from '@/hooks/useOrderReturnRequests';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   RefreshCw, 
@@ -24,7 +26,8 @@ import {
   Ban,
   FileText,
   TrendingUp,
-  Archive
+  Archive,
+  RotateCcw
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -83,7 +86,15 @@ const AdminReembolsos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(null);
   const [dialogType, setDialogType] = useState<'review' | 'approve' | 'reject' | 'process' | 'complete' | null>(null);
-  
+  const [activeTab, setActiveTab] = useState<'refunds' | 'returns'>('refunds');
+
+  // Return requests state
+  const [returnSearchTerm, setReturnSearchTerm] = useState('');
+  const [returnActionItem, setReturnActionItem] = useState<any | null>(null);
+  const [returnActionType, setReturnActionType] = useState<'accept' | 'reject' | null>(null);
+  const [returnActionNotes, setReturnActionNotes] = useState('');
+  const [returnAmountApproved, setReturnAmountApproved] = useState('');
+
   // Form states
   const [notes, setNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
@@ -95,6 +106,17 @@ const AdminReembolsos = () => {
   const statusFilters = statusFilter === 'all' ? undefined : statusFilter;
   const { data: refunds, isLoading } = refundManagement.useRefunds({ status: statusFilters });
   const { data: stats } = refundManagement.useRefundStats();
+
+  // Fetch return requests
+  const { data: returnRequests = [], isLoading: returnsLoading } = useAdminReturnRequests();
+  const updateReturn = useUpdateReturnRequest();
+
+  const filteredReturnRequests = returnRequests.filter(r => {
+    if (!returnSearchTerm) return true;
+    return r.order_id.toLowerCase().includes(returnSearchTerm.toLowerCase())
+      || r.reason.toLowerCase().includes(returnSearchTerm.toLowerCase());
+  });
+  const pendingReturnCount = returnRequests.filter(r => r.status === 'pending' || r.status === 'under_mediation').length;
 
   // Filter by search term
   const filteredRefunds = refunds?.filter(refund => {
@@ -187,6 +209,7 @@ const AdminReembolsos = () => {
 
   return (
     <AdminLayout title="Gestión de Reembolsos" subtitle="Sistema de estados: pending → under_review → approved → processing → completed">
+
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -605,6 +628,84 @@ const AdminReembolsos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* ── Solicitudes de Devolución ── */}
+      <Card className="bg-card border-border mt-6">
+        <CardContent className="p-0">
+          <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-2">
+            <RotateCcw className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-bold text-foreground">Solicitudes de Devolución</h2>
+            {pendingReturnCount > 0 && <Badge className="bg-destructive text-destructive-foreground text-xs">{pendingReturnCount}</Badge>}
+          </div>
+          <div className="px-4 py-3 border-b border-border">
+            <Input placeholder="Buscar por ID de pedido…" value={returnSearchTerm} onChange={e => setReturnSearchTerm(e.target.value)} className="max-w-xs h-8 text-sm" />
+          </div>
+          {returnsLoading ? (
+            <div className="py-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+          ) : filteredReturnRequests.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">No hay solicitudes de devolución</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead>Pedido</TableHead><TableHead>Tipo</TableHead><TableHead>Motivo</TableHead>
+                    <TableHead>Monto</TableHead><TableHead className="text-center">Estado</TableHead><TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredReturnRequests.map((ret) => {
+                    const cfg = RETURN_STATUS_CONFIG[ret.status as keyof typeof RETURN_STATUS_CONFIG];
+                    return (
+                      <TableRow key={ret.id} className="border-border hover:bg-muted/50">
+                        <TableCell className="font-mono text-xs">{ret.order_id.slice(0,8).toUpperCase()}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">{ret.order_type.toUpperCase()}</Badge></TableCell>
+                        <TableCell><p className="text-xs font-medium">{ret.reason_type || '—'}</p><p className="text-xs text-muted-foreground line-clamp-1">{ret.reason}</p></TableCell>
+                        <TableCell className="text-xs">{ret.amount_requested ? `$${ret.amount_requested}` : '—'}</TableCell>
+                        <TableCell className="text-center"><Badge variant="outline" className={`${cfg?.color} border-current text-xs`}>{cfg?.label}</Badge></TableCell>
+                        <TableCell className="text-right">
+                          {(ret.status === 'pending' || ret.status === 'under_mediation') && (
+                            <div className="flex gap-1 justify-end">
+                              <Button size="sm" variant="outline" className="h-7 text-xs text-green-600 border-green-300 hover:bg-green-50"
+                                onClick={() => { setReturnActionItem(ret); setReturnActionType('accept'); setReturnAmountApproved(ret.amount_requested?.toString() || ''); setReturnActionNotes(''); }}>Aceptar</Button>
+                              <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50"
+                                onClick={() => { setReturnActionItem(ret); setReturnActionType('reject'); setReturnActionNotes(''); }}>Rechazar</Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!returnActionItem} onOpenChange={() => setReturnActionItem(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>{returnActionType === 'accept' ? 'Aceptar Devolución' : 'Rechazar Devolución'}</DialogTitle></DialogHeader>
+          <div className="space-y-3 mt-2">
+            {returnActionType === 'accept' && (
+              <div><label className="text-xs text-muted-foreground">Monto aprobado</label>
+                <Input type="number" value={returnAmountApproved} onChange={e => setReturnAmountApproved(e.target.value)} className="mt-1 h-9" /></div>
+            )}
+            <div><label className="text-xs text-muted-foreground">{returnActionType === 'reject' ? 'Razón del rechazo *' : 'Notas admin'}</label>
+              <Textarea value={returnActionNotes} onChange={e => setReturnActionNotes(e.target.value)} className="mt-1 min-h-[70px]" /></div>
+          </div>
+          <DialogFooter className="gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => setReturnActionItem(null)}>Cancelar</Button>
+            <Button size="sm" disabled={updateReturn.isPending} onClick={async () => {
+              if (!returnActionItem) return;
+              await updateReturn.mutateAsync({ id: returnActionItem.id, status: returnActionType === 'accept' ? 'accepted' : 'rejected', admin_notes: returnActionNotes, amount_approved: returnActionType === 'accept' && returnAmountApproved ? parseFloat(returnAmountApproved) : undefined, resolved_at: new Date().toISOString() });
+              setReturnActionItem(null);
+            }}>
+              {updateReturn.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </AdminLayout>
   );
 };
