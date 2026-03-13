@@ -407,11 +407,13 @@ const VariantSelectorB2B = ({
     <div className="space-y-4">
       {/* Render selector for each attribute type */}
       {orderedAttributeTypes.map((type, index) => {
-        const config = ATTRIBUTE_CONFIG[type] || { icon: Package, displayName: type, order: 99 };
+        const normalizedType = normalizeAttributeType(type);
+        const config = ATTRIBUTE_CONFIG[normalizedType] || { icon: Package, displayName: type, order: 99 };
         const Icon = config.icon;
         const allOptions = attributeOptions[type] || [];
         const availableOptions = getAvailableOptions(type);
         const selectedValue = selectedAttributes[type];
+        const isColorType = normalizedType === 'color';
         
         // Only show if previous types are selected (or this is the first type)
         const previousTypesSelected = orderedAttributeTypes.slice(0, index).every(t => selectedAttributes[t]);
