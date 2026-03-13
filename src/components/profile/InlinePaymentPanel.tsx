@@ -210,10 +210,14 @@ function ConfigDialog({
   const [form, setForm] = useState<FormState>(existing ? profileToForm(existing) : emptyForm());
   const [saving, setSaving] = useState(false);
 
-  // Reset when dialog opens
-  useState(() => {
+  // Reset form whenever the dialog opens with a different method/profile
+  // We use a key on the Dialog instead (see parent), but also sync here
+  const currentKey = `${adminMethod?.id ?? ""}:${existing?.id ?? "new"}`;
+  const [lastKey, setLastKey] = useState(currentKey);
+  if (currentKey !== lastKey) {
+    setLastKey(currentKey);
     setForm(existing ? profileToForm(existing) : emptyForm());
-  });
+  }
 
   if (!adminMethod) return null;
   const isEditing = !!existing;
