@@ -21,9 +21,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Package, ShoppingBag, Truck, CheckCircle, XCircle, Clock, ExternalLink, ChevronRight, ArrowLeft, MapPin, Calendar, RefreshCw, AlertTriangle, Loader2, Ban, DollarSign, Plane, Ship, Warehouse, PackageCheck, Boxes, Store } from "lucide-react";
+import { Package, ShoppingBag, Truck, CheckCircle, XCircle, Clock, ExternalLink, ChevronRight, ArrowLeft, MapPin, Calendar, RefreshCw, AlertTriangle, Loader2, Ban, DollarSign, Plane, Ship, Warehouse, PackageCheck, Boxes, Store, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { PaymentProofUpload } from "@/components/payments/PaymentProofUpload";
 const refundStatusConfig: Record<RefundStatus, {
   label: string;
   color: string;
