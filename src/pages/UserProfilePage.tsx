@@ -251,14 +251,19 @@ export function UserProfilePage() {
             )}
           </div>
 
-          {/* Servicio al Cliente group */}
+          {/* Centro de Ayuda group */}
           <div className="border-b border-border">
-            <button onClick={() => toggleGroup("Servicio al Cliente")}
+            <button onClick={() => toggleGroup("Centro de Ayuda")}
               className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
-              <span className="text-sm font-semibold text-foreground">Servicio al Cliente</span>
-              <span className="text-muted-foreground text-xs">{expandedGroups["Servicio al Cliente"] ? "−" : "+"}</span>
+              <span className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                Centro de Ayuda
+                {unreadChats > 0 && (
+                  <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{unreadChats}</Badge>
+                )}
+              </span>
+              <span className="text-muted-foreground text-xs">{expandedGroups["Centro de Ayuda"] ? "−" : "+"}</span>
             </button>
-            {expandedGroups["Servicio al Cliente"] && (
+            {expandedGroups["Centro de Ayuda"] && (
               <ul className="pb-1">
                 <li>
                   <button
@@ -269,11 +274,16 @@ export function UserProfilePage() {
                   </button>
                 </li>
                 <li>
-                  <SupportMenuPopover>
-                    <button className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
-                      <HelpCircle className="w-3.5 h-3.5" /> Centro de ayuda
-                    </button>
-                  </SupportMenuPopover>
+                  <button
+                    onClick={() => navigate("/soporte")}
+                    className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span className="flex-1 text-left">Live Chat</span>
+                    {unreadChats > 0 && (
+                      <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{unreadChats}</Badge>
+                    )}
+                  </button>
                 </li>
               </ul>
             )}
