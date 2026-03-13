@@ -431,7 +431,7 @@ const VariantSelectorB2B = ({
               </Badge>
             </h4>
 
-            {type === 'color' ? (
+            {isColorType ? (
               // Color swatches - with IMAGE THUMBNAILS support
               <div className="flex flex-wrap gap-2">
                 {allOptions.map(value => {
