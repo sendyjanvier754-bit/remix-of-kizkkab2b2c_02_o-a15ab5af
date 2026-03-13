@@ -35,6 +35,9 @@ import {
   RotateCcw,
   BarChart2,
   TrendingUp,
+  FileText,
+  Store,
+  Info,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
