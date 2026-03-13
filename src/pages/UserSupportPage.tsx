@@ -149,7 +149,7 @@ export default function UserSupportPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold leading-tight">Live Chat</h1>
-                <p className="text-sm text-muted-foreground">Centro de Ayuda — escríbenos, te respondemos a la brevedad.</p>
+                
               </div>
             </div>
             {newChatButton}
