@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCreateChat } from '@/hooks/useSupportChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import GlobalHeader from '@/components/layout/GlobalHeader';
 import {
   Dialog,
   DialogContent,
@@ -129,49 +130,56 @@ export default function UserSupportPage() {
     );
   }
 
-  // Desktop: side-by-side layout
+  // Desktop: layout con GlobalHeader igual que /perfil
   return (
-    <PageWrapper seo={{ title: 'Live Chat - Soporte', description: 'Chatea con nuestro equipo de soporte' }}>
-      {/* Encabezado de página */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-primary/10">
-            <MessageCircle className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold leading-tight">Live Chat</h1>
-            <p className="text-sm text-muted-foreground">Centro de Ayuda — escríbenos, te respondemos a la brevedad.</p>
-          </div>
-        </div>
-        {newChatButton}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-14rem)]">
-        <div className="lg:col-span-4 xl:col-span-3">
-          <ChatList
-            onSelectChat={setSelectedChatId}
-            selectedChatId={selectedChatId}
-            isStaff={false}
-          />
-        </div>
-        <div className="lg:col-span-8 xl:col-span-9">
-          {selectedChatId ? (
-            <ChatWindow
-              chatId={selectedChatId}
-              isStaff={false}
-              onClose={() => setSelectedChatId(null)}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center rounded-xl border border-dashed border-border bg-card">
-              <div className="text-center">
-                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-muted-foreground text-sm">Selecciona un chat o crea uno nuevo</p>
-                <Button size="sm" className="mt-4 gap-1" onClick={() => setNewChatOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  Nuevo chat
-                </Button>
+    <PageWrapper seo={{ title: 'Live Chat - Centro de Ayuda', description: 'Chatea con nuestro equipo de soporte' }}>
+      <div className="min-h-screen bg-muted/30">
+        <GlobalHeader />
+
+        <div className="max-w-[1200px] mx-auto px-4 py-6">
+          {/* Encabezado de página */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <MessageCircle className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold leading-tight">Live Chat</h1>
+                <p className="text-sm text-muted-foreground">Centro de Ayuda — escríbenos, te respondemos a la brevedad.</p>
               </div>
             </div>
-          )}
+            {newChatButton}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-16rem)]">
+            <div className="lg:col-span-4 xl:col-span-3">
+              <ChatList
+                onSelectChat={setSelectedChatId}
+                selectedChatId={selectedChatId}
+                isStaff={false}
+              />
+            </div>
+            <div className="lg:col-span-8 xl:col-span-9">
+              {selectedChatId ? (
+                <ChatWindow
+                  chatId={selectedChatId}
+                  isStaff={false}
+                  onClose={() => setSelectedChatId(null)}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center rounded-xl border border-dashed border-border bg-card">
+                  <div className="text-center">
+                    <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                    <p className="text-muted-foreground text-sm">Selecciona un chat o crea uno nuevo</p>
+                    <Button size="sm" className="mt-4 gap-1" onClick={() => setNewChatOpen(true)}>
+                      <Plus className="h-4 w-4" />
+                      Nuevo chat
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
