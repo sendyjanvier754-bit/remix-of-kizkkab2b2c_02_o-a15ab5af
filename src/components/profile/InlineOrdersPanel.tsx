@@ -560,6 +560,14 @@ export const InlineOrdersPanel = () => {
   const { data: b2cOrdersRaw = [], isLoading: isLoadingB2C } = useBuyerB2COrders();
   const cancelMutation = useCancelBuyerOrder();
 
+  // Fetch user's return requests to build a map by order_id
+  const { data: myReturns = [] } = useMyReturnRequests();
+  const returnStatusByOrderId = useMemo(() => {
+    const map: Record<string, string> = {};
+    myReturns.forEach(r => { map[r.order_id] = r.status; });
+    return map;
+  }, [myReturns]);
+
   // Normalize B2C → BuyerOrder
   const normalizedB2C: BuyerOrder[] = useMemo(() =>
     b2cOrdersRaw.map((o: BuyerB2COrder) => ({
