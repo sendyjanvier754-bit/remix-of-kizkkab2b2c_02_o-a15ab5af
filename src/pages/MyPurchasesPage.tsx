@@ -417,6 +417,32 @@ const OrderDetailDialog = ({
             </Card>
           )}
 
+          {/* Payment Proof Upload - for B2C pending_validation orders */}
+          {!isB2B && order.payment_status === 'pending_validation' && order.payment_method !== 'stripe' && (
+            <Card className="border-amber-200 bg-amber-50/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2 text-amber-700">
+                  <Upload className="h-5 w-5" />
+                  Comprobante de Pago
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-sm text-amber-700">
+                  Sube el recibo o captura de tu pago por{' '}
+                  <strong className="capitalize">{order.payment_method}</strong> para que el admin pueda verificarlo.
+                </p>
+                <PaymentProofUpload
+                  orderId={order.id}
+                  existingUrl={(order.metadata as any)?.payment_proof_url}
+                  orderTable="orders_b2c"
+                  onUploaded={() => {
+                    // Refetch B2C orders to reflect new proof
+                  }}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Tracking Section */}
           {(order.status === 'shipped' || order.status === 'delivered') && trackingNumber && <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
               <CardHeader className="pb-2">
