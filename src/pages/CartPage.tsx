@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ShoppingCart, Trash2, Package, MessageCircle, Banknote, Wallet, DollarSign, X, Loader2 } from "lucide-react";
+import { ShoppingCart, Trash2, Package, MessageCircle, Banknote, Wallet, DollarSign, X, Loader2, Check, Palette, Ruler, Minus, Plus } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useB2CCartItems, B2CCartItem } from "@/hooks/useB2CCartItems";
 import { useActiveB2COrder } from "@/hooks/useB2COrders";
@@ -27,9 +27,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QuantitySelector } from "@/components/ui/quantity-selector";
-import { useB2CCatalogVariants } from "@/hooks/useB2CCatalogVariants";
+import { useB2CCatalogVariants, B2CCatalogVariant } from "@/hooks/useB2CCatalogVariants";
 import { addItemB2C } from "@/services/cartService";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+
+// ── B2C Cart Variant Drawer helpers ───────────────────────────────────────────
+const ATTR_CONFIG: Record<string, { icon: typeof Palette; displayName: string; order: number }> = {
+  color:  { icon: Palette, displayName: 'Color', order: 1 },
+  size:   { icon: Ruler,   displayName: 'Talla', order: 2 },
+  talla:  { icon: Ruler,   displayName: 'Talla', order: 2 },
+  age:    { icon: Ruler,   displayName: 'Edad',  order: 3 },
+};
+
+const COLOR_HEX: Record<string, string> = {
+  blanco: '#FFFFFF', white: '#FFFFFF', negro: '#000000', black: '#000000',
+  rojo: '#EF4444', red: '#EF4444', azul: '#3B82F6', blue: '#3B82F6',
+  verde: '#22C55E', green: '#22C55E', amarillo: '#EAB308', yellow: '#EAB308',
+  rosa: '#EC4899', pink: '#EC4899', morado: '#A855F7', purple: '#A855F7',
+  naranja: '#F97316', orange: '#F97316', beige: '#D4B896', marron: '#8B4513',
+  brown: '#8B4513', navy: '#1E3A5A', gris: '#6B7280', gray: '#6B7280',
+  gold: '#FFD700', silver: '#C0C0C0', cream: '#FFFDD0', coral: '#FF7F50',
+};
+
+function getHex(name: string): string | null {
+  return COLOR_HEX[name.toLowerCase()] ?? null;
+}
 
 const CartPage = () => {
   const { t } = useTranslation();
