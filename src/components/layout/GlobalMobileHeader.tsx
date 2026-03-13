@@ -356,9 +356,9 @@ const GlobalMobileHeader = ({
           onClick={(e) => {
             e.preventDefault();
             if (user) {
-              navigate('/admin/soporte-chat');
+              navigate('/soporte');
             } else {
-              sessionStorage.setItem('post_login_redirect', '/admin/soporte-chat');
+              sessionStorage.setItem('post_login_redirect', '/soporte');
               navigate('/cuenta');
             }
           }}
