@@ -226,10 +226,10 @@ export const B2CPaymentStateOverlay = ({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5 text-green-600" />
-                Confirmar Pago
+                Enviar Comprobante de Pago
               </DialogTitle>
               <DialogDescription>
-                Sube el comprobante de tu pago (captura de pantalla o PDF). El admin lo verificará y confirmará tu pedido.
+                Sube el comprobante de tu pago (captura de pantalla o PDF) y la referencia de la transacción. El admin lo verificará y confirmará tu pedido.
               </DialogDescription>
             </DialogHeader>
 
@@ -246,8 +246,15 @@ export const B2CPaymentStateOverlay = ({
                   orderId={order.id}
                   existingUrl={proofUrl}
                   orderTable="orders_b2c"
+                  showReferenceInput
                   onUploaded={(url) => setProofUrl(url)}
                 />
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-xs text-amber-700">
+                  <strong>Nota:</strong> Tu pago permanecerá como «pendiente de validación» hasta que el administrador lo confirme. Recibirás una notificación cuando sea aprobado.
+                </p>
               </div>
             </div>
 
@@ -269,7 +276,7 @@ export const B2CPaymentStateOverlay = ({
                 ) : (
                   <CheckCircle className="h-4 w-4 mr-2" />
                 )}
-                Confirmar Pago
+                Enviar Comprobante
               </Button>
             </DialogFooter>
           </DialogContent>

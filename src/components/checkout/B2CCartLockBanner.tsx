@@ -90,6 +90,7 @@ export const B2CCartLockBanner = () => {
             orderId={activeOrder.id}
             existingUrl={proofUrl}
             orderTable="orders_b2c"
+            showReferenceInput
             onUploaded={() => {
               queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
               refreshActiveOrder();
