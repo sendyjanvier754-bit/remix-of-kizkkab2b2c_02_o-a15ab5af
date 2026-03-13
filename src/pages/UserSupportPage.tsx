@@ -132,8 +132,17 @@ export default function UserSupportPage() {
   // Desktop: side-by-side layout
   return (
     <PageWrapper seo={{ title: 'Soporte - Live Chat', description: 'Chatea con nuestro equipo de soporte' }}>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Mis chats de soporte</h1>
+      {/* Encabezado de página */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/10">
+            <MessageCircle className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold leading-tight">Soporte</h1>
+            <p className="text-sm text-muted-foreground">Escríbenos, te respondemos a la brevedad.</p>
+          </div>
+        </div>
         {newChatButton}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-14rem)]">
