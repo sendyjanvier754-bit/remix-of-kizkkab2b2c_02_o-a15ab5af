@@ -6304,6 +6304,33 @@ export type Database = {
           },
         ]
       }
+      shared_carts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          items: Json
+          share_code: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          items: Json
+          share_code?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          items?: Json
+          share_code?: string
+        }
+        Relationships: []
+      }
       shipment_tracking: {
         Row: {
           carrier: string | null
