@@ -1177,7 +1177,7 @@ const CheckoutPage = () => {
                 onClick={handlePlaceOrder}
                 disabled={
                   isProcessing || 
-                  (deliveryMethod === 'address' && (!selectedAddress || addresses.length === 0 || !selectedCommune)) ||
+                  (deliveryMethod === 'address' && (!selectedAddress || addresses.length === 0)) ||
                   (deliveryMethod === 'pickup' && (!selectedPickupPoint || pickupPoints.length === 0))
                 }
                 className="w-full mt-6 bg-[#071d7f] hover:bg-[#0a2a9f]"

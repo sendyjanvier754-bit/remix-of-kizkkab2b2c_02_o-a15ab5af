@@ -227,14 +227,14 @@ export const useStoreReviews = (storeId: string | undefined) => {
     queryFn: async () => {
       if (!storeId) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("store_reviews")
         .select("*")
         .eq("store_id", storeId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as StoreReview[];
+      return (data || []) as unknown as StoreReview[];
     },
     enabled: !!storeId,
   });

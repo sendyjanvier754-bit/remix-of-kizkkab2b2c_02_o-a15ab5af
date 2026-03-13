@@ -905,7 +905,7 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-badges'],
       queryFn: async () => {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_badges')
           .select('*')
           .eq('is_active', true)

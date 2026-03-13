@@ -151,6 +151,7 @@ export const useB2CCartItems = () => {
                 total_price: currentSellerPrice * item.quantity,
               })
               .eq('id', item.id)
+              .then(() => {})
           );
         }
 
