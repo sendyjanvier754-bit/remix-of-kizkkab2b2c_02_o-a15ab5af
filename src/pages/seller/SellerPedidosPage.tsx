@@ -275,12 +275,17 @@ const SellerPedidosPage = () => {
           </Card>
         )}
 
-        {/* Main Tabs: Pedidos | Mis Ventas | Devoluciones */}
+        {/* Main Tabs: Pedidos B2C | Mis Ventas | Devoluciones */}
         <Tabs defaultValue="orders" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="orders" className="gap-1.5">
-              <ShoppingCart className="h-3.5 w-3.5" />
-              Pedidos
+              <Store className="h-3.5 w-3.5" />
+              Pedidos B2C
+              {pendingValidationOrders.length > 0 && (
+                <Badge className="h-4 min-w-4 px-1 text-[9px] bg-amber-500 text-white ml-1">
+                  {pendingValidationOrders.length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="ventas" className="gap-1.5">
               <BarChart2 className="h-3.5 w-3.5" />
