@@ -41,9 +41,18 @@ const REASON_TYPES = [
   { value: "other",        label: "Otro motivo" },
 ];
 
-const EMPTY_FORM = {
+interface FormState {
+  order_id: string;
+  order_type: 'b2b' | 'b2c';
+  seller_id: string;
+  reason_type: string;
+  reason: string;
+  amount_requested: string;
+}
+
+const EMPTY_FORM: FormState = {
   order_id: "",
-  order_type: "b2c" as const,
+  order_type: "b2c",
   seller_id: "",
   reason_type: "",
   reason: "",
@@ -54,7 +63,7 @@ export function InlineReturnsPanel() {
   const { data: returns = [], isLoading } = useMyReturnRequests();
   const createReturn = useCreateReturnRequest();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState<typeof EMPTY_FORM & { order_type: 'b2b' | 'b2c' }>(EMPTY_FORM);
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const handleSubmit = async () => {
     if (!form.order_id || !form.reason_type || !form.reason) return;
