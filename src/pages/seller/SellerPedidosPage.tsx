@@ -108,17 +108,24 @@ const SellerPedidosPage = () => {
 
   const pendingValidationOrders = orders?.filter(o => o.payment_status === 'pending_validation') || [];
 
-  // ── Product sales summary ─────────────────────────────────────────────────
+  // ── Product sales summary (reads from B2C order items) ───────────────────
   const productSales = useMemo(() => {
     const map: Record<string, { sku: string; nombre: string; qty: number; revenue: number; image?: string }> = {};
     (orders || []).forEach(order => {
-      (order.order_items_b2b || []).forEach(item => {
-        const key = item.sku;
+      const items = (order as any).order_items_b2c || [];
+      items.forEach((item: any) => {
+        const key = item.sku || item.product_name || item.id;
         if (!map[key]) {
-          map[key] = { sku: item.sku, nombre: item.nombre, qty: 0, revenue: 0, image: (item as any).image };
+          map[key] = {
+            sku: item.sku || '—',
+            nombre: item.product_name || item.sku || 'Producto',
+            qty: 0,
+            revenue: 0,
+            image: item.seller_catalog?.images?.[0] ?? item.image ?? undefined,
+          };
         }
-        map[key].qty += item.cantidad;
-        map[key].revenue += Number(item.subtotal);
+        map[key].qty += Number(item.quantity);
+        map[key].revenue += Number(item.total_price);
       });
     });
     return Object.values(map).sort((a, b) => b.revenue - a.revenue);
@@ -187,12 +194,13 @@ const SellerPedidosPage = () => {
   };
 
   const getBuyerInfo = (order: Order) => {
-    const metadata = order.metadata as Record<string, any> | null;
-    const shippingAddress = metadata?.shipping_address;
+    // orders_b2c stores shipping_address directly on the row (not inside metadata)
+    const shippingAddress = (order as any).shipping_address
+      || (order.metadata as Record<string, any> | null)?.shipping_address;
     return {
       name: shippingAddress?.full_name || order.buyer_profile?.full_name || 'Cliente',
       phone: shippingAddress?.phone || '',
-      address: shippingAddress ? `${shippingAddress.street_address}, ${shippingAddress.city}` : '',
+      address: shippingAddress ? `${shippingAddress.street_address || ''}, ${shippingAddress.city || ''}`.replace(/^, |, $/, '') : '',
     };
   };
 

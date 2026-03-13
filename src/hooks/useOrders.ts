@@ -112,33 +112,49 @@ export const useOrders = () => {
 
         if (!store?.id) return [];
         
-        // Get B2C orders where this seller's store has items
+        // Query orders_b2c filtered by this seller's store_id
         let query = supabase
-          .from('orders_b2b')
+          .from('orders_b2c')
           .select(`
             *,
-            order_items_b2b (*),
-            buyer_profile:profiles!orders_b2b_buyer_id_fkey (full_name, email)
+            order_items_b2c (*),
+            buyer_profile:profiles!orders_b2c_buyer_user_id_fkey (full_name, email)
           `)
-          .eq('seller_id', user.id)
-          .not('metadata->order_type', 'is', null)
+          .eq('store_id', store.id)
           .order('created_at', { ascending: false });
 
         if (filters?.paymentStatus && filters.paymentStatus !== 'all') {
           query = query.eq('payment_status', filters.paymentStatus as any);
         }
         if (filters?.status && filters.status !== 'all') {
-          query = query.eq('status', filters.status);
+          query = query.eq('status', filters.status as any);
         }
 
         const { data, error } = await query;
         if (error) throw error;
         
-        // Filter to only B2C orders
-        return (data || []).filter(o => {
-          const metadata = o.metadata as Record<string, any> | null;
-          return metadata?.order_type === 'b2c';
-        }) as Order[];
+        // Map orders_b2c rows to the Order interface shape used across the page
+        return (data || []).map((o: any) => ({
+          id: o.id,
+          seller_id: store.id,
+          buyer_id: o.buyer_user_id,
+          status: o.status as OrderStatus,
+          payment_status: o.payment_status as PaymentStatus,
+          total_amount: Number(o.total_amount),
+          total_quantity: (o.order_items_b2c || []).reduce((s: number, i: any) => s + Number(i.quantity), 0),
+          currency: o.currency || 'USD',
+          payment_method: o.payment_method,
+          notes: o.notes,
+          metadata: o.metadata,
+          created_at: o.created_at,
+          updated_at: o.updated_at,
+          shipping_address: o.shipping_address,
+          buyer_profile: o.buyer_profile,
+          // Expose B2C items under a dedicated key so the page can read them
+          order_items_b2c: o.order_items_b2c || [],
+          // Keep order_items_b2b as empty array to avoid crashes on old code paths
+          order_items_b2b: [],
+        })) as any[];
       },
       enabled: !!user?.id,
     });
@@ -571,27 +587,30 @@ export const useOrders = () => {
       queryKey: ['b2c-sales-stats', user?.id],
       queryFn: async () => {
         if (!user?.id) return null;
+
+        // Get seller's store first
+        const { data: store } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('owner_user_id', user.id)
+          .maybeSingle();
+
+        if (!store?.id) return { total: 0, pending_validation: 0, paid: 0, shipped: 0, cancelled: 0, totalRevenue: 0 };
         
         const { data, error } = await supabase
-          .from('orders_b2b')
-          .select('status, payment_status, total_amount, metadata')
-          .eq('seller_id', user.id);
+          .from('orders_b2c')
+          .select('status, payment_status, total_amount')
+          .eq('store_id', store.id);
         
         if (error) throw error;
 
-        // Filter B2C orders only
-        const b2cOrders = data.filter(o => {
-          const metadata = o.metadata as Record<string, any> | null;
-          return metadata?.order_type === 'b2c';
-        });
-
         return {
-          total: b2cOrders.length,
-          pending_validation: b2cOrders.filter(o => o.payment_status === 'pending_validation').length,
-          paid: b2cOrders.filter(o => o.status === 'paid' || o.payment_status === 'paid').length,
-          shipped: b2cOrders.filter(o => o.status === 'shipped').length,
-          cancelled: b2cOrders.filter(o => o.status === 'cancelled').length,
-          totalRevenue: b2cOrders.filter(o => o.status === 'paid' || o.status === 'shipped')
+          total: data.length,
+          pending_validation: data.filter(o => o.payment_status === 'pending_validation').length,
+          paid: data.filter(o => o.status === 'paid' || o.payment_status === 'paid').length,
+          shipped: data.filter(o => o.status === 'shipped').length,
+          cancelled: data.filter(o => o.status === 'cancelled').length,
+          totalRevenue: data.filter(o => o.status === 'paid' || o.status === 'shipped')
             .reduce((sum, o) => sum + Number(o.total_amount), 0),
         };
       },
