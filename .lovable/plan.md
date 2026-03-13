@@ -37,3 +37,11 @@ Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
 Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
 Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
 ```
+
+## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
+
+### Lo que se implementó
+1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
+2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
+3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
+4. **Routing**: Ruta pública en App.tsx
