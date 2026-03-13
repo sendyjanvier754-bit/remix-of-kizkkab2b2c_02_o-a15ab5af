@@ -186,6 +186,10 @@ const CartPage = () => {
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [showRemoveItemDialog, setShowRemoveItemDialog] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Cart selection store
   const { 
