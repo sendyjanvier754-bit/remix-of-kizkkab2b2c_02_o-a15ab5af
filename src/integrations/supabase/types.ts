@@ -7513,6 +7513,89 @@ export type Database = {
         }
         Relationships: []
       }
+      user_payment_profiles: {
+        Row: {
+          account_holder: string | null
+          account_number: string | null
+          account_type: string | null
+          admin_payment_method_id: string
+          bank_name: string | null
+          bank_swift: string | null
+          card_brand: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
+          card_last4: string | null
+          created_at: string
+          holder_name: string | null
+          id: string
+          is_default: boolean
+          label: string | null
+          metadata: Json | null
+          method_type: string
+          phone_number: string | null
+          stripe_customer_id: string | null
+          stripe_payment_method_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_holder?: string | null
+          account_number?: string | null
+          account_type?: string | null
+          admin_payment_method_id: string
+          bank_name?: string | null
+          bank_swift?: string | null
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string
+          holder_name?: string | null
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          metadata?: Json | null
+          method_type: string
+          phone_number?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_holder?: string | null
+          account_number?: string | null
+          account_type?: string | null
+          admin_payment_method_id?: string
+          bank_name?: string | null
+          bank_swift?: string | null
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string
+          holder_name?: string | null
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          metadata?: Json | null
+          method_type?: string
+          phone_number?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_payment_profiles_admin_payment_method_id_fkey"
+            columns: ["admin_payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
