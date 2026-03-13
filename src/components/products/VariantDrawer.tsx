@@ -204,7 +204,20 @@ const VariantDrawer: React.FC = () => {
     }
 
     // If there are selected variants, add each selection
-    if (selections.length > 0 && totalQty > 0) {
+    const hasVariants = productVariants && productVariants.length > 0;
+    const hasVariantSelections = selections.length > 0 && selections.some((s: any) => s.quantity > 0);
+
+    // If product has variants, require variant selection — don't allow adding without one
+    if (hasVariants && !hasVariantSelections) {
+      toast({
+        title: 'Selecciona una variante',
+        description: 'Este producto tiene variantes disponibles. Selecciona al menos una antes de agregar.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (hasVariantSelections) {
       for (const sel of selections) {
         const qty = sel.quantity || 0;
         if (qty <= 0) continue;
@@ -254,7 +267,7 @@ const VariantDrawer: React.FC = () => {
       }
       toast({ title: isB2BUser ? 'Agregado al pedido B2B' : 'Agregado al carrito', description: `${product.nombre} (${totalQty} uds)` });
     } else if (totalQty > 0) {
-      // No variant selections, fallback to single add
+      // No variants exist for this product — add directly
       if (isB2BUser) {
         await addItemB2B({
           userId: user.id,
