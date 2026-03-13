@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Package, Eye, EyeOff, Search, ArrowUpDown, TrendingUp, TrendingDown } from "lucide-react";
+import { MoreHorizontal, Edit, Package, Eye, EyeOff, Search, ArrowUpDown, TrendingUp, TrendingDown, Layers } from "lucide-react";
 import { SellerCatalogItem } from "@/hooks/useSellerCatalog";
 import { useTranslation } from "react-i18next";
+import { VariantPublicationPanel } from "./VariantPublicationPanel";
 
 interface InventarioTableProps {
   items: SellerCatalogItem[];
@@ -28,6 +29,7 @@ export function InventarioTable({ items, getMargin, onEditPrice, onAdjustStock, 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>('nombre');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [variantPanelItem, setVariantPanelItem] = useState<SellerCatalogItem | null>(null);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -163,20 +165,25 @@ export function InventarioTable({ items, getMargin, onEditPrice, onAdjustStock, 
                           <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onEditPrice(item)}>
-                            <Edit className="h-4 w-4 mr-2" />{t('inventarioTable.editPrice')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onAdjustStock(item)}>
-                            <Package className="h-4 w-4 mr-2" />{t('inventarioTable.adjustStock')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onToggleActive(item.id)}>
-                            {item.isActive ? (
-                              <><EyeOff className="h-4 w-4 mr-2" /> {t('inventarioTable.hide')}</>
-                            ) : (
-                              <><Eye className="h-4 w-4 mr-2" /> {t('inventarioTable.publish')}</>
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
+                           <DropdownMenuItem onClick={() => onEditPrice(item)}>
+                             <Edit className="h-4 w-4 mr-2" />{t('inventarioTable.editPrice')}
+                           </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => onAdjustStock(item)}>
+                             <Package className="h-4 w-4 mr-2" />{t('inventarioTable.adjustStock')}
+                           </DropdownMenuItem>
+                           {item.sourceProductId && (
+                             <DropdownMenuItem onClick={() => setVariantPanelItem(item)}>
+                               <Layers className="h-4 w-4 mr-2" />Gestionar variantes
+                             </DropdownMenuItem>
+                           )}
+                           <DropdownMenuItem onClick={() => onToggleActive(item.id)}>
+                             {item.isActive ? (
+                               <><EyeOff className="h-4 w-4 mr-2" /> {t('inventarioTable.hide')}</>
+                             ) : (
+                               <><Eye className="h-4 w-4 mr-2" /> {t('inventarioTable.publish')}</>
+                             )}
+                           </DropdownMenuItem>
+                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
@@ -190,6 +197,16 @@ export function InventarioTable({ items, getMargin, onEditPrice, onAdjustStock, 
       <p className="text-sm text-muted-foreground">
         {t('inventarioTable.ofProducts', { filtered: filteredAndSortedItems.length, total: items.length })}
       </p>
+
+      {/* Variant Publication Panel */}
+      <VariantPublicationPanel
+        open={!!variantPanelItem}
+        onOpenChange={(open) => { if (!open) setVariantPanelItem(null); }}
+        catalogId={variantPanelItem?.catalogId ?? null}
+        sourceProductId={variantPanelItem?.sourceProductId ?? null}
+        productName={variantPanelItem?.nombre ?? ""}
+        defaultPrice={variantPanelItem?.precioVenta ?? 0}
+      />
     </div>
   );
 }

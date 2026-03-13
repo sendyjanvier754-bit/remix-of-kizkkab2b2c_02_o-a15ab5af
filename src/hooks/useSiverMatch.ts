@@ -187,7 +187,7 @@ export const useSiverMatch = () => {
       queryFn: async () => {
         if (!user?.id) return null;
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_profiles')
           .select(`
             *,
@@ -210,7 +210,7 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-gestors', departmentId],
       queryFn: async () => {
-        let query = supabase
+        const baseQuery = (supabase as any)
           .from('siver_match_profiles')
           .select(`
             *,
@@ -221,11 +221,7 @@ export const useSiverMatch = () => {
           .eq('is_active', true)
           .order('average_rating', { ascending: false });
         
-        if (departmentId) {
-          query = query.eq('department_id', departmentId);
-        }
-        
-        const { data, error } = await query;
+        const { data, error } = await (departmentId ? baseQuery.eq('department_id', departmentId) : baseQuery);
         if (error) throw error;
         return data as unknown as SiverMatchProfile[];
       },
@@ -761,7 +757,7 @@ export const useSiverMatch = () => {
   // Confirm delivery (triggers wallet split)
   const confirmDelivery = useMutation({
     mutationFn: async (saleId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('siver_match_sales')
         .update({
           status: 'delivered',
@@ -772,7 +768,7 @@ export const useSiverMatch = () => {
       if (error) throw error;
       
       // Trigger wallet split
-      await supabase.rpc('process_siver_match_wallet_split', { p_sale_id: saleId });
+      await (supabase as any).rpc('process_siver_match_wallet_split', { p_sale_id: saleId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siver-match-sales'] });
@@ -790,17 +786,17 @@ export const useSiverMatch = () => {
         if (!user?.id) return [];
         
         // Get my profiles
-        const { data: profiles } = await supabase
+        const { data: profiles } = await (supabase as any)
           .from('siver_match_profiles')
           .select('id, role')
           .eq('user_id', user.id);
         
         if (!profiles?.length) return [];
         
-        const profileIds = profiles.map(p => p.id);
+        const profileIds = (profiles as any[]).map((p: any) => p.id);
         
         // Get delivered sales where I haven't reviewed yet
-        const { data: sales } = await supabase
+        const { data: sales } = await (supabase as any)
           .from('siver_match_sales')
           .select(`
             id, sale_number, gestor_id, investor_id, delivered_at,
@@ -814,8 +810,8 @@ export const useSiverMatch = () => {
         
         // Check which sales don't have my review
         const pending = [];
-        for (const sale of sales) {
-          const { data: existingReview } = await supabase
+        for (const sale of (sales as any[])) {
+          const { data: existingReview } = await (supabase as any)
             .from('siver_match_reviews')
             .select('id')
             .eq('sale_id', sale.id)
@@ -850,28 +846,30 @@ export const useSiverMatch = () => {
       if (!sale) throw new Error('Venta no encontrada');
       
       // Get my profile
-      const { data: profiles } = await supabase
+      const { data: profiles } = await (supabase as any)
         .from('siver_match_profiles')
         .select('id, role')
         .eq('user_id', user?.id);
       
-      if (!profiles?.length) throw new Error('No tienes perfil');
+      if (!(profiles as any[])?.length) throw new Error('No tienes perfil');
+      
+      const profilesArr = profiles as any[];
       
       // Determine reviewer and reviewed
-      let reviewerProfile = profiles[0];
+      let reviewerProfile = profilesArr[0];
       let reviewedId: string;
       
-      if (profiles.some(p => p.id === sale.gestor_id)) {
+      if (profilesArr.some((p: any) => p.id === (sale as any).gestor_id)) {
         // I'm the gestor, reviewing investor
-        reviewerProfile = profiles.find(p => p.id === sale.gestor_id)!;
-        reviewedId = sale.investor_id;
+        reviewerProfile = profilesArr.find((p: any) => p.id === (sale as any).gestor_id)!;
+        reviewedId = (sale as any).investor_id;
       } else {
         // I'm the investor, reviewing gestor
-        reviewerProfile = profiles.find(p => p.id === sale.investor_id)!;
-        reviewedId = sale.gestor_id;
+        reviewerProfile = profilesArr.find((p: any) => p.id === (sale as any).investor_id)!;
+        reviewedId = (sale as any).gestor_id;
       }
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('siver_match_reviews')
         .insert({
           sale_id: saleId,
@@ -903,7 +901,7 @@ export const useSiverMatch = () => {
     return useQuery({
       queryKey: ['siver-match-badges'],
       queryFn: async () => {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('siver_match_badges')
           .select('*')
           .eq('is_active', true)

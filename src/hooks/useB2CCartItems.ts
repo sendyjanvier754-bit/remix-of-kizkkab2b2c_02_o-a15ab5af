@@ -144,13 +144,15 @@ export const useB2CCartItems = () => {
         // If the seller changed the price, sync the cart row silently
         if (Math.abs(currentSellerPrice - item.unit_price) > 0.001) {
           priceUpdates.push(
-            supabase
-              .from('b2c_cart_items')
-              .update({
-                unit_price: currentSellerPrice,
-                total_price: currentSellerPrice * item.quantity,
-              })
-              .eq('id', item.id)
+            Promise.resolve(
+              supabase
+                .from('b2c_cart_items')
+                .update({
+                  unit_price: currentSellerPrice,
+                  total_price: currentSellerPrice * item.quantity,
+                })
+                .eq('id', item.id)
+            ).then(() => {})
           );
         }
 

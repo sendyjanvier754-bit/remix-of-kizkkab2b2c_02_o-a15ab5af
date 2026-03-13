@@ -262,10 +262,10 @@ const AdminLogisticsPage = () => {
   };
   
   // Filter tracking records
-  const filteredTracking = trackingRecords?.filter(t => 
-    t.hybrid_tracking_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredTracking = (trackingRecords as any[])?.filter((t: any) => 
+    t.hybrid_tracking_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.china_tracking_number.toLowerCase().includes(searchQuery.toLowerCase())
+    (t.china_tracking_number || t.china_tracking || '')?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

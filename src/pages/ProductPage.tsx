@@ -52,7 +52,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
         const {
           data: sellerProduct,
           error: sellerError
-        } = await supabase.from("seller_catalog").select(`
+        } = await (supabase as any).from("seller_catalog").select(`
             *,
             store:stores!seller_catalog_seller_store_id_fkey(
               id, name, logo, whatsapp, is_active, slug
@@ -61,7 +61,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
               id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
               category:categories!products_categoria_id_fkey(id, name, slug)
             )
-          `).eq("id", catalogId).eq("is_active", true).maybeSingle();
+          `).eq("id", catalogId).eq("is_active", true).maybeSingle() as { data: any; error: any };
         
         if (sellerProduct) {
           return {
@@ -90,7 +90,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
       const {
         data: sellerProduct,
         error: sellerError
-      } = await supabase.from("seller_catalog").select(`
+      } = await (supabase as any).from("seller_catalog").select(`
           *,
           store:stores!seller_catalog_seller_store_id_fkey(
               id, name, logo, whatsapp, is_active, slug
@@ -99,7 +99,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
             id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
-        `).eq("sku", cleanSku).eq("is_active", true).maybeSingle();
+        `).eq("sku", cleanSku).eq("is_active", true).maybeSingle() as { data: any; error: any };
       if (sellerProduct) {
         return {
           type: 'seller_catalog' as const,
@@ -122,25 +122,26 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
         error: b2bError
       } = await supabase.from("v_productos_con_precio_b2b").select("*").eq("sku_interno", cleanSku).eq("is_active", true).maybeSingle();
       if (b2bProduct) {
+        const b2bAny = b2bProduct as any;
         return {
           type: 'products' as const,
-          id: b2bProduct.id,
-          sku: b2bProduct.sku_interno,
-          nombre: b2bProduct.nombre,
-          descripcion: b2bProduct.descripcion_larga || b2bProduct.descripcion_corta,
-          precio_venta: b2bProduct.precio_b2b,
-          precio_costo: b2bProduct.costo_base_excel,
-          stock: b2bProduct.stock_fisico,
-          images: b2bProduct.galeria_imagenes || (b2bProduct.imagen_principal ? [b2bProduct.imagen_principal] : []),
+          id: b2bAny.id,
+          sku: b2bAny.sku_interno,
+          nombre: b2bAny.nombre,
+          descripcion: b2bAny.descripcion_larga || b2bAny.descripcion_corta,
+          precio_venta: b2bAny.precio_b2b,
+          precio_costo: b2bAny.costo_base_excel,
+          stock: b2bAny.stock_fisico,
+          images: b2bAny.galeria_imagenes || (b2bAny.imagen_principal ? [b2bAny.imagen_principal] : []),
           store: null,
           source_product: {
-            id: b2bProduct.id,
-            categoria_id: b2bProduct.categoria_id,
-            precio_mayorista: b2bProduct.costo_base_excel,
-            precio_sugerido_venta: b2bProduct.precio_b2b,
-            moq: b2bProduct.moq,
-            stock_fisico: b2bProduct.stock_fisico,
-            category: b2bProduct.category
+            id: b2bAny.id,
+            categoria_id: b2bAny.categoria_id,
+            precio_mayorista: b2bAny.costo_base_excel,
+            precio_sugerido_venta: b2bAny.precio_b2b,
+            moq: b2bAny.moq,
+            stock_fisico: b2bAny.stock_fisico,
+            category: b2bAny.category
           }
         };
       }

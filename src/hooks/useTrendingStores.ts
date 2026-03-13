@@ -11,10 +11,10 @@ export interface TrendingStoreProduct {
 
 export interface StoreReview {
   id: string;
-  user_id: string;
+  user_id?: string;
   rating: number;
   comment: string | null;
-  is_anonymous: boolean;
+  is_anonymous?: boolean;
   created_at: string;
   user_name?: string;
 }
@@ -66,7 +66,7 @@ export const useTrendingStores = (limit = 5) => {
             .eq("store_id", store.id);
 
           // Fetch most recent review with user profile
-          const { data: reviews } = await supabase
+          const { data: reviews } = await (supabase as any)
             .from("store_reviews")
             .select("id, user_id, comment, is_anonymous, created_at")
             .eq("store_id", store.id)
@@ -76,8 +76,9 @@ export const useTrendingStores = (limit = 5) => {
 
           // Get user name for review if not anonymous
           let recentReview: TrendingStore["recentReview"] = null;
-          if (reviews && reviews.length > 0) {
-            const review = reviews[0];
+          const reviewsArr = (reviews || []) as any[];
+          if (reviewsArr.length > 0) {
+            const review = reviewsArr[0];
             let authorName = "Usuario";
             
             if (!review.is_anonymous) {
@@ -226,14 +227,14 @@ export const useStoreReviews = (storeId: string | undefined) => {
     queryFn: async () => {
       if (!storeId) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("store_reviews")
         .select("*")
         .eq("store_id", storeId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as StoreReview[];
+      return (data || []) as unknown as StoreReview[];
     },
     enabled: !!storeId,
   });
