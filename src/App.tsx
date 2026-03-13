@@ -158,6 +158,7 @@ const AppContent = () => {
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />
             <Route path="/busqueda" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />
             <Route path="/soporte" element={<ProtectedRoute><LazyRoute><UserSupportPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/notificaciones" element={<ProtectedRoute><LazyRoute><UserNotificationsPage /></LazyRoute></ProtectedRoute>} />
             
             {/* ========== LEGAL & INFO PAGES ========== */}
             <Route path="/terminos" element={<LazyRoute><TermsPage /></LazyRoute>} />
