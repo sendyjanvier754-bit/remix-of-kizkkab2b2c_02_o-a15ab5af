@@ -3011,6 +3011,69 @@ export type Database = {
           },
         ]
       }
+      order_return_requests: {
+        Row: {
+          admin_notes: string | null
+          amount_approved: number | null
+          amount_requested: number | null
+          buyer_id: string
+          created_at: string | null
+          id: string
+          order_id: string
+          order_type: string
+          reason: string
+          reason_type: string | null
+          resolution_type: string | null
+          resolved_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          seller_id: string | null
+          seller_notes: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_approved?: number | null
+          amount_requested?: number | null
+          buyer_id: string
+          created_at?: string | null
+          id?: string
+          order_id: string
+          order_type: string
+          reason: string
+          reason_type?: string | null
+          resolution_type?: string | null
+          resolved_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seller_id?: string | null
+          seller_notes?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_approved?: number | null
+          amount_requested?: number | null
+          buyer_id?: string
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          order_type?: string
+          reason?: string
+          reason_type?: string | null
+          resolution_type?: string | null
+          resolved_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seller_id?: string | null
+          seller_notes?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       orders_b2b: {
         Row: {
           admin_notes: string | null
