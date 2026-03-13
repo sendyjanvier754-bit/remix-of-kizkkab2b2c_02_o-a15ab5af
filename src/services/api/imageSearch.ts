@@ -59,5 +59,5 @@ const mockSearch = async (): Promise<Product[]> => {
     .eq('is_active', true)
     .limit(8);
     
-  return (products?.sort(() => 0.5 - Math.random()) || []) as Product[];
+  return (products?.sort(() => 0.5 - Math.random()) || []) as unknown as Product[];
 };
