@@ -54,7 +54,7 @@ export function InlineReturnsPanel() {
   const { data: returns = [], isLoading } = useMyReturnRequests();
   const createReturn = useCreateReturnRequest();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState<typeof EMPTY_FORM & { order_type: 'b2b' | 'b2c' }>(EMPTY_FORM);
 
   const handleSubmit = async () => {
     if (!form.order_id || !form.reason_type || !form.reason) return;
