@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   User, ShoppingBag, Heart, MapPin, CreditCard, Settings,
   LogOut, ChevronRight, Bell, HelpCircle, Shield, Info, Package,
-  RotateCcw, MessageCircle,
+  RotateCcw, MessageCircle, Clock, Truck, Star, Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
