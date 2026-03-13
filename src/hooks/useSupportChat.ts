@@ -145,6 +145,12 @@ export function useSupportChat(chatId: string | null) {
       updated_at: new Date().toISOString(),
     }).eq('id', chatId);
 
+    // Add as participant
+    await supabase.from('chat_participants').upsert(
+      { chat_id: chatId, user_id: user.id, role: 'staff' },
+      { onConflict: 'chat_id,user_id' }
+    );
+
     // System message
     await supabase.from('chat_messages').insert({
       chat_id: chatId,
