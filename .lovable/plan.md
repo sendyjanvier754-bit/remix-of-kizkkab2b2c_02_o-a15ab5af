@@ -1,42 +1,39 @@
+## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
+### Lo que se implementó
 
-## Plan: Fix PO linking — close expired PO only when new order arrives
+1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
+2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
+3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
+4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
+5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
+6. **Routing**: Ruta añadida en App.tsx con lazy loading
 
-### Problem
-The `check_po_auto_close_thresholds` trigger fires on every PO totals update and checks both quantity AND time. When an order is linked to an expired-by-time PO, the totals update triggers auto-close in the same transaction — order ends up in a closed PO.
+### Flujo
+1. Agente busca usuario → solicita acceso → OTP enviado como notificación
+2. Agente ingresa OTP → sesión activa 2h con timer visible
+3. Agente busca productos → agrega a borrador → configura envío
+4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
+5. Soporte multitarea con múltiples borradores
 
-### Correct behavior
-- A PO accumulates many orders normally
-- PO closes by: quantity threshold, manual close, or cron
-- **Time expiration** is only checked when a **new order arrives**: if the PO is expired, close it first, open a new one, link the order to the new one
-- Orders already in the PO stay there when it closes (that's normal)
+## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
 
-### Changes
+### Problema
+El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
 
-#### 1. SQL Migration — Update `link_order_to_market_po_on_payment`
-Before linking an order, check if the open PO's `cycle_start_at + time_interval_hours` has passed. If expired:
-- Call `close_market_po_and_open_next(v_po_id, 'auto_time_expired')`
-- Query for the new open PO
-- Link the order to the **new** PO
+### Cambios realizados
 
-This way the expired PO closes with all its existing orders intact, and the new order goes to a fresh PO.
+1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
 
-#### 2. SQL Migration — Remove time check from `check_po_auto_close_thresholds`
-Remove lines 44-52 (time threshold check). Keep only the quantity threshold check. This prevents the cascade where updating totals triggers a time-based close in the same transaction.
+2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
 
-#### 3. Data fix — Move orphaned order to active PO
-Using insert tool (data operation):
-- `UPDATE orders_b2b SET master_po_id = (PO-CB-005 id) WHERE id = '90a31c1f...'`
-- Recalculate totals for both PO-CB-004 and PO-CB-005
+3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
 
-```text
-Flow after fix:
-
-  Order 1 arrives → PO-001 open, not expired → link to PO-001 ✓
-  Order 2 arrives → PO-001 open, not expired → link to PO-001 ✓
-  Order 3 arrives → PO-001 open, not expired → link to PO-001 ✓
-  ... time passes, PO-001 expires ...
-  Order 4 arrives → PO-001 open BUT expired → close PO-001 (keeps orders 1-3) → open PO-002 → link order 4 to PO-002 ✓
-  Order 5 arrives → PO-002 open, not expired → link to PO-002 ✓
+### Flujo corregido
 ```
-
+Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
+Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
+... pasa el tiempo, PO-001 vence ...
+Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
+Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
+```
