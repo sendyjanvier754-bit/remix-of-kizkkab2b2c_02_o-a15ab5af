@@ -1,39 +1,70 @@
-## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
-### Lo que se implementó
 
-1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
-2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
-3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
-4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
-5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
-6. **Routing**: Ruta añadida en App.tsx con lazy loading
+## Plan: Compartir Carrito (Share Cart)
 
-### Flujo
-1. Agente busca usuario → solicita acceso → OTP enviado como notificación
-2. Agente ingresa OTP → sesión activa 2h con timer visible
-3. Agente busca productos → agrega a borrador → configura envío
-4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
-5. Soporte multitarea con múltiples borradores
+### Concepto
+Crear una funcionalidad para compartir el carrito via link. Al abrir el link, el receptor puede ver los productos y agregarlos a su propio carrito.
 
-## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
+### 1. Base de Datos — Nueva tabla `shared_carts`
 
-### Problema
-El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
+```sql
+CREATE TABLE public.shared_carts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  share_code text UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(6), 'hex'),
+  created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  items jsonb NOT NULL, -- snapshot of cart items
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz DEFAULT (now() + interval '7 days')
+);
 
-### Cambios realizados
+ALTER TABLE public.shared_carts ENABLE ROW LEVEL SECURITY;
 
-1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
+-- Anyone can read a shared cart (public link)
+CREATE POLICY "Anyone can view shared carts" ON public.shared_carts
+  FOR SELECT USING (true);
 
-2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
-
-3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
-
-### Flujo corregido
+-- Authenticated users can create
+CREATE POLICY "Authenticated users can create shared carts" ON public.shared_carts
+  FOR INSERT TO authenticated WITH CHECK (auth.uid() = created_by);
 ```
-Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-... pasa el tiempo, PO-001 vence ...
-Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
-Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
+
+### 2. Nueva Página — `/carrito/compartido/:shareCode`
+
+- Fetch `shared_carts` by `share_code`
+- Display items in read-only list (name, image, price, qty, variant info)
+- Button "Agregar todo a mi carrito" — loops items and calls `addItemB2C` for each
+- If expired, show message
+
+### 3. Compartir desde CartPage
+
+- Add share button (replace WhatsApp icon with `Share2` icon, or add alongside)
+- On click: create `shared_carts` row with JSON snapshot of current items → generate link `/carrito/compartido/{share_code}`
+- Show dialog/sheet with:
+  - Copyable link
+  - WhatsApp share button (opens `wa.me` with the link)
+  - Support chat share option
+
+### 4. Cambios en archivos
+
+| Archivo | Cambio |
+|---------|--------|
+| **Migration SQL** | Crear tabla `shared_carts` |
+| `src/pages/CartPage.tsx` | Agregar botón compartir (icono `Share2`), lógica para crear shared cart y mostrar dialog con link/WhatsApp |
+| `src/pages/SharedCartPage.tsx` | **Nuevo** — página para ver carrito compartido y agregar items |
+| `src/App.tsx` | Agregar ruta `/carrito/compartido/:shareCode` |
+
+### 5. Flujo
+
+```text
+Usuario en /carrito
+  → Toca botón compartir (Share2 icon)
+  → Se crea snapshot en shared_carts
+  → Dialog muestra link + botones WhatsApp/Copiar
+  → Receptor abre link
+  → Ve productos, toca "Agregar a mi carrito"
+  → Items se copian a su carrito B2C
 ```
+
+### Detalle del icono
+- El botón de WhatsApp actual en el footer del carrito móvil se cambiará por un icono de compartir (`Share2` de lucide-react) que abre el dialog de compartir con opciones (copiar link, WhatsApp, soporte).
+
