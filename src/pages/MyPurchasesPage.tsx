@@ -374,13 +374,34 @@ const OrderDetailDialog = ({
                 ) : (
                   <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
                     <Store className="h-3 w-3 mr-1" />
-                    B2C
+                    {order.metadata?.store_name || 'Tienda'}
                   </Badge>
                 )}
               </div>
             </div>
           </DialogTitle>
         </DialogHeader>
+
+        {/* Store Profile Card — B2C only */}
+        {!isB2B && order.metadata?.store_name && (
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border mt-2">
+            {order.metadata?.store_logo ? (
+              <img
+                src={order.metadata.store_logo}
+                alt={order.metadata.store_name}
+                className="h-12 w-12 rounded-full object-cover border border-border shrink-0"
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <Store className="h-6 w-6 text-primary" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-foreground truncate">{order.metadata.store_name}</p>
+              <p className="text-xs text-muted-foreground">Vendedor de este pedido</p>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6 mt-4">
           {/* PO Information Card - Show if linked to PO */}
