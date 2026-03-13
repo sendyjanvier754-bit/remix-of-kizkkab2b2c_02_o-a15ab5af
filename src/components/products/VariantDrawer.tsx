@@ -26,6 +26,8 @@ const VariantDrawer: React.FC = () => {
   const [totalQty, setTotalQty] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [variantImage, setVariantImage] = useState<string | null>(null);
+  const [isVariantValid, setIsVariantValid] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [basePriceFromDb, setBasePriceFromDb] = useState<number | null>(null);
   const [variantPrices, setVariantPrices] = useState<Record<string, number>>({});
   const [b2cVariantPrices, setB2cVariantPrices] = useState<Record<string, number>>({});
