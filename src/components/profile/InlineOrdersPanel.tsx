@@ -5,6 +5,13 @@
  *
  * Reuses the exact same data hooks, components, and logic as MyPurchasesPage.
  */
+/**
+ * InlineOrdersPanel
+ * Embeds the full orders experience (tabs, list, detail dialog, cancel dialog)
+ * directly in the /perfil desktop layout — no redirect to /mis-compras needed.
+ *
+ * Reuses the exact same data hooks, components, and logic as MyPurchasesPage.
+ */
 import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,6 +40,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OpenChatButton } from "@/components/chat/OpenChatButton";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -41,7 +50,12 @@ import {
   ChevronRight, RefreshCw, AlertTriangle, Loader2, Ban, DollarSign,
   Plane, Ship, Warehouse, PackageCheck, Boxes, Store, MapPin, Calendar, RotateCcw,
 } from "lucide-react";
-import { useMyReturnRequests, RETURN_STATUS_CONFIG } from "@/hooks/useOrderReturnRequests";
+import {
+  useMyReturnRequests,
+  useCreateReturnRequest,
+  useOrderReturnStatus,
+  RETURN_STATUS_CONFIG,
+} from "@/hooks/useOrderReturnRequests";
 
 // ── status config (mirrors MyPurchasesPage) ──────────────────────────────────
 const statusConfig: Record<BuyerOrderStatus, { label: string; color: string; icon: React.ReactNode; bgColor: string }> = {
