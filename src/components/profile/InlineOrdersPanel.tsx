@@ -39,8 +39,9 @@ import { es } from "date-fns/locale";
 import {
   Package, ShoppingBag, Truck, CheckCircle, XCircle, Clock, ExternalLink,
   ChevronRight, RefreshCw, AlertTriangle, Loader2, Ban, DollarSign,
-  Plane, Ship, Warehouse, PackageCheck, Boxes, Store, MapPin, Calendar,
+  Plane, Ship, Warehouse, PackageCheck, Boxes, Store, MapPin, Calendar, RotateCcw,
 } from "lucide-react";
+import { useMyReturnRequests, RETURN_STATUS_CONFIG } from "@/hooks/useOrderReturnRequests";
 
 // ── status config (mirrors MyPurchasesPage) ──────────────────────────────────
 const statusConfig: Record<BuyerOrderStatus, { label: string; color: string; icon: React.ReactNode; bgColor: string }> = {
