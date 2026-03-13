@@ -372,37 +372,13 @@ const SellerPedidosPage = () => {
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
-                                  {order.payment_status === 'pending_validation' && (
-                                    <>
-                                      <Button
-                                        variant="default"
-                                        size="sm"
-                                        className="bg-green-600 hover:bg-green-700"
-                                        onClick={() => {
-                                          setSelectedOrder(order);
-                                          setConfirmDialogOpen(true);
-                                        }}
-                                      >
-                                        <Check className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => {
-                                          setSelectedOrder(order);
-                                          setRejectDialogOpen(true);
-                                        }}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </>
-                                  )}
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setSelectedOrder(order)}
                                   >
                                     <Eye className="h-4 w-4" />
+
                                   </Button>
                                 </div>
                               </TableCell>
