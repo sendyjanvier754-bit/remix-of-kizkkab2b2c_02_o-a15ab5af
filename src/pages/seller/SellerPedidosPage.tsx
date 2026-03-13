@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSellerReturnRequests, useUpdateReturnRequest, RETURN_STATUS_CONFIG, ReturnStatus } from '@/hooks/useOrderReturnRequests';
 import { useOrders, OrderStatus, Order, PaymentStatus } from '@/hooks/useOrders';
 import { useAuth } from '@/hooks/useAuth';
 import { 
