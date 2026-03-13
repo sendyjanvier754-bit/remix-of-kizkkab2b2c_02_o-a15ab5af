@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import useRefundManagement, { RefundStatus, RefundRequest } from '@/hooks/useRefundManagement';
+import { useAdminReturnRequests, useUpdateReturnRequest, RETURN_STATUS_CONFIG } from '@/hooks/useOrderReturnRequests';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   RefreshCw, 
@@ -24,7 +26,8 @@ import {
   Ban,
   FileText,
   TrendingUp,
-  Archive
+  Archive,
+  RotateCcw
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
