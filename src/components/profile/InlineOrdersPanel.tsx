@@ -148,69 +148,70 @@ const OrderCard = ({
   return (
     <Card
       onClick={onClick}
-      className={`cursor-pointer hover:shadow-md transition-all border-l-4 group ${borderColor}`}
+      className={`cursor-pointer hover:shadow-md transition-all border-l-4 group ${borderColor} overflow-hidden`}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-start gap-3 flex-1">
-            <div className={`p-2.5 rounded-xl ${status.bgColor} ${status.color} shrink-0`}>
+      <CardContent className="p-3 sm:p-4">
+        {/* Mobile: stacked layout / Desktop: side-by-side */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
+            <div className={`p-2 sm:p-2.5 rounded-xl ${status.bgColor} ${status.color} shrink-0`}>
               {status.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-foreground">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-semibold text-xs sm:text-sm text-foreground">
                   Pedido #{order.id.slice(0, 8).toUpperCase()}
                 </span>
-                <Badge variant="outline" className={`${status.color} border-current text-xs`}>
+                <Badge variant="outline" className={`${status.color} border-current text-[10px] sm:text-xs px-1.5`}>
                   {status.label}
                 </Badge>
                 {isB2B ? (
-                  <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 text-xs">
-                    <Boxes className="h-3 w-3 mr-1" />B2B
+                  <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 text-[10px] sm:text-xs px-1.5">
+                    <Boxes className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5" />B2B
                   </Badge>
                 ) : (
-                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
-                    <Store className="h-3 w-3 mr-1" />B2C
+                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-[10px] sm:text-xs px-1.5">
+                    <Store className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5" />B2C
                   </Badge>
                 )}
-                {/* Return request status badge */}
                 {returnCfg && (
-                  <Badge variant="outline" className={`${returnCfg.color} border-current text-xs gap-1`}>
+                  <Badge variant="outline" className={`${returnCfg.color} border-current text-[10px] sm:text-xs gap-0.5 px-1.5`}>
                     <RotateCcw className="h-2.5 w-2.5" />
                     {returnCfg.label}
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
                 {format(new Date(order.created_at), "d 'de' MMMM, yyyy", { locale: es })}
               </p>
-              <p className="text-xs text-muted-foreground truncate mt-0.5">
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate mt-0.5 max-w-[200px] sm:max-w-none">
                 {firstItem?.nombre}{itemCount > 1 && ` y ${itemCount - 1} más`}
               </p>
               {poInfo && (
-                <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                <p className="text-[11px] sm:text-xs text-blue-600 mt-1 flex items-center gap-1">
                   <Package className="h-3 w-3" />PO: {poInfo.po_number}
                 </p>
               )}
             </div>
           </div>
-          <div className="flex items-center justify-end gap-3">
-            <div className="text-right">
-              <p className="font-bold text-sm text-foreground">
+          {/* Price + arrow */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 pl-9 sm:pl-0">
+            <div className="text-left sm:text-right">
+              <p className="font-bold text-xs sm:text-sm text-foreground">
                 {order.currency} ${order.total_amount.toLocaleString()}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 {order.total_quantity} {order.total_quantity === 1 ? 'art.' : 'arts.'}
               </p>
             </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
           </div>
         </div>
         {order.status === 'shipped' && order.metadata?.tracking_number && (
-          <div className="mt-3 pt-3 border-t flex items-center gap-2 text-xs">
-            <Truck className="h-3.5 w-3.5 text-purple-600" />
+          <div className="mt-2.5 pt-2.5 border-t flex items-center gap-2 text-[11px] sm:text-xs">
+            <Truck className="h-3.5 w-3.5 text-purple-600 shrink-0" />
             <span className="text-muted-foreground">Rastreo:</span>
-            <span className="font-medium text-purple-600">{order.metadata.tracking_number}</span>
+            <span className="font-medium text-purple-600 truncate">{order.metadata.tracking_number}</span>
           </div>
         )}
       </CardContent>
