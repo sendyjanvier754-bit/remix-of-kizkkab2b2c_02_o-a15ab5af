@@ -218,16 +218,140 @@ const OrderCard = ({
   );
 };
 
+// ── RETURN REQUEST DIALOG ─────────────────────────────────────────────────────
+const ReturnRequestDialog = ({
+  order, open, onClose, existingReturnStatus,
+}: { order: BuyerOrder | null; open: boolean; onClose: () => void; existingReturnStatus?: string | null }) => {
+  const [reason, setReason] = useState('');
+  const [reasonType, setReasonType] = useState('');
+  const [amountRequested, setAmountRequested] = useState('');
+  const createReturn = useCreateReturnRequest();
+
+  const handleSubmit = async () => {
+    if (!order || !reason.trim() || !reasonType) return;
+    const isB2B = order.metadata?.order_type === 'b2b';
+    await createReturn.mutateAsync({
+      order_id: order.id,
+      order_type: isB2B ? 'b2b' : 'b2c',
+      seller_id: order.seller_id || undefined,
+      reason,
+      reason_type: reasonType,
+      amount_requested: amountRequested ? parseFloat(amountRequested) : undefined,
+    });
+    setReason(''); setReasonType(''); setAmountRequested('');
+    onClose();
+  };
+
+  if (!order) return null;
+  if (existingReturnStatus) {
+    const cfg = RETURN_STATUS_CONFIG[existingReturnStatus as keyof typeof RETURN_STATUS_CONFIG];
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RotateCcw className="h-5 w-5" />Solicitud de Devolución
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-center space-y-3">
+            <Badge variant="outline" className={`${cfg?.color} border-current text-sm px-4 py-1.5`}>
+              {cfg?.label || existingReturnStatus}
+            </Badge>
+            <p className="text-sm text-muted-foreground">
+              Ya existe una solicitud de devolución para este pedido.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <RotateCcw className="h-5 w-5 text-amber-600" />Solicitar Devolución
+          </DialogTitle>
+          <DialogDescription>
+            Pedido #{order.id.slice(0, 8).toUpperCase()} · ${order.total_amount.toLocaleString()}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>Motivo *</Label>
+            <Select value={reasonType} onValueChange={setReasonType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona el tipo de problema" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="producto_danado">Producto dañado / defectuoso</SelectItem>
+                <SelectItem value="producto_incorrecto">Producto incorrecto recibido</SelectItem>
+                <SelectItem value="no_llegó">Pedido no llegó</SelectItem>
+                <SelectItem value="descripcion_incorrecta">No corresponde a la descripción</SelectItem>
+                <SelectItem value="calidad">Problema de calidad</SelectItem>
+                <SelectItem value="otro">Otro motivo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Descripción detallada *</Label>
+            <Textarea
+              placeholder="Describe el problema con detalle..."
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Monto a solicitar (opcional)</Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="number"
+                step="0.01"
+                className="pl-10"
+                placeholder={order.total_amount.toString()}
+                value={amountRequested}
+                onChange={e => setAmountRequested(e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Deja vacío para solicitar el monto total del pedido
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!reason.trim() || !reasonType || createReturn.isPending}
+            className="bg-amber-600 hover:bg-amber-700"
+          >
+            {createReturn.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Enviar Solicitud
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // ── DETAIL DIALOG ─────────────────────────────────────────────────────────────
 const OrderDetailDialog = ({
-  order, open, onClose, onReorder, onCancelClick, poInfo,
+  order, open, onClose, onReorder, onCancelClick, onRequestReturn, poInfo, returnStatus,
 }: {
   order: BuyerOrder | null;
   open: boolean;
   onClose: () => void;
   onReorder: (o: BuyerOrder) => void;
   onCancelClick: (o: BuyerOrder) => void;
+  onRequestReturn: (o: BuyerOrder) => void;
   poInfo?: OrderPOInfo;
+  returnStatus?: string | null;
 }) => {
   if (!order) return null;
 
@@ -238,6 +362,8 @@ const OrderDetailDialog = ({
   const trackingUrl = carrierBaseUrl ? `${carrierBaseUrl}${trackingNumber}` : "";
   const canCancel = ['placed', 'paid'].includes(order.status);
   const refundStatus = (order.metadata?.refund_status as RefundStatus) || 'none';
+  const isDelivered = order.status === 'delivered';
+  const returnCfg = returnStatus ? RETURN_STATUS_CONFIG[returnStatus as keyof typeof RETURN_STATUS_CONFIG] : null;
   const refundConfig = refundStatusConfig[refundStatus];
   const isB2B = order.metadata?.order_type === 'b2b';
 
