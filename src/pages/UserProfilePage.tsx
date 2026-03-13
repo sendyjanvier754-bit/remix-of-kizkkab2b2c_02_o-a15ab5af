@@ -79,121 +79,161 @@ export function UserProfilePage() {
   const pendingShipment = b2cOrders.filter(o => o.status === 'confirmed' || o.status === 'processing').length;
   const shipped = b2cOrders.filter(o => o.status === 'shipped' || o.status === 'in_transit').length;
 
-  // ── Mobile layout (AliExpress-style) ───────────────────────────────────────
+  // ── Mobile layout (mirrors desktop structure) ───────────────────────────────
   const MobileLayout = () => (
-    <div className="min-h-screen bg-muted/40 pb-24">
-      {/* Profile header */}
-      <div className="bg-background px-4 pt-5 pb-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="w-12 h-12 border-2 border-border shadow-sm">
-            <AvatarImage src={user?.avatar_url || undefined} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">{getInitials()}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-foreground truncate">{user?.name || "Usuario"}</h1>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <button onClick={() => navigate("/editar-perfil")} className="p-2 rounded-full hover:bg-muted transition-colors">
-              <Settings className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <button onClick={() => navigate("/notificaciones")} className="p-2 rounded-full hover:bg-muted transition-colors relative">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              {unreadChats > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
-                  {unreadChats}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-muted/30 pb-24">
 
-      {/* Mis Pedidos section */}
-      <div className="bg-background mt-2 px-4 py-3">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-foreground">Mis pedidos</h2>
-          <button onClick={() => navigate("/mis-compras")} className="text-xs text-primary flex items-center gap-0.5 font-medium">
-            Ver todo <ChevronRight className="w-3.5 h-3.5" />
+      {/* Greeting card */}
+      <div className="bg-background border-b border-border px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar className="w-11 h-11 border-2 border-border flex-shrink-0">
+              <AvatarImage src={user?.avatar_url || undefined} />
+              <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <h1 className="text-base font-bold text-foreground leading-tight truncate">
+                Hola, <span className="text-primary">{user?.name || user?.email?.split("@")[0] || "Usuario"}</span>
+              </h1>
+              <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/editar-perfil")}
+            className="text-[11px] text-primary hover:underline flex items-center gap-0.5 flex-shrink-0"
+          >
+            Editar perfil <ChevronRight className="w-3 h-3" />
           </button>
         </div>
-        <div className="grid grid-cols-5 gap-1">
-          {[
-            { icon: <Wallet className="w-6 h-6" />, label: "Pendientes de pago", count: pendingPayment },
-            { icon: <Package className="w-6 h-6" />, label: "Pendientes de envío", count: pendingShipment },
-            { icon: <Truck className="w-6 h-6" />, label: "Enviado", count: shipped },
-            { icon: <Star className="w-6 h-6" />, label: "Añadir reseñas", count: 0 },
-            { icon: <RotateCcw className="w-6 h-6" />, label: "Devoluciones", count: pendingReturns },
-          ].map((item, i) => (
-            <button
-              key={i}
-              onClick={() => i === 4 ? navigate("/mis-compras") : navigate("/mis-compras")}
-              className="flex flex-col items-center gap-1.5 py-2 relative"
-            >
-              <div className="text-muted-foreground">{item.icon}</div>
-              {item.count > 0 && (
-                <span className="absolute top-0.5 right-1/4 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
-                  {item.count}
-                </span>
-              )}
-              <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-2">{item.label}</span>
-            </button>
-          ))}
+
+        {/* Quick stats */}
+        <div className="mt-3 grid grid-cols-4 divide-x divide-border border border-border rounded-md">
+          <button
+            onClick={() => setActiveSection('orders')}
+            className={`flex flex-col items-center py-2.5 gap-0.5 transition-colors ${activeSection === 'orders' ? 'bg-primary/5' : ''}`}
+          >
+            <span className="text-lg font-bold text-foreground">{totalOrders}</span>
+            <span className="text-[10px] text-muted-foreground">Pedidos</span>
+          </button>
+          <button
+            onClick={() => setActiveSection('favorites')}
+            className={`flex flex-col items-center py-2.5 gap-0.5 transition-colors ${activeSection === 'favorites' ? 'bg-primary/5' : ''}`}
+          >
+            <span className="text-lg font-bold text-foreground">{favorites.length}</span>
+            <span className="text-[10px] text-muted-foreground">Favoritos</span>
+          </button>
+          <button
+            onClick={() => setActiveSection('returns')}
+            className={`flex flex-col items-center py-2.5 gap-0.5 transition-colors relative ${activeSection === 'returns' ? 'bg-primary/5' : ''}`}
+          >
+            <span className="text-lg font-bold text-foreground">{myReturns.length}</span>
+            <span className="text-[10px] text-muted-foreground">Devoluciones</span>
+            {pendingReturns > 0 && (
+              <span className="absolute top-1 right-2 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                {pendingReturns}
+              </span>
+            )}
+          </button>
+          <div className="flex flex-col items-center py-2.5 gap-0.5">
+            <span className="text-lg font-bold text-foreground">0</span>
+            <span className="text-[10px] text-muted-foreground">Puntos</span>
+          </div>
         </div>
       </div>
 
-      {/* Quick actions row */}
-      <div className="bg-background mt-2 px-4 py-3">
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { icon: <Clock className="w-6 h-6" />, label: "Historial", action: () => navigate("/mis-compras") },
-            { icon: <Heart className="w-6 h-6" />, label: "Lista de deseos", action: () => navigate("/favoritos") },
-            { icon: <CreditCard className="w-6 h-6" />, label: "Créditos", action: () => {} },
-            { icon: <ShoppingBag className="w-6 h-6" />, label: "Mis tiendas", action: () => {} },
-          ].map((item, i) => (
-            <button key={i} onClick={item.action} className="flex flex-col items-center gap-1.5 py-2">
-              <div className="text-muted-foreground">{item.icon}</div>
-              <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-2">{item.label}</span>
-            </button>
-          ))}
+      {/* Centro de Ayuda */}
+      <div className="bg-background mt-2 border-y border-border">
+        <div className="px-4 py-2 border-b border-border">
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Centro de Ayuda</h3>
+        </div>
+        <div className="grid grid-cols-2 divide-x divide-border">
+          <button onClick={() => navigate("/notificaciones")}
+            className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors">
+            <Bell className="w-5 h-5 text-muted-foreground" />
+            <span className="text-[10px] text-muted-foreground">Notificaciones</span>
+          </button>
+          <button onClick={() => navigate("/soporte")}
+            className="relative flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors">
+            <MessageCircle className="w-5 h-5 text-muted-foreground" />
+            <span className="text-[10px] text-muted-foreground">Live Chat</span>
+            {unreadChats > 0 && (
+              <span className="absolute top-1.5 right-1/4 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                {unreadChats}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Service section */}
-      <div className="bg-background mt-2 px-4 py-3">
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { icon: <HelpCircle className="w-6 h-6" />, label: "Centro de Ayuda", action: () => navigate("/soporte") },
-            { icon: <MapPin className="w-6 h-6" />, label: "Direcciones", action: () => navigate("/mis-direcciones") },
-            { icon: <MessageCircle className="w-6 h-6" />, label: "Live Chat", action: () => navigate("/soporte"), badge: unreadChats },
-            { icon: <Shield className="w-6 h-6" />, label: "Legal", action: () => setShowLegal(true) },
-          ].map((item, i) => (
-            <button key={i} onClick={item.action} className="flex flex-col items-center gap-1.5 py-2 relative">
-              <div className="text-muted-foreground">{item.icon}</div>
-              {item.badge && item.badge > 0 && (
-                <span className="absolute top-0 right-1/4 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
-                  {item.badge}
-                </span>
-              )}
-              <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-2">{item.label}</span>
-            </button>
-          ))}
-        </div>
+      {/* Quick access */}
+      <div className="bg-background mt-2 border-y border-border divide-y divide-border">
+        <button onClick={() => setActiveSection('favorites')}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
+          <div className="flex items-center gap-2">
+            <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+            <span className="text-xs font-semibold text-foreground">Favoritos</span>
+          </div>
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <span className="text-xs">{favorites.length} artículo{favorites.length !== 1 ? "s" : ""}</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+        </button>
+        <button onClick={() => setActiveSection('orders')}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
+          <div className="flex items-center gap-2">
+            <Package className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold text-foreground">Mis Pedidos</span>
+          </div>
+          <span className="text-xs text-muted-foreground">{totalOrders} total</span>
+        </button>
+        <button onClick={() => setActiveSection('returns')}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
+          <div className="flex items-center gap-2">
+            <RotateCcw className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-semibold text-foreground">Devoluciones</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {pendingReturns > 0 && (
+              <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{pendingReturns}</Badge>
+            )}
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+          </div>
+        </button>
+      </div>
+
+      {/* Legal + About */}
+      <div className="bg-background mt-2 border-y border-border divide-y divide-border">
+        <button onClick={() => setShowLegal(true)}
+          className="w-full flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+          <Shield className="w-4 h-4" /> Términos Legales
+        </button>
+        <button onClick={() => setShowAbout(true)}
+          className="w-full flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+          <Info className="w-4 h-4" /> Acerca de
+        </button>
+      </div>
+
+      {/* Active section panel */}
+      <div className="mt-2 px-3">
+        {activeSection === 'orders'    && <InlineOrdersPanel />}
+        {activeSection === 'favorites' && <InlineFavoritesPanel />}
+        {activeSection === 'addresses' && <InlineAddressesPanel />}
+        {activeSection === 'payment'   && <InlinePaymentPanel />}
+        {activeSection === 'settings'  && <InlineSettingsPanel />}
+        {activeSection === 'returns'   && <InlineReturnsPanel />}
       </div>
 
       {/* Logout */}
       <div className="mt-4 px-4">
-        <Button onClick={handleLogout} disabled={isLoading} variant="outline"
-          className="w-full h-11 border-destructive text-destructive hover:bg-destructive/10 font-semibold rounded-lg flex items-center justify-center gap-2">
+        <button
+          onClick={handleLogout}
+          disabled={isLoading}
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/5 transition-colors border border-border rounded-md bg-background"
+        >
           <LogOut className="w-4 h-4" />
-          {isLoading ? "Cerrando sesión..." : "Cerrar Sesión"}
-        </Button>
-      </div>
-
-      {/* About link */}
-      <div className="mt-3 px-4 pb-4 flex justify-center">
-        <button onClick={() => setShowAbout(true)} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-          <Info className="h-3.5 w-3.5" /> Acerca de
+          {isLoading ? "Cerrando..." : "Cerrar Sesión"}
         </button>
       </div>
     </div>
