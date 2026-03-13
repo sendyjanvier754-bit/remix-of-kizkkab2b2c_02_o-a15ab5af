@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ShoppingCart, Trash2, Package, MessageCircle, Banknote, Wallet, DollarSign, X, Loader2 } from "lucide-react";
+import { ShoppingCart, Trash2, Package, MessageCircle, Banknote, Wallet, DollarSign, X, Loader2, Check, Palette, Ruler, Minus, Plus } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useB2CCartItems, B2CCartItem } from "@/hooks/useB2CCartItems";
 import { useActiveB2COrder } from "@/hooks/useB2COrders";
@@ -27,9 +27,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QuantitySelector } from "@/components/ui/quantity-selector";
-import { useB2CCatalogVariants } from "@/hooks/useB2CCatalogVariants";
+import { useB2CCatalogVariants, B2CCatalogVariant } from "@/hooks/useB2CCatalogVariants";
 import { addItemB2C } from "@/services/cartService";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+
+// ── B2C Cart Variant Drawer helpers ───────────────────────────────────────────
+const ATTR_CONFIG: Record<string, { icon: typeof Palette; displayName: string; order: number }> = {
+  color:  { icon: Palette, displayName: 'Color', order: 1 },
+  size:   { icon: Ruler,   displayName: 'Talla', order: 2 },
+  talla:  { icon: Ruler,   displayName: 'Talla', order: 2 },
+  age:    { icon: Ruler,   displayName: 'Edad',  order: 3 },
+};
+
+const COLOR_HEX: Record<string, string> = {
+  blanco: '#FFFFFF', white: '#FFFFFF', negro: '#000000', black: '#000000',
+  rojo: '#EF4444', red: '#EF4444', azul: '#3B82F6', blue: '#3B82F6',
+  verde: '#22C55E', green: '#22C55E', amarillo: '#EAB308', yellow: '#EAB308',
+  rosa: '#EC4899', pink: '#EC4899', morado: '#A855F7', purple: '#A855F7',
+  naranja: '#F97316', orange: '#F97316', beige: '#D4B896', marron: '#8B4513',
+  brown: '#8B4513', navy: '#1E3A5A', gris: '#6B7280', gray: '#6B7280',
+  gold: '#FFD700', silver: '#C0C0C0', cream: '#FFFDD0', coral: '#FF7F50',
+};
+
+function getHex(name: string): string | null {
+  return COLOR_HEX[name.toLowerCase()] ?? null;
+}
 
 const CartPage = () => {
   const { t } = useTranslation();
@@ -55,29 +78,108 @@ const CartPage = () => {
   const [selectedItemForVariants, setSelectedItemForVariants] = useState<B2CCartItem | null>(null);
   const [variantQtys, setVariantQtys] = useState<Record<string, number>>({});
   const [isAddingVariant, setIsAddingVariant] = useState(false);
+  // B2B-style attribute selectors: { color: 'Rojo', size: 'M' }
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
+  const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
 
   const { data: catalogVariants = [], isLoading: isLoadingVariants } = useB2CCatalogVariants(
     selectedItemForVariants?.sellerCatalogId ?? null
   );
 
-  // Pre-fill variant quantities from current cart when drawer opens
-  useEffect(() => {
-    if (!selectedItemForVariants) { setVariantQtys({}); return; }
-    // Build a map from productVariantId → qty so we can pre-fill the drawer.
-    // We need catalogVariants to be loaded before we can fill by seller_catalog_variants.id.
-    // Using productVariantId as an intermediate key here.
-    const pvIdToQty: Record<string, number> = {};
-    items
-      .filter(i => i.sellerCatalogId === selectedItemForVariants.sellerCatalogId)
-      .forEach(i => { if (i.variantId) pvIdToQty[i.variantId] = (pvIdToQty[i.variantId] || 0) + i.quantity; });
-    // catalogVariants may not be loaded yet; do a best-effort fill using productVariantId → id mapping
-    // This effect runs again after catalogVariants loads because selectedItemForVariants is in the dep array.
-    const map: Record<string, number> = {};
+  // Build B2B-style attribute options from catalogVariants
+  const drawerAttrOptions = useMemo(() => {
+    const opts: Record<string, Set<string>> = {};
     catalogVariants.forEach(v => {
-      if (pvIdToQty[v.productVariantId] != null) map[v.id] = pvIdToQty[v.productVariantId];
+      const attrs = v.variantAttributes || {};
+      if (v.color) { if (!opts.color) opts.color = new Set(); opts.color.add(v.color); }
+      if (v.size)  { if (!opts.size)  opts.size  = new Set(); opts.size.add(v.size);  }
+      Object.entries(attrs).forEach(([k, val]) => {
+        if (val && k !== 'color' && k !== 'size') {
+          if (!opts[k]) opts[k] = new Set();
+          opts[k].add(String(val));
+        }
+      });
     });
-    setVariantQtys(map);
-  }, [selectedItemForVariants, items, catalogVariants]);
+    const result: Record<string, string[]> = {};
+    Object.entries(opts).forEach(([k, s]) => { result[k] = Array.from(s).sort(); });
+    return result;
+  }, [catalogVariants]);
+
+  const drawerAttrTypes = useMemo(() =>
+    Object.keys(drawerAttrOptions).sort((a, b) =>
+      (ATTR_CONFIG[a]?.order ?? 99) - (ATTR_CONFIG[b]?.order ?? 99)
+    ),
+  [drawerAttrOptions]);
+
+  // Build image map: attrType → value → imageUrl
+  const drawerImageMap = useMemo(() => {
+    const map: Record<string, Record<string, string>> = {};
+    catalogVariants.forEach(v => {
+      const img = v.images?.[0];
+      if (!img) return;
+      if (v.color) { if (!map.color) map.color = {}; if (!map.color[v.color]) map.color[v.color] = img; }
+      if (v.size)  { if (!map.size)  map.size  = {}; if (!map.size[v.size])   map.size[v.size]   = img; }
+    });
+    return map;
+  }, [catalogVariants]);
+
+  // Find the variant that matches current attribute selection
+  const matchingVariant = useMemo((): B2CCatalogVariant | null => {
+    if (drawerAttrTypes.length === 0) return null;
+    return catalogVariants.find(v => {
+      return drawerAttrTypes.every(type => {
+        const sel = selectedAttrs[type];
+        if (!sel) return false;
+        if (type === 'color') return v.color === sel;
+        if (type === 'size' || type === 'talla') return v.size === sel;
+        return v.variantAttributes?.[type] === sel;
+      });
+    }) ?? null;
+  }, [selectedAttrs, catalogVariants, drawerAttrTypes]);
+
+  // Update preview image when matching variant changes
+  useEffect(() => {
+    if (matchingVariant?.images?.[0]) setActivePreviewImage(matchingVariant.images[0]);
+  }, [matchingVariant]);
+
+  // Auto-select first option for each type when drawer opens
+  useEffect(() => {
+    if (!selectedItemForVariants || catalogVariants.length === 0) { setSelectedAttrs({}); return; }
+    if (Object.keys(selectedAttrs).length > 0) return;
+    // Try to pre-select the attributes of the currently clicked item
+    const current = items.find(i => i.id === selectedItemForVariants.id);
+    const firstDefaults: Record<string, string> = {};
+    drawerAttrTypes.forEach(type => {
+      const firstOpt = drawerAttrOptions[type]?.[0];
+      if (firstOpt) firstDefaults[type] = firstOpt;
+    });
+    if (current?.color && drawerAttrOptions.color?.includes(current.color)) firstDefaults.color = current.color;
+    if (current?.size && drawerAttrOptions.size?.includes(current.size)) firstDefaults.size = current.size;
+    setSelectedAttrs(firstDefaults);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItemForVariants, catalogVariants]);
+
+  // Reset drawer fully when closed
+  useEffect(() => {
+    if (!selectedItemForVariants) {
+      setVariantQtys({});
+      setSelectedAttrs({});
+      setActivePreviewImage(null);
+    }
+  }, [selectedItemForVariants]);
+
+  // Pre-fill qty for the matching variant from existing cart
+  useEffect(() => {
+    if (!matchingVariant) return;
+    const existingItem = items.find(
+      i => i.sellerCatalogId === selectedItemForVariants?.sellerCatalogId
+        && i.variantId === matchingVariant.productVariantId
+    );
+    setVariantQtys(prev => ({
+      ...prev,
+      [matchingVariant.id]: prev[matchingVariant.id] ?? (existingItem?.quantity ?? 0),
+    }));
+  }, [matchingVariant, items, selectedItemForVariants]);
 
   const [isNegotiating, setIsNegotiating] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
@@ -341,6 +443,8 @@ const CartPage = () => {
       toast.success('Carrito actualizado');
       setSelectedItemForVariants(null);
       setVariantQtys({});
+      setSelectedAttrs({});
+      setActivePreviewImage(null);
       await refetch(false);
     } catch (err) {
       console.error('Error updating variants:', err);
@@ -1104,7 +1208,7 @@ const CartPage = () => {
           {/* Overlay */}
           <div
             className="fixed inset-0 bg-black/50 z-[60]"
-            onClick={() => { setSelectedItemForVariants(null); setVariantQtys({}); }}
+            onClick={() => setSelectedItemForVariants(null)}
           />
 
           {/* Responsive Panel */}
@@ -1112,26 +1216,43 @@ const CartPage = () => {
             onClick={(e) => e.stopPropagation()}
             className="fixed bg-background shadow-2xl flex flex-col z-[61]
                        bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl
-                       md:top-0 md:bottom-auto md:left-auto md:right-0 md:rounded-none md:border-l md:w-[400px] md:h-screen md:max-h-screen"
+                       md:top-0 md:bottom-auto md:left-auto md:right-0 md:rounded-none md:border-l md:w-[420px] md:h-screen md:max-h-screen"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-              <div>
-                <h3 className="text-lg font-bold">Cambiar variante</h3>
-                <p className="text-sm text-muted-foreground truncate max-w-[250px]">{selectedItemForVariants.name}</p>
+            {/* Header with dynamic preview image */}
+            <div className="flex items-center gap-3 p-4 border-b flex-shrink-0">
+              <div className="relative flex-shrink-0">
+                {(activePreviewImage || selectedItemForVariants.image) ? (
+                  <img
+                    src={activePreviewImage || selectedItemForVariants.image!}
+                    alt={selectedItemForVariants.name}
+                    className="w-16 h-16 rounded-xl object-cover border border-border/50 shadow-sm transition-all duration-300"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center">
+                    <Package className="h-7 w-7 text-muted-foreground/50" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold leading-tight line-clamp-2">{selectedItemForVariants.name}</h3>
+                {matchingVariant && (
+                  <p className="text-sm font-semibold text-primary mt-0.5">
+                    ${matchingVariant.price.toFixed(2)}
+                  </p>
+                )}
               </div>
               <button
-                onClick={() => { setSelectedItemForVariants(null); setVariantQtys({}); }}
-                className="p-1 hover:bg-muted rounded-full transition"
+                onClick={() => setSelectedItemForVariants(null)}
+                className="p-1.5 hover:bg-muted rounded-full transition flex-shrink-0"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Variant List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Variant content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
               {isLoadingVariants ? (
-                <div className="flex items-center justify-center py-8">
+                <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : catalogVariants.length === 0 ? (
@@ -1139,51 +1260,195 @@ const CartPage = () => {
                   No hay variantes disponibles
                 </p>
               ) : (
-                catalogVariants.map((variant) => {
-                  const qty = variantQtys[variant.id] ?? 0;
-                  const label =
-                    [variant.color, variant.size].filter(Boolean).join(' / ') || variant.sku;
-                  return (
-                    <div
-                      key={variant.id}
-                      className="flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-white"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{label}</p>
-                        <p className="text-sm font-bold mt-0.5" style={{ color: '#29892a' }}>
-                          ${variant.price.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Stock: {variant.stock}</p>
+                <>
+                  {/* ── B2B-style attribute selectors ───────────────────── */}
+                  {drawerAttrTypes.map((type) => {
+                    const config = ATTR_CONFIG[type] || { icon: Package, displayName: type, order: 99 };
+                    const Icon = config.icon;
+                    const options = drawerAttrOptions[type] || [];
+                    const selected = selectedAttrs[type];
+
+                    return (
+                      <div key={type} className="p-3 bg-muted/30 rounded-xl border border-border/50">
+                        <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <Icon className="w-4 h-4 text-primary" />
+                          {config.displayName}
+                          <Badge variant="secondary" className="text-[10px]">
+                            {options.length} opciones
+                          </Badge>
+                        </h4>
+
+                        {type === 'color' ? (
+                          /* Color swatches with images */
+                          <div className="flex flex-wrap gap-2.5">
+                            {options.map(value => {
+                              const isSelected = selected === value;
+                              const img = drawerImageMap[type]?.[value];
+                              const hex = getHex(value);
+                              const variantForOpt = catalogVariants.find(v => v.color === value);
+                              const outOfStock = variantForOpt ? variantForOpt.stock === 0 : false;
+
+                              return (
+                                <button
+                                  key={value}
+                                  onClick={() => {
+                                    setSelectedAttrs(prev => ({ ...prev, [type]: value }));
+                                    if (img) setActivePreviewImage(img);
+                                  }}
+                                  disabled={outOfStock}
+                                  className={cn(
+                                    "relative w-14 h-14 rounded-xl border-2 transition-all overflow-hidden group",
+                                    isSelected
+                                      ? "border-primary ring-2 ring-primary/30 scale-105 shadow-md"
+                                      : "border-border hover:border-primary/60 hover:scale-102",
+                                    outOfStock && "opacity-30 cursor-not-allowed"
+                                  )}
+                                  title={`${value}${outOfStock ? ' - Sin stock' : ''}`}
+                                >
+                                  {img ? (
+                                    <img src={img} alt={value} className="w-full h-full object-cover" loading="lazy" />
+                                  ) : hex ? (
+                                    <div className="w-full h-full" style={{ backgroundColor: hex }} />
+                                  ) : (
+                                    <span className="text-[11px] font-bold uppercase text-muted-foreground flex items-center justify-center h-full">
+                                      {value.charAt(0)}
+                                    </span>
+                                  )}
+                                  {isSelected && (
+                                    <div className="absolute inset-0 bg-primary/25 flex items-center justify-center">
+                                      <Check className="w-5 h-5 text-primary drop-shadow" />
+                                    </div>
+                                  )}
+                                  {outOfStock && (
+                                    <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                                      <div className="w-7 h-0.5 bg-destructive rotate-45 rounded" />
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-x-0 -bottom-5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    <span className="text-[9px] text-muted-foreground capitalize truncate block text-center px-1">{value}</span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          /* Size / other attribute pill buttons */
+                          <div className="flex flex-wrap gap-2">
+                            {options.map(value => {
+                              const isSelected = selected === value;
+                              const variantForOpt = catalogVariants.find(v =>
+                                (type === 'size' || type === 'talla') ? v.size === value : v.variantAttributes?.[type] === value
+                              );
+                              const outOfStock = variantForOpt ? variantForOpt.stock === 0 : false;
+
+                              return (
+                                <button
+                                  key={value}
+                                  onClick={() => setSelectedAttrs(prev => ({ ...prev, [type]: value }))}
+                                  disabled={outOfStock}
+                                  className={cn(
+                                    "px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium min-w-[44px]",
+                                    isSelected
+                                      ? "border-primary bg-primary/10 text-primary shadow-sm"
+                                      : "border-border bg-background hover:border-primary/60",
+                                    outOfStock && "opacity-30 cursor-not-allowed line-through"
+                                  )}
+                                  title={`${value}${outOfStock ? ' - Sin stock' : ''}`}
+                                >
+                                  {value}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                      <QuantitySelector
-                        value={qty}
-                        onChange={(newQty) =>
-                          setVariantQtys((prev) => ({ ...prev, [variant.id]: newQty }))
-                        }
-                        min={0}
-                        max={variant.stock}
-                        size="sm"
-                      />
+                    );
+                  })}
+
+                  {/* ── Quantity + stock for matching variant ──────────── */}
+                  {matchingVariant && (
+                    <div className={cn(
+                      "p-4 rounded-xl border-2 transition-all",
+                      variantQtys[matchingVariant.id] > 0
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-muted/20"
+                    )}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">
+                            {[matchingVariant.color, matchingVariant.size].filter(Boolean).join(' / ') || matchingVariant.sku}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-base font-bold text-primary">
+                              ${matchingVariant.price.toFixed(2)}
+                            </span>
+                            <Badge
+                              variant={matchingVariant.stock > 0 ? "secondary" : "destructive"}
+                              className="text-[10px]"
+                            >
+                              {matchingVariant.stock > 0 ? `${matchingVariant.stock} disp.` : 'Sin stock'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition disabled:opacity-40"
+                            onClick={() => setVariantQtys(prev => ({
+                              ...prev,
+                              [matchingVariant.id]: Math.max(0, (prev[matchingVariant.id] ?? 0) - 1)
+                            }))}
+                            disabled={(variantQtys[matchingVariant.id] ?? 0) <= 0}
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="text-sm font-bold w-8 text-center">
+                            {variantQtys[matchingVariant.id] ?? 0}
+                          </span>
+                          <button
+                            className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition disabled:opacity-40"
+                            onClick={() => setVariantQtys(prev => ({
+                              ...prev,
+                              [matchingVariant.id]: Math.min(matchingVariant.stock, (prev[matchingVariant.id] ?? 0) + 1)
+                            }))}
+                            disabled={(variantQtys[matchingVariant.id] ?? 0) >= matchingVariant.stock || matchingVariant.stock === 0}
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  );
-                })
+                  )}
+
+                  {!matchingVariant && drawerAttrTypes.length > 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                      Selecciona todas las opciones para ver disponibilidad
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t flex-shrink-0">
+            <div className="p-4 border-t flex-shrink-0 space-y-2">
+              {matchingVariant && (variantQtys[matchingVariant.id] ?? 0) > 0 && (
+                <div className="flex items-center justify-between text-sm font-medium text-muted-foreground bg-muted/40 px-3 py-2 rounded-lg">
+                  <span>Total seleccionado</span>
+                  <span className="text-primary font-bold">
+                    ${(matchingVariant.price * (variantQtys[matchingVariant.id] ?? 0)).toFixed(2)}
+                  </span>
+                </div>
+              )}
               <button
                 onClick={handleAddVariantsToCart}
-                disabled={isAddingVariant}
-                className="w-full py-3 rounded-lg font-semibold text-white flex items-center justify-center gap-2 transition hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: '#071d7f' }}
+                disabled={isAddingVariant || !matchingVariant || (variantQtys[matchingVariant?.id ?? ''] ?? 0) === 0}
+                className="w-full py-3 rounded-xl font-semibold bg-primary text-primary-foreground flex items-center justify-center gap-2 transition hover:opacity-90 disabled:opacity-40"
               >
                 {isAddingVariant ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <ShoppingCart className="h-4 w-4" />
                 )}
-                Actualizar carrito
+                Agregar al carrito
               </button>
             </div>
           </aside>
@@ -1194,3 +1459,4 @@ const CartPage = () => {
 };
 
 export default CartPage;
+
