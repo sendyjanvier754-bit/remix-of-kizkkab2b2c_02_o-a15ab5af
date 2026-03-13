@@ -800,7 +800,7 @@ export const useSiverMatch = () => {
         const profileIds = (profiles as any[]).map((p: any) => p.id);
         
         // Get delivered sales where I haven't reviewed yet
-        const { data: sales } = await supabase
+        const { data: sales } = await (supabase as any)
           .from('siver_match_sales')
           .select(`
             id, sale_number, gestor_id, investor_id, delivered_at,
