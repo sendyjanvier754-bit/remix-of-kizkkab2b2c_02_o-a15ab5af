@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Upload, CheckCircle, ExternalLink, Loader2, FileImage, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -9,35 +11,33 @@ type OrderTable = 'orders_b2b' | 'orders_b2c';
 interface PaymentProofUploadProps {
   orderId: string;
   existingUrl?: string | null;
+  existingReference?: string | null;
   onUploaded?: (url: string) => void;
   /** When true, also allows upload (admin uploading on behalf of buyer) */
   readOnly?: boolean;
   /** Which table to patch. Defaults to orders_b2b */
   orderTable?: OrderTable;
+  /** Show a payment reference input alongside the upload */
+  showReferenceInput?: boolean;
 }
 
 /**
  * Reusable component to upload/view a payment proof (comprobante de pago).
  * Supports both orders_b2b and orders_b2c tables.
- *
- * Usage – buyer/seller upload:
- *   <PaymentProofUpload orderId={order.id} existingUrl={...} orderTable="orders_b2c" onUploaded={...} />
- *
- * Usage – admin read-only view:
- *   <PaymentProofUpload orderId={order.id} existingUrl={...} orderTable="orders_b2c" readOnly />
- *
- * Usage – admin can upload on behalf of buyer:
- *   <PaymentProofUpload orderId={order.id} existingUrl={...} orderTable="orders_b2c" />
+ * Optionally shows a payment reference input field.
  */
 export const PaymentProofUpload = ({
   orderId,
   existingUrl,
+  existingReference,
   onUploaded,
   readOnly = false,
   orderTable = 'orders_b2b',
+  showReferenceInput = false,
 }: PaymentProofUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [proofUrl, setProofUrl] = useState<string | null>(existingUrl ?? null);
+  const [referenceValue, setReferenceValue] = useState(existingReference ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,9 +78,18 @@ export const PaymentProofUpload = ({
 
       const existingMeta = (orderRow?.metadata as Record<string, unknown>) ?? {};
 
+      const updateData: Record<string, unknown> = {
+        metadata: { ...existingMeta, payment_proof_url: publicUrl },
+      };
+
+      // Also save payment_reference if provided
+      if (referenceValue.trim()) {
+        updateData.payment_reference = referenceValue.trim();
+      }
+
       const { error: updateError } = await supabase
         .from(orderTable)
-        .update({ metadata: { ...existingMeta, payment_proof_url: publicUrl } })
+        .update(updateData)
         .eq('id', orderId);
 
       if (updateError) throw updateError;
@@ -94,6 +103,21 @@ export const PaymentProofUpload = ({
     } finally {
       setIsUploading(false);
       if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  // Save reference alone (without uploading a new file)
+  const handleSaveReference = async () => {
+    if (!referenceValue.trim()) return;
+    try {
+      const { error } = await supabase
+        .from(orderTable)
+        .update({ payment_reference: referenceValue.trim() })
+        .eq('id', orderId);
+      if (error) throw error;
+      toast.success('Referencia de pago guardada');
+    } catch (err: any) {
+      toast.error('Error al guardar la referencia');
     }
   };
 
@@ -144,6 +168,31 @@ export const PaymentProofUpload = ({
         className="hidden"
         onChange={handleFileChange}
       />
+
+      {/* Optional reference input */}
+      {showReferenceInput && (
+        <div>
+          <Label className="text-xs">Número de referencia / código de transacción</Label>
+          <div className="flex gap-2 mt-1">
+            <Input
+              value={referenceValue}
+              onChange={(e) => setReferenceValue(e.target.value)}
+              placeholder="Ej: TXN-123456"
+              className="h-9 text-sm flex-1"
+            />
+            {proofUrl && referenceValue.trim() && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveReference}
+                className="h-9 text-xs"
+              >
+                Guardar
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {proofUrl ? (
         <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
