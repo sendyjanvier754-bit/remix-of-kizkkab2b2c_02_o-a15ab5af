@@ -116,7 +116,7 @@ const AdminPedidos = () => {
         `)
         .order('created_at', { ascending: false });
       if (b2cStatusFilter !== 'all') {
-        q = q.eq('payment_status', b2cStatusFilter);
+        q = q.eq('payment_status', b2cStatusFilter as any);
       }
       const { data, error } = await q;
       if (error) throw error;
