@@ -116,40 +116,7 @@ const CheckoutPage = () => {
 
   const selectedAddressData = addresses.find(a => a.id === selectedAddress);
 
-  const paymentMethods = [
-    {
-      id: 'stripe' as PaymentMethod,
-      name: t('payments.creditCard'),
-      description: t('checkout.creditCardDesc'),
-      icon: CreditCard,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      id: 'moncash' as PaymentMethod,
-      name: 'MonCash',
-      description: t('checkout.moncashDesc'),
-      icon: Smartphone,
-      color: 'text-[#94111f]',
-      bgColor: 'bg-[#94111f]/10',
-    },
-    {
-      id: 'natcash' as PaymentMethod,
-      name: 'NatCash',
-      description: t('checkout.natcashDesc'),
-      icon: Smartphone,
-      color: 'text-[#071d7f]',
-      bgColor: 'bg-[#071d7f]/10',
-    },
-    {
-      id: 'transfer' as PaymentMethod,
-      name: t('payments.bankTransfer'),
-      description: t('checkout.bankTransferDesc'),
-      icon: Building2,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-  ];
+  
 
   // Get unique store IDs from cart items for multi-vendor shipping
   const storeIds = useMemo(() =>
@@ -162,11 +129,38 @@ const CheckoutPage = () => {
 
   // Fetch ADMIN payment methods (all B2C payments go through admin/platform)
   const {
+    methods: adminMethods,
     bankMethod: adminBank,
     moncashMethod: adminMoncash,
     natcashMethod: adminNatcash,
     isLoading: adminPaymentMethodsLoading
   } = useAdminPaymentMethodsReadOnly();
+
+  // Build payment methods list dynamically from admin-configured active methods
+  const paymentMethods = useMemo(() => {
+    const list: Array<{
+      id: PaymentMethod;
+      name: string;
+      description: string;
+      icon: typeof CreditCard;
+      color: string;
+      bgColor: string;
+    }> = [];
+    if (adminPaymentMethodsLoading) return list;
+    if (adminMethods.some(m => m.method_type === 'stripe' && m.is_active)) {
+      list.push({ id: 'stripe', name: t('payments.creditCard'), description: t('checkout.creditCardDesc'), icon: CreditCard, color: 'text-blue-600', bgColor: 'bg-blue-50' });
+    }
+    if (adminMoncash?.is_active) {
+      list.push({ id: 'moncash', name: adminMoncash.display_name || 'MonCash', description: t('checkout.moncashDesc'), icon: Smartphone, color: 'text-[#94111f]', bgColor: 'bg-[#94111f]/10' });
+    }
+    if (adminNatcash?.is_active) {
+      list.push({ id: 'natcash', name: adminNatcash.display_name || 'NatCash', description: t('checkout.natcashDesc'), icon: Smartphone, color: 'text-[#071d7f]', bgColor: 'bg-[#071d7f]/10' });
+    }
+    if (adminBank?.is_active) {
+      list.push({ id: 'transfer', name: adminBank.display_name || t('payments.bankTransfer'), description: t('checkout.bankTransferDesc'), icon: Building2, color: 'text-green-600', bgColor: 'bg-green-50' });
+    }
+    return list;
+  }, [adminPaymentMethodsLoading, adminMethods, adminMoncash, adminNatcash, adminBank, t]);
 
   // Check if automatic payment is available for each method
   const moncashAutoAvailable = adminMoncash?.automatic_enabled && adminMoncash?.is_active;
