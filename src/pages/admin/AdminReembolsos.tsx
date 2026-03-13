@@ -86,7 +86,15 @@ const AdminReembolsos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(null);
   const [dialogType, setDialogType] = useState<'review' | 'approve' | 'reject' | 'process' | 'complete' | null>(null);
-  
+  const [activeTab, setActiveTab] = useState<'refunds' | 'returns'>('refunds');
+
+  // Return requests state
+  const [returnSearchTerm, setReturnSearchTerm] = useState('');
+  const [returnActionItem, setReturnActionItem] = useState<any | null>(null);
+  const [returnActionType, setReturnActionType] = useState<'accept' | 'reject' | null>(null);
+  const [returnActionNotes, setReturnActionNotes] = useState('');
+  const [returnAmountApproved, setReturnAmountApproved] = useState('');
+
   // Form states
   const [notes, setNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
@@ -98,6 +106,17 @@ const AdminReembolsos = () => {
   const statusFilters = statusFilter === 'all' ? undefined : statusFilter;
   const { data: refunds, isLoading } = refundManagement.useRefunds({ status: statusFilters });
   const { data: stats } = refundManagement.useRefundStats();
+
+  // Fetch return requests
+  const { data: returnRequests = [], isLoading: returnsLoading } = useAdminReturnRequests();
+  const updateReturn = useUpdateReturnRequest();
+
+  const filteredReturnRequests = returnRequests.filter(r => {
+    if (!returnSearchTerm) return true;
+    return r.order_id.toLowerCase().includes(returnSearchTerm.toLowerCase())
+      || r.reason.toLowerCase().includes(returnSearchTerm.toLowerCase());
+  });
+  const pendingReturnCount = returnRequests.filter(r => r.status === 'pending' || r.status === 'under_mediation').length;
 
   // Filter by search term
   const filteredRefunds = refunds?.filter(refund => {
