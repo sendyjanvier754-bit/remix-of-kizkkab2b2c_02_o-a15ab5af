@@ -74,7 +74,7 @@ export const useAddresses = () => {
           notes: input.notes ?? null,
           department_id: input.department_id ?? null,
           commune_id: input.commune_id ?? null,
-          destination_country_id: (input as any).destination_country_id || '',
+          destination_country_id: (input as any).destination_country_id ?? null,
           user_id: user.id,
         })
         .select()

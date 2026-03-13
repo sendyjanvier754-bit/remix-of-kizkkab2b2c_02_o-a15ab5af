@@ -126,7 +126,8 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
       department_id: selectedDeptId || null,
       commune_id: selectedCommuneId || null,
       city: communes.find(c => c.id === selectedCommuneId)?.name ?? prev.city,
-    }));
+      destination_country_id: selectedCountryId || null,
+    } as any));
   }, [selectedCountryId, selectedDeptId, selectedCommuneId, countries, departments, communes]);
 
   const resetLocation = () => {
