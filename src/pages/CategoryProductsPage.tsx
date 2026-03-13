@@ -9,6 +9,7 @@ import { UserRole } from "@/types/auth";
 import { useCategoryBySlug } from "@/hooks/useQueriesCategories";
 import { useProductsByCategory } from "@/hooks/useProducts";
 import { usePublicCategories } from "@/hooks/useCategories";
+import { useSellerProductsByCategory } from "@/hooks/useSellerProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProductCard from "@/components/landing/ProductCard";
 
@@ -30,26 +31,62 @@ const CategoryProductsPage = () => {
 
   const { data: category, isLoading: isCategoryLoading } = useCategoryBySlug(slug);
   const categoryId = category?.id ?? null;
+  const isB2BUser = role === UserRole.ADMIN || role === UserRole.SELLER;
+  const { data: allCategories = [] } = usePublicCategories();
 
+  // B2B users: fetch from products table
   const { data: productsData, isLoading: isProductsLoading } = useProductsByCategory(
-    categoryId,
+    isB2BUser ? categoryId : null,
     currentPage - 1,
     ITEMS_PER_PAGE
   );
 
-  const products: AnyProduct[] = productsData?.products || [];
-  const total = productsData?.total || 0;
+  // B2C users: fetch from seller_catalog
+  const { data: sellerProducts = [], isLoading: isSellerLoading } = useSellerProductsByCategory(
+    !isB2BUser ? (categoryId ?? undefined) : undefined,
+    allCategories,
+    100
+  );
+
+  // Unify product list based on user type
+  const products: AnyProduct[] = isB2BUser 
+    ? (productsData?.products || [])
+    : sellerProducts.map((sp: any) => ({
+        id: sp.id,
+        sku_interno: sp.sku,
+        sku: sp.sku,
+        nombre: sp.nombre,
+        descripcion_corta: sp.descripcion,
+        precio: sp.precio_venta,
+        precio_b2c: sp.precio_venta,
+        precio_mayorista: sp.source_product?.precio_mayorista || sp.precio_costo || 0,
+        precio_sugerido_venta: sp.precio_venta,
+        imagen_principal: Array.isArray(sp.images) ? sp.images[0] : sp.images,
+        galeria_imagenes: Array.isArray(sp.images) ? sp.images : [],
+        stock_fisico: sp.stock ?? 0,
+        moq: sp.source_product?.moq || 1,
+        categoria_id: sp.category_id || sp.source_product?.categoria_id,
+        vendedor: sp.store ? { 
+          id: sp.store.id, 
+          nombre: sp.store.name,
+          whatsapp: sp.store.whatsapp,
+          is_verified: true 
+        } : { id: "", nombre: "Tienda" },
+        // Keep seller catalog reference for cart
+        sellerCatalogId: sp.id,
+        source_product_id: sp.source_product_id,
+        storeId: sp.seller_store_id,
+      }));
+
+  const total = isB2BUser ? (productsData?.total || 0) : products.length;
   
-  // Calculate visible products count based on user role
-  const isB2BUser = role === UserRole.ADMIN || role === UserRole.SELLER;
-  const visibleProductsCount = !isB2BUser 
-    ? products.filter((p: any) => p.precio_sugerido_venta != null && p.precio_sugerido_venta > 0).length
-    : total;
+  const visibleProductsCount = isB2BUser 
+    ? total
+    : products.length;
   
   const totalPages = Math.max(1, Math.ceil(visibleProductsCount / ITEMS_PER_PAGE));
 
-  const isLoading = isCategoryLoading || isProductsLoading;
-  const { data: allCategories = [] } = usePublicCategories();
+  const isLoading = isCategoryLoading || (isB2BUser ? isProductsLoading : isSellerLoading);
 
   const subcategories = allCategories.filter((c: any) => c.parent_id === categoryId);
 
@@ -65,13 +102,11 @@ const CategoryProductsPage = () => {
   const filteredProducts = useMemo(() => {
     let list = [...products];
 
-    // Filter products based on user role
-    // Only sellers/admins can see products from the B2B catalog
-    const isB2BUser = role === UserRole.ADMIN || role === UserRole.SELLER;
-    if (!isB2BUser) {
-      // For non-B2B users, only show products that have a suggested retail price (visible to public)
-      // This means hiding pure B2B-only products
-      list = list.filter((p: any) => p.precio_sugerido_venta != null && p.precio_sugerido_venta > 0);
+    // For B2B users, filter products without suggested price
+    if (isB2BUser) {
+      // B2B sees all products
+    } else {
+      // B2C products already come from seller_catalog, no additional filtering needed
     }
 
     // apply subcategory filter if selected
@@ -102,6 +137,12 @@ const CategoryProductsPage = () => {
       list = list.filter((p: any) => (p.stock_fisico ?? 0) > 0);
     }
 
+    // Paginate for B2C (seller products come all at once)
+    if (!isB2BUser) {
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      list = list.slice(start, start + ITEMS_PER_PAGE);
+    }
+
     // sorting
     switch (filters.sortBy) {
       case "price_asc":
@@ -114,7 +155,7 @@ const CategoryProductsPage = () => {
       default:
         return list;
     }
-  }, [products, filters.sortBy, selectedSubcategory, priceMin, priceMax, role, minRating, onlyPromo, inStockOnly]);
+  }, [products, filters.sortBy, selectedSubcategory, priceMin, priceMax, isB2BUser, minRating, onlyPromo, inStockOnly, currentPage]);
   const handleViewStore = (sellerId: string) => navigate(`/tienda/${sellerId}`);
 
   const getSku = (p: AnyProduct) => p.sku_interno ?? p.sku ?? p.id;
