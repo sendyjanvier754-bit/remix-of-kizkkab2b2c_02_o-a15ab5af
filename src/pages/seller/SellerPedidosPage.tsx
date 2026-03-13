@@ -847,6 +847,40 @@ const SellerPedidosPage = () => {
                   </div>
                 </div>
 
+                {/* Payment proof (read-only for seller) */}
+                {(() => {
+                  const proofUrl = (selectedOrder.metadata as Record<string, any> | null)?.payment_proof_url;
+                  return (
+                    <div className="p-3 bg-muted/30 border border-border rounded-lg space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5" />
+                        Comprobante de pago
+                      </p>
+                      {proofUrl ? (
+                        <a
+                          href={proofUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Ver comprobante adjunto
+                        </a>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">El comprador aún no ha subido el comprobante.</p>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Admin manages payment — info notice */}
+                {selectedOrder.payment_status === 'pending_validation' && (
+                  <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-400/30 rounded-lg text-sm text-amber-700">
+                    <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                    <p>Este pago está pendiente de validación por el <strong>administrador</strong>. Recibirás una notificación cuando sea confirmado o rechazado.</p>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="flex justify-end gap-2 pt-1">
                   <OpenChatButton
@@ -856,32 +890,6 @@ const SellerPedidosPage = () => {
                     navigateTo="seller"
                     size="sm"
                   />
-                  {selectedOrder.payment_status === 'pending_validation' && (
-                    <>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                        onClick={() => setConfirmDialogOpen(true)}
-                      >
-                        <Check className="h-4 w-4 mr-1.5" />Confirmar Pago
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => setRejectDialogOpen(true)}>
-                        <X className="h-4 w-4 mr-1.5" />Rechazar Pago
-                      </Button>
-                    </>
-                  )}
-                  {(selectedOrder.status === 'draft' || selectedOrder.status === 'placed') && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCancelOrder(selectedOrder.id)}
-                      disabled={cancelOrderWithRestore.isPending}
-                    >
-                      {cancelOrderWithRestore.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <XCircle className="h-4 w-4 mr-1.5" />}
-                      Cancelar
-                    </Button>
-                  )}
                 </div>
               </div>
             );
