@@ -8,14 +8,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCreateChat } from '@/hooks/useSupportChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import GlobalHeader from '@/components/layout/GlobalHeader';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  DialogFooter } from
+'@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -55,67 +54,60 @@ export default function UserSupportPage() {
       setNewChatTitle('');
       setSelectedChatId(chat.id);
     } catch {
+
       // silently ignore
-    }
-    setCreating(false);
+    }setCreating(false);
   };
 
   // Don't render while checking auth
   if (authLoading || !user) return null;
 
-  const newChatButton = (
-    <Button size="sm" className="gap-1" onClick={() => setNewChatOpen(true)}>
+  const newChatButton =
+  <Button size="sm" className="gap-1" onClick={() => setNewChatOpen(true)}>
       <Plus className="h-4 w-4" />
       Nuevo chat
-    </Button>
-  );
+    </Button>;
+
 
   // Mobile: show either list or chat window (not both)
   if (isMobile) {
     return (
       <PageWrapper seo={{ title: 'Soporte - Live Chat', description: 'Chatea con nuestro equipo de soporte' }}>
         <div className="h-[calc(100vh-10rem)] flex flex-col">
-          {selectedChatId ? (
-            <div className="h-full flex flex-col">
+          {selectedChatId ?
+          <div className="h-full flex flex-col">
               <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-                className="self-start mb-2 gap-1 text-muted-foreground"
-              >
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="self-start mb-2 gap-1 text-muted-foreground">
+              
                 <ChevronLeft className="h-4 w-4" />
                 Volver a chats
               </Button>
               <div className="flex-1 min-h-0">
                 <ChatWindow
-                  chatId={selectedChatId}
-                  isStaff={false}
-                  onClose={handleBack}
-                />
+                chatId={selectedChatId}
+                isStaff={false}
+                onClose={handleBack} />
+              
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col h-full gap-3">
-              {/* Encabezado */}
+            </div> :
+
+          <div className="flex flex-col h-full gap-3">
               <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-primary" />
-                  <h1 className="text-lg font-semibold">Soporte</h1>
-                </div>
+                <h1 className="text-lg font-semibold">Mis chats de soporte</h1>
                 {newChatButton}
               </div>
-              <p className="text-xs text-muted-foreground px-1 -mt-1">
-                Escríbenos, te respondemos a la brevedad.
-              </p>
               <div className="flex-1 min-h-0">
                 <ChatList
-                  onSelectChat={setSelectedChatId}
-                  selectedChatId={selectedChatId}
-                  isStaff={false}
-                />
+                onSelectChat={setSelectedChatId}
+                selectedChatId={selectedChatId}
+                isStaff={false} />
+              
               </div>
             </div>
-          )}
+          }
         </div>
 
         <NewChatDialog
@@ -124,66 +116,46 @@ export default function UserSupportPage() {
           title={newChatTitle}
           onTitleChange={setNewChatTitle}
           onSubmit={handleCreateChat}
-          creating={creating}
-        />
-      </PageWrapper>
-    );
+          creating={creating} />
+        
+      </PageWrapper>);
+
   }
 
-  // Desktop: layout con GlobalHeader igual que /perfil
+  // Desktop: side-by-side layout
   return (
-    <PageWrapper seo={{ title: 'Live Chat - Centro de Ayuda', description: 'Chatea con nuestro equipo de soporte' }}>
-      <div className="min-h-screen bg-muted/30">
-        <GlobalHeader />
+    <PageWrapper seo={{ title: 'Soporte - Live Chat', description: 'Chatea con nuestro equipo de soporte' }}>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-semibold">Mis chats de soporte</h1>
+        {newChatButton}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-14rem)]">
+        <div className="lg:col-span-4 xl:col-span-3">
+          <ChatList
+            onSelectChat={setSelectedChatId}
+            selectedChatId={selectedChatId}
+            isStaff={false} />
+          
+        </div>
+        <div className="lg:col-span-8 xl:col-span-9">
+          {selectedChatId ?
+          <ChatWindow
+            chatId={selectedChatId}
+            isStaff={false}
+            onClose={() => setSelectedChatId(null)} /> :
 
-        <div className="max-w-[1200px] mx-auto px-4 py-6">
-          {/* Encabezado de página */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5 text-muted-foreground mr-1">
-                <ChevronLeft className="h-4 w-4" />
-                Volver
-              </Button>
-              <div className="p-2 rounded-xl bg-primary/10">
-                <MessageCircle className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold leading-tight">Live Chat</h1>
-                <p className="text-sm text-muted-foreground">Centro de Ayuda — escríbenos, te respondemos a la brevedad.</p>
-              </div>
-            </div>
-            {newChatButton}
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-16rem)]">
-            <div className="lg:col-span-4 xl:col-span-3">
-              <ChatList
-                onSelectChat={setSelectedChatId}
-                selectedChatId={selectedChatId}
-                isStaff={false}
-              />
+          <div className="h-full flex items-center justify-center rounded-xl border border-dashed border-border bg-card">
+              <div className="text-center">
+                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground text-sm">Selecciona un chat o crea uno nuevo</p>
+                
+
+
+              
+              </div>
             </div>
-            <div className="lg:col-span-8 xl:col-span-9">
-              {selectedChatId ? (
-                <ChatWindow
-                  chatId={selectedChatId}
-                  isStaff={false}
-                  onClose={() => setSelectedChatId(null)}
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center rounded-xl border border-dashed border-border bg-card">
-                  <div className="text-center">
-                    <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                    <p className="text-muted-foreground text-sm">Selecciona un chat o crea uno nuevo</p>
-                    <Button size="sm" className="mt-4 gap-1" onClick={() => setNewChatOpen(true)}>
-                      <Plus className="h-4 w-4" />
-                      Nuevo chat
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          }
         </div>
       </div>
 
@@ -193,10 +165,10 @@ export default function UserSupportPage() {
         title={newChatTitle}
         onTitleChange={setNewChatTitle}
         onSubmit={handleCreateChat}
-        creating={creating}
-      />
-    </PageWrapper>
-  );
+        creating={creating} />
+      
+    </PageWrapper>);
+
 }
 
 interface NewChatDialogProps {
@@ -223,9 +195,9 @@ function NewChatDialog({ open, onOpenChange, title, onTitleChange, onSubmit, cre
               placeholder="Ej: Problema con mi pedido #1234"
               value={title}
               onChange={(e) => onTitleChange(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') onSubmit(); }}
-              autoFocus
-            />
+              onKeyDown={(e) => {if (e.key === 'Enter') onSubmit();}}
+              autoFocus />
+            
           </div>
         </div>
         <DialogFooter>
@@ -237,6 +209,6 @@ function NewChatDialog({ open, onOpenChange, title, onTitleChange, onSubmit, cre
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }
