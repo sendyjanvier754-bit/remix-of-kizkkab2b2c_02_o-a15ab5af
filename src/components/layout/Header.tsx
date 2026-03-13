@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingBag, Search, Heart, User, Mail, Camera, Loader2, TrendingUp, Flame, Mic, MicOff, Eye, EyeOff, MessageCircle } from "lucide-react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import { Input } from "@/components/ui/input";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
@@ -527,6 +528,12 @@ const Header = ({
               <MessageCircle className="w-6 h-6" />
               <span className="text-xs">{t('header.support')}</span>
             </button>
+            {user && (
+              <div className="flex flex-col items-center gap-1">
+                <NotificationBell />
+                <span className="text-xs text-gray-700">Alertas</span>
+              </div>
+            )}
             <Link to={favoritesLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
               <Heart className="w-6 h-6" />
               <span className="text-xs">{t('header.favorites')}</span>

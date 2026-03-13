@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Check, CheckCheck, Loader2, Trash2 } from 'lucide-react';
+import { Bell, CheckCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -8,10 +8,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { useNotifications, DBNotification } from '@/hooks/useNotifications';
+import { useAuth } from '@/hooks/useAuth';
+import { UserRole } from '@/types/auth';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 
 const getNotificationIcon = (type: DBNotification['type']) => {
   switch (type) {
@@ -38,7 +40,7 @@ const NotificationItem = ({
   return (
     <div
       className={`p-3 hover:bg-muted/50 transition-colors cursor-pointer ${
-        !notification.is_read ? 'bg-blue-50/50' : ''
+        !notification.is_read ? 'bg-primary/5' : ''
       }`}
       onClick={() => !notification.is_read && onMarkRead(notification.id)}
     >
@@ -50,7 +52,7 @@ const NotificationItem = ({
               {notification.title}
             </p>
             {!notification.is_read && (
-              <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0" />
+              <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
             )}
           </div>
           <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
@@ -70,7 +72,20 @@ const NotificationItem = ({
 
 export const NotificationBell = () => {
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
+  const { role } = useAuth();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Route to full notifications page based on role
+  const notificationsPath =
+    role === UserRole.ADMIN || role === UserRole.SELLER || role === UserRole.SALES_AGENT
+      ? '/admin/notificaciones'
+      : '/notificaciones';
+
+  const handleViewAll = () => {
+    setOpen(false);
+    navigate(notificationsPath);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -78,8 +93,8 @@ export const NotificationBell = () => {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge 
-              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs"
+            <Badge
+              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground text-xs"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -88,7 +103,7 @@ export const NotificationBell = () => {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-3 border-b">
-          <h4 className="font-semibold">Notificaciones</h4>
+          <h4 className="font-semibold text-sm">Notificaciones</h4>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -104,15 +119,13 @@ export const NotificationBell = () => {
 
         <ScrollArea className="h-[300px]">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full py-10">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <div className="flex flex-col items-center justify-center h-full text-center p-6 py-10">
               <Bell className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                No tienes notificaciones
-              </p>
+              <p className="text-sm text-muted-foreground">No tienes notificaciones</p>
             </div>
           ) : (
             <div className="divide-y">
@@ -129,7 +142,12 @@ export const NotificationBell = () => {
 
         {notifications.length > 0 && (
           <div className="p-2 border-t text-center">
-            <Button variant="ghost" size="sm" className="w-full text-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs"
+              onClick={handleViewAll}
+            >
               Ver todas las notificaciones
             </Button>
           </div>
