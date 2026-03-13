@@ -745,6 +745,8 @@ const MyPurchasesPage = () => {
       metadata: {
         order_type: 'b2c',
         store_name: o.store?.name,
+        store_logo: o.store?.logo_url,
+        store_id: o.store_id,
         payment_reference: o.payment_reference,
         tracking_number: o.tracking_number,
         ...(o.metadata || {}),
