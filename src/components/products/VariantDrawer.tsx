@@ -481,7 +481,8 @@ const VariantDrawer: React.FC = () => {
             <Button 
               onClick={handleConfirm} 
               className="h-10 px-4"
-              disabled={totalQty === 0}
+              disabled={!isVariantValid}
+              title={validationErrors.length > 0 ? validationErrors.join(', ') : undefined}
             >
               🛒 Agregar ({totalQty})
             </Button>
