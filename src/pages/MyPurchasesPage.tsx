@@ -144,6 +144,60 @@ const carrierUrls: Record<string, string> = {
   "USPS": "https://tools.usps.com/go/TrackConfirmAction?tLabels=",
   "Estafeta": "https://rastreo3.estafeta.com/Tracking/searchByGet?wayBillType=1&wayBill="
 };
+// Maps B2C payment_status → display config for the buyer
+const b2cPaymentStatusConfig: Record<string, { label: string; color: string; bgColor: string; icon: React.ReactNode; borderColor: string }> = {
+  placed: {
+    label: 'Subir comprobante',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100',
+    icon: <Upload className="h-4 w-4" />,
+    borderColor: 'border-l-orange-500',
+  },
+  pending: {
+    label: 'Subir comprobante',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100',
+    icon: <Upload className="h-4 w-4" />,
+    borderColor: 'border-l-orange-500',
+  },
+  pending_validation: {
+    label: 'En validación',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-100',
+    icon: <Clock className="h-4 w-4" />,
+    borderColor: 'border-l-amber-500',
+  },
+  paid: {
+    label: 'Pago confirmado',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    icon: <CheckCircle className="h-4 w-4" />,
+    borderColor: 'border-l-green-500',
+  },
+  failed: {
+    label: 'Pago rechazado',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
+    icon: <XCircle className="h-4 w-4" />,
+    borderColor: 'border-l-red-500',
+  },
+  cancelled: {
+    label: 'Cancelado',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-100',
+    icon: <XCircle className="h-4 w-4" />,
+    borderColor: 'border-l-gray-400',
+  },
+};
+
+const getB2CDisplayStatus = (order: BuyerOrder) => {
+  const ps = order.payment_status as string | null;
+  const s = order.status as string;
+  // Use payment_status for b2c display; fall back to order status
+  const key = ps || s;
+  return b2cPaymentStatusConfig[key] || b2cPaymentStatusConfig['placed'];
+};
+
 const OrderCard = ({
   order,
   onClick,
@@ -153,26 +207,34 @@ const OrderCard = ({
   onClick: () => void;
   poInfo?: OrderPOInfo;
 }) => {
-  const status = statusConfig[order.status] || statusConfig.draft;
-  const itemCount = order.order_items_b2b?.length || 0;
-  const firstItem = order.order_items_b2b?.[0];
   const orderType = order.metadata?.order_type || 'b2c';
   const isB2B = orderType === 'b2b';
+  const itemCount = order.order_items_b2b?.length || 0;
+  const firstItem = order.order_items_b2b?.[0];
 
-  return <Card className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4 group ${order.status === 'shipped' ? 'border-l-purple-500' : order.status === 'delivered' ? 'border-l-green-500' : order.status === 'paid' ? 'border-l-amber-500' : order.status === 'placed' ? 'border-l-blue-500' : order.status === 'cancelled' ? 'border-l-red-500' : 'border-l-gray-300'}`} onClick={onClick}>
+  // B2C orders use payment-based status display; B2B use order status
+  const b2cStatus = !isB2B ? getB2CDisplayStatus(order) : null;
+  const b2bStatus = isB2B ? (statusConfig[order.status] || statusConfig.draft) : null;
+  const displayStatus = b2cStatus || b2bStatus!;
+
+  const borderClass = isB2B
+    ? (order.status === 'shipped' ? 'border-l-purple-500' : order.status === 'delivered' ? 'border-l-green-500' : order.status === 'paid' ? 'border-l-amber-500' : order.status === 'placed' ? 'border-l-blue-500' : order.status === 'cancelled' ? 'border-l-red-500' : 'border-l-gray-300')
+    : (b2cStatus?.borderColor || 'border-l-orange-500');
+
+  return <Card className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4 group ${borderClass}`} onClick={onClick}>
       <CardContent className="p-4 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-4 flex-1">
-            <div className={`p-3 rounded-xl ${status.bgColor} ${status.color} shrink-0`}>
-              {status.icon}
+            <div className={`p-3 rounded-xl ${displayStatus.bgColor} ${displayStatus.color} shrink-0`}>
+              {displayStatus.icon}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-sm md:text-base text-foreground">
                   Pedido #{order.id.slice(0, 8).toUpperCase()}
                 </span>
-                <Badge variant="outline" className={`${status.color} border-current text-xs`}>
-                  {status.label}
+                <Badge variant="outline" className={`${displayStatus.color} border-current text-xs`}>
+                  {displayStatus.label}
                 </Badge>
                 {isB2B ? (
                   <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 text-xs">
@@ -182,19 +244,29 @@ const OrderCard = ({
                 ) : (
                   <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
                     <Store className="h-3 w-3 mr-1" />
-                    B2C
+                    {order.metadata?.store_name || 'Tienda'}
                   </Badge>
                 )}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {format(new Date(order.created_at), "d 'de' MMMM, yyyy", {
-                locale: es
-              })}
+                {format(new Date(order.created_at), "d 'de' MMMM, yyyy", { locale: es })}
               </p>
               <p className="text-sm text-muted-foreground truncate mt-1">
                 {firstItem?.nombre} {itemCount > 1 && `y ${itemCount - 1} más`}
               </p>
-              {/* Show PO info if linked */}
+              {/* B2C: hint to upload proof when still pending */}
+              {!isB2B && (order.payment_status === 'placed' || order.payment_status === 'pending') && (
+                <p className="text-xs text-orange-600 mt-1 flex items-center gap-1 font-medium">
+                  <Upload className="h-3 w-3" />
+                  Toca para subir tu comprobante de pago
+                </p>
+              )}
+              {!isB2B && order.payment_status === 'pending_validation' && (
+                <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Comprobante enviado — el admin está verificando
+                </p>
+              )}
               {poInfo && (
                 <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
                   <Package className="h-3 w-3" />
