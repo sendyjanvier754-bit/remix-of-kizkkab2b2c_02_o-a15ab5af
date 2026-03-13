@@ -65,7 +65,17 @@ interface VariantSelectorB2BProps {
 const ATTRIBUTE_CONFIG: Record<string, { icon: typeof Palette; displayName: string; order: number }> = {
   color: { icon: Palette, displayName: 'Color', order: 1 },
   size: { icon: Ruler, displayName: 'Talla', order: 2 },
+  talla: { icon: Ruler, displayName: 'Talla', order: 2 },
   age: { icon: Ruler, displayName: 'Edad', order: 3 },
+};
+
+// Normalize attribute key to canonical type
+const normalizeAttributeType = (key: string): string => {
+  const lower = key.toLowerCase();
+  if (lower.includes('color')) return 'color';
+  if (lower.includes('talla') || lower.includes('size')) return 'size';
+  if (lower.includes('age') || lower.includes('edad')) return 'age';
+  return key;
 };
 
 // Parse color string to hex
@@ -184,8 +194,8 @@ const VariantSelectorB2B = ({
   const orderedAttributeTypes = useMemo(() => {
     const types = Object.keys(attributeOptions);
     return types.sort((a, b) => {
-      const orderA = ATTRIBUTE_CONFIG[a]?.order || 99;
-      const orderB = ATTRIBUTE_CONFIG[b]?.order || 99;
+      const orderA = ATTRIBUTE_CONFIG[normalizeAttributeType(a)]?.order || 99;
+      const orderB = ATTRIBUTE_CONFIG[normalizeAttributeType(b)]?.order || 99;
       return orderA - orderB;
     });
   }, [attributeOptions]);
@@ -397,11 +407,13 @@ const VariantSelectorB2B = ({
     <div className="space-y-4">
       {/* Render selector for each attribute type */}
       {orderedAttributeTypes.map((type, index) => {
-        const config = ATTRIBUTE_CONFIG[type] || { icon: Package, displayName: type, order: 99 };
+        const normalizedType = normalizeAttributeType(type);
+        const config = ATTRIBUTE_CONFIG[normalizedType] || { icon: Package, displayName: type, order: 99 };
         const Icon = config.icon;
         const allOptions = attributeOptions[type] || [];
         const availableOptions = getAvailableOptions(type);
         const selectedValue = selectedAttributes[type];
+        const isColorType = normalizedType === 'color';
         
         // Only show if previous types are selected (or this is the first type)
         const previousTypesSelected = orderedAttributeTypes.slice(0, index).every(t => selectedAttributes[t]);
@@ -419,7 +431,7 @@ const VariantSelectorB2B = ({
               </Badge>
             </h4>
 
-            {type === 'color' ? (
+            {isColorType ? (
               // Color swatches - with IMAGE THUMBNAILS support
               <div className="flex flex-wrap gap-2">
                 {allOptions.map(value => {
