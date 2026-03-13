@@ -185,6 +185,7 @@ const CheckoutPage = () => {
 
   // Fetch ADMIN payment methods (all B2C payments go through admin/platform)
   const {
+    methods: adminMethods,
     bankMethod: adminBank,
     moncashMethod: adminMoncash,
     natcashMethod: adminNatcash,
