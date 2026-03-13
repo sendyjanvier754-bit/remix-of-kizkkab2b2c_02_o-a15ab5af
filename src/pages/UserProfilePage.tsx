@@ -26,6 +26,7 @@ import { InlineSettingsPanel } from "@/components/profile/InlineSettingsPanel";
 import { InlineReturnsPanel } from "@/components/profile/InlineReturnsPanel";
 import { SupportMenuPopover } from "@/components/profile/SupportMenuPopover";
 import { useMyReturnRequests } from "@/hooks/useOrderReturnRequests";
+import { useUnreadChatCount } from "@/hooks/useSupportChat";
 
 type ActiveSection = 'orders' | 'favorites' | 'addresses' | 'payment' | 'settings' | 'returns';
 
@@ -40,7 +41,7 @@ export function UserProfilePage() {
     "Mi Cuenta": true,
     "Mis Pedidos": true,
     "Mis Intereses": false,
-    "Servicio al Cliente": false,
+    "Centro de Ayuda": true,
     "Política": false,
   });
 
@@ -48,6 +49,7 @@ export function UserProfilePage() {
   const { data: b2cOrders = [] } = useBuyerB2COrders();
   const { data: b2bOrders = [] } = useBuyerOrders();
   const { data: myReturns = [] } = useMyReturnRequests();
+  const unreadChats = useUnreadChatCount();
   const totalOrders = b2cOrders.length + (b2bOrders?.length ?? 0);
   const pendingReturns = myReturns.filter(r => r.status === 'pending').length;
 
