@@ -230,7 +230,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 } else if (userRole === UserRole.ADMIN) {
                   navigate('/admin/dashboard', { replace: true });
                 } else {
-                  navigate('/perfil', { replace: true });
+                  navigate('/', { replace: true });
                 }
               } else {
                 console.log('⏸️ Not redirecting - user already in correct area:', currentPath);

@@ -63,9 +63,9 @@ const LoginPage = () => {
         } else if (role === UserRole.ADMIN) {
           navigate('/admin/dashboard', { replace: true });
         } else if (role === UserRole.USER) {
-          navigate('/perfil', { replace: true });
+          navigate('/', { replace: true });
         } else {
-          navigate('/perfil', { replace: true });
+          navigate('/', { replace: true });
         }
       }
     }
