@@ -265,12 +265,13 @@ export const useConfirmB2CPayment = () => {
 
   return useMutation({
     mutationFn: async (orderId: string) => {
+      // Buyer only notifies payment — status moves to pending_validation
+      // The ADMIN must confirm receipt before it becomes 'paid'
       const { error } = await supabase
         .from('orders_b2c')
         .update({
-          payment_status: 'paid' as any,
-          status: 'paid',
-          payment_confirmed_at: new Date().toISOString(),
+          payment_status: 'pending_validation' as any,
+          status: 'placed',
         })
         .eq('id', orderId);
 
@@ -279,11 +280,11 @@ export const useConfirmB2CPayment = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
-      toast.success('¡Pago confirmado!');
+      toast.success('Comprobante enviado. El admin verificará tu pago en breve.');
     },
     onError: (error: Error) => {
-      console.error('Error confirming payment:', error);
-      toast.error('Error al confirmar el pago');
+      console.error('Error al enviar comprobante:', error);
+      toast.error('Error al enviar el comprobante');
     },
   });
 };
