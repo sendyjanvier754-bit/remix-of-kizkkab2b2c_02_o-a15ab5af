@@ -79,8 +79,17 @@ const SellerPedidosPage = () => {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [paymentNotes, setPaymentNotes] = useState('');
+  const [returnActionOrder, setReturnActionOrder] = useState<any | null>(null);
+  const [returnActionType, setReturnActionType] = useState<'accept' | 'reject' | 'mediate' | null>(null);
+  const [returnActionNotes, setReturnActionNotes] = useState('');
+  const [returnAmountApproved, setReturnAmountApproved] = useState('');
 
   const { data: orders, isLoading } = useSellerB2CSales({ paymentStatus: paymentStatusFilter });
+  const { data: returnRequests = [], isLoading: returnsLoading } = useSellerReturnRequests();
+  const updateReturn = useUpdateReturnRequest();
+
+  const pendingReturns = returnRequests.filter(r => r.status === 'pending');
+  const activeTab = 'orders';
   const { data: stats } = useB2CSalesStats();
 
   const filteredOrders = orders?.filter(order => {
