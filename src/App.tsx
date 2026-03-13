@@ -53,6 +53,7 @@ const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const EditProfilePage = lazy(() => import("./pages/EditProfilePage"));
 const UserSupportPage = lazy(() => import("./pages/UserSupportPage"));
+const UserNotificationsPage = lazy(() => import("./pages/UserNotificationsPage"));
 
 // Lazy loaded - Legal & Info Pages
 const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
