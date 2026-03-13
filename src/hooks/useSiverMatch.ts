@@ -814,8 +814,8 @@ export const useSiverMatch = () => {
         
         // Check which sales don't have my review
         const pending = [];
-        for (const sale of sales) {
-          const { data: existingReview } = await supabase
+        for (const sale of (sales as any[])) {
+          const { data: existingReview } = await (supabase as any)
             .from('siver_match_reviews')
             .select('id')
             .eq('sale_id', sale.id)
