@@ -140,6 +140,10 @@ export default function UserSupportPage() {
           {/* Encabezado de página */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5 text-muted-foreground mr-1">
+                <ChevronLeft className="h-4 w-4" />
+                Volver
+              </Button>
               <div className="p-2 rounded-xl bg-primary/10">
                 <MessageCircle className="h-6 w-6 text-primary" />
               </div>
