@@ -194,8 +194,8 @@ const VariantSelectorB2B = ({
   const orderedAttributeTypes = useMemo(() => {
     const types = Object.keys(attributeOptions);
     return types.sort((a, b) => {
-      const orderA = ATTRIBUTE_CONFIG[a]?.order || 99;
-      const orderB = ATTRIBUTE_CONFIG[b]?.order || 99;
+      const orderA = ATTRIBUTE_CONFIG[normalizeAttributeType(a)]?.order || 99;
+      const orderB = ATTRIBUTE_CONFIG[normalizeAttributeType(b)]?.order || 99;
       return orderA - orderB;
     });
   }, [attributeOptions]);
