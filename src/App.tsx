@@ -44,6 +44,7 @@ const CategoriesPage = lazy(() => import("./pages/CategoriesPage"));
 const CategoryProductsPage = lazy(() => import("./pages/CategoryProductsPage"));
 const StoreProfilePage = lazy(() => import("./pages/StoreProfilePage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
+const SharedCartPage = lazy(() => import("./pages/SharedCartPage"));
 const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
 const SearchResultsPage = lazy(() => import("./pages/SearchResultsPage"));
 const TrendsPage = lazy(() => import("./pages/TrendsPage"));
@@ -153,6 +154,7 @@ const AppContent = () => {
             <Route path="/editar-perfil" element={<ProtectedRoute><LazyRoute><EditProfilePage /></LazyRoute></ProtectedRoute>} />
             <Route path="/mis-compras" element={<LazyRoute><MyPurchasesPage /></LazyRoute>} />
             <Route path="/carrito" element={<LazyRoute><CartPage /></LazyRoute>} />
+            <Route path="/carrito/compartido/:shareCode" element={<LazyRoute><SharedCartPage /></LazyRoute>} />
             <Route path="/checkout" element={<LazyRoute><CheckoutPage /></LazyRoute>} />
             <Route path="/favoritos" element={<LazyRoute><FavoritesPage /></LazyRoute>} />
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />

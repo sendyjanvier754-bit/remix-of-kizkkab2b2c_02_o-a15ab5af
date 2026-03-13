@@ -13,7 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ShoppingCart, Trash2, Package, MessageCircle, Banknote, Wallet, DollarSign, X, Loader2, Check, Palette, Ruler, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Trash2, Package, MessageCircle, Banknote, Wallet, DollarSign, X, Loader2, Check, Palette, Ruler, Minus, Plus, Share2, Copy, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useB2CCartItems, B2CCartItem } from "@/hooks/useB2CCartItems";
 import { useActiveB2COrder } from "@/hooks/useB2COrders";
@@ -185,6 +186,10 @@ const CartPage = () => {
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [showRemoveItemDialog, setShowRemoveItemDialog] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Cart selection store
   const { 
@@ -498,6 +503,62 @@ const CartPage = () => {
     const supportPhone = '5712345678'; // Cambiar al número real de soporte
     const whatsappUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleShareCart = async () => {
+    if (!user?.id || items.length === 0) return;
+    setIsSharing(true);
+    setShareCopied(false);
+    try {
+      const snapshot = items.map(item => ({
+        sku: item.sku,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+        storeId: item.storeId,
+        storeName: item.storeName,
+        storeWhatsapp: item.storeWhatsapp,
+        sellerCatalogId: item.sellerCatalogId,
+        color: item.color,
+        size: item.size,
+        variantId: item.variantId,
+        variantAttributes: item.variantAttributes,
+      }));
+
+      const { data, error } = await (supabase as any)
+        .from('shared_carts')
+        .insert([{ created_by: user.id, items: snapshot }])
+        .select('share_code')
+        .single();
+
+      if (error) throw error;
+
+      const link = `${window.location.origin}/carrito/compartido/${data.share_code}`;
+      setShareLink(link);
+      setShowShareDialog(true);
+    } catch (err) {
+      console.error('Error sharing cart:', err);
+      toast.error('Error al compartir carrito');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setShareCopied(true);
+      toast.success('Enlace copiado');
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      toast.error('No se pudo copiar');
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    const message = `¡Mira mi carrito de compras! 🛒\n\n${items.length} productos · $${totalPrice.toFixed(2)}\n\n${shareLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   return (
@@ -945,13 +1006,13 @@ const CartPage = () => {
                 {/* Checkout Button and Support */}
                 <div className="p-2 flex gap-2 justify-center">
                   <button
-                    onClick={handleWhatsAppSupport}
-                    className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-gray-300"
-                    style={{ color: '#29892a' }}
-                    title="Contactar por WhatsApp"
+                    onClick={handleShareCart}
+                    disabled={isSharing}
+                    className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-border hover:bg-muted"
+                    title="Compartir carrito"
                   >
-                    <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
-                    {t('common.support')}
+                    {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                    Compartir
                   </button>
                   {someSelected ? (
                     <Link
@@ -1105,14 +1166,14 @@ const CartPage = () => {
         <div className="fixed left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 bottom-10 z-40 flex justify-center">
           <div className="rounded-lg p-1 border border-gray-300 shadow-md w-full" style={{ backgroundColor: '#efefef' }}>
             <div className="flex gap-1 justify-between items-center">
-              {/* Botón WhatsApp */}
+              {/* Botón Compartir */}
               <button
-                onClick={handleWhatsAppSupport}
-                className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center"
-                style={{ color: 'white', backgroundColor: '#29892a' }}
-                title="Contactar Soporte"
+                onClick={handleShareCart}
+                disabled={isSharing}
+                className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center border border-border bg-muted hover:bg-muted/80"
+                title="Compartir carrito"
               >
-                <MessageCircle className="w-5 h-5" />
+                {isSharing ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : <Share2 className="w-5 h-5 text-foreground" />}
               </button>
 
               <div className="flex-1" />
@@ -1202,7 +1263,50 @@ const CartPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Variant Selection Drawer ─────────────────────────────────── */}
+      {/* Share Cart Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="w-5 h-5" />
+              Compartir carrito
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Comparte este enlace para que otra persona pueda ver y agregar estos productos a su carrito.
+            </p>
+            
+            {/* Link */}
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={shareLink}
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted truncate"
+              />
+              <Button size="sm" variant="outline" onClick={handleCopyShareLink}>
+                {shareCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleShareWhatsApp} className="w-full gap-2" style={{ backgroundColor: '#29892a' }}>
+                <MessageCircle className="w-4 h-4" />
+                Enviar por WhatsApp
+              </Button>
+              <Button variant="outline" onClick={handleCopyShareLink} className="w-full gap-2">
+                <Copy className="w-4 h-4" />
+                {shareCopied ? 'Copiado!' : 'Copiar enlace'}
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">El enlace expira en 7 días</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       {selectedItemForVariants && (
         <>
           {/* Overlay */}
