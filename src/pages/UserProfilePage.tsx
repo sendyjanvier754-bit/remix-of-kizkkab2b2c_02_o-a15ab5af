@@ -74,84 +74,127 @@ export function UserProfilePage() {
   const toggleGroup = (group: string) =>
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
 
-  // ── Mobile layout ─────────────────────────────────────────────────────────
+  // Derived order counts by status
+  const pendingPayment = b2cOrders.filter(o => o.status === 'pending_payment' || o.status === 'pending').length;
+  const pendingShipment = b2cOrders.filter(o => o.status === 'confirmed' || o.status === 'processing').length;
+  const shipped = b2cOrders.filter(o => o.status === 'shipped' || o.status === 'in_transit').length;
+
+  // ── Mobile layout (AliExpress-style) ───────────────────────────────────────
   const MobileLayout = () => (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
-        <div className="px-4 py-6">
-          <h1 className="text-2xl font-bold mb-6">Mi Cuenta</h1>
-          <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-            <Avatar className="w-16 h-16 border-2 border-white shadow-md">
-              <AvatarImage src={user?.avatar_url || undefined} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">{getInitials()}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold">{user?.name || "Usuario"}</h2>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-              <Button variant="outline" size="sm" className="mt-2 text-xs h-7" onClick={() => navigate("/editar-perfil")}>
-                <User className="w-3 h-3 mr-1" /> Editar Perfil
-              </Button>
-            </div>
+    <div className="min-h-screen bg-muted/40 pb-24">
+      {/* Profile header */}
+      <div className="bg-background px-4 pt-5 pb-4">
+        <div className="flex items-center gap-3">
+          <Avatar className="w-12 h-12 border-2 border-border shadow-sm">
+            <AvatarImage src={user?.avatar_url || undefined} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">{getInitials()}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold text-foreground truncate">{user?.name || "Usuario"}</h1>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
-        </div>
-      </div>
-      <div className="px-4 py-4 bg-white mb-2">
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="text-xl font-bold text-primary">{totalOrders}</div>
-            <div className="text-xs text-muted-foreground mt-1">Compras</div>
-          </div>
-          <div className="text-center p-3 bg-pink-50 rounded-lg">
-            <div className="text-xl font-bold text-pink-500">{favorites.length}</div>
-            <div className="text-xs text-muted-foreground mt-1">Favoritos</div>
-          </div>
-          <div className="text-center p-3 bg-green-50 rounded-lg">
-            <div className="text-xl font-bold text-green-500">0</div>
-            <div className="text-xs text-muted-foreground mt-1">Puntos</div>
-          </div>
-        </div>
-      </div>
-      <div className="px-4 py-3 space-y-2">
-        {[
-          { icon: <ShoppingBag className="w-6 h-6"/>, label: "Mis Compras",     action: () => navigate("/mis-compras")     },
-          { icon: <Heart className="w-6 h-6"/>,        label: "Favoritos",       action: () => navigate("/favoritos")       },
-          { icon: <MapPin className="w-6 h-6"/>,        label: "Mis Direcciones", action: () => navigate("/mis-direcciones") },
-          { icon: <Bell className="w-6 h-6"/>,          label: "Notificaciones",  action: () => navigate("/notificaciones")  },
-          { icon: <MessageCircle className="w-6 h-6"/>, label: "Live Chat",       action: () => navigate("/soporte"), badge: unreadChats },
-        ].map((item, i) => (
-          <button key={i} onClick={item.action}
-            className="w-full bg-white border border-border rounded-lg p-4 hover:bg-muted/40 transition-colors flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-primary">{item.icon}</div>
-              <span className="font-medium text-sm">{item.label}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {item.badge !== undefined && item.badge > 0 && (
-                <Badge className="h-5 min-w-5 px-1.5 text-[10px] bg-destructive text-destructive-foreground">{item.badge}</Badge>
+          <div className="flex items-center gap-1">
+            <button onClick={() => navigate("/editar-perfil")} className="p-2 rounded-full hover:bg-muted transition-colors">
+              <Settings className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <button onClick={() => navigate("/notificaciones")} className="p-2 rounded-full hover:bg-muted transition-colors relative">
+              <Bell className="w-5 h-5 text-muted-foreground" />
+              {unreadChats > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                  {unreadChats}
+                </span>
               )}
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </div>
-          </button>
-        ))}
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="px-4 py-4">
-        <Button onClick={handleLogout} disabled={isLoading}
-          className="w-full h-11 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold rounded-lg flex items-center justify-center gap-2">
-          <LogOut className="w-5 h-5" />
+
+      {/* Mis Pedidos section */}
+      <div className="bg-background mt-2 px-4 py-3">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold text-foreground">Mis pedidos</h2>
+          <button onClick={() => navigate("/mis-compras")} className="text-xs text-primary flex items-center gap-0.5 font-medium">
+            Ver todo <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <div className="grid grid-cols-5 gap-1">
+          {[
+            { icon: <Wallet className="w-6 h-6" />, label: "Pendientes de pago", count: pendingPayment },
+            { icon: <Package className="w-6 h-6" />, label: "Pendientes de envío", count: pendingShipment },
+            { icon: <Truck className="w-6 h-6" />, label: "Enviado", count: shipped },
+            { icon: <Star className="w-6 h-6" />, label: "Añadir reseñas", count: 0 },
+            { icon: <RotateCcw className="w-6 h-6" />, label: "Devoluciones", count: pendingReturns },
+          ].map((item, i) => (
+            <button
+              key={i}
+              onClick={() => i === 4 ? navigate("/mis-compras") : navigate("/mis-compras")}
+              className="flex flex-col items-center gap-1.5 py-2 relative"
+            >
+              <div className="text-muted-foreground">{item.icon}</div>
+              {item.count > 0 && (
+                <span className="absolute top-0.5 right-1/4 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                  {item.count}
+                </span>
+              )}
+              <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-2">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick actions row */}
+      <div className="bg-background mt-2 px-4 py-3">
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { icon: <Clock className="w-6 h-6" />, label: "Historial", action: () => navigate("/mis-compras") },
+            { icon: <Heart className="w-6 h-6" />, label: "Lista de deseos", action: () => navigate("/favoritos") },
+            { icon: <CreditCard className="w-6 h-6" />, label: "Créditos", action: () => {} },
+            { icon: <ShoppingBag className="w-6 h-6" />, label: "Mis tiendas", action: () => {} },
+          ].map((item, i) => (
+            <button key={i} onClick={item.action} className="flex flex-col items-center gap-1.5 py-2">
+              <div className="text-muted-foreground">{item.icon}</div>
+              <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-2">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Service section */}
+      <div className="bg-background mt-2 px-4 py-3">
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { icon: <HelpCircle className="w-6 h-6" />, label: "Centro de Ayuda", action: () => navigate("/soporte") },
+            { icon: <MapPin className="w-6 h-6" />, label: "Direcciones", action: () => navigate("/mis-direcciones") },
+            { icon: <MessageCircle className="w-6 h-6" />, label: "Live Chat", action: () => navigate("/soporte"), badge: unreadChats },
+            { icon: <Shield className="w-6 h-6" />, label: "Legal", action: () => setShowLegal(true) },
+          ].map((item, i) => (
+            <button key={i} onClick={item.action} className="flex flex-col items-center gap-1.5 py-2 relative">
+              <div className="text-muted-foreground">{item.icon}</div>
+              {item.badge && item.badge > 0 && (
+                <span className="absolute top-0 right-1/4 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                  {item.badge}
+                </span>
+              )}
+              <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-2">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Logout */}
+      <div className="mt-4 px-4">
+        <Button onClick={handleLogout} disabled={isLoading} variant="outline"
+          className="w-full h-11 border-destructive text-destructive hover:bg-destructive/10 font-semibold rounded-lg flex items-center justify-center gap-2">
+          <LogOut className="w-4 h-4" />
           {isLoading ? "Cerrando sesión..." : "Cerrar Sesión"}
         </Button>
       </div>
-      <div className="px-4 pb-6">
-        <div className="flex gap-2">
-          <button onClick={() => setShowLegal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-muted/50 hover:bg-muted text-xs text-muted-foreground transition-colors">
-            <Shield className="h-3.5 w-3.5 text-primary" /> Términos Legales
-          </button>
-          <button onClick={() => setShowAbout(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-muted/50 hover:bg-muted text-xs text-muted-foreground transition-colors">
-            <Info className="h-3.5 w-3.5 text-primary" /> Acerca de
-          </button>
-        </div>
+
+      {/* About link */}
+      <div className="mt-3 px-4 pb-4 flex justify-center">
+        <button onClick={() => setShowAbout(true)} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+          <Info className="h-3.5 w-3.5" /> Acerca de
+        </button>
       </div>
     </div>
   );
