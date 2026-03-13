@@ -792,6 +792,11 @@ export const InlineOrdersPanel = () => {
     setOrderToCancel(order);
   };
 
+  const handleRequestReturn = (order: BuyerOrder) => {
+    setSelectedOrder(null);
+    setOrderForReturn(order);
+  };
+
   const handleCancelConfirm = async (reason: string, requestRefund: boolean) => {
     if (!orderToCancel) return;
     await cancelMutation.mutateAsync({ orderId: orderToCancel.id, reason, requestRefund });
