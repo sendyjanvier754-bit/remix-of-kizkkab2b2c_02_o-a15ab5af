@@ -154,6 +154,7 @@ const AppContent = () => {
             <Route path="/editar-perfil" element={<ProtectedRoute><LazyRoute><EditProfilePage /></LazyRoute></ProtectedRoute>} />
             <Route path="/mis-compras" element={<LazyRoute><MyPurchasesPage /></LazyRoute>} />
             <Route path="/carrito" element={<LazyRoute><CartPage /></LazyRoute>} />
+            <Route path="/carrito/compartido/:shareCode" element={<LazyRoute><SharedCartPage /></LazyRoute>} />
             <Route path="/checkout" element={<LazyRoute><CheckoutPage /></LazyRoute>} />
             <Route path="/favoritos" element={<LazyRoute><FavoritesPage /></LazyRoute>} />
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />
