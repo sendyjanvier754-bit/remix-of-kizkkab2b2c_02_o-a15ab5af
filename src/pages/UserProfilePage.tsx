@@ -408,20 +408,24 @@ export function UserProfilePage() {
           {/* Support widget */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
             <div className="px-4 py-2.5 border-b border-border">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Servicio Al Cliente</h3>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Centro de Ayuda</h3>
             </div>
             <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
               <button onClick={() => navigate("/notificaciones")}
                 className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors">
                 <Bell className="w-5 h-5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground leading-tight text-center">Mis<br/>Notificaciones</span>
+                <span className="text-[10px] text-muted-foreground leading-tight text-center">Notificaciones</span>
               </button>
-              <SupportMenuPopover>
-                <button className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors w-full">
-                  <HelpCircle className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground leading-tight text-center">Centro<br/>de Ayuda</span>
-                </button>
-              </SupportMenuPopover>
+              <button onClick={() => navigate("/soporte")}
+                className="relative flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors w-full">
+                <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground leading-tight text-center">Live Chat</span>
+                {unreadChats > 0 && (
+                  <span className="absolute top-1.5 right-3 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                    {unreadChats}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 
