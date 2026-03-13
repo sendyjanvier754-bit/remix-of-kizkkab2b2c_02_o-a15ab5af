@@ -35,7 +35,7 @@ export function ChatList({ onSelectChat, selectedChatId, isStaff = false }: Chat
       <CardHeader className="py-3 px-4 border-b border-border flex-shrink-0">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Inbox className="h-4 w-4" />
-          {t('header.support')}
+          {isStaff ? t('header.support') : 'Live Chat'}
         </CardTitle>
       </CardHeader>
       
