@@ -472,8 +472,8 @@ const GlobalMobileHeader = ({
             className={cn(
               "flex-shrink-0 px-1.5 py-2 text-xs rounded-none whitespace-nowrap transition-all border-r border-[#0a3a9f] text-center",
               selectedCategory === null
-                ? "bg-white text-[#071d7f] font-medium"
-                : "bg-white text-[#94111f] hover:bg-gray-100"
+                ? "bg-white/20 text-white font-medium"
+                : "text-white/80 hover:bg-white/10"
             )}
           >
             Todo
@@ -486,8 +486,8 @@ const GlobalMobileHeader = ({
                 "flex-shrink-0 px-1.5 py-2 text-xs rounded-none whitespace-nowrap transition-all text-center",
                 index < rootCategories.length - 1 && "border-r border-[#0a3a9f]",
                 selectedCategory === cat.id
-                  ? "bg-white text-[#071d7f] font-medium"
-                  : "bg-white text-[#94111f] hover:bg-gray-100"
+                  ? "bg-white/20 text-white font-medium"
+                  : "text-white/80 hover:bg-white/10"
               )}
             >
               {cat.name}
