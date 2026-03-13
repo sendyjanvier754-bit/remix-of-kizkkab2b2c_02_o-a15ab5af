@@ -99,6 +99,45 @@ export const useOrders = () => {
 
   // Fetch seller's B2C sales (orders where the seller's store is the vendor)
   const useSellerB2CSales = (filters?: OrderFilters) => {
+    const queryClient = useQueryClient();
+
+    // Realtime subscription — updates automatically when a new B2C order arrives
+    useEffect(() => {
+      if (!user?.id) return;
+
+      let storeId: string | null = null;
+
+      // Get store id once and subscribe
+      supabase
+        .from('stores')
+        .select('id')
+        .eq('owner_user_id', user.id)
+        .maybeSingle()
+        .then(({ data: store }) => {
+          if (!store?.id) return;
+          storeId = store.id;
+
+          const channel = supabase
+            .channel(`seller-b2c-orders-${storeId}`)
+            .on(
+              'postgres_changes',
+              {
+                event: '*',
+                schema: 'public',
+                table: 'orders_b2c',
+                filter: `store_id=eq.${storeId}`,
+              },
+              () => {
+                queryClient.invalidateQueries({ queryKey: ['seller-b2c-sales', user?.id] });
+                queryClient.invalidateQueries({ queryKey: ['b2c-sales-stats', user?.id] });
+              }
+            )
+            .subscribe();
+
+          return () => { supabase.removeChannel(channel); };
+        });
+    }, [user?.id, queryClient]);
+
     return useQuery({
       queryKey: ['seller-b2c-sales', user?.id, filters],
       queryFn: async () => {
@@ -118,7 +157,7 @@ export const useOrders = () => {
           .from('orders_b2c')
           .select(`
             *,
-            order_items_b2c (*),
+            order_items_b2c (*, seller_catalog(nombre, sku, images)),
             buyer_profile:profiles!orders_b2c_buyer_user_id_fkey (full_name, email)
           `)
           .eq('store_id', store.id)
@@ -145,15 +184,14 @@ export const useOrders = () => {
           total_quantity: (o.order_items_b2c || []).reduce((s: number, i: any) => s + Number(i.quantity), 0),
           currency: o.currency || 'USD',
           payment_method: o.payment_method,
+          payment_reference: o.payment_reference,
           notes: o.notes,
           metadata: o.metadata,
           created_at: o.created_at,
           updated_at: o.updated_at,
           shipping_address: o.shipping_address,
           buyer_profile: o.buyer_profile,
-          // Expose B2C items under a dedicated key so the page can read them
           order_items_b2c: o.order_items_b2c || [],
-          // Keep order_items_b2b as empty array to avoid crashes on old code paths
           order_items_b2b: [],
         })) as any[];
       },
