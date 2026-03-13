@@ -116,7 +116,7 @@ const CheckoutPage = () => {
 
   const selectedAddressData = addresses.find(a => a.id === selectedAddress);
 
-  // placeholder — paymentMethods built after admin hook below
+  
 
   // Get unique store IDs from cart items for multi-vendor shipping
   const storeIds = useMemo(() =>
