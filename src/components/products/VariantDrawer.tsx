@@ -123,6 +123,8 @@ const VariantDrawer: React.FC = () => {
       setTotalPrice(0);
       setVariantImage(null);
       setSelectedVariantId(null);
+      setIsVariantValid(false);
+      setValidationErrors([]);
     }
   }, [isOpen]);
 
