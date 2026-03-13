@@ -73,23 +73,17 @@ const SellerPedidosPage = () => {
   const { 
     useSellerB2CSales, 
     useB2CSalesStats, 
-    cancelOrderWithRestore, 
-    confirmManualPayment, 
-    rejectManualPayment 
   } = useOrders();
   
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [paymentNotes, setPaymentNotes] = useState('');
   const [returnActionOrder, setReturnActionOrder] = useState<any | null>(null);
   const [returnActionType, setReturnActionType] = useState<'accept' | 'reject' | 'mediate' | null>(null);
   const [returnActionNotes, setReturnActionNotes] = useState('');
   const [returnAmountApproved, setReturnAmountApproved] = useState('');
   const [returnSearchTerm, setReturnSearchTerm] = useState('');
+
 
   const { data: orders = [], isLoading } = useSellerB2CSales({ paymentStatus: paymentStatusFilter });
   const { data: returnRequests = [], isLoading: returnsLoading } = useSellerReturnRequests();
