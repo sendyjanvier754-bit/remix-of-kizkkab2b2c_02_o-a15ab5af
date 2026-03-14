@@ -112,12 +112,14 @@ const MarketplacePage = () => {
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {!isMobile && <Header />}
+      {!isMobile && <Header showViewModeSwitch={true} />}
       
       <main className={`flex-1 container mx-auto px-4 py-6 ${isMobile ? 'pb-20' : ''}`}>
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Adquisición de Lotes</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {isClientPreview ? "Marketplace" : "Adquisición de Lotes"}
+          </h1>
         </div>
 
         {/* Compact Filter Bar */}
