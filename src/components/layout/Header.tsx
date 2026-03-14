@@ -62,7 +62,7 @@ declare global {
 }
 
 // ── Top Bar Ticker ──────────────────────────────────────
-const TopBarTicker = ({ messages, style }: { messages: string[]; style?: React.CSSProperties }) => {
+const TopBarTicker = ({ messages, urls, style }: { messages: string[]; urls?: string[]; style?: React.CSSProperties }) => {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
@@ -79,7 +79,8 @@ const TopBarTicker = ({ messages, style }: { messages: string[]; style?: React.C
   }, [messages.length]);
 
   if (!messages.length) return null;
-  return (
+  const url = urls?.[index];
+  const content = (
     <span
       className="transition-opacity duration-300 font-medium"
       style={{ opacity: visible ? 1 : 0, ...style }}
@@ -87,6 +88,12 @@ const TopBarTicker = ({ messages, style }: { messages: string[]; style?: React.C
       {messages[index]}
     </span>
   );
+  if (url) {
+    return url.startsWith('http')
+      ? <a href={url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">{content}</a>
+      : <Link to={url} className="hover:opacity-80 transition-opacity">{content}</Link>;
+  }
+  return content;
 };
 
 interface HeaderProps {
@@ -431,27 +438,70 @@ const Header = ({
       {(() => {
         const bgColor = getValue('topbar_bg_color') || '#f9fafb';
         const textColor = getValue('topbar_text_color') || '#4b5563';
-        let messages: string[] = [];
+
+        // Rotating left messages — support {text,url}[] and legacy string[]
+        let messages: { text: string; url: string }[] = [];
         try {
           const raw = getValue('topbar_messages');
           const parsed = JSON.parse(raw || '[]');
-          if (Array.isArray(parsed)) messages = parsed.filter(Boolean);
+          if (Array.isArray(parsed)) {
+            messages = parsed
+              .filter(Boolean)
+              .map((m: any) => typeof m === 'string' ? { text: m, url: '' } : m);
+          }
         } catch {}
         if (!messages.length) {
-          messages = [t('header.shippingAbroad'), t('header.freeReturns'), t('header.trends')];
+          messages = [
+            { text: t('header.shippingAbroad'), url: '' },
+            { text: t('header.freeReturns'), url: '' },
+            { text: t('header.trends'), url: '/tendencias' },
+          ];
         }
+
+        // Right-side links
+        let rightLinks: { text: string; url: string }[] = [];
+        try {
+          const raw = getValue('topbar_right_links');
+          const parsed = JSON.parse(raw || '[]');
+          if (Array.isArray(parsed) && parsed.length) rightLinks = parsed;
+        } catch {}
+        if (!rightLinks.length) {
+          rightLinks = [
+            { text: t('header.helpCenter'), url: '/contacto' },
+            { text: t('header.sell'), url: '/admin/login' },
+          ];
+        }
+
+        const msgTexts = messages.map(m => m.text);
+
         return (
           <div style={{ backgroundColor: bgColor, color: textColor }} className="border-b border-gray-200">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between h-10 text-xs">
-                {/* Marquee de mensajes */}
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <TopBarTicker messages={messages} style={{ color: textColor }} />
+                {/* Rotating messages left */}
+                <div className="flex items-center overflow-hidden">
+                  <TopBarTicker
+                    messages={msgTexts}
+                    urls={messages.map(m => m.url)}
+                    style={{ color: textColor }}
+                  />
                 </div>
-                <div className="flex items-center gap-4" style={{ color: textColor }}>
-                  <button className="hover:opacity-75 transition-opacity">{t('header.helpCenter')}</button>
-                  <span className="opacity-30">|</span>
-                  <Link to="/admin/login" className="hover:opacity-75 transition-opacity">{t('header.sell')}</Link>
+                {/* Configurable right links */}
+                <div className="flex items-center gap-3" style={{ color: textColor }}>
+                  {rightLinks.map((link, i) => (
+                    <span key={i} className="flex items-center gap-3">
+                      {i > 0 && <span className="opacity-30">|</span>}
+                      {link.url ? (
+                        link.url.startsWith('http') ? (
+                          <a href={link.url} target="_blank" rel="noopener noreferrer" className="hover:opacity-75 transition-opacity">{link.text}</a>
+                        ) : (
+                          <Link to={link.url} className="hover:opacity-75 transition-opacity">{link.text}</Link>
+                        )
+                      ) : (
+                        <span className="hover:opacity-75 transition-opacity cursor-default">{link.text}</span>
+                      )}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>

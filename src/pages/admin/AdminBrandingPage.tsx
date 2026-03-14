@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Palette, Globe, Share2, Search, CreditCard, FileText, Image, ShieldCheck, Plus, X, MonitorPlay } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Save, Palette, Globe, Share2, Search, CreditCard, FileText, Image, ShieldCheck, Plus, X, MonitorPlay, Pencil } from 'lucide-react';
 
 const PAYMENT_ICONS = [
   { key: 'payment_icon_visa',       label: 'VISA',                default: '/visa.png' },
@@ -36,7 +37,17 @@ export default function AdminBrandingPage() {
   const { settings, isLoading, updateMultiple } = useBrandingSettings();
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  const [topbarMessages, setTopbarMessages] = useState<string[]>(['']);
+  const [identityOpen, setIdentityOpen] = useState(false);
+  // Draft used inside the Identity dialog — only committed on save
+  const [identityDraft, setIdentityDraft] = useState<Record<string, string>>({});
+
+  // Each message: { text: string; url: string }
+  const [topbarMessages, setTopbarMessages] = useState<{ text: string; url: string }[]>([{ text: '', url: '' }]);
+  // Right-side links: [{ text, url }]
+  const [topbarRightLinks, setTopbarRightLinks] = useState<{ text: string; url: string }[]>([
+    { text: 'Centro de Ayuda', url: '' },
+    { text: 'Vender', url: '/admin/login' },
+  ]);
 
   useEffect(() => {
     if (settings.length > 0) {
@@ -45,29 +56,51 @@ export default function AdminBrandingPage() {
       setForm(map);
       try {
         const msgs = JSON.parse(map.topbar_messages || '[]');
-        setTopbarMessages(Array.isArray(msgs) && msgs.length > 0 ? msgs : ['']);
-      } catch {
-        setTopbarMessages(['']);
-      }
+        if (Array.isArray(msgs) && msgs.length > 0) {
+          // Support both legacy string[] and new {text,url}[]
+          setTopbarMessages(msgs.map((m: any) =>
+            typeof m === 'string' ? { text: m, url: '' } : m
+          ));
+        } else {
+          setTopbarMessages([{ text: '', url: '' }]);
+        }
+      } catch { setTopbarMessages([{ text: '', url: '' }]); }
+      try {
+        const rl = JSON.parse(map.topbar_right_links || '[]');
+        if (Array.isArray(rl) && rl.length > 0) setTopbarRightLinks(rl);
+      } catch {}
     }
   }, [settings]);
 
-  const syncTopbarMessages = (msgs: string[]) => {
+  const syncMessages = (msgs: { text: string; url: string }[]) => {
     setTopbarMessages(msgs);
-    setForm(prev => ({ ...prev, topbar_messages: JSON.stringify(msgs.filter(m => m.trim())) }));
+    setForm(prev => ({ ...prev, topbar_messages: JSON.stringify(msgs.filter(m => m.text.trim())) }));
+  };
+  const syncRightLinks = (links: { text: string; url: string }[]) => {
+    setTopbarRightLinks(links);
+    setForm(prev => ({ ...prev, topbar_right_links: JSON.stringify(links.filter(l => l.text.trim())) }));
   };
 
-  const addTopbarMessage = () => setTopbarMessages(prev => [...prev, '']);
-
-  const updateTopbarMessage = (i: number, value: string) => {
+  const addMessage = () => syncMessages([...topbarMessages, { text: '', url: '' }]);
+  const updateMessage = (i: number, field: 'text' | 'url', value: string) => {
     const updated = [...topbarMessages];
-    updated[i] = value;
-    syncTopbarMessages(updated);
+    updated[i] = { ...updated[i], [field]: value };
+    syncMessages(updated);
+  };
+  const removeMessage = (i: number) => {
+    const updated = topbarMessages.filter((_, idx) => idx !== i);
+    syncMessages(updated.length > 0 ? updated : [{ text: '', url: '' }]);
   };
 
-  const removeTopbarMessage = (i: number) => {
-    const updated = topbarMessages.filter((_, idx) => idx !== i);
-    syncTopbarMessages(updated.length > 0 ? updated : ['']);
+  const addRightLink = () => syncRightLinks([...topbarRightLinks, { text: '', url: '' }]);
+  const updateRightLink = (i: number, field: 'text' | 'url', value: string) => {
+    const updated = [...topbarRightLinks];
+    updated[i] = { ...updated[i], [field]: value };
+    syncRightLinks(updated);
+  };
+  const removeRightLink = (i: number) => {
+    const updated = topbarRightLinks.filter((_, idx) => idx !== i);
+    syncRightLinks(updated.length > 0 ? updated : [{ text: '', url: '' }]);
   };
 
   const set = (key: string, value: string) =>
@@ -126,23 +159,120 @@ export default function AdminBrandingPage() {
           </CardContent>
         </Card>
 
-        {/* ── Identity ── */}
+        {/* ── Identity ── (read-only card + edit dialog) */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Globe className="h-5 w-5" /> Identidad</CardTitle>
-            <CardDescription>Nombre, slogan, logo y favicon de la plataforma</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {field('platform_name', 'Nombre de la Plataforma', 'Ej: Mi Marketplace')}
-              {field('platform_slogan', 'Slogan', 'Tu slogan aquí')}
+          <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2"><Globe className="h-5 w-5" /> Identidad</CardTitle>
+              <CardDescription>Nombre, slogan, logo y favicon de la plataforma</CardDescription>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => {
+                setIdentityDraft({
+                  platform_name:   form.platform_name   || '',
+                  platform_slogan: form.platform_slogan || '',
+                  logo_url:        form.logo_url        || '',
+                  favicon_url:     form.favicon_url     || '',
+                });
+                setIdentityOpen(true);
+              }}
+            >
+              <Pencil className="h-4 w-4 mr-1" /> Editar
+            </Button>
+          </CardHeader>
+          <CardContent>
             <div className="grid gap-6 sm:grid-cols-2">
-              <BrandingImageUpload id="logo_url" label="Logo" value={form.logo_url || ''} onChange={v => set('logo_url', v)} previewSize="lg" />
-              <BrandingImageUpload id="favicon_url" label="Favicon" value={form.favicon_url || ''} onChange={v => set('favicon_url', v)} previewSize="sm" />
+              {/* Name & Slogan */}
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Nombre de la Plataforma</p>
+                  <p className="font-semibold text-base">{form.platform_name || <span className="text-muted-foreground italic text-sm">Sin configurar</span>}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Slogan</p>
+                  <p className="text-sm">{form.platform_slogan || <span className="text-muted-foreground italic">Sin configurar</span>}</p>
+                </div>
+              </div>
+              {/* Logo & Favicon previews */}
+              <div className="flex items-center gap-6">
+                <div className="space-y-1 text-center">
+                  <p className="text-xs text-muted-foreground">Logo</p>
+                  {form.logo_url
+                    ? <img src={form.logo_url} alt="Logo" className="h-14 w-14 rounded-lg object-contain border bg-white p-1" />
+                    : <div className="h-14 w-14 rounded-lg border-2 border-dashed flex items-center justify-center"><Image className="h-5 w-5 text-muted-foreground" /></div>
+                  }
+                </div>
+                <div className="space-y-1 text-center">
+                  <p className="text-xs text-muted-foreground">Favicon</p>
+                  {form.favicon_url
+                    ? <img src={form.favicon_url} alt="Favicon" className="h-8 w-8 rounded object-contain border bg-white p-0.5" />
+                    : <div className="h-8 w-8 rounded border-2 border-dashed flex items-center justify-center"><Image className="h-4 w-4 text-muted-foreground" /></div>
+                  }
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Identity edit dialog */}
+        <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Globe className="h-5 w-5" /> Editar Identidad</DialogTitle>
+              <DialogDescription>Modifica nombre, slogan, logo y favicon. Los cambios solo se guardan al hacer clic en Guardar.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Nombre de la Plataforma</Label>
+                  <Input
+                    value={identityDraft.platform_name || ''}
+                    onChange={e => setIdentityDraft(d => ({ ...d, platform_name: e.target.value }))}
+                    placeholder="Ej: Mi Marketplace"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Slogan</Label>
+                  <Input
+                    value={identityDraft.platform_slogan || ''}
+                    onChange={e => setIdentityDraft(d => ({ ...d, platform_slogan: e.target.value }))}
+                    placeholder="Tu slogan aquí"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <BrandingImageUpload
+                  id="dialog_logo_url"
+                  label="Logo"
+                  value={identityDraft.logo_url || ''}
+                  onChange={v => setIdentityDraft(d => ({ ...d, logo_url: v }))}
+                  previewSize="lg"
+                />
+                <BrandingImageUpload
+                  id="dialog_favicon_url"
+                  label="Favicon"
+                  value={identityDraft.favicon_url || ''}
+                  onChange={v => setIdentityDraft(d => ({ ...d, favicon_url: v }))}
+                  previewSize="sm"
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setIdentityOpen(false)}>Cancelar</Button>
+              <Button
+                onClick={() => {
+                  setForm(prev => ({ ...prev, ...identityDraft }));
+                  setIdentityOpen(false);
+                }}
+              >
+                <Save className="h-4 w-4 mr-1" /> Aplicar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* ── Colors ── */}
         <Card>
@@ -176,7 +306,7 @@ export default function AdminBrandingPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><MonitorPlay className="h-5 w-5" /> Barra Superior</CardTitle>
-            <CardDescription>Color e mensajes rotativos que aparecen en la barra superior del sitio</CardDescription>
+            <CardDescription>Color, mensajes rotativos y enlaces configurables de la barra superior del sitio</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Colors */}
@@ -225,26 +355,37 @@ export default function AdminBrandingPage() {
                 color: form.topbar_text_color || '#4b5563',
               }}
             >
-              <span>{topbarMessages.filter(m => m.trim())[0] || 'Vista previa del mensaje...'}</span>
-              <span className="opacity-60 text-[10px]">Centro de Ayuda | Vender</span>
+              <span>{topbarMessages.find(m => m.text.trim())?.text || 'Vista previa del mensaje...'}</span>
+              <div className="flex items-center gap-3 opacity-70">
+                {topbarRightLinks.filter(l => l.text.trim()).map((l, i) => (
+                  <span key={i}>{l.text}</span>
+                ))}
+              </div>
             </div>
 
-            {/* Messages */}
-            <div className="space-y-2">
-              <Label>Mensajes Rotativos</Label>
-              <p className="text-xs text-muted-foreground">Se mostrarán uno tras otro en la barra superior. Si no hay mensajes se usarán los textos por defecto del sistema.</p>
+            {/* Left — Rotating messages */}
+            <div className="space-y-3">
+              <Label>Mensajes Rotativos (izquierda)</Label>
+              <p className="text-xs text-muted-foreground">Se muestran uno tras otro. Puedes agregar un enlace opcional a cada mensaje.</p>
               <div className="space-y-2">
                 {topbarMessages.map((msg, i) => (
-                  <div key={i} className="flex gap-2">
-                    <Input
-                      value={msg}
-                      onChange={e => updateTopbarMessage(i, e.target.value)}
-                      placeholder={`Mensaje ${i + 1}, ej: Envío internacional disponible`}
-                    />
+                  <div key={i} className="flex gap-2 items-start">
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      <Input
+                        value={msg.text}
+                        onChange={e => updateMessage(i, 'text', e.target.value)}
+                        placeholder={`Texto, ej: Envío internacional`}
+                      />
+                      <Input
+                        value={msg.url}
+                        onChange={e => updateMessage(i, 'url', e.target.value)}
+                        placeholder="URL (opcional), ej: /tendencias"
+                        className="font-mono text-xs"
+                      />
+                    </div>
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeTopbarMessage(i)}
+                      variant="ghost" size="icon"
+                      onClick={() => removeMessage(i)}
                       disabled={topbarMessages.length === 1}
                     >
                       <X className="h-4 w-4 text-muted-foreground" />
@@ -252,9 +393,45 @@ export default function AdminBrandingPage() {
                   </div>
                 ))}
               </div>
-              <Button variant="outline" size="sm" onClick={addTopbarMessage}>
+              <Button variant="outline" size="sm" onClick={addMessage}>
                 <Plus className="h-4 w-4 mr-1" />
                 Agregar Mensaje
+              </Button>
+            </div>
+
+            {/* Right — Action links */}
+            <div className="space-y-3 border-t pt-4">
+              <Label>Enlaces del Lado Derecho</Label>
+              <p className="text-xs text-muted-foreground">Texto e URL de cada enlace que aparece a la derecha de la barra (ej: Centro de Ayuda, Vender).</p>
+              <div className="space-y-2">
+                {topbarRightLinks.map((link, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      <Input
+                        value={link.text}
+                        onChange={e => updateRightLink(i, 'text', e.target.value)}
+                        placeholder={`Texto, ej: Centro de Ayuda`}
+                      />
+                      <Input
+                        value={link.url}
+                        onChange={e => updateRightLink(i, 'url', e.target.value)}
+                        placeholder="URL, ej: /contacto"
+                        className="font-mono text-xs"
+                      />
+                    </div>
+                    <Button
+                      variant="ghost" size="icon"
+                      onClick={() => removeRightLink(i)}
+                      disabled={topbarRightLinks.length === 1}
+                    >
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button variant="outline" size="sm" onClick={addRightLink}>
+                <Plus className="h-4 w-4 mr-1" />
+                Agregar Enlace
               </Button>
             </div>
           </CardContent>
@@ -347,26 +524,38 @@ export default function AdminBrandingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="legal_terms">
-              <TabsList className="mb-4">
-                {LEGAL_FIELDS.map(lf => (
-                  <TabsTrigger key={lf.key} value={lf.key}>{lf.label}</TabsTrigger>
-                ))}
-              </TabsList>
-              {LEGAL_FIELDS.map(lf => (
-                <TabsContent key={lf.key} value={lf.key}>
-                  <Textarea
-                    value={form[lf.key] || ''}
-                    onChange={e => set(lf.key, e.target.value)}
-                    placeholder={`Pega aquí el HTML del contenido de "${lf.label}"...`}
-                    rows={16}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Vacío = contenido por defecto. Con contenido = reemplaza todo el cuerpo de la página.
-                  </p>
-                </TabsContent>
-              ))}
+            <Tabs defaultValue="legal_terms" orientation="vertical">
+              <div className="flex gap-4">
+                {/* Sidebar nav */}
+                <TabsList className="flex flex-col h-auto w-52 shrink-0 items-stretch gap-0.5 bg-muted/50 p-1 rounded-lg">
+                  {LEGAL_FIELDS.map(lf => (
+                    <TabsTrigger
+                      key={lf.key}
+                      value={lf.key}
+                      className="justify-start text-left text-sm px-3 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                    >
+                      {lf.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {/* Content panels */}
+                <div className="flex-1 min-w-0">
+                  {LEGAL_FIELDS.map(lf => (
+                    <TabsContent key={lf.key} value={lf.key} className="mt-0">
+                      <Textarea
+                        value={form[lf.key] || ''}
+                        onChange={e => set(lf.key, e.target.value)}
+                        placeholder={`Pega aquí el HTML del contenido de "${lf.label}"...`}
+                        rows={18}
+                        className="font-mono text-xs w-full"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Vacío = contenido por defecto. Con contenido = reemplaza todo el cuerpo de la página.
+                      </p>
+                    </TabsContent>
+                  ))}
+                </div>
+              </div>
             </Tabs>
           </CardContent>
         </Card>
