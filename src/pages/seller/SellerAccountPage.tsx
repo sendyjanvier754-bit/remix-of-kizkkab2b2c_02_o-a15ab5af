@@ -1323,7 +1323,7 @@ const SellerAccountPage = () => {
                 </div>
 
                 {/* Filter Tabs */}
-                <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as BuyerOrderStatus | 'all')}>
+                <Tabs value={statusFilter} onValueChange={(v) => { setStatusFilter(v as BuyerOrderStatus | 'all'); setOrdersPage(1); }}>
                   <TabsList className="flex w-full overflow-x-auto gap-1 justify-start" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     <TabsTrigger value="all" className="text-xs shrink-0">Todos</TabsTrigger>
                     <TabsTrigger value="placed" className="text-xs shrink-0">Pendientes</TabsTrigger>
