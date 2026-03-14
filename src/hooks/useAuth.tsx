@@ -22,7 +22,7 @@ interface AuthContextType {
   role: UserRole | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, termsAcceptedAt?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -271,19 +271,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, termsAcceptedAt?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
+          terms_accepted_at: termsAcceptedAt ?? null,
         },
       },
     });
+
+    // If signup succeeded and we have a user id, persist terms_accepted_at in profiles
+    if (!error && data?.user?.id && termsAcceptedAt) {
+      await supabase
+        .from('profiles')
+        .upsert(
+          { id: data.user.id, email, full_name: fullName, terms_accepted_at: termsAcceptedAt } as any,
+          { onConflict: 'id' }
+        );
+    }
+
     return { error };
   };
 

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle, Users, Shield, TrendingUp, Loader2, LinkIcon, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -52,6 +53,7 @@ const SellerRegistrationPage = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Check if email exists when user leaves email field
   const checkEmailExists = async (email: string) => {
@@ -167,6 +169,11 @@ const SellerRegistrationPage = () => {
       return;
     }
 
+    if (!termsAccepted) {
+      setErrors(prev => ({ ...prev, terms: 'Debes aceptar los Términos y Condiciones para continuar.' }));
+      return;
+    }
+
     // Validate form
     const result = sellerRegistrationSchema.safeParse(formData);
     if (!result.success) {
@@ -184,6 +191,7 @@ const SellerRegistrationPage = () => {
 
     try {
       // 1. Create auth user
+      const termsAcceptedAt = new Date().toISOString();
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -191,6 +199,7 @@ const SellerRegistrationPage = () => {
           emailRedirectTo: `${window.location.origin}/seller/onboarding`,
           data: {
             full_name: formData.storeName,
+            terms_accepted_at: termsAcceptedAt,
           },
         },
       });
@@ -235,7 +244,13 @@ const SellerRegistrationPage = () => {
           id: authData.user.id,
           email: formData.email,
           full_name: formData.storeName,
-        });
+          terms_accepted_at: termsAcceptedAt,
+        } as any);
+      } else {
+        // Update terms_accepted_at on existing profile
+        await supabase.from("profiles")
+          .update({ terms_accepted_at: termsAcceptedAt } as any)
+          .eq('id', authData.user.id);
       }
 
       // 3. Create seller record
@@ -306,18 +321,19 @@ const SellerRegistrationPage = () => {
   const benefits = [
     {
       icon: <Users className="w-8 h-8" />,
-      title: "Acceso a Mayoristas",
-      description: "Vende tus productos a mayoristas en toda la región",
+      title: "Catálogo Mayorista Internacional",
+      description: "Miles de productos al por mayor directo de proveedores globales, disponibles para importar y revender",
     },
     {
       icon: <Shield className="w-8 h-8" />,
-      title: "Pagos Seguros",
-      description: "Sistema de pago anticipado verificado y confiable",
+      title: "Pagos Flexibles",
+      description: "Paga con el método que prefieras",
+      isPayments: true,
     },
     {
       icon: <TrendingUp className="w-8 h-8" />,
-      title: "Crece tu Negocio",
-      description: "Herramientas para gestionar tu catálogo y ventas",
+      title: "Herramientas de Reventa",
+      description: "Panel completo para gestionar tu catálogo, pedidos, inventario y clientes desde un solo lugar",
     },
   ];
 
@@ -342,11 +358,10 @@ const SellerRegistrationPage = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Crecimiento B2B Garantizado
+            Importa y revende con {platformName}
           </h1>
-          <p className="text-xl text-gray-700 max-w-2xl mx-auto mb-8">
-            Únete a {platformName} y vende tus productos a mayoristas.
-            Plataforma segura, pagos anticipados y acceso a nuevos mercados.
+          <p className="text-lg text-gray-600 max-w-xl mx-auto">
+            Accede al catálogo mayorista internacional y empieza a vender desde tu tienda.
           </p>
         </div>
 
@@ -355,13 +370,32 @@ const SellerRegistrationPage = () => {
           {benefits.map((benefit, index) => (
             <div
               key={index}
-              className="bg-white rounded-lg p-8 shadow-md hover:shadow-lg transition text-center"        
+              className="bg-white rounded-lg p-8 shadow-md hover:shadow-lg transition text-center"
             >
               <div className="flex justify-center mb-4 text-indigo-600">
                 {benefit.icon}
               </div>
               <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
-              <p className="text-gray-600">{benefit.description}</p>
+              {benefit.isPayments ? (
+                <div className="flex flex-wrap justify-center gap-2 mt-3">
+                  {[
+                    { key: 'payment_icon_visa',       fallback: '/visa.png',              alt: 'VISA' },
+                    { key: 'payment_icon_mastercard', fallback: '/mastercard.png',        alt: 'Mastercard' },
+                    { key: 'payment_icon_moncash',    fallback: null,                     alt: 'MonCash' },
+                    { key: 'payment_icon_natcash',    fallback: null,                     alt: 'NatCash' },
+                    { key: 'payment_icon_transfer',   fallback: null,                     alt: 'Transferencia' },
+                  ].map(p => {
+                    const src = getValue(p.key);
+                    if (src) return <img key={p.key} src={src} alt={p.alt} className="h-6 w-auto" />;
+                    if (p.fallback) return <img key={p.key} src={p.fallback} alt={p.alt} className="h-6 w-auto" />;
+                    return (
+                      <span key={p.key} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">{p.alt}</span>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-600">{benefit.description}</p>
+              )}
             </div>
           ))}
         </div>
@@ -374,12 +408,12 @@ const SellerRegistrationPage = () => {
 
             <ul className="space-y-4">
               {[
-                "Acceso a múltiples mayoristas de la región",
-                "Pagos anticipados - Sin esperar a cobrar",
-                "Panel de control para gestionar productos",
-                "Soporte dedicado en español",
-                "Comisiones competitivas",
-                "Red de puntos de recogida",
+                "Accede a productos mayoristas de proveedores internacionales",
+                "Compra lotes al por mayor con precios altamente competitivos",
+                "Panel de control para gestionar tu catálogo de reventa",
+                "Soporte dedicado en español, inglés, francés y creolé",
+                "Múltiples métodos de pago: tarjeta, MonCash, NatCash y más",
+                "Red de puntos de recogida y entrega a domicilio en Haití",
               ].map((feature, index) => (
                 <li key={index} className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
@@ -593,7 +627,37 @@ const SellerRegistrationPage = () => {
                 </>
               )}
 
-              <div className="pt-4">
+              {/* Terms & Conditions checkbox */}
+              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <Checkbox
+                  id="seller-terms"
+                  checked={termsAccepted}
+                  onCheckedChange={(v) => {
+                    setTermsAccepted(v === true);
+                    if (v) setErrors(prev => { const e = { ...prev }; delete e.terms; return e; });
+                  }}
+                  className="mt-0.5 shrink-0"
+                  disabled={isLoading}
+                />
+                <label htmlFor="seller-terms" className="text-xs text-gray-600 leading-relaxed cursor-pointer select-none">
+                  He leído y acepto los{' '}
+                  <a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline hover:no-underline font-medium">
+                    Términos y Condiciones
+                  </a>
+                  ,{' '}
+                  <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline hover:no-underline font-medium">
+                    Política de Privacidad
+                  </a>{' '}y{' '}
+                  <a href="/devoluciones" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline hover:no-underline font-medium">
+                    Política de Devoluciones
+                  </a>.
+                </label>
+              </div>
+              {errors.terms && (
+                <p className="text-red-500 text-sm -mt-2">{errors.terms}</p>
+              )}
+
+              <div className="pt-2">
                 <Button
                   type="submit"
                   className={`w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition ${
@@ -601,7 +665,7 @@ const SellerRegistrationPage = () => {
                       ? 'bg-green-600 hover:bg-green-700 text-white' 
                       : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                   }`}
-                  disabled={isLoading}
+                  disabled={isLoading || (!showLinkOption && !termsAccepted)}
                 >
                   {isLoading ? (
                     <>

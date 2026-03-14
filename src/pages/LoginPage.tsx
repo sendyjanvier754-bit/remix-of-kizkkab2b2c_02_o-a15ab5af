@@ -17,6 +17,7 @@ import { useBranding } from "@/hooks/useBranding";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
 import { AboutModal } from "@/components/legal/AboutModal";
 import { useTranslation } from "react-i18next";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const LoginPage = () => {
   const { t } = useTranslation();
@@ -38,6 +39,8 @@ const LoginPage = () => {
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [accountType, setAccountType] = useState<'buyer' | 'seller' | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [loginTermsAccepted, setLoginTermsAccepted] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   
@@ -67,6 +70,12 @@ const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!loginTermsAccepted) {
+      setError('Debes aceptar los Términos y Condiciones para continuar.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -76,6 +85,16 @@ const LoginPage = () => {
           setError(t('loginPage.invalidCredentials'));
         } else {
           setError(error.message);
+        }
+      } else {
+        // If user had no terms_accepted_at yet (registered before this feature), save it now
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          await supabase
+            .from('profiles')
+            .update({ terms_accepted_at: new Date().toISOString() } as any)
+            .eq('id', session.user.id)
+            .is('terms_accepted_at', null);
         }
       }
     } catch (err) {
@@ -159,10 +178,15 @@ const LoginPage = () => {
       return;
     }
 
+    if (!termsAccepted) {
+      setError('Debes aceptar los Términos y Condiciones para continuar.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { error } = await signUp(registerEmail, registerPassword, registerName);
+      const { error } = await signUp(registerEmail, registerPassword, registerName, new Date().toISOString());
       if (error) {
         if (error.message.includes("already registered")) {
           setError(t('loginPage.alreadyRegistered'));
@@ -175,6 +199,7 @@ const LoginPage = () => {
         setRegisterEmail("");
         setRegisterPassword("");
         setConfirmPassword("");
+        setTermsAccepted(false);
       }
     } catch (err) {
       setError(t('loginPage.createError'));
@@ -271,7 +296,30 @@ const LoginPage = () => {
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    {/* Terms & Conditions checkbox for login */}
+                    <div className="flex items-start gap-3 p-3 bg-muted/40 rounded-lg border">
+                      <Checkbox
+                        id="login-terms-accepted"
+                        checked={loginTermsAccepted}
+                        onCheckedChange={(v) => setLoginTermsAccepted(v === true)}
+                        className="mt-0.5 shrink-0"
+                      />
+                      <label htmlFor="login-terms-accepted" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
+                        Acepto los{' '}
+                        <button
+                          type="button"
+                          onClick={() => setShowLegal(true)}
+                          className="text-primary underline hover:no-underline font-medium"
+                        >
+                          Términos y Condiciones
+                        </button>{' '}y la{' '}
+                        <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
+                          Política de Privacidad
+                        </a>.
+                      </label>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isLoading || !loginTermsAccepted}>
                       {isLoading ? t('loginPage.loggingIn') : t('loginPage.loginButton')}
                     </Button>
                   </form>
@@ -446,7 +494,35 @@ const LoginPage = () => {
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    {/* Terms & Conditions checkbox */}
+                    <div className="flex items-start gap-3 p-3 bg-muted/40 rounded-lg border">
+                      <Checkbox
+                        id="terms-accepted"
+                        checked={termsAccepted}
+                        onCheckedChange={(v) => setTermsAccepted(v === true)}
+                        className="mt-0.5 shrink-0"
+                      />
+                      <label htmlFor="terms-accepted" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
+                        He leído y acepto los{' '}
+                        <button
+                          type="button"
+                          onClick={() => setShowLegal(true)}
+                          className="text-primary underline hover:no-underline font-medium"
+                        >
+                          Términos y Condiciones
+                        </button>
+                        ,{' '}
+                        <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
+                          Política de Privacidad
+                        </a>{' '}y{' '}
+                        <a href="/devoluciones" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
+                          Política de Devoluciones
+                        </a>
+                        .
+                      </label>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isLoading || !termsAccepted}>
                       {isLoading ? t('loginPage.creatingAccount') : t('loginPage.createAccountBtn')}
                     </Button>
                   </form>
