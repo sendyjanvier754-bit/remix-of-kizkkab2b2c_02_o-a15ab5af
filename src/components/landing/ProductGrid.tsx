@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useB2BPricesMap } from "@/hooks/useMarketplaceData";
+import { useViewMode } from "@/contexts/ViewModeContext";
 
 interface Product {
   id: string;
