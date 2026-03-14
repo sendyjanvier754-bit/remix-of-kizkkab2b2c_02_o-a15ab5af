@@ -1566,6 +1566,8 @@ const CartPage = () => {
           </aside>
         </>
       )}
+      {/* Productos recomendados */}
+      <RecommendedProductsSection maxProducts={12} className="max-w-7xl mx-auto" />
     </div>
   );
 };

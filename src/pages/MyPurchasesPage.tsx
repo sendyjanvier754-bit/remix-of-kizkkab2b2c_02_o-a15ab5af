@@ -979,9 +979,34 @@ const MyPurchasesPage = () => {
                   </div>
                 </CardContent>
               </Card>)}
-          </div> : allOrders.length > 0 ? <div className="space-y-4">
-            {allOrders.map(order => <OrderCard key={order.id} order={order} onClick={() => setSelectedOrder(order)} poInfo={poInfoMap?.[order.id]} />)}
-          </div> : <Card className="text-center py-12">
+          </div> : allOrders.length > 0 ? <>
+            <div className="space-y-4">
+              {paginatedOrders.map(order => <OrderCard key={order.id} order={order} onClick={() => setSelectedOrder(order)} poInfo={poInfoMap?.[order.id]} />)}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            )}
+          </> : <Card className="text-center py-12">
             <CardContent>
               <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">

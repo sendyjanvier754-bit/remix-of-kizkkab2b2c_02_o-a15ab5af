@@ -211,6 +211,9 @@ export function UserProfilePage() {
           {isLoading ? "Cerrando sesión..." : "Cerrar Sesión"}
         </button>
       </div>
+
+      {/* ── Productos recomendados (solo mobile/tablet) ── */}
+      <RecommendedProductsSection maxProducts={12} />
     </div>
   );
 
