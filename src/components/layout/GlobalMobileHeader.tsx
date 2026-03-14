@@ -434,7 +434,7 @@ const GlobalMobileHeader = ({
 
         {/* Favorites heart */}
         <Link to={favoritesLink} className="relative flex-shrink-0">
-          <Heart className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
+          <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" strokeWidth={1.5} />
           <span className={cn("absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white", accentColor)} />
         </Link>
 
