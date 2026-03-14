@@ -425,6 +425,9 @@ const GlobalMobileHeader = ({
           </button>
         )}
 
+        {/* Spacer to push right icons to edge */}
+        <div className="flex-1" />
+
         {/* Account User - Hide for unauthenticated and USER role users */}
         {(user && (role === UserRole.SELLER || role === UserRole.ADMIN)) && (
           <Link to={accountLink} className="relative flex-shrink-0">
