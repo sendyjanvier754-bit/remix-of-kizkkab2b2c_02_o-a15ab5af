@@ -71,11 +71,19 @@ export const B2CCartLockBanner = () => {
             {t('common.cancel')}
           </Button>
 
-          <Button asChild size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">
-            <Link to="/checkout">
-              {t('cartLock.resumePayment')}
-              <ArrowRight className="h-3 w-3 ml-1" />
-            </Link>
+          <Button
+            size="sm"
+            className="bg-yellow-600 hover:bg-yellow-700 text-white"
+            onClick={() => {
+              if (activeOrder?.id) {
+                window.location.href = `/mis-compras?orderId=${activeOrder.id}`;
+              } else {
+                window.location.href = "/mis-compras";
+              }
+            }}
+          >
+            {t('cartLock.resumePayment')}
+            <ArrowRight className="h-3 w-3 ml-1" />
           </Button>
         </div>
       </div>

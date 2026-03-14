@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useRecommendedProducts } from "@/hooks/useMarketplaceData";
 import ProductCard from "@/components/landing/ProductCard";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 interface RecommendedProductsSectionProps {
   maxProducts?: number;
@@ -14,8 +15,10 @@ const RecommendedProductsSection = ({ maxProducts = 12, className }: Recommended
 
   if (isLoading || products.length === 0) return null;
 
-  // Shuffle products for randomness
-  const shuffled = [...products].sort(() => Math.random() - 0.5);
+  // Shuffle products only once per products change
+  const shuffled = useMemo(() => {
+    return [...products].sort(() => Math.random() - 0.5);
+  }, [products]);
 
   return (
     <div className={cn("py-6 px-4", className)}>
