@@ -44,7 +44,7 @@ const GlobalHeader = ({
   const isHomePage = location.pathname === '/';
   
   if (isB2BUser && (isClientPreview || isHomePage)) {
-    return <Header showViewModeSwitch={!isHomePage} />;
+    return <Header showViewModeSwitch={true} />;
   }
 
   // Seller o Admin: mostrar Header regular (unificado)
