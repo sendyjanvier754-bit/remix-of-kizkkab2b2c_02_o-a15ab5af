@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useB2BCartSupabase } from "@/hooks/useB2BCartSupabase";
 import { UserRole } from "@/types/auth";
+import { useViewMode } from "@/contexts/ViewModeContext";
 import { toast } from "sonner";
 
 interface ProductForCart {
