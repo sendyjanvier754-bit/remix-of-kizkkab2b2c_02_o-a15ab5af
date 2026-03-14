@@ -75,7 +75,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/contacto" className="text-gray-400 hover:text-white transition text-xs">
-                  Ver todos los canales →
+                  {t('footerExtra.allChannels')}
                 </Link>
               </li>
             </ul>

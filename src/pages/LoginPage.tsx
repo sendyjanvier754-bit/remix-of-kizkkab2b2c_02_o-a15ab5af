@@ -16,31 +16,28 @@ import Footer from "@/components/layout/Footer";
 import { useBranding } from "@/hooks/useBranding";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
 import { AboutModal } from "@/components/legal/AboutModal";
+import { useTranslation } from "react-i18next";
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const { getValue } = useBranding();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Login form
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   
-  // OTP login
   const [otpEmail, setOtpEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   
-  // Register form
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  // Account type step: null = not chosen yet
   const [accountType, setAccountType] = useState<'buyer' | 'seller' | null>(null);
-  // Info modals
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   
@@ -48,14 +45,10 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Default to register tab if ?tab=register
   const defaultTab = searchParams.get('tab') === 'register' ? 'register' : 'login';
 
-  // Redirigir si el usuario ya está autenticado
   useEffect(() => {
     if (!authLoading && user) {
-      // Solo redirigir si venimos de registro o ya estábamos aquí
-      // El login genuino es manejado por useAuth
       const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
       if (!justLoggedIn) {
         if (role === UserRole.SELLER) {
@@ -80,15 +73,13 @@ const LoginPage = () => {
       const { error } = await signIn(loginEmail, loginPassword);
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          setError("Email o contraseña incorrectos");
+          setError(t('loginPage.invalidCredentials'));
         } else {
           setError(error.message);
         }
       }
-      // Si no hay error, useAuth manejará la redirección automáticamente
-      // No necesitamos navigate() aquí
     } catch (err) {
-      setError("Error al iniciar sesión. Intenta de nuevo.");
+      setError(t('loginPage.loginError'));
     } finally {
       setIsLoading(false);
     }
@@ -102,25 +93,23 @@ const LoginPage = () => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: otpEmail,
-        options: {
-          shouldCreateUser: false,
-        },
+        options: { shouldCreateUser: false },
       });
 
       if (error) {
         if (error.message.includes("Signups not allowed") || error.message.includes("otp")) {
-          setError("El inicio de sesión por código OTP no está habilitado. Contacta al administrador o usa contraseña.");
+          setError(t('loginPage.otpNotEnabled'));
         } else if (error.message.includes("rate limit") || error.message.includes("429")) {
-          setError("Demasiados intentos. Espera unos minutos antes de solicitar otro código.");
+          setError(t('loginPage.tooManyAttempts'));
         } else {
           setError(error.message);
         }
       } else {
         setOtpSent(true);
-        setSuccess("Código enviado a tu email. Revisa tu bandeja de entrada.");
+        setSuccess(t('loginPage.otpSent'));
       }
     } catch {
-      setError("Error al enviar el código.");
+      setError(t('loginPage.sendError'));
     } finally {
       setIsLoading(false);
     }
@@ -142,14 +131,14 @@ const LoginPage = () => {
       if (error) {
         sessionStorage.removeItem('just_logged_in');
         if (error.message.includes("expired") || error.message.includes("Token")) {
-          setError("El código ha expirado. Solicita uno nuevo.");
+          setError(t('loginPage.codeExpired'));
         } else {
-          setError("Código inválido. Verifica e intenta de nuevo.");
+          setError(t('loginPage.invalidCode'));
         }
       }
     } catch {
       sessionStorage.removeItem('just_logged_in');
-      setError("Error al verificar el código.");
+      setError(t('loginPage.verifyError'));
     } finally {
       setIsLoading(false);
     }
@@ -161,12 +150,12 @@ const LoginPage = () => {
     setSuccess(null);
     
     if (registerPassword !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
+      setError(t('loginPage.passwordMismatch'));
       return;
     }
     
     if (registerPassword.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+      setError(t('loginPage.passwordMinLength'));
       return;
     }
 
@@ -176,19 +165,19 @@ const LoginPage = () => {
       const { error } = await signUp(registerEmail, registerPassword, registerName);
       if (error) {
         if (error.message.includes("already registered")) {
-          setError("Este email ya está registrado. Intenta iniciar sesión.");
+          setError(t('loginPage.alreadyRegistered'));
         } else {
           setError(error.message);
         }
       } else {
-        setSuccess("¡Cuenta creada exitosamente! Ya puedes iniciar sesión.");
+        setSuccess(t('loginPage.accountCreated'));
         setRegisterName("");
         setRegisterEmail("");
         setRegisterPassword("");
         setConfirmPassword("");
       }
     } catch (err) {
-      setError("Error al crear la cuenta. Intenta de nuevo.");
+      setError(t('loginPage.createError'));
     } finally {
       setIsLoading(false);
     }
@@ -200,26 +189,26 @@ const LoginPage = () => {
       <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center pb-24 md:pb-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Bienvenido a {getValue('platform_name')}</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('loginPage.welcome', { name: getValue('platform_name') })}</h1>
             <p className="text-muted-foreground">{getValue('platform_slogan')}</p>
           </div>
 
           <Card>
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">Acceder</CardTitle>
+              <CardTitle className="text-2xl text-center">{t('loginPage.access')}</CardTitle>
               <CardDescription className="text-center">
-                Inicia sesión o crea una nueva cuenta
+                {t('loginPage.loginOrCreate')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue={defaultTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="login">Contraseña</TabsTrigger>
+                  <TabsTrigger value="login">{t('loginPage.passwordTab')}</TabsTrigger>
                   <TabsTrigger value="otp">
                     <KeyRound className="h-3 w-3 mr-1" />
-                    Código Email
+                    {t('loginPage.emailCodeTab')}
                   </TabsTrigger>
-                  <TabsTrigger value="register">Registrarse</TabsTrigger>
+                  <TabsTrigger value="register">{t('loginPage.registerTab')}</TabsTrigger>
                 </TabsList>
 
                 {error && (
@@ -239,7 +228,7 @@ const LoginPage = () => {
                 <TabsContent value="login">
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
+                      <Label htmlFor="login-email">{t('auth.email')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -256,9 +245,9 @@ const LoginPage = () => {
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="login-password">Contraseña</Label>
+                        <Label htmlFor="login-password">{t('loginPage.passwordLabel')}</Label>
                         <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-                          ¿Olvidaste tu contraseña?
+                          {t('auth.forgotPassword')}
                         </Link>
                       </div>
                       <div className="relative">
@@ -283,7 +272,7 @@ const LoginPage = () => {
                     </div>
 
                     <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Iniciando..." : "Iniciar Sesión"}
+                      {isLoading ? t('loginPage.loggingIn') : t('loginPage.loginButton')}
                     </Button>
                   </form>
                 </TabsContent>
@@ -292,10 +281,10 @@ const LoginPage = () => {
                   {!otpSent ? (
                     <form onSubmit={handleSendOTP} className="space-y-4">
                       <p className="text-sm text-muted-foreground">
-                        Te enviaremos un código de verificación a tu email para iniciar sesión sin contraseña.
+                        {t('loginPage.otpDescription')}
                       </p>
                       <div className="space-y-2">
-                        <Label htmlFor="otp-email">Email</Label>
+                        <Label htmlFor="otp-email">{t('auth.email')}</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <Input
@@ -310,13 +299,13 @@ const LoginPage = () => {
                         </div>
                       </div>
                       <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? "Enviando..." : "Enviar código"}
+                        {isLoading ? t('loginPage.sending') : t('loginPage.sendCode')}
                       </Button>
                     </form>
                   ) : (
                     <form onSubmit={handleVerifyOTP} className="space-y-4">
                       <p className="text-sm text-muted-foreground text-center">
-                        Ingresa el código de 6 dígitos enviado a <strong>{otpEmail}</strong>
+                        {t('loginPage.enterCode')} <strong>{otpEmail}</strong>
                       </p>
                       <div className="flex justify-center">
                         <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
@@ -331,20 +320,19 @@ const LoginPage = () => {
                         </InputOTP>
                       </div>
                       <Button type="submit" className="w-full" disabled={isLoading || otpCode.length !== 6}>
-                        {isLoading ? "Verificando..." : "Verificar código"}
+                        {isLoading ? t('loginPage.verifying') : t('loginPage.verifyCode')}
                       </Button>
                       <Button type="button" variant="ghost" className="w-full" onClick={() => { setOtpSent(false); setOtpCode(""); setError(null); setSuccess(null); }}>
-                        Enviar nuevo código
+                        {t('loginPage.newCode')}
                       </Button>
                     </form>
                   )}
                 </TabsContent>
 
                 <TabsContent value="register">
-                  {/* Step 1: Choose account type */}
                   {accountType === null && (
                     <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground text-center">¿Qué tipo de cuenta deseas crear?</p>
+                      <p className="text-sm text-muted-foreground text-center">{t('loginPage.accountTypeQuestion')}</p>
                       <button
                         type="button"
                         onClick={() => setAccountType('buyer')}
@@ -354,8 +342,8 @@ const LoginPage = () => {
                           <ShoppingBag className="h-6 w-6 text-blue-600" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-foreground">Cuenta de Cliente</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Compra productos de tus tiendas favoritas</p>
+                          <p className="font-semibold text-foreground">{t('loginPage.buyerAccount')}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t('loginPage.buyerAccountDesc')}</p>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition" />
                       </button>
@@ -368,15 +356,14 @@ const LoginPage = () => {
                           <Store className="h-6 w-6 text-green-600" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-foreground">Cuenta de Vendedor</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Esta cuenta es para comerciantes interesados en compra al por mayor</p>
+                          <p className="font-semibold text-foreground">{t('loginPage.sellerAccount')}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t('loginPage.sellerAccountDesc')}</p>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition" />
                       </button>
                     </div>
                   )}
 
-                  {/* Step 2: Buyer registration form */}
                   {accountType === 'buyer' && (
                     <div>
                       <button
@@ -385,17 +372,17 @@ const LoginPage = () => {
                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition"
                       >
                         <ArrowLeft className="h-4 w-4" />
-                        Cambiar tipo de cuenta
+                        {t('loginPage.changeAccountType')}
                       </button>
                       <form onSubmit={handleRegister} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="register-name">Nombre completo</Label>
+                      <Label htmlFor="register-name">{t('loginPage.fullName')}</Label>
                       <div className="relative">
                         <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="register-name"
                           type="text"
-                          placeholder="Tu nombre"
+                          placeholder={t('loginPage.yourName')}
                           className="pl-10"
                           value={registerName}
                           onChange={(e) => setRegisterName(e.target.value)}
@@ -405,7 +392,7 @@ const LoginPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-email">Email</Label>
+                      <Label htmlFor="register-email">{t('auth.email')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -421,13 +408,13 @@ const LoginPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-password">Contraseña</Label>
+                      <Label htmlFor="register-password">{t('loginPage.passwordLabel')}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="register-password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Mínimo 6 caracteres"
+                          placeholder={t('loginPage.minChars')}
                           className="pl-10 pr-10"
                           value={registerPassword}
                           onChange={(e) => setRegisterPassword(e.target.value)}
@@ -444,13 +431,13 @@ const LoginPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirmar contraseña</Label>
+                      <Label htmlFor="confirm-password">{t('loginPage.confirmPassword')}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="confirm-password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Repite tu contraseña"
+                          placeholder={t('loginPage.repeatPassword')}
                           className="pl-10"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
@@ -460,7 +447,7 @@ const LoginPage = () => {
                     </div>
 
                     <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
+                      {isLoading ? t('loginPage.creatingAccount') : t('loginPage.createAccountBtn')}
                     </Button>
                   </form>
                     </div>
@@ -470,19 +457,19 @@ const LoginPage = () => {
 
               <div className="mt-6 pt-6 border-t space-y-3">
                 <p className="text-sm text-center text-muted-foreground mb-4">
-                  ¿Quieres vender en {getValue('platform_name')}?
+                  {t('loginPage.wantToSell', { name: getValue('platform_name') })}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <Button variant="outline" asChild className="gap-2">
                     <Link to="/registro-vendedor">
                       <Store className="h-4 w-4" />
-                      Ser Vendedor
+                      {t('loginPage.beSeller')}
                     </Link>
                   </Button>
                   <Button variant="outline" asChild className="gap-2">
                     <Link to="/">
                       <ShoppingBag className="h-4 w-4" />
-                      Explorar
+                      {t('loginPage.explore')}
                     </Link>
                   </Button>
                 </div>
@@ -494,7 +481,7 @@ const LoginPage = () => {
                     onClick={() => setShowLegal(true)}
                   >
                     <Shield className="h-3.5 w-3.5" />
-                    Términos Legales
+                    {t('loginPage.legalTerms')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -503,7 +490,7 @@ const LoginPage = () => {
                     onClick={() => setShowAbout(true)}
                   >
                     <Info className="h-3.5 w-3.5" />
-                    Acerca de
+                    {t('loginPage.about')}
                   </Button>
                 </div>
               </div>
