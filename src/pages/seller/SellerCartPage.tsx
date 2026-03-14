@@ -853,6 +853,8 @@ const SellerCartPage = () => {
         )}
 
         <main className={`flex-1 ${isMobile ? 'container mx-auto px-4 pb-40' : 'max-w-7xl mx-auto px-4 py-6'}`}>
+          {/* Cart mode tabs */}
+          <CartModeTabs b2bCount={items.length} />
           {items.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
