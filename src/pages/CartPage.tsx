@@ -1573,7 +1573,6 @@ const CartPage = () => {
         </>
       )}
     </div>
-    </div>
   );
 };
 

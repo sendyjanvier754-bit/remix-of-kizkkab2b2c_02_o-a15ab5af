@@ -2124,7 +2124,6 @@ const SellerCartPage = () => {
         </DialogContent>
       </Dialog>
     </SellerLayout>
-    </SellerLayout>
   );
 };
 
