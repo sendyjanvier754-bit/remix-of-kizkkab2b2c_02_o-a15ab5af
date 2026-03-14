@@ -588,7 +588,7 @@ const SellerCartPage = () => {
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-
+  const handleWhatsAppContact = async () => {
     try {
       // Get admin WhatsApp number from settings
       const { data: settingsData } = await supabase
