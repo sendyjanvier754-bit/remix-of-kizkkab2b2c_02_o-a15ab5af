@@ -279,9 +279,10 @@ const ProductPage = () => {
     }
   };
   const {
-    sku,
+    sku: skuParam,
     catalogId
   } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const {
     user
@@ -292,6 +293,12 @@ const ProductPage = () => {
   } = useToast();
   // Determine if user is B2B (Seller or Admin)
   const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
+
+  const resolvedSku = useMemo(() => {
+    if (skuParam) return skuParam;
+    const routeMatch = location.pathname.match(/^\/producto\/([^/]+)/);
+    return routeMatch?.[1];
+  }, [skuParam, location.pathname]);
 
   // Use separate favorite hooks for B2B and B2C
   const b2bFav = useB2BFavorites();
