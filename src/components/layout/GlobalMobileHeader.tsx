@@ -430,6 +430,52 @@ const GlobalMobileHeader = ({
         {/* Spacer to push right icons to edge */}
         <div className="flex-1" />
 
+        {/* Language Selector */}
+        {(() => {
+          const { i18n } = useTranslation();
+          const [showLangMenu, setShowLangMenu] = useState(false);
+          const langRef = useRef<HTMLDivElement>(null);
+          
+          useEffect(() => {
+            const handler = (e: MouseEvent) => {
+              if (langRef.current && !langRef.current.contains(e.target as Node)) setShowLangMenu(false);
+            };
+            document.addEventListener('mousedown', handler);
+            return () => document.removeEventListener('mousedown', handler);
+          }, []);
+
+          const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === i18n.language) || SUPPORTED_LANGUAGES[0];
+
+          return (
+            <div ref={langRef} className="relative flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                className="flex items-center gap-0.5 text-xs text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <span className="text-sm">{currentLang.flag}</span>
+              </button>
+              {showLangMenu && (
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-[130px]">
+                  {SUPPORTED_LANGUAGES.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { i18n.changeLanguage(lang.code); setShowLangMenu(false); }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors",
+                        i18n.language === lang.code ? "font-semibold text-primary bg-primary/5" : "text-gray-700"
+                      )}
+                    >
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Account User - Hide for unauthenticated and USER role users */}
         {(user && (role === UserRole.SELLER || role === UserRole.ADMIN)) && (
           <Link to={accountLink} className="relative flex-shrink-0">
