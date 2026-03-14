@@ -27,6 +27,7 @@ import { InlineReturnsPanel } from "@/components/profile/InlineReturnsPanel";
 import { SupportMenuPopover } from "@/components/profile/SupportMenuPopover";
 import { useMyReturnRequests } from "@/hooks/useOrderReturnRequests";
 import { useUnreadChatCount } from "@/hooks/useSupportChat";
+import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
 
 type ActiveSection = 'orders' | 'favorites' | 'addresses' | 'payment' | 'settings' | 'returns';
 
@@ -211,6 +212,9 @@ export function UserProfilePage() {
           {isLoading ? "Cerrando sesión..." : "Cerrar Sesión"}
         </button>
       </div>
+
+      {/* ── Productos recomendados (solo mobile/tablet) ── */}
+      <RecommendedProductsSection maxProducts={12} />
     </div>
   );
 

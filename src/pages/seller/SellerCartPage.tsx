@@ -49,6 +49,7 @@ import { useLogisticsDataForItems } from "@/hooks/useLogisticsDataForItems";
 import { useCartShippingCostView } from "@/hooks/useCartShippingCostView";
 import { useAutoSaveCartWithShipping } from "@/hooks/useAutoSaveCartWithShipping";
 import { useQueryClient } from "@tanstack/react-query";
+import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
 
 const SellerCartPage = () => {
   const navigate = useNavigate();
@@ -2117,6 +2118,8 @@ const SellerCartPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Productos recomendados */}
+      <RecommendedProductsSection maxProducts={12} className="max-w-7xl mx-auto" />
     </SellerLayout>
   );
 };
