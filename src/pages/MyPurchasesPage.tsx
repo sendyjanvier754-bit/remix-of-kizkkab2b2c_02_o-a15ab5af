@@ -802,6 +802,15 @@ const MyPurchasesPage = () => {
     );
   }, [orders, normalizedB2COrders, statusFilter]);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = isMobile ? 6 : 8;
+  const totalPages = Math.max(1, Math.ceil(allOrders.length / itemsPerPage));
+  const paginatedOrders = allOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Reset page when filter changes
+  useEffect(() => { setCurrentPage(1); }, [statusFilter]);
+
   // Get order IDs to fetch PO info
   const orderIds = useMemo(() => orders?.map(o => o.id) || [], [orders]);
   const { data: poInfoMap } = useOrdersPOInfo(orderIds);
