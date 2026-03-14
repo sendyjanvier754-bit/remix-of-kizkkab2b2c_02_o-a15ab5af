@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, Package, Eye, EyeOff, User, Home } from "lucide-react";
+import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, Package, Eye, EyeOff, User, Home, Globe } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { SUPPORTED_LANGUAGES } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
