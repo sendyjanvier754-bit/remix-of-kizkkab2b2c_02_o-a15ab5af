@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { ShoppingCart, Trash2, Package, AlertCircle, MessageCircle, X, Banknote, Wallet, DollarSign, AlertTriangle, Info, CheckSquare, Square, TrendingUp, Loader2, ShoppingBag, Truck, Clock } from "lucide-react";
+import { ShoppingCart, Trash2, Package, AlertCircle, MessageCircle, X, Banknote, Wallet, DollarSign, AlertTriangle, Info, CheckSquare, Square, TrendingUp, Loader2, ShoppingBag, Truck, Clock, Share2, Copy, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useB2BCartProductTotals } from "@/hooks/useB2BCartProductTotals";
@@ -116,6 +116,10 @@ const SellerCartPage = () => {
   const [showRemoveItemDialog, setShowRemoveItemDialog] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<{ id: string; name: string } | null>(null);
   const [showOrderSummaryDrawer, setShowOrderSummaryDrawer] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const [selectedProductForVariants, setSelectedProductForVariants] = useState<any>(null);
   const [variantSelections, setVariantSelections] = useState<any[]>([]);
@@ -531,6 +535,57 @@ const SellerCartPage = () => {
       console.error('Error clearing cart:', error);
       toast.error('Error al vaciar carrito');
     }
+  };
+
+  const handleShareCart = async () => {
+    if (!user?.id || items.length === 0) return;
+    setIsSharing(true);
+    setShareCopied(false);
+    try {
+      const snapshot = items.map(item => ({
+        sku: item.sku,
+        name: item.name,
+        price: item.precioB2B,
+        quantity: item.cantidad,
+        image: item.image,
+        color: item.color,
+        size: item.size,
+        variantId: item.variantId,
+      }));
+
+      const { data, error } = await (supabase as any)
+        .from('shared_carts')
+        .insert([{ created_by: user.id, items: snapshot }])
+        .select('share_code')
+        .single();
+
+      if (error) throw error;
+
+      const link = `${window.location.origin}/carrito/compartido/${data.share_code}`;
+      setShareLink(link);
+      setShowShareDialog(true);
+    } catch (err) {
+      console.error('Error sharing cart:', err);
+      toast.error('Error al compartir carrito');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setShareCopied(true);
+      toast.success('Enlace copiado');
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      toast.error('No se pudo copiar');
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    const message = `¡Mira mi carrito B2B! 🛒\n\n${items.length} productos · $${subtotal.toFixed(2)}\n\n${shareLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleWhatsAppContact = async () => {
@@ -1321,6 +1376,15 @@ const SellerCartPage = () => {
                     )}
                     <div className="flex gap-2 justify-center">
                       <button
+                        onClick={handleShareCart}
+                        disabled={isSharing}
+                        className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-border hover:bg-muted"
+                        title="Compartir carrito"
+                      >
+                        {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                        Compartir
+                      </button>
+                      <button
                         onClick={handleWhatsAppContact}
                         className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-gray-300"
                         style={{ color: '#29892a' }}
@@ -1498,6 +1562,16 @@ const SellerCartPage = () => {
                   title="Contactar por WhatsApp"
                 >
                   <MessageCircle className="w-5 h-5" />
+                </button>
+
+                {/* Botón Compartir */}
+                <button
+                  onClick={handleShareCart}
+                  disabled={isSharing}
+                  className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center border border-border bg-muted hover:bg-muted/80"
+                  title="Compartir carrito"
+                >
+                  {isSharing ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : <Share2 className="w-5 h-5 text-foreground" />}
                 </button>
 
                 {/* Spacer */}
@@ -2005,6 +2079,44 @@ const SellerCartPage = () => {
           </div>
         </div>
       )}
+
+      {/* Share Cart Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="w-5 h-5" />
+              Compartir carrito B2B
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Comparte este enlace para que otra persona pueda ver y agregar estos productos a su carrito.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={shareLink}
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted truncate"
+              />
+              <Button size="sm" variant="outline" onClick={handleCopyShareLink}>
+                {shareCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleShareWhatsApp} className="w-full gap-2" style={{ backgroundColor: '#29892a' }}>
+                <MessageCircle className="w-4 h-4" />
+                Enviar por WhatsApp
+              </Button>
+              <Button variant="outline" onClick={handleCopyShareLink} className="w-full gap-2">
+                <Copy className="w-4 h-4" />
+                {shareCopied ? 'Copiado!' : 'Copiar enlace'}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">El enlace expira en 7 días</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SellerLayout>
   );
 };
