@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { BusinessPanel } from "@/components/business/BusinessPanel";
 import { ShippingTypeSelector } from "@/components/seller/ShippingTypeSelector";
+import CartModeTabs from "@/components/cart/CartModeTabs";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
