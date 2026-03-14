@@ -2179,6 +2179,11 @@ const SellerAccountPage = () => {
         </div>
       </div>
 
+      {/* Recommended products - mobile/tablet only */}
+      {isMobile && (
+        <RecommendedProductsSection maxProducts={12} className="lg:hidden" />
+      )}
+
       {/* Status Viewer Modal */}
       {showStatusViewer && statuses.length > 0 && (
         <SellerStatusViewer
