@@ -44,7 +44,7 @@ export const useB2CFavorites = () => {
           seller_catalog_id,
           created_at,
           product:products!b2c_favorites_product_id_fkey (
-            id, nombre, precio_mayorista, imagen_principal, sku_interno
+            id, nombre, precio_mayorista_base, imagen_principal, sku_interno
           ),
           catalog:seller_catalog!b2c_favorites_seller_catalog_id_fkey (
             id, nombre, precio_venta, images, imagen_principal, sku,
