@@ -552,18 +552,6 @@ const Header = ({
               </button>
             )}
             <LanguageSwitcher compact variant="ghost" />
-            <Link to={cartLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
-              <ShoppingBag className="w-6 h-6" />
-              <span className="text-xs">{t('header.cart')}</span>
-              {cartCount > 0 && (
-                <span className={cn(
-                  "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1",
-                  cartBounce && "animate-bounce"
-                )}>
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
