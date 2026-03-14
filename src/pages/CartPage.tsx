@@ -604,6 +604,10 @@ const CartPage = () => {
       <main className={`flex-1 ${isMobile ? 'container mx-auto px-4 pb-40' : 'max-w-7xl mx-auto px-4 py-6'}`}>
         {/* Cart Lock Banner for pending payments */}
         <B2CCartLockBanner />
+        {/* Cart mode tabs for sellers */}
+        {isB2BUser && (
+          <CartModeTabs b2cCount={items.length} />
+        )}
         {items.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
