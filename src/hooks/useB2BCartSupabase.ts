@@ -50,15 +50,18 @@ export const useB2BCartSupabase = () => {
     }
 
     try {
-      // Try to get existing open cart
-      const { data: existingCart, error: fetchError } = await supabase
+      // Try to get existing open cart (use limit+order to handle duplicates)
+      const { data: existingCarts, error: fetchError } = await supabase
         .from('b2b_carts')
         .select('*')
         .eq('buyer_user_id', user.id)
         .eq('status', 'open')
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (fetchError) throw fetchError;
+
+      const existingCart = existingCarts && existingCarts.length > 0 ? existingCarts[0] : null;
 
       if (existingCart) {
         // Fetch cart items
