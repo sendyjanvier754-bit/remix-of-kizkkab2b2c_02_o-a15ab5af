@@ -348,7 +348,7 @@ const GlobalMobileHeader = ({
   const buttonColor = showB2BStyle ? "bg-blue-600 hover:bg-blue-700" : "bg-[#071d7f] hover:bg-[#071d7f]/90";
   return <header className="bg-[#ffdcdc] sticky top-0 z-40">
       {/* Top search bar */}
-      <div className="flex items-center gap-2 px-2 py-2 bg-[#fff3f3]">
+      <div className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 bg-[#fff3f3]">
         {/* Logo/Icon - cambia según el modo */}
         <button
           type="button"
