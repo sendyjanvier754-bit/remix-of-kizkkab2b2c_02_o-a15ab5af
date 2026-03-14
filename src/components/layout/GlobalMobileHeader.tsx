@@ -428,7 +428,7 @@ const GlobalMobileHeader = ({
         {/* Account User - Hide for unauthenticated and USER role users */}
         {(user && (role === UserRole.SELLER || role === UserRole.ADMIN)) && (
           <Link to={accountLink} className="relative flex-shrink-0">
-            <User className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
+            <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" strokeWidth={1.5} />
           </Link>
         )}
 
