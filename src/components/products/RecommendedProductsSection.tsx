@@ -1,5 +1,5 @@
+import { useTranslation } from "react-i18next";
 import { useRecommendedProducts } from "@/hooks/useMarketplaceData";
-import ProductCard from "@/components/landing/ProductCard";
 import { cn } from "@/lib/utils";
 
 interface RecommendedProductsSectionProps {
