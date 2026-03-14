@@ -45,3 +45,13 @@ Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
 2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
 3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
 4. **Routing**: Ruta pública en App.tsx
+
+## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
+
+### Problema
+Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
+
+### Cambios
+1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
+2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
+3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.
