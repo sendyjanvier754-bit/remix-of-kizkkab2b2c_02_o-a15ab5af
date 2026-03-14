@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ShoppingCart, Trash2, Package, MessageCircle, Banknote, Wallet, DollarSign, X, Loader2, Check, Palette, Ruler, Minus, Plus, Share2, Copy, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useB2CCartItems, B2CCartItem } from "@/hooks/useB2CCartItems";
 import { useActiveB2COrder } from "@/hooks/useB2COrders";
 import { B2CCartLockBanner } from "@/components/checkout/B2CCartLockBanner";
@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { UserRole } from "@/types/auth";
+import CartModeTabs from "@/components/cart/CartModeTabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -217,11 +218,8 @@ const CartPage = () => {
   const allSelected = items.length > 0 && items.every(item => b2cSelectedIds.has(item.id));
   const someSelected = selectedItems.length > 0;
 
-  // Redirect sellers/admins to B2B cart
+  // Show tabs for sellers to switch between B2C and B2B carts
   const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
-  if (isB2BUser) {
-    return <Navigate to="/seller/carrito" replace />;
-  }
 
   // Show confirmation dialog for removing item
   const handleRemoveItem = (itemId: string, itemName: string) => {
@@ -606,6 +604,10 @@ const CartPage = () => {
       <main className={`flex-1 ${isMobile ? 'container mx-auto px-4 pb-40' : 'max-w-7xl mx-auto px-4 py-6'}`}>
         {/* Cart Lock Banner for pending payments */}
         <B2CCartLockBanner />
+        {/* Cart mode tabs for sellers */}
+        {isB2BUser && (
+          <CartModeTabs b2cCount={items.length} />
+        )}
         {items.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
