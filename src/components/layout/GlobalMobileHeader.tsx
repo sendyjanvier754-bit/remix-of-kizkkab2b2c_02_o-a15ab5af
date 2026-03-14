@@ -348,7 +348,7 @@ const GlobalMobileHeader = ({
   const buttonColor = showB2BStyle ? "bg-blue-600 hover:bg-blue-700" : "bg-[#071d7f] hover:bg-[#071d7f]/90";
   return <header className="bg-[#ffdcdc] sticky top-0 z-40">
       {/* Top search bar */}
-      <div className="flex items-center gap-2 px-2 py-2 bg-[#fff3f3]">
+      <div className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 bg-[#fff3f3]">
         {/* Logo/Icon - cambia según el modo */}
         <button
           type="button"
@@ -364,13 +364,13 @@ const GlobalMobileHeader = ({
           }}
           aria-label="Chat de soporte"
         >
-          <Mail className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
+          <Mail className="w-6 h-6 sm:w-7 sm:h-7 text-gray-700" strokeWidth={1.5} />
         </button>
 
         {/* Search input with dropdown */}
-        <div ref={searchRef} className="flex-1 relative min-w-0 max-w-[55%]">
+        <div ref={searchRef} className="flex-1 relative min-w-0 max-w-[55%] sm:max-w-[65%]">
           <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
-            <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => searchQuery.length >= 2 && setShowResults(true)} className="flex-1 bg-transparent text-sm text-gray-700 px-3 py-2 outline-none min-w-0" />
+            <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => searchQuery.length >= 2 && setShowResults(true)} className="flex-1 bg-transparent text-sm sm:text-base text-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 outline-none min-w-0" placeholder="Buscar productos..." />
             {searchQuery && <button type="button" onClick={clearSearch} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
                 <X className="w-4 h-4" />
               </button>}
@@ -428,13 +428,13 @@ const GlobalMobileHeader = ({
         {/* Account User - Hide for unauthenticated and USER role users */}
         {(user && (role === UserRole.SELLER || role === UserRole.ADMIN)) && (
           <Link to={accountLink} className="relative flex-shrink-0">
-            <User className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
+            <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" strokeWidth={1.5} />
           </Link>
         )}
 
         {/* Favorites heart */}
         <Link to={favoritesLink} className="relative flex-shrink-0">
-          <Heart className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
+          <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" strokeWidth={1.5} />
           <span className={cn("absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white", accentColor)} />
         </Link>
 
