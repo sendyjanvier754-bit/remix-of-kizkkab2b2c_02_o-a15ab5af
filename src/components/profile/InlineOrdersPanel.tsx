@@ -152,9 +152,9 @@ const OrderCard = ({
     >
       <CardContent className="p-2 sm:p-3">
         {/* Mobile: stacked layout / Desktop: side-by-side */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-          <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
-            <div className={`p-2 sm:p-2.5 rounded-xl ${status.bgColor} ${status.color} shrink-0`}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3">
+          <div className="flex items-start gap-2 sm:gap-2.5 flex-1 min-w-0">
+            <div className={`p-1.5 sm:p-2 rounded-lg ${status.bgColor} ${status.color} shrink-0`}>
               {status.icon}
             </div>
             <div className="flex-1 min-w-0">
