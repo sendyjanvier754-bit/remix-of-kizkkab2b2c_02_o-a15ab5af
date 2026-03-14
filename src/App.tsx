@@ -462,6 +462,14 @@ const AppContent = () => {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/email-config" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminEmailConfigPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/admin" element={<AdminLogin />} />
             
             {/* ========== SELLER ROUTES (B2B) ========== */}
