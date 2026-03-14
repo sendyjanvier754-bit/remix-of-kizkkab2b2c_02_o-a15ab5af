@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { searchProductsByImage } from "@/services/api/imageSearch";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
+import { useViewMode } from "@/contexts/ViewModeContext";
 
 interface SearchResult {
   id: string;
