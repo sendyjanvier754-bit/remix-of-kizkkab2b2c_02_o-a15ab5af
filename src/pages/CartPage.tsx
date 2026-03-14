@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { UserRole } from "@/types/auth";
+import CartModeTabs from "@/components/cart/CartModeTabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useCartSelectionStore } from "@/stores/useCartSelectionStore";
 import { Checkbox } from "@/components/ui/checkbox";
