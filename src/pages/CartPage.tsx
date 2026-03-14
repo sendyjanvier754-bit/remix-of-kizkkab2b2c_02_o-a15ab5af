@@ -218,11 +218,8 @@ const CartPage = () => {
   const allSelected = items.length > 0 && items.every(item => b2cSelectedIds.has(item.id));
   const someSelected = selectedItems.length > 0;
 
-  // Redirect sellers/admins to B2B cart
+  // Show tabs for sellers to switch between B2C and B2B carts
   const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
-  if (isB2BUser) {
-    return <Navigate to="/seller/carrito" replace />;
-  }
 
   // Show confirmation dialog for removing item
   const handleRemoveItem = (itemId: string, itemName: string) => {
