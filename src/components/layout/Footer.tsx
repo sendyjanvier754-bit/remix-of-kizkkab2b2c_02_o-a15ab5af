@@ -23,7 +23,7 @@ const Footer = () => {
             <h4 className="font-bold text-lg mb-4">{platformName}</h4>
             <p className="text-gray-400 text-sm">{t('footer.tagline')}</p>
             <Link to="/sobre-nosotros" className="text-sm text-gray-400 hover:text-white transition mt-3 inline-block">
-              Sobre nosotros →
+              {t('footerExtra.aboutUs')}
             </Link>
           </div>
 
@@ -75,7 +75,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/contacto" className="text-gray-400 hover:text-white transition text-xs">
-                  Ver todos los canales →
+                  {t('footerExtra.allChannels')}
                 </Link>
               </li>
             </ul>

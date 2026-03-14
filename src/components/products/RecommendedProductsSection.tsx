@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRecommendedProducts } from "@/hooks/useMarketplaceData";
 import ProductCard from "@/components/landing/ProductCard";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ interface RecommendedProductsSectionProps {
 }
 
 const RecommendedProductsSection = ({ maxProducts = 12, className }: RecommendedProductsSectionProps) => {
+  const { t } = useTranslation();
   const { data: products = [], isLoading } = useRecommendedProducts(null, null, maxProducts);
 
   if (isLoading || products.length === 0) return null;
@@ -17,7 +19,7 @@ const RecommendedProductsSection = ({ maxProducts = 12, className }: Recommended
 
   return (
     <div className={cn("py-6 px-4", className)}>
-      <h2 className="text-lg font-bold text-foreground mb-4">Tu mejor elección</h2>
+      <h2 className="text-lg font-bold text-foreground mb-4">{t('recommendedProducts.title')}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
         {shuffled.map((product) => (
           <ProductCard
