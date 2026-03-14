@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useViewMode } from "@/contexts/ViewModeContext";
 
 interface Product {
   id: string;
