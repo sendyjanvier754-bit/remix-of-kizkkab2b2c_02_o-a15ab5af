@@ -4,6 +4,7 @@ import { useSellerProducts } from "@/hooks/useSellerProducts";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSmartCart } from "@/hooks/useSmartCart";
+import { useViewMode } from "@/contexts/ViewModeContext";
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +26,7 @@ const MarketplacePage = () => {
     data: categories = []
   } = usePublicCategories();
   const { addToCart, isB2BUser } = useSmartCart();
+  const { isClientPreview } = useViewMode();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -110,12 +112,14 @@ const MarketplacePage = () => {
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {!isMobile && <Header />}
+      {!isMobile && <Header showViewModeSwitch={true} />}
       
       <main className={`flex-1 container mx-auto px-4 py-6 ${isMobile ? 'pb-20' : ''}`}>
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Adquisición de Lotes</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {isClientPreview ? "Marketplace" : "Adquisición de Lotes"}
+          </h1>
         </div>
 
         {/* Compact Filter Bar */}
