@@ -26,6 +26,7 @@ const MarketplacePage = () => {
     data: categories = []
   } = usePublicCategories();
   const { addToCart, isB2BUser } = useSmartCart();
+  const { isClientPreview } = useViewMode();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
