@@ -169,7 +169,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
       }
 
       if (sellerError) {
-        console.error("Error fetching seller product by SKU:", { cleanSku, storeId, sellerError });
+        console.error("Error fetching seller product by SKU:", { cleanSku, normalizedStoreId, sellerError });
       }
 
       const sellerProduct = sellerProducts?.[0] || null;
