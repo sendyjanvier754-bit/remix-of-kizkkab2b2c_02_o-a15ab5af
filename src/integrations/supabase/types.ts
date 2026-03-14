@@ -2059,6 +2059,45 @@ export type Database = {
         }
         Relationships: []
       }
+      email_configuration: {
+        Row: {
+          api_key: string
+          api_secret: string
+          created_at: string
+          id: string
+          is_active: boolean
+          provider: string
+          sender_email: string
+          sender_name: string
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          api_key?: string
+          api_secret?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider?: string
+          sender_email?: string
+          sender_name?: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          api_secret?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider?: string
+          sender_email?: string
+          sender_name?: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_movements: {
         Row: {
           change_amount: number
