@@ -17,7 +17,7 @@ const RecommendedProductsSection = ({ maxProducts = 12, className }: Recommended
 
   return (
     <div className={cn("py-6 px-4", className)}>
-      <h2 className="text-lg font-bold text-foreground mb-4">Productos recomendados</h2>
+      <h2 className="text-lg font-bold text-foreground mb-4">Tu mejor elección</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
         {shuffled.map((product) => (
           <ProductCard
