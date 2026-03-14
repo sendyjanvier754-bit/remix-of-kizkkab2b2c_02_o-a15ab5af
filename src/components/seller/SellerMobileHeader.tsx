@@ -439,18 +439,6 @@ const SellerMobileHeader = ({
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#071d7f] rounded-full border border-white" />
         </Link>
 
-        {/* Cart B2B */}
-        <Link to="/seller/carrito" className="relative flex-shrink-0">
-          <ShoppingBag className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
-          {cartCount > 0 && (
-            <span className={cn(
-              "absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-green-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5",
-              cartBounce && "animate-cart-shake"
-            )}>
-              {cartCount > 99 ? '99+' : cartCount}
-            </span>
-          )}
-        </Link>
       </div>
 
       {/* Category tabs - horizontal scroll with black background */}

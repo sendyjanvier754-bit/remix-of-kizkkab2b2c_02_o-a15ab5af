@@ -367,18 +367,6 @@ const Header = ({
             <Link to={accountLink} className="relative flex-shrink-0 text-gray-700 hover:text-[#071d7f] transition-colors">
               <User className="w-6 h-6" strokeWidth={1.5} />
             </Link>
-            {/* Cart */}
-            <Link to="/carrito" className="relative flex-shrink-0">
-              <ShoppingBag className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
-              {cartCount > 0 && (
-                <span className={cn(
-                  "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1",
-                  cartBounce && "animate-cart-shake"
-                )}>
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </Link>
           </div>
 
           {/* Mobile Categories Scroll Bar */}
@@ -564,18 +552,6 @@ const Header = ({
               </button>
             )}
             <LanguageSwitcher compact variant="ghost" />
-            <Link to={cartLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
-              <ShoppingBag className="w-6 h-6" />
-              <span className="text-xs">{t('header.cart')}</span>
-              {cartCount > 0 && (
-                <span className={cn(
-                  "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1",
-                  cartBounce && "animate-bounce"
-                )}>
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -699,10 +675,6 @@ const Header = ({
                 <Link to={accountLink} className="flex flex-col items-center gap-1 text-gray-700" onClick={() => setIsMenuOpen(false)}>
                   <User className="w-6 h-6" />
                   <span className="text-xs">{t('header.account')}</span>
-                </Link>
-                <Link to="/carrito" className="flex flex-col items-center gap-1 text-gray-700" onClick={() => setIsMenuOpen(false)}>
-                  <ShoppingBag className="w-6 h-6" />
-                  <span className="text-xs">{t('header.cart')}</span>
                 </Link>
               </div>
               {rootCategories.map((cat) => {

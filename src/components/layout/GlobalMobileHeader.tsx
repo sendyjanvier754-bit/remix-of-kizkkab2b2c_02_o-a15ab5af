@@ -441,13 +441,6 @@ const GlobalMobileHeader = ({
           <span className={cn("absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white", accentColor)} />
         </Link>
 
-        {/* Cart */}
-        <Link to={cartLink} className="relative flex-shrink-0">
-          <ShoppingBag className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
-          {cartCount > 0 && <span className={cn("absolute -top-1 -right-1 min-w-[16px] h-[16px] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5", accentColor, cartBounce && "animate-cart-shake")}>
-              {cartCount > 99 ? '99+' : cartCount}
-            </span>}
-        </Link>
       </div>
 
       {/* Category tabs - distributed evenly across full width */}
