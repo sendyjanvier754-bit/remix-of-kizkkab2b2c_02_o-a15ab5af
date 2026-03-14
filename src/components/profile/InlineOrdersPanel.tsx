@@ -778,6 +778,16 @@ export const InlineOrdersPanel = () => {
     return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [b2bOrdersRaw, normalizedB2C, statusFilter]);
 
+  // Reset page when filter changes
+  useEffect(() => { setCurrentPage(1); }, [statusFilter]);
+
+  const ITEMS_PER_PAGE = 5;
+  const totalPages = Math.ceil(allOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return allOrders.slice(start, start + ITEMS_PER_PAGE);
+  }, [allOrders, currentPage]);
+
   const orderIds = useMemo(() => b2bOrdersRaw.map(o => o.id), [b2bOrdersRaw]);
   const { data: poInfoMap } = useOrdersPOInfo(orderIds);
 
