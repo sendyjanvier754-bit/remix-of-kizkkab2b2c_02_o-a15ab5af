@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
