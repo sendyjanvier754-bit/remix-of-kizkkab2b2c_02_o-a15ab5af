@@ -676,10 +676,6 @@ const Header = ({
                   <User className="w-6 h-6" />
                   <span className="text-xs">{t('header.account')}</span>
                 </Link>
-                <Link to="/carrito" className="flex flex-col items-center gap-1 text-gray-700" onClick={() => setIsMenuOpen(false)}>
-                  <ShoppingBag className="w-6 h-6" />
-                  <span className="text-xs">{t('header.cart')}</span>
-                </Link>
               </div>
               {rootCategories.map((cat) => {
                 const subs = getSubcategories(cat.id);
