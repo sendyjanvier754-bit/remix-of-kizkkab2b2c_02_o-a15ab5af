@@ -866,28 +866,69 @@ export const InlineOrdersPanel = () => {
       </div>
 
       {/* Order list */}
-      <div className="p-4 space-y-3">
+      <div className="p-3 space-y-2">
         {isLoadingAll ? (
           [1, 2, 3].map(i => (
-            <div key={i} className="flex items-center gap-4 p-4 border border-border rounded-lg">
-              <Skeleton className="h-10 w-10 rounded-xl" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-3.5 w-36" />
-                <Skeleton className="h-3 w-24" />
+            <div key={i} className="flex items-center gap-3 p-3 border border-border rounded-lg">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-2.5 w-20" />
               </div>
-              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-4 w-14" />
             </div>
           ))
-        ) : allOrders.length > 0 ? (
-          allOrders.map(order => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              onClick={() => setSelectedOrder(order)}
-              poInfo={poInfoMap?.[order.id]}
-              returnStatus={returnStatusByOrderId[order.id] || null}
-            />
-          ))
+        ) : paginatedOrders.length > 0 ? (
+          <>
+            {paginatedOrders.map(order => (
+              <OrderCard
+                key={order.id}
+                order={order}
+                onClick={() => setSelectedOrder(order)}
+                poInfo={poInfoMap?.[order.id]}
+                returnStatus={returnStatusByOrderId[order.id] || null}
+              />
+            ))}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-muted-foreground">
+                  {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, allOrders.length)} de {allOrders.length}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </Button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <Button
+                      key={page}
+                      variant={page === currentPage ? "default" : "outline"}
+                      size="icon"
+                      className="h-7 w-7 text-xs"
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
             <ShoppingBag className="w-10 h-10 opacity-25" />
