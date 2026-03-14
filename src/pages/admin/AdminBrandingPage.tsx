@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Palette, Globe, Share2, Search, CreditCard, FileText, Image, ShieldCheck } from 'lucide-react';
+import { Loader2, Save, Palette, Globe, Share2, Search, CreditCard, FileText, Image, ShieldCheck, Plus, X, MonitorPlay } from 'lucide-react';
 
 const PAYMENT_ICONS = [
   { key: 'payment_icon_visa',       label: 'VISA',                default: '/visa.png' },
@@ -25,6 +25,9 @@ const LEGAL_FIELDS = [
   { key: 'legal_terms',       label: 'Términos y Condiciones' },
   { key: 'legal_privacy',     label: 'Política de Privacidad' },
   { key: 'legal_cookies',     label: 'Política de Cookies' },
+  { key: 'legal_returns',     label: 'Devoluciones' },
+  { key: 'legal_refunds',     label: 'Reembolsos' },
+  { key: 'legal_exchanges',   label: 'Cambios' },
   { key: 'about_content',     label: 'Sobre Nosotros' },
   { key: 'affiliate_program', label: 'Programa de Afiliados' },
 ];
@@ -33,14 +36,39 @@ export default function AdminBrandingPage() {
   const { settings, isLoading, updateMultiple } = useBrandingSettings();
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [topbarMessages, setTopbarMessages] = useState<string[]>(['']);
 
   useEffect(() => {
     if (settings.length > 0) {
       const map: Record<string, string> = {};
       settings.forEach(s => { map[s.key] = s.value; });
       setForm(map);
+      try {
+        const msgs = JSON.parse(map.topbar_messages || '[]');
+        setTopbarMessages(Array.isArray(msgs) && msgs.length > 0 ? msgs : ['']);
+      } catch {
+        setTopbarMessages(['']);
+      }
     }
   }, [settings]);
+
+  const syncTopbarMessages = (msgs: string[]) => {
+    setTopbarMessages(msgs);
+    setForm(prev => ({ ...prev, topbar_messages: JSON.stringify(msgs.filter(m => m.trim())) }));
+  };
+
+  const addTopbarMessage = () => setTopbarMessages(prev => [...prev, '']);
+
+  const updateTopbarMessage = (i: number, value: string) => {
+    const updated = [...topbarMessages];
+    updated[i] = value;
+    syncTopbarMessages(updated);
+  };
+
+  const removeTopbarMessage = (i: number) => {
+    const updated = topbarMessages.filter((_, idx) => idx !== i);
+    syncTopbarMessages(updated.length > 0 ? updated : ['']);
+  };
 
   const set = (key: string, value: string) =>
     setForm(prev => ({ ...prev, [key]: value }));
@@ -140,6 +168,94 @@ export default function AdminBrandingPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               {field('contact_email', 'Email de Contacto', 'info@tuempresa.com')}
               {field('contact_phone', 'Teléfono', '+509 ...')}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Top Bar ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><MonitorPlay className="h-5 w-5" /> Barra Superior</CardTitle>
+            <CardDescription>Color e mensajes rotativos que aparecen en la barra superior del sitio</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Colors */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Color de Fondo</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={form.topbar_bg_color || '#f9fafb'}
+                    onChange={e => set('topbar_bg_color', e.target.value)}
+                    className="h-10 w-12 rounded border cursor-pointer p-1 bg-white"
+                  />
+                  <Input
+                    value={form.topbar_bg_color || ''}
+                    onChange={e => set('topbar_bg_color', e.target.value)}
+                    placeholder="#f9fafb"
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Color de Texto</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={form.topbar_text_color || '#4b5563'}
+                    onChange={e => set('topbar_text_color', e.target.value)}
+                    className="h-10 w-12 rounded border cursor-pointer p-1 bg-white"
+                  />
+                  <Input
+                    value={form.topbar_text_color || ''}
+                    onChange={e => set('topbar_text_color', e.target.value)}
+                    placeholder="#4b5563"
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Live preview */}
+            <div
+              className="rounded border text-xs px-4 h-10 flex items-center justify-between font-medium"
+              style={{
+                backgroundColor: form.topbar_bg_color || '#f9fafb',
+                color: form.topbar_text_color || '#4b5563',
+              }}
+            >
+              <span>{topbarMessages.filter(m => m.trim())[0] || 'Vista previa del mensaje...'}</span>
+              <span className="opacity-60 text-[10px]">Centro de Ayuda | Vender</span>
+            </div>
+
+            {/* Messages */}
+            <div className="space-y-2">
+              <Label>Mensajes Rotativos</Label>
+              <p className="text-xs text-muted-foreground">Se mostrarán uno tras otro en la barra superior. Si no hay mensajes se usarán los textos por defecto del sistema.</p>
+              <div className="space-y-2">
+                {topbarMessages.map((msg, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input
+                      value={msg}
+                      onChange={e => updateTopbarMessage(i, e.target.value)}
+                      placeholder={`Mensaje ${i + 1}, ej: Envío internacional disponible`}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeTopbarMessage(i)}
+                      disabled={topbarMessages.length === 1}
+                    >
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button variant="outline" size="sm" onClick={addTopbarMessage}>
+                <Plus className="h-4 w-4 mr-1" />
+                Agregar Mensaje
+              </Button>
             </div>
           </CardContent>
         </Card>

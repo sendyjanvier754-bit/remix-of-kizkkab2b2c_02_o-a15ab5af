@@ -60,6 +60,9 @@ const UserNotificationsPage = lazy(() => import("./pages/UserNotificationsPage")
 const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/legal/PrivacyPage"));
 const CookiesPage = lazy(() => import("./pages/legal/CookiesPage"));
+const ReturnsPage = lazy(() => import("./pages/legal/ReturnsPage"));
+const RefundsPage = lazy(() => import("./pages/legal/RefundsPage"));
+const ExchangesPage = lazy(() => import("./pages/legal/ExchangesPage"));
 const ContactPage = lazy(() => import("./pages/legal/ContactPage"));
 const AboutPage = lazy(() => import("./pages/legal/AboutPage"));
 // Lazy loaded - Siver Match Pages (B2B2C Ecosystem)
@@ -167,6 +170,9 @@ const AppContent = () => {
             <Route path="/terminos" element={<LazyRoute><TermsPage /></LazyRoute>} />
             <Route path="/privacidad" element={<LazyRoute><PrivacyPage /></LazyRoute>} />
             <Route path="/cookies" element={<LazyRoute><CookiesPage /></LazyRoute>} />
+            <Route path="/devoluciones" element={<LazyRoute><ReturnsPage /></LazyRoute>} />
+            <Route path="/reembolsos" element={<LazyRoute><RefundsPage /></LazyRoute>} />
+            <Route path="/cambios" element={<LazyRoute><ExchangesPage /></LazyRoute>} />
             <Route path="/contacto" element={<LazyRoute><ContactPage /></LazyRoute>} />
             <Route path="/sobre-nosotros" element={<LazyRoute><AboutPage /></LazyRoute>} />
             

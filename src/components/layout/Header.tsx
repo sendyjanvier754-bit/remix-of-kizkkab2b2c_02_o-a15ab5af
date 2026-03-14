@@ -61,6 +61,34 @@ declare global {
   }
 }
 
+// ── Top Bar Ticker ──────────────────────────────────────
+const TopBarTicker = ({ messages, style }: { messages: string[]; style?: React.CSSProperties }) => {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (messages.length <= 1) return;
+    const timer = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex(i => (i + 1) % messages.length);
+        setVisible(true);
+      }, 350);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [messages.length]);
+
+  if (!messages.length) return null;
+  return (
+    <span
+      className="transition-opacity duration-300 font-medium"
+      style={{ opacity: visible ? 1 : 0, ...style }}
+    >
+      {messages[index]}
+    </span>
+  );
+};
+
 interface HeaderProps {
   showViewModeSwitch?: boolean;
   selectedCategoryId?: string | null;
@@ -399,26 +427,37 @@ const Header = ({
   return (
     <>
     <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-[#ffdcdc] border-b border-gray-200">
-      {/* Top Bar */}
-      <div className="bg-gray-50 border-b border-gray-200">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-10 text-xs text-gray-600">
-            <div className="flex items-center gap-4">
-              <span>{t('header.shippingAbroad')}</span>
-              <Link to="/tendencias" className="flex items-center gap-1 hover:text-[#071d7f] transition-colors">
-                <TrendingUp className="w-3 h-3" />
-                <span>{t('header.trends')}</span>
-              </Link>
-              <span>{t('header.freeReturns')}</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <button>{t('header.helpCenter')}</button>
-              <span></span>
-              <Link to="/admin/login">{t('header.sell')}</Link>
+      {/* Top Bar — configurable desde Admin › Identidad › Barra Superior */}
+      {(() => {
+        const bgColor = getValue('topbar_bg_color') || '#f9fafb';
+        const textColor = getValue('topbar_text_color') || '#4b5563';
+        let messages: string[] = [];
+        try {
+          const raw = getValue('topbar_messages');
+          const parsed = JSON.parse(raw || '[]');
+          if (Array.isArray(parsed)) messages = parsed.filter(Boolean);
+        } catch {}
+        if (!messages.length) {
+          messages = [t('header.shippingAbroad'), t('header.freeReturns'), t('header.trends')];
+        }
+        return (
+          <div style={{ backgroundColor: bgColor, color: textColor }} className="border-b border-gray-200">
+            <div className="container mx-auto px-4">
+              <div className="flex items-center justify-between h-10 text-xs">
+                {/* Marquee de mensajes */}
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <TopBarTicker messages={messages} style={{ color: textColor }} />
+                </div>
+                <div className="flex items-center gap-4" style={{ color: textColor }}>
+                  <button className="hover:opacity-75 transition-opacity">{t('header.helpCenter')}</button>
+                  <span className="opacity-30">|</span>
+                  <Link to="/admin/login" className="hover:opacity-75 transition-opacity">{t('header.sell')}</Link>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Main Header */}
       <div className="container mx-auto px-4">
