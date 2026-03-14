@@ -544,7 +544,7 @@ const SellerCartPage = () => {
     try {
       const snapshot = items.map(item => ({
         sku: item.sku,
-        name: item.nombre,
+        name: item.name,
         price: item.precioB2B,
         quantity: item.cantidad,
         image: item.image,
