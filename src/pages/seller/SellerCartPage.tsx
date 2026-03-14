@@ -1376,6 +1376,15 @@ const SellerCartPage = () => {
                     )}
                     <div className="flex gap-2 justify-center">
                       <button
+                        onClick={handleShareCart}
+                        disabled={isSharing}
+                        className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-border hover:bg-muted"
+                        title="Compartir carrito"
+                      >
+                        {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                        Compartir
+                      </button>
+                      <button
                         onClick={handleWhatsAppContact}
                         className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-gray-300"
                         style={{ color: '#29892a' }}
