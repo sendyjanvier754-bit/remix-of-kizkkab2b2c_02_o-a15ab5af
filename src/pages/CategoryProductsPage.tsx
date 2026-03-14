@@ -59,7 +59,7 @@ const CategoryProductsPage = () => {
         descripcion_corta: sp.descripcion,
         precio: sp.precio_venta,
         precio_b2c: sp.precio_venta,
-        precio_mayorista: sp.source_product?.precio_mayorista || sp.precio_costo || 0,
+        precio_mayorista: sp.source_product?.precio_mayorista_base || sp.precio_costo || 0,
         precio_sugerido_venta: sp.precio_venta,
         imagen_principal: Array.isArray(sp.images) ? sp.images[0] : sp.images,
         galeria_imagenes: Array.isArray(sp.images) ? sp.images : [],

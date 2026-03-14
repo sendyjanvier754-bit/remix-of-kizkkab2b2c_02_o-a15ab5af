@@ -73,7 +73,7 @@ export const useWishlist = (type?: WishlistType) => {
           products:product_id (
             id,
             nombre,
-            precio_mayorista,
+            precio_mayorista_base,
             imagen_principal,
             sku_interno,
             moq,
@@ -125,8 +125,8 @@ export const useWishlist = (type?: WishlistType) => {
             ? (product?.nombre || 'Producto')
             : (catalog?.nombre || product?.nombre || 'Producto'),
           price: isB2B
-            ? (product?.precio_mayorista || 0)
-            : (catalog?.precio_venta || product?.precio_mayorista || 0),
+            ? (product?.precio_mayorista_base || 0)
+            : (catalog?.precio_venta || product?.precio_mayorista_base || 0),
           image: isB2B
             ? (product?.imagen_principal || '/placeholder.svg')
             : (resolveCatalogImage(catalog) !== '/placeholder.svg'

@@ -89,7 +89,7 @@ const MarketplacePage = () => {
       nombre: product.nombre,
       images: mainImage ? [mainImage] : [],
       price: product.precio_venta,
-      costB2B: product.source_product?.precio_mayorista || product.precio_venta,
+      costB2B: product.source_product?.precio_mayorista_base || product.precio_venta,
       moq: product.source_product?.moq || 1,
       stock: product.stock || 0,
       source_product_id: product.source_product?.id,

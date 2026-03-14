@@ -24,7 +24,7 @@ export interface SellerProduct {
   source_product: {
     id: string;
     categoria_id: string | null;
-    precio_mayorista: number;
+    precio_mayorista_base: number;
     precio_sugerido_venta: number | null;
     moq: number;
     stock_fisico: number;
@@ -56,7 +56,7 @@ export const useSellerProduct = (sku: string | undefined) => {
           source_product:products!seller_catalog_source_product_id_fkey(
             id,
             categoria_id,
-            precio_mayorista,
+            precio_mayorista_base,
             precio_sugerido_venta,
             moq,
             stock_fisico,
@@ -100,7 +100,7 @@ export const useSellerProducts = (limit = 20) => {
            source_product:products!seller_catalog_source_product_id_fkey(
              id,
              categoria_id,
-             precio_mayorista,
+              precio_mayorista_base,
              precio_sugerido_venta,
              moq,
              stock_fisico,
@@ -169,7 +169,7 @@ export const useSellerProductsByCategory = (categoryId: string | undefined, allC
           source_product:products!seller_catalog_source_product_id_fkey(
             id,
             categoria_id,
-            precio_mayorista,
+            precio_mayorista_base,
             precio_sugerido_venta,
             moq,
             stock_fisico,

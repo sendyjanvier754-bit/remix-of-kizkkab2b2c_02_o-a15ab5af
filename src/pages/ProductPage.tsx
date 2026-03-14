@@ -58,7 +58,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
               id, name, logo, whatsapp, is_active, slug
             ),
             source_product:products!seller_catalog_source_product_id_fkey(
-              id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
+              id, categoria_id, precio_mayorista_base, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
               category:categories!products_categoria_id_fkey(id, name, slug)
             )
           `).eq("id", catalogId).eq("is_active", true).maybeSingle() as { data: any; error: any };
@@ -118,7 +118,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
           id, name, logo, whatsapp, is_active, slug
         ),
         source_product:products!seller_catalog_source_product_id_fkey(
-          id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
+          id, categoria_id, precio_mayorista_base, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
           category:categories!products_categoria_id_fkey(id, name, slug)
         )
       `;
@@ -210,7 +210,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
           source_product: {
             id: b2bAny.id,
             categoria_id: b2bAny.categoria_id,
-            precio_mayorista: b2bAny.costo_base_excel,
+            precio_mayorista_base: b2bAny.costo_base_excel,
             precio_sugerido_venta: b2bAny.precio_b2b,
             moq: b2bAny.moq,
             stock_fisico: b2bAny.stock_fisico,
@@ -592,7 +592,7 @@ const ProductPage = () => {
   }, [product]);
 
   // B2B Specific Data
-  const costB2B = product?.source_product?.precio_mayorista || 0;
+  const costB2B = product?.source_product?.precio_mayorista_base || 0;
   const pvp = product?.precio_venta || 0;
   const moq = product?.source_product?.moq || 1;
   const stockB2B = product?.source_product?.stock_fisico || 0;
