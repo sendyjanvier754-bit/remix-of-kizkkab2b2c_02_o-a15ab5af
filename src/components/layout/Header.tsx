@@ -548,6 +548,21 @@ const Header = ({
                 <span className="text-xs font-medium">B2B</span>
               </Link>
             )}
+            {showViewModeSwitch && canToggle && (
+              <button
+                onClick={toggleViewMode}
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-1 rounded-md transition text-xs font-medium",
+                  isClientPreview
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+                title={isClientPreview ? "Volver a vista B2B" : "Ver como cliente"}
+              >
+                {isClientPreview ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <span>{isClientPreview ? "Vista B2B" : "Vista Cliente"}</span>
+              </button>
+            )}
             <LanguageSwitcher compact variant="ghost" />
             <Link to={cartLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
               <ShoppingBag className="w-6 h-6" />
