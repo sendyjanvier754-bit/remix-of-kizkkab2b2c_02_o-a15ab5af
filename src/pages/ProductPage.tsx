@@ -99,7 +99,14 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
             id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
-        `).eq("sku", cleanSku).eq("is_active", true).limit(1) as { data: any[]; error: any };
+        `).eq("sku", cleanSku).eq("is_active", true);
+      
+      // Filter by specific seller store if provided
+      if (storeId) {
+        skuQuery = skuQuery.eq("seller_store_id", storeId);
+      }
+      
+      const { data: sellerProducts, error: sellerError } = await skuQuery.limit(1) as { data: any[]; error: any };
       const sellerProduct = sellerProducts?.[0] || null;
       if (sellerProduct) {
         return {
