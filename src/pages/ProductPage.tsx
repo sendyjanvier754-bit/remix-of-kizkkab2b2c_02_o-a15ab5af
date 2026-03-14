@@ -88,7 +88,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
 
       // First try to find in seller_catalog (B2C)
       const {
-        data: sellerProduct,
+        data: sellerProducts,
         error: sellerError
       } = await (supabase as any).from("seller_catalog").select(`
           *,
@@ -99,7 +99,8 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
             id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
-        `).eq("sku", cleanSku).eq("is_active", true).maybeSingle() as { data: any; error: any };
+        `).eq("sku", cleanSku).eq("is_active", true).limit(1) as { data: any[]; error: any };
+      const sellerProduct = sellerProducts?.[0] || null;
       if (sellerProduct) {
         return {
           type: 'seller_catalog' as const,
@@ -148,7 +149,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
       console.error("Product not found for SKU:", sku);
       return null;
     },
-    enabled: !!sku
+    enabled: !!sku || !!catalogId
   });
 };
 const ProductPage = () => {
