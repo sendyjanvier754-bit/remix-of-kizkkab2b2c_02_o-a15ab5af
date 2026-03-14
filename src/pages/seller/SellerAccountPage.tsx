@@ -37,6 +37,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link, useSearchParams } from "react-router-dom";
+import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
 
 const SellerAccountPage = () => {
   const { user, signOut } = useAuth();
