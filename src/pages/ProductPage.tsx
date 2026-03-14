@@ -43,9 +43,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronRight, ChevronLeft, ShoppingCart, Heart, Store as StoreIcon, Package, TrendingUp, Calculator, Shield, Truck, RotateCcw, Award, MessageCircle, Zap, Info, Star, X, ArrowLeft, Search, Share2, MoreVertical, ZoomIn, ExternalLink } from "lucide-react";
 
 // Hook to fetch product from both seller_catalog and products table by SKU or catalog ID
-const useProductBySku = (sku: string | undefined, catalogId: string | undefined) => {
+const useProductBySku = (sku: string | undefined, catalogId: string | undefined, storeId?: string | null) => {
   return useQuery({
-    queryKey: ["product-by-sku", sku, catalogId],
+    queryKey: ["product-by-sku", sku, catalogId, storeId],
     queryFn: async () => {
       // If catalogId is provided, search directly in seller_catalog by ID
       if (catalogId) {
