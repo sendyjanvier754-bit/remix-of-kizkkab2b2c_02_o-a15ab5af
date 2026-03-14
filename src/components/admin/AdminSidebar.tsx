@@ -2,7 +2,7 @@ import {
   LayoutDashboard, CreditCard, Package, Users, MapPin, Settings, LogOut, ShoppingBag,
   ChevronLeft, FolderTree, ShoppingCart, Image as ImageIcon, Truck, ClipboardList,
   Calculator, MessageSquare, RefreshCw, Ticket, UserCheck, BarChart3, LayoutGrid,
-  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck
+  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck, Mail
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
