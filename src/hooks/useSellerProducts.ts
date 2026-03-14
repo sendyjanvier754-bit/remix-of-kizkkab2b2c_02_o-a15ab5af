@@ -56,7 +56,7 @@ export const useSellerProduct = (sku: string | undefined) => {
           source_product:products!seller_catalog_source_product_id_fkey(
             id,
             categoria_id,
-            precio_mayorista,
+            precio_mayorista_base,
             precio_sugerido_venta,
             moq,
             stock_fisico,
