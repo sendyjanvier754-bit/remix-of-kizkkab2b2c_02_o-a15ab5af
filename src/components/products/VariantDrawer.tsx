@@ -6,6 +6,7 @@ import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';
+import { useViewMode } from '@/contexts/ViewModeContext';
 import { addItemB2C, addItemB2B } from '@/services/cartService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
