@@ -47,7 +47,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Package, ShoppingBag, Truck, CheckCircle, XCircle, Clock, ExternalLink,
-  ChevronRight, RefreshCw, AlertTriangle, Loader2, Ban, DollarSign,
+  ChevronRight, ChevronLeft, RefreshCw, AlertTriangle, Loader2, Ban, DollarSign,
   Plane, Ship, Warehouse, PackageCheck, Boxes, Store, MapPin, Calendar, RotateCcw,
 } from "lucide-react";
 import {
