@@ -150,7 +150,7 @@ const OrderCard = ({
       onClick={onClick}
       className={`cursor-pointer hover:shadow-md transition-all border-l-4 group ${borderColor} overflow-hidden`}
     >
-      <CardContent className="p-3 sm:p-4">
+      <CardContent className="p-2 sm:p-3">
         {/* Mobile: stacked layout / Desktop: side-by-side */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
