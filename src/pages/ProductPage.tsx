@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -83,46 +83,69 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
       // Otherwise search by SKU
       if (!sku) return null;
 
+      const safeDecode = (value: string) => {
+        try {
+          return decodeURIComponent(value);
+        } catch {
+          return value;
+        }
+      };
+
       // Normalize/clean SKU from route (defensive against malformed URLs)
-      const decodedSku = decodeURIComponent(sku);
-      const cleanSku = decodedSku.split('?')[0].replace(/-undefined$/, '').trim();
+      const decodedSku = safeDecode(sku);
+      const cleanSku = decodedSku
+        .split('?')[0]
+        .replace(/-undefined$/, '')
+        .replace(/\/+$/, '')
+        .trim();
 
-      // First try exact match in seller_catalog (B2C)
-      let skuQuery = (supabase as any).from("seller_catalog").select(`
-          *,
-          store:stores!seller_catalog_seller_store_id_fkey(
-              id, name, logo, whatsapp, is_active, slug
-            ),
-          source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
-            category:categories!products_categoria_id_fkey(id, name, slug)
-          )
-        `).eq("sku", cleanSku).eq("is_active", true);
+      const normalizedStoreId = storeId?.split('?')[0]?.trim() || null;
+      if (!cleanSku) return null;
 
-      // Filter by specific seller store if provided
-      if (storeId) {
-        skuQuery = skuQuery.eq("seller_store_id", storeId);
-      }
+      const skuCandidates = Array.from(
+        new Set(
+          [
+            cleanSku,
+            cleanSku.replace(/\s+/g, '_'),
+            cleanSku.replace(/_/g, ' '),
+          ].filter(Boolean)
+        )
+      );
 
-      let { data: sellerProducts, error: sellerError } = await skuQuery.limit(1) as { data: any[]; error: any };
+      const sellerSelect = `
+        *,
+        store:stores!seller_catalog_seller_store_id_fkey(
+          id, name, logo, whatsapp, is_active, slug
+        ),
+        source_product:products!seller_catalog_source_product_id_fkey(
+          id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
+          category:categories!products_categoria_id_fkey(id, name, slug)
+        )
+      `;
 
-      // Fallback: partial SKU match within same seller (handles route inconsistencies)
-      if ((!sellerProducts || sellerProducts.length === 0) && storeId) {
-        const baseSku = cleanSku.split('-')[0];
-        const { data: fallbackProducts, error: fallbackError } = await (supabase as any)
+      const createSellerQuery = () => {
+        let query = (supabase as any)
           .from("seller_catalog")
-          .select(`
-            *,
-            store:stores!seller_catalog_seller_store_id_fkey(
-              id, name, logo, whatsapp, is_active, slug
-            ),
-            source_product:products!seller_catalog_source_product_id_fkey(
-              id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
-              category:categories!products_categoria_id_fkey(id, name, slug)
-            )
-          `)
-          .eq("seller_store_id", storeId)
-          .eq("is_active", true)
+          .select(sellerSelect)
+          .eq("is_active", true);
+
+        if (normalizedStoreId) {
+          query = query.eq("seller_store_id", normalizedStoreId);
+        }
+
+        return query;
+      };
+
+      let { data: sellerProducts, error: sellerError } = await createSellerQuery()
+        .in("sku", skuCandidates)
+        .order("updated_at", { ascending: false })
+        .limit(1) as { data: any[]; error: any };
+
+      // Fallback 1: partial base-SKU match (inside selected seller when provided)
+      if ((!sellerProducts || sellerProducts.length === 0) && cleanSku.includes('-')) {
+        const baseSku = cleanSku.split('-')[0];
+
+        const { data: fallbackProducts, error: fallbackError } = await createSellerQuery()
           .ilike("sku", `${baseSku}%`)
           .order("updated_at", { ascending: false })
           .limit(1) as { data: any[]; error: any };
@@ -131,8 +154,22 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
         sellerError = fallbackError;
       }
 
+      // Fallback 2: if seller ID is malformed in URL, still recover by SKU globally
+      if ((!sellerProducts || sellerProducts.length === 0) && normalizedStoreId) {
+        const { data: globalSkuProducts, error: globalSkuError } = await (supabase as any)
+          .from("seller_catalog")
+          .select(sellerSelect)
+          .eq("is_active", true)
+          .in("sku", skuCandidates)
+          .order("updated_at", { ascending: false })
+          .limit(1) as { data: any[]; error: any };
+
+        sellerProducts = globalSkuProducts;
+        sellerError = globalSkuError;
+      }
+
       if (sellerError) {
-        console.error("Error fetching seller product by SKU:", { cleanSku, storeId, sellerError });
+        console.error("Error fetching seller product by SKU:", { cleanSku, normalizedStoreId, sellerError });
       }
 
       const sellerProduct = sellerProducts?.[0] || null;
@@ -244,9 +281,10 @@ const ProductPage = () => {
     }
   };
   const {
-    sku,
+    sku: skuParam,
     catalogId
   } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const {
     user
@@ -257,6 +295,13 @@ const ProductPage = () => {
   } = useToast();
   // Determine if user is B2B (Seller or Admin)
   const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
+
+  const resolvedSku = useMemo(() => {
+    if (skuParam) return skuParam;
+    if (location.pathname.startsWith('/producto/catalogo/')) return undefined;
+    const routeMatch = location.pathname.match(/^\/producto\/([^/]+)/);
+    return routeMatch?.[1];
+  }, [skuParam, location.pathname]);
 
   // Use separate favorite hooks for B2B and B2C
   const b2bFav = useB2BFavorites();
@@ -290,13 +335,13 @@ const ProductPage = () => {
 
   // ===== SELLER / STORE SECTION =====
   const [searchParams] = useSearchParams();
-  const sellerParam = searchParams.get('seller'); // store ID from ?seller= URL param
+  const sellerParam = searchParams.get('seller')?.trim() || null; // store ID from ?seller= URL param
 
   // Fetch product data from both tables, filtered by seller if provided
   const {
     data: product,
     isLoading
-  } = useProductBySku(sku, catalogId, sellerParam);
+  } = useProductBySku(resolvedSku, catalogId, sellerParam);
 
   // Load store profile: prefer the FK-joined store on the product, fall back to ?seller= param
   const {
