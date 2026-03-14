@@ -73,7 +73,7 @@ export const useWishlist = (type?: WishlistType) => {
           products:product_id (
             id,
             nombre,
-            precio_mayorista,
+            precio_mayorista_base,
             imagen_principal,
             sku_interno,
             moq,
