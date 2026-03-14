@@ -83,7 +83,7 @@ const SellerDesktopHeader = ({
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [isImageSearching, setIsImageSearching] = useState(false);
   const { items: b2bItems } = useB2BCartItems();
-  const cartCount = b2bItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = b2bItems.reduce((sum, item) => sum + item.cantidad, 0);
   
   const searchRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
