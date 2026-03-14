@@ -418,7 +418,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
           </button>
         )}
 
-        <div className="flex-1" />
+        
 
         {/* Language Selector */}
         <div ref={langRef} className="relative flex-shrink-0">
