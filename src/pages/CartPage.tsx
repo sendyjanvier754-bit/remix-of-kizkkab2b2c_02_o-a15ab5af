@@ -57,6 +57,9 @@ function getHex(name: string): string | null {
   return COLOR_HEX[name.toLowerCase()] ?? null;
 }
 
+// Stable empty array to avoid new reference on every render when query has no data
+const EMPTY_CATALOG_VARIANTS: B2CCatalogVariant[] = [];
+
 const CartPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -85,7 +88,7 @@ const CartPage = () => {
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
 
-  const { data: catalogVariants = [], isLoading: isLoadingVariants } = useB2CCatalogVariants(
+  const { data: catalogVariants = EMPTY_CATALOG_VARIANTS, isLoading: isLoadingVariants } = useB2CCatalogVariants(
     selectedItemForVariants?.sellerCatalogId ?? null
   );
 

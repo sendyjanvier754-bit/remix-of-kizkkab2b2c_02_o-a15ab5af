@@ -13,12 +13,12 @@ const RecommendedProductsSection = ({ maxProducts = 12, className }: Recommended
   const { t } = useTranslation();
   const { data: products = [], isLoading } = useRecommendedProducts(null, null, maxProducts);
 
-  if (isLoading || products.length === 0) return null;
-
-  // Shuffle products only once per products change
+  // Shuffle products only once per products change — must be before any early return
   const shuffled = useMemo(() => {
     return [...products].sort(() => Math.random() - 0.5);
   }, [products]);
+
+  if (isLoading || products.length === 0) return null;
 
   return (
     <div className={cn("py-6 px-4", className)}>

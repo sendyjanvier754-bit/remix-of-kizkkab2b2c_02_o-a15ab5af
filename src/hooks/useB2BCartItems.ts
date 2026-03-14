@@ -43,8 +43,6 @@ export const useB2BCartItems = () => {
     try {
       setError(null);
 
-      console.log('Loading B2B cart items for user:', user.id);
-
       // Get cart first
       const { data: carts, error: cartsError } = await supabase
         .from('b2b_carts')
@@ -58,7 +56,6 @@ export const useB2BCartItems = () => {
       }
 
       const cartIds = (carts || []).map(c => c.id);
-      console.log('Found carts:', cartIds);
 
       if (cartIds.length === 0) {
         // No carts found, return empty items
@@ -77,9 +74,6 @@ export const useB2BCartItems = () => {
         console.error('Error fetching B2B cart items:', itemsError);
         throw itemsError;
       }
-
-      console.log('B2B Cart items loaded:', cartItems?.length || 0, 'items');
-      console.log('🔍 Datos brutos de la DB (incluyendo variantes):', cartItems);
 
       // Fetch fresh prices from vistas for each item
       const formattedItems: B2BCartItem[] = await Promise.all(
@@ -107,7 +101,6 @@ export const useB2BCartItems = () => {
               if (variantData.images?.[0]) {
                 image = variantData.images[0];
               }
-              console.log(`✅ Variant ${item.variant_id} price from v_variantes_con_precio_b2b:`, freshPrice, 'MOQ:', moq);
             }
           }
           
@@ -125,7 +118,6 @@ export const useB2BCartItems = () => {
               if (!image && productData.imagen_principal) {
                 image = productData.imagen_principal;
               }
-              console.log(`✅ Product ${item.product_id} price from v_productos_con_precio_b2b:`, freshPrice, 'MOQ:', moq);
             }
           }
 
@@ -149,14 +141,6 @@ export const useB2BCartItems = () => {
         })
       );
 
-      console.log('✅ Variantes después del map:', formattedItems.map(item => ({ 
-        name: item.name,
-        color: item.color,
-        size: item.size,
-        variantId: item.variantId,
-        precioB2B: item.precioB2B
-      })));
-
       setItems(formattedItems);
     } catch (err) {
       console.error('Error loading B2B cart items:', err);
@@ -176,15 +160,12 @@ export const useB2BCartItems = () => {
 
   // Subscribe to cross-tab cart changes
   const { broadcastCartUpdate } = useCartSync(() => {
-    console.log('B2B cart update detected from another tab, reloading...');
     loadCartItems(false);
   });
 
   // Subscribe to real-time changes using Supabase
   useEffect(() => {
     if (!user?.id) return;
-
-    console.log('Setting up real-time subscription for b2b_cart_items');
 
     // Subscribe to changes in b2b_cart_items
     const itemsSubscription = supabase
@@ -196,8 +177,7 @@ export const useB2BCartItems = () => {
           schema: 'public',
           table: 'b2b_cart_items',
         },
-        (payload) => {
-          console.log('Real-time cart item update received:', payload);
+        () => {
           // Reload cart items on any change
           loadCartItems(false);
           // Broadcast to other tabs
@@ -216,8 +196,7 @@ export const useB2BCartItems = () => {
           schema: 'public',
           table: 'b2b_carts',
         },
-        (payload) => {
-          console.log('Real-time cart status update received:', payload);
+        () => {
           // Reload cart items when cart status changes
           loadCartItems(false);
           // Broadcast to other tabs

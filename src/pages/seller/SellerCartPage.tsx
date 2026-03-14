@@ -195,13 +195,6 @@ const SellerCartPage = () => {
     selectedShippingTypeId
   );
 
-  console.log('📊 SellerCartPage - shipping state:', {
-    selectedShippingTypeId,
-    cartShippingCost,
-    isLoadingShippingCost,
-    b2bSelectedIdsCount: b2bSelectedIds.size
-  });
-
   const subtotal = selectedItems.reduce((sum, item) => sum + item.subtotal, 0);
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.cantidad, 0);
   const allSelected = items.length > 0 && items.every(item => b2bSelectedIds.has(item.id));
@@ -212,16 +205,6 @@ const SellerCartPage = () => {
   
   // Total = subtotal + shipping ONLY if checkbox is checked
   const totalEstimado = subtotal + (includeShippingInTotal ? shippingCostAmount : 0);
-  
-  console.log('💰 SellerCartPage - CÁLCULO DE TOTAL:', {
-    subtotal: subtotal.toFixed(2),
-    shippingCostAmount: shippingCostAmount.toFixed(2),
-    includeShippingInTotal,
-    totalEstimado: totalEstimado.toFixed(2),
-    fuente: 'cartShippingCost (con tier seleccionado)',
-    selectedTier: selectedShippingTypeId,
-    cartShippingCostRaw: cartShippingCost
-  });
   
   // Check if costs are still loading/calculating
   const isCostCalculating = isLoadingShippingCost;
@@ -1188,11 +1171,6 @@ const SellerCartPage = () => {
                             itemIds={Array.from(b2bSelectedIds)}
                             countryId={cartCountryId}
                             onShippingTypeChange={(typeId, summary) => {
-                              console.log('📬 SellerCartPage received shipping change:', {
-                                typeId,
-                                summary,
-                                previousTypeId: selectedShippingTypeId
-                              });
                               setSelectedShippingTypeId(typeId);
                               setShippingSummary(summary);
                             }}

@@ -43,7 +43,6 @@ export const useB2CCartSupabase = () => {
   // Fetch or create cart
   const fetchOrCreateCart = useCallback(async (userId: string) => {
     try {
-      console.log('Fetching or creating cart for user:', userId);
       
       // Try to get latest open cart (legacy data may contain multiple open carts)
       const { data: existingCarts, error: fetchError } = await supabase
@@ -63,7 +62,6 @@ export const useB2CCartSupabase = () => {
 
       if (!existingCarts || existingCarts.length === 0) {
         // No cart exists, create one
-        console.log('No existing cart found, creating new one');
 
         const { data: newCart, error: createError } = await supabase
           .from('b2c_carts')
@@ -81,10 +79,8 @@ export const useB2CCartSupabase = () => {
           throw createError;
         }
 
-        console.log('Cart created successfully:', newCart);
         cartId = newCart.id;
       } else {
-        console.log('Existing cart found:', existingCarts[0]);
         cartId = existingCarts[0].id;
       }
 
@@ -135,18 +131,14 @@ export const useB2CCartSupabase = () => {
   // Initialize cart when user logs in
   useEffect(() => {
     if (user?.id) {
-      console.log('useB2CCartSupabase: User detected, loading cart...');
       setIsLoading(true);
       fetchOrCreateCart(user.id)
-        .then(() => {
-          console.log('useB2CCartSupabase: Cart loaded successfully');
-        })
+        .then(() => {})
         .catch(err => {
           console.error('Error in fetchOrCreateCart:', err);
           setIsLoading(false);
         });
     } else {
-      console.log('useB2CCartSupabase: No user, resetting cart');
       setCart(initialCart);
       setIsLoading(false);
     }

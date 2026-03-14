@@ -20,8 +20,6 @@ export function useShippingTiersRealtimeSync() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    console.log('🔴 [Realtime] Setting up shipping_tiers sync');
-
     // Create realtime channel
     const channel = supabase
       .channel('shipping_tiers_realtime_sync')
@@ -33,8 +31,6 @@ export function useShippingTiersRealtimeSync() {
           table: 'shipping_tiers',
         },
         (payload) => {
-          console.log('🔴 [Realtime] Shipping tier changed:', payload);
-
           // Invalidar todas las queries relacionadas con shipping
           const queriesToInvalidate = [
             // Hooks de shipping types
@@ -58,19 +54,13 @@ export function useShippingTiersRealtimeSync() {
 
           queriesToInvalidate.forEach(queryKey => {
             queryClient.invalidateQueries({ queryKey });
-            console.log(`✅ [Realtime] Invalidated query:`, queryKey);
           });
-
-          console.log('🔄 [Realtime] All shipping queries invalidated - UI will refresh');
         }
       )
-      .subscribe((status) => {
-        console.log('🔴 [Realtime] Subscription status:', status);
-      });
+      .subscribe();
 
     // Cleanup on unmount
     return () => {
-      console.log('🔴 [Realtime] Cleaning up shipping_tiers sync');
       supabase.removeChannel(channel);
     };
   }, [queryClient]);

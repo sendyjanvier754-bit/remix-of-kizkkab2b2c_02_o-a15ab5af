@@ -62,8 +62,6 @@ export const useB2CCartItems = () => {
     try {
       setError(null);
 
-      console.log('Loading cart items for user:', user.id);
-
       // Get latest open cart (legacy data may contain multiple open carts)
       const { data: openCart, error: cartError } = await supabase
         .from('b2c_carts')
@@ -80,7 +78,6 @@ export const useB2CCartItems = () => {
       }
 
       if (!openCart?.id) {
-        console.log('Cart items loaded: 0 items');
         setItems([]);
         return;
       }
@@ -95,8 +92,6 @@ export const useB2CCartItems = () => {
         console.error('Error fetching cart items:', itemsError);
         throw itemsError;
       }
-
-      console.log('Cart items loaded:', cartItems?.length || 0, 'items');
 
       // Fetch seller prices separately to avoid PostgREST FK join dependency
       const variantIds = (cartItems || []).map(i => i.variant_id).filter(Boolean);
@@ -203,15 +198,12 @@ export const useB2CCartItems = () => {
 
   // Subscribe to cross-tab cart changes
   const { broadcastCartUpdate } = useCartSync(() => {
-    console.log('Cart update detected from another tab, reloading...');
     loadCartItems(false);
   });
 
   // Subscribe to real-time changes using Supabase
   useEffect(() => {
     if (!user?.id) return;
-
-    console.log('Setting up real-time subscription for b2c_cart_items');
 
     // Subscribe to changes in b2c_cart_items
     const itemsSubscription = supabase
@@ -223,8 +215,7 @@ export const useB2CCartItems = () => {
           schema: 'public',
           table: 'b2c_cart_items',
         },
-        (payload) => {
-          console.log('Real-time cart item update received:', payload);
+        () => {
           // Reload cart items on any change
           loadCartItems(false);
           // Broadcast to other tabs
@@ -243,8 +234,7 @@ export const useB2CCartItems = () => {
           schema: 'public',
           table: 'b2c_carts',
         },
-        (payload) => {
-          console.log('Real-time cart status update received:', payload);
+        () => {
           // Reload cart items when cart status changes
           loadCartItems(false);
           // Broadcast to other tabs

@@ -113,7 +113,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user && mounted) {
-          console.log('🔄 Loading existing session...');
           setSession(session);
           
           const [profile, userRole] = await Promise.all([
@@ -160,12 +159,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       (event, session) => {
         if (!mounted) return;
         
-        console.log(`🔐 Auth event: ${event}`, {
-          hasSession: !!session,
-          currentPath: window.location.pathname,
-          hasInitialized
-        });
-        
         setSession(session);
 
         // Procesar cambios de auth
@@ -198,15 +191,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               sessionStorage.removeItem('just_logged_in');
               
               const currentPath = window.location.pathname;
-              console.log('✅ Genuine login detected - checking redirect from:', currentPath, 'role:', userRole);
 
               // Verificar si el usuario ya está en la ruta correcta para su rol
               const isInCorrectArea = 
                 (userRole === UserRole.SELLER && currentPath.startsWith('/seller')) ||
                 (userRole === UserRole.ADMIN && currentPath.startsWith('/admin')) ||
                 (userRole === UserRole.USER && !currentPath.startsWith('/seller') && !currentPath.startsWith('/admin'));
-
-              console.log('🔍 Is in correct area?', isInCorrectArea, 'for role:', userRole);
 
               // Solo redirigir si está en páginas de autenticación, raíz, o área incorrecta
               const needsRedirect = 
@@ -215,15 +205,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 currentPath === '/' ||
                 !isInCorrectArea;
 
-              console.log('🔍 Needs redirect?', needsRedirect);
-
               if (needsRedirect) {
-                console.log('📍 Redirecting to default page for role:', userRole);
                 // Check for a pending post-login redirect (e.g. chat button clicked while logged out)
                 const pendingRedirect = sessionStorage.getItem('post_login_redirect');
                 if (pendingRedirect) {
                   sessionStorage.removeItem('post_login_redirect');
-                  console.log('↩️ Using post_login_redirect:', pendingRedirect);
                   navigate(pendingRedirect, { replace: true });
                 } else if (userRole === UserRole.SELLER) {
                   navigate('/seller/adquisicion-lotes', { replace: true });
@@ -232,11 +218,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 } else {
                   navigate('/', { replace: true });
                 }
-              } else {
-                console.log('⏸️ Not redirecting - user already in correct area:', currentPath);
               }
-            } else {
-              console.log('⏸️ Not redirecting - not a genuine login (page reload or token refresh)');
             }
           })();
         } else {
