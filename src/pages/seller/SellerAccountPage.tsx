@@ -118,6 +118,7 @@ const SellerAccountPage = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [statusFilter, setStatusFilter] = useState<BuyerOrderStatus | 'all'>('all');
+  const [ordersPage, setOrdersPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<BuyerOrder | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
