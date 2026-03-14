@@ -1,57 +1,46 @@
-## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
-### Lo que se implementó
 
-1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
-2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
-3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
-4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
-5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
-6. **Routing**: Ruta añadida en App.tsx con lazy loading
+## Issues Found
 
-### Flujo
-1. Agente busca usuario → solicita acceso → OTP enviado como notificación
-2. Agente ingresa OTP → sesión activa 2h con timer visible
-3. Agente busca productos → agrega a borrador → configura envío
-4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
-5. Soporte multitarea con múltiples borradores
+### 1. Product prices show B2B when seller is in "Vista Cliente"
+**ProductCard** (line 56) and **ProductGrid** (line 37) check `user?.role` directly to determine `isB2BUser`, completely ignoring `isClientPreview`. This means even in client preview mode, B2B prices, profit badges, and MOQ info are shown.
 
-## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
+**Affected files:**
+- `src/components/landing/ProductCard.tsx` - line 56: `const isB2BUser = user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN;` -- needs to also check `!isClientPreview`
+- `src/components/landing/ProductGrid.tsx` - line 37: same pattern, needs `isClientPreview` check
 
-### Problema
-El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
+### 2. Vista Cliente switch button missing from SellerLayout headers
+- **SellerLayout** uses `Header` without passing `showViewModeSwitch={true}` (line 44), so the toggle button does not appear on seller pages like `/seller/adquisicion-lotes`
+- **SellerMobileHeader** has no view mode switch button at all
+- **SellerDesktopHeader** has no view mode switch button at all
 
-### Cambios realizados
+### 3. GlobalMobileHeader missing the view mode switch button
+The `GlobalMobileHeader` imports `toggleViewMode` and `canToggle` but never renders a toggle button in the UI.
 
-1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
+### 4. MarketplacePage title says "Adquisicion de Lotes" (B2B title)
+The marketplace page likely shows B2B-oriented title/layout regardless of view mode.
 
-2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
+---
 
-3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
+## Plan
 
-### Flujo corregido
-```
-Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-... pasa el tiempo, PO-001 vence ...
-Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
-Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
-```
+### A. Fix ProductCard to respect isClientPreview
+- Import `useViewMode` in `ProductCard.tsx`
+- Change `isB2BUser` to: `(user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN) && !isClientPreview`
 
-## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
+### B. Fix ProductGrid to respect isClientPreview
+- Import `useViewMode` in `ProductGrid.tsx`
+- Same pattern: add `&& !isClientPreview` to `isB2BUser`
 
-### Lo que se implementó
-1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
-2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
-3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
-4. **Routing**: Ruta pública en App.tsx
+### C. Add view mode switch to SellerLayout's Header
+- In `SellerLayout.tsx`, pass `showViewModeSwitch={true}` to the `Header` component (line 44)
 
-## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
+### D. Add view mode toggle to SellerMobileHeader
+- Import `useViewMode`
+- Add a small toggle button (Eye/EyeOff icon) in the top action bar, similar to GlobalMobileHeader style
 
-### Problema
-Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
+### E. Add view mode toggle to GlobalMobileHeader
+- Render a toggle button in the top bar when `canToggle` is true (the imports already exist, just the UI is missing)
 
-### Cambios
-1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
-2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
-3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.
+These changes ensure that when a seller activates "Vista Cliente", all pages consistently show B2C prices, B2C cart, and B2C UI -- and the toggle is accessible from every header variant including mobile.
+
