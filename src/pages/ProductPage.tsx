@@ -257,15 +257,15 @@ const ProductPage = () => {
     );
   };
 
-  // Fetch product data from both tables
-  const {
-    data: product,
-    isLoading
-  } = useProductBySku(sku, catalogId);
-
   // ===== SELLER / STORE SECTION =====
   const [searchParams] = useSearchParams();
   const sellerParam = searchParams.get('seller'); // store ID from ?seller= URL param
+
+  // Fetch product data from both tables, filtered by seller if provided
+  const {
+    data: product,
+    isLoading
+  } = useProductBySku(sku, catalogId, sellerParam);
 
   // Load store profile: prefer the FK-joined store on the product, fall back to ?seller= param
   const {
