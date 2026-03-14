@@ -368,7 +368,7 @@ const GlobalMobileHeader = ({
         </button>
 
         {/* Search input with dropdown */}
-        <div ref={searchRef} className="flex-1 relative min-w-0">
+        <div ref={searchRef} className="flex-1 relative min-w-0 max-w-[55%]">
           <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => searchQuery.length >= 2 && setShowResults(true)} className="flex-1 bg-transparent text-sm text-gray-700 px-3 py-2 outline-none min-w-0" />
             {searchQuery && <button type="button" onClick={clearSearch} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
