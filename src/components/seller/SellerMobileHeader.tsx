@@ -424,6 +424,9 @@ const SellerMobileHeader = ({
           )}
         </div>
 
+        {/* Vista Cliente Toggle */}
+        <ViewModeToggle />
+
         {/* Account User */}
         <Link to="/seller/cuenta" className="relative flex-shrink-0">
           <User className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
