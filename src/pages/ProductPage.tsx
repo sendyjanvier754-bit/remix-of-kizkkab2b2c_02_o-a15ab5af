@@ -87,10 +87,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
       const cleanSku = sku.replace(/-undefined$/, '');
 
       // First try to find in seller_catalog (B2C)
-      const {
-        data: sellerProducts,
-        error: sellerError
-      } = await (supabase as any).from("seller_catalog").select(`
+      let skuQuery = (supabase as any).from("seller_catalog").select(`
           *,
           store:stores!seller_catalog_seller_store_id_fkey(
               id, name, logo, whatsapp, is_active, slug
