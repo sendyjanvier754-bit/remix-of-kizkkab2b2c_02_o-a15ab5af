@@ -148,7 +148,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
       console.error("Product not found for SKU:", sku);
       return null;
     },
-    enabled: !!sku
+    enabled: !!sku || !!catalogId
   });
 };
 const ProductPage = () => {
