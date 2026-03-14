@@ -33,6 +33,7 @@ import { useB2CCatalogVariants, B2CCatalogVariant } from "@/hooks/useB2CCatalogV
 import { addItemB2C } from "@/services/cartService";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
 
 // ── B2C Cart Variant Drawer helpers ───────────────────────────────────────────
 const ATTR_CONFIG: Record<string, { icon: typeof Palette; displayName: string; order: number }> = {

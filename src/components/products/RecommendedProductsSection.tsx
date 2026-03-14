@@ -28,14 +28,10 @@ const RecommendedProductsSection = ({ maxProducts = 12, className }: Recommended
               price: product.price,
               originalPrice: product.originalPrice,
               image: product.image,
-              discount: product.discount,
-              badge: product.badge,
               sku: product.sku,
               storeId: product.storeId,
               storeName: product.storeName,
               storeWhatsapp: product.storeWhatsapp,
-              isSellerVerified: product.isSellerVerified,
-              rating: product.rating,
               source_product_id: product.source_product_id,
             }}
           />
