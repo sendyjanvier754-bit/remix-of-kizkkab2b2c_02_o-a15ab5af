@@ -343,7 +343,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
         </button>
 
         {/* Search input with dropdown */}
-        <div ref={searchRef} className="flex-1 relative min-w-0 max-w-[55%] sm:max-w-[65%]">
+        <div ref={searchRef} className="flex-1 relative min-w-0">
           <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
             <input
               type="text"
