@@ -296,6 +296,7 @@ const ProductPage = () => {
 
   const resolvedSku = useMemo(() => {
     if (skuParam) return skuParam;
+    if (location.pathname.startsWith('/producto/catalogo/')) return undefined;
     const routeMatch = location.pathname.match(/^\/producto\/([^/]+)/);
     return routeMatch?.[1];
   }, [skuParam, location.pathname]);
