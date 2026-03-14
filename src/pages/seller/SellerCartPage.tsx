@@ -1564,19 +1564,18 @@ const SellerCartPage = () => {
                   <MessageCircle className="w-5 h-5" />
                 </button>
 
+                {/* Botón Compartir */}
+                <button
+                  onClick={handleShareCart}
+                  disabled={isSharing}
+                  className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center border border-border bg-muted hover:bg-muted/80"
+                  title="Compartir carrito"
+                >
+                  {isSharing ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : <Share2 className="w-5 h-5 text-foreground" />}
+                </button>
+
                 {/* Spacer */}
                 <div className="flex-1" />
-
-                {/* Total en el Medio - Clickeable para abrir resumen */}
-                <Badge 
-                  variant="outline" 
-                  className="text-sm border-2 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-green-50 transition" 
-                  style={{ borderColor: '#29892a', color: '#29892a' }}
-                  onClick={() => setShowOrderSummaryDrawer(true)}
-                >
-                  <DollarSign className="w-3.5 h-3.5 mr-1.5" />
-                  ${subtotal.toFixed(2)}
-                </Badge>
 
                 {/* Botón Comprar B2B */}
                 {isCartValid && someSelected ? (
