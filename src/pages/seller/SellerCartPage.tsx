@@ -537,7 +537,58 @@ const SellerCartPage = () => {
     }
   };
 
-  const handleWhatsAppContact = async () => {
+  const handleShareCart = async () => {
+    if (!user?.id || items.length === 0) return;
+    setIsSharing(true);
+    setShareCopied(false);
+    try {
+      const snapshot = items.map(item => ({
+        sku: item.sku,
+        name: item.nombre,
+        price: item.precioB2B,
+        quantity: item.cantidad,
+        image: item.image,
+        color: item.color,
+        size: item.size,
+        variantId: item.variantId,
+      }));
+
+      const { data, error } = await (supabase as any)
+        .from('shared_carts')
+        .insert([{ created_by: user.id, items: snapshot, cart_type: 'b2b' }])
+        .select('share_code')
+        .single();
+
+      if (error) throw error;
+
+      const link = `${window.location.origin}/carrito/compartido/${data.share_code}`;
+      setShareLink(link);
+      setShowShareDialog(true);
+    } catch (err) {
+      console.error('Error sharing cart:', err);
+      toast.error('Error al compartir carrito');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setShareCopied(true);
+      toast.success('Enlace copiado');
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      toast.error('No se pudo copiar');
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    const message = `¡Mira mi carrito B2B! 🛒\n\n${items.length} productos · $${subtotal.toFixed(2)}\n\n${shareLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+
     try {
       // Get admin WhatsApp number from settings
       const { data: settingsData } = await supabase
