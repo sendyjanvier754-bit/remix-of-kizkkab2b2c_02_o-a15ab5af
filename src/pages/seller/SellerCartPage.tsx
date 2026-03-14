@@ -555,7 +555,7 @@ const SellerCartPage = () => {
 
       const { data, error } = await (supabase as any)
         .from('shared_carts')
-        .insert([{ created_by: user.id, items: snapshot, cart_type: 'b2b' }])
+        .insert([{ created_by: user.id, items: snapshot }])
         .select('share_code')
         .single();
 
