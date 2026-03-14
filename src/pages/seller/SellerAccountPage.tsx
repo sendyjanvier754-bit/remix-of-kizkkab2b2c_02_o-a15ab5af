@@ -1393,9 +1393,9 @@ const SellerAccountPage = () => {
                                         )}
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-1.5">
-                                          <span className="font-semibold text-sm">#{order.id.slice(0, 6).toUpperCase()}</span>
-                                          {getStatusBadge(order.status)}
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="font-semibold text-sm shrink-0">#{order.id.slice(0, 6).toUpperCase()}</span>
+                                          <span className="shrink-0">{getStatusBadge(order.status)}</span>
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                                           {order.order_items_b2b?.length || 0} prod. • {order.total_quantity} uds
