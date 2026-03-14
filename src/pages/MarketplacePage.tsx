@@ -4,6 +4,7 @@ import { useSellerProducts } from "@/hooks/useSellerProducts";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSmartCart } from "@/hooks/useSmartCart";
+import { useViewMode } from "@/contexts/ViewModeContext";
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
