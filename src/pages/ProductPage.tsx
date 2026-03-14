@@ -210,7 +210,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
           source_product: {
             id: b2bAny.id,
             categoria_id: b2bAny.categoria_id,
-            precio_mayorista: b2bAny.costo_base_excel,
+            precio_mayorista_base: b2bAny.costo_base_excel,
             precio_sugerido_venta: b2bAny.precio_b2b,
             moq: b2bAny.moq,
             stock_fisico: b2bAny.stock_fisico,
