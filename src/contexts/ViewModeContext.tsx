@@ -33,9 +33,9 @@ export const ViewModeProvider = ({ children }: { children: ReactNode }) => {
       setViewMode((prev) => {
         const newMode = prev === "b2b" ? "client" : "b2b";
         
-        if (newMode === "client") {
-          navigate("/marketplace");
-          toast.success("Navegando como cliente B2C");
+      if (newMode === "client") {
+        navigate("/");
+        toast.success("Navegando como cliente B2C");
         } else {
           toast.info("Vista B2B restaurada");
         }
