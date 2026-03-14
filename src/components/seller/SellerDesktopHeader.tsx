@@ -399,13 +399,6 @@ const SellerDesktopHeader = ({
                       )}
                     </button>
                   )}
-                  <button type="submit" className="text-gray-400 hover:text-[#071d7f]">
-                    {isSearching ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Search className="w-5 h-5" />
-                    )}
-                  </button>
                 </div>
               </form>
 
