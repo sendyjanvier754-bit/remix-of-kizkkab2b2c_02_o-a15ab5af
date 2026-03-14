@@ -338,9 +338,6 @@ const Header = ({
                   )}
                 </button>
               )}
-              <button className="bg-[#071d7f] hover:bg-[#071d7f]/90 p-2 rounded-full m-0.5 transition-colors">
-                <Search className="w-4 h-4 text-white" strokeWidth={2} />
-              </button>
             </div>
 
             {/* Support Chat */}
