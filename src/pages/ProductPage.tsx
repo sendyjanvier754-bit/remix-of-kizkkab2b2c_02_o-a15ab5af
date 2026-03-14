@@ -58,7 +58,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
               id, name, logo, whatsapp, is_active, slug
             ),
             source_product:products!seller_catalog_source_product_id_fkey(
-              id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
+              id, categoria_id, precio_mayorista_base, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
               category:categories!products_categoria_id_fkey(id, name, slug)
             )
           `).eq("id", catalogId).eq("is_active", true).maybeSingle() as { data: any; error: any };
