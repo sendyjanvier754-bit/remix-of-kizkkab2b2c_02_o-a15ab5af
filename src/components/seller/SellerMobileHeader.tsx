@@ -487,4 +487,21 @@ const SellerMobileHeader = ({
   );
 };
 
+const ViewModeToggle = () => {
+  const { isClientPreview, toggleViewMode, canToggle } = useViewMode();
+  if (!canToggle) return null;
+  return (
+    <button
+      onClick={toggleViewMode}
+      className={cn(
+        "flex-shrink-0 p-1 rounded-full transition-colors",
+        isClientPreview ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+      )}
+      title={isClientPreview ? "Vista Cliente activa" : "Cambiar a Vista Cliente"}
+    >
+      {isClientPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+    </button>
+  );
+};
+
 export default SellerMobileHeader;
