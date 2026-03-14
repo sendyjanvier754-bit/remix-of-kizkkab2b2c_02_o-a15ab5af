@@ -24,7 +24,7 @@ export interface SellerProduct {
   source_product: {
     id: string;
     categoria_id: string | null;
-    precio_mayorista: number;
+    precio_mayorista_base: number;
     precio_sugerido_venta: number | null;
     moq: number;
     stock_fisico: number;
