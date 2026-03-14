@@ -1,5 +1,4 @@
 import { Heart, Package, Store, TrendingUp, ShoppingCart, MessageCircle, ShieldCheck } from "lucide-react";
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +6,8 @@ import { UserRole } from "@/types/auth";
 import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useViewMode } from "@/contexts/ViewModeContext";
+import { useB2CFavorites } from "@/hooks/useB2CFavorites";
+import { useB2BFavorites } from "@/hooks/useB2BFavorites";
 
 interface Product {
   id: string;
@@ -50,12 +51,32 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, b2bData }: ProductCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { isClientPreview } = useViewMode();
 
   const isB2BUser = (user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN) && !isClientPreview;
+
+  // Favorites: B2C saves seller_catalog_id, B2B saves source_product_id
+  const b2cFav = useB2CFavorites();
+  const b2bFav = useB2BFavorites();
+
+  const isFav = isB2BUser
+    ? (product.source_product_id ? b2bFav.isInFavorites(product.source_product_id) : false)
+    : b2cFav.isInFavorites(undefined, product.id);
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isB2BUser) {
+      // B2B favorites require the source product ID
+      if (product.source_product_id) {
+        b2bFav.toggle(product.source_product_id);
+      }
+    } else {
+      b2cFav.toggle({ sellerCatalogId: product.id });
+    }
+  };
 
   // Calcular precios según el contexto
   // Priorizamos b2bData si existe, sino usamos los campos del producto (fallback)
@@ -177,18 +198,14 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
             </div>
           )}
 
-          {/* Favorite Button */}
+          {/* Favorite Button - shows for all roles */}
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsFavorite(!isFavorite);
-            }}
+            onClick={handleToggleFavorite}
             className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white transition z-20"
           >
             <Heart
               className={`w-4 h-4 ${
-                isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"
+                isFav ? "fill-red-500 text-red-500" : "text-gray-600"
               }`}
             />
           </button>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types/auth';
+import { toast } from 'sonner';
 
 interface AppUser {
   id: string;
@@ -162,6 +163,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
 
         // Procesar cambios de auth
+        if (event === 'TOKEN_REFRESHED') {
+          // Session refreshed silently — nothing to do, state already updated above
+          return;
+        }
+
+        if (event === 'SIGNED_OUT' && !sessionStorage.getItem('manual_sign_out')) {
+          // Session expired (refresh token invalid) — notify user
+          setUser(null);
+          setRole(null);
+          toast.error('Tu sesión expiró. Por favor inicia sesión nuevamente.', {
+            duration: 6000,
+          });
+          navigate('/login', { replace: true });
+          return;
+        }
+
+        // Clear manual sign out flag after processing
+        sessionStorage.removeItem('manual_sign_out');
+
         if (session?.user) {
           // Usar promesas en paralelo para reducir latencia
           (async () => {
@@ -282,18 +302,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    sessionStorage.setItem('manual_sign_out', 'true');
+    // Clear local state immediately so UI updates right away
+    setUser(null);
+    setSession(null);
+    setRole(null);
     try {
-      // Clear local state first to ensure UI updates immediately
-      setUser(null);
-      setSession(null);
-      setRole(null);
-      
-      // Then sign out from Supabase (ignore errors if session already expired)
       await supabase.auth.signOut();
     } catch (error) {
       console.warn('Sign out error (session may have already expired):', error);
     } finally {
-      // Always navigate to home, regardless of Supabase response
       navigate('/');
     }
   };

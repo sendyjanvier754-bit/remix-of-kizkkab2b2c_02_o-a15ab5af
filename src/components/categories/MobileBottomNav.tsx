@@ -1,16 +1,20 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, LayoutGrid, Sparkles, ShoppingBag, Package, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useB2CCartItems } from "@/hooks/useB2CCartItems";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const MobileBottomNav = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { role, user } = useAuth();
   const { items: b2cItems } = useB2CCartItems();
   const { items: b2bItems } = useB2BCartItems();
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   
   // Hide on admin routes (except support chat)
   const isAdminRoute = location.pathname.startsWith("/admin") && !location.pathname.startsWith("/admin/soporte-chat");
@@ -45,6 +49,7 @@ const MobileBottomNav = () => {
   ];
 
   return (
+    <>
     <nav className="fixed bottom-0 left-0 right-0 z-[9999] bg-[#ffdcdc] border-t border-gray-200 lg:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
       <div className="flex items-center justify-around h-12 px-1 bg-[#fff3f3]">
         {navItems.map((item) => {
@@ -52,8 +57,24 @@ const MobileBottomNav = () => {
             (item.href === "/categorias" && location.pathname.startsWith("/categoria"));
           
           const IconComponent = item.icon;
+          const isCartItem = item.href === cartLink;
+          const requiresAuth = isCartItem && !user;
           
-          return (
+          return requiresAuth ? (
+            <button
+              key="cart-login"
+              onClick={() => setShowLoginDialog(true)}
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 min-w-[60px] h-full",
+                "transition-colors bg-transparent border-0 cursor-pointer"
+              )}
+            >
+              <div className="relative">
+                <IconComponent className="w-5 h-5 text-gray-500" strokeWidth={1.5} />
+              </div>
+              <span className="text-[10px] text-gray-500">{item.label}</span>
+            </button>
+          ) : (
             <Link
               key={item.href}
               to={item.href}
@@ -91,6 +112,36 @@ const MobileBottomNav = () => {
         })}
       </div>
     </nav>
+
+    {/* Login required dialog — shown when guest clicks cart */}
+    <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-[#071d7f]" />
+            Inicia sesión
+          </DialogTitle>
+          <DialogDescription>
+            Necesitas una cuenta para ver y gestionar tu carrito de compras.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-3 pt-2">
+          <button
+            onClick={() => { setShowLoginDialog(false); navigate('/cuenta'); }}
+            className="w-full py-2.5 px-4 bg-[#071d7f] text-white rounded-lg font-medium hover:bg-[#0a2a9f] transition"
+          >
+            Iniciar sesión
+          </button>
+          <button
+            onClick={() => { setShowLoginDialog(false); navigate('/cuenta?tab=register'); }}
+            className="w-full py-2.5 px-4 border border-[#071d7f] text-[#071d7f] rounded-lg font-medium hover:bg-[#071d7f]/5 transition"
+          >
+            Crear cuenta
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

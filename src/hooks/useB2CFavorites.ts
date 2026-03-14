@@ -47,7 +47,7 @@ export const useB2CFavorites = () => {
             id, nombre, precio_mayorista_base, imagen_principal, sku_interno
           ),
           catalog:seller_catalog!b2c_favorites_seller_catalog_id_fkey (
-            id, nombre, precio_venta, images, imagen_principal, sku,
+            id, nombre, precio_venta, images, sku,
             store:stores!seller_catalog_seller_store_id_fkey ( id, name )
           )
         `)
@@ -55,7 +55,7 @@ export const useB2CFavorites = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching B2C favorites:', error);
+        console.error('Error fetching B2C favorites:', error.message, error);
         return [];
       }
 

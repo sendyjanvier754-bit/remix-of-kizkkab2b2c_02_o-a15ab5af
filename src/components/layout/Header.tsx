@@ -16,6 +16,7 @@ import { useViewMode } from "@/contexts/ViewModeContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 import { useBranding } from "@/hooks/useBranding";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -127,6 +128,7 @@ const Header = ({
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [cartBounce, setCartBounce] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const isMobile = useIsMobile();
   const imageInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -662,18 +664,28 @@ const Header = ({
                 <span>{isClientPreview ? "Vista B2B" : "Vista Cliente"}</span>
               </button>
             )}
-            <Link to={cartLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
-              <ShoppingBag className="w-6 h-6" />
-              <span className="text-xs">{t('header.cart')}</span>
-              {cartCount > 0 && (
-                <span className={cn(
-                  "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1",
-                  cartBounce && "animate-bounce"
-                )}>
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </Link>
+            {user ? (
+              <Link to={cartLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
+                <ShoppingBag className="w-6 h-6" />
+                <span className="text-xs">{t('header.cart')}</span>
+                {cartCount > 0 && (
+                  <span className={cn(
+                    "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1",
+                    cartBounce && "animate-bounce"
+                  )}>
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </Link>
+            ) : (
+              <button
+                onClick={() => setShowLoginDialog(true)}
+                className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative bg-transparent border-0 cursor-pointer"
+              >
+                <ShoppingBag className="w-6 h-6" />
+                <span className="text-xs">{t('header.cart')}</span>
+              </button>
+            )}
             <LanguageSwitcher compact variant="ghost" />
           </div>
 
@@ -841,6 +853,35 @@ const Header = ({
 
     {/* spacer to push page content below fixed header — matches actual header height */}
     <div aria-hidden style={{ height: `${headerHeight}px` }} />
+
+    {/* Login required dialog — shown when guest clicks cart */}
+    <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-[#071d7f]" />
+            Inicia sesión
+          </DialogTitle>
+          <DialogDescription>
+            Necesitas una cuenta para ver y gestionar tu carrito de compras.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-3 pt-2">
+          <button
+            onClick={() => { setShowLoginDialog(false); navigate('/cuenta'); }}
+            className="w-full py-2.5 px-4 bg-[#071d7f] text-white rounded-lg font-medium hover:bg-[#0a2a9f] transition"
+          >
+            Iniciar sesión
+          </button>
+          <button
+            onClick={() => { setShowLoginDialog(false); navigate('/cuenta?tab=register'); }}
+            className="w-full py-2.5 px-4 border border-[#071d7f] text-[#071d7f] rounded-lg font-medium hover:bg-[#071d7f]/5 transition"
+          >
+            Crear cuenta
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
     </>
   );
 };

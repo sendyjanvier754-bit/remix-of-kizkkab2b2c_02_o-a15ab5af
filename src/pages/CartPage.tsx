@@ -67,7 +67,7 @@ const CartPage = () => {
   const { items: rawItems, isLoading, refetch } = useB2CCartItems();
   const { isCartLocked } = useActiveB2COrder();
   const isMobile = useIsMobile();
-  const { user, role } = useAuth();
+  const { user, role, isLoading: authLoading } = useAuth();
 
   // ── Optimistic state (same pattern as SellerCartPage) ──────────────────────
   const [items, setItems] = useState<B2CCartItem[]>(rawItems);
@@ -224,6 +224,36 @@ const CartPage = () => {
 
   // Show tabs for sellers to switch between B2C and B2B carts
   const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
+
+  // If auth is resolved and user is not logged in, show login prompt
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {!isMobile && <GlobalHeader />}
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center py-12 px-6">
+            <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Inicia sesión para ver tu carrito</h2>
+            <p className="text-sm text-gray-500 mb-6">Necesitas una cuenta para guardar y gestionar tus productos.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => navigate('/cuenta')}
+                className="py-2.5 px-6 bg-[#071d7f] text-white rounded-lg font-medium hover:bg-[#0a2a9f] transition"
+              >
+                Iniciar sesión
+              </button>
+              <button
+                onClick={() => navigate('/cuenta?tab=register')}
+                className="py-2.5 px-6 border border-[#071d7f] text-[#071d7f] rounded-lg font-medium hover:bg-[#071d7f]/5 transition"
+              >
+                Crear cuenta
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // Show confirmation dialog for removing item
   const handleRemoveItem = (itemId: string, itemName: string) => {
