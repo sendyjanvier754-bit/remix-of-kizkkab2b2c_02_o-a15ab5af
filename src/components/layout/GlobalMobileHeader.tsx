@@ -364,7 +364,7 @@ const GlobalMobileHeader = ({
           }}
           aria-label="Chat de soporte"
         >
-          <Mail className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
+          <Mail className="w-6 h-6 sm:w-7 sm:h-7 text-gray-700" strokeWidth={1.5} />
         </button>
 
         {/* Search input with dropdown */}
