@@ -1,16 +1,33 @@
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Mail, Clock, MessageCircle, HelpCircle } from "lucide-react";
+import { MapPin, Phone, Mail, MessageCircle, HelpCircle, MessagesSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useBranding } from '@/hooks/useBranding';
+import { useAuth } from '@/hooks/useAuth';
+import { UserRole } from '@/types/auth';
 
 const ContactPage = () => {
   const { getValue } = useBranding();
+  const { role, user } = useAuth();
+  const navigate = useNavigate();
   const contactEmail = getValue('contact_email') || 'contacto@empresa.com';
   const contactPhone = getValue('contact_phone') || '+509 3234-5678';
   const whatsappHref = `https://wa.me/${contactPhone.replace(/[^0-9]/g, '')}`;
+
+  const supportChatPath = (role === UserRole.ADMIN || role === UserRole.SELLER || role === UserRole.SALES_AGENT)
+    ? '/admin/soporte-chat'
+    : '/soporte';
+
+  const handleChatClick = () => {
+    if (user) {
+      navigate(supportChatPath);
+    } else {
+      sessionStorage.setItem('post_login_redirect', '/soporte');
+      navigate('/cuenta');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -84,6 +101,28 @@ const ContactPage = () => {
               <p className="text-sm text-muted-foreground mb-2">Nuestra oficina principal:</p>
               <p className="font-medium">Puerto Príncipe, Haití</p>
               <p className="text-xs text-muted-foreground mt-2">Visitas con cita previa.</p>
+            </CardContent>
+          </Card>
+
+          {/* Chat en vivo */}
+          <Card className="md:col-span-2 border-primary/30 bg-primary/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MessagesSquare className="h-5 w-5 text-primary" />
+                Chat en Vivo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Chatea directamente con nuestro equipo de soporte.</p>
+                <p className="text-xs text-muted-foreground">
+                  {user ? 'Atención en tiempo real durante horario laboral.' : 'Inicia sesión para acceder al chat en vivo.'}
+                </p>
+              </div>
+              <Button onClick={handleChatClick} className="shrink-0">
+                <MessagesSquare className="h-4 w-4 mr-2" />
+                {user ? 'Abrir Chat' : 'Iniciar sesión para chatear'}
+              </Button>
             </CardContent>
           </Card>
         </div>
