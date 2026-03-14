@@ -46,7 +46,7 @@ const CartModeTabs = ({ b2cCount = 0, b2bCount = 0 }: CartModeTabsProps) => {
         }`}
       >
         <ShoppingBag className="w-4 h-4" />
-        <span>Pedido B2B</span>
+        <span>Carrito B2B</span>
         {b2bCount > 0 && (
           <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
             isB2B ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
