@@ -44,6 +44,7 @@ export function SellerLayout({
               <Header 
                 selectedCategoryId={selectedCategoryId}
                 onCategorySelect={onCategorySelect}
+                showViewModeSwitch={true}
               />
             )
           )}

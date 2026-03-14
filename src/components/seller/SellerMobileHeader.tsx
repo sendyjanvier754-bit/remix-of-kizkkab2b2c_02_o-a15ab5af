@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, User } from "lucide-react";
+import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, User, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { searchProductsByImage } from "@/services/api/imageSearch";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
+import { useViewMode } from "@/contexts/ViewModeContext";
 
 interface SearchResult {
   id: string;
@@ -423,6 +424,9 @@ const SellerMobileHeader = ({
           )}
         </div>
 
+        {/* Vista Cliente Toggle */}
+        <ViewModeToggle />
+
         {/* Account User */}
         <Link to="/seller/cuenta" className="relative flex-shrink-0">
           <User className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
@@ -480,6 +484,23 @@ const SellerMobileHeader = ({
         ))}
       </div>
     </header>
+  );
+};
+
+const ViewModeToggle = () => {
+  const { isClientPreview, toggleViewMode, canToggle } = useViewMode();
+  if (!canToggle) return null;
+  return (
+    <button
+      onClick={toggleViewMode}
+      className={cn(
+        "flex-shrink-0 p-1 rounded-full transition-colors",
+        isClientPreview ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+      )}
+      title={isClientPreview ? "Vista Cliente activa" : "Cambiar a Vista Cliente"}
+    >
+      {isClientPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+    </button>
   );
 };
 

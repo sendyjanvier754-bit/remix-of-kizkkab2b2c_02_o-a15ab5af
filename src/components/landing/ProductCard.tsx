@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useViewMode } from "@/contexts/ViewModeContext";
 
 interface Product {
   id: string;
@@ -52,8 +53,9 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { isClientPreview } = useViewMode();
 
-  const isB2BUser = user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN;
+  const isB2BUser = (user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN) && !isClientPreview;
 
   // Calcular precios según el contexto
   // Priorizamos b2bData si existe, sino usamos los campos del producto (fallback)

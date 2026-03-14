@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useB2BPricesMap } from "@/hooks/useMarketplaceData";
+import { useViewMode } from "@/contexts/ViewModeContext";
 
 interface Product {
   id: string;
@@ -30,7 +31,8 @@ interface ProductGridProps {
 
 const ProductGrid = ({ products, isLoading = false, skeletonCount = 30 }: ProductGridProps) => {
   const { user } = useAuth();
-  const isB2BUser = user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN;
+  const { isClientPreview } = useViewMode();
+  const isB2BUser = (user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN) && !isClientPreview;
 
   const sourceProductIds = useMemo(
     () => isB2BUser ? products.map(p => p.source_product_id).filter(Boolean) as string[] : [],
