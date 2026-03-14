@@ -71,7 +71,7 @@ export const useB2CFavorites = () => {
           seller_catalog_id: row.seller_catalog_id,
           created_at: row.created_at,
           name: hasCatalog ? (catalog.nombre || 'Producto') : (product?.nombre || 'Producto'),
-          price: hasCatalog ? (catalog.precio_venta || 0) : (product?.precio_mayorista || 0),
+          price: hasCatalog ? (catalog.precio_venta || 0) : (product?.precio_mayorista_base || 0),
           image: hasCatalog ? resolveCatalogImage(catalog) : (product?.imagen_principal || '/placeholder.svg'),
           sku: hasCatalog ? (catalog.sku || '') : (product?.sku_interno || ''),
           store_id: hasCatalog ? (catalog.store?.id ?? null) : null,

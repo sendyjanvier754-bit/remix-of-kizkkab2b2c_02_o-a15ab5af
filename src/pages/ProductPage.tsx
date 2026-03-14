@@ -592,7 +592,7 @@ const ProductPage = () => {
   }, [product]);
 
   // B2B Specific Data
-  const costB2B = product?.source_product?.precio_mayorista || 0;
+  const costB2B = product?.source_product?.precio_mayorista_base || 0;
   const pvp = product?.precio_venta || 0;
   const moq = product?.source_product?.moq || 1;
   const stockB2B = product?.source_product?.stock_fisico || 0;
