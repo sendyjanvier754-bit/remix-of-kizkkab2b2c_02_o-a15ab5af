@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { searchProductsByImage } from "@/services/api/imageSearch";
 import { useTranslation } from "react-i18next";
+import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 
 interface SearchResult {
   id: string;
@@ -81,6 +82,8 @@ const SellerDesktopHeader = ({
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [isImageSearching, setIsImageSearching] = useState(false);
+  const { items: b2bItems } = useB2BCartItems();
+  const cartCount = b2bItems.reduce((sum, item) => sum + item.cantidad, 0);
   
   const searchRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -462,6 +465,15 @@ const SellerDesktopHeader = ({
               <Link to="/seller/favoritos" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <Heart className="w-6 h-6" />
                 <span className="text-xs">{t('header.favorites')}</span>
+              </Link>
+              <Link to="/seller/carrito" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
+                <ShoppingBag className="w-6 h-6" />
+                <span className="text-xs">{t('header.cart')}</span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
               </Link>
               <Link to="/seller/cuenta" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition">
                 <User className="w-6 h-6" />
