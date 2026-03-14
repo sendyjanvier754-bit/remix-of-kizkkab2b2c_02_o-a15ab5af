@@ -116,6 +116,10 @@ const SellerCartPage = () => {
   const [showRemoveItemDialog, setShowRemoveItemDialog] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<{ id: string; name: string } | null>(null);
   const [showOrderSummaryDrawer, setShowOrderSummaryDrawer] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const [selectedProductForVariants, setSelectedProductForVariants] = useState<any>(null);
   const [variantSelections, setVariantSelections] = useState<any[]>([]);
