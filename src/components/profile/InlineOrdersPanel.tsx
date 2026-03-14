@@ -717,6 +717,7 @@ export const InlineOrdersPanel = () => {
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState<BuyerOrderStatus | 'all'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<BuyerOrder | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<BuyerOrder | null>(null);
   const [orderForReturn, setOrderForReturn] = useState<BuyerOrder | null>(null);
