@@ -100,6 +100,8 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
         .trim();
 
       const normalizedStoreId = storeId?.split('?')[0]?.trim() || null;
+      if (!cleanSku) return null;
+
       const skuCandidates = Array.from(
         new Set(
           [
