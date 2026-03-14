@@ -855,7 +855,20 @@ const SellerCartPage = () => {
         <main className={`flex-1 ${isMobile ? 'container mx-auto px-4 pb-40' : 'max-w-7xl mx-auto px-4 py-6'}`}>
           {/* Cart mode tabs */}
           <CartModeTabs b2bCount={items.length} />
-          {items.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-4 py-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-4 p-4 border border-border rounded-lg animate-pulse">
+                  <div className="h-16 w-16 bg-muted rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-40 bg-muted rounded" />
+                    <div className="h-3 w-24 bg-muted rounded" />
+                  </div>
+                  <div className="h-5 w-16 bg-muted rounded" />
+                </div>
+              ))}
+            </div>
+          ) : items.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600 font-medium mb-2">Tu carrito está vacío</p>
