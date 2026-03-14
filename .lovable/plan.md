@@ -1,28 +1,47 @@
+## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
+### Lo que se implementó
 
-## Plan: Filter product query by seller store
+1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
+2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
+3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
+4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
+5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
+6. **Routing**: Ruta añadida en App.tsx con lazy loading
 
-### Problem
-When navigating to `/producto/{sku}?seller={storeId}`, the `useProductBySku` hook ignores the `?seller=` param and just grabs the first matching SKU with `.limit(1)`. Since multiple sellers can have the same SKU, the wrong seller's product may be displayed.
+### Flujo
+1. Agente busca usuario → solicita acceso → OTP enviado como notificación
+2. Agente ingresa OTP → sesión activa 2h con timer visible
+3. Agente busca productos → agrega a borrador → configura envío
+4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
+5. Soporte multitarea con múltiples borradores
 
-### Fix
-**File: `src/pages/ProductPage.tsx`**
+## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
 
-1. **Pass `sellerParam` into `useProductBySku`** — add a third parameter `storeId`:
-   ```typescript
-   const useProductBySku = (sku, catalogId, storeId) => { ... }
-   ```
+### Problema
+El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
 
-2. **Filter by `seller_store_id` when available** — in the SKU query (line ~93-102), add `.eq("seller_store_id", storeId)` when `storeId` is provided. Keep the `.limit(1)` fallback for when no seller param exists.
+### Cambios realizados
 
-3. **Update the hook call** (line ~260):
-   ```typescript
-   const { data: product, isLoading } = useProductBySku(sku, catalogId, sellerParam);
-   ```
+1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
 
-4. **Move `searchParams` extraction before the hook call** — currently `sellerParam` is read at line ~263, after the hook call at line ~260. Need to reorder so `sellerParam` is available.
+2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
 
-### Result
-- With `?seller=X`: fetches the exact seller's product
-- Without `?seller=`: fetches any matching seller's product (current behavior)
+3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
 
+### Flujo corregido
+```
+Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
+Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
+... pasa el tiempo, PO-001 vence ...
+Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
+Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
+```
+
+## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
+
+### Lo que se implementó
+1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
+2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
+3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
+4. **Routing**: Ruta pública en App.tsx

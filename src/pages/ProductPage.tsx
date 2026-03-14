@@ -43,9 +43,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronRight, ChevronLeft, ShoppingCart, Heart, Store as StoreIcon, Package, TrendingUp, Calculator, Shield, Truck, RotateCcw, Award, MessageCircle, Zap, Info, Star, X, ArrowLeft, Search, Share2, MoreVertical, ZoomIn, ExternalLink } from "lucide-react";
 
 // Hook to fetch product from both seller_catalog and products table by SKU or catalog ID
-const useProductBySku = (sku: string | undefined, catalogId: string | undefined) => {
+const useProductBySku = (sku: string | undefined, catalogId: string | undefined, storeId?: string | null) => {
   return useQuery({
-    queryKey: ["product-by-sku", sku, catalogId],
+    queryKey: ["product-by-sku", sku, catalogId, storeId],
     queryFn: async () => {
       // If catalogId is provided, search directly in seller_catalog by ID
       if (catalogId) {
@@ -87,10 +87,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
       const cleanSku = sku.replace(/-undefined$/, '');
 
       // First try to find in seller_catalog (B2C)
-      const {
-        data: sellerProducts,
-        error: sellerError
-      } = await (supabase as any).from("seller_catalog").select(`
+      let skuQuery = (supabase as any).from("seller_catalog").select(`
           *,
           store:stores!seller_catalog_seller_store_id_fkey(
               id, name, logo, whatsapp, is_active, slug
@@ -99,7 +96,14 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined)
             id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
-        `).eq("sku", cleanSku).eq("is_active", true).limit(1) as { data: any[]; error: any };
+        `).eq("sku", cleanSku).eq("is_active", true);
+      
+      // Filter by specific seller store if provided
+      if (storeId) {
+        skuQuery = skuQuery.eq("seller_store_id", storeId);
+      }
+      
+      const { data: sellerProducts, error: sellerError } = await skuQuery.limit(1) as { data: any[]; error: any };
       const sellerProduct = sellerProducts?.[0] || null;
       if (sellerProduct) {
         return {
@@ -253,15 +257,15 @@ const ProductPage = () => {
     );
   };
 
-  // Fetch product data from both tables
-  const {
-    data: product,
-    isLoading
-  } = useProductBySku(sku, catalogId);
-
   // ===== SELLER / STORE SECTION =====
   const [searchParams] = useSearchParams();
   const sellerParam = searchParams.get('seller'); // store ID from ?seller= URL param
+
+  // Fetch product data from both tables, filtered by seller if provided
+  const {
+    data: product,
+    isLoading
+  } = useProductBySku(sku, catalogId, sellerParam);
 
   // Load store profile: prefer the FK-joined store on the product, fall back to ?seller= param
   const {
