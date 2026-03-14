@@ -1543,6 +1543,11 @@ const SellerCartPage = () => {
           )}
         </main>
 
+        {/* Productos recomendados - justo después de los items */}
+        {items.length > 0 && (
+          <RecommendedProductsSection maxProducts={12} className="px-4" />
+        )}
+
         {/* Botones Fijos - Solo Mobile */}
         {items.length > 0 && isMobile && (
           <div className="fixed left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 bottom-10 z-40 flex flex-col gap-2">
