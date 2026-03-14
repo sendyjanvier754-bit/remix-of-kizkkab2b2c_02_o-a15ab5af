@@ -42,9 +42,10 @@ export const useSmartCart = () => {
   const { user, role } = useAuth();
   const b2cCart = useCart();
   const b2bCart = useB2BCartSupabase();
+  const { isClientPreview } = useViewMode();
 
-  // User is B2B only if authenticated AND has SELLER or ADMIN role
-  const isB2BUser = user && (role === UserRole.SELLER || role === UserRole.ADMIN);
+  // User is B2B only if authenticated AND has SELLER or ADMIN role AND NOT in client preview mode
+  const isB2BUser = user && (role === UserRole.SELLER || role === UserRole.ADMIN) && !isClientPreview;
   
   // User is authenticated
   const isAuthenticated = !!user;

@@ -36,8 +36,9 @@ const VariantDrawer: React.FC = () => {
 
   const { user, role } = useAuth();
   const { toast } = useToast();
+  const { isClientPreview } = useViewMode();
 
-  const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
+  const isB2BUser = (role === UserRole.SELLER || role === UserRole.ADMIN) && !isClientPreview;
   
   // Get cart product totals for MOQ validation at product level
   const { getProductTotal } = useB2BCartProductTotals();
