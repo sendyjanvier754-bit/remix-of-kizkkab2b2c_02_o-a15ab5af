@@ -83,52 +83,87 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
       // Otherwise search by SKU
       if (!sku) return null;
 
+      const safeDecode = (value: string) => {
+        try {
+          return decodeURIComponent(value);
+        } catch {
+          return value;
+        }
+      };
+
       // Normalize/clean SKU from route (defensive against malformed URLs)
-      const decodedSku = decodeURIComponent(sku);
-      const cleanSku = decodedSku.split('?')[0].replace(/-undefined$/, '').trim();
+      const decodedSku = safeDecode(sku);
+      const cleanSku = decodedSku
+        .split('?')[0]
+        .replace(/-undefined$/, '')
+        .replace(/\/+$/, '')
+        .trim();
 
-      // First try exact match in seller_catalog (B2C)
-      let skuQuery = (supabase as any).from("seller_catalog").select(`
-          *,
-          store:stores!seller_catalog_seller_store_id_fkey(
-              id, name, logo, whatsapp, is_active, slug
-            ),
-          source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
-            category:categories!products_categoria_id_fkey(id, name, slug)
-          )
-        `).eq("sku", cleanSku).eq("is_active", true);
+      const normalizedStoreId = storeId?.split('?')[0]?.trim() || null;
+      const skuCandidates = Array.from(
+        new Set(
+          [
+            cleanSku,
+            cleanSku.replace(/\s+/g, '_'),
+            cleanSku.replace(/_/g, ' '),
+          ].filter(Boolean)
+        )
+      );
 
-      // Filter by specific seller store if provided
-      if (storeId) {
-        skuQuery = skuQuery.eq("seller_store_id", storeId);
-      }
+      const sellerSelect = `
+        *,
+        store:stores!seller_catalog_seller_store_id_fkey(
+          id, name, logo, whatsapp, is_active, slug
+        ),
+        source_product:products!seller_catalog_source_product_id_fkey(
+          id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
+          category:categories!products_categoria_id_fkey(id, name, slug)
+        )
+      `;
 
-      let { data: sellerProducts, error: sellerError } = await skuQuery.limit(1) as { data: any[]; error: any };
-
-      // Fallback: partial SKU match within same seller (handles route inconsistencies)
-      if ((!sellerProducts || sellerProducts.length === 0) && storeId) {
-        const baseSku = cleanSku.split('-')[0];
-        const { data: fallbackProducts, error: fallbackError } = await (supabase as any)
+      const createSellerQuery = () => {
+        let query = (supabase as any)
           .from("seller_catalog")
-          .select(`
-            *,
-            store:stores!seller_catalog_seller_store_id_fkey(
-              id, name, logo, whatsapp, is_active, slug
-            ),
-            source_product:products!seller_catalog_source_product_id_fkey(
-              id, categoria_id, precio_mayorista, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
-              category:categories!products_categoria_id_fkey(id, name, slug)
-            )
-          `)
-          .eq("seller_store_id", storeId)
-          .eq("is_active", true)
+          .select(sellerSelect)
+          .eq("is_active", true);
+
+        if (normalizedStoreId) {
+          query = query.eq("seller_store_id", normalizedStoreId);
+        }
+
+        return query;
+      };
+
+      let { data: sellerProducts, error: sellerError } = await createSellerQuery()
+        .in("sku", skuCandidates)
+        .order("updated_at", { ascending: false })
+        .limit(1) as { data: any[]; error: any };
+
+      // Fallback 1: partial base-SKU match (inside selected seller when provided)
+      if ((!sellerProducts || sellerProducts.length === 0) && cleanSku.includes('-')) {
+        const baseSku = cleanSku.split('-')[0];
+
+        const { data: fallbackProducts, error: fallbackError } = await createSellerQuery()
           .ilike("sku", `${baseSku}%`)
           .order("updated_at", { ascending: false })
           .limit(1) as { data: any[]; error: any };
 
         sellerProducts = fallbackProducts;
         sellerError = fallbackError;
+      }
+
+      // Fallback 2: if seller ID is malformed in URL, still recover by SKU globally
+      if ((!sellerProducts || sellerProducts.length === 0) && normalizedStoreId) {
+        const { data: globalSkuProducts, error: globalSkuError } = await (supabase as any)
+          .from("seller_catalog")
+          .select(sellerSelect)
+          .eq("is_active", true)
+          .in("sku", skuCandidates)
+          .order("updated_at", { ascending: false })
+          .limit(1) as { data: any[]; error: any };
+
+        sellerProducts = globalSkuProducts;
+        sellerError = globalSkuError;
       }
 
       if (sellerError) {
