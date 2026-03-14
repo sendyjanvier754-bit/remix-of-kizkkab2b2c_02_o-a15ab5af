@@ -1175,6 +1175,11 @@ const CartPage = () => {
           </div>
           </div>
         )}
+
+        {/* Productos recomendados - justo después de los items */}
+        {items.length > 0 && (
+          <RecommendedProductsSection maxProducts={12} />
+        )}
       </main>
 
       {/* Botones Fijos - Solo Mobile */}
@@ -1567,8 +1572,6 @@ const CartPage = () => {
           </aside>
         </>
       )}
-      {/* Productos recomendados */}
-      <RecommendedProductsSection maxProducts={12} className="max-w-7xl mx-auto" />
     </div>
   );
 };
