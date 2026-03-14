@@ -61,6 +61,15 @@ declare global {
   }
 }
 
+// ── Dynamic color helper ──────────────────────────────────
+const hexAlpha = (hex: string, a: number): string => {
+  const h = (hex || '#071d7f').replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16) || 7;
+  const g = parseInt(h.slice(2, 4), 16) || 29;
+  const b = parseInt(h.slice(4, 6), 16) || 127;
+  return `rgba(${r},${g},${b},${a})`;
+};
+
 // ── Top Bar Ticker ──────────────────────────────────────
 const TopBarTicker = ({ messages, urls, style }: { messages: string[]; urls?: string[]; style?: React.CSSProperties }) => {
   const [index, setIndex] = useState(0);
@@ -199,6 +208,20 @@ const Header = ({
                     "/cuenta";
   const favoritesLink = isB2B ? "/seller/favoritos" : "/favoritos";
 
+  // ── Dynamic branding colors ──────────────────────────────
+  const headerBg = getValue('header_bg') || null;
+  const headerAccent = getValue('header_accent') || '#071d7f';
+  const headerCss = `
+    .dyn-header .bg-\\[\\#071d7f\\] { background-color: ${headerAccent} !important; }
+    .dyn-header .bg-\\[\\#071d7f\\]\\/5 { background-color: ${hexAlpha(headerAccent, 0.05)} !important; }
+    .dyn-header .hover\\:bg-\\[\\#0a3a9f\\]:hover { background-color: ${headerAccent} !important; }
+    .dyn-header .text-\\[\\#071d7f\\] { color: ${headerAccent} !important; }
+    .dyn-header .hover\\:text-\\[\\#071d7f\\]:hover { color: ${headerAccent} !important; }
+    .dyn-header .border-\\[\\#071d7f\\] { border-color: ${headerAccent} !important; }
+    .dyn-header .hover\\:border-\\[\\#071d7f\\]:hover { border-color: ${headerAccent} !important; }
+  `;
+  // ────────────────────────────────────────────────────────────────────
+
   const handleCategoryClick = (category: any | null) => {
     const catId = category ? category.id : null;
     if (onCategorySelect) {
@@ -312,7 +335,8 @@ const Header = ({
   if (isMobile) {
     return (
       <>
-        <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+        <style>{headerCss}</style>
+        <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 dyn-header" style={{ backgroundColor: headerBg || '#ffffff' }}>
           <div className="flex items-center gap-3 px-3 py-2.5">
             {/* Notification/Mail icon */}
             <button
@@ -433,7 +457,8 @@ const Header = ({
 
   return (
     <>
-    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-[#ffdcdc] border-b border-gray-200">
+    <style>{headerCss}</style>
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 dyn-header" style={{ backgroundColor: headerBg || '#ffdcdc' }}>
       {/* Top Bar — configurable desde Admin › Identidad › Barra Superior */}
       {(() => {
         const bgColor = getValue('topbar_bg_color') || '#f9fafb';

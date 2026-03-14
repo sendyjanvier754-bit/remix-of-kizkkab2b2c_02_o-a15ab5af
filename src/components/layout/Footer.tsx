@@ -15,8 +15,21 @@ const Footer = () => {
   const contactEmail = getValue('contact_email');
   const contactPhone = getValue('contact_phone');
 
+  // Dynamic footer colors
+  const footerBg = getValue('footer_bg') || '#111827';
+  const footerText = getValue('footer_text') || '#9ca3af';
+  const footerHeading = getValue('footer_heading') || '#ffffff';
+  const footerCss = `
+    .dyn-footer .text-gray-400 { color: ${footerText} !important; }
+    .dyn-footer h4, .dyn-footer h5, .dyn-footer .text-white { color: ${footerHeading} !important; }
+    .dyn-footer a:hover, .dyn-footer .hover\\:text-white:hover { color: ${footerHeading} !important; }
+    .dyn-footer p.text-sm.font-semibold { color: ${footerHeading} !important; }
+  `;
+
   return (
-    <footer className="hidden md:block bg-gray-900 text-white">
+    <>
+    <style>{footerCss}</style>
+    <footer className="hidden md:block dyn-footer" style={{ backgroundColor: footerBg, color: footerText }}>
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           <div>
@@ -209,6 +222,7 @@ const Footer = () => {
         </div>
       </div>
     </footer>
+    </>
   );
 };
 

@@ -277,14 +277,89 @@ export default function AdminBrandingPage() {
         {/* ── Colors ── */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5" /> Colores de Marca</CardTitle>
-            <CardDescription>Colores principales para la identidad visual</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5" /> Colores de la Plataforma</CardTitle>
+            <CardDescription>Colores de marca, encabezado y footer del sitio</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {field('primary_color', 'Color Primario', '#3B82F6')}
-              {field('secondary_color', 'Color Secundario', '#10B981')}
+          <CardContent className="space-y-6">
+
+            {/* Brand colors */}
+            <div>
+              <p className="text-sm font-medium mb-3">Colores de Marca</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {field('primary_color', 'Color Primario', '#3B82F6')}
+                {field('secondary_color', 'Color Secundario', '#10B981')}
+              </div>
             </div>
+
+            {/* Header colors */}
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium mb-1">Encabezado (Header)</p>
+              <p className="text-xs text-muted-foreground mb-3">Aplica al encabezado principal del sitio (escritorio y móvil).</p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Fondo del Encabezado</Label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={form.header_bg || '#ffdcdc'} onChange={e => set('header_bg', e.target.value)} className="h-10 w-12 rounded border cursor-pointer p-1 bg-white" />
+                    <Input value={form.header_bg || ''} onChange={e => set('header_bg', e.target.value)} placeholder="#ffdcdc" className="font-mono" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Color de Acento</Label>
+                  <p className="text-xs text-muted-foreground">Barra categorías, hover, badge, botón B2B</p>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={form.header_accent || '#071d7f'} onChange={e => set('header_accent', e.target.value)} className="h-10 w-12 rounded border cursor-pointer p-1 bg-white" />
+                    <Input value={form.header_accent || ''} onChange={e => set('header_accent', e.target.value)} placeholder="#071d7f" className="font-mono" />
+                  </div>
+                </div>
+              </div>
+              {/* Header preview */}
+              <div className="mt-3 rounded border overflow-hidden" style={{ backgroundColor: form.header_bg || '#ffdcdc' }}>
+                <div className="flex items-center justify-between px-4 h-10">
+                  <div className="w-20 h-4 rounded" style={{ backgroundColor: form.header_accent || '#071d7f', opacity: 0.3 }} />
+                  <div className="flex gap-3">
+                    {['', '', ''].map((_, i) => <div key={i} className="w-5 h-5 rounded-full" style={{ backgroundColor: form.header_accent || '#071d7f', opacity: 0.25 }} />)}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5" style={{ backgroundColor: form.header_accent || '#071d7f' }}>
+                  {['Cat 1', 'Cat 2', 'Cat 3'].map(c => <span key={c} className="text-[10px] text-white px-2">{c}</span>)}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer colors */}
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium mb-1">Footer</p>
+              <p className="text-xs text-muted-foreground mb-3">Colores del footer del sitio.</p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Fondo del Footer</Label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={form.footer_bg || '#111827'} onChange={e => set('footer_bg', e.target.value)} className="h-10 w-12 rounded border cursor-pointer p-1 bg-white" />
+                    <Input value={form.footer_bg || ''} onChange={e => set('footer_bg', e.target.value)} placeholder="#111827" className="font-mono" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Color de Texto / Links</Label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={form.footer_text || '#9ca3af'} onChange={e => set('footer_text', e.target.value)} className="h-10 w-12 rounded border cursor-pointer p-1 bg-white" />
+                    <Input value={form.footer_text || ''} onChange={e => set('footer_text', e.target.value)} placeholder="#9ca3af" className="font-mono" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Color de Títulos</Label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={form.footer_heading || '#ffffff'} onChange={e => set('footer_heading', e.target.value)} className="h-10 w-12 rounded border cursor-pointer p-1 bg-white" />
+                    <Input value={form.footer_heading || ''} onChange={e => set('footer_heading', e.target.value)} placeholder="#ffffff" className="font-mono" />
+                  </div>
+                </div>
+              </div>
+              {/* Footer preview */}
+              <div className="mt-3 rounded border px-4 py-3 space-y-1" style={{ backgroundColor: form.footer_bg || '#111827' }}>
+                <p className="text-xs font-bold" style={{ color: form.footer_heading || '#ffffff' }}>Título de sección</p>
+                <p className="text-xs" style={{ color: form.footer_text || '#9ca3af' }}>Link de ejemplo &middot; Link de ejemplo &middot; Otro link</p>
+              </div>
+            </div>
+
           </CardContent>
         </Card>
 
