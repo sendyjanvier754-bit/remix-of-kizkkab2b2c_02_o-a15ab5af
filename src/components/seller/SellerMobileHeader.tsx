@@ -369,13 +369,6 @@ const SellerMobileHeader = ({
                 )}
               </button>
             )}
-            <button type="submit" className="bg-[#071d7f] hover:bg-[#071d7f]/90 p-1.5 rounded-full transition-colors flex-shrink-0">
-              {isSearching ? (
-                <Loader2 className="w-4 h-4 text-white animate-spin" />
-              ) : (
-                <Search className="w-4 h-4 text-white" strokeWidth={2} />
-              )}
-            </button>
           </form>
 
           {/* Search results dropdown */}

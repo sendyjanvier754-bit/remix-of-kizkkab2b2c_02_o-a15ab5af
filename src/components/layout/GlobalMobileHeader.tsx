@@ -383,9 +383,6 @@ const GlobalMobileHeader = ({
             {voiceSupported && <button type="button" onClick={startVoiceSearch} className={cn("p-1 transition-colors flex-shrink-0", isListening ? "text-[#071d7f] animate-pulse" : "text-gray-500 hover:text-gray-700")}>
                 {isListening ? <MicOff className="w-5 h-5" strokeWidth={1.5} /> : <Mic className="w-5 h-5" strokeWidth={1.5} />}
               </button>}
-            <button type="submit" className={cn(buttonColor, "p-2 rounded-full m-0.5 transition-colors flex-shrink-0")}>
-              {isSearching ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Search className="w-4 h-4 text-white" strokeWidth={2} />}
-            </button>
           </form>
 
           {/* Search results dropdown */}
