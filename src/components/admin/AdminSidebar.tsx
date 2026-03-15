@@ -81,6 +81,7 @@ export function AdminSidebar() {
     { title: t('adminSidebar.userDiscounts'), url: "/admin/descuentos-usuarios", icon: UserCheck },
     { title: "Pop-ups Marketing", url: "/admin/popups", icon: Megaphone },
     { title: "Email Configuration", url: "/admin/email-config", icon: Mail },
+    { title: "Programas Afiliados", url: "/admin/affiliates", icon: Award },
   ];
 
   const renderGroup = (label: string, items: typeof mainNavItems) => (
