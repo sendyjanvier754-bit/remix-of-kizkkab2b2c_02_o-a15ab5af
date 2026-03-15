@@ -190,6 +190,78 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_earnings: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          order_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      affiliate_programs: {
+        Row: {
+          commission_type: string
+          commission_value: number
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          role_target: string
+          updated_at: string
+        }
+        Insert: {
+          commission_type?: string
+          commission_value?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          role_target?: string
+          updated_at?: string
+        }
+        Update: {
+          commission_type?: string
+          commission_value?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          role_target?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agent_cart_draft_items: {
         Row: {
           color: string | null
@@ -5235,6 +5307,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          affiliate_program_id: string | null
           avatar_url: string | null
           banner_url: string | null
           created_at: string
@@ -5242,11 +5315,13 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          referral_code: string | null
           terms_accepted_at: string | null
           updated_at: string
           user_code: string | null
         }
         Insert: {
+          affiliate_program_id?: string | null
           avatar_url?: string | null
           banner_url?: string | null
           created_at?: string
@@ -5254,11 +5329,13 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          referral_code?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
           user_code?: string | null
         }
         Update: {
+          affiliate_program_id?: string | null
           avatar_url?: string | null
           banner_url?: string | null
           created_at?: string
@@ -5266,11 +5343,20 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          referral_code?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
           user_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_affiliate_program_id_fkey"
+            columns: ["affiliate_program_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchasing_agents: {
         Row: {
@@ -7845,6 +7931,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      waiting_list: {
+        Row: {
+          created_at: string
+          feature: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       wallet_transactions: {
         Row: {
