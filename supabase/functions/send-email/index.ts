@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Send email error:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message || "Error interno" }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Error interno" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

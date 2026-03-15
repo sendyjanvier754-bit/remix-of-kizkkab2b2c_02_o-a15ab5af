@@ -105,6 +105,8 @@ const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage"));
 const AdminPurchasingAgentsPage = lazy(() => import("./pages/admin/AdminPurchasingAgentsPage"));
 const AdminBrandingPage = lazy(() => import("./pages/admin/AdminBrandingPage"));
 const AdminEmailConfigPage = lazy(() => import("./pages/admin/AdminEmailConfigPage"));
+const AdminAffiliatesPage = lazy(() => import("./pages/admin/AdminAffiliatesPage"));
+const AffiliatesDashboardPage = lazy(() => import("./pages/AffiliatesDashboardPage"));
 const PurchasingAgentDashboard = lazy(() => import("./pages/purchasing-agent/PurchasingAgentDashboard"));
 const PurchasingAgentLogin = lazy(() => import("./pages/purchasing-agent/PurchasingAgentLogin"));
 
@@ -165,6 +167,7 @@ const AppContent = () => {
             <Route path="/busqueda" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />
             <Route path="/soporte" element={<ProtectedRoute><LazyRoute><UserSupportPage /></LazyRoute></ProtectedRoute>} />
             <Route path="/notificaciones" element={<ProtectedRoute><LazyRoute><UserNotificationsPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/dashboard/affiliates" element={<ProtectedRoute><LazyRoute><AffiliatesDashboardPage /></LazyRoute></ProtectedRoute>} />
             
             {/* ========== LEGAL & INFO PAGES ========== */}
             <Route path="/terminos" element={<LazyRoute><TermsPage /></LazyRoute>} />
@@ -473,6 +476,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminEmailConfigPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/affiliates" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminAffiliatesPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
