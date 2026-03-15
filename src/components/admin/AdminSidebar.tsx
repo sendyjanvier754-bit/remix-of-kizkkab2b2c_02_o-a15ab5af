@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { CheckSquare, Megaphone } from "lucide-react";
+import { CheckSquare, Megaphone, Award } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
