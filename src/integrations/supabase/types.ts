@@ -1780,6 +1780,42 @@ export type Database = {
         }
         Relationships: []
       }
+      content_translations: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          field_name: string
+          id: string
+          is_auto_translated: boolean | null
+          language: string
+          translated_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          field_name: string
+          id?: string
+          is_auto_translated?: boolean | null
+          language: string
+          translated_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          field_name?: string
+          id?: string
+          is_auto_translated?: boolean | null
+          language?: string
+          translated_text?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       credit_movements: {
         Row: {
           amount: number
