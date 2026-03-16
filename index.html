@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Siver Market 509 | Marketplace Mayorista B2B en Haití</title>
+    <title>Marketplace</title>
     <meta name="description" content="Plataforma mayorista B2B y marketplace B2C líder en Haití.">
     <meta name="author" content="Siver Market" />
     <meta name="keywords" content="mayorista, B2B, marketplace, Haití, comercio, ventas, distribución">
@@ -29,6 +29,22 @@
   <meta name="twitter:title" content="Siver Market 509 | Marketplace Mayorista B2B en Haití">
   <meta property="og:description" content="Plataforma mayorista B2B y marketplace B2C líder en Haití.">
   <meta name="twitter:description" content="Plataforma mayorista B2B y marketplace B2C líder en Haití.">
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('branding_settings_cache');
+        if (!raw) return;
+        var branding = JSON.parse(raw);
+        var tabTitle = branding.browser_tab_title || '';
+        var name = branding.platform_name || '';
+        var slogan = branding.platform_slogan || '';
+        var nextTitle = tabTitle || (name ? (name + (slogan ? ' | ' + slogan : '')) : 'Marketplace');
+        document.title = nextTitle;
+      } catch (_) {
+        // no-op
+      }
+    })();
+  </script>
 </head>
 
   <body>

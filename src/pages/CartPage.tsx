@@ -31,8 +31,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { useB2CCatalogVariants, B2CCatalogVariant } from "@/hooks/useB2CCatalogVariants";
 import { addItemB2C } from "@/services/cartService";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useScrollLock } from "@/hooks/useScrollLock";
+import { VariantBadges } from "@/components/variants/VariantBadges";
+import { VariantPanelShell } from "@/components/variants/VariantPanelShell";
 import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
 
 // ── B2C Cart Variant Drawer helpers ───────────────────────────────────────────
@@ -55,6 +58,12 @@ const COLOR_HEX: Record<string, string> = {
 
 function getHex(name: string): string | null {
   return COLOR_HEX[name.toLowerCase()] ?? null;
+}
+
+function normalizeDrawerAttrType(type: string): string {
+  const key = (type || '').toLowerCase().trim();
+  if (key === 'talla') return 'size';
+  return key;
 }
 
 // Stable empty array to avoid new reference on every render when query has no data
@@ -88,8 +97,32 @@ const CartPage = () => {
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
 
+  // Fallback: when sellerCatalogId is missing (old cart items), resolve it from seller_catalog by SKU + storeId
+  const { data: resolvedCatalogId } = useQuery({
+    queryKey: ['resolve-catalog-id', selectedItemForVariants?.sku, selectedItemForVariants?.storeId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('seller_catalog')
+        .select('id')
+        .eq('seller_store_id', selectedItemForVariants!.storeId!)
+        .eq('sku', selectedItemForVariants!.sku)
+        .eq('is_active', true)
+        .maybeSingle();
+      return (data as any)?.id ?? null;
+    },
+    enabled:
+      !!selectedItemForVariants &&
+      !selectedItemForVariants.sellerCatalogId &&
+      !!selectedItemForVariants.storeId &&
+      !!selectedItemForVariants.sku,
+    staleTime: 60_000,
+  });
+
+  const effectiveCatalogId =
+    selectedItemForVariants?.sellerCatalogId ?? resolvedCatalogId ?? null;
+
   const { data: catalogVariants = EMPTY_CATALOG_VARIANTS, isLoading: isLoadingVariants } = useB2CCatalogVariants(
-    selectedItemForVariants?.sellerCatalogId ?? null
+    effectiveCatalogId
   );
 
   // Build B2B-style attribute options from catalogVariants
@@ -100,9 +133,10 @@ const CartPage = () => {
       if (v.color) { if (!opts.color) opts.color = new Set(); opts.color.add(v.color); }
       if (v.size)  { if (!opts.size)  opts.size  = new Set(); opts.size.add(v.size);  }
       Object.entries(attrs).forEach(([k, val]) => {
-        if (val && k !== 'color' && k !== 'size') {
-          if (!opts[k]) opts[k] = new Set();
-          opts[k].add(String(val));
+        const normalizedKey = normalizeDrawerAttrType(k);
+        if (val && normalizedKey !== 'color' && normalizedKey !== 'size') {
+          if (!opts[normalizedKey]) opts[normalizedKey] = new Set();
+          opts[normalizedKey].add(String(val));
         }
       });
     });
@@ -137,7 +171,7 @@ const CartPage = () => {
         const sel = selectedAttrs[type];
         if (!sel) return false;
         if (type === 'color') return v.color === sel;
-        if (type === 'size' || type === 'talla') return v.size === sel;
+        if (type === 'size') return v.size === sel;
         return v.variantAttributes?.[type] === sel;
       });
     }) ?? null;
@@ -173,6 +207,9 @@ const CartPage = () => {
       setActivePreviewImage(null);
     }
   }, [selectedItemForVariants]);
+
+  // Prevent background scroll while variant panel is open
+  useScrollLock(!!selectedItemForVariants);
 
   // Pre-fill qty for the matching variant from existing cart
   useEffect(() => {
@@ -751,19 +788,8 @@ const CartPage = () => {
                               </button>
                             </div>
                             
-                            {/* Variant badges and Quantity Selector */}
-                            <div className="mt-1 flex items-center gap-1 flex-wrap">
-                              {item.color && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
-                                  {item.color}
-                                </span>
-                              )}
-                              {item.size && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
-                                  {item.size}
-                                </span>
-                              )}
-                            </div>
+                            {/* Variant badges */}
+                            <VariantBadges color={item.color} size={item.size} className="mt-1" />
                             
                             {/* Price */}
                             <div className="mt-1">
@@ -940,18 +966,7 @@ const CartPage = () => {
                                 </div>
 
                                 {/* Variant badges */}
-                                <div className="mt-1 flex items-center gap-1 flex-wrap">
-                                  {item.color && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
-                                      {item.color}
-                                    </span>
-                                  )}
-                                  {item.size && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
-                                      Talla: {item.size}
-                                    </span>
-                                  )}
-                                </div>
+                                <VariantBadges color={item.color} size={item.size} className="mt-1" />
 
                                 {/* Price and Qty Controls Row */}
                                 <div className="flex items-center justify-between mt-3">
@@ -1361,21 +1376,12 @@ const CartPage = () => {
       </Dialog>
 
 
-      {selectedItemForVariants && (
-        <>
-          {/* Overlay */}
-          <div
-            className="fixed inset-0 bg-black/50 z-[60]"
-            onClick={() => setSelectedItemForVariants(null)}
-          />
-
-          {/* Responsive Panel */}
-          <aside
-            onClick={(e) => e.stopPropagation()}
-            className="fixed bg-background shadow-2xl flex flex-col z-[61]
-                       bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl
-                       md:top-0 md:bottom-auto md:left-auto md:right-0 md:rounded-none md:border-l md:w-[420px] md:h-screen md:max-h-screen"
-          >
+      <VariantPanelShell
+        isOpen={!!selectedItemForVariants}
+        onClose={() => setSelectedItemForVariants(null)}
+      >
+        {selectedItemForVariants && (
+          <>
             {/* Header with dynamic preview image */}
             <div className="flex items-center gap-3 p-4 border-b flex-shrink-0">
               <div className="relative flex-shrink-0">
@@ -1432,7 +1438,7 @@ const CartPage = () => {
                           <Icon className="w-4 h-4 text-primary" />
                           {config.displayName}
                           <Badge variant="secondary" className="text-[10px]">
-                            {options.length} opciones
+                            {options.length} opción{options.length === 1 ? '' : 'es'}
                           </Badge>
                         </h4>
 
@@ -1488,7 +1494,7 @@ const CartPage = () => {
                             {options.map(value => {
                               const isSelected = selected === value;
                               const variantForOpt = catalogVariants.find(v =>
-                                (type === 'size' || type === 'talla') ? v.size === value : v.variantAttributes?.[type] === value
+                                type === 'size' ? v.size === value : v.variantAttributes?.[type] === value
                               );
                               const outOfStock = variantForOpt ? variantForOpt.stock === 0 : false;
 
@@ -1602,9 +1608,9 @@ const CartPage = () => {
                 Agregar al carrito
               </button>
             </div>
-          </aside>
-        </>
-      )}
+          </>
+        )}
+      </VariantPanelShell>
     </div>
   );
 };

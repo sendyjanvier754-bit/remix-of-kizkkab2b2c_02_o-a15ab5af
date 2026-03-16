@@ -95,6 +95,7 @@ const HeaderB2B = ({
     data: categories = [],
     isLoading: categoriesLoading
   } = usePublicCategories();
+  const headerBrandImage = getValue('logo_url') || getValue('favicon_url');
   const navigate = useNavigate();
   const catBarRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
@@ -385,8 +386,10 @@ const HeaderB2B = ({
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/seller/catalogo" className="flex items-center gap-2 flex-shrink-0">
-              {getValue('logo_url') ? (
-                <img src={getValue('logo_url')} alt={getValue('platform_name')} className="h-10 w-auto max-w-[120px] object-contain" />
+              {headerBrandImage ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-white">
+                  <img src={headerBrandImage} alt={getValue('platform_name')} className="h-full w-full object-cover" />
+                </div>
               ) : (
                 <>
                   <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center">

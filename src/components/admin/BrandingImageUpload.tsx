@@ -12,6 +12,20 @@ interface BrandingImageUploadProps {
   onChange: (url: string) => void;
   /** 'sm' = 32px, 'md' = 48px (default), 'lg' = 80px */
   previewSize?: 'sm' | 'md' | 'lg';
+  /** MIME accept string for file input */
+  accept?: string;
+  /** max file size in MB */
+  maxSizeMB?: number;
+  /** show URL input field (default: false => upload-only UX) */
+  allowUrlInput?: boolean;
+  /** optional helper text under control */
+  helperText?: string;
+  /** render preview in circular template */
+  circular?: boolean;
+  /** optional minimum image width in px */
+  minWidth?: number;
+  /** optional minimum image height in px */
+  minHeight?: number;
 }
 
 const SIZE_CLASS: Record<string, string> = {
@@ -26,22 +40,69 @@ export function BrandingImageUpload({
   value,
   onChange,
   previewSize = 'md',
+  accept = 'image/*',
+  maxSizeMB = 2,
+  allowUrlInput = false,
+  helperText,
+  minWidth,
+  minHeight,
+  circular = false,
 }: BrandingImageUploadProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const validateImageResolution = (file: File) =>
+    new Promise<void>((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const width = img.naturalWidth;
+        const height = img.naturalHeight;
+        URL.revokeObjectURL(objectUrl);
+        if ((minWidth && width < minWidth) || (minHeight && height < minHeight)) {
+          reject(new Error(`Resolución mínima recomendada: ${minWidth ?? 0}x${minHeight ?? 0}px. Archivo actual: ${width}x${height}px`));
+          return;
+        }
+        resolve();
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('No se pudo leer la resolución de la imagen'));
+      };
+      img.src = objectUrl;
+    });
+
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      setError('Solo se permiten imágenes (JPEG, PNG, WebP, SVG, GIF)');
+    const accepts = accept
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    const isAccepted = accepts.some(pattern => {
+      if (pattern.endsWith('/*')) return file.type.startsWith(pattern.replace('/*', '/'));
+      return file.type === pattern;
+    });
+
+    if (!isAccepted) {
+      setError('Tipo de archivo no permitido');
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setError('La imagen no puede superar 2 MB');
+
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      setError(`El archivo no puede superar ${maxSizeMB} MB`);
       return;
+    }
+
+    if (file.type.startsWith('image/') && (minWidth || minHeight)) {
+      try {
+        await validateImageResolution(file);
+      } catch (err: any) {
+        setError(err?.message || 'La resolución de la imagen es demasiado baja');
+        return;
+      }
     }
 
     setError(null);
@@ -76,7 +137,7 @@ export function BrandingImageUpload({
           <img
             src={value}
             alt={label}
-            className={`${SIZE_CLASS[previewSize]} rounded border bg-muted/50 object-contain p-0.5`}
+            className={`${SIZE_CLASS[previewSize]} ${circular ? 'rounded-full' : 'rounded'} border bg-muted/50 object-cover p-0.5`}
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
           />
           <button
@@ -109,18 +170,22 @@ export function BrandingImageUpload({
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          accept={accept}
           className="hidden"
           onChange={handleFile}
         />
-        <Input
-          id={`${id}-url`}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="https://… (URL directa)"
-          className="text-xs"
-        />
+        {allowUrlInput && (
+          <Input
+            id={`${id}-url`}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="https://… (URL directa)"
+            className="text-xs"
+          />
+        )}
       </div>
+
+      {helperText && <p className="text-xs text-muted-foreground">{helperText}</p>}
 
       {error && <p className="text-xs text-destructive mt-1">{error}</p>}
     </div>

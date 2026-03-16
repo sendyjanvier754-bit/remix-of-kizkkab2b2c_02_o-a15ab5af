@@ -16,6 +16,7 @@ export interface SEOMetadata {
 export const useSEO = (metadata: SEOMetadata) => {
   const { getValue } = useBranding();
   const platformName = getValue('platform_name');
+  const defaultBrandImage = getValue('logo_url') || getValue('favicon_url');
 
   useEffect(() => {
     // Title
@@ -39,14 +40,14 @@ export const useSEO = (metadata: SEOMetadata) => {
     setOrCreateMeta("og:title", metadata.title);
     setOrCreateMeta("og:description", metadata.description);
     setOrCreateMeta("og:type", metadata.type || "website");
-    if (metadata.image) setOrCreateMeta("og:image", metadata.image);
+    setOrCreateMeta("og:image", metadata.image || defaultBrandImage);
     if (metadata.url) setOrCreateMeta("og:url", metadata.url);
 
     // Twitter Card
     setOrCreateMeta("twitter:card", "summary_large_image");
     setOrCreateMeta("twitter:title", metadata.title);
     setOrCreateMeta("twitter:description", metadata.description);
-    if (metadata.image) setOrCreateMeta("twitter:image", metadata.image);
+    setOrCreateMeta("twitter:image", metadata.image || defaultBrandImage);
 
     // Schema.org structured data for products
     let schemaScript: HTMLScriptElement | null = null;
@@ -69,14 +70,16 @@ export const useSEO = (metadata: SEOMetadata) => {
         document.head.removeChild(schemaScript);
       }
     };
-  }, [metadata, platformName]);
+  }, [metadata, platformName, defaultBrandImage]);
 };
 
 const setOrCreateMeta = (property: string, content: string) => {
-  let meta = document.querySelector(`meta[property="${property}"]`);
+  const isTwitter = property.startsWith("twitter:");
+  const attr = isTwitter ? "name" : "property";
+  let meta = document.querySelector(`meta[${attr}="${property}"]`);
   if (!meta) {
     meta = document.createElement("meta");
-    meta.setAttribute("property", property);
+    meta.setAttribute(attr, property);
     document.head.appendChild(meta);
   }
   meta.setAttribute("content", content);

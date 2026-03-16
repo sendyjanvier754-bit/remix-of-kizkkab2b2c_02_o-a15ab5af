@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { searchProductsByImage } from "@/services/api/imageSearch";
 import { useTranslation } from "react-i18next";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
+import { useBranding } from "@/hooks/useBranding";
 
 interface SearchResult {
   id: string;
@@ -96,8 +97,10 @@ const SellerDesktopHeader = ({
 
   const { data: categories = [] } = useCategories();
   const { user } = useAuth();
+  const { getValue } = useBranding();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const headerBrandImage = getValue('logo_url') || getValue('favicon_url');
 
   // Root categories
   const rootCategories = categories.filter((c) => !c.parent_id);
@@ -341,9 +344,15 @@ const SellerDesktopHeader = ({
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/seller/adquisicion-lotes" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-10 h-10 rounded bg-[#071d7f] flex items-center justify-center">
-                <ShoppingBag className="w-6 h-6 text-white" />
-              </div>
+              {headerBrandImage ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-white">
+                  <img src={headerBrandImage} alt={getValue('platform_name') || 'SIVER'} className="h-full w-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded bg-[#071d7f] flex items-center justify-center">
+                  <ShoppingBag className="w-6 h-6 text-white" />
+                </div>
+              )}
               <span className="font-bold text-2xl text-gray-900 tracking-tight">SIVER</span>
             </Link>
 

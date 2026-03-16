@@ -112,6 +112,18 @@ export default function AdminBrandingPage() {
     setSaving(false);
   };
 
+  const handleSaveIdentity = async () => {
+    setSaving(true);
+    try {
+      await updateMultiple(identityDraft);
+      // Update local form state after successful save
+      setForm(prev => ({ ...prev, ...identityDraft }));
+      setIdentityOpen(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const field = (key: string, label: string, placeholder = '', multiline = false) => (
     <div key={key} className="space-y-2">
       <Label htmlFor={key}>{label}</Label>
@@ -150,7 +162,7 @@ export default function AdminBrandingPage() {
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex items-center gap-4 py-4">
             {form.logo_url && (
-              <img src={form.logo_url} alt="Logo" className="h-12 w-12 rounded-lg object-contain bg-white p-1" />
+              <img src={form.logo_url} alt="Logo" className="h-12 w-12 rounded-full object-cover bg-white p-0.5 border" />
             )}
             <div>
               <h2 className="text-xl font-bold text-foreground">{form.platform_name || 'Tu Plataforma'}</h2>
@@ -164,7 +176,7 @@ export default function AdminBrandingPage() {
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2"><Globe className="h-5 w-5" /> Identidad</CardTitle>
-              <CardDescription>Nombre, slogan, logo y favicon de la plataforma</CardDescription>
+              <CardDescription>Nombre, slogan, loader, texto del navegador y previsualización al compartir</CardDescription>
             </div>
             <Button
               variant="outline"
@@ -176,6 +188,17 @@ export default function AdminBrandingPage() {
                   platform_slogan: form.platform_slogan || '',
                   logo_url:        form.logo_url        || '',
                   favicon_url:     form.favicon_url     || '',
+                  loader_media_url: form.loader_media_url || '',
+                  loader_media_type: form.loader_media_type || 'image',
+                  loader_media_fit: form.loader_media_fit || 'cover',
+                  loader_ring_color: form.loader_ring_color || '#1d4ed8',
+                  loader_ring_size: form.loader_ring_size || '96',
+                  loader_ring_width: form.loader_ring_width || '4',
+                  browser_tab_title: form.browser_tab_title || '',
+                  browser_meta_description: form.browser_meta_description || '',
+                  share_title: form.share_title || '',
+                  share_description: form.share_description || '',
+                  share_image_url: form.share_image_url || '',
                 });
                 setIdentityOpen(true);
               }}
@@ -195,21 +218,45 @@ export default function AdminBrandingPage() {
                   <p className="text-xs text-muted-foreground">Slogan</p>
                   <p className="text-sm">{form.platform_slogan || <span className="text-muted-foreground italic">Sin configurar</span>}</p>
                 </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Título de Pestaña</p>
+                  <p className="text-sm">{form.browser_tab_title || <span className="text-muted-foreground italic">Sin configurar</span>}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Texto del Navegador / Compartir</p>
+                  <p className="text-sm">{form.browser_meta_description || form.share_description || <span className="text-muted-foreground italic">Sin configurar</span>}</p>
+                </div>
               </div>
               {/* Logo & Favicon previews */}
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 flex-wrap">
                 <div className="space-y-1 text-center">
                   <p className="text-xs text-muted-foreground">Logo</p>
                   {form.logo_url
-                    ? <img src={form.logo_url} alt="Logo" className="h-14 w-14 rounded-lg object-contain border bg-white p-1" />
-                    : <div className="h-14 w-14 rounded-lg border-2 border-dashed flex items-center justify-center"><Image className="h-5 w-5 text-muted-foreground" /></div>
+                    ? <img src={form.logo_url} alt="Logo" className="h-14 w-14 rounded-full object-cover border bg-white p-0.5" />
+                    : <div className="h-14 w-14 rounded-full border-2 border-dashed flex items-center justify-center"><Image className="h-5 w-5 text-muted-foreground" /></div>
                   }
                 </div>
                 <div className="space-y-1 text-center">
                   <p className="text-xs text-muted-foreground">Favicon</p>
                   {form.favicon_url
-                    ? <img src={form.favicon_url} alt="Favicon" className="h-8 w-8 rounded object-contain border bg-white p-0.5" />
-                    : <div className="h-8 w-8 rounded border-2 border-dashed flex items-center justify-center"><Image className="h-4 w-4 text-muted-foreground" /></div>
+                    ? <img src={form.favicon_url} alt="Favicon" className="h-8 w-8 rounded-full object-cover border bg-white p-0.5" />
+                    : <div className="h-8 w-8 rounded-full border-2 border-dashed flex items-center justify-center"><Image className="h-4 w-4 text-muted-foreground" /></div>
+                  }
+                </div>
+                <div className="space-y-1 text-center">
+                  <p className="text-xs text-muted-foreground">Loader</p>
+                  {form.loader_media_url
+                    ? (form.loader_media_type === 'video'
+                      ? <video src={form.loader_media_url} className="h-8 w-8 rounded object-contain border bg-white p-0.5" muted loop playsInline />
+                      : <img src={form.loader_media_url} alt="Loader" className="h-8 w-8 rounded object-contain border bg-white p-0.5" />)
+                    : <div className="h-8 w-8 rounded border-2 border-dashed flex items-center justify-center"><MonitorPlay className="h-4 w-4 text-muted-foreground" /></div>
+                  }
+                </div>
+                <div className="space-y-1 text-center">
+                  <p className="text-xs text-muted-foreground">Imagen Share</p>
+                  {form.share_image_url
+                    ? <img src={form.share_image_url} alt="Imagen para compartir" className="h-10 w-10 rounded object-cover border bg-white p-0.5" />
+                    : <div className="h-10 w-10 rounded border-2 border-dashed flex items-center justify-center"><Share2 className="h-4 w-4 text-muted-foreground" /></div>
                   }
                 </div>
               </div>
@@ -219,10 +266,10 @@ export default function AdminBrandingPage() {
 
         {/* Identity edit dialog */}
         <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2"><Globe className="h-5 w-5" /> Editar Identidad</DialogTitle>
-              <DialogDescription>Modifica nombre, slogan, logo y favicon. Los cambios solo se guardan al hacer clic en Guardar.</DialogDescription>
+              <DialogDescription>Modifica nombre, slogan, loader, texto del navegador y datos de compartir. Los cambios solo se guardan al hacer clic en Guardar.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -250,6 +297,10 @@ export default function AdminBrandingPage() {
                   value={identityDraft.logo_url || ''}
                   onChange={v => setIdentityDraft(d => ({ ...d, logo_url: v }))}
                   previewSize="lg"
+                  circular
+                  minWidth={512}
+                  minHeight={512}
+                  helperText="Calidad recomendada: mínimo 512x512 px para máxima nitidez."
                 />
                 <BrandingImageUpload
                   id="dialog_favicon_url"
@@ -257,18 +308,177 @@ export default function AdminBrandingPage() {
                   value={identityDraft.favicon_url || ''}
                   onChange={v => setIdentityDraft(d => ({ ...d, favicon_url: v }))}
                   previewSize="sm"
+                  circular
+                  minWidth={256}
+                  minHeight={256}
+                  helperText="Calidad recomendada: mínimo 256x256 px para pestaña del navegador."
+                />
+              </div>
+
+              <div className="border-t pt-4 space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-1.5"><MonitorPlay className="h-4 w-4" /> Pantalla de carga</Label>
+                <BrandingImageUpload
+                  id="dialog_loader_media_url"
+                  label="Media (imagen / GIF / video)"
+                  value={identityDraft.loader_media_url || ''}
+                  onChange={v => setIdentityDraft(d => ({ ...d, loader_media_url: v }))}
+                  previewSize="sm"
+                  accept="image/*,video/mp4,video/webm,video/ogg"
+                  maxSizeMB={15}
+                  helperText="Sube desde tu ordenador (imagen, GIF o video)."
+                />
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Tipo de media</Label>
+                  <div className="flex gap-3">
+                    {(['image', 'gif', 'video'] as const).map(t => (
+                      <label key={t} className="flex items-center gap-1.5 cursor-pointer text-sm">
+                        <input
+                          type="radio"
+                          name="loader_media_type"
+                          value={t}
+                          checked={(identityDraft.loader_media_type || 'image') === t}
+                          onChange={() => setIdentityDraft(d => ({ ...d, loader_media_type: t }))}
+                          className="accent-primary"
+                        />
+                        {t === 'image' ? 'Imagen' : t === 'gif' ? 'GIF' : 'Video'}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Ajuste dentro del círculo</Label>
+                  <div className="flex gap-4">
+                    {(['cover', 'contain'] as const).map(fit => (
+                      <label key={fit} className="flex items-center gap-1.5 cursor-pointer text-sm">
+                        <input
+                          type="radio"
+                          name="loader_media_fit"
+                          value={fit}
+                          checked={(identityDraft.loader_media_fit || 'cover') === fit}
+                          onChange={() => setIdentityDraft(d => ({ ...d, loader_media_fit: fit }))}
+                          className="accent-primary"
+                        />
+                        {fit === 'cover' ? 'Llenar círculo (cover)' : 'Mostrar completa (contain)'}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Color del círculo giratorio</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={identityDraft.loader_ring_color || '#1d4ed8'}
+                        onChange={(e) => setIdentityDraft(d => ({ ...d, loader_ring_color: e.target.value }))}
+                        className="h-9 w-12 rounded border cursor-pointer p-1 bg-white"
+                      />
+                      <Input
+                        value={identityDraft.loader_ring_color || '#1d4ed8'}
+                        onChange={(e) => setIdentityDraft(d => ({ ...d, loader_ring_color: e.target.value }))}
+                        placeholder="#1d4ed8"
+                        className="font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Tamaño del círculo (px)</Label>
+                    <Input
+                      type="number"
+                      min={56}
+                      max={220}
+                      value={identityDraft.loader_ring_size || '96'}
+                      onChange={(e) => setIdentityDraft(d => ({ ...d, loader_ring_size: e.target.value }))}
+                      placeholder="96"
+                    />
+                    <p className="text-[11px] text-muted-foreground">Rango recomendado: 56 a 220 px.</p>
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label className="text-xs">Grosor del borde giratorio (px)</Label>
+                    <Input
+                      type="number"
+                      min={2}
+                      max={12}
+                      value={identityDraft.loader_ring_width || '4'}
+                      onChange={(e) => setIdentityDraft(d => ({ ...d, loader_ring_width: e.target.value }))}
+                      placeholder="4"
+                    />
+                    <p className="text-[11px] text-muted-foreground">Rango recomendado: 2 a 12 px.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 space-y-3">
+                <Label className="text-sm font-medium">Texto del navegador</Label>
+                <div className="space-y-2">
+                  <Label className="text-xs">Título de la pestaña</Label>
+                  <Input
+                    value={identityDraft.browser_tab_title || ''}
+                    onChange={e => setIdentityDraft(d => ({ ...d, browser_tab_title: e.target.value }))}
+                    placeholder="Ej: Siver Market 509 | Marketplace"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Descripción (tooltip y meta por defecto)</Label>
+                  <Textarea
+                    value={identityDraft.browser_meta_description || ''}
+                    onChange={e => setIdentityDraft(d => ({ ...d, browser_meta_description: e.target.value }))}
+                    placeholder="Ej: Mayorista B2B en Haití"
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-4 space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-1.5"><Share2 className="h-4 w-4" /> Vista previa al compartir</Label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label className="text-xs">Título para compartir</Label>
+                    <Input
+                      value={identityDraft.share_title || ''}
+                      onChange={e => setIdentityDraft(d => ({ ...d, share_title: e.target.value }))}
+                      placeholder="Título OG/Twitter"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label className="text-xs">Descripción para compartir</Label>
+                    <Textarea
+                      value={identityDraft.share_description || ''}
+                      onChange={e => setIdentityDraft(d => ({ ...d, share_description: e.target.value }))}
+                      placeholder="Descripción OG/Twitter"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+                <BrandingImageUpload
+                  id="dialog_share_image_url"
+                  label="Imagen para compartir link"
+                  value={identityDraft.share_image_url || ''}
+                  onChange={v => setIdentityDraft(d => ({ ...d, share_image_url: v }))}
+                  previewSize="md"
                 />
               </div>
             </div>
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setIdentityOpen(false)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setIdentityOpen(false)} disabled={saving}>Cancelar</Button>
               <Button
-                onClick={() => {
-                  setForm(prev => ({ ...prev, ...identityDraft }));
-                  setIdentityOpen(false);
-                }}
+                onClick={handleSaveIdentity}
+                disabled={saving}
               >
-                <Save className="h-4 w-4 mr-1" /> Aplicar
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-1" /> Guardar
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

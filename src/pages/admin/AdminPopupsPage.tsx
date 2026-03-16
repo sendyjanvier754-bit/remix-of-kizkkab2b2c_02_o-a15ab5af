@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { BrandingImageUpload } from '@/components/admin/BrandingImageUpload';
 import { useMarketingPopups, MarketingPopup } from '@/hooks/useMarketingPopups';
 import { useDiscountCodes } from '@/hooks/useDiscountCodes';
 import { Button } from '@/components/ui/button';
@@ -273,16 +274,18 @@ const AdminPopupsPage = () => {
                   <Label>{t('popups.form.bodyText')}</Label>
                   <Textarea value={form.body_text} onChange={(e) => setForm({ ...form, body_text: e.target.value })} placeholder={t('popups.form.bodyTextPlaceholder')} rows={2} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>{t('popups.form.buttonText')}</Label>
-                    <Input value={form.button_text} onChange={(e) => setForm({ ...form, button_text: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('popups.form.imageUrl')}</Label>
-                    <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
-                  </div>
+                <div className="space-y-2">
+                  <Label>{t('popups.form.buttonText')}</Label>
+                  <Input value={form.button_text} onChange={(e) => setForm({ ...form, button_text: e.target.value })} />
                 </div>
+                <BrandingImageUpload
+                  id="popup_image_url"
+                  label={t('popups.form.imageUrl')}
+                  value={form.image_url}
+                  onChange={(url) => setForm({ ...form, image_url: url })}
+                  previewSize="md"
+                  helperText="Sube la imagen del popup desde tu ordenador."
+                />
               </div>
 
               <div className="space-y-4 border-t pt-4">

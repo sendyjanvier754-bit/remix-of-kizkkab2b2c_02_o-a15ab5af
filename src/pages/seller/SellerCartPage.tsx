@@ -37,7 +37,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { QuantitySelector } from "@/components/ui/quantity-selector";
 import VariantSelectorB2B from "@/components/products/VariantSelectorB2B";
 import { useProductVariants } from "@/hooks/useProductVariants";
-import { VariantBadges } from "@/components/seller/cart/VariantBadges";
+import { VariantBadges } from "@/components/variants/VariantBadges";
+import { VariantPanelShell } from "@/components/variants/VariantPanelShell";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { addItemB2B } from "@/services/cartService";
 import { useB2BCartLogistics } from "@/hooks/useB2BCartLogistics";
 import { useStoreByOwner } from "@/hooks/useStore";
@@ -126,6 +128,9 @@ const SellerCartPage = () => {
   const [variantSelections, setVariantSelections] = useState<any[]>([]);
   const [isAddingVariant, setIsAddingVariant] = useState(false);
   const [variantImage, setVariantImage] = useState<string | null>(null);
+
+  // Prevent background scroll while variant panel is open
+  useScrollLock(!!selectedProductForVariants);
 
   // Prefill variant quantities in the selector with what's already in the cart
   const initialVariantQuantities = useMemo(() => {
@@ -1042,16 +1047,7 @@ const SellerCartPage = () => {
                               </div>
                               {/* Variant badges + price on same row */}
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                {item.color && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                                    {item.color}
-                                  </span>
-                                )}
-                                {item.size && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                                    Talla: {item.size}
-                                  </span>
-                                )}
+                                <VariantBadges color={item.color} size={item.size} />
                                 <span className="text-sm font-bold ml-2" style={{ color: '#29892a' }}>
                                   ${item.precioB2B.toFixed(2)}
                                 </span>
@@ -1482,16 +1478,7 @@ const SellerCartPage = () => {
                             </div>
                             {/* Variant badges + price on same row */}
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              {item.color && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                                  {item.color}
-                                </span>
-                              )}
-                              {item.size && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                                  Talla: {item.size}
-                                </span>
-                              )}
+                              <VariantBadges color={item.color} size={item.size} />
                               <span className="text-sm font-bold ml-2" style={{ color: '#29892a' }}>
                                 ${item.precioB2B.toFixed(2)}
                               </span>
@@ -1638,40 +1625,27 @@ const SellerCartPage = () => {
       </AlertDialog>
 
 
-      {/* Variant Selection Drawer - Responsive: Mobile/Tablet: Bottom | Desktop: Right Side */}
-      {selectedProductForVariants && (
-        <>
-          {/* Overlay */}
-          <div 
-            className="fixed inset-0 bg-black/50 z-[60]"
-            style={{ animation: 'fadeIn 0.3s ease-out' }}
-            onClick={() => {
-              setSelectedProductForVariants(null);
-              setVariantSelections([]);
-              setVariantImage(null);
-            }}
-          />
-          
-          {/* Responsive Panel - Bottom on mobile, Right side on desktop */}
-          <aside
-            onClick={(e) => e.stopPropagation()}
-            className="fixed bg-background shadow-2xl flex flex-col z-[61]
-                       bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl
-                       md:top-0 md:bottom-auto md:left-auto md:right-0 md:rounded-none md:border-l md:w-[400px] md:h-screen md:max-h-screen"
-            style={{ 
-              animation: 'slideInRight 0.3s ease-out'
-            }}
-          >
-            {/* Header - Desktop only shows close button */}
-            <div className="hidden md:flex items-center justify-between p-4 border-b flex-shrink-0">
+      {/* Variant Selection Drawer - Responsive */}
+      <VariantPanelShell
+        isOpen={!!selectedProductForVariants}
+        onClose={() => {
+          setSelectedProductForVariants(null);
+          setVariantSelections([]);
+          setVariantImage(null);
+        }}
+      >
+        {selectedProductForVariants && (
+          <>
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
               <h3 className="text-lg font-bold text-foreground">Seleccionar variantes</h3>
-              <button 
+              <button
                 onClick={() => {
                   setSelectedProductForVariants(null);
                   setVariantSelections([]);
                   setVariantImage(null);
                 }}
-                className="p-1 hover:bg-muted rounded-full transition"
+                className="p-1.5 hover:bg-muted rounded-full transition"
               >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
@@ -1788,9 +1762,9 @@ const SellerCartPage = () => {
                 )}
               </Button>
             </div>
-          </aside>
-        </>
-      )}
+          </>
+        )}
+      </VariantPanelShell>
 
       {/* Suggested Prices Detail Modal */}
       <SuggestedPricesDetailModal

@@ -15,8 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Store, Search, Package, Grid3X3, X, SlidersHorizontal } from "lucide-react";
 import VariantDrawer from "@/components/products/VariantDrawer";
 import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
+import { useSEO } from "@/hooks/useSEO";
+import { useBranding } from "@/hooks/useBranding";
 
 const MarketplacePage = () => {
+  const { getValue } = useBranding();
   const isMobile = useIsMobile();
   const {
     data: products,
@@ -37,6 +40,17 @@ const MarketplacePage = () => {
   const [showOnlyStock, setShowOnlyStock] = useState(false);
   const [showOnlyPromos, setShowOnlyPromos] = useState(false);
   const [minRating, setMinRating] = useState<number>(0);
+
+  const marketplaceShareImage =
+    getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url');
+
+  useSEO({
+    title: 'Marketplace',
+    description: 'Explora productos del marketplace y encuentra las mejores ofertas.',
+    type: 'website',
+    image: marketplaceShareImage,
+    url: typeof window !== 'undefined' ? window.location.href : undefined,
+  });
 
   // Get root categories
   const rootCategories = useMemo(() => categories.filter(c => !c.parent_id), [categories]);

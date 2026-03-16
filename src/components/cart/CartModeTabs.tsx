@@ -21,14 +21,14 @@ const CartModeTabs = ({ b2cCount = 0, b2bCount = 0 }: CartModeTabsProps) => {
     <div className="flex gap-1 p-1 bg-muted rounded-xl mb-4">
       <button
         onClick={() => !isB2C && navigate('/carrito')}
-        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
+        className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
           isB2C
             ? 'bg-background text-foreground shadow-sm'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
         <ShoppingCart className="w-4 h-4" />
-        <span>Mi Carrito</span>
+        <span className="whitespace-nowrap">Mi Carrito</span>
         {b2cCount > 0 && (
           <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
             isB2C ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
@@ -39,14 +39,14 @@ const CartModeTabs = ({ b2cCount = 0, b2bCount = 0 }: CartModeTabsProps) => {
       </button>
       <button
         onClick={() => !isB2B && navigate('/seller/carrito')}
-        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
+        className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
           isB2B
             ? 'bg-background text-foreground shadow-sm'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
         <ShoppingBag className="w-4 h-4" />
-        <span>Carrito B2B</span>
+        <span className="whitespace-nowrap">Carrito B2B</span>
         {b2bCount > 0 && (
           <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
             isB2B ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'

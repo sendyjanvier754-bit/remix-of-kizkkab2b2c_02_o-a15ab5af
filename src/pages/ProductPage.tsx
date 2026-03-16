@@ -13,8 +13,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/hooks/useStore';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProductVariants } from "@/hooks/useProductVariants";
+import { useB2CCatalogVariants } from "@/hooks/useB2CCatalogVariants";
 import { useRecommendedProducts } from "@/hooks/useMarketplaceData";
 import { useStoreFollow } from "@/hooks/useTrendingStores";
+import { useSEO } from "@/hooks/useSEO";
+import { useBranding } from "@/hooks/useBranding";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
@@ -229,6 +232,7 @@ const ProductPage = () => {
   const [showStickyNav, setShowStickyNav] = useState(false);
   const [showCompactHeader, setShowCompactHeader] = useState(false);
   const [showFloatingCart, setShowFloatingCart] = useState(false);
+  const { getValue } = useBranding();
   const imageRef = useRef<HTMLDivElement>(null);
   const descRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
@@ -420,6 +424,10 @@ const ProductPage = () => {
   // Fetch product variants with B2B prices if user is seller
   const { data: variants = [] } = useProductVariants(product?.source_product?.id, isB2BUser);
 
+  // For B2C seller products: load seller-specific variants (only in-stock) from seller_catalog_variants
+  const sellerCatalogIdForB2C = !isB2BUser && (product as any)?.type === 'seller_catalog' ? product?.id : null;
+  const { data: sellerCatalogVariants = [] } = useB2CCatalogVariants(sellerCatalogIdForB2C);
+
   // Local state
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -585,11 +593,43 @@ const ProductPage = () => {
   // Derived data
   const images = useMemo(() => {
     if (!product) return [];
+
+    // B2C seller product: prioritize images from seller variants in stock
+    if (!isB2BUser && (product as any).type === 'seller_catalog' && sellerCatalogVariants.length > 0) {
+      const variantImages = sellerCatalogVariants
+        .map(v => (Array.isArray(v.images) ? v.images[0] : null))
+        .filter((img): img is string => typeof img === 'string' && img.trim() !== '');
+
+      const uniqueVariantImages = Array.from(new Set(variantImages));
+      if (uniqueVariantImages.length > 0) {
+        return uniqueVariantImages;
+      }
+    }
+
     const imgs = product.images as any;
     // Filter out empty strings and invalid URLs
     const validImages = Array.isArray(imgs) ? imgs.filter((img: string) => img && img.trim() !== '') : [];
     return validImages.length > 0 ? validImages : [];
-  }, [product]);
+  }, [product, isB2BUser, sellerCatalogVariants]);
+
+  const marketplaceShareImage =
+    getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url');
+  const productMainImage = images[0] || '';
+
+  useSEO({
+    title: product?.nombre || 'Producto',
+    description: product?.descripcion || 'Detalle del producto en marketplace.',
+    type: 'product',
+    image: productMainImage || marketplaceShareImage,
+    url: typeof window !== 'undefined' ? window.location.href : undefined,
+  });
+
+  // Keep selected image index valid if image source changes (e.g. when seller variants load)
+  useEffect(() => {
+    if (selectedImage >= images.length && images.length > 0) {
+      setSelectedImage(0);
+    }
+  }, [images, selectedImage]);
 
   // B2B Specific Data
   const costB2B = product?.source_product?.precio_mayorista_base || 0;
@@ -1131,6 +1171,8 @@ const ProductPage = () => {
                           moq: moq,
                           stock: isB2BUser ? stockB2B : product.stock,
                           source_product_id: product.source_product?.id,
+                          sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
+                          storeId: product.store?.id || sellerParam || undefined,
                         }, () => {
                           // onComplete: scroll to recommendations
                           if (recsRef.current) {

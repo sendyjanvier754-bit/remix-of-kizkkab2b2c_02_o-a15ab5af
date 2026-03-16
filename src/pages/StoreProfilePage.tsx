@@ -10,10 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useStore, useStoreProducts, useStoreSales } from "@/hooks/useStore";
+import { useSEO } from "@/hooks/useSEO";
+import { useBranding } from "@/hooks/useBranding";
 import ProductCard from "@/components/landing/ProductCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PaymentMethodsDisplay, PaymentMethodsData } from "@/components/shared/PaymentMethodsDisplay";
 import { useStoreFollow } from "@/hooks/useTrendingStores";
+import StoreReviewModal from "@/components/trends/StoreReviewModal";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Star,
@@ -48,11 +51,24 @@ const StoreProfilePage = () => {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
   const { role, user } = useAuth();
+  const { getValue } = useBranding();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
+  const marketplaceShareImage =
+    getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url');
+
   // Fetch real store data — resolves slug OR uuid to full store object
   const { data: storeData, isLoading: isStoreLoading } = useStore(storeId);
+
+  const storeShareImage = storeData?.logo || marketplaceShareImage;
+  useSEO({
+    title: storeData?.name || 'Tienda',
+    description: storeData?.description || 'Descubre productos de esta tienda en el marketplace.',
+    type: 'website',
+    image: storeShareImage,
+    url: typeof window !== 'undefined' ? window.location.href : undefined,
+  });
 
   // Use the real UUID (storeData.id) for all sub-queries — never pass the slug directly
   const realStoreId = storeData?.id;
@@ -125,6 +141,7 @@ const StoreProfilePage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [bannerSliding, setBannerSliding] = useState(false);
 
@@ -455,14 +472,23 @@ const StoreProfilePage = () => {
                   Ver Descripción
                 </Button>
               )}
-              <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs">
+              <button
+                onClick={() => setShowReviewModal(true)}
+                className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs hover:bg-gray-200 transition-colors"
+                title="Ver y escribir reseñas"
+              >
                 <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
                 {store.rating !== null ? (
-                  <span className="font-semibold text-[#071d7f]">{store.rating}</span>
+                  <>
+                    <span className="font-semibold text-[#071d7f]">{store.rating}</span>
+                    {store.reviews != null && (
+                      <span className="text-[#071d7f]/60">({store.reviews})</span>
+                    )}
+                  </>
                 ) : (
-                  <span className="text-[#071d7f]/60">Sin reseñas</span>
+                  <span className="text-[#071d7f]/60">Reseñas</span>
                 )}
-              </div>
+              </button>
               <button
                 onClick={handleFollowToggle}
                 disabled={followLoading}
@@ -496,7 +522,11 @@ const StoreProfilePage = () => {
                   Ver Descripción
                 </Button>
               )}
-              <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded">
+              <button
+                onClick={() => setShowReviewModal(true)}
+                className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200 transition-colors"
+                title="Ver y escribir reseñas"
+              >
                 <div className="flex text-yellow-400">
                   {[1,2,3,4,5].map(i => (
                     <Star key={i} className={`w-4 h-4 ${store.rating !== null && i <= Math.round(store.rating!) ? 'fill-current' : 'text-gray-300'}`} />
@@ -505,12 +535,12 @@ const StoreProfilePage = () => {
                 {store.rating !== null ? (
                   <>
                     <span className="font-semibold text-[#071d7f] ml-1">{store.rating}</span>
-                    <span className="text-[#071d7f]/70 text-sm">({store.reviews} reseñas)</span>
+                    <span className="text-[#071d7f]/70 text-sm">({store.reviews ?? 0} reseñas)</span>
                   </>
                 ) : (
                   <span className="text-[#071d7f]/60 text-sm ml-1">Sin reseñas</span>
                 )}
-              </div>
+              </button>
             </div>
 
             {/* Desktop: Action buttons */}
@@ -528,6 +558,15 @@ const StoreProfilePage = () => {
                 <span>{store.followers}</span>
                 <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
               </button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#071d7f] text-[#071d7f] hover:bg-[#071d7f]/5 font-semibold"
+                onClick={() => setShowReviewModal(true)}
+              >
+                <Star className="w-4 h-4 mr-1" />
+                Reseñar
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -743,6 +782,22 @@ const StoreProfilePage = () => {
       </Dialog>
 
       {!isMobile && <Footer />}
+
+      {/* Store Review Modal */}
+      <StoreReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        store={{
+          id: storeData?.id || '',
+          name: storeData?.name || 'Tienda',
+          logo: storeData?.logo || undefined,
+        }}
+        onReviewSubmitted={() => {
+          // Refetch rating data after review is submitted
+          // This will trigger a re-render and update the display
+          setShowReviewModal(false);
+        }}
+      />
     </div>
   );
 };

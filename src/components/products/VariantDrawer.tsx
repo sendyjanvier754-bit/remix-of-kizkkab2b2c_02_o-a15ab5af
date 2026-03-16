@@ -15,6 +15,8 @@ import { useB2BCartProductTotals } from '@/hooks/useB2BCartProductTotals';
 import { BusinessPanel } from '@/components/business/BusinessPanel';
 import { useProductVariants } from '@/hooks/useProductVariants';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
+import { useB2CCatalogVariants } from '@/hooks/useB2CCatalogVariants';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 const VariantDrawer: React.FC = () => {
   const location = useLocation();
@@ -46,6 +48,37 @@ const VariantDrawer: React.FC = () => {
   // Fetch product variants to get attribute_combination for each variant
   // ✅ CRÍTICO: Pasar isB2BUser para que cargue desde v_variantes_con_precio_b2b cuando sea B2B
   const { data: productVariants } = useProductVariants(product?.source_product_id || product?.id, isB2BUser);
+
+  // For B2C: fetch only the variants the seller has in seller_catalog_variants
+  // product.id = seller_catalog.id when opened from marketplace (also available via sellerCatalogId)
+  const sellerCatalogIdForFilter = !isB2BUser ? (product?.sellerCatalogId || product?.id) : null;
+  const { data: sellerCatalogVariants = [] } = useB2CCatalogVariants(sellerCatalogIdForFilter ?? null);
+
+  // Build the allowed set: product_variants IDs that the seller actually has in stock
+  const allowedVariantIds = useMemo(() => {
+    if (isB2BUser || sellerCatalogVariants.length === 0) return undefined;
+    return new Set(sellerCatalogVariants.map(v => v.productVariantId).filter(Boolean) as string[]);
+  }, [isB2BUser, sellerCatalogVariants]);
+
+  // Override stock from seller_catalog_variants (not product_variants global stock)
+  const sellerVariantStockMap = useMemo(() => {
+    if (isB2BUser || sellerCatalogVariants.length === 0) return undefined;
+    return sellerCatalogVariants.reduce((acc: Record<string, number>, v) => {
+      if (v.productVariantId) acc[v.productVariantId] = Number(v.stock || 0);
+      return acc;
+    }, {});
+  }, [isB2BUser, sellerCatalogVariants]);
+
+  // Availability status map (pending => pre-compra / disponible pronto)
+  const sellerVariantAvailabilityMap = useMemo(() => {
+    if (isB2BUser || sellerCatalogVariants.length === 0) return undefined;
+    return sellerCatalogVariants.reduce((acc: Record<string, string>, v) => {
+      if (v.productVariantId) {
+        acc[v.productVariantId] = v.availabilityStatus || 'available';
+      }
+      return acc;
+    }, {});
+  }, [isB2BUser, sellerCatalogVariants]);
 
   // 1. Fetch base price from DB for B2B users
   useEffect(() => {
@@ -108,15 +141,8 @@ const VariantDrawer: React.FC = () => {
     fetchB2cVariantPrices();
   }, [isB2BUser, product?.id]);
 
-  // Prevent body scroll when drawer open
-  useEffect(() => {
-    if (!isOpen) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = original;
-    };
-  }, [isOpen]);
+  // Prevent body scroll when drawer open (safe for nested overlays/dialogs)
+  useScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) {
@@ -449,6 +475,9 @@ const VariantDrawer: React.FC = () => {
             isB2B={isB2BUser}
             variantPrices={variantPrices}
             b2cVariantPrices={b2cVariantPrices}
+            allowedVariantIds={allowedVariantIds}
+            stockOverrides={sellerVariantStockMap}
+            availabilityOverrides={sellerVariantAvailabilityMap}
             onSelectionChange={(list, qty, price, _variant, isValid, errors) => {
               setSelections(list);
               setTotalQty(qty);

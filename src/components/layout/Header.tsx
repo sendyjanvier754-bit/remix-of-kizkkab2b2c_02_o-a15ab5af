@@ -209,6 +209,7 @@ const Header = ({
                     role === UserRole.ADMIN ? "/admin/dashboard" : 
                     "/cuenta";
   const favoritesLink = isB2B ? "/seller/favoritos" : "/favoritos";
+  const headerBrandImage = getValue('logo_url') || getValue('favicon_url');
 
   // ── Dynamic branding colors ──────────────────────────────
   const headerBg = getValue('header_bg') || null;
@@ -541,8 +542,10 @@ const Header = ({
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            {getValue('logo_url') ? (
-              <img src={getValue('logo_url')} alt={getValue('platform_name')} className="h-10 w-auto max-w-[120px] object-contain" />
+            {headerBrandImage ? (
+              <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-white">
+                <img src={headerBrandImage} alt={getValue('platform_name')} className="h-full w-full object-cover" />
+              </div>
             ) : (
               <>
                 <div className="w-10 h-10 rounded bg-[#071d7f] flex items-center justify-center">

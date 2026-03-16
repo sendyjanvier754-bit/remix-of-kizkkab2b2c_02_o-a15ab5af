@@ -7,6 +7,7 @@ export interface B2CCatalogVariant {
   sku: string;
   price: number;            // precio_override (seller's configured price)
   stock: number;
+  availabilityStatus: 'pending' | 'available' | 'out_of_stock' | null;
   color: string | null;
   size: string | null;
   variantAttributes: Record<string, any>;
@@ -27,9 +28,10 @@ export const useB2CCatalogVariants = (catalogId: string | null) => {
       // Step 1: fetch seller_catalog_variants (only columns that actually exist)
       const { data: variants, error: variantsError } = await supabase
         .from('seller_catalog_variants')
-        .select('id, sku, precio_override, stock, is_available, variant_id')
+        .select('id, sku, precio_override, stock, is_available, availability_status, variant_id')
         .eq('seller_catalog_id', catalogId!)
-        .eq('is_available', true)
+        .gt('stock', 0)
+        .or('is_available.eq.true,availability_status.eq.pending')
         .order('created_at', { ascending: true });
 
       if (variantsError) throw variantsError;
@@ -66,6 +68,7 @@ export const useB2CCatalogVariants = (catalogId: string | null) => {
           sku: v.sku || '',
           price: Number(v.precio_override) || 0,
           stock: v.stock || 0,
+          availabilityStatus: ((v as any).availability_status ?? null) as 'pending' | 'available' | 'out_of_stock' | null,
           color,
           size,
           variantAttributes: attrs,

@@ -18,6 +18,12 @@ interface VariantSelectorProps {
   isB2B?: boolean;
   variantPrices?: Record<string, number>;
   b2cVariantPrices?: Record<string, number>;
+  /** When provided (B2C seller page), only show product_variants whose id is in this set */
+  allowedVariantIds?: Set<string>;
+  /** Optional stock by product_variant.id (seller stock) */
+  stockOverrides?: Record<string, number>;
+  /** Optional availability by product_variant.id (available | pending | out_of_stock) */
+  availabilityOverrides?: Record<string, string>;
   onSelectionChange?: (selections: VariantSelection[], totalQty: number, totalPrice: number, selectedVariant?: ProductVariant | null, isValid?: boolean, validationErrors?: string[]) => void;
   onVariantImageChange?: (imageUrl: string | null) => void;
 }
@@ -70,14 +76,48 @@ const VariantSelector = ({
   isB2B = false,
   variantPrices = {},
   b2cVariantPrices = {},
+  allowedVariantIds,
+  stockOverrides,
+  availabilityOverrides,
   onSelectionChange,
   onVariantImageChange,
 }: VariantSelectorProps) => {
-  const { grouped, variants, attrDisplayNames, isLoading } = useGroupedVariants(productId);
+  const { grouped: rawGrouped, variants: rawVariants, attrDisplayNames, isLoading } = useGroupedVariants(productId);
+
+  // Filter to only the variants the seller has in their inventory (B2C only)
+  const variants = useMemo(() => {
+    if (!allowedVariantIds || allowedVariantIds.size === 0) return rawVariants;
+    return rawVariants?.filter(v => allowedVariantIds.has(v.id)) ?? [];
+  }, [rawVariants, allowedVariantIds]);
+
+  // Re-group from filtered variants for the legacy fallback render path
+  const grouped = useMemo(() => {
+    if (!allowedVariantIds || allowedVariantIds.size === 0) return rawGrouped;
+    return (variants ?? []).reduce((acc, v) => {
+      const type = v.option_type;
+      if (!acc[type]) acc[type] = [];
+      acc[type].push(v);
+      return acc;
+    }, {} as Record<string, ProductVariant[]>);
+  }, [variants, rawGrouped, allowedVariantIds]);
   const [selections, setSelections] = useState<Record<string, number>>({});
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
   const onSelectionChangeRef = useRef(onSelectionChange);
   const onVariantImageChangeRef = useRef(onVariantImageChange);
+
+  const getEffectiveStock = useCallback((variant: ProductVariant): number => {
+    if (!isB2B && stockOverrides && typeof stockOverrides[variant.id] === 'number') {
+      return stockOverrides[variant.id];
+    }
+    return variant.stock;
+  }, [isB2B, stockOverrides]);
+
+  const getAvailabilityStatus = useCallback((variant: ProductVariant): string => {
+    if (!isB2B && availabilityOverrides && availabilityOverrides[variant.id]) {
+      return availabilityOverrides[variant.id];
+    }
+    return 'available';
+  }, [isB2B, availabilityOverrides]);
   
   // Keep ref updated
   useEffect(() => {
@@ -379,7 +419,7 @@ const VariantSelector = ({
   const updateQuantity = (variantId: string, newQty: number, variant: ProductVariant) => {
     setSelections((prev) => {
       // Validar límites: mínimo 0, máximo stock del variant
-      const clampedQty = Math.max(0, Math.min(variant.stock, newQty));
+      const clampedQty = Math.max(0, Math.min(getEffectiveStock(variant), newQty));
       return { ...prev, [variantId]: clampedQty };
     });
   };
@@ -530,7 +570,7 @@ const VariantSelector = ({
                           break;
                         }
                       }
-                      if (matches) return sum + v.stock;
+                      if (matches) return sum + getEffectiveStock(v);
                     }
                     return sum;
                   }, 0) || 0;
@@ -679,12 +719,17 @@ const VariantSelector = ({
                     <span className="text-sm font-semibold text-foreground">
                       {Object.values(selectedAttributes).join(' / ')}
                     </span>
-                    {matchingVariant.stock === 0 && (
+                    {getEffectiveStock(matchingVariant) === 0 && (
                       <Badge variant="secondary" className="text-xs">Agotado</Badge>
                     )}
-                    {matchingVariant.stock > 0 && matchingVariant.stock <= 5 && (
+                    {getAvailabilityStatus(matchingVariant) === 'pending' && getEffectiveStock(matchingVariant) > 0 && (
+                      <Badge variant="outline" className="text-xs text-blue-700 border-blue-300 bg-blue-50">
+                        Disponible pronto · Pre-compra
+                      </Badge>
+                    )}
+                    {getAvailabilityStatus(matchingVariant) !== 'pending' && getEffectiveStock(matchingVariant) > 0 && getEffectiveStock(matchingVariant) <= 5 && (
                       <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
-                        ¡Últimas {matchingVariant.stock}!
+                        ¡Últimas {getEffectiveStock(matchingVariant)}!
                       </Badge>
                     )}
                     {isB2B && matchingVariant.moq > 1 && (
@@ -696,8 +741,8 @@ const VariantSelector = ({
                     value={selections[matchingVariant.id] || 0}
                     onChange={(newQty) => updateQuantity(matchingVariant.id, newQty, matchingVariant)}
                     min={0}
-                    max={matchingVariant.stock}
-                    disabled={matchingVariant.stock === 0}
+                    max={getEffectiveStock(matchingVariant)}
+                    disabled={getEffectiveStock(matchingVariant) === 0}
                     size="md"
                   />
                 </div>
@@ -715,7 +760,7 @@ const VariantSelector = ({
                 </span>
               )}
               <span className="text-xs text-muted-foreground whitespace-nowrap ml-auto">
-                {matchingVariant.stock} disponibles
+                {getEffectiveStock(matchingVariant)} disponibles
               </span>
             </div>
           </div>
@@ -752,7 +797,9 @@ const VariantSelector = ({
               const price = isB2B ? (variantPrices[variant.id] || 0) : (b2cVariantPrices[variant.id] ?? basePrice);
               const hasPromo = variant.precio_promocional && variant.precio_promocional < price;
               const displayPrice = hasPromo ? variant.precio_promocional : price;
-              const outOfStock = variant.stock === 0;
+              const effectiveStock = getEffectiveStock(variant);
+              const outOfStock = effectiveStock === 0;
+              const isPending = getAvailabilityStatus(variant) === 'pending';
 
               return (
                 <div
@@ -783,6 +830,11 @@ const VariantSelector = ({
                           Agotado
                         </Badge>
                       )}
+                      {isPending && !outOfStock && (
+                        <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0 text-blue-700 border-blue-300 bg-blue-50">
+                          Disponible pronto
+                        </Badge>
+                      )}
                       {isB2B && variant.moq > 1 && (
                         <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
                           Min:{variant.moq}
@@ -799,7 +851,7 @@ const VariantSelector = ({
                         </span>
                       )}
                       <span className="text-[10px] sm:text-xs text-muted-foreground hidden xs:inline">
-                        · {variant.stock} disp.
+                        · {effectiveStock} disp.
                       </span>
                     </div>
                   </div>
@@ -809,7 +861,7 @@ const VariantSelector = ({
                     value={qty}
                     onChange={(newQty) => updateQuantity(variant.id, newQty, variant)}
                     min={0}
-                    max={variant.stock}
+                    max={effectiveStock}
                     disabled={outOfStock}
                     size="sm"
                   />
