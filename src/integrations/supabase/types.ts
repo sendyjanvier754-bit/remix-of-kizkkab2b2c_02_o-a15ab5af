@@ -7179,6 +7179,8 @@ export type Database = {
           created_at: string
           id: string
           is_approved: boolean | null
+          parent_review_id: string | null
+          photos: Json | null
           rating: number
           store_id: string
           user_id: string
@@ -7188,6 +7190,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_approved?: boolean | null
+          parent_review_id?: string | null
+          photos?: Json | null
           rating: number
           store_id: string
           user_id: string
@@ -7197,11 +7201,20 @@ export type Database = {
           created_at?: string
           id?: string
           is_approved?: boolean | null
+          parent_review_id?: string | null
+          photos?: Json | null
           rating?: number
           store_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "store_reviews_parent_review_id_fkey"
+            columns: ["parent_review_id"]
+            isOneToOne: false
+            referencedRelation: "store_reviews"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "store_reviews_store_id_fkey"
             columns: ["store_id"]
