@@ -85,7 +85,8 @@ export const useStoreProducts = (storeId: string | undefined, page = 0, limit = 
       const { data, error, count } = await supabase
         .from("seller_catalog")
         .select(
-          "id, seller_store_id, source_product_id, source_order_id, sku, nombre, descripcion, images, is_active, imported_at, metadata, precio_venta, precio_costo, stock",
+          `id, seller_store_id, source_product_id, source_order_id, sku, nombre, descripcion, images, is_active, imported_at, metadata, precio_venta, precio_costo, stock,
+          source_product:products!seller_catalog_source_product_id_fkey(categoria_id, categories(id, name))`,
           { count: "exact" }
         )
         .eq("seller_store_id", storeId)

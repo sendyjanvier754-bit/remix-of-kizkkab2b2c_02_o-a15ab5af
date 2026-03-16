@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
@@ -238,13 +238,26 @@ const StoreProfilePage = () => {
 
   const products = productsData?.products || [];
 
+  // Derive unique categories from actual product data
+  const productCategories = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const p of products) {
+      const cat = (p as any).source_product?.categories;
+      if (cat?.id && cat?.name) seen.set(cat.id, cat.name);
+    }
+    return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
+  }, [products]);
+
   // Filter products
   const filteredProducts = products.filter((product: any) => {
     const matchSearch =
       !searchQuery ||
       product.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchSearch;
+    const matchCategory =
+      !selectedCategory ||
+      (product as any).source_product?.categories?.id === selectedCategory;
+    return matchSearch && matchCategory;
   });
 
   const handleShare = async () => {
@@ -592,40 +605,39 @@ const StoreProfilePage = () => {
         <div className="mb-8">
 
           {/* Search & Filter */}
-          <div className="bg-white rounded-lg px-4 py-3 mb-6 shadow">
-            <div className="flex items-center gap-2">
-              {/* Search icon button + expandable input */}
-              <div className="flex items-center gap-2 flex-1">
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery(searchQuery === '' ? ' ' : '')}
-                  className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  aria-label="Buscar"
-                >
-                  <Search className="w-5 h-5 text-gray-500" />
-                </button>
-                <input
-                  type="text"
-                  placeholder="Buscar en esta tienda..."
-                  value={searchQuery.trim()}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400 border-b border-gray-200 focus:border-blue-500 py-1 transition-colors"
-                />
-              </div>
+          <div className="mb-6">
+            <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm overflow-hidden">
+              {/* Search icon */}
+              <Search className="w-4 h-4 text-gray-400 ml-3 flex-shrink-0" />
 
-              {/* Category Filter */}
-              <select
-                value={selectedCategory || ""}
-                onChange={(e) => setSelectedCategory(e.target.value || null)}
-                className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">Todas las categorías</option>
-                {store.categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              {/* Search input */}
+              <input
+                type="text"
+                placeholder="Buscar en esta tienda..."
+                value={searchQuery.trim()}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 min-w-0 text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400 px-2 py-2.5"
+              />
+
+              {/* Category Filter — compact inside the pill, hidden if no categories */}
+              {productCategories.length > 0 && (
+                <>
+                  <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
+                  <select
+                    value={selectedCategory || ""}
+                    onChange={(e) => setSelectedCategory(e.target.value || null)}
+                    className="text-xs text-gray-600 bg-transparent outline-none cursor-pointer pl-2 pr-6 py-2.5 appearance-none max-w-[110px] truncate"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}
+                  >
+                    <option value="">Todas</option>
+                    {productCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           </div>
 
