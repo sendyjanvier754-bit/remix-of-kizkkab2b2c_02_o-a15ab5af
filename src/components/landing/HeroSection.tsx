@@ -108,7 +108,7 @@ const HeroSection = () => {
 
   if (isLoading) {
     return (
-      <section className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 overflow-hidden">
+      <section className="relative w-full h-48 sm:h-64 md:h-80 lg:h-[24rem] xl:h-[28rem] 2xl:h-[32rem] overflow-hidden">
         <Skeleton className="w-full h-full" />
       </section>
     );
@@ -121,7 +121,7 @@ const HeroSection = () => {
   return (
     <section 
       ref={containerRef}
-      className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 overflow-hidden touch-pan-y"
+      className="relative w-full h-48 sm:h-64 md:h-80 lg:h-[24rem] xl:h-[28rem] 2xl:h-[32rem] overflow-hidden touch-pan-y"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -131,7 +131,7 @@ const HeroSection = () => {
         {slides.map((slide, index) => (
           <div
             key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-500 cursor-pointer ${
+            className={`absolute inset-0 transition-opacity duration-500 cursor-pointer bg-muted/20 ${
               index === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             onClick={() => handleSlideClick(slide.link_url)}
@@ -139,7 +139,7 @@ const HeroSection = () => {
             <img
               src={slide.image_url}
               alt={slide.title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover object-center lg:object-contain lg:p-2 xl:p-4"
               onError={(e) => {
                 const img = e.currentTarget as HTMLImageElement;
                 // try fallback then placeholder
