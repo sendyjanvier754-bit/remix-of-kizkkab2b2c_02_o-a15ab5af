@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Category } from "@/hooks/useCategories";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 interface CategorySidebarProps {
   categories: Category[];
@@ -12,6 +13,11 @@ const CategorySidebar = ({
   selectedCategory, 
   onSelectCategory 
 }: CategorySidebarProps) => {
+  const { getTranslated } = useTranslatedList(
+    'category',
+    categories,
+    (cat) => ({ name: cat.name, description: cat.description })
+  );
 
   return (
     <aside className="w-[100px] flex-shrink-0 bg-gray-50 overflow-y-auto pb-20 scrollbar-hide">
@@ -32,6 +38,7 @@ const CategorySidebar = ({
       <nav>
         {categories.map((category) => {
           const isSelected = selectedCategory === category.id;
+          const translated = getTranslated(category);
 
           return (
             <button
@@ -44,7 +51,7 @@ const CategorySidebar = ({
                   : "text-gray-600 hover:text-gray-900 border-transparent"
               )}
             >
-              {category.name}
+              {translated.name || category.name}
             </button>
           );
         })}
