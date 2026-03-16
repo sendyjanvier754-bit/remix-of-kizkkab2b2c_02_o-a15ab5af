@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { format, parseISO, isValid } from "date-fns";
+import { es } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -50,6 +52,16 @@ interface StoreReviewModalProps {
   };
   onReviewSubmitted?: () => void;
 }
+
+const formatReviewDateTime = (iso: string) => {
+  try {
+    const parsed = parseISO(iso);
+    if (!isValid(parsed)) return iso;
+    return format(parsed, "dd MMM yyyy, HH:mm", { locale: es });
+  } catch {
+    return iso;
+  }
+};
 
 // ─── Star display (read-only) ────────────────────────────────────────────────
 const StarDisplay = ({ value }: { value: number }) => (
@@ -152,11 +164,7 @@ const ReviewCard = ({
     setReplyOpen(false);
   };
 
-  const formattedDate = new Date(review.created_at).toLocaleDateString("es", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const formattedDate = formatReviewDateTime(review.created_at);
 
   const hasReplies = (review.replies?.length ?? 0) > 0;
 
@@ -431,7 +439,7 @@ const StoreReviewModal = ({ isOpen, onClose, store, onReviewSubmitted }: StoreRe
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="w-[95vw] sm:max-w-lg h-[85vh] sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
         {/* Header */}
         <DialogHeader className="px-5 pt-5 pb-3 border-b shrink-0">
           <DialogTitle className="flex items-center gap-3">
@@ -472,7 +480,7 @@ const StoreReviewModal = ({ isOpen, onClose, store, onReviewSubmitted }: StoreRe
           </TabsList>
 
           {/* Reviews list */}
-          <TabsContent value="list" className="flex-1 overflow-y-auto px-5 pb-5 mt-3 data-[state=inactive]:hidden">
+          <TabsContent value="list" className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-5 pb-5 mt-3 data-[state=inactive]:hidden">
             {isLoading ? (
               <p className="text-sm text-center text-gray-400 py-8">Cargando reseñas...</p>
             ) : error ? (
@@ -505,7 +513,7 @@ const StoreReviewModal = ({ isOpen, onClose, store, onReviewSubmitted }: StoreRe
           </TabsContent>
 
           {/* Write review form */}
-          <TabsContent value="write" className="flex-1 overflow-y-auto px-5 pb-5 mt-0 data-[state=inactive]:hidden">
+          <TabsContent value="write" className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-5 pb-5 mt-0 data-[state=inactive]:hidden">
             <WriteReviewForm store={store} onSubmitted={handleWriteSubmitted} />
           </TabsContent>
         </Tabs>
