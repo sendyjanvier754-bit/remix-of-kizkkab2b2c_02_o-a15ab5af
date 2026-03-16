@@ -167,6 +167,31 @@ const StoreProfilePage = () => {
   // Derived state
   const isLoading = isStoreLoading || isProductsLoading;
 
+  // Product data used by filters (must stay before any conditional return to keep hook order stable)
+  const products = productsData?.products || [];
+
+  // Derive unique categories from actual product data
+  const productCategories = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const p of products) {
+      const cat = (p as any).source_product?.categories;
+      if (cat?.id && cat?.name) seen.set(cat.id, cat.name);
+    }
+    return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
+  }, [products]);
+
+  // Filter products
+  const filteredProducts = products.filter((product: any) => {
+    const matchSearch =
+      !searchQuery ||
+      product.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchCategory =
+      !selectedCategory ||
+      (product as any).source_product?.categories?.id === selectedCategory;
+    return matchSearch && matchCategory;
+  });
+
   useEffect(() => {
     if (storeData) {
         console.log("Store loaded:", storeData);
@@ -235,30 +260,6 @@ const StoreProfilePage = () => {
   // Generate approx sales for last 24h (Mock logic for demo)
   // Use store ID to make it consistent but "random" looking
   const approxSales24h = Math.floor((store.id.charCodeAt(0) + new Date().getDate()) % 20) + 5;
-
-  const products = productsData?.products || [];
-
-  // Derive unique categories from actual product data
-  const productCategories = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const p of products) {
-      const cat = (p as any).source_product?.categories;
-      if (cat?.id && cat?.name) seen.set(cat.id, cat.name);
-    }
-    return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
-  }, [products]);
-
-  // Filter products
-  const filteredProducts = products.filter((product: any) => {
-    const matchSearch =
-      !searchQuery ||
-      product.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchCategory =
-      !selectedCategory ||
-      (product as any).source_product?.categories?.id === selectedCategory;
-    return matchSearch && matchCategory;
-  });
 
   const handleShare = async () => {
     const shareData = {
