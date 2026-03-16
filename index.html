@@ -3,36 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Siver Market 509 | Marketplace B2B &amp; B2C en Haití</title>
-    <meta name="description" content="Plataforma mayorista B2B y marketplace B2C líder en Haití. Compra y vende al por mayor con los mejores precios.">
-    <meta name="author" content="Siver Market" />
-    <meta name="keywords" content="mayorista, B2B, marketplace, Haití, comercio, ventas, distribución, Siver Market">
+    <title>Kizkka | Plataforma Global de Comercio.</title>
+    <meta name="description" content="Potencia tu negocio con Kizkka. Conectamos vendedores internacionales con el mercado B2B, ofreciendo logística eficiente y los mejores precios.">
+    <meta name="author" content="Kizkka" />
+    <meta name="keywords" content="B2B, B2C, marketplace, ecommerce, comercio, logística, Kizkka">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://sivermarket509.com/" />
-    <meta property="og:site_name" content="Siver Market 509" />
-    <meta property="og:title" content="Siver Market 509 | Marketplace B2B &amp; B2C en Haití" />
-    <meta property="og:description" content="Plataforma mayorista B2B y marketplace B2C líder en Haití. Compra y vende al por mayor con los mejores precios." />
-    <meta property="og:image" content="https://sivermarket509.com/og-image.png" />
+    <meta property="og:url" id="og-url" content="" />
+    <meta property="og:site_name" content="Kizkka" />
+    <meta property="og:title" id="og-title" content="Kizkka - Soluciones de ecommerce sin fronteras" />
+    <meta property="og:description" id="og-description" content="Transforma tu manera de vender. Gestión de pedidos, logística internacional y precios B2B en una sola plataforma." />
+    <meta property="og:image" id="og-image" content="https://fonvunyiaxcjkodrnpox.supabase.co/storage/v1/object/public/branding-assets/dialog_share_image_url-1773679883600.png" />
     <meta property="og:locale" content="es_HT" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Siver Market 509 | Marketplace B2B &amp; B2C en Haití" />
-    <meta name="twitter:description" content="Plataforma mayorista B2B y marketplace B2C líder en Haití. Compra y vende al por mayor con los mejores precios." />
-    <meta name="twitter:image" content="https://sivermarket509.com/og-image.png" />
+    <meta name="twitter:title" id="tw-title" content="Kizkka - Soluciones de ecommerce sin fronteras" />
+    <meta name="twitter:description" id="tw-description" content="Transforma tu manera de vender. Gestión de pedidos, logística internacional y precios B2B en una sola plataforma." />
+    <meta name="twitter:image" id="tw-image" content="https://fonvunyiaxcjkodrnpox.supabase.co/storage/v1/object/public/branding-assets/dialog_share_image_url-1773679883600.png" />
 
-    <link rel="canonical" href="https://sivermarket509.com" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="canonical" href="https://kizkka.com" />
+    <link rel="icon" id="favicon-link" type="image/png" href="/favicon.png" />
 
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "Siver Market 509",
-      "url": "https://sivermarket509.com",
-      "description": "Plataforma mayorista B2B y marketplace B2C líder en Haití"
+      "name": "Kizkka",
+      "url": "https://kizkka.com",
+      "description": "Plataforma Global de Comercio B2B2C"
     }
     </script>
 
@@ -41,12 +41,47 @@
         try {
           var raw = localStorage.getItem('branding_settings_cache');
           if (!raw) return;
-          var branding = JSON.parse(raw);
-          var tabTitle = branding.browser_tab_title || '';
-          var name = branding.platform_name || '';
-          var slogan = branding.platform_slogan || '';
-          var nextTitle = tabTitle || (name ? (name + (slogan ? ' | ' + slogan : '')) : '');
-          if (nextTitle) document.title = nextTitle;
+          var b = JSON.parse(raw);
+
+          // Tab title
+          var title = b.browser_tab_title || (b.platform_name ? b.platform_name + (b.platform_slogan ? ' | ' + b.platform_slogan : '') : '');
+          if (title) document.title = title;
+
+          // Meta description
+          if (b.browser_meta_description) {
+            var descMeta = document.querySelector('meta[name="description"]');
+            if (descMeta) descMeta.setAttribute('content', b.browser_meta_description);
+          }
+
+          // OG / Twitter tags from share_* fields
+          if (b.share_title) {
+            var ogT = document.getElementById('og-title');
+            var twT = document.getElementById('tw-title');
+            if (ogT) ogT.setAttribute('content', b.share_title);
+            if (twT) twT.setAttribute('content', b.share_title);
+          }
+          if (b.share_description) {
+            var ogD = document.getElementById('og-description');
+            var twD = document.getElementById('tw-description');
+            if (ogD) ogD.setAttribute('content', b.share_description);
+            if (twD) twD.setAttribute('content', b.share_description);
+          }
+          if (b.share_image_url) {
+            var ogI = document.getElementById('og-image');
+            var twI = document.getElementById('tw-image');
+            if (ogI) ogI.setAttribute('content', b.share_image_url);
+            if (twI) twI.setAttribute('content', b.share_image_url);
+          }
+
+          // Favicon
+          if (b.favicon_url) {
+            var fav = document.getElementById('favicon-link');
+            if (fav) fav.setAttribute('href', b.favicon_url);
+          }
+
+          // OG URL
+          var ogUrl = document.getElementById('og-url');
+          if (ogUrl) ogUrl.setAttribute('content', window.location.href);
         } catch (_) {}
       })();
     </script>
