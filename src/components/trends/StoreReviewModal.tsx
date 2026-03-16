@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Star, Image as ImageIcon, X, UserCircle, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
 import {
   Dialog,
@@ -17,6 +17,28 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSubmitReview, useStoreReviews, uploadReviewPhotos } from "@/hooks/useTrendingStores";
 import type { StoreReview } from "@/hooks/useTrendingStores";
+
+const isHeicLikeFile = (file: File) => {
+  const fileName = file.name.toLowerCase();
+  const fileType = file.type.toLowerCase();
+  return fileType.includes("heic") || fileType.includes("heif") || fileName.endsWith(".heic") || fileName.endsWith(".heif");
+};
+
+const normalizeReviewPhoto = async (file: File): Promise<File> => {
+  if (!isHeicLikeFile(file)) return file;
+
+  const heic2anyModule = await import("heic2any");
+  const heic2any = heic2anyModule.default;
+  const converted = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.9,
+  });
+
+  const blob = Array.isArray(converted) ? converted[0] : converted;
+  const baseName = file.name.replace(/\.(heic|heif)$/i, "");
+  return new File([blob], `${baseName || "review-photo"}.jpg`, { type: "image/jpeg" });
+};
 
 interface StoreReviewModalProps {
   isOpen: boolean;
@@ -238,15 +260,28 @@ const WriteReviewForm = ({
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    setPhotoFiles(prev => [...prev, ...files]);
-    files.forEach(f => {
-      const reader = new FileReader();
-      reader.onload = ev => setPhotoPreviews(prev => [...prev, ev.target!.result as string]);
-      reader.readAsDataURL(f);
-    });
-    e.target.value = "";
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFiles = Array.from(e.target.files ?? []);
+    if (rawFiles.length === 0) return;
+
+    try {
+      const normalizedFiles = await Promise.all(rawFiles.map(normalizeReviewPhoto));
+      setPhotoFiles(prev => [...prev, ...normalizedFiles]);
+      normalizedFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = ev => setPhotoPreviews(prev => [...prev, ev.target?.result as string]);
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      console.error("Review photo conversion error:", error);
+      toast({
+        title: "No se pudo procesar la foto",
+        description: "Convierte la imagen a JPG o PNG e inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      e.target.value = "";
+    }
   };
 
   const removePhoto = (idx: number) => {
