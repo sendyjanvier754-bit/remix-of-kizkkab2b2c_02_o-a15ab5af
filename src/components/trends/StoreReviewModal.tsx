@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Star, Image as ImageIcon, X, UserCircle, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Star, Image as ImageIcon, X, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -151,6 +151,7 @@ const ReviewCard = ({
   const queryClient = useQueryClient();
   const [replyOpen, setReplyOpen] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
 
   const submitReply = async (comment: string, isAnonymous: boolean) => {
     if (!user) {
@@ -172,10 +173,19 @@ const ReviewCard = ({
     <div className={depth > 0 ? "pl-6 border-l-2 border-gray-100 mt-2" : "border-b border-gray-100 pb-4 last:border-0"}>
       <div className="flex gap-2.5">
         {/* Avatar */}
-        {review.user_avatar ? (
-          <img src={review.user_avatar} alt={review.user_name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+        {review.user_avatar && !avatarLoadFailed ? (
+          <img
+            src={review.user_avatar}
+            alt={review.user_name}
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+            onError={() => setAvatarLoadFailed(true)}
+          />
         ) : (
-          <UserCircle className="w-8 h-8 text-gray-400 flex-shrink-0" />
+          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-bold text-indigo-600 uppercase leading-none">
+              {(review.user_name ?? "U").split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
+            </span>
+          </div>
         )}
 
         <div className="flex-1 min-w-0">

@@ -40,6 +40,27 @@ export interface TrendingStore {
   } | null;
 }
 
+const resolveProfileAvatarUrl = (avatarUrl?: string | null): string | null => {
+  if (!avatarUrl) return null;
+  const trimmed = avatarUrl.trim();
+  if (!trimmed) return null;
+
+  // Already an absolute URL
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  // Relative storage URL that already contains the public avatars path
+  if (trimmed.includes("/storage/v1/object/public/avatars/")) {
+    const base = import.meta.env.VITE_SUPABASE_URL;
+    if (!base) return trimmed;
+    return `${base}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+  }
+
+  // Stored as raw path in avatars bucket (e.g. "user-id/avatar.jpg" or "avatars/user-id/avatar.jpg")
+  const normalizedPath = trimmed.replace(/^\/+/, "").replace(/^avatars\//, "");
+  const { data } = supabase.storage.from("avatars").getPublicUrl(normalizedPath);
+  return data?.publicUrl || null;
+};
+
 export const useTrendingStores = (limit = 5) => {
   return useQuery({
     queryKey: ["trending-stores", limit],
@@ -257,7 +278,7 @@ export const useStoreReviews = (storeId: string | undefined) => {
         photos: Array.isArray(r.photos) ? r.photos : [],
         parent_review_id: r.parent_review_id ?? null,
         user_name: profileMap[r.user_id!]?.full_name || "Usuario",
-        user_avatar: profileMap[r.user_id!]?.avatar_url || null,
+        user_avatar: resolveProfileAvatarUrl(profileMap[r.user_id!]?.avatar_url),
         replies: [],
       }));
 
