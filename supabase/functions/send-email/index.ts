@@ -11,7 +11,7 @@ interface EmailRequest {
   subject: string;
   htmlContent: string;
   textContent?: string;
-  type?: "auth" | "marketing" | "communication" | "test";
+  type?: "auth" | "marketing" | "communication" | "test" | "orders" | "notifications" | "support" | "authentication";
 }
 
 Deno.serve(async (req) => {
@@ -23,7 +23,6 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Create admin client to read email config (bypasses RLS)
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch email configuration from DB
@@ -60,6 +59,37 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Determine sender: check email_senders table for type-specific sender
+    let senderEmail = config.sender_email;
+    let senderName = config.sender_name || "Siver";
+
+    if (type && type !== "test") {
+      // Map type to purpose
+      const purposeMap: Record<string, string> = {
+        auth: "authentication",
+        authentication: "authentication",
+        marketing: "marketing",
+        communication: "notifications",
+        orders: "orders",
+        notifications: "notifications",
+        support: "support",
+      };
+      const purpose = purposeMap[type] || type;
+
+      const { data: senderData } = await supabaseAdmin
+        .from("email_senders")
+        .select("sender_email, sender_name, is_active")
+        .eq("purpose", purpose)
+        .eq("is_active", true)
+        .limit(1);
+
+      const sender = senderData?.[0];
+      if (sender && sender.sender_email && sender.sender_email.includes("@")) {
+        senderEmail = sender.sender_email;
+        senderName = sender.sender_name || senderName;
+      }
+    }
+
     // Build recipients array
     const recipients = Array.isArray(to)
       ? to.map((email) => ({ Email: email }))
@@ -70,8 +100,8 @@ Deno.serve(async (req) => {
       Messages: [
         {
           From: {
-            Email: config.sender_email,
-            Name: config.sender_name || "Siver",
+            Email: senderEmail,
+            Name: senderName,
           },
           To: recipients,
           Subject: subject,
@@ -82,7 +112,9 @@ Deno.serve(async (req) => {
       ],
     };
 
-    const authToken = btoa(`${config.api_key}:${config.api_secret}`);
+    const authToken = btoa(`${config.api_key.trim()}:${config.api_secret.trim()}`);
+
+    console.log("Sending email via Mailjet:", { to, subject, type, senderEmail, senderName });
 
     const mailjetResponse = await fetch("https://api.mailjet.com/v3.1/send", {
       method: "POST",

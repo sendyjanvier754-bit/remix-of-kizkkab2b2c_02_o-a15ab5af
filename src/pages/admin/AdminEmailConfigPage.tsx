@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Mail, Key, Send, Shield, CheckCircle2, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Key, Send, Shield, CheckCircle2, XCircle, Loader2, Eye, EyeOff, Users, AlertTriangle } from "lucide-react";
 
 interface EmailConfig {
   id: string;
@@ -22,10 +21,43 @@ interface EmailConfig {
   settings: Record<string, any>;
 }
 
+interface EmailSender {
+  id: string;
+  purpose: string;
+  sender_email: string;
+  sender_name: string;
+  is_active: boolean;
+}
+
+const PURPOSE_LABELS: Record<string, { label: string; description: string }> = {
+  authentication: { label: "Autenticación", description: "Emails de verificación, reseteo de contraseña" },
+  orders: { label: "Pedidos", description: "Confirmaciones de pedido, actualizaciones de envío" },
+  notifications: { label: "Notificaciones", description: "Alertas del sistema, avisos importantes" },
+  marketing: { label: "Marketing", description: "Promociones, newsletters, campañas" },
+  support: { label: "Soporte", description: "Respuestas de soporte, tickets" },
+};
+
+const validateApiKey = (key: string): string | null => {
+  if (!key) return null;
+  if (/\s/.test(key)) return "La API Key no debe contener espacios";
+  if (/[Ss]ecret/i.test(key)) return "La API Key parece contener texto extra ('Secret'). Verifica que solo pegaste la clave.";
+  if (key.length < 20) return "La API Key parece demasiado corta";
+  return null;
+};
+
+const validateEmail = (email: string): string | null => {
+  if (!email) return null;
+  if (!email.includes("@")) return "El email debe contener @";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Formato de email inválido";
+  return null;
+};
+
 const AdminEmailConfigPage = () => {
   const [config, setConfig] = useState<EmailConfig | null>(null);
+  const [senders, setSenders] = useState<EmailSender[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingSenders, setSavingSenders] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
@@ -33,6 +65,7 @@ const AdminEmailConfigPage = () => {
 
   useEffect(() => {
     fetchConfig();
+    fetchSenders();
   }, []);
 
   const fetchConfig = async () => {
@@ -43,10 +76,7 @@ const AdminEmailConfigPage = () => {
         .limit(1);
 
       if (error) throw error;
-
-      if (data && data.length > 0) {
-        setConfig(data[0]);
-      }
+      if (data && data.length > 0) setConfig(data[0]);
     } catch (err) {
       console.error("Error loading email config:", err);
       toast.error("Error al cargar la configuración de email");
@@ -55,18 +85,42 @@ const AdminEmailConfigPage = () => {
     }
   };
 
+  const fetchSenders = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from("email_senders")
+        .select("*")
+        .order("purpose");
+
+      if (error) throw error;
+      setSenders(data || []);
+    } catch (err) {
+      console.error("Error loading email senders:", err);
+    }
+  };
+
   const handleSave = async () => {
     if (!config) return;
-    setSaving(true);
 
+    // Validate
+    const apiKeyError = validateApiKey(config.api_key);
+    if (apiKeyError) { toast.error(apiKeyError); return; }
+
+    const apiSecretError = validateApiKey(config.api_secret);
+    if (apiSecretError) { toast.error(`API Secret: ${apiSecretError}`); return; }
+
+    const emailError = validateEmail(config.sender_email);
+    if (emailError) { toast.error(`Email remitente: ${emailError}`); return; }
+
+    setSaving(true);
     try {
       const { error } = await (supabase as any)
         .from("email_configuration")
         .update({
-          api_key: config.api_key,
-          api_secret: config.api_secret,
-          sender_email: config.sender_email,
-          sender_name: config.sender_name,
+          api_key: config.api_key.trim(),
+          api_secret: config.api_secret.trim(),
+          sender_email: config.sender_email.trim(),
+          sender_name: config.sender_name.trim(),
           is_active: config.is_active,
           settings: config.settings,
           updated_at: new Date().toISOString(),
@@ -81,6 +135,46 @@ const AdminEmailConfigPage = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveSenders = async () => {
+    // Validate all non-empty sender emails
+    for (const sender of senders) {
+      if (sender.sender_email) {
+        const err = validateEmail(sender.sender_email);
+        if (err) {
+          toast.error(`${PURPOSE_LABELS[sender.purpose]?.label || sender.purpose}: ${err}`);
+          return;
+        }
+      }
+    }
+
+    setSavingSenders(true);
+    try {
+      for (const sender of senders) {
+        const { error } = await (supabase as any)
+          .from("email_senders")
+          .update({
+            sender_email: sender.sender_email.trim(),
+            sender_name: sender.sender_name.trim(),
+            is_active: sender.is_active,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", sender.id);
+
+        if (error) throw error;
+      }
+      toast.success("Remitentes guardados correctamente");
+    } catch (err) {
+      console.error("Error saving senders:", err);
+      toast.error("Error al guardar los remitentes");
+    } finally {
+      setSavingSenders(false);
+    }
+  };
+
+  const updateSender = (id: string, field: keyof EmailSender, value: any) => {
+    setSenders(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
   };
 
   const handleTestEmail = async () => {
@@ -140,6 +234,9 @@ const AdminEmailConfigPage = () => {
   }
 
   const isConfigured = config.api_key && config.api_secret && config.sender_email;
+  const apiKeyWarning = validateApiKey(config.api_key);
+  const apiSecretWarning = validateApiKey(config.api_secret);
+  const senderEmailWarning = validateEmail(config.sender_email);
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-4xl">
@@ -168,7 +265,10 @@ const AdminEmailConfigPage = () => {
             <Key className="w-4 h-4" /> Credenciales
           </TabsTrigger>
           <TabsTrigger value="sender" className="flex items-center gap-1">
-            <Send className="w-4 h-4" /> Remitente
+            <Send className="w-4 h-4" /> Remitente Principal
+          </TabsTrigger>
+          <TabsTrigger value="senders" className="flex items-center gap-1">
+            <Users className="w-4 h-4" /> Remitentes por Tipo
           </TabsTrigger>
           <TabsTrigger value="test" className="flex items-center gap-1">
             <Shield className="w-4 h-4" /> Prueba
@@ -212,6 +312,11 @@ const AdminEmailConfigPage = () => {
                     {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {apiKeyWarning && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {apiKeyWarning}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -233,6 +338,11 @@ const AdminEmailConfigPage = () => {
                     {showApiSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {apiSecretWarning && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {apiSecretWarning}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-3 pt-2">
@@ -251,13 +361,13 @@ const AdminEmailConfigPage = () => {
           </Card>
         </TabsContent>
 
-        {/* Sender Tab */}
+        {/* Main Sender Tab */}
         <TabsContent value="sender">
           <Card>
             <CardHeader>
-              <CardTitle>Configuración del Remitente</CardTitle>
+              <CardTitle>Remitente Principal</CardTitle>
               <CardDescription>
-                El email y nombre que aparecerán como remitente en todos los emails enviados.
+                Email y nombre por defecto para todos los emails. Los remitentes por tipo (pestaña siguiente) tienen prioridad cuando están configurados.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -270,6 +380,11 @@ const AdminEmailConfigPage = () => {
                   onChange={(e) => setConfig({ ...config, sender_email: e.target.value })}
                   placeholder="noreply@tudominio.com"
                 />
+                {senderEmailWarning && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {senderEmailWarning}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -286,6 +401,79 @@ const AdminEmailConfigPage = () => {
               <Button onClick={handleSave} disabled={saving} className="w-full">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Guardar Remitente
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Multi-Sender Tab */}
+        <TabsContent value="senders">
+          <Card>
+            <CardHeader>
+              <CardTitle>Remitentes por Tipo de Email</CardTitle>
+              <CardDescription>
+                Configura un email remitente diferente para cada tipo de comunicación.
+                Si un tipo está vacío o inactivo, se usará el remitente principal.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {senders.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No se encontraron remitentes configurados.</p>
+              ) : (
+                senders.map((sender) => {
+                  const info = PURPOSE_LABELS[sender.purpose] || { label: sender.purpose, description: "" };
+                  const emailErr = sender.sender_email ? validateEmail(sender.sender_email) : null;
+                  return (
+                    <div key={sender.id} className="border border-border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{info.label}</h3>
+                          <p className="text-xs text-muted-foreground">{info.description}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={sender.is_active}
+                            onCheckedChange={(checked) => updateSender(sender.id, "is_active", checked)}
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {sender.is_active ? "Activo" : "Inactivo"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Email</Label>
+                          <Input
+                            type="email"
+                            value={sender.sender_email}
+                            onChange={(e) => updateSender(sender.id, "sender_email", e.target.value)}
+                            placeholder={config.sender_email || "noreply@tudominio.com"}
+                            className="text-sm"
+                          />
+                          {emailErr && (
+                            <p className="text-xs text-destructive flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3" /> {emailErr}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Nombre</Label>
+                          <Input
+                            type="text"
+                            value={sender.sender_name}
+                            onChange={(e) => updateSender(sender.id, "sender_name", e.target.value)}
+                            placeholder={config.sender_name || "Siver"}
+                            className="text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <Button onClick={handleSaveSenders} disabled={savingSenders} className="w-full">
+                {savingSenders ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Guardar Remitentes
               </Button>
             </CardContent>
           </Card>
