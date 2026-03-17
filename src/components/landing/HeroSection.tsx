@@ -4,31 +4,6 @@ import { useMarketplaceBanners } from "@/hooks/useMarketplaceData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Default banners as fallback when no database banners exist
-const defaultBanners = [
-  {
-    id: "default-1",
-    title: "Bienvenido a Siver",
-    image_url: "/navidad-1.png",
-    link_url: "/marketplace",
-    fallback: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=400&fit=crop",
-  },
-  {
-    id: "default-2",
-    title: "Explora Nuestras Ofertas",
-    image_url: "/navidad-2.png",
-    link_url: "/marketplace",
-    fallback: "https://images.unsplash.com/photo-1512909006721-3d6018887383?w=1200&h=400&fit=crop",
-  },
-  {
-    id: "default-3",
-    title: "Nuevos Productos",
-    image_url: "/navidad-3.png",
-    link_url: "/marketplace",
-    fallback: "https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=1200&h=400&fit=crop",
-  },
-];
-
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -39,31 +14,29 @@ const HeroSection = () => {
   const isMobile = useIsMobile();
 
   // Filter banners by device target, then pick correct image per device
-  const slides = dbBanners && dbBanners.length > 0
-    ? dbBanners
-        .filter((b) => {
-          const dt = (b as { device_target?: string }).device_target ?? 'all';
-          return dt === 'all' || dt === (isMobile ? 'mobile' : 'desktop');
-        })
-        .map(b => {
-          const desktopImg = (b as { desktop_image_url?: string | null }).desktop_image_url;
-          const useDesktop = !isMobile && !!desktopImg;
-          const bPos = b as { mobile_position_x?: number; mobile_position_y?: number; mobile_scale?: number; desktop_position_x?: number; desktop_position_y?: number; desktop_scale?: number };
-          const px = useDesktop ? (bPos.desktop_position_x ?? 50) : (bPos.mobile_position_x ?? 50);
-          const py = useDesktop ? (bPos.desktop_position_y ?? 50) : (bPos.mobile_position_y ?? 50);
-          const scale = useDesktop ? (bPos.desktop_scale ?? 100) : (bPos.mobile_scale ?? 100);
-          return {
-            id: b.id,
-            title: b.title,
-            image_url: useDesktop ? desktopImg! : b.image_url,
-            link_url: b.link_url,
-            fallback: "/placeholder.svg",
-            objectPosition: `${px}% ${py}%`,
-            objectScale: scale / 100,
-            objectOrigin: `${px}% ${py}%`,
-          };
-        })
-    : defaultBanners;
+  const slides = (dbBanners || [])
+    .filter((b) => {
+      const dt = (b as { device_target?: string }).device_target ?? 'all';
+      return dt === 'all' || dt === (isMobile ? 'mobile' : 'desktop');
+    })
+    .map(b => {
+      const desktopImg = (b as { desktop_image_url?: string | null }).desktop_image_url;
+      const useDesktop = !isMobile && !!desktopImg;
+      const bPos = b as { mobile_position_x?: number; mobile_position_y?: number; mobile_scale?: number; desktop_position_x?: number; desktop_position_y?: number; desktop_scale?: number };
+      const px = useDesktop ? (bPos.desktop_position_x ?? 50) : (bPos.mobile_position_x ?? 50);
+      const py = useDesktop ? (bPos.desktop_position_y ?? 50) : (bPos.mobile_position_y ?? 50);
+      const scale = useDesktop ? (bPos.desktop_scale ?? 100) : (bPos.mobile_scale ?? 100);
+
+      return {
+        id: b.id,
+        title: b.title,
+        image_url: useDesktop ? desktopImg! : b.image_url,
+        link_url: b.link_url,
+        objectPosition: `${px}% ${py}%`,
+        objectScale: scale / 100,
+        objectOrigin: `${px}% ${py}%`,
+      };
+    });
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -157,20 +130,14 @@ const HeroSection = () => {
             <img
               src={slide.image_url}
               alt={slide.title}
+              loading={index === 0 ? 'eager' : 'lazy'}
+              fetchPriority={index === 0 ? 'high' : 'low'}
+              decoding="async"
               className="w-full h-full object-cover"
               style={{
                 objectPosition: (slide as { objectPosition?: string }).objectPosition ?? '50% 50%',
                 transform: `scale(${(slide as { objectScale?: number }).objectScale ?? 1})`,
                 transformOrigin: (slide as { objectOrigin?: string }).objectOrigin ?? '50% 50%',
-              }}
-              onError={(e) => {
-                const img = e.currentTarget as HTMLImageElement;
-                // try fallback then placeholder
-                if (slide.fallback && img.src !== slide.fallback) {
-                  img.src = slide.fallback;
-                } else if (!img.src.includes("/placeholder.svg")) {
-                  img.src = "/placeholder.svg";
-                }
               }}
             />
           </div>

@@ -43,7 +43,7 @@ export const useBrandingSettings = () => {
     try {
       const { error } = await supabase
         .from('branding_settings')
-        .upsert({ key, value, updated_at: new Date().toISOString() } as any, { onConflict: 'key' });
+        .upsert({ key, value } as any, { onConflict: 'key' });
 
       if (error) throw error;
       await fetchSettings();
@@ -68,9 +68,10 @@ export const useBrandingSettings = () => {
   const updateMultiple = async (updates: Record<string, string>) => {
     try {
       for (const [key, value] of Object.entries(updates)) {
-        await supabase
+        const { error } = await supabase
           .from('branding_settings')
-          .upsert({ key, value, updated_at: new Date().toISOString() } as any, { onConflict: 'key' });
+          .upsert({ key, value } as any, { onConflict: 'key' });
+        if (error) throw error;
       }
       await fetchSettings();
       queryClient.invalidateQueries({ queryKey: ['branding-settings'] });
@@ -83,8 +84,8 @@ export const useBrandingSettings = () => {
       console.error('Error updating branding settings:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudo actualizar la configuración',
+        title: 'Error al guardar',
+        description: error?.message || 'No se pudo actualizar la configuración',
       });
       return false;
     }

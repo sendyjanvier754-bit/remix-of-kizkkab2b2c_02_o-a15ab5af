@@ -383,21 +383,23 @@ export const useRecommendedProducts = (productId: string | null, categoryId: str
 
 /**
  * Hook para banners del marketplace (B2C)
+ * Siempre carga directamente desde la base de datos.
  */
 export const useMarketplaceBanners = () => {
   return useQuery({
     queryKey: ["marketplace-banners"],
     queryFn: async () => {
       const now = new Date().toISOString();
-      
+
       const { data, error } = await supabase
         .from("admin_banners")
-        .select("*")
+        .select("id,title,image_url,desktop_image_url,link_url,sort_order,device_target,mobile_position_x,mobile_position_y,mobile_scale,desktop_position_x,desktop_position_y,desktop_scale")
         .eq("is_active", true)
         .or(`target_audience.eq.b2c,target_audience.eq.all`)
         .or(`starts_at.is.null,starts_at.lte.${now}`)
         .or(`ends_at.is.null,ends_at.gte.${now}`)
-        .order("sort_order", { ascending: true });
+        .order("sort_order", { ascending: true })
+        .limit(12);
 
       if (error) {
         console.error("Error fetching banners:", error);
@@ -406,7 +408,9 @@ export const useMarketplaceBanners = () => {
 
       return data || [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
 
