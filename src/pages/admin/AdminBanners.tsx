@@ -19,6 +19,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogDescription,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -69,6 +70,8 @@ const AdminBanners = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadingDesktop, setUploadingDesktop] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingOrderId, setSavingOrderId] = useState<string | null>(null);
+  const [orderDraftByBanner, setOrderDraftByBanner] = useState<Record<string, number>>({});
   const [activeImageTab, setActiveImageTab] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
   const [activeBannerTab, setActiveBannerTab] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -181,10 +184,25 @@ const AdminBanners = () => {
       return;
     }
 
+    const normalizedOrder = Number(formData.sort_order) || 0;
+    const hasDuplicateOrder = banners.some(
+      b => b.id !== editingBanner?.id && (b.sort_order ?? 0) === normalizedOrder
+    );
+
+    if (hasDuplicateOrder) {
+      toast({
+        title: 'Orden duplicado',
+        description: `Ya existe un banner con el orden ${normalizedOrder}. Usa otro número.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const bannerData = {
         ...formData,
+        sort_order: normalizedOrder,
         desktop_image_url: formData.desktop_image_url || null,
         starts_at: null,
         ends_at: null,
@@ -204,6 +222,52 @@ const AdminBanners = () => {
 
   const toggleActive = async (banner: AdminBanner) => {
     await updateBanner(banner.id, { is_active: !banner.is_active });
+  };
+
+  const applyQuickSortOrder = async (banner: AdminBanner) => {
+    const raw = orderDraftByBanner[banner.id];
+    const normalizedOrder = Number.isFinite(raw) ? Math.max(0, Math.trunc(raw)) : (banner.sort_order ?? 0);
+
+    const hasDuplicateOrder = banners.some(
+      b => b.id !== banner.id && (b.sort_order ?? 0) === normalizedOrder
+    );
+
+    if (hasDuplicateOrder) {
+      toast({
+        title: 'Orden duplicado',
+        description: `Ya existe un banner con el orden ${normalizedOrder}. Usa otro número.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if ((banner.sort_order ?? 0) === normalizedOrder) return;
+
+    setSavingOrderId(banner.id);
+    try {
+      await updateBanner(banner.id, { sort_order: normalizedOrder });
+      setOrderDraftByBanner(prev => ({ ...prev, [banner.id]: normalizedOrder }));
+    } finally {
+      setSavingOrderId(null);
+    }
+  };
+
+  const deleteBannerInActiveTab = async (
+    banner: AdminBanner,
+    tab: 'mobile' | 'tablet' | 'desktop'
+  ) => {
+    const isMobileGroupTab = tab === 'mobile' || tab === 'tablet';
+
+    if (banner.device_target === 'all') {
+      // Scoped delete: keep banner for the opposite device group
+      await updateBanner(banner.id, {
+        device_target: isMobileGroupTab ? 'desktop' : 'mobile',
+      });
+      return;
+    }
+
+    // Banner is already scoped to one device group, so full delete is safe.
+    await deleteBanner(banner.id);
   };
 
   if (loading) {
@@ -290,7 +354,7 @@ const AdminBanners = () => {
                 </div>
               </div>
               <CardContent className="p-3">
-                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold truncate text-sm">{banner.title}</h3>
                     {banner.link_url && (
@@ -298,6 +362,31 @@ const AdminBanners = () => {
                         <LinkIcon className="h-3 w-3 shrink-0" />{banner.link_url}
                       </p>
                     )}
+                      <div className="mt-2 flex items-center gap-2">
+                        <Label htmlFor={`quick-order-${banner.id}`} className="text-[11px] text-muted-foreground whitespace-nowrap">
+                          Orden
+                        </Label>
+                        <Input
+                          id={`quick-order-${banner.id}`}
+                          type="number"
+                          min={0}
+                          value={orderDraftByBanner[banner.id] ?? banner.sort_order ?? 0}
+                          onChange={(e) => setOrderDraftByBanner(prev => ({
+                            ...prev,
+                            [banner.id]: parseInt(e.target.value) || 0,
+                          }))}
+                          className="h-7 w-20 text-xs"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => applyQuickSortOrder(banner)}
+                          disabled={savingOrderId === banner.id}
+                        >
+                          {savingOrderId === banner.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Guardar'}
+                        </Button>
+                      </div>
                   </div>
                   <div className="flex items-center gap-0.5 shrink-0">
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleActive(banner)}
@@ -320,7 +409,7 @@ const AdminBanners = () => {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteBanner(banner.id)}
+                          <AlertDialogAction onClick={() => deleteBannerInActiveTab(banner, activeBannerTab)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                             Eliminar
                           </AlertDialogAction>
@@ -390,6 +479,9 @@ const AdminBanners = () => {
               <DialogTitle>
                 {editingBanner ? "Editar Banner" : "Nuevo Banner"}
               </DialogTitle>
+              <DialogDescription>
+                Configura imágenes por dispositivo, enlace y audiencia del banner.
+              </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
@@ -420,11 +512,13 @@ const AdminBanners = () => {
               {(activeImageTab === 'mobile' || activeImageTab === 'tablet') && (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    {activeImageTab === 'mobile' ? 'Imagen para teléfonos (< 768px) · Cuadrada o vertical · ej. 750×900px' : 'Imagen para tablets (768–1023px) · misma imagen que móvil · ej. 750×900px'}
+                    {activeImageTab === 'mobile'
+                      ? 'Imagen para teléfonos (< 768px) · Recomendado: 700×300 px'
+                      : 'Imagen para tablets (768–1023px) · misma imagen que móvil · Recomendado: 700×300 px'}
                   </p>
                   {formData.image_url ? (
                     <div className="space-y-2">
-                      <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted max-w-xs mx-auto">
+                      <div className="relative aspect-[7/3] rounded-lg overflow-hidden bg-muted max-w-md mx-auto">
                         <img src={formData.image_url} alt="Mobile preview" className="w-full h-full object-cover"
                           style={{
                             objectPosition: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
@@ -453,7 +547,7 @@ const AdminBanners = () => {
                     </div>
                   ) : (
                     <div onClick={() => fileInputRef.current?.click()}
-                      className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors max-w-xs mx-auto">
+                      className="aspect-[7/3] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors max-w-md mx-auto">
                       {uploading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : (
                         <><Upload className="h-6 w-6 text-muted-foreground mb-1" />
                           <p className="text-xs text-muted-foreground text-center px-2">Subir imagen</p></>
@@ -467,7 +561,7 @@ const AdminBanners = () => {
               {/* Desktop tab (≥ 1024px) */}
               {activeImageTab === 'desktop' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Imagen para PC (≥ 1024px) · Horizontal · ej. 1920×480px</p>
+                  <p className="text-xs text-muted-foreground">Imagen para PC (≥ 1024px) · Recomendado: 1520×320 px</p>
                   {formData.desktop_image_url ? (
                     <div className="space-y-2">
                       <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
@@ -576,7 +670,7 @@ const AdminBanners = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Sube una imagen horizontal (ej. 1920×480px) para Desktop y una imagen cuadrada o vertical para Móvil.
+                  Tamaños recomendados: Móvil/Tablet 700×300 px · PC 1520×320 px.
                 </p>
               </div>
 

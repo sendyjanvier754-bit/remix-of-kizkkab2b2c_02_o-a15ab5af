@@ -57,11 +57,41 @@ export function useAdminBanners(targetAudience?: string) {
 
   const createBanner = async (banner: Omit<AdminBanner, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data, error } = await supabase
-        .from('admin_banners')
-        .insert(banner)
-        .select()
-        .single();
+      const runInsert = async (payload: Record<string, unknown>) => {
+        const { data, error } = await supabase
+          .from('admin_banners')
+          .insert(payload)
+          .select()
+          .single();
+        return { data, error };
+      };
+
+      let { data, error } = await runInsert(banner as unknown as Record<string, unknown>);
+
+      if (error) {
+        const msg = `${error.message ?? ''} ${error.details ?? ''} ${error.hint ?? ''}`.toLowerCase();
+        const looksLikeSchemaCacheIssue = error.code === 'PGRST204'
+          || msg.includes('schema cache')
+          || msg.includes('could not find the')
+          || msg.includes('column');
+
+        if (looksLikeSchemaCacheIssue) {
+          const fallbackPayload = {
+            title: banner.title,
+            image_url: banner.image_url,
+            link_url: banner.link_url,
+            target_audience: banner.target_audience,
+            is_active: banner.is_active,
+            sort_order: banner.sort_order,
+            starts_at: banner.starts_at,
+            ends_at: banner.ends_at,
+          };
+
+          const retry = await runInsert(fallbackPayload);
+          data = retry.data;
+          error = retry.error;
+        }
+      }
 
       if (error) throw error;
 
@@ -69,8 +99,27 @@ export function useAdminBanners(targetAudience?: string) {
       toast({ title: 'Banner creado', description: 'El banner ha sido creado correctamente' });
       return data;
     } catch (error) {
-      console.error('Error creating banner:', error);
-      toast({ title: 'Error', description: 'No se pudo crear el banner', variant: 'destructive' });
+      const err = error as {
+        message?: string;
+        details?: string;
+        hint?: string;
+        code?: string;
+      };
+      console.error('Error creating banner:', {
+        message: err?.message,
+        details: err?.details,
+        hint: err?.hint,
+        code: err?.code,
+      });
+
+      const detailParts = [err?.message, err?.details, err?.hint].filter(Boolean);
+      toast({
+        title: 'Error',
+        description: detailParts.length > 0
+          ? detailParts.join(' · ')
+          : 'No se pudo crear el banner',
+        variant: 'destructive'
+      });
       return null;
     }
   };

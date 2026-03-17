@@ -151,12 +151,20 @@ export type Database = {
       admin_banners: {
         Row: {
           created_at: string
+          desktop_image_url: string | null
+          desktop_position_x: number
+          desktop_position_y: number
+          desktop_scale: number
+          device_target: string
           ends_at: string | null
           id: string
           image_url: string
-          is_active: boolean | null
+          is_active: boolean
           link_url: string | null
-          sort_order: number | null
+          mobile_position_x: number
+          mobile_position_y: number
+          mobile_scale: number
+          sort_order: number
           starts_at: string | null
           target_audience: string
           title: string
@@ -164,12 +172,20 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          desktop_image_url?: string | null
+          desktop_position_x?: number
+          desktop_position_y?: number
+          desktop_scale?: number
+          device_target?: string
           ends_at?: string | null
           id?: string
           image_url: string
-          is_active?: boolean | null
+          is_active?: boolean
           link_url?: string | null
-          sort_order?: number | null
+          mobile_position_x?: number
+          mobile_position_y?: number
+          mobile_scale?: number
+          sort_order?: number
           starts_at?: string | null
           target_audience?: string
           title: string
@@ -177,12 +193,20 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          desktop_image_url?: string | null
+          desktop_position_x?: number
+          desktop_position_y?: number
+          desktop_scale?: number
+          device_target?: string
           ends_at?: string | null
           id?: string
           image_url?: string
-          is_active?: boolean | null
+          is_active?: boolean
           link_url?: string | null
-          sort_order?: number | null
+          mobile_position_x?: number
+          mobile_position_y?: number
+          mobile_scale?: number
+          sort_order?: number
           starts_at?: string | null
           target_audience?: string
           title?: string
