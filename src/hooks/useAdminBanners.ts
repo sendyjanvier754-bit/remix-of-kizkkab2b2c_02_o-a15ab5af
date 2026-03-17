@@ -10,6 +10,12 @@ export interface AdminBanner {
   link_url: string | null;
   target_audience: string;
   device_target: 'all' | 'desktop' | 'mobile';
+  mobile_position_x: number;
+  mobile_position_y: number;
+  mobile_scale: number;
+  desktop_position_x: number;
+  desktop_position_y: number;
+  desktop_scale: number;
   is_active: boolean;
   sort_order: number;
   starts_at: string | null;

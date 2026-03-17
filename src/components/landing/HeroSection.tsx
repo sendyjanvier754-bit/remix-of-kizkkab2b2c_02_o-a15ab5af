@@ -47,12 +47,20 @@ const HeroSection = () => {
         })
         .map(b => {
           const desktopImg = (b as { desktop_image_url?: string | null }).desktop_image_url;
+          const useDesktop = !isMobile && !!desktopImg;
+          const bPos = b as { mobile_position_x?: number; mobile_position_y?: number; mobile_scale?: number; desktop_position_x?: number; desktop_position_y?: number; desktop_scale?: number };
+          const px = useDesktop ? (bPos.desktop_position_x ?? 50) : (bPos.mobile_position_x ?? 50);
+          const py = useDesktop ? (bPos.desktop_position_y ?? 50) : (bPos.mobile_position_y ?? 50);
+          const scale = useDesktop ? (bPos.desktop_scale ?? 100) : (bPos.mobile_scale ?? 100);
           return {
             id: b.id,
             title: b.title,
-            image_url: (!isMobile && desktopImg) ? desktopImg : b.image_url,
+            image_url: useDesktop ? desktopImg! : b.image_url,
             link_url: b.link_url,
             fallback: "/placeholder.svg",
+            objectPosition: `${px}% ${py}%`,
+            objectScale: scale / 100,
+            objectOrigin: `${px}% ${py}%`,
           };
         })
     : defaultBanners;
@@ -149,7 +157,12 @@ const HeroSection = () => {
             <img
               src={slide.image_url}
               alt={slide.title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover"
+              style={{
+                objectPosition: (slide as { objectPosition?: string }).objectPosition ?? '50% 50%',
+                transform: `scale(${(slide as { objectScale?: number }).objectScale ?? 1})`,
+                transformOrigin: (slide as { objectOrigin?: string }).objectOrigin ?? '50% 50%',
+              }}
               onError={(e) => {
                 const img = e.currentTarget as HTMLImageElement;
                 // try fallback then placeholder
