@@ -2248,6 +2248,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_senders: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          purpose: string
+          sender_email: string
+          sender_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          purpose: string
+          sender_email: string
+          sender_name?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          purpose?: string
+          sender_email?: string
+          sender_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_movements: {
         Row: {
           change_amount: number
