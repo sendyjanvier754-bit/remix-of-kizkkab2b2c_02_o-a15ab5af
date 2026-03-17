@@ -151,6 +151,8 @@ export type Database = {
       admin_banners: {
         Row: {
           created_at: string
+          desktop_image_url: string | null
+          device_target: string
           ends_at: string | null
           id: string
           image_url: string
@@ -164,6 +166,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          desktop_image_url?: string | null
+          device_target?: string
           ends_at?: string | null
           id?: string
           image_url: string
@@ -177,6 +181,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          desktop_image_url?: string | null
+          device_target?: string
           ends_at?: string | null
           id?: string
           image_url?: string
@@ -1225,6 +1231,42 @@ export type Database = {
           },
         ]
       }
+      branding_seo_sync_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          request_id: number | null
+          setting_key: string
+          status: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          request_id?: number | null
+          setting_key: string
+          status?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          request_id?: number | null
+          setting_key?: string
+          status?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       branding_settings: {
         Row: {
           created_at: string
@@ -2202,6 +2244,36 @@ export type Database = {
           sender_email?: string
           sender_name?: string
           settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_senders: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          purpose: string
+          sender_email: string
+          sender_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          purpose: string
+          sender_email: string
+          sender_name?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          purpose?: string
+          sender_email?: string
+          sender_name?: string
           updated_at?: string
         }
         Relationships: []

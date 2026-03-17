@@ -9,15 +9,9 @@ export interface AdminBanner {
   desktop_image_url: string | null;
   link_url: string | null;
   target_audience: string;
-  device_target: 'all' | 'desktop' | 'mobile';
-  mobile_position_x: number;
-  mobile_position_y: number;
-  mobile_scale: number;
-  desktop_position_x: number;
-  desktop_position_y: number;
-  desktop_scale: number;
-  is_active: boolean;
-  sort_order: number;
+  device_target: string;
+  is_active: boolean | null;
+  sort_order: number | null;
   starts_at: string | null;
   ends_at: string | null;
   created_at: string;
