@@ -55,14 +55,22 @@ const TARGET_OPTIONS = [
   { value: "public", label: "Solo público" },
 ];
 
+const DEVICE_OPTIONS = [
+  { value: "all", label: "Todos los dispositivos" },
+  { value: "desktop", label: "Solo Desktop (PC / tablet)" },
+  { value: "mobile", label: "Solo Móvil" },
+];
+
 const AdminBanners = () => {
   const { banners, loading, createBanner, updateBanner, deleteBanner, uploadBannerImage } = useAdminBanners();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<AdminBanner | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingDesktop, setUploadingDesktop] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputDesktopRef = useRef<HTMLInputElement>(null);
 
   // B2B Hero Config State
   const [b2bFeaturedIds, setB2bFeaturedIds] = useState("");
@@ -83,8 +91,10 @@ const AdminBanners = () => {
   const [formData, setFormData] = useState({
     title: "",
     image_url: "",
+    desktop_image_url: "",
     link_url: "",
     target_audience: "all",
+    device_target: "all" as "all" | "desktop" | "mobile",
     is_active: true,
     sort_order: 0,
   });
@@ -93,8 +103,10 @@ const AdminBanners = () => {
     setFormData({
       title: "",
       image_url: "",
+      desktop_image_url: "",
       link_url: "",
       target_audience: "all",
+      device_target: "all",
       is_active: true,
       sort_order: 0,
     });
@@ -111,8 +123,10 @@ const AdminBanners = () => {
     setFormData({
       title: banner.title,
       image_url: banner.image_url,
+      desktop_image_url: banner.desktop_image_url || "",
       link_url: banner.link_url || "",
       target_audience: banner.target_audience,
+      device_target: (banner.device_target ?? "all") as "all" | "desktop" | "mobile",
       is_active: banner.is_active,
       sort_order: banner.sort_order,
     });
@@ -122,18 +136,21 @@ const AdminBanners = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("El archivo es muy grande. Máximo 5MB.");
-      return;
-    }
-
+    if (file.size > 5 * 1024 * 1024) { alert("El archivo es muy grande. Máximo 5MB."); return; }
     setUploading(true);
     const url = await uploadBannerImage(file);
-    if (url) {
-      setFormData(prev => ({ ...prev, image_url: url }));
-    }
+    if (url) setFormData(prev => ({ ...prev, image_url: url }));
     setUploading(false);
+  };
+
+  const handleDesktopImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("El archivo es muy grande. Máximo 5MB."); return; }
+    setUploadingDesktop(true);
+    const url = await uploadBannerImage(file);
+    if (url) setFormData(prev => ({ ...prev, desktop_image_url: url }));
+    setUploadingDesktop(false);
   };
 
   const handleSave = async () => {
@@ -146,6 +163,7 @@ const AdminBanners = () => {
     try {
       const bannerData = {
         ...formData,
+        desktop_image_url: formData.desktop_image_url || null,
         starts_at: null,
         ends_at: null,
       };
@@ -254,12 +272,15 @@ const AdminBanners = () => {
                     alt={banner.title}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-2 left-2 flex gap-2">
+                  <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
                     <Badge variant={banner.is_active ? "default" : "secondary"}>
                       {banner.is_active ? "Activo" : "Inactivo"}
                     </Badge>
                     <Badge variant="outline" className="bg-background/80">
                       {TARGET_OPTIONS.find(t => t.value === banner.target_audience)?.label}
+                    </Badge>
+                    <Badge variant="outline" className="bg-background/80">
+                      {DEVICE_OPTIONS.find(d => d.value === (banner.device_target ?? "all"))?.label ?? "Todos los dispositivos"}
                     </Badge>
                   </div>
                 </div>
@@ -328,7 +349,7 @@ const AdminBanners = () => {
 
         {/* Create/Edit Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingBanner ? "Editar Banner" : "Nuevo Banner"}
@@ -336,49 +357,64 @@ const AdminBanners = () => {
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              {/* Image Upload */}
-              <div className="space-y-2">
-                <Label>Imagen del banner</Label>
-                {formData.image_url ? (
-                  <div className="relative aspect-[16/6] rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={formData.image_url}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="absolute bottom-2 right-2"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                    >
-                      {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cambiar"}
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="aspect-[16/6] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
-                  >
-                    {uploading ? (
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    ) : (
-                      <>
-                        <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">Click para subir imagen</p>
-                        <p className="text-xs text-muted-foreground/70">Recomendado: 1920x480px</p>
-                      </>
-                    )}
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
+              {/* Dual Image Upload */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Mobile image */}
+                <div className="space-y-1">
+                  <Label className="flex items-center gap-1 text-sm font-semibold">
+                    <Smartphone className="h-3.5 w-3.5" /> Móvil / Tablet
+                  </Label>
+                  <p className="text-xs text-muted-foreground mb-1">Cuadrada o vertical · ej. 750×900px</p>
+                  {formData.image_url ? (
+                    <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted">
+                      <img src={formData.image_url} alt="Mobile preview" className="w-full h-full object-cover" />
+                      <Button variant="secondary" size="sm" className="absolute bottom-1 right-1 text-xs px-2 py-1 h-auto"
+                        onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                        {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Cambiar"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div onClick={() => fileInputRef.current?.click()}
+                      className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                      {uploading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : (
+                        <><Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen móvil</p></>
+                      )}
+                    </div>
+                  )}
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </div>
+
+                {/* Desktop image */}
+                <div className="space-y-1">
+                  <Label className="flex items-center gap-1 text-sm font-semibold">
+                    <ImageIcon className="h-3.5 w-3.5" /> Desktop / PC
+                  </Label>
+                  <p className="text-xs text-muted-foreground mb-1">Horizontal · ej. 1920×480px</p>
+                  {formData.desktop_image_url ? (
+                    <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted">
+                      <img src={formData.desktop_image_url} alt="Desktop preview" className="w-full h-full object-cover" />
+                      <Button variant="secondary" size="sm" className="absolute bottom-1 right-1 text-xs px-2 py-1 h-auto"
+                        onClick={() => fileInputDesktopRef.current?.click()} disabled={uploadingDesktop}>
+                        {uploadingDesktop ? <Loader2 className="h-3 w-3 animate-spin" /> : "Cambiar"}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="absolute top-1 right-1 text-xs px-1 py-0.5 h-auto text-destructive"
+                        onClick={() => setFormData(prev => ({ ...prev, desktop_image_url: "" }))}>
+                        ✕
+                      </Button>
+                    </div>
+                  ) : (
+                    <div onClick={() => fileInputDesktopRef.current?.click()}
+                      className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                      {uploadingDesktop ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : (
+                        <><Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen desktop</p>
+                          <p className="text-xs text-muted-foreground/60 text-center px-2 mt-0.5">(opcional)</p></>
+                      )}
+                    </div>
+                  )}
+                  <input ref={fileInputDesktopRef} type="file" accept="image/*" onChange={handleDesktopImageUpload} className="hidden" />
+                </div>
               </div>
 
               {/* Title */}
@@ -421,6 +457,29 @@ const AdminBanners = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Device Target */}
+              <div className="space-y-2">
+                <Label>Dispositivo</Label>
+                <Select
+                  value={formData.device_target}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, device_target: value as "all" | "desktop" | "mobile" }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEVICE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Sube una imagen horizontal (ej. 1920×480px) para Desktop y una imagen cuadrada o vertical para Móvil.
+                </p>
               </div>
 
               {/* Sort Order */}

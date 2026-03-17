@@ -6,8 +6,10 @@ export interface AdminBanner {
   id: string;
   title: string;
   image_url: string;
+  desktop_image_url: string | null;
   link_url: string | null;
   target_audience: string;
+  device_target: 'all' | 'desktop' | 'mobile';
   is_active: boolean;
   sort_order: number;
   starts_at: string | null;

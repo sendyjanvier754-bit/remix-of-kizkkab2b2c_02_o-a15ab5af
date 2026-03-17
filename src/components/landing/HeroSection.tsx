@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMarketplaceBanners } from "@/hooks/useMarketplaceData";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Default banners as fallback when no database banners exist
 const defaultBanners = [
@@ -35,16 +36,25 @@ const HeroSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   
   const { data: dbBanners, isLoading } = useMarketplaceBanners();
+  const isMobile = useIsMobile();
 
-  // Use database banners if available, otherwise use defaults
-  const slides = dbBanners && dbBanners.length > 0 
-    ? dbBanners.map(b => ({
-        id: b.id,
-        title: b.title,
-        image_url: b.image_url,
-        link_url: b.link_url,
-        fallback: "/placeholder.svg",
-      }))
+  // Filter banners by device target, then pick correct image per device
+  const slides = dbBanners && dbBanners.length > 0
+    ? dbBanners
+        .filter((b) => {
+          const dt = (b as { device_target?: string }).device_target ?? 'all';
+          return dt === 'all' || dt === (isMobile ? 'mobile' : 'desktop');
+        })
+        .map(b => {
+          const desktopImg = (b as { desktop_image_url?: string | null }).desktop_image_url;
+          return {
+            id: b.id,
+            title: b.title,
+            image_url: (!isMobile && desktopImg) ? desktopImg : b.image_url,
+            link_url: b.link_url,
+            fallback: "/placeholder.svg",
+          };
+        })
     : defaultBanners;
 
   // Minimum swipe distance (in px)
@@ -131,7 +141,7 @@ const HeroSection = () => {
         {slides.map((slide, index) => (
           <div
             key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-500 cursor-pointer bg-muted/20 ${
+            className={`absolute inset-0 transition-opacity duration-500 cursor-pointer ${
               index === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             onClick={() => handleSlideClick(slide.link_url)}
@@ -139,7 +149,7 @@ const HeroSection = () => {
             <img
               src={slide.image_url}
               alt={slide.title}
-              className="w-full h-full object-cover object-center lg:object-contain lg:p-2 xl:p-4"
+              className="w-full h-full object-cover object-center"
               onError={(e) => {
                 const img = e.currentTarget as HTMLImageElement;
                 // try fallback then placeholder
