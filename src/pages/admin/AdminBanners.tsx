@@ -146,14 +146,14 @@ const AdminBanners = () => {
       link_url: banner.link_url || "",
       target_audience: banner.target_audience,
       device_target: (banner.device_target ?? "all") as "all" | "desktop" | "mobile",
-      mobile_position_x: banner.mobile_position_x ?? 50,
-      mobile_position_y: banner.mobile_position_y ?? 50,
-      mobile_scale: banner.mobile_scale ?? 100,
-      desktop_position_x: banner.desktop_position_x ?? 50,
-      desktop_position_y: banner.desktop_position_y ?? 50,
-      desktop_scale: banner.desktop_scale ?? 100,
-      is_active: banner.is_active,
-      sort_order: banner.sort_order,
+      mobile_position_x: 50,
+      mobile_position_y: 50,
+      mobile_scale: 100,
+      desktop_position_x: 50,
+      desktop_position_y: 50,
+      desktop_scale: 100,
+      is_active: banner.is_active ?? true,
+      sort_order: banner.sort_order ?? 0,
     });
     setIsDialogOpen(true);
   };
