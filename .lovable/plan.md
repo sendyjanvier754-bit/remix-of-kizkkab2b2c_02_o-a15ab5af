@@ -1,57 +1,42 @@
-## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
-### Lo que se implementó
 
-1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
-2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
-3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
-4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
-5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
-6. **Routing**: Ruta añadida en App.tsx con lazy loading
+## Diagnóstico y Plan
 
-### Flujo
-1. Agente busca usuario → solicita acceso → OTP enviado como notificación
-2. Agente ingresa OTP → sesión activa 2h con timer visible
-3. Agente busca productos → agrega a borrador → configura envío
-4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
-5. Soporte multitarea con múltiples borradores
+### Problemas encontrados
 
-## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
+**1. API Key de Mailjet corrupta (causa del 401)**
+El valor guardado en `api_key` es `"eb055aca36b7c58ca5ef3ffa6756d50aSecret "` — tiene la palabra "Secret " concatenada al final. Mailjet rechaza la autenticación porque la clave es inválida. Necesitas corregir ese valor en el panel de admin (quitar "Secret " del final).
 
-### Problema
-El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
+**2. Build error en `useAdminBanners.ts`**
+La interfaz `AdminBanner` define propiedades (`desktop_image_url`, `device_target`, `mobile_position_x/y`, `mobile_scale`, `desktop_position_x/y`, `desktop_scale`) que no existen en la tabla real de la DB.
 
-### Cambios realizados
+**3. Sistema de múltiples remitentes no existe**
+Actualmente solo hay un registro único en `email_configuration`. No hay soporte para múltiples remitentes por tipo de email.
 
-1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
+---
 
-2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
+### Plan de implementación
 
-3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
+#### 1. Corregir build error de `useAdminBanners.ts`
+Actualizar la interfaz `AdminBanner` para que coincida con el esquema real de la DB (solo: `id`, `title`, `image_url`, `link_url`, `target_audience`, `is_active`, `sort_order`, `starts_at`, `ends_at`, `created_at`, `updated_at`). Eliminar las propiedades inexistentes.
 
-### Flujo corregido
-```
-Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-... pasa el tiempo, PO-001 vence ...
-Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
-Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
-```
+#### 2. Crear tabla `email_senders` para múltiples remitentes
+Nueva tabla con columnas:
+- `id`, `purpose` (enum: 'authentication', 'orders', 'notifications', 'marketing', 'support')
+- `sender_email`, `sender_name`, `is_active`
+- La Edge Function `send-email` recibirá el `type` y buscará el remitente correspondiente en `email_senders`, con fallback al remitente principal de `email_configuration`.
 
-## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
+#### 3. Agregar validación de API Key en el admin
+- Validar formato del `api_key` (sin espacios ni texto extra) antes de guardar.
+- Validar formato del `sender_email` (debe contener `@`).
+- Mostrar advertencias claras si los valores parecen incorrectos.
 
-### Lo que se implementó
-1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
-2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
-3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
-4. **Routing**: Ruta pública en App.tsx
+#### 4. Actualizar la UI del admin para gestionar remitentes
+Agregar una sección en `AdminEmailConfigPage` donde el admin pueda configurar un email remitente diferente para cada propósito (autenticación, pedidos, notificaciones, marketing, soporte).
 
-## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
+#### 5. Actualizar Edge Function `send-email`
+Modificar para que busque el remitente según el `type` del email en la tabla `email_senders`, con fallback a `email_configuration.sender_email`.
 
-### Problema
-Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
+#### 6. Re-desplegar la Edge Function
+Desplegar `send-email` después de los cambios.
 
-### Cambios
-1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
-2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
-3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.
