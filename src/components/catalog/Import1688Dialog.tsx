@@ -88,7 +88,17 @@ const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: strin
 ];
 
 const autoDetect = (headers: string[], keywords: string[]): string => {
-  return headers.find((h) => keywords.some((k) => h.toLowerCase().includes(k.toLowerCase()))) || "";
+  // Pass 1: exact match (priority order from keywords)
+  for (const k of keywords) {
+    const match = headers.find((h) => h.toLowerCase() === k.toLowerCase());
+    if (match) return match;
+  }
+  // Pass 2: partial match
+  for (const k of keywords) {
+    const match = headers.find((h) => h.toLowerCase().includes(k.toLowerCase()));
+    if (match) return match;
+  }
+  return "";
 };
 
 const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688DialogProps) => {
@@ -633,6 +643,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                       <TableRow>
                         <TableHead className="w-12">Img</TableHead>
                         <TableHead>SKU</TableHead>
+                        <TableHead>Nombre</TableHead>
                         <TableHead>Color</TableHead>
                         <TableHead>Talla</TableHead>
                         <TableHead>Descripción</TableHead>
@@ -660,6 +671,9 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                           </TableCell>
                           <TableCell className="font-mono text-xs max-w-[120px] truncate">
                             {row.sku_interno}
+                          </TableCell>
+                          <TableCell className="max-w-[150px] text-xs" title={row.nombre}>
+                            <span className="line-clamp-2">{row.nombre}</span>
                           </TableCell>
                           <TableCell className="max-w-[100px] truncate">{row.variante_1_color}</TableCell>
                           <TableCell>{row.variante_2_talla}</TableCell>
