@@ -160,10 +160,14 @@ const AdminPedidos = () => {
         .eq('id', orderId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success('Pago B2C confirmado');
       queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] });
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
+      // Send payment confirmed email async
+      fetchOrderEmailData(variables.orderId, 'b2c').then(emailData => {
+        if (emailData) sendPaymentConfirmedEmail(emailData);
+      });
       setSelectedB2COrder(null);
       setB2cPaymentNotes('');
     },
