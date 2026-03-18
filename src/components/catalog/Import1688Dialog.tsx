@@ -123,7 +123,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         variante_1_color: v1,
         variante_2_talla: v2,
         descripcion_corta: "",
-        costo: row[cols.price] || "0",
+        costo: (row[cols.price] || "0").toString().replace(/[^0-9.]/g, "") || "0",
         moq: 3,
         stock: row[cols.stock] || "0",
         url_imagen: row[cols.image] || "",
