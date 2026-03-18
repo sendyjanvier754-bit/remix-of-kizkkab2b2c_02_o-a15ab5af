@@ -56,7 +56,7 @@ interface ColumnMapping {
 
 const DEFAULT_MAPPING: ColumnMapping = {
   sku_interno: 'SKU_Interno',
-  nombre: 'Nombre',
+  nombre: 'Titulo_Producto',
   descripcion_corta: 'Descripcion_Corta',
   costo_base: 'Costo_Base_Proveedor',
   moq: 'MOQ_Cantidad_Minima',
@@ -125,6 +125,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
   const [attributeConfigs, setAttributeConfigs] = useState<AttributeConfig[]>([]);
   const [showTemplateHint, setShowTemplateHint] = useState(false);
   const [processedUrlMap, setProcessedUrlMap] = useState<Record<string, string>>({});
+  const [isPreparingPreloadedFile, setIsPreparingPreloadedFile] = useState(false);
   
   // Asset processing hook
   const assetProcessing = useAssetProcessing();
@@ -135,6 +136,71 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     const mappedCols = Object.values(mapping);
     return headers.filter(h => !mappedCols.includes(h));
   }, [headers, mapping]);
+
+  const parseImportFile = async (file: File) => {
+    const fileName = file.name.toLowerCase();
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
+    if (isExcel) {
+      const data = new Uint8Array(await file.arrayBuffer());
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const jsonData: (string | number | boolean | null | undefined)[][] = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: '',
+        raw: false,
+      });
+
+      if (jsonData.length === 0) {
+        return { headers: [], rows: [] as string[][] };
+      }
+
+      const headerRow = jsonData[0].map(h => String(h ?? '').trim());
+      const dataRows = jsonData
+        .slice(1)
+        .filter(row => row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== ''))
+        .map(row => row.map(cell => {
+          let value = String(cell ?? '').trim();
+          value = value.replace(/\\:/g, ':').replace(/\\_/g, '_');
+          return value;
+        }));
+
+      return { headers: headerRow, rows: dataRows };
+    }
+
+    const text = await file.text();
+    const lines = text.split('\n').filter(line => line.trim());
+    const parsed = lines.map(line => {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+
+      result.push(current.trim());
+      return result;
+    });
+
+    if (parsed.length === 0) {
+      return { headers: [], rows: [] as string[][] };
+    }
+
+    return {
+      headers: parsed[0].map(value => value.trim()),
+      rows: parsed.slice(1),
+    };
+  };
 
   // Handle preloaded products + file from 1688 import
   useEffect(() => {
@@ -156,30 +222,27 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
 
       // If a preloaded file is provided, auto-parse it to populate headers/rawData/mapping
       if (preloadedFile) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
+        setIsPreparingPreloadedFile(true);
+        void (async () => {
           try {
-            const data = new Uint8Array(e.target?.result as ArrayBuffer);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData: (string | number | boolean | null | undefined)[][] = XLSX.utils.sheet_to_json(worksheet, {
-              header: 1, defval: '', raw: false
-            });
-            if (jsonData.length > 0) {
-              const headerRow = jsonData[0].map(h => String(h ?? '').trim());
-              const dataRows = jsonData.slice(1).filter(row =>
-                row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')
-              ).map(row => row.map(cell => String(cell ?? '').trim()));
-              setHeaders(headerRow);
-              setRawData(dataRows);
-              autoMapColumns(headerRow);
+            const parsed = await parseImportFile(preloadedFile);
+            if (parsed.headers.length > 0) {
+              setHeaders(parsed.headers);
+              setRawData(parsed.rows);
+              autoMapColumns(parsed.headers);
+              setStep('mapping');
             }
           } catch (error) {
             console.error('Error auto-parsing preloaded file:', error);
+            toast({
+              title: 'No se pudo preparar el archivo precargado',
+              description: 'Puedes volver al modal de 1688 o subir el archivo manualmente.',
+              variant: 'destructive'
+            });
+          } finally {
+            setIsPreparingPreloadedFile(false);
           }
-        };
-        reader.readAsArrayBuffer(preloadedFile);
+        })();
       }
 
       setStep('upload');
@@ -280,88 +343,24 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const fileName = file.name.toLowerCase();
-    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
-
-    if (isExcel) {
-      // Parse Excel files using XLSX library
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          
-          // Convert to array of arrays with raw: false to preserve formatted strings (avoid scientific notation)
-          const jsonData: (string | number | boolean | null | undefined)[][] = XLSX.utils.sheet_to_json(worksheet, { 
-            header: 1, 
-            defval: '',
-            raw: false // This ensures numbers are returned as formatted strings
-          });
-          
-          if (jsonData.length > 0) {
-            // First row is headers
-            const headerRow = jsonData[0].map(h => String(h ?? '').trim());
-            const dataRows = jsonData.slice(1).filter(row => 
-              row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')
-            ).map(row => row.map(cell => {
-              let val = String(cell ?? '').trim();
-              // Clean potential escaped characters from Excel (backslashes before colons and underscores)
-              val = val.replace(/\\:/g, ':').replace(/\\_/g, '_');
-              return val;
-            }));
-            
-            setHeaders(headerRow);
-            setRawData(dataRows);
-            autoMapColumns(headerRow);
-            setStep('mapping');
-          }
-        } catch (error) {
-          console.error('Error parsing Excel file:', error);
-          toast({
-            title: 'Error al leer el archivo Excel',
-            description: 'Asegúrate de que el archivo es un Excel válido (.xlsx o .xls)',
-            variant: 'destructive'
-          });
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    } else {
-      // Parse CSV files
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        const lines = text.split('\n').filter(line => line.trim());
-        const parsed = lines.map(line => {
-          const result = [];
-          let current = '';
-          let inQuotes = false;
-          
-          for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') {
-              inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-              result.push(current.trim());
-              current = '';
-            } else {
-              current += char;
-            }
-          }
-          result.push(current.trim());
-          return result;
-        });
-
-        if (parsed.length > 0) {
-          setHeaders(parsed[0]);
-          setRawData(parsed.slice(1));
-          autoMapColumns(parsed[0]);
+    void (async () => {
+      try {
+        const parsed = await parseImportFile(file);
+        if (parsed.headers.length > 0) {
+          setHeaders(parsed.headers);
+          setRawData(parsed.rows);
+          autoMapColumns(parsed.headers);
           setStep('mapping');
         }
-      };
-      reader.readAsText(file);
-    }
+      } catch (error) {
+        console.error('Error parsing import file:', error);
+        toast({
+          title: 'Error al leer el archivo',
+          description: 'Asegúrate de que el archivo sea un CSV o Excel válido.',
+          variant: 'destructive'
+        });
+      }
+    })();
   };
 
   const autoMapColumns = (headerRow: string[]) => {
@@ -369,7 +368,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     headerRow.forEach((header) => {
       const lower = header.toLowerCase();
       if (lower.includes('sku') || lower.includes('codigo')) autoMapping.sku_interno = header;
-      else if (lower.includes('nombre') || lower.includes('name') || lower.includes('title') || lower.includes('product')) {
+      else if (lower.includes('nombre') || lower.includes('name') || lower.includes('title') || lower.includes('titulo') || lower.includes('product')) {
         // Prioriza nombre, pero también puede usar para descripción si no hay columna específica
         if (!autoMapping.nombre) autoMapping.nombre = header;
       }
@@ -377,14 +376,21 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
         autoMapping.descripcion_corta = header;
       }
       else if (lower.includes('costo') || lower.includes('cost') || lower.includes('precio') || lower.includes('price')) autoMapping.costo_base = header;
-      else if (lower.includes('moq') || lower.includes('minimo')) autoMapping.moq = header;
-      else if (lower.includes('stock') || lower.includes('cantidad') || lower.includes('qty')) autoMapping.stock_fisico = header;
+      else if (lower.includes('moq') || lower.includes('minimo') || lower.includes('cantidad_minima')) autoMapping.moq = header;
+      else if (lower.includes('stock') || lower.includes('cantidad') || lower.includes('qty') || lower.includes('inventario')) autoMapping.stock_fisico = header;
       else if (lower.includes('imagen') || lower.includes('image') || lower.includes('foto')) {
         autoMapping.url_imagen = header;
       }
       else if (lower.includes('categ')) autoMapping.categoria = header;
       else if (lower.includes('proveedor') || lower.includes('supplier')) autoMapping.proveedor = header;
-      else if (lower.includes('url_proveedor') || lower.includes('url_origen') || lower.includes('link')) autoMapping.url_origen = header;
+      else if (
+        lower.includes('url_proveedor') ||
+        lower.includes('url_origen') ||
+        lower.includes('url_producto') ||
+        lower.includes('producto_url') ||
+        lower.includes('product_url') ||
+        lower.includes('link')
+      ) autoMapping.url_origen = header;
     });
     setMapping(autoMapping);
   };
@@ -588,6 +594,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     setIsCheckingDuplicates(false);
     setAttributeConfigs([]);
     setProcessedUrlMap({});
+    setIsPreparingPreloadedFile(false);
     assetProcessing.reset();
     setShowTemplateHint(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -703,7 +710,21 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                   </CardContent>
                 </Card>
 
-                {preloadedFile && rawData.length > 0 ? (
+                {preloadedFile && isPreparingPreloadedFile ? (
+                  <Card className="border-2 border-primary/20 bg-primary/5">
+                    <CardContent className="py-8 text-center space-y-4">
+                      <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium">Preparando archivo precargado</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Estamos cargando {preloadedFile.name} para continuar con el mismo archivo de 1688.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : preloadedFile && rawData.length > 0 ? (
                   <Card className="border-2 border-primary/30 bg-primary/5">
                     <CardContent className="py-8 text-center space-y-4">
                       <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -716,6 +737,15 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                         </p>
                       </div>
                       <Badge variant="secondary" className="text-xs">Archivo listo para importar</Badge>
+                      <div className="flex justify-center gap-3 pt-2">
+                        <Button onClick={() => setStep('mapping')}>
+                          Continuar a mapeo <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                          Cambiar archivo
+                        </Button>
+                      </div>
+                      <Input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} className="hidden" />
                     </CardContent>
                   </Card>
                 ) : (
@@ -792,7 +822,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { key: 'sku_interno', label: 'SKU Interno' },
-                        { key: 'nombre', label: 'Nombre' },
+                        { key: 'nombre', label: 'Título del producto' },
                         { key: 'costo_base', label: 'Costo Base' },
                         { key: 'stock_fisico', label: 'Stock Físico' },
                       ].map(({ key, label }) => (
