@@ -313,7 +313,7 @@ const VariantDrawer: React.FC = () => {
           userId: user.id,
           productId: product.source_product_id || product.id,
           sku: product.sku || product.id,
-          name: product.nombre,
+          name: displayName,
           priceB2B: product.costB2B ?? product.price ?? 0,
           quantity: totalQty,
           image: product.images?.[0] || undefined,
