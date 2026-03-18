@@ -190,10 +190,14 @@ const AdminPedidos = () => {
         .eq('id', orderId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.error('Pago B2C rechazado');
       queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] });
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
+      // Send payment rejected email async
+      fetchOrderEmailData(variables.orderId, 'b2c').then(emailData => {
+        if (emailData) sendPaymentRejectedEmail({ ...emailData, reason: variables.reason });
+      });
       setSelectedB2COrder(null);
       setB2cRejectionReason('');
     },
