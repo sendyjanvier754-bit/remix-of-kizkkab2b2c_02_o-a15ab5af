@@ -139,17 +139,15 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartB
   useEffect(() => {
     if (open && preloadedProducts && preloadedProducts.length > 0) {
       setGroupedProducts(preloadedProducts);
-      // Collect attribute configs from preloaded data
+      // Build attribute configs from preloaded detected attributes
       const allAttrs = preloadedProducts.flatMap(p => p.detectedAttributes);
-      const uniqueAttrs: Record<string, DetectedAttribute> = {};
+      const uniqueAttrs: Record<string, typeof allAttrs[0]> = {};
       allAttrs.forEach(a => { uniqueAttrs[a.attributeName] = a; });
       const configs: AttributeConfig[] = Object.values(uniqueAttrs).map(attr => ({
-        columnName: attr.columnName,
-        attributeName: attr.attributeName,
-        type: attr.type,
-        renderType: attr.renderType,
-        categoryHint: attr.categoryHint,
-        enabled: true,
+        id: crypto.randomUUID(),
+        nameType: 'manual' as const,
+        nameValue: attr.attributeName,
+        valueColumn: attr.columnName,
       }));
       setAttributeConfigs(configs);
       setDetectedAttributeColumns(Object.keys(uniqueAttrs));
