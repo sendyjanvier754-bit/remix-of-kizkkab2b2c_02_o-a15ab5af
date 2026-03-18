@@ -367,8 +367,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                       <TableCell className="max-w-[180px] truncate">{row.nombre}</TableCell>
                       <TableCell className="max-w-[100px] truncate">{row.variante_1_color}</TableCell>
                       <TableCell>{row.variante_2_talla}</TableCell>
-                      <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
-                        {row.descripcion_corta}
+                      <TableCell className="max-w-[250px] text-xs text-muted-foreground" title={row.descripcion_corta}>
+                        <span className="line-clamp-2">{row.descripcion_corta}</span>
                       </TableCell>
                       <TableCell className="text-right font-medium">{row.costo}</TableCell>
                       <TableCell className="text-right">{row.stock}</TableCell>

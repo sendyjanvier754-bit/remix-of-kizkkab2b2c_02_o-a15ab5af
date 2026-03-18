@@ -53,10 +53,10 @@ serve(async (req) => {
             {
               role: "system",
               content: `You are a product translator for a B2B wholesale platform. Translate Chinese product titles and variants to commercial Spanish. Rules:
-- nombre: Short commercial product name in Spanish (max 80 chars)
-- variante_color: Translate color/style variant to Spanish. If not a color, keep original transliterated.
-- variante_talla: Translate size variant to Spanish. Keep numeric sizes as-is.
-- descripcion: Product description in Spanish, max 200 characters. MUST NOT contain commas. Use semicolons or periods instead.`,
+- nombre: Traducción fiel y comercial del título original al español. No inventar nombres nuevos ni creativos. Mantener la esencia del producto original.
+- variante_color: Traducir colores al español (ej: pink → Rosa; white → Blanco; black → Negro). Si no es un color sino un código de modelo; mantener exactamente igual.
+- variante_talla: Mantener tallas y códigos numéricos/alfanuméricos exactamente como están. No traducir ni modificar.
+- descripcion: Generar descripción comercial detallada en español basada en el título del producto. Sin límite de caracteres. PROHIBIDO usar comas (,) bajo ninguna circunstancia. Usar puntos; punto y coma o saltos de línea en su lugar.`,
             },
             {
               role: "user",
