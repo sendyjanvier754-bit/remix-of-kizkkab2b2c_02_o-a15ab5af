@@ -27,6 +27,14 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const { toggle: toggleFav, isInFavorites } = useB2BFavorites();
   const isFav = isInFavorites(product.id);
 
+  // Translate product name
+  const { translated: translatedProduct } = useTranslatedContent(
+    'product',
+    product.id,
+    { name: product.nombre, descripcion_corta: product.descripcion_corta || '' }
+  );
+  const displayName = translatedProduct.name || product.nombre;
+
   // Datos desde v_business_panel_data (se cargan solo cuando se abre el modal)
   const { data: bpData, isLoading: bpLoading } = useBusinessPanelData(
     showPricingModal ? product.id : undefined
