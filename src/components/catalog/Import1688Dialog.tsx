@@ -15,11 +15,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, Package } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, Package, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import type { GroupedProduct, VariantRow, DetectedAttribute } from "@/hooks/useSmartProductGrouper";
+import { groupProductsByParent } from "@/hooks/useSmartProductGrouper";
 import { detectAttributeType, parseColorToHex } from "@/hooks/useEAVAttributes";
 
 interface Import1688DialogProps {
@@ -57,13 +65,39 @@ interface Grouped1688Product {
   variants: ProcessedRow[];
 }
 
-type Step = "upload" | "preview" | "export";
+interface ColumnMapping {
+  sku_interno: string;
+  nombre: string;
+  costo: string;
+  stock: string;
+  url_imagen: string;
+  url_producto: string;
+}
+
+type Step = "upload" | "mapping" | "preview" | "export";
 
 const BATCH_SIZE = 15;
+
+const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: string[] }[] = [
+  { key: "sku_interno", label: "SKU Interno", keywords: ["SKU ID", "ID", "商品ID", "id"] },
+  { key: "nombre", label: "Título Original", keywords: ["Nombre del SKU", "标题", "Title", "título", "商品标题"] },
+  { key: "costo", label: "Costo", keywords: ["Precio calculado2", "Precio calculado", "价格", "Price", "precio"] },
+  { key: "stock", label: "Stock", keywords: ["Inventario", "库存", "Stock", "stock", "存量"] },
+  { key: "url_imagen", label: "URL Imagen", keywords: ["Imagen SKU", "SKU图", "图片", "Image", "imagen", "Img"] },
+  { key: "url_producto", label: "URL Producto", keywords: ["URL", "url", "链接", "link"] },
+];
+
+const autoDetect = (headers: string[], keywords: string[]): string => {
+  return headers.find((h) => keywords.some((k) => h.toLowerCase().includes(k.toLowerCase()))) || "";
+};
 
 const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688DialogProps) => {
   const [step, setStep] = useState<Step>("upload");
   const [rawData, setRawData] = useState<RawRow[]>([]);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
+    sku_interno: "", nombre: "", costo: "", stock: "", url_imagen: "", url_producto: "",
+  });
   const [processedData, setProcessedData] = useState<ProcessedRow[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasDownloaded, setHasDownloaded] = useState(false);
@@ -74,6 +108,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const resetState = () => {
     setStep("upload");
     setRawData([]);
+    setHeaders([]);
+    setColumnMapping({ sku_interno: "", nombre: "", costo: "", stock: "", url_imagen: "", url_producto: "" });
     setProcessedData([]);
     setIsProcessing(false);
     setHasDownloaded(false);
@@ -86,23 +122,6 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     onOpenChange(newOpen);
   };
 
-  // Detect 1688 columns - flexible matching
-  const detectColumns = (headers: string[]) => {
-    const find = (keywords: string[]) =>
-      headers.find((h) => keywords.some((k) => h.toLowerCase().includes(k.toLowerCase()))) || "";
-
-    return {
-      id: find(["ID", "商品ID", "id"]),
-      title: find(["标题", "Title", "título", "商品标题"]),
-      variant1: find(["规格1", "Variant1", "variante1", "颜色", "Color"]),
-      variant2: find(["规格2", "Variant2", "variante2", "尺码", "Size", "尺寸"]),
-      image: find(["Imagen SKU", "SKU图", "图片", "Image", "imagen", "Img"]),
-      price: find(["Precio calculado2", "Precio calculado", "价格", "Price", "precio"]),
-      stock: find(["Inventario", "库存", "Stock", "stock", "存量"]),
-      url: find(["URL", "url", "链接", "link"]),
-    };
-  };
-
   const parseFile = async (file: File) => {
     const data = await file.arrayBuffer();
     const workbook = XLSX.read(data, { type: "array", raw: true });
@@ -111,40 +130,114 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     return rows;
   };
 
-  const processRows = (rows: RawRow[]): ProcessedRow[] => {
-    if (rows.length === 0) return [];
-    
-    const headers = Object.keys(rows[0]);
-    const cols = detectColumns(headers);
+  // Step 1 → Step 2: Parse file and auto-detect columns
+  const handleFile = async (file: File) => {
+    setFileName(file.name);
+    setIsProcessing(true);
+    try {
+      const rows = await parseFile(file);
+      if (rows.length === 0) {
+        toast.error("El archivo está vacío");
+        setIsProcessing(false);
+        return;
+      }
+      setRawData(rows);
+      const detectedHeaders = Object.keys(rows[0]);
+      setHeaders(detectedHeaders);
 
-    return rows.map((row) => {
-      const id = row[cols.id] || "";
-      const v1 = row[cols.variant1] || "";
-      const v2 = row[cols.variant2] || "";
-      
-      // Generate SKU: [ID]-[V1]-[V2]
-      const skuParts = [id, v1, v2].filter(Boolean);
-      const sku = skuParts.join("-").replace(/\s+/g, "").slice(0, 50);
-
-      return {
-        product_id: id,
-        sku_interno: sku,
-        nombre: row[cols.title] || "",
-        nombre_original: row[cols.title] || "",
-        url_producto: row[cols.url] || "",
-        proveedor: "1688",
-        variante_1_color: v1,
-        variante_2_talla: v2,
-        descripcion_corta: "",
-        costo: (row[cols.price] || "0").toString().replace(/[^0-9.]/g, "") || "0",
-        moq: 3,
-        stock: row[cols.stock] || "0",
-        url_imagen: row[cols.image] || "",
+      // Auto-detect mapping suggestions
+      const autoMap: ColumnMapping = {
+        sku_interno: autoDetect(detectedHeaders, MAPPING_FIELDS[0].keywords),
+        nombre: autoDetect(detectedHeaders, MAPPING_FIELDS[1].keywords),
+        costo: autoDetect(detectedHeaders, MAPPING_FIELDS[2].keywords),
+        stock: autoDetect(detectedHeaders, MAPPING_FIELDS[3].keywords),
+        url_imagen: autoDetect(detectedHeaders, MAPPING_FIELDS[4].keywords),
+        url_producto: autoDetect(detectedHeaders, MAPPING_FIELDS[5].keywords),
       };
-    });
+      setColumnMapping(autoMap);
+      setStep("mapping");
+      toast.success(`${rows.length} filas detectadas. Configura el mapeo de columnas.`);
+    } catch (err) {
+      console.error("File processing error:", err);
+      toast.error("Error al procesar el archivo");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  // Group processed rows by product ID
+  // Step 2 → Step 3: Process rows with user mapping and translate
+  const processAndTranslate = async () => {
+    setIsProcessing(true);
+    try {
+      const cols = columnMapping;
+
+      // Detect variant columns: columns NOT mapped to any standard field
+      const mappedCols = new Set(Object.values(cols).filter(Boolean));
+      const variantHeaders = headers.filter(h => !mappedCols.has(h));
+
+      // Detect which variant columns look like color vs size
+      let colorCol = "";
+      let sizeCol = "";
+      for (const vh of variantHeaders) {
+        const lower = vh.toLowerCase();
+        if (!colorCol && (lower.includes("color") || lower.includes("颜色") || lower.includes("规格1") || lower.includes("variant1"))) {
+          colorCol = vh;
+        } else if (!sizeCol && (lower.includes("talla") || lower.includes("size") || lower.includes("尺码") || lower.includes("尺寸") || lower.includes("规格2") || lower.includes("variant2"))) {
+          sizeCol = vh;
+        }
+      }
+      // Fallback: first two unmapped non-standard columns
+      const remainingVariants = variantHeaders.filter(v => v !== colorCol && v !== sizeCol);
+      if (!colorCol && remainingVariants.length > 0) colorCol = remainingVariants.shift() || "";
+      if (!sizeCol && remainingVariants.length > 0) sizeCol = remainingVariants.shift() || "";
+
+      const processed: ProcessedRow[] = rawData.map((row) => {
+        const id = row[cols.sku_interno] || "";
+        const v1 = colorCol ? (row[colorCol] || "") : "";
+        const v2 = sizeCol ? (row[sizeCol] || "") : "";
+
+        const skuParts = [id, v1, v2].filter(Boolean);
+        const sku = skuParts.join("-").replace(/\s+/g, "").slice(0, 50);
+
+        return {
+          product_id: id,
+          sku_interno: sku,
+          nombre: row[cols.nombre] || "",
+          nombre_original: row[cols.nombre] || "",
+          url_producto: row[cols.url_producto] || "",
+          proveedor: "1688",
+          variante_1_color: v1,
+          variante_2_talla: v2,
+          descripcion_corta: "",
+          costo: (row[cols.costo] || "0").toString().replace(/[^0-9.]/g, "") || "0",
+          moq: 3,
+          stock: row[cols.stock] || "0",
+          url_imagen: row[cols.url_imagen] || "",
+        };
+      });
+
+      setProcessedData(processed);
+      setStep("preview");
+
+      // Translate in batches
+      const total = processed.length;
+      setTranslationProgress({ current: 0, total });
+
+      for (let i = 0; i < total; i += BATCH_SIZE) {
+        await translateBatch(processed, i);
+        setTranslationProgress({ current: Math.min(i + BATCH_SIZE, total), total });
+      }
+
+      toast.success(`${processed.length} variantes procesadas`);
+    } catch (err) {
+      console.error("Processing error:", err);
+      toast.error("Error al procesar");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Group processed rows by product_id (same 1688 ID = same product)
   const groupedProducts = useMemo((): Grouped1688Product[] => {
     const groups: Record<string, Grouped1688Product> = {};
 
@@ -161,7 +254,6 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         };
       }
       groups[key].variants.push(row);
-      // Update parent name/description if translated
       if (row.nombre && row.nombre !== row.nombre_original) {
         groups[key].parentName = row.nombre;
       }
@@ -192,7 +284,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       }
 
       const translations = data?.translations || [];
-      
+
       setProcessedData((prev) => {
         const updated = [...prev];
         for (const t of translations) {
@@ -211,41 +303,6 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       });
     } catch (err) {
       console.error("Translation error:", err);
-    }
-  };
-
-  const handleFile = async (file: File) => {
-    setFileName(file.name);
-    setIsProcessing(true);
-
-    try {
-      const rows = await parseFile(file);
-      if (rows.length === 0) {
-        toast.error("El archivo está vacío");
-        setIsProcessing(false);
-        return;
-      }
-
-      setRawData(rows);
-      const processed = processRows(rows);
-      setProcessedData(processed);
-      setStep("preview");
-
-      // Translate in batches
-      const total = processed.length;
-      setTranslationProgress({ current: 0, total });
-
-      for (let i = 0; i < total; i += BATCH_SIZE) {
-        await translateBatch(processed, i);
-        setTranslationProgress({ current: Math.min(i + BATCH_SIZE, total), total });
-      }
-
-      toast.success(`${processed.length} variantes procesadas`);
-    } catch (err) {
-      console.error("File processing error:", err);
-      toast.error("Error al procesar el archivo");
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -292,7 +349,6 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   // Build GroupedProduct[] for SmartBulkImportDialog
   const buildGroupedProducts = (): GroupedProduct[] => {
     return groupedProducts.map((group) => {
-      // Detect color attribute
       const colorValues = new Set<string>();
       const colorImageMap: Record<string, string> = {};
       const sizeValues = new Set<string>();
@@ -366,6 +422,10 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     onConfirmImport?.(grouped);
   };
 
+  const isMappingValid = columnMapping.sku_interno && columnMapping.nombre && columnMapping.costo;
+
+  const stepLabel = step === "upload" ? "Paso 1/4" : step === "mapping" ? "Paso 2/4" : step === "preview" ? "Paso 3/4" : "Paso 4/4";
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -374,7 +434,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
             <FileSpreadsheet className="h-5 w-5 text-primary" />
             Importar desde 1688
             <Badge variant="secondary" className="text-xs">
-              {step === "upload" ? "Paso 1/3" : step === "preview" ? "Paso 2/3" : "Paso 3/3"}
+              {stepLabel}
             </Badge>
           </DialogTitle>
         </DialogHeader>
@@ -424,7 +484,96 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
           </div>
         )}
 
-        {/* Step 2: Preview - Grouped by product */}
+        {/* Step 2: Column Mapping */}
+        {step === "mapping" && (
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Settings2 className="h-4 w-4" />
+              <span>Mapea cada campo de Kizkka a la columna correspondiente del archivo <strong className="text-foreground">{fileName}</strong></span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {MAPPING_FIELDS.map((field) => (
+                <div key={field.key} className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">
+                    {field.label}
+                    {(field.key === "sku_interno" || field.key === "nombre" || field.key === "costo") && (
+                      <span className="text-destructive ml-1">*</span>
+                    )}
+                  </label>
+                  <Select
+                    value={columnMapping[field.key] || "__none__"}
+                    onValueChange={(val) =>
+                      setColumnMapping((prev) => ({ ...prev, [field.key]: val === "__none__" ? "" : val }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar columna..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Sin mapear —</SelectItem>
+                      {headers.map((h) => (
+                        <SelectItem key={h} value={h}>
+                          {h}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {columnMapping[field.key] && (
+                    <p className="text-xs text-muted-foreground">
+                      Preview: <span className="font-mono">{rawData[0]?.[columnMapping[field.key]] || "—"}</span>
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Show detected unmapped columns as potential variant attributes */}
+            {(() => {
+              const mappedCols = new Set(Object.values(columnMapping).filter(Boolean));
+              const unmapped = headers.filter(h => !mappedCols.has(h));
+              if (unmapped.length === 0) return null;
+              return (
+                <div className="border rounded-md p-3 bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">
+                    Columnas no mapeadas (se usarán como variantes automáticamente):
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {unmapped.map((col) => (
+                      <Badge key={col} variant="outline" className="text-xs">
+                        {col}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="flex justify-between items-center pt-2">
+              <Button variant="ghost" onClick={() => setStep("upload")}>
+                Volver
+              </Button>
+              <Button
+                onClick={processAndTranslate}
+                disabled={!isMappingValid || isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    Continuar
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Preview - Grouped by product */}
         {step === "preview" && (
           <div className="flex flex-col flex-1 min-h-0 gap-4">
             <div className="flex items-center justify-between">
@@ -443,10 +592,15 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                   </div>
                 )}
               </div>
-              <Button onClick={downloadExcel} disabled={isProcessing}>
-                <Download className="h-4 w-4 mr-2" />
-                Descargar Excel Procesado
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setStep("mapping")}>
+                  Volver al mapeo
+                </Button>
+                <Button onClick={downloadExcel} disabled={isProcessing}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Descargar Excel Procesado
+                </Button>
+              </div>
             </div>
 
             <div className="overflow-auto flex-1 border rounded-md">
@@ -524,7 +678,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
           </div>
         )}
 
-        {/* Step 3: Export & Confirm */}
+        {/* Step 4: Export & Confirm */}
         {step === "export" && (
           <div className="flex flex-col items-center gap-6 py-8">
             <div className="flex items-center gap-3">

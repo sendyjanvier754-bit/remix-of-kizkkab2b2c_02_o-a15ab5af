@@ -1,79 +1,57 @@
-## Plan: Refactorización Import1688Dialog — Mapeo Manual + Agrupación Inteligente
+## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
-### Problema actual
+### Lo que se implementó
 
-1. Las columnas se auto-detectan sin dar opción al usuario de corregir el mapeo
-2. La agrupación por `product_id` es manual y no usa `groupProductsByParent` del `useSmartProductGrouper`
-3. No hay paso intermedio de mapeo de columnas como en SmartBulkImportDialog
-4. El título se extrae directamente sin separar variantes del "Nombre del SKU"
+1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
+2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
+3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
+4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
+5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
+6. **Routing**: Ruta añadida en App.tsx con lazy loading
 
-### Archivos a modificar
+### Flujo
+1. Agente busca usuario → solicita acceso → OTP enviado como notificación
+2. Agente ingresa OTP → sesión activa 2h con timer visible
+3. Agente busca productos → agrega a borrador → configura envío
+4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
+5. Soporte multitarea con múltiples borradores
 
-- `src/components/catalog/Import1688Dialog.tsx` — refactorización completa
-- `supabase/functions/process-1688-import/index.ts` — sin cambios (prompt ya actualizado)
+## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
 
----
+### Problema
+El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
 
-### Cambios en Import1688Dialog.tsx
+### Cambios realizados
 
-**Nuevo flujo de 4 pasos:** upload → mapping → preview → export
+1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
 
-**Paso 1 — Upload (sin cambios)**
-Drag & drop existente.
+2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
 
-**Paso 2 — Mapping (NUEVO)**
-Interfaz similar a SmartBulkImportDialog (líneas 380-403):
+3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
 
-- Mostrar los headers detectados del archivo
-- Select dropdowns para mapear cada campo Kizkka a una columna del Excel:
-  - SKU_Interno ← sugerencia auto: "SKU ID"
-  - Título Original ← sugerencia auto: "Nombre del SKU"
-  - Costo ← sugerencia auto: "Precio calculado2"
-  - Stock ← sugerencia auto: "Inventario"
-  - URL_Imagen ← sugerencia auto: "Imagen SKU"
-  - URL_Producto ← sugerencia auto: columna con "URL"
-- Auto-detección inicial como sugerencia pero editable por el usuario
-- Botón "Continuar" para proceder al preview
-
-**Paso 3 — Preview con Traducción**
-
-- Usar `groupProductsByParent` de `useSmartProductGrouper` en lugar de la agrupación manual actual
-- Pasar las filas procesadas como `RawImportRow[]` con el mapping del usuario
-- El SKU se construye con la columna mapeada a SKU_Interno (no hardcoded a "ID")
-- Extraer título de la columna mapeada a "Título Original" (Nombre del SKU)
-- Variantes: color y talla se extraen de las columnas detectadas como atributos por `groupProductsByParent` (misma lógica que SmartBulkImportDialog) valor directo de la columna mapeada 
-- Costo: columna (Precio calculado2)`, "")` — sin redondeo
-- Stock: valor directo de la columna mapeada
-- Imagen: URL literal sin modificar
-- Traducción por lotes via edge function (sin cambios)
-- Tabla: Imagen (miniatura real), SKU, Nombre Traducido, Color, Talla, Costo Exacto, Stock, Descripción
-
-**Paso 4 — Export & Confirm (sin cambios funcionales)**
-
-- Descargar Excel con columnas Kizkka
-- Confirmar para enviar `GroupedProduct[]` al SmartBulkImportDialog
-
-### Detalle técnico de la agrupación
-
-Reemplazar el `groupedProducts` memo actual (líneas 148-174) que agrupa por `product_id` con:
-
+### Flujo corregido
 ```
-const { groups } = groupProductsByParent(rows, headers, mappingRecord, attributeColumns);
+Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
+Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
+... pasa el tiempo, PO-001 vence ...
+Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
+Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
 ```
 
-Esto usa `extractBaseSku` para detectar automáticamente qué filas son variantes del mismo producto (misma lógica que el importador inteligente), eliminando el problema de "cada fila = un producto".
+## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
 
-### Mapeo de columnas — auto-detección sugerida
+### Lo que se implementó
+1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
+2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
+3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
+4. **Routing**: Ruta pública en App.tsx
 
-```
-const auto1688Map = {
-  sku_interno: find(["SKU ID", "ID"]),
-  nombre: find(["Nombre del SKU", "标题", "Title"]),
-  costo_base: find(["Precio calculado2", "Precio calculado"]),
-  stock_fisico: find(["Inventario", "库存", "Stock"]),
-  url_imagen: find(["Imagen SKU", "SKU图", "Image"]),
-  url_origen: find(["URL", "链接"]),
-};
-```
+## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
 
-El usuario puede corregir cualquier mapeo antes de continuar.
+### Problema
+Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
+
+### Cambios
+1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
+2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
+3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.
