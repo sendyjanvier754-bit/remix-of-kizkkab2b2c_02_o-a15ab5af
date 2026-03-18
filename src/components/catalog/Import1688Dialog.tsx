@@ -239,6 +239,19 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       setProcessedData(processed);
       setStep("preview");
 
+      // Translate file title first (as an extra item in first batch)
+      try {
+        const { data: titleData } = await supabase.functions.invoke("process-1688-import", {
+          body: { items: [{ title: cleanFileTitle }] },
+        });
+        const titleTranslation = titleData?.translations?.[0];
+        if (titleTranslation?.nombre) {
+          setTranslatedFileTitle(titleTranslation.nombre);
+        }
+      } catch (err) {
+        console.warn("File title translation failed:", err);
+      }
+
       // Translate in batches
       const total = processed.length;
       setTranslationProgress({ current: 0, total });
