@@ -13,6 +13,7 @@ import { useLogisticsEngine } from '@/hooks/useLogisticsEngine';
 import { validateB2BCheckout, getFieldError, hasFieldError, type CheckoutValidationError } from '@/services/checkoutValidation';
 import { useApplyDiscount, AppliedDiscount } from '@/hooks/useApplyDiscount';
 import { useAdminPaymentMethods } from '@/hooks/usePaymentMethods';
+import { fetchOrderEmailData, sendOrderConfirmationEmail, sendPaymentDetailsEmail, sendSellerNewOrderEmail } from '@/hooks/useOrderEmails';
 import { useB2BPricingEngineV2 } from '@/hooks/useB2BPricingEngineV2';
 import { useStoreByOwner } from '@/hooks/useStore';
 import { useMarkets } from '@/hooks/useMarkets';
@@ -885,6 +886,16 @@ const SellerCheckout = () => {
       }
 
       setOrderPlaced(true);
+
+      // Send order emails async (confirmation + payment details + seller notification)
+      if (order?.id) {
+        fetchOrderEmailData(order.id, 'b2b').then(emailData => {
+          if (!emailData) return;
+          sendOrderConfirmationEmail(emailData);
+          sendPaymentDetailsEmail(emailData);
+          sendSellerNewOrderEmail(emailData);
+        });
+      }
       
       // Clear the B2B cart by marking it as completed
       try {

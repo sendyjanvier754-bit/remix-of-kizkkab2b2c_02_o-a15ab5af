@@ -44,6 +44,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
 import { toast } from 'sonner';
+import { fetchOrderEmailData, sendPaymentConfirmedEmail, sendPaymentRejectedEmail } from '@/hooks/useOrderEmails';
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: React.ElementType }> = {
   draft: { label: 'Borrador', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: Clock },
@@ -159,10 +160,14 @@ const AdminPedidos = () => {
         .eq('id', orderId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success('Pago B2C confirmado');
       queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] });
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
+      // Send payment confirmed email async
+      fetchOrderEmailData(variables.orderId, 'b2c').then(emailData => {
+        if (emailData) sendPaymentConfirmedEmail(emailData);
+      });
       setSelectedB2COrder(null);
       setB2cPaymentNotes('');
     },
@@ -185,10 +190,14 @@ const AdminPedidos = () => {
         .eq('id', orderId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.error('Pago B2C rechazado');
       queryClient.invalidateQueries({ queryKey: ['admin-b2c-orders'] });
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
+      // Send payment rejected email async
+      fetchOrderEmailData(variables.orderId, 'b2c').then(emailData => {
+        if (emailData) sendPaymentRejectedEmail({ ...emailData, reason: variables.reason });
+      });
       setSelectedB2COrder(null);
       setB2cRejectionReason('');
     },

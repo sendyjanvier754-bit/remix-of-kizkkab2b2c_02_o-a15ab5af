@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { fetchOrderEmailData, sendOrderCancelledEmail } from '@/hooks/useOrderEmails';
 
 export type BuyerOrderStatus = 'draft' | 'placed' | 'paid' | 'preparing' | 'in_transit' | 'shipped' | 'delivered' | 'cancelled';
 export type RefundStatus = 'none' | 'requested' | 'processing' | 'completed' | 'rejected';
@@ -382,6 +383,10 @@ export const useCancelBuyerOrder = () => {
           : variables.requestRefund 
             ? 'Tu solicitud de reembolso ha sido enviada' 
             : 'El pedido ha sido cancelado exitosamente'
+      });
+      // Send cancellation email async
+      fetchOrderEmailData(variables.orderId, 'b2b').then(emailData => {
+        if (emailData) sendOrderCancelledEmail({ ...emailData, reason: variables.reason, cancelledBy: 'buyer' });
       });
     },
     onError: (error: Error) => {

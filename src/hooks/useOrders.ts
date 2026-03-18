@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { fetchOrderEmailData, sendOrderStatusChangeEmail, sendOrderCancelledEmail } from '@/hooks/useOrderEmails';
 
 export type OrderStatus = 'draft' | 'placed' | 'paid' | 'preparing' | 'shipped' | 'cancelled';
 export type PaymentStatus = 'draft' | 'pending' | 'pending_validation' | 'paid' | 'failed' | 'expired' | 'cancelled';
@@ -316,12 +317,16 @@ export const useOrders = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
       queryClient.invalidateQueries({ queryKey: ['all-orders'] });
       queryClient.invalidateQueries({ queryKey: ['order'] });
       queryClient.invalidateQueries({ queryKey: ['buyer-orders'] });
       toast({ title: 'Estado del pedido actualizado' });
+      // Send status change email async
+      fetchOrderEmailData(variables.orderId, 'b2b').then(emailData => {
+        if (emailData) sendOrderStatusChangeEmail({ ...emailData, newStatus: variables.status });
+      });
     },
     onError: (error: Error) => {
       toast({ title: 'Error al actualizar pedido', description: error.message, variant: 'destructive' });
@@ -361,12 +366,22 @@ export const useOrders = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
       queryClient.invalidateQueries({ queryKey: ['all-orders'] });
       queryClient.invalidateQueries({ queryKey: ['order'] });
       queryClient.invalidateQueries({ queryKey: ['buyer-orders'] });
       toast({ title: 'Información de envío actualizada' });
+      // Send shipped email async
+      fetchOrderEmailData(variables.orderId, 'b2b').then(emailData => {
+        if (emailData) sendOrderStatusChangeEmail({
+          ...emailData,
+          newStatus: 'shipped',
+          trackingNumber: variables.trackingNumber,
+          carrier: variables.carrier,
+          carrierUrl: variables.carrierUrl,
+        });
+      });
     },
     onError: (error: Error) => {
       toast({ title: 'Error al actualizar envío', description: error.message, variant: 'destructive' });
@@ -385,10 +400,14 @@ export const useOrders = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
       queryClient.invalidateQueries({ queryKey: ['all-orders'] });
       toast({ title: 'Pedido cancelado' });
+      // Send cancellation email async
+      fetchOrderEmailData(variables as string, 'b2b').then(emailData => {
+        if (emailData) sendOrderCancelledEmail({ ...emailData, cancelledBy: 'seller' });
+      });
     },
     onError: (error: Error) => {
       toast({ title: 'Error al cancelar pedido', description: error.message, variant: 'destructive' });

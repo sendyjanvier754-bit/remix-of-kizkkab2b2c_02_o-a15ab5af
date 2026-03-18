@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { fetchOrderEmailData, sendOrderConfirmationEmail, sendPaymentDetailsEmail, sendSellerNewOrderEmail, sendOrderCancelledEmail } from '@/hooks/useOrderEmails';
 
 export interface B2COrderItem {
   sku: string;
@@ -146,10 +147,19 @@ export const useCreateB2COrder = () => {
         throw err;
       }
     },
-    onSuccess: () => {
+    onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
       queryClient.invalidateQueries({ queryKey: ['b2c-cart-items'] });
       toast.success('¡Pedido creado exitosamente!');
+      // Send emails async (don't block UI)
+      if (order?.id) {
+        fetchOrderEmailData(order.id, 'b2c').then(emailData => {
+          if (!emailData) return;
+          sendOrderConfirmationEmail(emailData);
+          sendPaymentDetailsEmail(emailData);
+          sendSellerNewOrderEmail(emailData);
+        });
+      }
     },
     onError: (error: Error) => {
       console.error('Error creating order:', error);
@@ -394,6 +404,10 @@ export const useCancelB2COrder = () => {
       toast.info(data.itemsRestored > 0
         ? `Pedido cancelado. ${data.itemsRestored} productos restaurados al carrito.`
         : 'Pedido cancelado');
+      // Send cancellation email async
+      fetchOrderEmailData(data.orderId, 'b2c').then(emailData => {
+        if (emailData) sendOrderCancelledEmail({ ...emailData, cancelledBy: 'buyer' });
+      });
     },
     onError: (error: Error) => {
       console.error('Error cancelling order:', error);
