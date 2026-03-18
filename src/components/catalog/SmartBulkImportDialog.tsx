@@ -38,6 +38,7 @@ interface SmartBulkImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preloadedProducts?: GroupedProduct[];
+  preloadedFile?: File;
 }
 
 interface ColumnMapping {
