@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -109,6 +110,9 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
   const profitMargin = getProfitMargin(priceSettings);
   
   const [step, setStep] = useState<'upload' | 'mapping' | 'attributes' | 'processing' | 'preview' | 'importing'>('upload');
+  const [showGroupConfirm, setShowGroupConfirm] = useState(false);
+  const [groupConfirmPhase, setGroupConfirmPhase] = useState<'confirm' | 'count'>('confirm');
+  const [userProductCount, setUserProductCount] = useState('');
   const [rawData, setRawData] = useState<string[][]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<ColumnMapping>(DEFAULT_MAPPING);
@@ -447,9 +451,11 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     
     setGroupedProducts(groups);
     setDetectedAttributeColumns(attrs);
-    
-    // Move to asset processing step
-    setStep('processing');
+
+    // Ask user to confirm detected product grouping
+    setGroupConfirmPhase('confirm');
+    setUserProductCount(String(groups.length));
+    setShowGroupConfirm(true);
   };
 
   // Start asset processing
@@ -597,12 +603,26 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     setIsPreparingPreloadedFile(false);
     assetProcessing.reset();
     setShowTemplateHint(false);
+    setShowGroupConfirm(false);
+    setGroupConfirmPhase('confirm');
+    setUserProductCount('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeDuplicates = () => {
     setGroupedProducts(prev => prev.filter(g => !g.existsInDb));
     setDuplicateSkus([]);
+  };
+
+  const mergeGroupsToCount = (groups: GroupedProduct[], targetCount: number): GroupedProduct[] => {
+    if (targetCount >= groups.length || targetCount <= 0) return groups;
+    if (targetCount === 1) {
+      return [{ ...groups[0], variants: groups.flatMap(g => g.variants) }];
+    }
+    const result = groups.slice(0, targetCount - 1);
+    const toMerge = groups.slice(targetCount - 1);
+    result.push({ ...toMerge[0], variants: toMerge.flatMap(g => g.variants) });
+    return result;
   };
 
   const getAttributeIcon = (type: string) => {
@@ -640,6 +660,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
   const currentStepIndex = STEPS.findIndex(s => s.id === step);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col overflow-hidden p-0">
         <div className="px-6 pt-6 pb-2 flex-shrink-0">
@@ -1430,6 +1451,81 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
         )}
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showGroupConfirm} onOpenChange={setShowGroupConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {groupConfirmPhase === 'confirm'
+              ? (groupedProducts.length === 1 ? '1 producto detectado' : `${groupedProducts.length} productos detectados`)
+              : '¿Cuántos productos son?'}
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div>
+              {groupConfirmPhase === 'confirm' ? (
+                <span>
+                  Se detectaron <strong>{groupedProducts.length}</strong> producto(s) padre con{' '}
+                  <strong>{groupedProducts.reduce((s, g) => s + g.variants.length, 0)}</strong> variante(s) en total.
+                  <br />¿Es correcto este agrupamiento?
+                </span>
+              ) : (
+                <span>Indica cuántos productos son en realidad. El sistema fusionará los grupos según tu respuesta.</span>
+              )}
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        {groupConfirmPhase === 'count' && (
+          <div className="px-1 py-2">
+            <Input
+              type="number"
+              min={1}
+              max={groupedProducts.length}
+              value={userProductCount}
+              onChange={e => setUserProductCount(e.target.value)}
+              placeholder="Ej: 1"
+              autoFocus
+            />
+          </div>
+        )}
+
+        <AlertDialogFooter>
+          {groupConfirmPhase === 'confirm' ? (
+            <>
+              <AlertDialogCancel onClick={() => { setShowGroupConfirm(false); }}>
+                Cancelar
+              </AlertDialogCancel>
+              <Button variant="outline" onClick={() => { setGroupConfirmPhase('count'); }}>
+                No, indicar cuántos
+              </Button>
+              <AlertDialogAction onClick={() => { setShowGroupConfirm(false); setStep('processing'); }}>
+                Sí, continuar
+              </AlertDialogAction>
+            </>
+          ) : (
+            <>
+              <AlertDialogCancel onClick={() => setGroupConfirmPhase('confirm')}>
+                Volver
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const count = parseInt(userProductCount, 10);
+                  if (!isNaN(count) && count > 0) {
+                    setGroupedProducts(prev => mergeGroupsToCount(prev, count));
+                  }
+                  setShowGroupConfirm(false);
+                  setGroupConfirmPhase('confirm');
+                  setStep('processing');
+                }}
+              >
+                Confirmar y continuar
+              </AlertDialogAction>
+            </>
+          )}
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 
