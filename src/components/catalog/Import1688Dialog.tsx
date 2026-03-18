@@ -475,7 +475,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     onConfirmImport?.(grouped, processedFile);
   };
 
-  const isMappingValid = columnMapping.sku_interno && columnMapping.nombre && columnMapping.costo;
+  const isMappingValid = columnMapping.sku_interno && columnMapping.nombre && columnMapping.costo && (columnMapping.url_producto || manualUrlProducto);
 
   const stepLabel = step === "upload" ? "Paso 1/4" : step === "mapping" ? "Paso 2/4" : step === "preview" ? "Paso 3/4" : "Paso 4/4";
 
@@ -550,7 +550,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                 <div key={field.key} className="space-y-1.5">
                   <label className="text-sm font-medium text-foreground">
                     {field.label}
-                    {(field.key === "sku_interno" || field.key === "nombre" || field.key === "costo") && (
+                    {(field.key === "sku_interno" || field.key === "nombre" || field.key === "costo" || field.key === "url_producto") && (
                       <span className="text-destructive ml-1">*</span>
                     )}
                   </label>

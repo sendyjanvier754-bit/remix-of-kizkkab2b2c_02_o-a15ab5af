@@ -341,7 +341,8 @@ export const importGroupedProducts = async (
   priceCalculator: (cost: number) => number,
   onProgress?: (current: number, total: number, message: string) => void,
   originCountryId?: string,
-  marketIds?: string[]
+  marketIds?: string[],
+  defaultPesoG?: number
 ): Promise<{ success: number; failed: number; errors: string[] }> => {
   
   let success = 0;
@@ -390,6 +391,7 @@ export const importGroupedProducts = async (
           galeria_imagenes: allImages.length > 0 ? allImages : null,
           url_origen: representativeVariant.sourceUrl || null,
           is_parent: true,
+          ...(defaultPesoG ? { peso_g: defaultPesoG } : {}),
         }, { onConflict: 'sku_interno', ignoreDuplicates: false })
         .select()
         .single();

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 const AdminCatalogo = () => {
   const { t } = useTranslation();
   const { useProducts, useCategories, useSuppliers, useCatalogKPIs } = useCatalog();
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<ProductFilters>({ stockStatus: 'all' });
   const [searchTerm, setSearchTerm] = useState('');
   const [smartImportOpen, setSmartImportOpen] = useState(false);
@@ -365,6 +367,10 @@ const AdminCatalogo = () => {
         onOpenChange={(v) => { setSmartImportOpen(v); if (!v) { setPreloaded1688Products(undefined); setPreloaded1688File(undefined); } }}
         preloadedProducts={preloaded1688Products}
         preloadedFile={preloaded1688File}
+        onImportComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+          queryClient.invalidateQueries({ queryKey: ['catalog-kpis'] });
+        }}
       />
       <Import1688Dialog
         open={import1688Open}

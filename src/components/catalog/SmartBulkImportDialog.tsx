@@ -40,6 +40,7 @@ interface SmartBulkImportDialogProps {
   onOpenChange: (open: boolean) => void;
   preloadedProducts?: GroupedProduct[];
   preloadedFile?: File;
+  onImportComplete?: () => void;
 }
 
 interface ColumnMapping {
@@ -59,13 +60,13 @@ const DEFAULT_MAPPING: ColumnMapping = {
   sku_interno: 'SKU_Interno',
   nombre: 'Titulo_Producto',
   descripcion_corta: 'Descripcion_Corta',
-  costo_base: 'Costo_Base_Proveedor',
-  moq: 'MOQ_Cantidad_Minima',
-  stock_fisico: 'Stock_Fisico',
-  url_imagen: 'URL_Imagen_Principal',
+  costo_base: 'Costo',
+  moq: 'MOQ',
+  stock_fisico: 'Stock',
+  url_imagen: 'URL_Imagen_Origen',
   categoria: 'Categoria',
   proveedor: 'Proveedor',
-  url_origen: 'URL_Proveedor'
+  url_origen: 'URL_Producto'
 };
 
 const STEPS = [
@@ -76,7 +77,7 @@ const STEPS = [
   { id: 'preview', label: 'Confirmar', icon: CheckCircle2 },
 ];
 
-const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloadedFile }: SmartBulkImportDialogProps) => {
+const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloadedFile, onImportComplete }: SmartBulkImportDialogProps) => {
   const { useCategories, useSuppliers } = useCatalog();
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
@@ -121,6 +122,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
   const [defaultCategoryId, setDefaultCategoryId] = useState<string>('');
   const [defaultSupplierId, setDefaultSupplierId] = useState<string>('');
   const [defaultOriginId, setDefaultOriginId] = useState<string>('');
+  const [defaultPesoG, setDefaultPesoG] = useState<string>('');
   const [selectedMarketIds, setSelectedMarketIds] = useState<string[]>([]);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, message: '' });
   const [importResult, setImportResult] = useState<{ success: number; failed: number; errors: string[] } | null>(null);
@@ -211,17 +213,11 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     if (open && preloadedProducts && preloadedProducts.length > 0) {
       sessionStorage.removeItem(STORAGE_KEY);
       setGroupedProducts(preloadedProducts);
-      // Build attribute configs from preloaded detected attributes
+      // Collect detected attribute column names for the UI (available columns list)
       const allAttrs = preloadedProducts.flatMap(p => p.detectedAttributes);
       const uniqueAttrs: Record<string, typeof allAttrs[0]> = {};
       allAttrs.forEach(a => { uniqueAttrs[a.attributeName] = a; });
-      const configs: AttributeConfig[] = Object.values(uniqueAttrs).map(attr => ({
-        id: crypto.randomUUID(),
-        nameType: 'manual' as const,
-        nameValue: attr.attributeName,
-        valueColumn: attr.columnName,
-      }));
-      setAttributeConfigs(configs);
+      // Do NOT auto-add attribute configs — user configures them manually
       setDetectedAttributeColumns(Object.keys(uniqueAttrs));
 
       // If a preloaded file is provided, auto-parse it to populate headers/rawData/mapping
@@ -380,7 +376,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
         autoMapping.descripcion_corta = header;
       }
       else if (lower.includes('costo') || lower.includes('cost') || lower.includes('precio') || lower.includes('price')) autoMapping.costo_base = header;
-      else if (lower.includes('moq') || lower.includes('minimo') || lower.includes('cantidad_minima')) autoMapping.moq = header;
+      else if (lower.includes('moq') || lower.includes('minimo') || lower.includes('cantidad_minima') || lower.includes('min_order')) autoMapping.moq = header;
       else if (lower.includes('stock') || lower.includes('cantidad') || lower.includes('qty') || lower.includes('inventario')) autoMapping.stock_fisico = header;
       else if (lower.includes('imagen') || lower.includes('image') || lower.includes('foto')) {
         autoMapping.url_imagen = header;
@@ -574,12 +570,14 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
       priceCalculator,
       (current, total, message) => setImportProgress({ current, total, message }),
       defaultOriginId || undefined,
-      selectedMarketIds.length > 0 ? selectedMarketIds : undefined
+      selectedMarketIds.length > 0 ? selectedMarketIds : undefined,
+      defaultPesoG ? parseFloat(defaultPesoG) : undefined
     );
 
     setImportResult(result);
     if (result.success > 0) {
       toast({ title: `${result.success} productos importados` });
+      onImportComplete?.();
     }
   };
 
@@ -593,6 +591,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     setDefaultCategoryId('');
     setDefaultSupplierId('');
     setDefaultOriginId('');
+    setDefaultPesoG('');
     setSelectedMarketIds([]);
     setImportProgress({ current: 0, total: 0, message: '' });
     setImportResult(null);
@@ -904,7 +903,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-2">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Categoría por defecto</Label>
                         <HierarchicalCategorySelect categories={categories} value={defaultCategoryId} onValueChange={setDefaultCategoryId} placeholder="Seleccionar" />
@@ -934,6 +933,24 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                         {!defaultOriginId && (
                           <p className="text-xs text-destructive">Requerido</p>
                         )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium flex items-center gap-1">
+                          Peso (gramos)
+                          <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder="Ej: 300"
+                          value={defaultPesoG}
+                          onChange={e => setDefaultPesoG(e.target.value)}
+                          className={cn(!defaultPesoG && "border-destructive/50")}
+                        />
+                        {!defaultPesoG
+                          ? <p className="text-xs text-destructive">Requerido para continuar</p>
+                          : <p className="text-xs text-muted-foreground">Requerido para envío B2B</p>
+                        }
                       </div>
                     </div>
                     
@@ -1429,7 +1446,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
             {step === 'mapping' && (
               <Button 
                 onClick={() => setStep('attributes')}
-                disabled={!defaultOriginId || selectedMarketIds.length === 0}
+                disabled={!defaultOriginId || selectedMarketIds.length === 0 || !defaultPesoG}
               >
                 Siguiente: Atributos <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
