@@ -84,9 +84,9 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       title: find(["标题", "Title", "título", "商品标题"]),
       variant1: find(["规格1", "Variant1", "variante1", "颜色", "Color"]),
       variant2: find(["规格2", "Variant2", "variante2", "尺码", "Size", "尺寸"]),
-      image: find(["SKU图", "图片", "Image", "imagen", "Img"]),
-      price: find(["Precio calculado", "价格", "Price", "precio"]),
-      stock: find(["库存", "Stock", "stock", "存量"]),
+      image: find(["Imagen SKU", "SKU图", "图片", "Image", "imagen", "Img"]),
+      price: find(["Precio calculado2", "Precio calculado", "价格", "Price", "precio"]),
+      stock: find(["Inventario", "库存", "Stock", "stock", "存量"]),
       url: find(["URL", "url", "链接", "link"]),
     };
   };
