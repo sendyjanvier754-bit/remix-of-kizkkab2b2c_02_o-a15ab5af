@@ -451,7 +451,7 @@ const VariantDrawer: React.FC = () => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-semibold text-foreground line-clamp-2">{product.nombre}</h4>
+              <h4 className="text-sm font-semibold text-foreground line-clamp-2">{displayName}</h4>
               {isB2BUser ? (
                 selectedVariantId && variantPrices[selectedVariantId] ? (
                   <div className="mt-1 flex items-center gap-2">
