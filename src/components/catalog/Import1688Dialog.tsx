@@ -81,7 +81,7 @@ const BATCH_SIZE = 15;
 const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: string[] }[] = [
   { key: "sku_interno", label: "SKU Interno", keywords: ["SKU ID", "ID", "商品ID", "id"] },
   { key: "nombre", label: "Título Original", keywords: ["Nombre del SKU", "标题", "Title", "título", "商品标题"] },
-  { key: "costo", label: "Costo", keywords: ["Precio calculado2", "Precio calculado", "价格", "Price", "precio"] },
+  { key: "costo", label: "Costo", keywords: ["PrecioCalculado2", "Precio calculado2", "Precio_calculado2", "Precio calculado", "价格", "Price", "precio"] },
   { key: "stock", label: "Stock", keywords: ["Inventario", "库存", "Stock", "stock", "存量"] },
   { key: "url_imagen", label: "URL Imagen", keywords: ["Imagen SKU", "SKU图", "图片", "Image", "imagen", "Img"] },
   { key: "url_producto", label: "URL Producto", keywords: ["Product_Url", "Product_URL", "URL", "url", "链接", "link"] },
