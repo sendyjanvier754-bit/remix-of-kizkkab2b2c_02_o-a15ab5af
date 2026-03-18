@@ -159,12 +159,12 @@ export type Database = {
           ends_at: string | null
           id: string
           image_url: string
-          is_active: boolean
+          is_active: boolean | null
           link_url: string | null
           mobile_position_x: number
           mobile_position_y: number
           mobile_scale: number
-          sort_order: number
+          sort_order: number | null
           starts_at: string | null
           target_audience: string
           title: string
@@ -180,12 +180,12 @@ export type Database = {
           ends_at?: string | null
           id?: string
           image_url: string
-          is_active?: boolean
+          is_active?: boolean | null
           link_url?: string | null
           mobile_position_x?: number
           mobile_position_y?: number
           mobile_scale?: number
-          sort_order?: number
+          sort_order?: number | null
           starts_at?: string | null
           target_audience?: string
           title: string
@@ -201,12 +201,12 @@ export type Database = {
           ends_at?: string | null
           id?: string
           image_url?: string
-          is_active?: boolean
+          is_active?: boolean | null
           link_url?: string | null
           mobile_position_x?: number
           mobile_position_y?: number
           mobile_scale?: number
-          sort_order?: number
+          sort_order?: number | null
           starts_at?: string | null
           target_audience?: string
           title?: string
