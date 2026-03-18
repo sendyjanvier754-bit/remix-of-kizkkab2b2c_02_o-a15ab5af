@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Heart, Package, Store, TrendingUp, ShoppingCart, MessageCircle, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { imgUrl } from "@/lib/imgUrl";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
@@ -152,7 +151,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
         <div className="relative overflow-hidden aspect-square bg-muted">
           {product.image ? (
             <img
-              src={imgUrl(product.image, { width: 400, quality: 75 })}
+              src={product.image}
               alt={product.name}
               loading="lazy"
               decoding="async"

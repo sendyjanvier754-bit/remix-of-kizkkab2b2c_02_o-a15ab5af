@@ -561,7 +561,7 @@ const AdminBanners = () => {
               {/* Desktop tab (≥ 1024px) */}
               {activeImageTab === 'desktop' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Imagen para PC (≥ 1024px) · Recomendado: 1520×320 px</p>
+                  <p className="text-xs text-muted-foreground">Imagen para PC (≥ 1024px) · Recomendado: 950×250 px</p>
                   {formData.desktop_image_url ? (
                     <div className="space-y-2">
                       <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
@@ -670,7 +670,7 @@ const AdminBanners = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Tamaños recomendados: Móvil/Tablet 700×300 px · PC 1520×320 px.
+                  Tamaños recomendados: Móvil/Tablet 700×300 px · PC 950×250 px.
                 </p>
               </div>
 
