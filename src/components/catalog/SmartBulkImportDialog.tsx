@@ -37,6 +37,7 @@ import * as XLSX from 'xlsx';
 interface SmartBulkImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preloadedProducts?: GroupedProduct[];
 }
 
 interface ColumnMapping {
