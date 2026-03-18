@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.backfill-translations]
 verify_jwt = true
+
+[functions.process-1688-import]
+verify_jwt = false
