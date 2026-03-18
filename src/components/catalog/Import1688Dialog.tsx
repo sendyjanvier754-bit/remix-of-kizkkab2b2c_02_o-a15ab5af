@@ -116,6 +116,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [translatedFileTitle, setTranslatedFileTitle] = useState("");
   const [cleanFileTitle, setCleanFileTitle] = useState("");
   const [translationProgress, setTranslationProgress] = useState({ current: 0, total: 0 });
+  const [manualUrlProducto, setManualUrlProducto] = useState("");
 
   const resetState = () => {
     setStep("upload");
@@ -127,6 +128,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setHasDownloaded(false);
     setFileName("");
     setTranslationProgress({ current: 0, total: 0 });
+    setManualUrlProducto("");
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -224,7 +226,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
           sku_interno: sku,
           nombre: (row[cols.nombre] || "").replace(/_/g, " ").trim(),
           nombre_original: (row[cols.nombre] || "").replace(/_/g, " ").trim(),
-          url_producto: row[cols.url_producto] || "",
+          url_producto: row[cols.url_producto] || manualUrlProducto,
           proveedor: "1688",
           variante_1_color: v1,
           variante_2_talla: v2,
@@ -574,6 +576,15 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     <p className="text-xs text-muted-foreground">
                       Preview: <span className="font-mono">{rawData[0]?.[columnMapping[field.key]] || "—"}</span>
                     </p>
+                  )}
+                  {field.key === "url_producto" && !columnMapping.url_producto && (
+                    <input
+                      type="url"
+                      value={manualUrlProducto}
+                      onChange={(e) => setManualUrlProducto(e.target.value)}
+                      placeholder="O ingresar URL manualmente..."
+                      className="w-full text-sm border rounded-md px-3 py-2 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
                   )}
                 </div>
               ))}
