@@ -130,6 +130,10 @@ const AdminCatalogo = () => {
               <Upload className="h-4 w-4 mr-2" />
               {t('adminCatalog.importProducts')}
             </Button>
+            <Button variant="outline" onClick={() => setImport1688Open(true)}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Importar 1688
+            </Button>
             <Button variant="outline" onClick={() => setBulkPriceOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
               {t('adminCatalog.updatePrices')}
