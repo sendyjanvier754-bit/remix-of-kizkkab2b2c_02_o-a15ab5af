@@ -11,6 +11,7 @@ import { UserRole } from '@/types/auth';
 import { SuggestedPricesDetailModal } from '@/components/seller/SuggestedPricesDetailModal';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { useB2BFavorites } from '@/hooks/useB2BFavorites';
+import { useTranslatedContent } from '@/hooks/useTranslatedContent';
 
 interface ProductCardB2BProps {
   product: ProductB2BCard;
@@ -25,6 +26,14 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const [showPricingModal, setShowPricingModal] = useState(false);
   const { toggle: toggleFav, isInFavorites } = useB2BFavorites();
   const isFav = isInFavorites(product.id);
+
+  // Translate product name
+  const { translated: translatedProduct } = useTranslatedContent(
+    'product',
+    product.id,
+    { name: product.nombre }
+  );
+  const displayName = translatedProduct.name || product.nombre;
 
   // Datos desde v_business_panel_data (se cargan solo cuando se abre el modal)
   const { data: bpData, isLoading: bpLoading } = useBusinessPanelData(
@@ -69,7 +78,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const handleWhatsApp = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const text = `Hola, estoy interesado en el siguiente producto:\n\n*${product.nombre}*\nSKU: ${product.sku}\nPrecio: $${product.precio_b2b.toFixed(2)}\n\nLink/Imagen: ${product.imagen_principal}`;
+    const text = `Hola, estoy interesado en el siguiente producto:\n\n*${displayName}*\nSKU: ${product.sku}\nPrecio: $${product.precio_b2b.toFixed(2)}\n\nLink/Imagen: ${product.imagen_principal}`;
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -98,7 +107,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
         <Link to={`/producto/${product.sku}`} className="block w-full h-full">
           <img
             src={product.imagen_principal}
-            alt={product.nombre}
+            alt={displayName}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder.svg';
@@ -177,8 +186,8 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
       <div className="p-3 flex flex-col flex-1">
         {/* Title */}
         <Link to={`/producto/${product.sku}`}>
-          <h3 className="text-sm text-foreground line-clamp-1 mb-2 leading-snug hover:text-primary transition-colors font-medium" title={product.nombre}>
-            {product.nombre}
+          <h3 className="text-sm text-foreground line-clamp-1 mb-2 leading-snug hover:text-primary transition-colors font-medium" title={displayName}>
+            {displayName}
           </h3>
         </Link>
 

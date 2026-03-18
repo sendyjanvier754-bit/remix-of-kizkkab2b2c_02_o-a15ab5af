@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslatedList } from '@/hooks/useTranslatedContent';
 
 interface FeaturedProductsCarouselProps {
   products: ProductB2BCard[];
@@ -25,6 +26,12 @@ const FeaturedProductsCarousel = ({
     align: 'start',
     loop: true
   }, [autoplayPlugin.current]);
+
+  const { getTranslated } = useTranslatedList(
+    'product',
+    products,
+    (p) => ({ name: p.nombre })
+  );
   
   if (products.length === 0) return null;
   
@@ -37,7 +44,7 @@ const FeaturedProductsCarousel = ({
                   <Card className="h-full border-none shadow-sm hover:shadow-md transition-shadow bg-white">
                     <CardContent className={isMobile ? "p-2" : "p-2"}>
                       <div className="relative aspect-square mb-2 rounded-md overflow-hidden bg-gray-100">
-                        <img src={product.imagen_principal} alt={product.nombre} className="w-full h-full object-cover" loading="lazy" />
+                        <img src={product.imagen_principal} alt={getTranslated(product).name || product.nombre} className="w-full h-full object-cover" loading="lazy" />
                         {product.stock_fisico === 0 && <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <span className="text-white text-xs font-bold">Agotado</span>
                           </div>}
@@ -45,7 +52,7 @@ const FeaturedProductsCarousel = ({
                       <div className="space-y-1">
                         {!isMobile && (
                           <h4 className="text-xs font-medium text-gray-900 line-clamp-2 h-8">
-                            {product.nombre}
+                            {getTranslated(product).name || product.nombre}
                           </h4>
                         )}
                         <div className="flex items-baseline gap-1">

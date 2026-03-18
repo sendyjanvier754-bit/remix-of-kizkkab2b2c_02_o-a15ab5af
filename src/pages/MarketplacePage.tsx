@@ -17,6 +17,7 @@ import VariantDrawer from "@/components/products/VariantDrawer";
 import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
 import { useSEO } from "@/hooks/useSEO";
 import { useBranding } from "@/hooks/useBranding";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 const MarketplacePage = () => {
   const { getValue } = useBranding();
@@ -40,6 +41,13 @@ const MarketplacePage = () => {
   const [showOnlyStock, setShowOnlyStock] = useState(false);
   const [showOnlyPromos, setShowOnlyPromos] = useState(false);
   const [minRating, setMinRating] = useState<number>(0);
+
+  // Translate product names
+  const { getTranslated: getTranslatedProduct } = useTranslatedList(
+    'product',
+    products?.map((p: any) => ({ id: p.source_product_id || p.id, nombre: p.nombre })),
+    (item) => ({ name: (item as any).nombre })
+  );
 
   const marketplaceShareImage =
     getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url');
@@ -305,7 +313,7 @@ const MarketplacePage = () => {
                   <Link to={`/producto/${product.sku}`} className="block">
                     <div className="relative aspect-square bg-muted overflow-hidden">
                       {mainImage ? (
-                        <img src={mainImage} alt={product.nombre} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                        <img src={mainImage} alt={getTranslatedProduct({ id: product.source_product_id || product.id } as any).name || product.nombre} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Package className="h-12 w-12 text-muted-foreground/30" />
@@ -340,7 +348,7 @@ const MarketplacePage = () => {
                   <div className="p-3">
                     <Link to={`/producto/${product.sku}`}>
                       <h3 className="text-sm font-medium text-foreground line-clamp-1 mb-1 hover:text-primary transition">
-                        {product.nombre}
+                        {getTranslatedProduct({ id: product.source_product_id || product.id } as any).name || product.nombre}
                       </h3>
                     </Link>
                     

@@ -17,6 +17,7 @@ import { useProductVariants } from '@/hooks/useProductVariants';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { useB2CCatalogVariants } from '@/hooks/useB2CCatalogVariants';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import { useTranslatedContent } from '@/hooks/useTranslatedContent';
 
 const VariantDrawer: React.FC = () => {
   const location = useLocation();
@@ -41,7 +42,14 @@ const VariantDrawer: React.FC = () => {
   const { isClientPreview } = useViewMode();
 
   const isB2BUser = (role === UserRole.SELLER || role === UserRole.ADMIN) && !isClientPreview;
-  
+
+  // Translate product name from DB
+  const { translated: translatedProduct } = useTranslatedContent(
+    'product',
+    product?.source_product_id || product?.id || null,
+    { name: product?.nombre || '' }
+  );
+  const displayName = translatedProduct.name || product?.nombre || '';
   // Get cart product totals for MOQ validation at product level
   const { getProductTotal } = useB2BCartProductTotals();
   
@@ -260,7 +268,7 @@ const VariantDrawer: React.FC = () => {
         const color = (attrs.color ?? null) as string | null;
         const size = (attrs.size ?? attrs.talla ?? null) as string | null;
         const variantLabel = matchedVariant ? `${color || ''}${color && size ? ' / ' : ''}${size || ''}`.trim() : '';
-        const itemName = variantLabel ? `${product.nombre} - ${variantLabel}` : product.nombre;
+        const itemName = variantLabel ? `${displayName} - ${variantLabel}` : displayName;
 
         if (isB2BUser) {
           await addItemB2B({
@@ -297,7 +305,7 @@ const VariantDrawer: React.FC = () => {
           });
         }
       }
-      toast({ title: isB2BUser ? 'Agregado al pedido B2B' : 'Agregado al carrito', description: `${product.nombre} (${totalQty} uds)` });
+      toast({ title: isB2BUser ? 'Agregado al pedido B2B' : 'Agregado al carrito', description: `${displayName} (${totalQty} uds)` });
     } else if (totalQty > 0) {
       // No variants exist for this product — add directly
       if (isB2BUser) {
@@ -305,17 +313,17 @@ const VariantDrawer: React.FC = () => {
           userId: user.id,
           productId: product.source_product_id || product.id,
           sku: product.sku || product.id,
-          name: product.nombre,
+          name: displayName,
           priceB2B: product.costB2B ?? product.price ?? 0,
           quantity: totalQty,
           image: product.images?.[0] || undefined,
         });
-        toast({ title: 'Agregado al pedido B2B', description: `${product.nombre} (${totalQty} uds)` });
+        toast({ title: 'Agregado al pedido B2B', description: `${displayName} (${totalQty} uds)` });
       } else {
         await addItemB2C({
           userId: user.id,
           sku: product.sku || product.id,
-          name: product.nombre,
+          name: displayName,
           price: product.price || 0,
           quantity: totalQty,
           image: product.images?.[0] || undefined,
@@ -433,7 +441,7 @@ const VariantDrawer: React.FC = () => {
             <div className="relative w-20 h-20 flex-shrink-0">
               <img 
                 src={displayImage} 
-                alt={product.nombre} 
+                alt={displayName} 
                 className="w-full h-full object-cover rounded-lg border border-border transition-all duration-300"
               />
               {variantImage && variantImage !== product?.images?.[0] && (
@@ -443,7 +451,7 @@ const VariantDrawer: React.FC = () => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-semibold text-foreground line-clamp-2">{product.nombre}</h4>
+              <h4 className="text-sm font-semibold text-foreground line-clamp-2">{displayName}</h4>
               {isB2BUser ? (
                 selectedVariantId && variantPrices[selectedVariantId] ? (
                   <div className="mt-1 flex items-center gap-2">
