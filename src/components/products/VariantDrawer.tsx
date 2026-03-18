@@ -441,7 +441,7 @@ const VariantDrawer: React.FC = () => {
             <div className="relative w-20 h-20 flex-shrink-0">
               <img 
                 src={displayImage} 
-                alt={product.nombre} 
+                alt={displayName} 
                 className="w-full h-full object-cover rounded-lg border border-border transition-all duration-300"
               />
               {variantImage && variantImage !== product?.images?.[0] && (
