@@ -268,7 +268,7 @@ const VariantDrawer: React.FC = () => {
         const color = (attrs.color ?? null) as string | null;
         const size = (attrs.size ?? attrs.talla ?? null) as string | null;
         const variantLabel = matchedVariant ? `${color || ''}${color && size ? ' / ' : ''}${size || ''}`.trim() : '';
-        const itemName = variantLabel ? `${product.nombre} - ${variantLabel}` : product.nombre;
+        const itemName = variantLabel ? `${displayName} - ${variantLabel}` : displayName;
 
         if (isB2BUser) {
           await addItemB2B({
