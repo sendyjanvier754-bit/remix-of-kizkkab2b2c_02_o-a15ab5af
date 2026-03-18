@@ -36,7 +36,7 @@ const TrendingCategoryCard = ({ category }: TrendingCategoryCardProps) => {
     category.id,
     { name: category.name }
   );
-  const displayCategoryName = translatedCategory.name || category.name;
+  const displayCategoryName = translatedCategory.translated.name || category.name;
 
   const handleProductClick = (product: CategoryProduct) => {
     if (isB2B) {

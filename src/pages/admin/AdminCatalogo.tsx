@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCatalog, Product, ProductFilters } from '@/hooks/useCatalog';
-import { Package, AlertTriangle, TrendingDown, Search, Upload, Plus, Download, Settings, Loader2, Cpu, ExternalLink, DollarSign, RefreshCw } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, Search, Upload, Plus, Download, Settings, Loader2, Cpu, ExternalLink, DollarSign, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import SmartBulkImportDialog from '@/components/catalog/SmartBulkImportDialog';
+import Import1688Dialog from '@/components/catalog/Import1688Dialog';
 import ProductFormDialog from '@/components/catalog/ProductFormDialog';
 import ProductEditDialog from '@/components/catalog/ProductEditDialog';
 import ProductEmbeddingsManager from '@/components/admin/ProductEmbeddingsManager';
@@ -25,6 +26,7 @@ const AdminCatalogo = () => {
   const [filters, setFilters] = useState<ProductFilters>({ stockStatus: 'all' });
   const [searchTerm, setSearchTerm] = useState('');
   const [smartImportOpen, setSmartImportOpen] = useState(false);
+  const [import1688Open, setImport1688Open] = useState(false);
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
@@ -127,6 +129,10 @@ const AdminCatalogo = () => {
             <Button variant="default" onClick={() => setSmartImportOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
               {t('adminCatalog.importProducts')}
+            </Button>
+            <Button variant="outline" onClick={() => setImport1688Open(true)}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Importar 1688
             </Button>
             <Button variant="outline" onClick={() => setBulkPriceOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
@@ -352,6 +358,11 @@ const AdminCatalogo = () => {
       </Tabs>
       {/* Dialogs */}
       <SmartBulkImportDialog open={smartImportOpen} onOpenChange={setSmartImportOpen} />
+      <Import1688Dialog
+        open={import1688Open}
+        onOpenChange={setImport1688Open}
+        onConfirmImport={() => setSmartImportOpen(true)}
+      />
       <ProductFormDialog open={newProductOpen} onOpenChange={setNewProductOpen} />
       <BulkPriceUpdateDialog open={bulkPriceOpen} onOpenChange={setBulkPriceOpen} />
       {editProductId && (

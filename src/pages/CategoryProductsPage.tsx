@@ -41,7 +41,7 @@ const CategoryProductsPage = () => {
     categoryId || '',
     category ? { name: category.name } : { name: '' }
   );
-  const displayCategoryName = translatedCategory.name || category?.name;
+  const displayCategoryName = translatedCategory.translated.name || category?.name;
 
   // B2B users: fetch from products table
   const { data: productsData, isLoading: isProductsLoading } = useProductsByCategory(
