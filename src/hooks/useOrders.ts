@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { fetchOrderEmailData, sendOrderStatusChangeEmail, sendOrderCancelledEmail } from '@/hooks/useOrderEmails';
 
 export type OrderStatus = 'draft' | 'placed' | 'paid' | 'preparing' | 'shipped' | 'cancelled';
 export type PaymentStatus = 'draft' | 'pending' | 'pending_validation' | 'paid' | 'failed' | 'expired' | 'cancelled';
