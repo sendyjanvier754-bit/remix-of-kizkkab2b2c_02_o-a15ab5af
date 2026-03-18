@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,15 +15,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle } from "lucide-react";
+import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, Package } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
+import type { GroupedProduct, VariantRow, DetectedAttribute } from "@/hooks/useSmartProductGrouper";
+import { detectAttributeType, parseColorToHex } from "@/hooks/useEAVAttributes";
 
 interface Import1688DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirmImport?: () => void;
+  onConfirmImport?: (groupedProducts: GroupedProduct[]) => void;
 }
 
 interface RawRow {
@@ -31,6 +33,7 @@ interface RawRow {
 }
 
 interface ProcessedRow {
+  product_id: string;
   sku_interno: string;
   nombre: string;
   nombre_original: string;
@@ -43,6 +46,15 @@ interface ProcessedRow {
   moq: number;
   stock: string;
   url_imagen: string;
+}
+
+interface Grouped1688Product {
+  productId: string;
+  parentName: string;
+  parentNameOriginal: string;
+  description: string;
+  url: string;
+  variants: ProcessedRow[];
 }
 
 type Step = "upload" | "preview" | "export";
@@ -115,6 +127,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       const sku = skuParts.join("-").replace(/\s+/g, "").slice(0, 50);
 
       return {
+        product_id: id,
         sku_interno: sku,
         nombre: row[cols.title] || "",
         nombre_original: row[cols.title] || "",
@@ -130,6 +143,35 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       };
     });
   };
+
+  // Group processed rows by product ID
+  const groupedProducts = useMemo((): Grouped1688Product[] => {
+    const groups: Record<string, Grouped1688Product> = {};
+
+    processedData.forEach((row) => {
+      const key = row.product_id || row.sku_interno;
+      if (!groups[key]) {
+        groups[key] = {
+          productId: key,
+          parentName: row.nombre,
+          parentNameOriginal: row.nombre_original,
+          description: row.descripcion_corta,
+          url: row.url_producto,
+          variants: [],
+        };
+      }
+      groups[key].variants.push(row);
+      // Update parent name/description if translated
+      if (row.nombre && row.nombre !== row.nombre_original) {
+        groups[key].parentName = row.nombre;
+      }
+      if (row.descripcion_corta) {
+        groups[key].description = row.descripcion_corta;
+      }
+    });
+
+    return Object.values(groups);
+  }, [processedData]);
 
   const translateBatch = async (items: ProcessedRow[], startIdx: number): Promise<void> => {
     const batchItems = items.slice(startIdx, startIdx + BATCH_SIZE).map((row) => ({
@@ -198,7 +240,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         setTranslationProgress({ current: Math.min(i + BATCH_SIZE, total), total });
       }
 
-      toast.success(`${processed.length} productos procesados`);
+      toast.success(`${processed.length} variantes procesadas`);
     } catch (err) {
       console.error("File processing error:", err);
       toast.error("Error al procesar el archivo");
@@ -247,9 +289,81 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     toast.success("Excel descargado correctamente");
   };
 
+  // Build GroupedProduct[] for SmartBulkImportDialog
+  const buildGroupedProducts = (): GroupedProduct[] => {
+    return groupedProducts.map((group) => {
+      // Detect color attribute
+      const colorValues = new Set<string>();
+      const colorImageMap: Record<string, string> = {};
+      const sizeValues = new Set<string>();
+
+      group.variants.forEach((v) => {
+        if (v.variante_1_color) {
+          colorValues.add(v.variante_1_color);
+          if (v.url_imagen && !colorImageMap[v.variante_1_color]) {
+            colorImageMap[v.variante_1_color] = v.url_imagen;
+          }
+        }
+        if (v.variante_2_talla) sizeValues.add(v.variante_2_talla);
+      });
+
+      const detectedAttributes: DetectedAttribute[] = [];
+
+      if (colorValues.size > 0) {
+        detectedAttributes.push({
+          columnName: "color",
+          attributeName: "color",
+          type: "color",
+          renderType: "swatches",
+          categoryHint: "",
+          uniqueValues: colorValues,
+          valueImageMap: colorImageMap,
+        });
+      }
+
+      if (sizeValues.size > 0) {
+        detectedAttributes.push({
+          columnName: "talla",
+          attributeName: "talla",
+          type: "size",
+          renderType: "chips",
+          categoryHint: "",
+          uniqueValues: sizeValues,
+          valueImageMap: {},
+        });
+      }
+
+      const variants: VariantRow[] = group.variants.map((v) => ({
+        originalRow: {},
+        sku: v.sku_interno,
+        name: v.nombre,
+        costBase: parseFloat(v.costo) || 0,
+        stock: parseInt(v.stock) || 0,
+        moq: v.moq,
+        imageUrl: v.url_imagen,
+        sourceUrl: v.url_producto,
+        attributeValues: {
+          ...(v.variante_1_color ? { color: v.variante_1_color } : {}),
+          ...(v.variante_2_talla ? { talla: v.variante_2_talla } : {}),
+        },
+      }));
+
+      return {
+        groupKey: group.productId,
+        parentName: group.parentName,
+        baseSku: group.productId,
+        supplier: "1688",
+        description: group.description,
+        variants,
+        detectedAttributes,
+      };
+    });
+  };
+
   const handleConfirmImport = () => {
+    const grouped = buildGroupedProducts();
     handleOpenChange(false);
-    onConfirmImport?.();
+    onConfirmImport?.(grouped);
   };
 
   return (
@@ -310,12 +424,18 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
           </div>
         )}
 
-        {/* Step 2: Preview */}
+        {/* Step 2: Preview - Grouped by product */}
         {step === "preview" && (
           <div className="flex flex-col flex-1 min-h-0 gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Badge variant="outline">{processedData.length} productos</Badge>
+                <Badge variant="outline">
+                  <Package className="h-3 w-3 mr-1" />
+                  {groupedProducts.length} producto{groupedProducts.length !== 1 ? "s" : ""}
+                </Badge>
+                <Badge variant="secondary">
+                  {processedData.length} variantes
+                </Badge>
                 {isProcessing && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -330,57 +450,76 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
             </div>
 
             <div className="overflow-auto flex-1 border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">Img</TableHead>
-                    <TableHead>SKU Interno</TableHead>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Color</TableHead>
-                    <TableHead>Talla</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead className="text-right">Costo</TableHead>
-                    <TableHead className="text-right">Stock</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {processedData.slice(0, 100).map((row, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        {row.url_imagen ? (
-                          <img
-                            src={row.url_imagen}
-                            alt=""
-                            className="h-10 w-10 rounded object-cover"
-                            loading="lazy"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded bg-muted" />
-                        )}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs max-w-[120px] truncate">
-                        {row.sku_interno}
-                      </TableCell>
-                      <TableCell className="max-w-[180px] truncate">{row.nombre}</TableCell>
-                      <TableCell className="max-w-[100px] truncate">{row.variante_1_color}</TableCell>
-                      <TableCell>{row.variante_2_talla}</TableCell>
-                      <TableCell className="max-w-[250px] text-xs text-muted-foreground" title={row.descripcion_corta}>
-                        <span className="line-clamp-2">{row.descripcion_corta}</span>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">{row.costo}</TableCell>
-                      <TableCell className="text-right">{row.stock}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {processedData.length > 100 && (
-                <div className="p-3 text-center text-sm text-muted-foreground border-t">
-                  Mostrando 100 de {processedData.length} productos
+              {groupedProducts.map((group, gi) => (
+                <div key={group.productId} className={gi > 0 ? "border-t-2 border-primary/20" : ""}>
+                  {/* Product header */}
+                  <div className="px-4 py-3 bg-muted/30 flex items-center gap-3">
+                    {group.variants[0]?.url_imagen && (
+                      <img
+                        src={group.variants[0].url_imagen}
+                        alt=""
+                        className="h-10 w-10 rounded object-cover flex-shrink-0"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground truncate">{group.parentName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        ID: {group.productId} · {group.variants.length} variante{group.variants.length !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Variants table */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">Img</TableHead>
+                        <TableHead>SKU</TableHead>
+                        <TableHead>Color</TableHead>
+                        <TableHead>Talla</TableHead>
+                        <TableHead>Descripción</TableHead>
+                        <TableHead className="text-right">Costo</TableHead>
+                        <TableHead className="text-right">Stock</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {group.variants.map((row, i) => (
+                        <TableRow key={i}>
+                          <TableCell>
+                            {row.url_imagen ? (
+                              <img
+                                src={row.url_imagen}
+                                alt=""
+                                className="h-8 w-8 rounded object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="h-8 w-8 rounded bg-muted" />
+                            )}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs max-w-[120px] truncate">
+                            {row.sku_interno}
+                          </TableCell>
+                          <TableCell className="max-w-[100px] truncate">{row.variante_1_color}</TableCell>
+                          <TableCell>{row.variante_2_talla}</TableCell>
+                          <TableCell className="max-w-[250px] text-xs text-muted-foreground" title={row.descripcion_corta}>
+                            <span className="line-clamp-2">{row.descripcion_corta}</span>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">{row.costo}</TableCell>
+                          <TableCell className="text-right">{row.stock}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         )}
@@ -405,7 +544,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
             <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50 border">
               <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <p className="text-sm text-muted-foreground">
-                ¿Deseas enviar este archivo al proceso de importación?
+                Se importarán {groupedProducts.length} producto{groupedProducts.length !== 1 ? "s" : ""} con {processedData.length} variantes en total.
               </p>
             </div>
 
