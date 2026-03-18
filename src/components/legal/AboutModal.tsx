@@ -100,7 +100,7 @@ function DefaultAffiliate({ platformName }: { platformName: string }) {
 
 export function AboutModal({ open, onOpenChange }: AboutModalProps) {
   const { getValue } = useBranding();
-  const platformName = getValue('platform_name') || 'Siver Market';
+  const platformName = getValue('platform_name');
   const aboutHtml = getValue('about_content');
   const affiliateHtml = getValue('affiliate_program');
 

@@ -4,6 +4,7 @@ import { useBranding } from '@/hooks/useBranding';
 
 const CookiesPage = () => {
   const { getValue } = useBranding();
+  const platformName = getValue('platform_name');
   const contactEmail = getValue('contact_email') || 'privacidad@empresa.com';
   const contactPhone = getValue('contact_phone') || '+509 3234-5678';
 
@@ -11,7 +12,7 @@ const CookiesPage = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <GlobalHeader />
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-2 text-foreground">Política de Cookies</h1>
+        <h1 className="text-3xl font-bold mb-2 text-foreground">Política de Cookies{platformName ? ` de ${platformName}` : ''}</h1>
         <p className="text-sm text-muted-foreground mb-8">Última actualización: 9 de marzo de 2026</p>
 
         <div className="prose prose-sm max-w-none space-y-6 text-foreground/90">

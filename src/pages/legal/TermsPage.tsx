@@ -6,7 +6,7 @@ import { useBranding } from '@/hooks/useBranding';
 const TermsPage = () => {
   const { t } = useTranslation();
   const { getValue } = useBranding();
-  const platformName = getValue('platform_name') || 'SIVER Market';
+  const platformName = getValue('platform_name');
   const contactEmail = getValue('contact_email') || 'legal@empresa.com';
   const contactPhone = getValue('contact_phone') || '+509 3234-5678';
 

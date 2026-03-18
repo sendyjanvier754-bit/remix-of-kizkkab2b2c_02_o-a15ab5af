@@ -4,7 +4,7 @@ import { useBranding } from '@/hooks/useBranding';
 
 const RefundsPage = () => {
   const { getValue } = useBranding();
-  const platformName = getValue('platform_name') || 'SIVER Market';
+  const platformName = getValue('platform_name');
   const contactEmail = getValue('contact_email') || 'soporte@empresa.com';
   const contactPhone = getValue('contact_phone') || '+509 3234-5678';
   const customHtml = getValue('legal_refunds');

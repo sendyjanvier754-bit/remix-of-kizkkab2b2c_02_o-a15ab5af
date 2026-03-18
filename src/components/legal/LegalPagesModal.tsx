@@ -68,7 +68,7 @@ function DefaultCookies({ platformName }: { platformName: string }) {
 
 export function LegalPagesModal({ open, onOpenChange }: LegalPagesModalProps) {
   const { getValue } = useBranding();
-  const platformName = getValue('platform_name') || 'Siver Market';
+  const platformName = getValue('platform_name');
   const termsHtml = getValue('legal_terms');
   const privacyHtml = getValue('legal_privacy');
   const cookiesHtml = getValue('legal_cookies');

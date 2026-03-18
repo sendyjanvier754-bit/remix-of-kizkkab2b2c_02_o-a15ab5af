@@ -15,6 +15,7 @@ import {
   Mail, FileText, Globe, Send, Loader2, Eye, Plus, Pencil, Trash2,
   CheckCircle2, AlertTriangle, Code, TestTube
 } from "lucide-react";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 interface EmailTemplate {
   id: string;
@@ -275,13 +276,16 @@ const AdminEmailTemplatesPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
+      <AdminLayout title="Plantillas de Email" subtitle="Gestiona las plantillas de contenido para cada tipo de email">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
+    <AdminLayout title="Plantillas de Email" subtitle="Gestiona las plantillas de contenido para cada tipo de email">
     <div className="space-y-6 p-4 md:p-6 max-w-6xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -609,6 +613,7 @@ const AdminEmailTemplatesPage = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminLayout>
   );
 };
 

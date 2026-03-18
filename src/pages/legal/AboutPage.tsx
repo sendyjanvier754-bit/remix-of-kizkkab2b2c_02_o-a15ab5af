@@ -6,7 +6,7 @@ import { useBranding } from '@/hooks/useBranding';
 
 const AboutPage = () => {
   const { getValue } = useBranding();
-  const platformName = getValue('platform_name') || 'SIVER Market';
+  const platformName = getValue('platform_name');
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
