@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslatedList } from '@/hooks/useTranslatedContent';
 
 interface FeaturedProductsCarouselProps {
   products: ProductB2BCard[];

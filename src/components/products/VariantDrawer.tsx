@@ -17,6 +17,7 @@ import { useProductVariants } from '@/hooks/useProductVariants';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { useB2CCatalogVariants } from '@/hooks/useB2CCatalogVariants';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import { useTranslatedContent } from '@/hooks/useTranslatedContent';
 
 const VariantDrawer: React.FC = () => {
   const location = useLocation();

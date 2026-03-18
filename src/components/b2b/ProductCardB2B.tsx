@@ -11,6 +11,7 @@ import { UserRole } from '@/types/auth';
 import { SuggestedPricesDetailModal } from '@/components/seller/SuggestedPricesDetailModal';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { useB2BFavorites } from '@/hooks/useB2BFavorites';
+import { useTranslatedContent } from '@/hooks/useTranslatedContent';
 
 interface ProductCardB2BProps {
   product: ProductB2BCard;
