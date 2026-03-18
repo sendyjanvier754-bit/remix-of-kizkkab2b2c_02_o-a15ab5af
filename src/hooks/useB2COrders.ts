@@ -404,6 +404,10 @@ export const useCancelB2COrder = () => {
       toast.info(data.itemsRestored > 0
         ? `Pedido cancelado. ${data.itemsRestored} productos restaurados al carrito.`
         : 'Pedido cancelado');
+      // Send cancellation email async
+      fetchOrderEmailData(data.orderId, 'b2c').then(emailData => {
+        if (emailData) sendOrderCancelledEmail({ ...emailData, cancelledBy: 'buyer' });
+      });
     },
     onError: (error: Error) => {
       console.error('Error cancelling order:', error);

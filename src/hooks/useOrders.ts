@@ -400,10 +400,14 @@ export const useOrders = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
       queryClient.invalidateQueries({ queryKey: ['all-orders'] });
       toast({ title: 'Pedido cancelado' });
+      // Send cancellation email async
+      fetchOrderEmailData(variables as string, 'b2b').then(emailData => {
+        if (emailData) sendOrderCancelledEmail({ ...emailData, cancelledBy: 'seller' });
+      });
     },
     onError: (error: Error) => {
       toast({ title: 'Error al cancelar pedido', description: error.message, variant: 'destructive' });
