@@ -481,6 +481,14 @@ const AppContent = () => {
               } 
             />
             <Route 
+              path="/admin/email-templates" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminEmailTemplatesPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/affiliates" 
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
