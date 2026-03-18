@@ -348,7 +348,7 @@ const MarketplacePage = () => {
                   <div className="p-3">
                     <Link to={`/producto/${product.sku}`}>
                       <h3 className="text-sm font-medium text-foreground line-clamp-1 mb-1 hover:text-primary transition">
-                        {product.nombre}
+                        {getTranslatedProduct({ id: product.source_product_id || product.id } as any).name || product.nombre}
                       </h3>
                     </Link>
                     
