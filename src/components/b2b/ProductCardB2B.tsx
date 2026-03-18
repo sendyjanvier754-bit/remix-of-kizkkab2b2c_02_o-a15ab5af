@@ -31,7 +31,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const { translated: translatedProduct } = useTranslatedContent(
     'product',
     product.id,
-    { name: product.nombre, descripcion_corta: product.descripcion_corta || '' }
+    { name: product.nombre }
   );
   const displayName = translatedProduct.name || product.nombre;
 
