@@ -1849,6 +1849,8 @@ export type Database = {
           id: string
           is_auto_translated: boolean | null
           language: string
+          source_text: string | null
+          source_text_hash: string | null
           translated_text: string
           updated_at: string | null
         }
@@ -1860,6 +1862,8 @@ export type Database = {
           id?: string
           is_auto_translated?: boolean | null
           language: string
+          source_text?: string | null
+          source_text_hash?: string | null
           translated_text: string
           updated_at?: string | null
         }
@@ -1871,6 +1875,8 @@ export type Database = {
           id?: string
           is_auto_translated?: boolean | null
           language?: string
+          source_text?: string | null
+          source_text_hash?: string | null
           translated_text?: string
           updated_at?: string | null
         }
