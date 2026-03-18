@@ -318,7 +318,7 @@ const VariantDrawer: React.FC = () => {
           quantity: totalQty,
           image: product.images?.[0] || undefined,
         });
-        toast({ title: 'Agregado al pedido B2B', description: `${product.nombre} (${totalQty} uds)` });
+        toast({ title: 'Agregado al pedido B2B', description: `${displayName} (${totalQty} uds)` });
       } else {
         await addItemB2C({
           userId: user.id,
