@@ -643,6 +643,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                       <TableRow>
                         <TableHead className="w-12">Img</TableHead>
                         <TableHead>SKU</TableHead>
+                        <TableHead>Título Producto</TableHead>
                         <TableHead>Nombre SKU</TableHead>
                         <TableHead>Talla</TableHead>
                         <TableHead>Descripción</TableHead>
