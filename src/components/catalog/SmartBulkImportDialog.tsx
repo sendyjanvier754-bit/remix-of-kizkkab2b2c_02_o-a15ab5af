@@ -74,7 +74,7 @@ const STEPS = [
   { id: 'preview', label: 'Confirmar', icon: CheckCircle2 },
 ];
 
-const SmartBulkImportDialog = ({ open, onOpenChange }: SmartBulkImportDialogProps) => {
+const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartBulkImportDialogProps) => {
   const { useCategories, useSuppliers } = useCatalog();
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
