@@ -182,7 +182,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
         reader.readAsArrayBuffer(preloadedFile);
       }
 
-      setStep('preview');
+      setStep('upload');
     }
   }, [open, preloadedProducts, preloadedFile]);
 
