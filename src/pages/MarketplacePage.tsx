@@ -42,6 +42,13 @@ const MarketplacePage = () => {
   const [showOnlyPromos, setShowOnlyPromos] = useState(false);
   const [minRating, setMinRating] = useState<number>(0);
 
+  // Translate product names
+  const { getTranslated: getTranslatedProduct } = useTranslatedList(
+    'product',
+    products?.map((p: any) => ({ id: p.source_product_id || p.id, nombre: p.nombre })),
+    (item) => ({ name: (item as any).nombre })
+  );
+
   const marketplaceShareImage =
     getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url');
 
