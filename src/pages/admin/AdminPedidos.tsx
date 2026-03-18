@@ -44,6 +44,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
 import { toast } from 'sonner';
+import { fetchOrderEmailData, sendPaymentConfirmedEmail, sendPaymentRejectedEmail } from '@/hooks/useOrderEmails';
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: React.ElementType }> = {
   draft: { label: 'Borrador', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: Clock },
