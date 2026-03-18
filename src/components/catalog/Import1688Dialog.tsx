@@ -212,8 +212,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         return {
           product_id: id,
           sku_interno: sku,
-          nombre: row[cols.nombre] || "",
-          nombre_original: row[cols.nombre] || "",
+          nombre: (row[cols.nombre] || "").replace(/_/g, " ").trim(),
+          nombre_original: (row[cols.nombre] || "").replace(/_/g, " ").trim(),
           url_producto: row[cols.url_producto] || "",
           proveedor: "1688",
           variante_1_color: v1,
