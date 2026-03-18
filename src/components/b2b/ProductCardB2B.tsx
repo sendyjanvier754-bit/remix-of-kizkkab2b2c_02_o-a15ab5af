@@ -107,7 +107,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
         <Link to={`/producto/${product.sku}`} className="block w-full h-full">
           <img
             src={product.imagen_principal}
-            alt={product.nombre}
+            alt={displayName}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder.svg';
