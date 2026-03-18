@@ -88,7 +88,17 @@ const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: strin
 ];
 
 const autoDetect = (headers: string[], keywords: string[]): string => {
-  return headers.find((h) => keywords.some((k) => h.toLowerCase().includes(k.toLowerCase()))) || "";
+  // Pass 1: exact match (priority order from keywords)
+  for (const k of keywords) {
+    const match = headers.find((h) => h.toLowerCase() === k.toLowerCase());
+    if (match) return match;
+  }
+  // Pass 2: partial match
+  for (const k of keywords) {
+    const match = headers.find((h) => h.toLowerCase().includes(k.toLowerCase()));
+    if (match) return match;
+  }
+  return "";
 };
 
 const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688DialogProps) => {
