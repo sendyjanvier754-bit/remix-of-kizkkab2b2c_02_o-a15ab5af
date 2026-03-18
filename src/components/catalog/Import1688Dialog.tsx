@@ -439,7 +439,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
       return {
         groupKey: group.productId,
-        parentName: group.parentName,
+        parentName: translatedFileTitle || group.parentName,
         baseSku: group.productId,
         supplier: "1688",
         description: group.description,
