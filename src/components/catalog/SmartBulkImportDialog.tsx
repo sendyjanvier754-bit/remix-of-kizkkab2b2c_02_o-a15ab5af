@@ -37,6 +37,7 @@ import * as XLSX from 'xlsx';
 interface SmartBulkImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preloadedProducts?: GroupedProduct[];
 }
 
 interface ColumnMapping {
@@ -73,7 +74,7 @@ const STEPS = [
   { id: 'preview', label: 'Confirmar', icon: CheckCircle2 },
 ];
 
-const SmartBulkImportDialog = ({ open, onOpenChange }: SmartBulkImportDialogProps) => {
+const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartBulkImportDialogProps) => {
   const { useCategories, useSuppliers } = useCatalog();
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
@@ -133,6 +134,26 @@ const SmartBulkImportDialog = ({ open, onOpenChange }: SmartBulkImportDialogProp
     const mappedCols = Object.values(mapping);
     return headers.filter(h => !mappedCols.includes(h));
   }, [headers, mapping]);
+
+  // Handle preloaded products from 1688 import
+  useEffect(() => {
+    if (open && preloadedProducts && preloadedProducts.length > 0) {
+      setGroupedProducts(preloadedProducts);
+      // Build attribute configs from preloaded detected attributes
+      const allAttrs = preloadedProducts.flatMap(p => p.detectedAttributes);
+      const uniqueAttrs: Record<string, typeof allAttrs[0]> = {};
+      allAttrs.forEach(a => { uniqueAttrs[a.attributeName] = a; });
+      const configs: AttributeConfig[] = Object.values(uniqueAttrs).map(attr => ({
+        id: crypto.randomUUID(),
+        nameType: 'manual' as const,
+        nameValue: attr.attributeName,
+        valueColumn: attr.columnName,
+      }));
+      setAttributeConfigs(configs);
+      setDetectedAttributeColumns(Object.keys(uniqueAttrs));
+      setStep('preview');
+    }
+  }, [open, preloadedProducts]);
 
   // Persist modal state in sessionStorage to survive page refreshes
   const STORAGE_KEY = 'smartImportDialogState';

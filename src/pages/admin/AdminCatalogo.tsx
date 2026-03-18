@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCatalog, Product, ProductFilters } from '@/hooks/useCatalog';
+import type { GroupedProduct } from '@/hooks/useSmartProductGrouper';
 import { Package, AlertTriangle, TrendingDown, Search, Upload, Plus, Download, Settings, Loader2, Cpu, ExternalLink, DollarSign, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import SmartBulkImportDialog from '@/components/catalog/SmartBulkImportDialog';
 import Import1688Dialog from '@/components/catalog/Import1688Dialog';
@@ -26,6 +27,7 @@ const AdminCatalogo = () => {
   const [filters, setFilters] = useState<ProductFilters>({ stockStatus: 'all' });
   const [searchTerm, setSearchTerm] = useState('');
   const [smartImportOpen, setSmartImportOpen] = useState(false);
+  const [preloaded1688Products, setPreloaded1688Products] = useState<GroupedProduct[] | undefined>(undefined);
   const [import1688Open, setImport1688Open] = useState(false);
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
@@ -357,11 +359,18 @@ const AdminCatalogo = () => {
         </TabsContent>
       </Tabs>
       {/* Dialogs */}
-      <SmartBulkImportDialog open={smartImportOpen} onOpenChange={setSmartImportOpen} />
+      <SmartBulkImportDialog
+        open={smartImportOpen}
+        onOpenChange={(v) => { setSmartImportOpen(v); if (!v) setPreloaded1688Products(undefined); }}
+        preloadedProducts={preloaded1688Products}
+      />
       <Import1688Dialog
         open={import1688Open}
         onOpenChange={setImport1688Open}
-        onConfirmImport={() => setSmartImportOpen(true)}
+        onConfirmImport={(grouped) => {
+          setPreloaded1688Products(grouped);
+          setSmartImportOpen(true);
+        }}
       />
       <ProductFormDialog open={newProductOpen} onOpenChange={setNewProductOpen} />
       <BulkPriceUpdateDialog open={bulkPriceOpen} onOpenChange={setBulkPriceOpen} />
