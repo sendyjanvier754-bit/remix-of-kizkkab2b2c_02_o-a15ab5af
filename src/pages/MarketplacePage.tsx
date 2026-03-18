@@ -313,7 +313,7 @@ const MarketplacePage = () => {
                   <Link to={`/producto/${product.sku}`} className="block">
                     <div className="relative aspect-square bg-muted overflow-hidden">
                       {mainImage ? (
-                        <img src={mainImage} alt={product.nombre} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                        <img src={mainImage} alt={getTranslatedProduct({ id: product.source_product_id || product.id } as any).name || product.nombre} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Package className="h-12 w-12 text-muted-foreground/30" />
