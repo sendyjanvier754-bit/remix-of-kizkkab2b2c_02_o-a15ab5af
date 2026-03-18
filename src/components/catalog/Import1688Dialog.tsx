@@ -653,7 +653,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                       />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-foreground truncate">{group.parentName}</p>
+                      <p className="font-medium text-foreground truncate">{translatedFileTitle || group.parentName}</p>
                       <p className="text-xs text-muted-foreground">
                         ID: {group.productId} · {group.variants.length} variante{group.variants.length !== 1 ? "s" : ""}
                       </p>
