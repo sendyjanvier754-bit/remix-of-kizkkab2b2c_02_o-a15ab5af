@@ -96,23 +96,29 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    // Verify caller is admin
+    // Verify caller is authenticated and admin
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-    const { data: userData, error: userError } = await anonClient.auth.getUser();
-    if (userError || !userData?.user?.id) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-    const userId = userData.user.id as string;
+    const token = authHeader?.replace('Bearer ', '').trim();
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !userData?.user?.id) {
+      console.error('Auth validation failed', { error: userError?.message });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const userId = userData.user.id as string;
 
     // Check admin role
     const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
@@ -123,7 +129,7 @@ serve(async (req) => {
     const body: ProcessRequest = await req.json();
     const { action, jobId, itemId, items } = body;
     
-    console.log(`Processing action: ${action}`, { jobId, itemId, itemsCount: items?.length });
+    console.log(`Processing action: ${action}`, { jobId, itemId, itemsCount: items?.length, userId });
     
     let response: ProcessResponse;
     
@@ -131,16 +137,6 @@ serve(async (req) => {
       case 'create_job': {
         if (!items || items.length === 0) {
           throw new Error('No items provided for processing');
-        }
-        
-        // Get user from authorization header
-        const authHeader = req.headers.get('Authorization');
-        let userId: string | null = null;
-        
-        if (authHeader) {
-          const token = authHeader.replace('Bearer ', '');
-          const { data: { user } } = await supabase.auth.getUser(token);
-          userId = user?.id || null;
         }
         
         // Create job record
