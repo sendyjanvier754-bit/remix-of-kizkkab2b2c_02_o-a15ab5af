@@ -305,7 +305,7 @@ const VariantDrawer: React.FC = () => {
           });
         }
       }
-      toast({ title: isB2BUser ? 'Agregado al pedido B2B' : 'Agregado al carrito', description: `${product.nombre} (${totalQty} uds)` });
+      toast({ title: isB2BUser ? 'Agregado al pedido B2B' : 'Agregado al carrito', description: `${displayName} (${totalQty} uds)` });
     } else if (totalQty > 0) {
       // No variants exist for this product — add directly
       if (isB2BUser) {
