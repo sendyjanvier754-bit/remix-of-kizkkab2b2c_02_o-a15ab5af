@@ -145,6 +145,14 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   // Step 1 → Step 2: Parse file and auto-detect columns
   const handleFile = async (file: File) => {
     setFileName(file.name);
+    // Clean file name to extract product title
+    const cleaned = file.name
+      .replace(/\.(csv|xlsx?|tsv)$/i, "")
+      .replace(/_?\d{10,}_sku_list$/i, "")
+      .replace(/_/g, " ")
+      .trim();
+    setCleanFileTitle(cleaned);
+    setTranslatedFileTitle(cleaned); // temporary until translated
     setIsProcessing(true);
     try {
       const rows = await parseFile(file);
