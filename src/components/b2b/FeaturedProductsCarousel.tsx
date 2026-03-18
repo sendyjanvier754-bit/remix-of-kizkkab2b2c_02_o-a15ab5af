@@ -52,7 +52,7 @@ const FeaturedProductsCarousel = ({
                       <div className="space-y-1">
                         {!isMobile && (
                           <h4 className="text-xs font-medium text-gray-900 line-clamp-2 h-8">
-                            {product.nombre}
+                            {getTranslated(product).name || product.nombre}
                           </h4>
                         )}
                         <div className="flex items-baseline gap-1">
