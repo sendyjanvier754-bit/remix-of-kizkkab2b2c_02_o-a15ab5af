@@ -17,6 +17,7 @@ import VariantDrawer from "@/components/products/VariantDrawer";
 import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
 import { useSEO } from "@/hooks/useSEO";
 import { useBranding } from "@/hooks/useBranding";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 const MarketplacePage = () => {
   const { getValue } = useBranding();
