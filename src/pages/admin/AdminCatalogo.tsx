@@ -359,11 +359,18 @@ const AdminCatalogo = () => {
         </TabsContent>
       </Tabs>
       {/* Dialogs */}
-      <SmartBulkImportDialog open={smartImportOpen} onOpenChange={setSmartImportOpen} />
+      <SmartBulkImportDialog
+        open={smartImportOpen}
+        onOpenChange={(v) => { setSmartImportOpen(v); if (!v) setPreloaded1688Products(undefined); }}
+        preloadedProducts={preloaded1688Products}
+      />
       <Import1688Dialog
         open={import1688Open}
         onOpenChange={setImport1688Open}
-        onConfirmImport={() => setSmartImportOpen(true)}
+        onConfirmImport={(grouped) => {
+          setPreloaded1688Products(grouped);
+          setSmartImportOpen(true);
+        }}
       />
       <ProductFormDialog open={newProductOpen} onOpenChange={setNewProductOpen} />
       <BulkPriceUpdateDialog open={bulkPriceOpen} onOpenChange={setBulkPriceOpen} />
