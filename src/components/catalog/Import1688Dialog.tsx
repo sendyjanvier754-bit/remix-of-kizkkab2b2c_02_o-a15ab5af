@@ -464,8 +464,13 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
   const handleConfirmImport = () => {
     const grouped = buildGroupedProducts();
+    // Build a File object from the Excel workbook for auto-loading in SmartBulkImportDialog
+    const wb = buildExcelWorkbook();
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const processedFile = new File([blob], getExcelFileName(), { type: blob.type });
     handleOpenChange(false);
-    onConfirmImport?.(grouped);
+    onConfirmImport?.(grouped, processedFile);
   };
 
   const isMappingValid = columnMapping.sku_interno && columnMapping.nombre && columnMapping.costo;

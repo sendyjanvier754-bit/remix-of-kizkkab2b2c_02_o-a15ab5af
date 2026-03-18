@@ -362,14 +362,16 @@ const AdminCatalogo = () => {
       {/* Dialogs */}
       <SmartBulkImportDialog
         open={smartImportOpen}
-        onOpenChange={(v) => { setSmartImportOpen(v); if (!v) setPreloaded1688Products(undefined); }}
+        onOpenChange={(v) => { setSmartImportOpen(v); if (!v) { setPreloaded1688Products(undefined); setPreloaded1688File(undefined); } }}
         preloadedProducts={preloaded1688Products}
+        preloadedFile={preloaded1688File}
       />
       <Import1688Dialog
         open={import1688Open}
         onOpenChange={setImport1688Open}
-        onConfirmImport={(grouped) => {
+        onConfirmImport={(grouped, processedFile) => {
           setPreloaded1688Products(grouped);
+          setPreloaded1688File(processedFile);
           setSmartImportOpen(true);
         }}
       />
