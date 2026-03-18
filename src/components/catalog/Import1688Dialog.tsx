@@ -33,7 +33,7 @@ import { detectAttributeType, parseColorToHex } from "@/hooks/useEAVAttributes";
 interface Import1688DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirmImport?: (groupedProducts: GroupedProduct[]) => void;
+  onConfirmImport?: (groupedProducts: GroupedProduct[], processedFile: File) => void;
 }
 
 interface RawRow {
