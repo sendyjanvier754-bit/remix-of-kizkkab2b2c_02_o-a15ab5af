@@ -1,57 +1,55 @@
-## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
-### Lo que se implementó
 
-1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
-2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
-3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
-4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
-5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
-6. **Routing**: Ruta añadida en App.tsx con lazy loading
+## Plan Consolidado: Ajustes de Precisión + Agrupación Producto/Variantes en Importación 1688
 
-### Flujo
-1. Agente busca usuario → solicita acceso → OTP enviado como notificación
-2. Agente ingresa OTP → sesión activa 2h con timer visible
-3. Agente busca productos → agrega a borrador → configura envío
-4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
-5. Soporte multitarea con múltiples borradores
+### Archivos a modificar
+- `supabase/functions/process-1688-import/index.ts` — prompt actualizado
+- `src/components/catalog/Import1688Dialog.tsx` — mapeo, precisión, agrupación
 
-## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
+---
 
-### Problema
-El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
+### 1. Edge Function `process-1688-import` — Actualizar prompt (líneas 55-59)
 
-### Cambios realizados
+Reemplazar el system prompt actual con:
+- **nombre**: "Traducción fiel y comercial del título original al español. No inventar nombres nuevos ni creativos."
+- **variante_color**: "Traducir colores al español (ej: pink → Rosa). Mantener tallas y códigos de modelo exactamente igual."
+- **variante_talla**: "Mantener tallas y códigos numéricos/alfanuméricos exactamente como están."
+- **descripcion**: Eliminar límite de 200 caracteres. "Generar descripción detallada basada en el título del producto. PROHIBIDO usar comas — usar puntos; punto y coma o saltos de línea."
 
-1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
+---
 
-2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
+### 2. Import1688Dialog.tsx — Ajustes de mapeo y precisión
 
-3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
+**a) Detección de columnas (líneas 82-91):**
+- Agregar `"Inventario"` al array de keywords de stock
+- Agregar `"Precio calculado"` ya está, agregar `"Precio calculado2"` explícitamente al inicio del array de price
+- Agregar `"Imagen SKU"` al array de keywords de image
 
-### Flujo corregido
-```
-Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-... pasa el tiempo, PO-001 vence ...
-Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
-Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
-```
+**b) Precisión de costo (línea 126):**
+- Cambiar `costo: row[cols.price] || "0"` a:
+  `costo: (row[cols.price] || "0").replace(/[^0-9.]/g, "")`
+  Esto elimina US$, ¥, espacios pero preserva decimales exactos (3.63 → 3.63, nunca 3.6)
 
-## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
+**c) Descripción en preview (línea 370):**
+- Eliminar `max-w-[200px]` y usar tooltip o expandible para texto largo
 
-### Lo que se implementó
-1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
-2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
-3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
-4. **Routing**: Ruta pública en App.tsx
+---
 
-## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
+### 3. Import1688Dialog.tsx — Agrupación Producto/Variantes
 
-### Problema
-Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
+**Problema actual:** Cada fila se trata como producto independiente. Un archivo 1688 es un solo producto con N variantes.
 
-### Cambios
-1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
-2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
-3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.
+**Solución:** Después de procesar las filas y traducir, agrupar usando la lógica existente de `useSmartProductGrouper`:
+
+- Importar `groupProductsByParent`, `GroupedProduct`, `VariantRow` desde `@/hooks/useSmartProductGrouper`
+- Tras traducción, agrupar por ID del producto 1688 (todas las filas con mismo ID = 1 producto padre con N variantes)
+- **Preview actualizado**: Mostrar nombre del producto padre como encabezado, tabla de variantes debajo (Imagen, SKU, Color, Talla, Descripción, Costo, Stock)
+- **Confirmación**: Al hacer clic en "Confirmar e Importar", construir `GroupedProduct[]` con:
+  - `parentName`: nombre traducido
+  - `baseSku`: ID 1688
+  - `variants[]`: cada fila como `VariantRow` con `attributeValues: { color, talla }`
+  - `detectedAttributes`: detectar automáticamente color (swatches) + talla (chips)
+- Pasar este `GroupedProduct[]` al `SmartBulkImportDialog` pre-cargado
+
+**Excel de descarga**: Mantener todas las filas (una por variante) para verificación manual.
+
