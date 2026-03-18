@@ -84,7 +84,7 @@ const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: strin
   { key: "costo", label: "Costo", keywords: ["Precio calculado2", "Precio calculado", "价格", "Price", "precio"] },
   { key: "stock", label: "Stock", keywords: ["Inventario", "库存", "Stock", "stock", "存量"] },
   { key: "url_imagen", label: "URL Imagen", keywords: ["Imagen SKU", "SKU图", "图片", "Image", "imagen", "Img"] },
-  { key: "url_producto", label: "URL Producto", keywords: ["URL", "url", "链接", "link"] },
+  { key: "url_producto", label: "URL Producto", keywords: ["Product_Url", "Product_URL", "URL", "url", "链接", "link"] },
 ];
 
 const autoDetect = (headers: string[], keywords: string[]): string => {
