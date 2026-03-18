@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { syncBatchEntityTranslations, syncEntityTranslations } from '@/lib/translationSync';
 
 export interface Product {
   id: string;
@@ -174,6 +175,13 @@ export const useCatalog = () => {
         .select()
         .single();
       if (error) throw error;
+
+      await syncEntityTranslations('product', data.id, {
+        nombre: data.nombre,
+        descripcion_corta: data.descripcion_corta,
+        descripcion_larga: data.descripcion_larga,
+      });
+
       return data;
     },
     onSuccess: () => {
@@ -230,6 +238,13 @@ export const useCatalog = () => {
         .select()
         .single();
       if (error) throw error;
+
+      await syncEntityTranslations('product', id, {
+        nombre: data.nombre,
+        descripcion_corta: data.descripcion_corta,
+        descripcion_larga: data.descripcion_larga,
+      });
+
       return data;
     },
     onSuccess: () => {
@@ -251,6 +266,19 @@ export const useCatalog = () => {
         .insert(products)
         .select();
       if (error) throw error;
+
+      await syncBatchEntityTranslations(
+        (data || []).map((row: any) => ({
+          entityType: 'product',
+          entityId: row.id,
+          fields: {
+            nombre: row.nombre,
+            descripcion_corta: row.descripcion_corta,
+            descripcion_larga: row.descripcion_larga,
+          },
+        }))
+      );
+
       return data;
     },
     onSuccess: (data) => {
@@ -331,6 +359,11 @@ export const useCatalog = () => {
         .select()
         .single();
       if (error) throw error;
+
+      await syncEntityTranslations('category', data.id, {
+        name: data.name,
+      });
+
       return data;
     },
     onSuccess: () => {

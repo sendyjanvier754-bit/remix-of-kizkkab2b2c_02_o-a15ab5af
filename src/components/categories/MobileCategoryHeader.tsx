@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Category } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 interface MobileCategoryHeaderProps {
   categories: Category[];
@@ -25,6 +26,13 @@ const MobileCategoryHeader = ({
 
   // Get root categories (no parent)
   const rootCategories = categories.filter((c) => !c.parent_id);
+
+  // Translation hook for category names
+  const { getTranslated } = useTranslatedList(
+    'category',
+    rootCategories,
+    (cat) => ({ name: cat.name })
+  );
 
   // Scroll to selected category tab
   useEffect(() => {
@@ -102,7 +110,7 @@ const MobileCategoryHeader = ({
                 : "text-gray-500 hover:text-gray-700"
             )}
           >
-            {category.name}
+            {getTranslated(category).name || category.name}
           </button>
         ))}
       </div>

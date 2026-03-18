@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMarketplaceBanners } from "@/hooks/useMarketplaceData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -37,6 +38,12 @@ const HeroSection = () => {
         objectOrigin: `${px}% ${py}%`,
       };
     });
+
+  const { getTranslated } = useTranslatedList(
+    'banner',
+    slides,
+    (slide) => ({ title: slide.title })
+  );
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -120,6 +127,11 @@ const HeroSection = () => {
       {/* Carousel Container */}
       <div className="relative w-full h-full">
         {slides.map((slide, index) => (
+          (() => {
+            const translated = getTranslated(slide);
+            const bannerTitle = translated.title || slide.title;
+
+            return (
           <div
             key={slide.id}
             className={`absolute inset-0 transition-opacity duration-500 cursor-pointer ${
@@ -129,7 +141,7 @@ const HeroSection = () => {
           >
             <img
               src={slide.image_url}
-              alt={slide.title}
+              alt={bannerTitle}
               loading={index === 0 ? 'eager' : 'lazy'}
               fetchPriority={index === 0 ? 'high' : 'low'}
               decoding="async"
@@ -141,6 +153,8 @@ const HeroSection = () => {
               }}
             />
           </div>
+            );
+          })()
         ))}
       </div>
 

@@ -12,6 +12,7 @@ import { usePublicCategories } from "@/hooks/useCategories";
 import { useSellerProductsByCategory } from "@/hooks/useSellerProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProductCard from "@/components/landing/ProductCard";
+import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 
 type AnyProduct = Record<string, any>;
 
@@ -33,6 +34,14 @@ const CategoryProductsPage = () => {
   const categoryId = category?.id ?? null;
   const isB2BUser = role === UserRole.ADMIN || role === UserRole.SELLER;
   const { data: allCategories = [] } = usePublicCategories();
+
+  // Translation hook for category name
+  const translatedCategory = useTranslatedContent(
+    'category',
+    categoryId || '',
+    category ? { name: category.name } : { name: '' }
+  );
+  const displayCategoryName = translatedCategory.name || category?.name;
 
   // B2B users: fetch from products table
   const { data: productsData, isLoading: isProductsLoading } = useProductsByCategory(
@@ -193,13 +202,13 @@ const CategoryProductsPage = () => {
             <ChevronRight className="w-4 h-4" />
             <button onClick={() => navigate("/categorias")} className="hover:text-blue-600">Categorías</button>
             <ChevronRight className="w-4 h-4" />
-            <span className="capitalize">{category?.name ?? slug?.replace("-", " ")}</span>
+            <span className="capitalize">{displayCategoryName ?? slug?.replace("-", " ")}</span>
           </div>
         </div>
 
         {/* Category Header */}
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 capitalize mb-1">{category?.name ?? slug}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 capitalize mb-1">{displayCategoryName ?? slug}</h1>
           <p className="text-sm text-gray-600">{visibleProductsCount} productos disponibles</p>
         </div>
 

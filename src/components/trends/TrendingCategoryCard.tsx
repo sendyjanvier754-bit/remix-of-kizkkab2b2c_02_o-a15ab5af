@@ -3,6 +3,7 @@ import { Sparkles, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
+import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 
 interface CategoryProduct {
   id: string;
@@ -29,6 +30,14 @@ const TrendingCategoryCard = ({ category }: TrendingCategoryCardProps) => {
   const { user, role } = useAuth();
   const isB2B = user && (role === UserRole.SELLER || role === UserRole.ADMIN);
 
+  // Translation hook for category name
+  const translatedCategory = useTranslatedContent(
+    'category',
+    category.id,
+    { name: category.name }
+  );
+  const displayCategoryName = translatedCategory.name || category.name;
+
   const handleProductClick = (product: CategoryProduct) => {
     if (isB2B) {
       navigate(`/seller/adquisicion-lotes?search=${encodeURIComponent(product.sku)}`);
@@ -54,12 +63,12 @@ const TrendingCategoryCard = ({ category }: TrendingCategoryCardProps) => {
             {category.icon ? (
               <img 
                 src={category.icon} 
-                alt={category.name}
+                alt={displayCategoryName}
                 className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/40 text-primary font-bold text-lg">
-                {category.name.charAt(0).toUpperCase()}
+                {displayCategoryName.charAt(0).toUpperCase()}
               </div>
             )}
           </div>
@@ -78,7 +87,7 @@ const TrendingCategoryCard = ({ category }: TrendingCategoryCardProps) => {
               className="font-bold text-foreground truncate cursor-pointer hover:text-primary transition-colors text-base"
               onClick={handleCategoryClick}
             >
-              {category.name}
+              {displayCategoryName}
             </h3>
             {category.productCount > 10 && (
               <Badge variant="secondary" className="bg-muted text-foreground text-[10px] px-1.5 py-0">
@@ -150,7 +159,7 @@ const TrendingCategoryCard = ({ category }: TrendingCategoryCardProps) => {
       <div className="px-3 py-3 flex items-center gap-1">
         <span className="text-orange-400 text-xl leading-none font-serif">"</span>
         <p className="text-sm text-muted-foreground flex-1 line-clamp-1">
-          {category.description || `Explora los mejores productos en ${category.name}`}
+          {category.description || `Explora los mejores productos en ${displayCategoryName}`}
         </p>
         <span className="text-orange-400 text-xl leading-none font-serif">"</span>
       </div>

@@ -14,6 +14,8 @@ import { UserRole } from '@/types/auth';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedContent } from '@/hooks/useTranslatedContent';
 
 const getNotificationIcon = (type: DBNotification['type']) => {
   switch (type) {
@@ -37,6 +39,14 @@ const NotificationItem = ({
   notification: DBNotification;
   onMarkRead: (id: string) => void;
 }) => {
+  const { translated } = useTranslatedContent('notification', notification.id, {
+    title: notification.title,
+    message: notification.message,
+  });
+
+  const translatedTitle = translated.title || notification.title;
+  const translatedMessage = translated.message || notification.message;
+
   return (
     <div
       className={`p-3 hover:bg-muted/50 transition-colors cursor-pointer ${
@@ -49,14 +59,14 @@ const NotificationItem = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <p className={`text-sm font-medium truncate ${!notification.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
-              {notification.title}
+              {translatedTitle}
             </p>
             {!notification.is_read && (
               <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
             )}
           </div>
           <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-            {notification.message}
+            {translatedMessage}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             {formatDistanceToNow(new Date(notification.created_at), {
@@ -71,6 +81,7 @@ const NotificationItem = ({
 };
 
 export const NotificationBell = () => {
+  const { t } = useTranslation();
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
   const { role } = useAuth();
   const [open, setOpen] = useState(false);
@@ -103,7 +114,7 @@ export const NotificationBell = () => {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-3 border-b">
-          <h4 className="font-semibold text-sm">Notificaciones</h4>
+          <h4 className="font-semibold text-sm">{t('notifications.title', { defaultValue: 'Notificaciones' })}</h4>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -112,7 +123,7 @@ export const NotificationBell = () => {
               onClick={markAllAsRead}
             >
               <CheckCheck className="h-3 w-3 mr-1" />
-              Marcar todas
+              {t('notifications.markAll', { defaultValue: 'Marcar todas' })}
             </Button>
           )}
         </div>
@@ -125,7 +136,7 @@ export const NotificationBell = () => {
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-6 py-10">
               <Bell className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">No tienes notificaciones</p>
+              <p className="text-sm text-muted-foreground">{t('notifications.empty', { defaultValue: 'No tienes notificaciones' })}</p>
             </div>
           ) : (
             <div className="divide-y">
@@ -148,7 +159,7 @@ export const NotificationBell = () => {
               className="w-full text-xs"
               onClick={handleViewAll}
             >
-              Ver todas las notificaciones
+              {t('notifications.viewAll', { defaultValue: 'Ver todas las notificaciones' })}
             </Button>
           </div>
         )}

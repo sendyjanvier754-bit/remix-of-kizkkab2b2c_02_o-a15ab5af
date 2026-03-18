@@ -9,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useB2BFavorites } from "@/hooks/useB2BFavorites";
+import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 
 interface Product {
   id: string;
@@ -57,6 +58,15 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
   const { isClientPreview } = useViewMode();
 
   const isB2BUser = (user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN) && !isClientPreview;
+
+  const translationEntityType = product.source_product_id ? 'product' : 'seller_catalog';
+  const translationEntityId = product.source_product_id || product.id;
+  const { translated: translatedProduct } = useTranslatedContent(
+    translationEntityType,
+    translationEntityId,
+    { name: product.name }
+  );
+  const displayName = translatedProduct.name || product.name;
 
   // Favorites: B2C saves seller_catalog_id, B2B saves source_product_id
   const b2cFav = useB2CFavorites();
@@ -131,7 +141,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
     useVariantDrawerStore.getState().open({
       id: product.id,
       sku: product.sku,
-      nombre: product.name,
+      nombre: displayName,
       images: product.image ? [product.image] : [],
       price: displayPrice,
       costB2B: costB2B,
@@ -152,7 +162,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
           {product.image ? (
             <img
               src={product.image}
-              alt={product.name}
+              alt={displayName}
               loading="lazy"
               decoding="async"
               className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
@@ -219,7 +229,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
       <div className="p-1 flex flex-col flex-1">
         <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'}>
           <h3 className="text-sm font-medium text-foreground line-clamp-1 mb-1 hover:text-primary transition h-5">
-            {product.name}
+            {displayName}
           </h3>
         </Link>
 

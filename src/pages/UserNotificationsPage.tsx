@@ -19,6 +19,8 @@ import GlobalHeader from '@/components/layout/GlobalHeader';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedContent } from '@/hooks/useTranslatedContent';
 
 const typeIcons: Record<string, React.ReactNode> = {
   order_delivery: <Package className="h-4 w-4" />,
@@ -32,6 +34,7 @@ const typeIcons: Record<string, React.ReactNode> = {
 };
 
 export default function UserNotificationsPage() {
+  const { t } = useTranslation();
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
@@ -46,7 +49,7 @@ export default function UserNotificationsPage() {
   if (authLoading || !user) return null;
 
   return (
-    <PageWrapper seo={{ title: 'Notificaciones', description: 'Tus notificaciones' }}>
+    <PageWrapper seo={{ title: t('notifications.title', { defaultValue: 'Notificaciones' }), description: t('notifications.pageDescription', { defaultValue: 'Tus notificaciones' }) }}>
       <div className="min-h-screen bg-muted/30">
         <GlobalHeader />
         <div className="max-w-[860px] mx-auto px-4 py-6">
@@ -60,22 +63,22 @@ export default function UserNotificationsPage() {
                 className="gap-1.5 text-muted-foreground mr-1"
               >
                 <ChevronLeft className="h-4 w-4" />
-                Volver
+                {t('common.back', { defaultValue: 'Volver' })}
               </Button>
               <div className="p-2 rounded-xl bg-primary/10">
                 <Bell className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold leading-tight">Notificaciones</h1>
+                <h1 className="text-2xl font-bold leading-tight">{t('notifications.title', { defaultValue: 'Notificaciones' })}</h1>
                 {unreadCount > 0 && (
-                  <p className="text-sm text-muted-foreground">{unreadCount} sin leer</p>
+                  <p className="text-sm text-muted-foreground">{t('notifications.unreadCount', { defaultValue: '{{count}} sin leer', count: unreadCount })}</p>
                 )}
               </div>
             </div>
             {unreadCount > 0 && (
               <Button size="sm" variant="outline" onClick={markAllAsRead} className="gap-1.5 text-xs">
                 <CheckCheck className="h-3.5 w-3.5" />
-                Marcar todo como leído
+                {t('notifications.markAllAsRead', { defaultValue: 'Marcar todo como leído' })}
               </Button>
             )}
           </div>
@@ -83,11 +86,11 @@ export default function UserNotificationsPage() {
           <Card>
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="text-center text-muted-foreground text-sm py-16">Cargando...</div>
+                <div className="text-center text-muted-foreground text-sm py-16">{t('common.loading', { defaultValue: 'Cargando...' })}</div>
               ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Bell className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground text-sm">No tienes notificaciones todavía</p>
+                  <p className="text-muted-foreground text-sm">{t('notifications.emptyStill', { defaultValue: 'No tienes notificaciones todavía' })}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
@@ -111,6 +114,14 @@ function NotificationItem({
   notification: DBNotification;
   onRead: (id: string) => void;
 }) {
+  const { translated } = useTranslatedContent('notification', notification.id, {
+    title: notification.title,
+    message: notification.message,
+  });
+
+  const translatedTitle = translated.title || notification.title;
+  const translatedMessage = translated.message || notification.message;
+
   const icon = typeIcons[notification.type] || typeIcons.general;
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
     addSuffix: true,
@@ -141,7 +152,7 @@ function NotificationItem({
                 !notification.is_read ? 'font-semibold text-foreground' : 'text-foreground'
               }`}
             >
-              {notification.title}
+              {translatedTitle}
             </p>
             {!notification.is_read && (
               <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
@@ -149,7 +160,7 @@ function NotificationItem({
           </div>
           {notification.message && (
             <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-              {notification.message}
+              {translatedMessage}
             </p>
           )}
           <p className="text-[10px] text-muted-foreground mt-1">{timeAgo}</p>

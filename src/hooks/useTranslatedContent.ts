@@ -2,6 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 
+const hashText = async (text: string): Promise<string> => {
+  const normalized = text.trim();
+  const data = new TextEncoder().encode(normalized);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
 /**
  * Hook to translate database content based on the current i18n language.
  * 
@@ -40,21 +49,39 @@ export function useTranslatedContent(
       // 1. Try cached translations from DB first
       const { data: cached } = await (supabase as any)
         .from("content_translations")
-        .select("field_name, translated_text")
+        .select("field_name, translated_text, source_text_hash")
         .eq("entity_type", entityType)
         .eq("entity_id", entityId)
         .eq("language", currentLang);
 
-      const cachedMap = new Map<string, string>(
-        (cached || []).map((c: any) => [c.field_name, c.translated_text])
+      const cachedMap = new Map<
+        string,
+        { text: string; sourceTextHash: string | null }
+      >(
+        (cached || []).map((c: any) => [
+          c.field_name,
+          {
+            text: c.translated_text,
+            sourceTextHash: c.source_text_hash,
+          },
+        ])
       );
 
+      const sourceHashMap = new Map<string, string>();
+      for (const [key, value] of Object.entries(cleanFields)) {
+        sourceHashMap.set(key, await hashText(value));
+      }
+
       // Check if all fields are cached
-      const allCached = Object.keys(cleanFields).every((k) => cachedMap.has(k));
+      const allCached = Object.keys(cleanFields).every((k) => {
+        const cachedEntry = cachedMap.get(k);
+        const sourceHash = sourceHashMap.get(k);
+        return !!cachedEntry && cachedEntry.sourceTextHash === sourceHash;
+      });
       if (allCached) {
         const result: Record<string, string> = {};
         for (const key of Object.keys(cleanFields)) {
-          result[key] = cachedMap.get(key) || cleanFields[key];
+          result[key] = cachedMap.get(key)?.text || cleanFields[key];
         }
         return result;
       }
@@ -62,7 +89,11 @@ export function useTranslatedContent(
       // 2. Call edge function to translate missing fields
       const missingFields: Record<string, string> = {};
       for (const [key, value] of Object.entries(cleanFields)) {
-        if (!cachedMap.has(key)) missingFields[key] = value;
+        const cachedEntry = cachedMap.get(key);
+        const sourceHash = sourceHashMap.get(key);
+        if (!cachedEntry || cachedEntry.sourceTextHash !== sourceHash) {
+          missingFields[key] = value;
+        }
       }
 
       try {
@@ -84,7 +115,10 @@ export function useTranslatedContent(
         const translated = data?.translations?.[entityId] || {};
         const result: Record<string, string> = {};
         for (const key of Object.keys(cleanFields)) {
-          result[key] = cachedMap.get(key) || translated[key] || cleanFields[key];
+          const cachedEntry = cachedMap.get(key);
+          const sourceHash = sourceHashMap.get(key);
+          const validCached = cachedEntry && cachedEntry.sourceTextHash === sourceHash;
+          result[key] = (validCached ? cachedEntry?.text : undefined) || translated[key] || cleanFields[key];
         }
         return result;
       } catch (err) {
@@ -139,15 +173,21 @@ export function useTranslatedList<T extends { id: string }>(
       // Fetch all cached translations for these entities at once
       const { data: cached } = await (supabase as any)
         .from("content_translations")
-        .select("entity_id, field_name, translated_text")
+        .select("entity_id, field_name, translated_text, source_text_hash")
         .eq("entity_type", entityType)
         .eq("language", currentLang)
         .in("entity_id", items.map((i) => i.id));
 
-      const cachedMap = new Map<string, Map<string, string>>();
+      const cachedMap = new Map<
+        string,
+        Map<string, { text: string; sourceTextHash: string | null }>
+      >();
       for (const row of cached || []) {
         if (!cachedMap.has(row.entity_id)) cachedMap.set(row.entity_id, new Map());
-        cachedMap.get(row.entity_id)!.set(row.field_name, row.translated_text);
+        cachedMap.get(row.entity_id)!.set(row.field_name, {
+          text: row.translated_text,
+          sourceTextHash: row.source_text_hash,
+        });
       }
 
       // Find items missing translations
@@ -167,12 +207,25 @@ export function useTranslatedList<T extends { id: string }>(
         }
 
         const itemCache = cachedMap.get(item.id);
-        const allCached = Object.keys(cleanFields).every((k) => itemCache?.has(k));
+        const sourceHashMap = new Map<string, string>();
+        for (const [k, v] of Object.entries(cleanFields)) {
+          sourceHashMap.set(k, await hashText(v));
+        }
+
+        const allCached = Object.keys(cleanFields).every((k) => {
+          const cachedEntry = itemCache?.get(k);
+          const sourceHash = sourceHashMap.get(k);
+          return !!cachedEntry && cachedEntry.sourceTextHash === sourceHash;
+        });
 
         if (!allCached) {
           const missingFields: Record<string, string> = {};
           for (const [k, v] of Object.entries(cleanFields)) {
-            if (!itemCache?.has(k)) missingFields[k] = v;
+            const cachedEntry = itemCache?.get(k);
+            const sourceHash = sourceHashMap.get(k);
+            if (!cachedEntry || cachedEntry.sourceTextHash !== sourceHash) {
+              missingFields[k] = v;
+            }
           }
           if (Object.keys(missingFields).length > 0) {
             toTranslate.push({
@@ -203,7 +256,10 @@ export function useTranslatedList<T extends { id: string }>(
               for (const [entityId, fields] of Object.entries(data.translations)) {
                 if (!cachedMap.has(entityId)) cachedMap.set(entityId, new Map());
                 for (const [field, text] of Object.entries(fields as Record<string, string>)) {
-                  cachedMap.get(entityId)!.set(field, text);
+                  cachedMap.get(entityId)!.set(field, {
+                    text,
+                    sourceTextHash: null,
+                  });
                 }
               }
             }
@@ -221,7 +277,7 @@ export function useTranslatedList<T extends { id: string }>(
         const itemCache = cachedMap.get(item.id);
 
         for (const [k, v] of Object.entries(fields)) {
-          translated[k] = itemCache?.get(k) || v || "";
+          translated[k] = itemCache?.get(k)?.text || v || "";
         }
         result.set(item.id, translated);
       }

@@ -21,6 +21,15 @@ interface TranslateBatchRequest {
   items: TranslateRequest[];
 }
 
+async function hashText(text: string): Promise<string> {
+  const normalized = text.trim();
+  const data = new TextEncoder().encode(normalized);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /**
  * Translate text using MyMemory Translation API (free, no key needed)
  * Supports es->en, es->fr, es->ht
@@ -100,13 +109,19 @@ Deno.serve(async (req) => {
       // Check existing translations first
       const { data: existing } = await supabase
         .from("content_translations")
-        .select("field_name, translated_text")
+        .select("field_name, translated_text, source_text_hash")
         .eq("entity_type", entity_type)
         .eq("entity_id", entity_id)
         .eq("language", target_language);
 
       const existingMap = new Map(
-        (existing || []).map((e: any) => [e.field_name, e.translated_text])
+        (existing || []).map((e: any) => [
+          e.field_name,
+          {
+            translatedText: e.translated_text as string,
+            sourceTextHash: e.source_text_hash as string | null,
+          },
+        ])
       );
 
       const translatedFields: Record<string, string> = {};
@@ -118,9 +133,12 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        const sourceTextHash = await hashText(originalText);
+        const existingEntry = existingMap.get(fieldName);
+
         // Use cached translation if available
-        if (existingMap.has(fieldName)) {
-          translatedFields[fieldName] = existingMap.get(fieldName)!;
+        if (existingEntry?.sourceTextHash === sourceTextHash) {
+          translatedFields[fieldName] = existingEntry.translatedText;
           continue;
         }
 
@@ -137,6 +155,8 @@ Deno.serve(async (req) => {
           entity_id,
           field_name: fieldName,
           language: target_language,
+          source_text: originalText,
+          source_text_hash: sourceTextHash,
           translated_text: translated,
           is_auto_translated: true,
           updated_at: new Date().toISOString(),

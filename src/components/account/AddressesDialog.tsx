@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAddresses, Address, AddressInput } from '@/hooks/useAddresses';
+import { useTranslatedList } from '@/hooks/useTranslatedContent';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, MapPin, Pencil, Trash2, Star, Loader2 } from 'lucide-react';
 import {
@@ -63,6 +64,24 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
   const [selectedCommuneId, setSelectedCommuneId] = useState('');
   const [loadingDepts, setLoadingDepts] = useState(false);
   const [loadingCommunes, setLoadingCommunes] = useState(false);
+
+  const { getTranslated: getTranslatedCountry } = useTranslatedList(
+    'country',
+    countries,
+    (country) => ({ name: country.name })
+  );
+
+  const { getTranslated: getTranslatedDepartment } = useTranslatedList(
+    'department',
+    departments,
+    (department) => ({ name: department.name })
+  );
+
+  const { getTranslated: getTranslatedCommune } = useTranslatedList(
+    'commune',
+    communes,
+    (commune) => ({ name: commune.name })
+  );
 
   // Load destination countries on mount
   useEffect(() => {
@@ -261,7 +280,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 </SelectTrigger>
                 <SelectContent>
                   {countries.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>{getTranslatedCountry(c).name || c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -286,7 +305,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 </SelectTrigger>
                 <SelectContent>
                   {departments.map(d => (
-                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                    <SelectItem key={d.id} value={d.id}>{getTranslatedDepartment(d).name || d.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -308,7 +327,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 </SelectTrigger>
                 <SelectContent className="max-h-[220px]">
                   {communes.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>{getTranslatedCommune(c).name || c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

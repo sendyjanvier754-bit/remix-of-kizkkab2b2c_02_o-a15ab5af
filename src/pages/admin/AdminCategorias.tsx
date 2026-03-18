@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CategoryAttributeTemplateManager from "@/components/admin/CategoryAttributeTemplateManager";
+import { syncEntityTranslations } from "@/lib/translationSync";
 
 interface Category {
   id: string;
@@ -113,8 +114,16 @@ const AdminCategorias = () => {
   // Create category mutation
   const createCategory = useMutation({
     mutationFn: async (data: Omit<Category, "id" | "created_at" | "updated_at">) => {
-      const { error } = await supabase.from("categories").insert([data]);
+      const { data: created, error } = await supabase
+        .from("categories")
+        .insert([data])
+        .select("id, name")
+        .single();
       if (error) throw error;
+
+      await syncEntityTranslations('category', created.id, {
+        name: created.name,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
@@ -129,8 +138,17 @@ const AdminCategorias = () => {
   // Update category mutation
   const updateCategory = useMutation({
     mutationFn: async ({ id, ...data }: Partial<Category> & { id: string }) => {
-      const { error } = await supabase.from("categories").update(data).eq("id", id);
+      const { data: updated, error } = await supabase
+        .from("categories")
+        .update(data)
+        .eq("id", id)
+        .select('id, name')
+        .single();
       if (error) throw error;
+
+      await syncEntityTranslations('category', updated.id, {
+        name: updated.name,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
