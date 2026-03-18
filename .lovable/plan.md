@@ -1,57 +1,33 @@
-## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
-### Lo que se implementó
 
-1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
-2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
-3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
-4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
-5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
-6. **Routing**: Ruta añadida en App.tsx con lazy loading
+## Plan: Auto-load processed file in SmartBulkImportDialog + rename file
 
-### Flujo
-1. Agente busca usuario → solicita acceso → OTP enviado como notificación
-2. Agente ingresa OTP → sesión activa 2h con timer visible
-3. Agente busca productos → agrega a borrador → configura envío
-4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
-5. Soporte multitarea con múltiples borradores
+### What changes
 
-## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
-
-### Problema
-El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
-
-### Cambios realizados
-
-1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
-
-2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
-
-3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
-
-### Flujo corregido
+**1. Rename downloaded Excel file (`Import1688Dialog.tsx` line 375)**
+Change from `1688_procesado_2026-03-18.xlsx` to use `translatedFileTitle`:
 ```
-Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-... pasa el tiempo, PO-001 vence ...
-Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
-Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
+{translatedFileTitle || cleanFileTitle || '1688_procesado'}_${date}.xlsx
 ```
 
-## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
+**2. Pass the processed Excel data alongside grouped products**
+Instead of only passing `GroupedProduct[]` to SmartBulkImportDialog, also generate and pass the processed Excel file as a `File` object so it can be auto-loaded in the upload step.
 
-### Lo que se implementó
-1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
-2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
-3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
-4. **Routing**: Ruta pública en App.tsx
+- In `Import1688Dialog.tsx` `handleConfirmImport`: build the Excel workbook in memory (same as `downloadExcel`) and create a `File` object from the blob. Pass it via a new callback prop or extend `onConfirmImport` to include the file.
+- Update `Import1688DialogProps.onConfirmImport` signature to: `(groupedProducts: GroupedProduct[], processedFile: File) => void`
 
-## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
+**3. Update AdminCatalogo.tsx to pass the file**
+In the `onConfirmImport` handler, capture the file and pass it to SmartBulkImportDialog via a new `preloadedFile` prop.
 
-### Problema
-Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
+**4. Update SmartBulkImportDialog to accept and auto-load the file**
+- Add `preloadedFile?: File` prop
+- In the `useEffect` that handles preloaded data (line 139-157): when `preloadedFile` is provided, parse it (same as the existing file upload logic), populate `rawData`, `headers`, `mapping`, auto-detect columns, and set step to `'mapping'` (or `'attributes'` if mapping is auto-detected) instead of skipping straight to `'preview'`
+- Show the file name in the upload area as already loaded
 
-### Cambios
-1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
-2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
-3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.
+This way the user sees the full import flow starting from the file being loaded, can verify mappings, configure attributes, process assets, then confirm.
+
+### Files to modify
+- `src/components/catalog/Import1688Dialog.tsx` — rename file, generate File object, updated callback
+- `src/pages/admin/AdminCatalogo.tsx` — pass file to SmartBulkImportDialog
+- `src/components/catalog/SmartBulkImportDialog.tsx` — accept `preloadedFile`, auto-parse it on open
+
