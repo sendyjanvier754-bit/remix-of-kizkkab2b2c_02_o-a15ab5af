@@ -138,6 +138,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartB
   // Handle preloaded products from 1688 import
   useEffect(() => {
     if (open && preloadedProducts && preloadedProducts.length > 0) {
+      sessionStorage.removeItem(STORAGE_KEY);
       setGroupedProducts(preloadedProducts);
       // Build attribute configs from preloaded detected attributes
       const allAttrs = preloadedProducts.flatMap(p => p.detectedAttributes);
@@ -158,56 +159,12 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartB
   // Persist modal state in sessionStorage to survive page refreshes
   const STORAGE_KEY = 'smartImportDialogState';
   
-  // Load persisted state on mount
+  // Always start from step 1 when opening without preloaded 1688 data
   useEffect(() => {
-    if (open) {
-      const saved = sessionStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.step && parsed.step !== 'upload') {
-            setStep(parsed.step);
-            const restoredHeaders = parsed.headers || [];
-            setHeaders(restoredHeaders);
-            setRawData(parsed.rawData || []);
-            
-            // Validate and restore mapping - ensure mapped columns exist in headers
-            let restoredMapping = parsed.mapping || DEFAULT_MAPPING;
-            // If url_imagen mapping doesn't exist in headers, try to find it
-            if (restoredMapping.url_imagen && !restoredHeaders.includes(restoredMapping.url_imagen)) {
-              const imageCol = restoredHeaders.find((h: string) => {
-                const lower = h.toLowerCase();
-                return lower.includes('imagen') || lower.includes('image') || lower.includes('foto');
-              });
-              if (imageCol) {
-                restoredMapping = { ...restoredMapping, url_imagen: imageCol };
-              }
-            }
-            setMapping(restoredMapping);
-            
-            setDefaultCategoryId(parsed.defaultCategoryId || '');
-            setDefaultSupplierId(parsed.defaultSupplierId || '');
-            setAttributeConfigs(parsed.attributeConfigs || []);
-            if (parsed.groupedProducts) {
-              // Restore groupedProducts with proper Set reconstruction
-              const restored = parsed.groupedProducts.map((g: any) => ({
-                ...g,
-                detectedAttributes: g.detectedAttributes.map((a: any) => ({
-                  ...a,
-                  uniqueValues: new Set(a.uniqueValues || []),
-                }))
-              }));
-              setGroupedProducts(restored);
-            }
-            setDetectedAttributeColumns(parsed.detectedAttributeColumns || []);
-          }
-        } catch (err) {
-          console.error('Error loading persisted import state:', err);
-          sessionStorage.removeItem(STORAGE_KEY);
-        }
-      }
-    }
-  }, [open]);
+    if (!open || (preloadedProducts && preloadedProducts.length > 0)) return;
+    sessionStorage.removeItem(STORAGE_KEY);
+    resetState();
+  }, [open, preloadedProducts]);
   
   // Save state to sessionStorage whenever it changes
   useEffect(() => {
