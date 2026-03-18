@@ -366,12 +366,22 @@ export const useOrders = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
       queryClient.invalidateQueries({ queryKey: ['all-orders'] });
       queryClient.invalidateQueries({ queryKey: ['order'] });
       queryClient.invalidateQueries({ queryKey: ['buyer-orders'] });
       toast({ title: 'Información de envío actualizada' });
+      // Send shipped email async
+      fetchOrderEmailData(variables.orderId, 'b2b').then(emailData => {
+        if (emailData) sendOrderStatusChangeEmail({
+          ...emailData,
+          newStatus: 'shipped',
+          trackingNumber: variables.trackingNumber,
+          carrier: variables.carrier,
+          carrierUrl: variables.carrierUrl,
+        });
+      });
     },
     onError: (error: Error) => {
       toast({ title: 'Error al actualizar envío', description: error.message, variant: 'destructive' });
