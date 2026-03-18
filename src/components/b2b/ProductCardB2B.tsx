@@ -78,7 +78,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
   const handleWhatsApp = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const text = `Hola, estoy interesado en el siguiente producto:\n\n*${product.nombre}*\nSKU: ${product.sku}\nPrecio: $${product.precio_b2b.toFixed(2)}\n\nLink/Imagen: ${product.imagen_principal}`;
+    const text = `Hola, estoy interesado en el siguiente producto:\n\n*${displayName}*\nSKU: ${product.sku}\nPrecio: $${product.precio_b2b.toFixed(2)}\n\nLink/Imagen: ${product.imagen_principal}`;
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
