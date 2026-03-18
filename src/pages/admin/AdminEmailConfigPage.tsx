@@ -203,6 +203,27 @@ const AdminEmailConfigPage = () => {
     setSenders(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
   };
 
+  const handleAddSender = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from("email_senders")
+        .insert({
+          purpose: "notifications",
+          sender_email: config?.sender_email || "",
+          sender_name: config?.sender_name || "Siver",
+          is_active: false,
+          destination_country_id: null,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      setSenders(prev => [...prev, data]);
+      toast.success("Nuevo remitente creado");
+    } catch (err: any) {
+      toast.error(err.message || "Error al crear remitente");
+    }
+  };
+
   const handleTestEmail = async () => {
     if (!testEmail) {
       toast.error("Ingresa un email de destino para la prueba");
