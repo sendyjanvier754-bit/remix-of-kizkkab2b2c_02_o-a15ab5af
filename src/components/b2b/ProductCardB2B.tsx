@@ -186,8 +186,8 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
       <div className="p-3 flex flex-col flex-1">
         {/* Title */}
         <Link to={`/producto/${product.sku}`}>
-          <h3 className="text-sm text-foreground line-clamp-1 mb-2 leading-snug hover:text-primary transition-colors font-medium" title={product.nombre}>
-            {product.nombre}
+          <h3 className="text-sm text-foreground line-clamp-1 mb-2 leading-snug hover:text-primary transition-colors font-medium" title={displayName}>
+            {displayName}
           </h3>
         </Link>
 
