@@ -62,8 +62,10 @@ const validateEmail = (email: string): string | null => {
 };
 
 const AdminEmailConfigPage = () => {
+  const navigate = useNavigate();
   const [config, setConfig] = useState<EmailConfig | null>(null);
   const [senders, setSenders] = useState<EmailSender[]>([]);
+  const [countries, setCountries] = useState<DestinationCountry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingSenders, setSavingSenders] = useState(false);
@@ -75,7 +77,22 @@ const AdminEmailConfigPage = () => {
   useEffect(() => {
     fetchConfig();
     fetchSenders();
+    fetchCountries();
   }, []);
+
+  const fetchCountries = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("destination_countries")
+        .select("id, name, code")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      setCountries(data || []);
+    } catch (err) {
+      console.error("Error loading countries:", err);
+    }
+  };
 
   const fetchConfig = async () => {
     try {
