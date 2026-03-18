@@ -323,7 +323,7 @@ const VariantDrawer: React.FC = () => {
         await addItemB2C({
           userId: user.id,
           sku: product.sku || product.id,
-          name: product.nombre,
+          name: displayName,
           price: product.price || 0,
           quantity: totalQty,
           image: product.images?.[0] || undefined,
