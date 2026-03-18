@@ -33,7 +33,7 @@ import { detectAttributeType, parseColorToHex } from "@/hooks/useEAVAttributes";
 interface Import1688DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirmImport?: (groupedProducts: GroupedProduct[]) => void;
+  onConfirmImport?: (groupedProducts: GroupedProduct[], processedFile: File) => void;
 }
 
 interface RawRow {
@@ -354,7 +354,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     if (file) handleFile(file);
   };
 
-  const downloadExcel = () => {
+  const buildExcelWorkbook = () => {
     const exportData = processedData.map((row) => ({
       SKU_Interno: row.sku_interno,
       Nombre: row.nombre,
@@ -372,7 +372,20 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Productos_1688");
-    XLSX.writeFile(wb, `1688_procesado_${new Date().toISOString().split("T")[0]}.xlsx`);
+    return wb;
+  };
+
+  const getExcelFileName = () => {
+    const date = new Date().toISOString().split("T")[0];
+    const baseName = (translatedFileTitle || cleanFileTitle || '1688_procesado')
+      .replace(/[<>:"/\\|?*]/g, '_')
+      .substring(0, 100);
+    return `${baseName}_${date}.xlsx`;
+  };
+
+  const downloadExcel = () => {
+    const wb = buildExcelWorkbook();
+    XLSX.writeFile(wb, getExcelFileName());
 
     setHasDownloaded(true);
     setStep("export");
@@ -451,8 +464,13 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
   const handleConfirmImport = () => {
     const grouped = buildGroupedProducts();
+    // Build a File object from the Excel workbook for auto-loading in SmartBulkImportDialog
+    const wb = buildExcelWorkbook();
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const processedFile = new File([blob], getExcelFileName(), { type: blob.type });
     handleOpenChange(false);
-    onConfirmImport?.(grouped);
+    onConfirmImport?.(grouped, processedFile);
   };
 
   const isMappingValid = columnMapping.sku_interno && columnMapping.nombre && columnMapping.costo;

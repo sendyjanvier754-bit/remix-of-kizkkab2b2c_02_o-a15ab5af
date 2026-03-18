@@ -28,6 +28,7 @@ const AdminCatalogo = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [smartImportOpen, setSmartImportOpen] = useState(false);
   const [preloaded1688Products, setPreloaded1688Products] = useState<GroupedProduct[] | undefined>(undefined);
+  const [preloaded1688File, setPreloaded1688File] = useState<File | undefined>(undefined);
   const [import1688Open, setImport1688Open] = useState(false);
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
@@ -361,14 +362,16 @@ const AdminCatalogo = () => {
       {/* Dialogs */}
       <SmartBulkImportDialog
         open={smartImportOpen}
-        onOpenChange={(v) => { setSmartImportOpen(v); if (!v) setPreloaded1688Products(undefined); }}
+        onOpenChange={(v) => { setSmartImportOpen(v); if (!v) { setPreloaded1688Products(undefined); setPreloaded1688File(undefined); } }}
         preloadedProducts={preloaded1688Products}
+        preloadedFile={preloaded1688File}
       />
       <Import1688Dialog
         open={import1688Open}
         onOpenChange={setImport1688Open}
-        onConfirmImport={(grouped) => {
+        onConfirmImport={(grouped, processedFile) => {
           setPreloaded1688Products(grouped);
+          setPreloaded1688File(processedFile);
           setSmartImportOpen(true);
         }}
       />

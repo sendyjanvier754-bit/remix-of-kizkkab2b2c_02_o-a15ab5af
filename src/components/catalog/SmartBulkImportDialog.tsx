@@ -38,6 +38,7 @@ interface SmartBulkImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preloadedProducts?: GroupedProduct[];
+  preloadedFile?: File;
 }
 
 interface ColumnMapping {
@@ -74,7 +75,7 @@ const STEPS = [
   { id: 'preview', label: 'Confirmar', icon: CheckCircle2 },
 ];
 
-const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartBulkImportDialogProps) => {
+const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloadedFile }: SmartBulkImportDialogProps) => {
   const { useCategories, useSuppliers } = useCatalog();
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
@@ -135,7 +136,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartB
     return headers.filter(h => !mappedCols.includes(h));
   }, [headers, mapping]);
 
-  // Handle preloaded products from 1688 import
+  // Handle preloaded products + file from 1688 import
   useEffect(() => {
     if (open && preloadedProducts && preloadedProducts.length > 0) {
       sessionStorage.removeItem(STORAGE_KEY);
@@ -152,9 +153,38 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartB
       }));
       setAttributeConfigs(configs);
       setDetectedAttributeColumns(Object.keys(uniqueAttrs));
+
+      // If a preloaded file is provided, auto-parse it to populate headers/rawData/mapping
+      if (preloadedFile) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData: (string | number | boolean | null | undefined)[][] = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1, defval: '', raw: false
+            });
+            if (jsonData.length > 0) {
+              const headerRow = jsonData[0].map(h => String(h ?? '').trim());
+              const dataRows = jsonData.slice(1).filter(row =>
+                row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')
+              ).map(row => row.map(cell => String(cell ?? '').trim()));
+              setHeaders(headerRow);
+              setRawData(dataRows);
+              autoMapColumns(headerRow);
+            }
+          } catch (error) {
+            console.error('Error auto-parsing preloaded file:', error);
+          }
+        };
+        reader.readAsArrayBuffer(preloadedFile);
+      }
+
       setStep('preview');
     }
-  }, [open, preloadedProducts]);
+  }, [open, preloadedProducts, preloadedFile]);
 
   // Persist modal state in sessionStorage to survive page refreshes
   const STORAGE_KEY = 'smartImportDialogState';
