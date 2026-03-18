@@ -358,6 +358,11 @@ const AdminCatalogo = () => {
       </Tabs>
       {/* Dialogs */}
       <SmartBulkImportDialog open={smartImportOpen} onOpenChange={setSmartImportOpen} />
+      <Import1688Dialog
+        open={import1688Open}
+        onOpenChange={setImport1688Open}
+        onConfirmImport={() => setSmartImportOpen(true)}
+      />
       <ProductFormDialog open={newProductOpen} onOpenChange={setNewProductOpen} />
       <BulkPriceUpdateDialog open={bulkPriceOpen} onOpenChange={setBulkPriceOpen} />
       {editProductId && (
