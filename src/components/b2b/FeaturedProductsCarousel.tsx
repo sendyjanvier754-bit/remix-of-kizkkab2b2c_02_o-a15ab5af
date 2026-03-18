@@ -44,7 +44,7 @@ const FeaturedProductsCarousel = ({
                   <Card className="h-full border-none shadow-sm hover:shadow-md transition-shadow bg-white">
                     <CardContent className={isMobile ? "p-2" : "p-2"}>
                       <div className="relative aspect-square mb-2 rounded-md overflow-hidden bg-gray-100">
-                        <img src={product.imagen_principal} alt={product.nombre} className="w-full h-full object-cover" loading="lazy" />
+                        <img src={product.imagen_principal} alt={getTranslated(product).name || product.nombre} className="w-full h-full object-cover" loading="lazy" />
                         {product.stock_fisico === 0 && <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <span className="text-white text-xs font-bold">Agotado</span>
                           </div>}
