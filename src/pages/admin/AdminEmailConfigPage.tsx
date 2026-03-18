@@ -29,6 +29,13 @@ interface EmailSender {
   sender_email: string;
   sender_name: string;
   is_active: boolean;
+  destination_country_id: string | null;
+}
+
+interface DestinationCountry {
+  id: string;
+  name: string;
+  code: string;
 }
 
 const PURPOSE_LABELS: Record<string, { label: string; description: string }> = {
