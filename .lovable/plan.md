@@ -1,36 +1,57 @@
+## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
+### Lo que se implementó
 
-## Plan: Use Excel file name as product title (translated)
+1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
+2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
+3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
+4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
+5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
+6. **Routing**: Ruta añadida en App.tsx con lazy loading
 
-### Problem
-The "Título Producto" column currently shows `group.parentName` which comes from the Excel's "nombre" column. The user wants it to show the **file name** of the Excel (e.g., `W_Rhinestone_Flat_Slippers_Diamond_Ladies_Shoes_Women_Slippers_618526722459_sku_list.csv`), cleaned and translated to Spanish.
+### Flujo
+1. Agente busca usuario → solicita acceso → OTP enviado como notificación
+2. Agente ingresa OTP → sesión activa 2h con timer visible
+3. Agente busca productos → agrega a borrador → configura envío
+4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
+5. Soporte multitarea con múltiples borradores
 
-### Changes in `src/components/catalog/Import1688Dialog.tsx`
+## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
 
-**1. Add state for translated file title (~line 116):**
-```ts
-const [translatedFileTitle, setTranslatedFileTitle] = useState("");
+### Problema
+El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
+
+### Cambios realizados
+
+1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
+
+2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
+
+3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
+
+### Flujo corregido
+```
+Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
+Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
+... pasa el tiempo, PO-001 vence ...
+Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
+Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
 ```
 
-**2. Extract and clean file name during `handleFile` (~line 145):**
-Strip the extension, remove the numeric ID and `_sku_list` suffix, replace underscores with spaces:
-```ts
-const cleanTitle = file.name
-  .replace(/\.(csv|xlsx?|tsv)$/i, "")
-  .replace(/_?\d{10,}_sku_list$/i, "")
-  .replace(/_/g, " ")
-  .trim();
-setTranslatedFileTitle(cleanTitle); // temporary until translated
-```
+## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
 
-**3. Translate the file title alongside the first batch (~after line 233):**
-Send one extra translation request for the file name itself, and store the result in `translatedFileTitle`. This can be done by adding the clean file name as an extra item in the first batch call, or as a separate single-item call before the batch loop.
+### Lo que se implementó
+1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
+2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
+3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
+4. **Routing**: Ruta pública en App.tsx
 
-**4. Update `parentName` in grouped products and header to use `translatedFileTitle`:**
-- In the group header (line 633): show `translatedFileTitle || cleanFileName` instead of `group.parentName`
-- In the "Título Producto" column (line 675-676): same — show the translated file title
-- In `convertToGroupedProducts` (line 419): set `parentName` to `translatedFileTitle`
+## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
 
-### Result
-- File `W_Rhinestone_Flat_Slippers_...csv` → cleaned to `W Rhinestone Flat Slippers Diamond Ladies Shoes Women Slippers` → AI translates → `"Pantuflas Planas de Diamante para Mujer"` → shown as product title everywhere
+### Problema
+Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
 
+### Cambios
+1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
+2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
+3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.

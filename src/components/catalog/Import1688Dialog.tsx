@@ -113,6 +113,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [hasDownloaded, setHasDownloaded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [translatedFileTitle, setTranslatedFileTitle] = useState("");
+  const [cleanFileTitle, setCleanFileTitle] = useState("");
   const [translationProgress, setTranslationProgress] = useState({ current: 0, total: 0 });
 
   const resetState = () => {
@@ -143,6 +145,14 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   // Step 1 → Step 2: Parse file and auto-detect columns
   const handleFile = async (file: File) => {
     setFileName(file.name);
+    // Clean file name to extract product title
+    const cleaned = file.name
+      .replace(/\.(csv|xlsx?|tsv)$/i, "")
+      .replace(/_?\d{10,}_sku_list$/i, "")
+      .replace(/_/g, " ")
+      .trim();
+    setCleanFileTitle(cleaned);
+    setTranslatedFileTitle(cleaned); // temporary until translated
     setIsProcessing(true);
     try {
       const rows = await parseFile(file);
@@ -228,6 +238,19 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
       setProcessedData(processed);
       setStep("preview");
+
+      // Translate file title first (as an extra item in first batch)
+      try {
+        const { data: titleData } = await supabase.functions.invoke("process-1688-import", {
+          body: { items: [{ title: cleanFileTitle }] },
+        });
+        const titleTranslation = titleData?.translations?.[0];
+        if (titleTranslation?.nombre) {
+          setTranslatedFileTitle(titleTranslation.nombre);
+        }
+      } catch (err) {
+        console.warn("File title translation failed:", err);
+      }
 
       // Translate in batches
       const total = processed.length;
@@ -416,7 +439,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
       return {
         groupKey: group.productId,
-        parentName: group.parentName,
+        parentName: translatedFileTitle || group.parentName,
         baseSku: group.productId,
         supplier: "1688",
         description: group.description,
@@ -630,7 +653,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                       />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-foreground truncate">{group.parentName}</p>
+                      <p className="font-medium text-foreground truncate">{translatedFileTitle || group.parentName}</p>
                       <p className="text-xs text-muted-foreground">
                         ID: {group.productId} · {group.variants.length} variante{group.variants.length !== 1 ? "s" : ""}
                       </p>
@@ -672,8 +695,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                           <TableCell className="font-mono text-xs max-w-[120px] truncate">
                             {row.sku_interno}
                           </TableCell>
-                          <TableCell className="max-w-[150px] text-xs" title={group.parentName}>
-                            <span className="line-clamp-2">{group.parentName}</span>
+                          <TableCell className="max-w-[150px] text-xs" title={translatedFileTitle || group.parentName}>
+                            <span className="line-clamp-2">{translatedFileTitle || group.parentName}</span>
                           </TableCell>
                           <TableCell className="max-w-[150px] text-xs" title={row.nombre}>
                             <span className="line-clamp-2">{row.nombre}</span>
