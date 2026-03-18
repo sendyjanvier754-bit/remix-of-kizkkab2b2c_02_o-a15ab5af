@@ -26,6 +26,12 @@ const FeaturedProductsCarousel = ({
     align: 'start',
     loop: true
   }, [autoplayPlugin.current]);
+
+  const { getTranslated } = useTranslatedList(
+    'product',
+    products,
+    (p) => ({ name: p.nombre })
+  );
   
   if (products.length === 0) return null;
   
