@@ -54,7 +54,7 @@ export function useAdminBanners(targetAudience?: string) {
       const runInsert = async (payload: Record<string, unknown>) => {
         const { data, error } = await supabase
           .from('admin_banners')
-          .insert(payload)
+          .insert(payload as any)
           .select()
           .single();
         return { data, error };

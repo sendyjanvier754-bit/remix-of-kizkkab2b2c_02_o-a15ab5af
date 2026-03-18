@@ -2269,6 +2269,7 @@ export type Database = {
       email_senders: {
         Row: {
           created_at: string
+          destination_country_id: string | null
           id: string
           is_active: boolean
           purpose: string
@@ -2278,6 +2279,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          destination_country_id?: string | null
           id?: string
           is_active?: boolean
           purpose: string
@@ -2287,6 +2289,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          destination_country_id?: string | null
           id?: string
           is_active?: boolean
           purpose?: string
@@ -2294,7 +2297,65 @@ export type Database = {
           sender_name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_senders_destination_country_id_fkey"
+            columns: ["destination_country_id"]
+            isOneToOne: false
+            referencedRelation: "destination_countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          created_at: string | null
+          destination_country_id: string | null
+          html_content: string
+          id: string
+          is_active: boolean | null
+          name: string
+          purpose: string
+          subject: string
+          text_content: string | null
+          updated_at: string | null
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          destination_country_id?: string | null
+          html_content: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          purpose: string
+          subject: string
+          text_content?: string | null
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          destination_country_id?: string | null
+          html_content?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          purpose?: string
+          subject?: string
+          text_content?: string | null
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_destination_country_id_fkey"
+            columns: ["destination_country_id"]
+            isOneToOne: false
+            referencedRelation: "destination_countries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_movements: {
         Row: {

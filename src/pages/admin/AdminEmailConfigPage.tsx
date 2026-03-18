@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Key, Send, Shield, CheckCircle2, XCircle, Loader2, Eye, EyeOff, Users, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mail, Key, Send, Shield, CheckCircle2, XCircle, Loader2, Eye, EyeOff, Users, AlertTriangle, FileText, Globe, Plus } from "lucide-react";
 
 interface EmailConfig {
   id: string;
@@ -27,6 +29,13 @@ interface EmailSender {
   sender_email: string;
   sender_name: string;
   is_active: boolean;
+  destination_country_id: string | null;
+}
+
+interface DestinationCountry {
+  id: string;
+  name: string;
+  code: string;
 }
 
 const PURPOSE_LABELS: Record<string, { label: string; description: string }> = {
@@ -53,8 +62,10 @@ const validateEmail = (email: string): string | null => {
 };
 
 const AdminEmailConfigPage = () => {
+  const navigate = useNavigate();
   const [config, setConfig] = useState<EmailConfig | null>(null);
   const [senders, setSenders] = useState<EmailSender[]>([]);
+  const [countries, setCountries] = useState<DestinationCountry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingSenders, setSavingSenders] = useState(false);
@@ -66,7 +77,22 @@ const AdminEmailConfigPage = () => {
   useEffect(() => {
     fetchConfig();
     fetchSenders();
+    fetchCountries();
   }, []);
+
+  const fetchCountries = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("destination_countries")
+        .select("id, name, code")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      setCountries(data || []);
+    } catch (err) {
+      console.error("Error loading countries:", err);
+    }
+  };
 
   const fetchConfig = async () => {
     try {
@@ -175,6 +201,27 @@ const AdminEmailConfigPage = () => {
 
   const updateSender = (id: string, field: keyof EmailSender, value: any) => {
     setSenders(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+  };
+
+  const handleAddSender = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from("email_senders")
+        .insert({
+          purpose: "notifications",
+          sender_email: config?.sender_email || "",
+          sender_name: config?.sender_name || "Siver",
+          is_active: false,
+          destination_country_id: null,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      setSenders(prev => [...prev, data]);
+      toast.success("Nuevo remitente creado");
+    } catch (err: any) {
+      toast.error(err.message || "Error al crear remitente");
+    }
   };
 
   const handleTestEmail = async () => {
@@ -410,11 +457,18 @@ const AdminEmailConfigPage = () => {
         <TabsContent value="senders">
           <Card>
             <CardHeader>
-              <CardTitle>Remitentes por Tipo de Email</CardTitle>
-              <CardDescription>
-                Configura un email remitente diferente para cada tipo de comunicación.
-                Si un tipo está vacío o inactivo, se usará el remitente principal.
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Remitentes por Tipo de Email</CardTitle>
+                  <CardDescription>
+                    Configura un email remitente diferente para cada tipo de comunicación y país.
+                    Si un tipo está vacío o inactivo, se usará el remitente principal.
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" className="gap-1" onClick={() => navigate("/admin/email-templates")}>
+                  <FileText className="w-4 h-4" /> Plantillas
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {senders.length === 0 ? (
@@ -423,12 +477,20 @@ const AdminEmailConfigPage = () => {
                 senders.map((sender) => {
                   const info = PURPOSE_LABELS[sender.purpose] || { label: sender.purpose, description: "" };
                   const emailErr = sender.sender_email ? validateEmail(sender.sender_email) : null;
+                  const countryName = sender.destination_country_id
+                    ? countries.find(c => c.id === sender.destination_country_id)?.name || "País"
+                    : "Global";
                   return (
                     <div key={sender.id} className="border border-border rounded-lg p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{info.label}</h3>
-                          <p className="text-xs text-muted-foreground">{info.description}</p>
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <h3 className="font-semibold text-foreground">{info.label}</h3>
+                            <p className="text-xs text-muted-foreground">{info.description}</p>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] gap-1">
+                            <Globe className="w-3 h-3" /> {countryName}
+                          </Badge>
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
@@ -440,7 +502,7 @@ const AdminEmailConfigPage = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="space-y-1">
                           <Label className="text-xs">Email</Label>
                           <Input
@@ -466,15 +528,37 @@ const AdminEmailConfigPage = () => {
                             className="text-sm"
                           />
                         </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">País</Label>
+                          <Select
+                            value={sender.destination_country_id || "global"}
+                            onValueChange={(v) => updateSender(sender.id, "destination_country_id", v === "global" ? null : v)}
+                          >
+                            <SelectTrigger className="text-sm h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="global">🌐 Global</SelectItem>
+                              {countries.map(c => (
+                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
                   );
                 })
               )}
-              <Button onClick={handleSaveSenders} disabled={savingSenders} className="w-full">
-                {savingSenders ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Guardar Remitentes
-              </Button>
+              <div className="flex gap-3">
+                <Button onClick={handleSaveSenders} disabled={savingSenders} className="flex-1">
+                  {savingSenders ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Guardar Remitentes
+                </Button>
+                <Button variant="outline" onClick={handleAddSender} className="gap-1">
+                  <Plus className="w-4 h-4" /> Nuevo Remitente
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
