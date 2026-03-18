@@ -26,6 +26,7 @@ const AdminCatalogo = () => {
   const [filters, setFilters] = useState<ProductFilters>({ stockStatus: 'all' });
   const [searchTerm, setSearchTerm] = useState('');
   const [smartImportOpen, setSmartImportOpen] = useState(false);
+  const [import1688Open, setImport1688Open] = useState(false);
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
