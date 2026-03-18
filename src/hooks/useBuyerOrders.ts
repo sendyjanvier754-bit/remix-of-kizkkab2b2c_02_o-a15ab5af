@@ -384,6 +384,10 @@ export const useCancelBuyerOrder = () => {
             ? 'Tu solicitud de reembolso ha sido enviada' 
             : 'El pedido ha sido cancelado exitosamente'
       });
+      // Send cancellation email async
+      fetchOrderEmailData(variables.orderId, 'b2b').then(emailData => {
+        if (emailData) sendOrderCancelledEmail({ ...emailData, reason: variables.reason, cancelledBy: 'buyer' });
+      });
     },
     onError: (error: Error) => {
       toast({ 
