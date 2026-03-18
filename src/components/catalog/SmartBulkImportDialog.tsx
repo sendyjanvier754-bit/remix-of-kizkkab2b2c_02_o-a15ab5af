@@ -135,6 +135,28 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts }: SmartB
     return headers.filter(h => !mappedCols.includes(h));
   }, [headers, mapping]);
 
+  // Handle preloaded products from 1688 import
+  useEffect(() => {
+    if (open && preloadedProducts && preloadedProducts.length > 0) {
+      setGroupedProducts(preloadedProducts);
+      // Collect attribute configs from preloaded data
+      const allAttrs = preloadedProducts.flatMap(p => p.detectedAttributes);
+      const uniqueAttrs: Record<string, DetectedAttribute> = {};
+      allAttrs.forEach(a => { uniqueAttrs[a.attributeName] = a; });
+      const configs: AttributeConfig[] = Object.values(uniqueAttrs).map(attr => ({
+        columnName: attr.columnName,
+        attributeName: attr.attributeName,
+        type: attr.type,
+        renderType: attr.renderType,
+        categoryHint: attr.categoryHint,
+        enabled: true,
+      }));
+      setAttributeConfigs(configs);
+      setDetectedAttributeColumns(Object.keys(uniqueAttrs));
+      setStep('preview');
+    }
+  }, [open, preloadedProducts]);
+
   // Persist modal state in sessionStorage to survive page refreshes
   const STORAGE_KEY = 'smartImportDialogState';
   
