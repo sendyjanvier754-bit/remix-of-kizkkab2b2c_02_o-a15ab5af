@@ -113,6 +113,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [hasDownloaded, setHasDownloaded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [translatedFileTitle, setTranslatedFileTitle] = useState("");
+  const [cleanFileTitle, setCleanFileTitle] = useState("");
   const [translationProgress, setTranslationProgress] = useState({ current: 0, total: 0 });
 
   const resetState = () => {
