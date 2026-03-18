@@ -42,7 +42,14 @@ const VariantDrawer: React.FC = () => {
   const { isClientPreview } = useViewMode();
 
   const isB2BUser = (role === UserRole.SELLER || role === UserRole.ADMIN) && !isClientPreview;
-  
+
+  // Translate product name from DB
+  const { translated: translatedProduct } = useTranslatedContent(
+    'product',
+    product?.source_product_id || product?.id || null,
+    { name: product?.nombre || '' }
+  );
+  const displayName = translatedProduct.name || product?.nombre || '';
   // Get cart product totals for MOQ validation at product level
   const { getProductTotal } = useB2BCartProductTotals();
   
