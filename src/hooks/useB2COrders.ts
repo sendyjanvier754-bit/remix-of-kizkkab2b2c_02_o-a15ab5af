@@ -147,10 +147,19 @@ export const useCreateB2COrder = () => {
         throw err;
       }
     },
-    onSuccess: () => {
+    onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
       queryClient.invalidateQueries({ queryKey: ['b2c-cart-items'] });
       toast.success('¡Pedido creado exitosamente!');
+      // Send emails async (don't block UI)
+      if (order?.id) {
+        fetchOrderEmailData(order.id, 'b2c').then(emailData => {
+          if (!emailData) return;
+          sendOrderConfirmationEmail(emailData);
+          sendPaymentDetailsEmail(emailData);
+          sendSellerNewOrderEmail(emailData);
+        });
+      }
     },
     onError: (error: Error) => {
       console.error('Error creating order:', error);
