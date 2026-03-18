@@ -360,7 +360,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       Titulo_Producto: translatedFileTitle || row.nombre,
       URL_Producto: row.url_producto,
       Proveedor: row.proveedor,
-      Variante_1_Color: row.nombre,
+      Variante_1_Color: row.variante_1_color,
       Variante_2_Talla: row.variante_2_talla,
       Descripcion_Corta: row.descripcion_corta,
       Costo: row.costo,
