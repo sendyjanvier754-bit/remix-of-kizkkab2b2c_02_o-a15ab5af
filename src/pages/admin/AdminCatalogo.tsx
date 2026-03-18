@@ -27,6 +27,7 @@ const AdminCatalogo = () => {
   const [filters, setFilters] = useState<ProductFilters>({ stockStatus: 'all' });
   const [searchTerm, setSearchTerm] = useState('');
   const [smartImportOpen, setSmartImportOpen] = useState(false);
+  const [preloaded1688Products, setPreloaded1688Products] = useState<GroupedProduct[] | undefined>(undefined);
   const [import1688Open, setImport1688Open] = useState(false);
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
