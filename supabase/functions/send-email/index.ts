@@ -9,9 +9,19 @@ const corsHeaders = {
 interface EmailRequest {
   to: string | string[];
   subject: string;
-  htmlContent: string;
+  htmlContent?: string;
   textContent?: string;
   type?: "auth" | "marketing" | "communication" | "test" | "orders" | "notifications" | "support" | "authentication";
+  // Template-based sending
+  template_purpose?: string;
+  destination_country_id?: string;
+  variables?: Record<string, string>;
+}
+
+function replaceVariables(text: string, variables: Record<string, string>): string {
+  return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    return variables[key] !== undefined ? variables[key] : match;
+  });
 }
 
 Deno.serve(async (req) => {
@@ -50,21 +60,66 @@ Deno.serve(async (req) => {
     }
 
     const body: EmailRequest = await req.json();
-    const { to, subject, htmlContent, textContent, type } = body;
+    let { to, subject, htmlContent, textContent, type, template_purpose, destination_country_id, variables } = body;
 
-    if (!to || !subject || !htmlContent) {
+    if (!to) {
       return new Response(
-        JSON.stringify({ success: false, error: "Faltan campos requeridos: to, subject, htmlContent" }),
+        JSON.stringify({ success: false, error: "Falta campo requerido: to" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Determine sender: check email_senders table for type-specific sender
+    // If template_purpose is provided, or type is provided without htmlContent, try to load template from DB
+    const purpose = template_purpose || type;
+    if (purpose && purpose !== "test" && !htmlContent) {
+      // Try to find template for specific country first, then fallback to global
+      let template = null;
+      
+      if (destination_country_id) {
+        const { data } = await supabaseAdmin
+          .from("email_templates")
+          .select("*")
+          .eq("purpose", purpose)
+          .eq("destination_country_id", destination_country_id)
+          .eq("is_active", true)
+          .limit(1);
+        template = data?.[0];
+      }
+
+      // Fallback to global template
+      if (!template) {
+        const { data } = await supabaseAdmin
+          .from("email_templates")
+          .select("*")
+          .eq("purpose", purpose)
+          .is("destination_country_id", null)
+          .eq("is_active", true)
+          .limit(1);
+        template = data?.[0];
+      }
+
+      if (template) {
+        const vars = variables || {};
+        subject = replaceVariables(template.subject, vars);
+        htmlContent = replaceVariables(template.html_content, vars);
+        if (template.text_content) {
+          textContent = replaceVariables(template.text_content, vars);
+        }
+      }
+    }
+
+    if (!subject || !htmlContent) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Faltan campos requeridos: subject, htmlContent (o template no encontrado)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Determine sender: check email_senders table for type+country-specific sender
     let senderEmail = config.sender_email;
     let senderName = config.sender_name || "Siver";
 
     if (type && type !== "test") {
-      // Map type to purpose
       const purposeMap: Record<string, string> = {
         auth: "authentication",
         authentication: "authentication",
@@ -74,16 +129,33 @@ Deno.serve(async (req) => {
         notifications: "notifications",
         support: "support",
       };
-      const purpose = purposeMap[type] || type;
+      const senderPurpose = purposeMap[type] || type;
 
-      const { data: senderData } = await supabaseAdmin
-        .from("email_senders")
-        .select("sender_email, sender_name, is_active")
-        .eq("purpose", purpose)
-        .eq("is_active", true)
-        .limit(1);
+      // Try country-specific sender first
+      let sender = null;
+      if (destination_country_id) {
+        const { data: senderData } = await supabaseAdmin
+          .from("email_senders")
+          .select("sender_email, sender_name, is_active")
+          .eq("purpose", senderPurpose)
+          .eq("destination_country_id", destination_country_id)
+          .eq("is_active", true)
+          .limit(1);
+        sender = senderData?.[0];
+      }
 
-      const sender = senderData?.[0];
+      // Fallback to global sender for this purpose
+      if (!sender) {
+        const { data: senderData } = await supabaseAdmin
+          .from("email_senders")
+          .select("sender_email, sender_name, is_active")
+          .eq("purpose", senderPurpose)
+          .is("destination_country_id", null)
+          .eq("is_active", true)
+          .limit(1);
+        sender = senderData?.[0];
+      }
+
       if (sender && sender.sender_email && sender.sender_email.includes("@")) {
         senderEmail = sender.sender_email;
         senderName = sender.sender_name || senderName;
@@ -114,7 +186,7 @@ Deno.serve(async (req) => {
 
     const authToken = btoa(`${config.api_key.trim()}:${config.api_secret.trim()}`);
 
-    console.log("Sending email via Mailjet:", { to, subject, type, senderEmail, senderName });
+    console.log("Sending email via Mailjet:", { to, subject, type, senderEmail, senderName, template_purpose, destination_country_id });
 
     const mailjetResponse = await fetch("https://api.mailjet.com/v3.1/send", {
       method: "POST",
