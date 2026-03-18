@@ -703,26 +703,45 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                   </CardContent>
                 </Card>
 
-                <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer" 
-                      onClick={() => fileInputRef.current?.click()}>
-                  <CardContent className="py-12 text-center space-y-4">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Upload className="h-8 w-8 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium">Arrastra tu archivo CSV aquí</h3>
-                      <p className="text-sm text-muted-foreground">o haz clic para seleccionar</p>
-                    </div>
-                    <Input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} className="hidden" />
-                  </CardContent>
-                </Card>
+                {preloadedFile && rawData.length > 0 ? (
+                  <Card className="border-2 border-primary/30 bg-primary/5">
+                    <CardContent className="py-8 text-center space-y-4">
+                      <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <FileSpreadsheet className="h-8 w-8 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium">{preloadedFile.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {rawData.length} filas • {headers.length} columnas — Generado desde importación 1688
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">Archivo listo para importar</Badge>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer" 
+                          onClick={() => fileInputRef.current?.click()}>
+                      <CardContent className="py-12 text-center space-y-4">
+                        <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Upload className="h-8 w-8 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-medium">Arrastra tu archivo CSV aquí</h3>
+                          <p className="text-sm text-muted-foreground">o haz clic para seleccionar</p>
+                        </div>
+                        <Input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} className="hidden" />
+                      </CardContent>
+                    </Card>
 
-                <div className="flex justify-center">
-                  <Button variant="outline" size="sm" onClick={downloadTemplate}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Descargar Plantilla
-                  </Button>
-                </div>
+                    <div className="flex justify-center">
+                      <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Descargar Plantilla
+                      </Button>
+                    </div>
+                  </>
+                )}
               </>
             )}
 
