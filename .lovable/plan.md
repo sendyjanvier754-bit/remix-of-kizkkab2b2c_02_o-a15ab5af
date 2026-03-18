@@ -1,57 +1,55 @@
-## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
+## Plan: Modal Pre-procesamiento 1688 + Fix Build Errors
 
-### Lo que se implementó
+### 1. Fix Build Errors (2 archivos)
 
-1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
-2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
-3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
-4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
-5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
-6. **Routing**: Ruta añadida en App.tsx con lazy loading
+- `TrendingCategoryCard.tsx` línea 39: `translatedCategory.name` → `translatedCategory.translated.name`
+- `CategoryProductsPage.tsx` línea 44: `translatedCategory.name` → `translatedCategory.translated.name`
 
-### Flujo
-1. Agente busca usuario → solicita acceso → OTP enviado como notificación
-2. Agente ingresa OTP → sesión activa 2h con timer visible
-3. Agente busca productos → agrega a borrador → configura envío
-4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
-5. Soporte multitarea con múltiples borradores
+### 2. Edge Function: `process-1688-import` (nueva)
 
-## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
+Recibe títulos y variantes en chino, usa Lovable AI (`google/gemini-3-flash-preview`) para:
 
-### Problema
-El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
+- Traducir título al español comercial
+- Traducir colores/variantes al español
+- Generar descripción ≤200 chars **sin comas**
 
-### Cambios realizados
+### 3. Componente: `Import1688Dialog.tsx` (nuevo)
 
-1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
+Modal con 3 pasos:
 
-2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
+**Paso 1 — Drag & Drop**
 
-3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
+- Zona de arrastrar archivos CSV/Excel
+- `xlsx` con `raw: true` — todo como texto literal (URLs e imágenes intactos)
 
-### Flujo corregido
-```
-Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-... pasa el tiempo, PO-001 vence ...
-Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
-Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
-```
+**Paso 2 — Preview con Traducción**
 
-## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
+- Auto-detecta columnas 1688 (ID, Título, Variante 1/2, Imagen SKU, Precio calculado2, Stock)
+- Genera `SKU_Interno` = `[ID]-[V1]-[V2]`
+  &nbsp;
+- Llama a `process-1688-import` por lotes para traducir
+- Tabla: Imagen (renderizada), SKU_Interno, Nombre, Variante_1_Color, Variante_2_Talla, Descripción_Corta, Costo, Stock
 
-### Lo que se implementó
-1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
-2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
-3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
-4. **Routing**: Ruta pública en App.tsx
+**Paso 3 — Descarga y luego Confirmación (2 botones separados)**
 
-## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
+Flujo secuencial con 2 acciones:
 
-### Problema
-Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
+1. **Botón "Descargar Excel Procesado"** — genera y descarga el Excel con columnas Kizkka (SKU_Interno, Nombre, URL_Producto, Proveedor, Variante_1_Color, Variante_2_Talla, Descripcion_Corta, Costo, MOQ, Stock, URL_Imagen_Origen). Tras descargar, se habilita el segundo botón.
+2. **Botón "Confirmar e Importar"** (deshabilitado hasta que se descargue) — muestra mensaje "¿Deseas enviar este archivo al proceso de importación?". Al confirmar: cierra el dialog 1688 y abre `SmartBulkImportDialog` con los datos pre-cargados.
 
-### Cambios
-1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
-2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
-3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.
+### 4. Integración en AdminCatalogo
+
+Agregar botón "Importar 1688" junto a los botones existentes. State `import1688Open` + renderizar `Import1688Dialog`.
+
+### 5. Deploy
+
+Agregar `process-1688-import` a `supabase/config.toml` y desplegar.
+
+### Archivos
+
+- `TrendingCategoryCard.tsx` — fix
+- `CategoryProductsPage.tsx` — fix
+- `src/components/catalog/Import1688Dialog.tsx` — nuevo
+- `supabase/functions/process-1688-import/index.ts` — nuevo
+- `supabase/config.toml` — agregar función
+- `src/pages/admin/AdminCatalogo.tsx` — agregar botón
