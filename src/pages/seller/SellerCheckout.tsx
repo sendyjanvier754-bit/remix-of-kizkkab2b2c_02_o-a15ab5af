@@ -886,6 +886,16 @@ const SellerCheckout = () => {
       }
 
       setOrderPlaced(true);
+
+      // Send order emails async (confirmation + payment details + seller notification)
+      if (order?.id) {
+        fetchOrderEmailData(order.id, 'b2b').then(emailData => {
+          if (!emailData) return;
+          sendOrderConfirmationEmail(emailData);
+          sendPaymentDetailsEmail(emailData);
+          sendSellerNewOrderEmail(emailData);
+        });
+      }
       
       // Clear the B2B cart by marking it as completed
       try {
