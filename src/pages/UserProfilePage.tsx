@@ -10,6 +10,8 @@ import {
   LogOut, ChevronRight, Bell, HelpCircle, Shield, Info, Package,
   RotateCcw, MessageCircle, Clock, Truck, Star, Wallet,
 } from "lucide-react";
+import { Store as StoreIcon } from "lucide-react";
+import { UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
 import { AboutModal } from "@/components/legal/AboutModal";
