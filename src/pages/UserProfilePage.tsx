@@ -38,6 +38,7 @@ export function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showUpgradeSeller, setShowUpgradeSeller] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>('orders');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Mi Cuenta": true,

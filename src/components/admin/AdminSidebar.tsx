@@ -56,7 +56,7 @@ export function AdminSidebar() {
     { title: t('adminSidebar.agentOrders'), url: "/admin/agente-pedidos", icon: Headset },
     { title: t('adminSidebar.liveChat'), url: "/admin/soporte-chat", icon: MessageCircle },
     { title: t('adminSidebar.notifications'), url: "/admin/notificaciones", icon: Bell },
-  ];
+    { title: "Cuentas", url: "/admin/cuentas", icon: UsersRound },
 
   const analyticsItems = [
     { title: t('adminSidebar.poMaster'), url: "/admin/po-master", icon: Package },
