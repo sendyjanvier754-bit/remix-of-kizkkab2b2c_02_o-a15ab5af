@@ -122,13 +122,13 @@ const Footer = () => {
               <PaymentIcon src={getValue('payment_icon_mastercard')} alt="Mastercard" fallback={<img src="/mastercard.png" alt="Mastercard" className="h-6 w-auto" />} />
             </div>
             <div className="flex flex-col items-center gap-2">
-              <PaymentIcon src={getValue('payment_icon_amex')} alt="American Express" fallback={<img src="/american express.png" alt="American Express" className="h-6 w-auto" />} />
+              <PaymentIcon src={getValue('payment_icon_amex')} alt="American Express" fallback={<img src="/american-express.png" alt="American Express" className="h-6 w-auto" />} />
             </div>
             <div className="flex flex-col items-center gap-2">
-              <PaymentIcon src={getValue('payment_icon_applepay')} alt="Apple Pay" fallback={<img src="/apple pay.png" alt="Apple Pay" className="h-6 w-auto" />} />
+              <PaymentIcon src={getValue('payment_icon_applepay')} alt="Apple Pay" fallback={<img src="/apple-pay.png" alt="Apple Pay" className="h-6 w-auto" />} />
             </div>
             <div className="flex flex-col items-center gap-2">
-              <PaymentIcon src={getValue('payment_icon_googlepay')} alt="Google Pay" fallback={<img src="/google pay.png" alt="Google Pay" className="h-6 w-auto" />} />
+              <PaymentIcon src={getValue('payment_icon_googlepay')} alt="Google Pay" fallback={<img src="/google-pay.png" alt="Google Pay" className="h-6 w-auto" />} />
             </div>
             <div className="flex flex-col items-center gap-2">
               {getValue('payment_icon_transfer') ? (

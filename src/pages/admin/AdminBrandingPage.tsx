@@ -14,9 +14,9 @@ import { Loader2, Save, Palette, Globe, Share2, Search, CreditCard, FileText, Im
 const PAYMENT_ICONS = [
   { key: 'payment_icon_visa',       label: 'VISA',                default: '/visa.png' },
   { key: 'payment_icon_mastercard', label: 'Mastercard',          default: '/mastercard.png' },
-  { key: 'payment_icon_amex',       label: 'American Express',    default: '/american express.png' },
-  { key: 'payment_icon_applepay',   label: 'Apple Pay',           default: '/apple pay.png' },
-  { key: 'payment_icon_googlepay',  label: 'Google Pay',          default: '/google pay.png' },
+  { key: 'payment_icon_amex',       label: 'American Express',    default: '/american-express.png' },
+  { key: 'payment_icon_applepay',   label: 'Apple Pay',           default: '/apple-pay.png' },
+  { key: 'payment_icon_googlepay',  label: 'Google Pay',          default: '/google-pay.png' },
   { key: 'payment_icon_moncash',    label: 'MonCash',             default: '' },
   { key: 'payment_icon_natcash',    label: 'NatCash',             default: '' },
   { key: 'payment_icon_transfer',   label: 'Transferencia Bancaria', default: '' },

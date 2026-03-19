@@ -22,9 +22,9 @@ const DEFAULTS: Record<string, string> = {
   // Payment method icon defaults — point to the existing static files
   payment_icon_visa: '/visa.png',
   payment_icon_mastercard: '/mastercard.png',
-  payment_icon_amex: '/american express.png',
-  payment_icon_applepay: '/apple pay.png',
-  payment_icon_googlepay: '/google pay.png',
+  payment_icon_amex: '/american-express.png',
+  payment_icon_applepay: '/apple-pay.png',
+  payment_icon_googlepay: '/google-pay.png',
   payment_icon_moncash: '',
   payment_icon_natcash: '',
   payment_icon_transfer: '',

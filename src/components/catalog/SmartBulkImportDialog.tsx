@@ -4,6 +4,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,6 +55,7 @@ interface ColumnMapping {
   categoria: string;
   proveedor: string;
   url_origen: string;
+  imagen_principal: string;
 }
 
 const DEFAULT_MAPPING: ColumnMapping = {
@@ -66,7 +68,8 @@ const DEFAULT_MAPPING: ColumnMapping = {
   url_imagen: 'URL_Imagen_Origen',
   categoria: 'Categoria',
   proveedor: 'Proveedor',
-  url_origen: 'URL_Producto'
+  url_origen: 'URL_Producto',
+  imagen_principal: ''
 };
 
 const STEPS = [
@@ -83,6 +86,11 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
   const { data: suppliers } = useSuppliers();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const productMainImageFileRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
+  const [productMainImageOverride, setProductMainImageOverride] = useState('');
+  const [confirmNoMainImage, setConfirmNoMainImage] = useState(false);
+  const [extraImages, setExtraImages] = useState<string[]>([]);
   
   // Shipping origins for country of origin selector
   const [shippingOrigins, setShippingOrigins] = useState<{ id: string; name: string; code: string }[]>([]);
@@ -343,6 +351,11 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Reset image state whenever a new file is loaded
+    setProductMainImageOverride('');
+    setConfirmNoMainImage(false);
+    setExtraImages([]);
+
     void (async () => {
       try {
         const parsed = await parseImportFile(file);
@@ -367,7 +380,15 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     const autoMapping = { ...DEFAULT_MAPPING };
     headerRow.forEach((header) => {
       const lower = header.toLowerCase();
-      if (lower.includes('sku') || lower.includes('codigo')) autoMapping.sku_interno = header;
+      // imagen_principal MUST be checked before generic imagen/image/foto
+      if (
+        lower === 'imagen_principal' ||
+        lower.includes('imagen_principal') ||
+        lower.includes('main_image') ||
+        lower.includes('main image') ||
+        lower.includes('foto_principal')
+      ) autoMapping.imagen_principal = header;
+      else if (lower.includes('sku') || lower.includes('codigo')) autoMapping.sku_interno = header;
       else if (lower.includes('nombre') || lower.includes('name') || lower.includes('title') || lower.includes('titulo') || lower.includes('product')) {
         // Prioriza nombre, pero también puede usar para descripción si no hay columna específica
         if (!autoMapping.nombre) autoMapping.nombre = header;
@@ -445,7 +466,20 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     }
     setIsCheckingDuplicates(false);
     
-    setGroupedProducts(groups);
+    // Set mainImageUrl and extraImages BEFORE storing in state
+    groups.forEach(group => {
+      if (productMainImageOverride) {
+        group.mainImageUrl = productMainImageOverride;
+      } else if (mapping.imagen_principal && group.variants[0]?.originalRow) {
+        const val = group.variants[0].originalRow[mapping.imagen_principal];
+        if (val) group.mainImageUrl = String(val);
+      }
+      if (extraImages.length > 0) {
+        group.extraImages = extraImages;
+      }
+    });
+
+    setGroupedProducts([...groups]); // spread to ensure new reference with mutations applied
     setDetectedAttributeColumns(attrs);
 
     // Ask user to confirm detected product grouping
@@ -516,6 +550,8 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
           
           return {
             ...group,
+            mainImageUrl: group.mainImageUrl,
+            extraImages: group.extraImages,
             variants: updatedVariants,
             detectedAttributes: updatedAttributes
           };
@@ -600,6 +636,9 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     setAttributeConfigs([]);
     setProcessedUrlMap({});
     setIsPreparingPreloadedFile(false);
+    setProductMainImageOverride('');
+    setConfirmNoMainImage(false);
+    setExtraImages([]);
     assetProcessing.reset();
     setShowTemplateHint(false);
     setShowGroupConfirm(false);
@@ -864,6 +903,101 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                   </CardContent>
                 </Card>
 
+                {/* Imagen Principal — required */}
+                <Card className={cn("border-2", !mapping.imagen_principal && !productMainImageOverride && !confirmNoMainImage ? "border-destructive/50" : "border-green-500/50")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      Imagen Principal del Producto
+                      <span className="text-destructive">*</span>
+                      {(mapping.imagen_principal || productMainImageOverride || confirmNoMainImage) && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />
+                      )}
+                    </CardTitle>
+                    <CardDescription className="text-xs">Requerido para continuar — mapea una columna, sube una imagen, o confirma continuar sin ella</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Mapear desde columna del archivo</Label>
+                      <Select value={mapping.imagen_principal || '__none__'} onValueChange={(v) => { setMapping(m => ({ ...m, imagen_principal: v === '__none__' ? '' : v })); if (v !== '__none__') { setProductMainImageOverride(''); setConfirmNoMainImage(false); } }}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Seleccionar columna" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">-- No mapear --</SelectItem>
+                          {headers.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {mapping.imagen_principal && (() => {
+                        const colIdx = headers.indexOf(mapping.imagen_principal);
+                        const previewUrl = colIdx >= 0 ? (rawData[0]?.[colIdx] || '') : '';
+                        return previewUrl ? (
+                          <div className="flex items-center gap-2 mt-1">
+                            <img
+                              src={previewUrl}
+                              alt="Vista previa"
+                              className="h-14 w-14 rounded object-cover border-2 border-green-500"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                            <p className="text-xs text-muted-foreground truncate max-w-[260px]">{previewUrl}</p>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                    {!mapping.imagen_principal && (
+                      <>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 border-t" />
+                          <span className="text-xs text-muted-foreground">O</span>
+                          <div className="flex-1 border-t" />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => productMainImageFileRef.current?.click()}
+                          >
+                            <Upload className="h-3 w-3 mr-1" />
+                            {productMainImageOverride ? 'Cambiar imagen' : 'Subir desde PC'}
+                          </Button>
+                          {productMainImageOverride && (
+                            <div className="relative group">
+                              <img src={productMainImageOverride} className="h-12 w-12 rounded object-cover border-2 border-green-500" alt="Principal" />
+                              <button
+                                className="absolute -top-1 -right-1 bg-destructive text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100"
+                                onClick={() => setProductMainImageOverride('')}
+                              >×</button>
+                            </div>
+                          )}
+                          <input ref={productMainImageFileRef} type="file" accept="image/*" className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = (ev) => { if (ev.target?.result) { setProductMainImageOverride(ev.target.result as string); setConfirmNoMainImage(false); } };
+                              reader.readAsDataURL(file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </div>
+                        {!productMainImageOverride && (
+                          <>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 border-t" />
+                              <span className="text-xs text-muted-foreground">O</span>
+                              <div className="flex-1 border-t" />
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <Checkbox checked={confirmNoMainImage} onCheckedChange={(v) => setConfirmNoMainImage(!!v)} />
+                              <span className="text-xs text-muted-foreground">Continuar sin imagen principal (se usará la imagen del primer variante)</span>
+                            </label>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+
                 <Accordion type="single" collapsible>
                   <AccordionItem value="optional" className="border rounded-lg">
                     <AccordionTrigger className="px-4 py-3 text-sm hover:no-underline">
@@ -874,7 +1008,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                         {[
                           { key: 'descripcion_corta', label: 'Descripción' },
                           { key: 'moq', label: 'MOQ' },
-                          { key: 'url_imagen', label: 'URL Imagen' },
+                          { key: 'url_imagen', label: 'URL Imagen Variante' },
                           { key: 'categoria', label: 'Categoría' },
                           { key: 'proveedor', label: 'Proveedor' },
                           { key: 'url_origen', label: 'URL Origen' },
@@ -894,6 +1028,50 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
+
+                {/* Gallery images (non-variant) */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      Imágenes Adicionales del Producto
+                      <Badge variant="outline" className="text-xs font-normal">Opcional</Badge>
+                    </CardTitle>
+                    <CardDescription className="text-xs">Imágenes de galería que no son imágenes de variantes. Puedes seleccionar varias a la vez.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => galleryFileInputRef.current?.click()}>
+                      <Upload className="h-3 w-3 mr-1" /> Seleccionar imágenes desde PC
+                    </Button>
+                    <input ref={galleryFileInputRef} type="file" accept="image/*" multiple className="hidden"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        files.forEach(file => {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => { if (ev.target?.result) setExtraImages(prev => [...prev, ev.target!.result as string]); };
+                          reader.readAsDataURL(file);
+                        });
+                        e.target.value = '';
+                      }}
+                    />
+                    {extraImages.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {extraImages.map((src, i) => (
+                          <div key={i} className="relative group">
+                            <img src={src} className="h-16 w-16 rounded object-cover border" alt={`Galeria ${i + 1}`} />
+                            <button
+                              className="absolute -top-1 -right-1 bg-destructive text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => setExtraImages(prev => prev.filter((_, j) => j !== i))}
+                            >×</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {extraImages.length === 0 && (
+                      <p className="text-xs text-muted-foreground">No hay imágenes adicionales seleccionadas.</p>
+                    )}
+                  </CardContent>
+                </Card>
 
                 <Card className="bg-muted/30 border-primary/20">
                   <CardHeader className="pb-2">
@@ -1299,15 +1477,13 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                       <Card key={i} className={cn("p-3", group.existsInDb && "opacity-50")}>
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
-                            {group.variants[0]?.imageUrl && (
+                            {(group.mainImageUrl || group.variants[0]?.imageUrl) && (
                               <img 
-                                src={group.variants[0].imageUrl}
+                                src={group.mainImageUrl || group.variants[0].imageUrl}
                                 alt={group.parentName}
                                 className="w-10 h-10 rounded object-cover border"
                                 loading="lazy"
                                 decoding="async"
-                                referrerPolicy="no-referrer"
-                                crossOrigin="anonymous"
                                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                               />
                             )}
@@ -1446,7 +1622,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
             {step === 'mapping' && (
               <Button 
                 onClick={() => setStep('attributes')}
-                disabled={!defaultOriginId || selectedMarketIds.length === 0 || !defaultPesoG}
+                disabled={!defaultOriginId || selectedMarketIds.length === 0 || !defaultPesoG || (!mapping.imagen_principal && !productMainImageOverride && !confirmNoMainImage)}
               >
                 Siguiente: Atributos <ArrowRight className="h-4 w-4 ml-2" />
               </Button>

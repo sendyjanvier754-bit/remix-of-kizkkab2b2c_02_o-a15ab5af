@@ -1288,7 +1288,7 @@ const SellerCartPage = () => {
                             className="bg-white border border-gray-200 rounded p-1 flex flex-col items-center justify-center hover:border-gray-300 transition"
                             title="American Express"
                           >
-                            <img src="/american express.png" alt="American Express" className="h-4 w-auto" />
+                            <img src="/american-express.png" alt="American Express" className="h-4 w-auto" />
                           </div>
 
                           {/* APPLE PAY */}
@@ -1296,7 +1296,7 @@ const SellerCartPage = () => {
                             className="bg-white border border-gray-200 rounded p-1 flex flex-col items-center justify-center hover:border-gray-300 transition"
                             title="Apple Pay"
                           >
-                            <img src="/apple pay.png" alt="Apple Pay" className="h-4 w-auto" />
+                            <img src="/apple-pay.png" alt="Apple Pay" className="h-4 w-auto" />
                           </div>
 
                           {/* GOOGLE PAY */}
@@ -1304,7 +1304,7 @@ const SellerCartPage = () => {
                             className="bg-white border border-gray-200 rounded p-1 flex flex-col items-center justify-center hover:border-gray-300 transition"
                             title="Google Pay"
                           >
-                            <img src="/google pay.png" alt="Google Pay" className="h-4 w-auto" />
+                            <img src="/google-pay.png" alt="Google Pay" className="h-4 w-auto" />
                           </div>
                         </>
                       )}
@@ -1955,13 +1955,13 @@ const SellerCartPage = () => {
                         <img src="/mastercard.png" alt="Mastercard" className="h-4 w-auto" />
                       </div>
                       <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="American Express">
-                        <img src="/american express.png" alt="American Express" className="h-4 w-auto" />
+                        <img src="/american-express.png" alt="American Express" className="h-4 w-auto" />
                       </div>
                       <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="Apple Pay">
-                        <img src="/apple pay.png" alt="Apple Pay" className="h-4 w-auto" />
+                        <img src="/apple-pay.png" alt="Apple Pay" className="h-4 w-auto" />
                       </div>
                       <div className="bg-white border border-gray-200 rounded p-1 flex items-center justify-center" title="Google Pay">
-                        <img src="/google pay.png" alt="Google Pay" className="h-4 w-auto" />
+                        <img src="/google-pay.png" alt="Google Pay" className="h-4 w-auto" />
                       </div>
                     </>
                   )}

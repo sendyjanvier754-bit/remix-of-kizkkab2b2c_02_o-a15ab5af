@@ -87,9 +87,9 @@ END$$;
 INSERT INTO public.branding_settings (key, value, description) VALUES
   ('payment_icon_visa',        '/visa.png',             'Icono de VISA (URL o ruta)'),
   ('payment_icon_mastercard',  '/mastercard.png',       'Icono de Mastercard'),
-  ('payment_icon_amex',        '/american express.png', 'Icono de American Express'),
-  ('payment_icon_applepay',    '/apple pay.png',        'Icono de Apple Pay'),
-  ('payment_icon_googlepay',   '/google pay.png',       'Icono de Google Pay'),
+  ('payment_icon_amex',        '/american-express.png', 'Icono de American Express'),
+  ('payment_icon_applepay',    '/apple-pay.png',        'Icono de Apple Pay'),
+  ('payment_icon_googlepay',   '/google-pay.png',       'Icono de Google Pay'),
   ('payment_icon_moncash',     '',                      'Icono de MonCash (vacío = badge por defecto)'),
   ('payment_icon_natcash',     '',                      'Icono de NatCash (vacío = badge por defecto)'),
   ('payment_icon_transfer',    '',                      'Icono de Transferencia Bancaria (vacío = badge por defecto)'),

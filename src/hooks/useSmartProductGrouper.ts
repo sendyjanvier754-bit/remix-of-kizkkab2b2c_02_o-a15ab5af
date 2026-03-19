@@ -28,6 +28,8 @@ export interface GroupedProduct {
   // Flag to indicate if this SKU already exists in DB
   existsInDb?: boolean;
   existingProductId?: string;
+  mainImageUrl?: string;
+  extraImages?: string[];
 }
 
 export interface VariantRow {
@@ -235,7 +237,8 @@ export const groupProductsByParent = (
   rows.forEach(row => {
     const sku = row[columnMapping.sku_interno] || '';
     const name = row[columnMapping.nombre] || '';
-    const imageUrl = normalizeExcelUrl(row[columnMapping.url_imagen] || '');
+    // Fall back to imagen_principal column for variant image if url_imagen is not mapped
+    const imageUrl = normalizeExcelUrl(row[columnMapping.url_imagen] || row[columnMapping.imagen_principal] || '');
     const parentId = row['parent_id'] || row['Parent_ID'] || row['parent'] || '';
     // Determine group key - prioritize explicit parent_id, otherwise require BOTH:
     // - same normalized parent title
@@ -334,6 +337,20 @@ export const groupProductsByParent = (
 };
 
 // Process and import grouped products with EAV
+/** Upload a base64 data: URL to Supabase Storage and return the public URL. */
+const uploadDataUrlToStorage = async (dataUrl: string, fileName: string): Promise<string> => {
+  const [header, base64] = dataUrl.split(',');
+  const mimeMatch = header.match(/data:(.*?);/);
+  const mimeType = mimeMatch?.[1] || 'image/jpeg';
+  const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+  const blob = await fetch(dataUrl).then(r => r.blob());
+  const path = `imports/${Date.now()}_${fileName}.${ext}`;
+  const { error } = await supabase.storage.from('product-images').upload(path, blob, { contentType: mimeType, upsert: true });
+  if (error) throw new Error(`Storage upload failed: ${error.message}`);
+  const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+  return urlData.publicUrl;
+};
+
 export const importGroupedProducts = async (
   groups: GroupedProduct[],
   categoryId: string | undefined,
@@ -364,16 +381,34 @@ export const importGroupedProducts = async (
       const minCost = Math.min(...group.variants.map(v => v.costBase));
       const b2bPrice = priceCalculator(minCost);
       
-      // Collect all unique images from variants for gallery
-      const allImages = [...new Set(group.variants.map(v => v.imageUrl).filter(Boolean))];
-      
-      // Log images being used for debugging
-      console.log(`Importing product ${group.baseSku}:`, {
-        imagen_principal: representativeVariant.imageUrl,
-        galeria_imagenes: allImages,
-        variantCount: group.variants.length
-      });
+      // Collect all unique images from variants for gallery, plus any extra gallery images
+      const variantImages = [...new Set(group.variants.map(v => v.imageUrl).filter(Boolean))] as string[];
+      const rawExtraImages = (group.extraImages || []).filter(Boolean);
 
+      // Upload any data: URLs to Storage and resolve to real public URLs
+      let resolvedMainImage = group.mainImageUrl || representativeVariant.imageUrl || null;
+      if (resolvedMainImage?.startsWith('data:')) {
+        try {
+          resolvedMainImage = await uploadDataUrlToStorage(resolvedMainImage, `${group.baseSku}_main`);
+        } catch (e) {
+          console.error('Failed to upload main image:', e);
+          resolvedMainImage = null;
+        }
+      }
+
+      const resolvedExtraImages = await Promise.all(
+        rawExtraImages.map(async (url, idx) => {
+          if (url.startsWith('data:')) {
+            try { return await uploadDataUrlToStorage(url, `${group.baseSku}_extra${idx}`); }
+            catch { return null; }
+          }
+          return url;
+        })
+      );
+
+      const allImages = [...new Set([...variantImages, ...resolvedExtraImages.filter(Boolean) as string[]])];
+
+      
       const { data: product, error: productError } = await supabase
         .from('products')
         .upsert({
@@ -387,7 +422,7 @@ export const importGroupedProducts = async (
           precio_mayorista_base: b2bPrice,
           moq: representativeVariant.moq,
           stock_fisico: totalStock,
-          imagen_principal: representativeVariant.imageUrl || null,
+          imagen_principal: resolvedMainImage,
           galeria_imagenes: allImages.length > 0 ? allImages : null,
           url_origen: representativeVariant.sourceUrl || null,
           is_parent: true,
