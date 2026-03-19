@@ -1,57 +1,105 @@
-## Módulo de Creación de Pedidos por Agente — IMPLEMENTADO ✅
 
-### Lo que se implementó
 
-1. **Base de datos**: 3 tablas nuevas (`agent_sessions`, `agent_cart_drafts`, `agent_cart_draft_items`) con RLS completo + rol `sales_agent` en enum `app_role` + RPC `agent_push_cart_to_user`
-2. **Edge Function**: `send-agent-otp` — genera OTP 6 dígitos, crea sesión, notifica al usuario
-3. **Hooks**: `useAgentSession` (OTP + sesión) y `useAgentCartDraft` (CRUD borradores)
-4. **Componentes**: AgentUserSearch, AgentOTPVerification, AgentSessionTimer, AgentDraftList, AgentProductSelector, AgentCartDraft, AgentShippingConfig
-5. **Página**: `AdminAgentOrders` en `/admin/agente-pedidos` protegida para roles ADMIN, SELLER, SALES_AGENT
-6. **Routing**: Ruta añadida en App.tsx con lazy loading
+## Plan: Admin Account Management + Simplified Seller Registration Flow
 
-### Flujo
-1. Agente busca usuario → solicita acceso → OTP enviado como notificación
-2. Agente ingresa OTP → sesión activa 2h con timer visible
-3. Agente busca productos → agrega a borrador → configura envío
-4. Clic "Enviar al Checkout" → items copiados al carrito real del usuario + notificación
-5. Soporte multitarea con múltiples borradores
+### Overview
+Three major changes: (1) Admin module to view/manage all user accounts and change roles, (2) Simplified seller registration flow from within an authenticated user's account, (3) Onboarding progress tracking with reminder notifications.
 
-## Fix PO Linking — Close Expired PO on New Order — IMPLEMENTADO ✅
+---
 
-### Problema
-El trigger `check_po_auto_close_thresholds` evaluaba tiempo Y cantidad en cada actualización de totales. Cuando un pedido se vinculaba a una PO vencida por tiempo, la actualización de totales disparaba el auto-cierre en la misma transacción — el pedido quedaba atrapado en una PO cerrada.
+### Part 1: Admin Accounts Module (`/admin/cuentas`)
 
-### Cambios realizados
+**New page: `src/pages/admin/AdminAccountsPage.tsx`**
+- Table listing all profiles with columns: name, email, role (from user_roles), created_at, status
+- Search/filter by name, email, role
+- Each row has action to change role via dropdown (user/seller/admin/sales_agent/purchasing_agent)
+- Role change logic: update `user_roles` table (delete old role, insert new one)
+- When upgrading to seller: auto-create store + sellers record (reuse logic from `useAdminApprovals.ts`)
+- When downgrading from seller: keep store but deactivate it
 
-1. **`link_order_to_market_po_on_payment`**: Ahora verifica si la PO abierta está vencida por `time_interval_hours` ANTES de vincular. Si está vencida → cierra la PO (con sus pedidos existentes intactos) → abre nueva PO → vincula el pedido nuevo a la PO fresca.
+**New hook: `src/hooks/useAdminAccounts.ts`**
+- Fetches profiles + user_roles joined
+- Mutation for role change with all side effects
 
-2. **`check_po_auto_close_thresholds`**: Se eliminó el chequeo de tiempo. Solo evalúa `quantity_threshold`. El cierre por tiempo ahora se maneja exclusivamente en el paso 1 (al llegar un nuevo pedido).
+**Sidebar update: `src/components/admin/AdminSidebar.tsx`**
+- Add "Cuentas" link to main nav items
 
-3. **Data fix**: Pedido `90a31c1f` ($381.61) movido de PO-CB-004 (cerrada) a PO-CB-005 (activa). Totales recalculados.
+**Route: `src/App.tsx`**
+- Add `/admin/cuentas` route with AdminAccountsPage
 
-### Flujo corregido
+---
+
+### Part 2: Simplified Seller Registration from Account Module
+
+**Current flow**: User goes to `/registro-vendedor` (standalone page) → fills long form → creates account OR sends approval request.
+
+**New flow for authenticated users**:
+- In `UserProfilePage.tsx` (or via a floating CTA), add "Convertirse en Vendedor" button
+- Opens a modal with simplified steps:
+  1. Store name + description (2 fields only)
+  2. Confirm → creates seller role + store + sellers record immediately (no admin approval needed for self-upgrade, OR sends approval request based on config)
+- After creation, redirect to `/seller/cuenta` (SellerAccountPage) to continue full store setup
+
+**Keep `/registro-vendedor`**: Move link to Footer only (remove from login page prominence). Keep page as informational landing.
+
+**Footer update: `src/components/layout/Footer.tsx`**
+- Add "Vender en [Platform]" link pointing to `/registro-vendedor`
+
+---
+
+### Part 3: Seller Onboarding Progress Tracker
+
+**Database migration**: Add `seller_onboarding_progress` table:
+```sql
+CREATE TABLE seller_onboarding_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  steps_completed JSONB DEFAULT '{}',
+  current_step TEXT DEFAULT 'store_info',
+  is_complete BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 ```
-Pedido 1 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-Pedido 2 llega → PO-001 abierta, no vencida → vincula a PO-001 ✓
-... pasa el tiempo, PO-001 vence ...
-Pedido 3 llega → PO-001 abierta PERO vencida → cierra PO-001 (mantiene pedidos 1-2) → abre PO-002 → vincula pedido 3 a PO-002 ✓
-Pedido 4 llega → PO-002 abierta, no vencida → vincula a PO-002 ✓
-```
+Steps: `store_info` → `social_media` → `address` → `payment_methods` → `complete`
 
-## Compartir Carrito (Share Cart) — IMPLEMENTADO ✅
+**New component: `src/components/seller/SellerOnboardingBanner.tsx`**
+- Sticky top banner shown when `is_complete = false`
+- Shows progress bar with current step
+- "Continuar configuración" button links to the appropriate step in SellerAccountPage
+- Can be minimized (stored in localStorage)
+- When minimized, shows a small floating indicator
 
-### Lo que se implementó
-1. **BD**: Tabla `shared_carts` con `share_code` único, snapshot JSONB, expiración 7 días, RLS público lectura + auth insert
-2. **CartPage**: Botón `Share2` reemplaza WhatsApp en footer móvil y desktop. Crea snapshot → muestra dialog con link copiable + envío WhatsApp
-3. **SharedCartPage**: `/carrito/compartido/:shareCode` — vista read-only de items + botón "Agregar todo a mi carrito"
-4. **Routing**: Ruta pública en App.tsx
+**Notification on exit**: When seller navigates away from onboarding without completing:
+- Insert a notification in the `notifications` table: "Completa la configuración de tu tienda"
+- With `data.action_url` pointing to the right step
 
-## Sellers compran como B2C (Vista Cliente) — IMPLEMENTADO ✅
+**Hook: `src/hooks/useSellerOnboarding.ts`**
+- Tracks progress, updates steps, checks completion
+- Auto-marks steps as complete when data exists (e.g., store has address → address step complete)
 
-### Problema
-Sellers siempre enrutados al carrito B2B. No podían comprar como clientes finales.
+**Integration points**:
+- `SellerAccountPage.tsx`: After saving each section, update onboarding progress
+- Seller layout: Show `SellerOnboardingBanner` when incomplete
 
-### Cambios
-1. **`useSmartCart.ts`**: Importa `useViewMode`. `isB2BUser` ahora es `false` cuando `isClientPreview` es `true` → carrito B2C.
-2. **`VariantDrawer.tsx`**: Misma lógica — en vista cliente muestra precios B2C, oculta calculadora de negocio, usa carrito B2C.
-3. **Sin cambios en BD** — atribución de ventas ya funciona correctamente.
+---
+
+### Technical Details
+
+**Files to create:**
+- `src/pages/admin/AdminAccountsPage.tsx`
+- `src/hooks/useAdminAccounts.ts`
+- `src/components/seller/SellerOnboardingBanner.tsx`
+- `src/hooks/useSellerOnboarding.ts`
+- `src/components/profile/UpgradeToSellerModal.tsx`
+
+**Files to modify:**
+- `src/App.tsx` — add route
+- `src/components/admin/AdminSidebar.tsx` — add nav item
+- `src/components/layout/Footer.tsx` — add seller registration link
+- `src/pages/UserProfilePage.tsx` — add upgrade CTA
+- `src/pages/LoginPage.tsx` — simplify seller registration references
+
+**Database migration:**
+- Create `seller_onboarding_progress` table with RLS (user can read/update own row)
+
