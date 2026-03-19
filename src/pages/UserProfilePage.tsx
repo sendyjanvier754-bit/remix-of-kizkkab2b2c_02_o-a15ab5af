@@ -205,6 +205,19 @@ export function UserProfilePage() {
         </div>
       )}
 
+      {/* ── Convertirse en Vendedor (solo para usuarios normales) ── */}
+      {user?.role === UserRole.USER && (
+        <div className="mt-2 px-4">
+          <button
+            onClick={() => setShowUpgradeSeller(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-primary border border-primary/30 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors font-medium"
+          >
+            <StoreIcon className="w-4 h-4" />
+            Convertirse en Vendedor
+          </button>
+        </div>
+      )}
+
       {/* ── Cerrar Sesión ── */}
       <div className="mt-4 px-4 pb-4">
         <button
