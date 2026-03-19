@@ -48,7 +48,7 @@ export default function AdminAccountsPage() {
   };
 
   return (
-    <AdminLayout title="Cuentas de Usuarios" icon={<Users className="w-6 h-6" />}>
+    <AdminLayout title="Cuentas de Usuarios">
       <div className="space-y-4">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
