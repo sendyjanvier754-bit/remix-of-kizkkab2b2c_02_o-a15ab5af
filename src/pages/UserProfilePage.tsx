@@ -10,9 +10,12 @@ import {
   LogOut, ChevronRight, Bell, HelpCircle, Shield, Info, Package,
   RotateCcw, MessageCircle, Clock, Truck, Star, Wallet,
 } from "lucide-react";
+import { Store as StoreIcon } from "lucide-react";
+import { UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
 import { AboutModal } from "@/components/legal/AboutModal";
+import { UpgradeToSellerModal } from "@/components/profile/UpgradeToSellerModal";
 import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useBuyerB2COrders } from "@/hooks/useBuyerB2COrders";
 import { useBuyerOrders } from "@/hooks/useBuyerOrders";
@@ -37,6 +40,7 @@ export function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showUpgradeSeller, setShowUpgradeSeller] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>('orders');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Mi Cuenta": true,
@@ -198,6 +202,19 @@ export function UserProfilePage() {
           {activeSection === 'payment'   && <InlinePaymentPanel />}
           {activeSection === 'settings'  && <InlineSettingsPanel />}
           {activeSection === 'returns'   && <InlineReturnsPanel />}
+        </div>
+      )}
+
+      {/* ── Convertirse en Vendedor (solo para usuarios normales) ── */}
+      {user?.role === UserRole.USER && (
+        <div className="mt-2 px-4">
+          <button
+            onClick={() => setShowUpgradeSeller(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-primary border border-primary/30 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors font-medium"
+          >
+            <StoreIcon className="w-4 h-4" />
+            Convertirse en Vendedor
+          </button>
         </div>
       )}
 
@@ -372,6 +389,17 @@ export function UserProfilePage() {
               </ul>
             )}
           </div>
+
+          {/* Upgrade to Seller */}
+          {user?.role === UserRole.USER && (
+            <button
+              onClick={() => setShowUpgradeSeller(true)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-[13px] text-primary hover:bg-primary/5 transition-colors border-t border-border font-medium"
+            >
+              <StoreIcon className="w-3.5 h-3.5" />
+              Convertirse en Vendedor
+            </button>
+          )}
 
           {/* Logout */}
           <button
@@ -549,6 +577,7 @@ export function UserProfilePage() {
       <div className="hidden md:block"><DesktopLayout /></div>
       <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />
       <AboutModal open={showAbout} onOpenChange={setShowAbout} />
+      <UpgradeToSellerModal open={showUpgradeSeller} onOpenChange={setShowUpgradeSeller} />
     </PageWrapper>
   );
 }

@@ -2,7 +2,7 @@ import {
   LayoutDashboard, CreditCard, Package, Users, MapPin, Settings, LogOut, ShoppingBag,
   ChevronLeft, FolderTree, ShoppingCart, Image as ImageIcon, Truck, ClipboardList,
   Calculator, MessageSquare, RefreshCw, Ticket, UserCheck, BarChart3, LayoutGrid,
-  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck, Mail
+  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck, Mail, UsersRound
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -56,6 +56,7 @@ export function AdminSidebar() {
     { title: t('adminSidebar.agentOrders'), url: "/admin/agente-pedidos", icon: Headset },
     { title: t('adminSidebar.liveChat'), url: "/admin/soporte-chat", icon: MessageCircle },
     { title: t('adminSidebar.notifications'), url: "/admin/notificaciones", icon: Bell },
+    { title: "Cuentas", url: "/admin/cuentas", icon: UsersRound },
   ];
 
   const analyticsItems = [

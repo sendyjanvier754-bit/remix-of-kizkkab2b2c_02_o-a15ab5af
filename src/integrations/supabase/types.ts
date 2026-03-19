@@ -6414,6 +6414,36 @@ export type Database = {
           },
         ]
       }
+      seller_onboarding_progress: {
+        Row: {
+          created_at: string | null
+          current_step: string | null
+          id: string
+          is_complete: boolean | null
+          steps_completed: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_step?: string | null
+          id?: string
+          is_complete?: boolean | null
+          steps_completed?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_step?: string | null
+          id?: string
+          is_complete?: boolean | null
+          steps_completed?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       seller_statuses: {
         Row: {
           caption: string | null

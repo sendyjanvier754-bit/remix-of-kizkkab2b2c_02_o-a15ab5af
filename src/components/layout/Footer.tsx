@@ -67,6 +67,7 @@ const Footer = () => {
               <li><Link to="/perfil" className="hover:text-white transition">{t('footer.myAccount')}</Link></li>
               <li><Link to="/mis-compras" className="hover:text-white transition">{t('footer.myOrders')}</Link></li>
               <li><Link to="/favoritos" className="hover:text-white transition">{t('footer.favorites')}</Link></li>
+              <li><Link to="/registro-vendedor" className="hover:text-white transition">Vender en {platformName}</Link></li>
             </ul>
           </div>
 
