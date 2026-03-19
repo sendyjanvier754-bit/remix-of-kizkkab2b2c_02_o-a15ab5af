@@ -390,6 +390,17 @@ export function UserProfilePage() {
             )}
           </div>
 
+          {/* Upgrade to Seller */}
+          {user?.role === UserRole.USER && (
+            <button
+              onClick={() => setShowUpgradeSeller(true)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-[13px] text-primary hover:bg-primary/5 transition-colors border-t border-border font-medium"
+            >
+              <StoreIcon className="w-3.5 h-3.5" />
+              Convertirse en Vendedor
+            </button>
+          )}
+
           {/* Logout */}
           <button
             onClick={handleLogout}
