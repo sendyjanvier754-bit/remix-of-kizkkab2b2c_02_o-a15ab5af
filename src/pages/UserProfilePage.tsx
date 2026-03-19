@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
 import { AboutModal } from "@/components/legal/AboutModal";
+import { UpgradeToSellerModal } from "@/components/profile/UpgradeToSellerModal";
 import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useBuyerB2COrders } from "@/hooks/useBuyerB2COrders";
 import { useBuyerOrders } from "@/hooks/useBuyerOrders";
