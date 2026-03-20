@@ -92,6 +92,10 @@ export function UpgradeToSellerModal({ open, onOpenChange }: Props) {
         is_complete: false,
       }, { onConflict: 'user_id' });
 
+      // Clean up all pending flags
+      sessionStorage.removeItem('pending_seller_upgrade');
+      if (user?.id) localStorage.removeItem(`pending_seller_upgrade_${user.id}`);
+
       toast.success("¡Cuenta de vendedor creada! Continúa configurando tu tienda.");
       onOpenChange(false);
       
