@@ -661,9 +661,11 @@ const App = () => (
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <ViewModeProvider>
-            <BrandingApplier />
-            <ShippingTiersRealtimeProvider />
-            <AppContent />
+            <SellerUpgradeProvider>
+              <BrandingApplier />
+              <ShippingTiersRealtimeProvider />
+              <AppContent />
+            </SellerUpgradeProvider>
           </ViewModeProvider>
         </AuthProvider>
       </BrowserRouter>
