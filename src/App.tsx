@@ -19,6 +19,7 @@ import MobileBottomNav from "./components/categories/MobileBottomNav";
 import { PopupRenderer } from "./components/marketing/PopupRenderer";
 import GlobalMobileHeader from "./components/layout/GlobalMobileHeader";
 import { BrandingApplier } from "@/components/BrandingApplier";
+import { SellerUpgradeProvider } from "./components/seller/SellerUpgradeProvider";
 
 // Suspense Wrapper for lazy components
 const LazyRoute = ({ children }: { children: ReactNode }) => (
@@ -660,9 +661,11 @@ const App = () => (
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <ViewModeProvider>
-            <BrandingApplier />
-            <ShippingTiersRealtimeProvider />
-            <AppContent />
+            <SellerUpgradeProvider>
+              <BrandingApplier />
+              <ShippingTiersRealtimeProvider />
+              <AppContent />
+            </SellerUpgradeProvider>
           </ViewModeProvider>
         </AuthProvider>
       </BrowserRouter>

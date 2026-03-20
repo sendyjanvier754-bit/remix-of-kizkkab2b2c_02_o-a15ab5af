@@ -15,7 +15,7 @@ import { UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
 import { AboutModal } from "@/components/legal/AboutModal";
-import { UpgradeToSellerModal } from "@/components/profile/UpgradeToSellerModal";
+import { useSellerUpgrade } from "@/components/seller/SellerUpgradeProvider";
 import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useBuyerB2COrders } from "@/hooks/useBuyerB2COrders";
 import { useBuyerOrders } from "@/hooks/useBuyerOrders";
@@ -37,14 +37,10 @@ type ActiveSection = 'orders' | 'favorites' | 'addresses' | 'payment' | 'setting
 export function UserProfilePage() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { openUpgradeModal } = useSellerUpgrade();
   const [isLoading, setIsLoading] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [showUpgradeSeller, setShowUpgradeSeller] = useState(() => {
-    const pending = sessionStorage.getItem('pending_seller_upgrade') === 'true';
-    if (pending) sessionStorage.removeItem('pending_seller_upgrade');
-    return pending;
-  });
   const [activeSection, setActiveSection] = useState<ActiveSection>('orders');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Mi Cuenta": true,
@@ -213,7 +209,7 @@ export function UserProfilePage() {
       {user?.role === UserRole.USER && (
         <div className="mt-2 px-4">
           <button
-            onClick={() => setShowUpgradeSeller(true)}
+            onClick={() => openUpgradeModal()}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-primary border border-primary/30 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors font-medium"
           >
             <StoreIcon className="w-4 h-4" />
@@ -397,7 +393,7 @@ export function UserProfilePage() {
           {/* Upgrade to Seller */}
           {user?.role === UserRole.USER && (
             <button
-              onClick={() => setShowUpgradeSeller(true)}
+              onClick={() => openUpgradeModal()}
               className="w-full flex items-center gap-2 px-4 py-2.5 text-[13px] text-primary hover:bg-primary/5 transition-colors border-t border-border font-medium"
             >
               <StoreIcon className="w-3.5 h-3.5" />
@@ -581,7 +577,7 @@ export function UserProfilePage() {
       <div className="hidden md:block"><DesktopLayout /></div>
       <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />
       <AboutModal open={showAbout} onOpenChange={setShowAbout} />
-      <UpgradeToSellerModal open={showUpgradeSeller} onOpenChange={setShowUpgradeSeller} />
+      
     </PageWrapper>
   );
 }
