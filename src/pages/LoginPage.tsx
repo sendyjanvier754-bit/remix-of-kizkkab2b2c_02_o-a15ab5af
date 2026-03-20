@@ -397,7 +397,11 @@ const LoginPage = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => navigate('/registro-vendedor')}
+                        onClick={() => {
+                          // Register as buyer first, then after login they'll be prompted to upgrade
+                          setAccountType('buyer');
+                          sessionStorage.setItem('pending_seller_upgrade', 'true');
+                        }}
                         className="w-full flex items-center gap-4 p-4 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 transition group text-left"
                       >
                         <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition">
@@ -405,7 +409,7 @@ const LoginPage = () => {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-foreground">{t('loginPage.sellerAccount')}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{t('loginPage.sellerAccountDesc')}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Crea tu cuenta y luego activa tu tienda desde tu perfil</p>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition" />
                       </button>
@@ -536,11 +540,17 @@ const LoginPage = () => {
                   {t('loginPage.wantToSell', { name: getValue('platform_name') })}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" asChild className="gap-2">
-                    <Link to="/registro-vendedor">
-                      <Store className="h-4 w-4" />
-                      {t('loginPage.beSeller')}
-                    </Link>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      sessionStorage.setItem('pending_seller_upgrade', 'true');
+                      // Switch to register tab with buyer type
+                      setAccountType('buyer');
+                    }}
+                  >
+                    <Store className="h-4 w-4" />
+                    {t('loginPage.beSeller')}
                   </Button>
                   <Button variant="outline" asChild className="gap-2">
                     <Link to="/">

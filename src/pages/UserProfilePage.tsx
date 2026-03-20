@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { PageWrapper } from "@/components/PageWrapper";
@@ -40,7 +40,11 @@ export function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [showUpgradeSeller, setShowUpgradeSeller] = useState(false);
+  const [showUpgradeSeller, setShowUpgradeSeller] = useState(() => {
+    const pending = sessionStorage.getItem('pending_seller_upgrade') === 'true';
+    if (pending) sessionStorage.removeItem('pending_seller_upgrade');
+    return pending;
+  });
   const [activeSection, setActiveSection] = useState<ActiveSection>('orders');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Mi Cuenta": true,
