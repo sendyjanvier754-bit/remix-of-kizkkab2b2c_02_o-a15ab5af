@@ -540,11 +540,17 @@ const LoginPage = () => {
                   {t('loginPage.wantToSell', { name: getValue('platform_name') })}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" asChild className="gap-2">
-                    <Link to="/registro-vendedor">
-                      <Store className="h-4 w-4" />
-                      {t('loginPage.beSeller')}
-                    </Link>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      sessionStorage.setItem('pending_seller_upgrade', 'true');
+                      // Switch to register tab with buyer type
+                      setAccountType('buyer');
+                    }}
+                  >
+                    <Store className="h-4 w-4" />
+                    {t('loginPage.beSeller')}
                   </Button>
                   <Button variant="outline" asChild className="gap-2">
                     <Link to="/">
