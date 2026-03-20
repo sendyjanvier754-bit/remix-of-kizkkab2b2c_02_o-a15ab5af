@@ -37,14 +37,10 @@ type ActiveSection = 'orders' | 'favorites' | 'addresses' | 'payment' | 'setting
 export function UserProfilePage() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { openUpgradeModal } = useSellerUpgrade();
   const [isLoading, setIsLoading] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [showUpgradeSeller, setShowUpgradeSeller] = useState(() => {
-    const pending = sessionStorage.getItem('pending_seller_upgrade') === 'true';
-    if (pending) sessionStorage.removeItem('pending_seller_upgrade');
-    return pending;
-  });
   const [activeSection, setActiveSection] = useState<ActiveSection>('orders');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Mi Cuenta": true,
