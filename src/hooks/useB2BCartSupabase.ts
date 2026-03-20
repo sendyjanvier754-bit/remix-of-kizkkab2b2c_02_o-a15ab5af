@@ -164,6 +164,24 @@ export const useB2BCartSupabase = () => {
       return;
     }
 
+    // Check if seller has completed store onboarding before allowing cart operations
+    if (user?.id) {
+      const { data: progress } = await supabase
+        .from('seller_onboarding_progress')
+        .select('is_complete')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (progress && !progress.is_complete) {
+        toast.error('Debes completar la configuración de tu tienda antes de agregar productos al carrito.', {
+          action: {
+            label: 'Completar',
+            onClick: () => { window.location.href = '/seller/cuenta'; },
+          },
+        });
+        return;
+      }
+    }
+
     // Validate MOQ
     if (item.quantity < item.moq) {
       toast.error(`La cantidad mínima de pedido es ${item.moq} unidades`);

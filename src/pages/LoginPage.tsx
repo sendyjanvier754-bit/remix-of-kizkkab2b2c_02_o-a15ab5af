@@ -39,6 +39,8 @@ const LoginPage = () => {
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [accountType, setAccountType] = useState<'buyer' | 'seller' | null>(null);
+  const [sellerStoreName, setSellerStoreName] = useState("");
+  const [sellerStoreDescription, setSellerStoreDescription] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loginTermsAccepted, setLoginTermsAccepted] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
@@ -194,11 +196,23 @@ const LoginPage = () => {
           setError(error.message);
         }
       } else {
-        setSuccess(t('loginPage.accountCreated'));
+        // If seller registration, store upgrade info for after login
+        if (accountType === 'seller' && sellerStoreName.trim()) {
+          sessionStorage.setItem('pending_seller_upgrade', 'true');
+          sessionStorage.setItem('pending_seller_store_name', sellerStoreName.trim());
+          if (sellerStoreDescription.trim()) {
+            sessionStorage.setItem('pending_seller_store_description', sellerStoreDescription.trim());
+          }
+        }
+        setSuccess(accountType === 'seller' 
+          ? '¡Cuenta creada! Revisa tu email para confirmar y tu tienda se activará automáticamente al iniciar sesión.'
+          : t('loginPage.accountCreated'));
         setRegisterName("");
         setRegisterEmail("");
         setRegisterPassword("");
         setConfirmPassword("");
+        setSellerStoreName("");
+        setSellerStoreDescription("");
         setTermsAccepted(false);
       }
     } catch (err) {
@@ -397,11 +411,7 @@ const LoginPage = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          // Register as buyer first, then after login they'll be prompted to upgrade
-                          setAccountType('buyer');
-                          sessionStorage.setItem('pending_seller_upgrade', 'true');
-                        }}
+                        onClick={() => setAccountType('seller')}
                         className="w-full flex items-center gap-4 p-4 border-2 border-border rounded-xl hover:border-green-500 hover:bg-green-50 transition group text-left"
                       >
                         <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition">
@@ -409,24 +419,53 @@ const LoginPage = () => {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-foreground">{t('loginPage.sellerAccount')}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Crea tu cuenta y luego activa tu tienda desde tu perfil</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Registra tu cuenta y tu tienda en un solo paso</p>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition" />
                       </button>
                     </div>
                   )}
 
-                  {accountType === 'buyer' && (
+                  {(accountType === 'buyer' || accountType === 'seller') && (
                     <div>
                       <button
                         type="button"
-                        onClick={() => setAccountType(null)}
+                        onClick={() => { setAccountType(null); setSellerStoreName(''); setSellerStoreDescription(''); }}
                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition"
                       >
                         <ArrowLeft className="h-4 w-4" />
                         {t('loginPage.changeAccountType')}
                       </button>
                       <form onSubmit={handleRegister} className="space-y-4">
+
+                    {/* Store name field for seller registration */}
+                    {accountType === 'seller' && (
+                      <>
+                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-xs text-green-700 font-medium flex items-center gap-1.5">
+                            <Store className="h-3.5 w-3.5" />
+                            Registro de vendedor
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="seller-store-name">Nombre de tu tienda *</Label>
+                          <div className="relative">
+                            <Store className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="seller-store-name"
+                              type="text"
+                              placeholder="Ej: Mi Boutique"
+                              className="pl-10"
+                              value={sellerStoreName}
+                              onChange={(e) => setSellerStoreName(e.target.value)}
+                              maxLength={80}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
                     <div className="space-y-2">
                       <Label htmlFor="register-name">{t('loginPage.fullName')}</Label>
                       <div className="relative">
@@ -526,8 +565,8 @@ const LoginPage = () => {
                       </label>
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading || !termsAccepted}>
-                      {isLoading ? t('loginPage.creatingAccount') : t('loginPage.createAccountBtn')}
+                    <Button type="submit" className="w-full" disabled={isLoading || !termsAccepted || (accountType === 'seller' && !sellerStoreName.trim())}>
+                      {isLoading ? t('loginPage.creatingAccount') : (accountType === 'seller' ? 'Crear cuenta y tienda' : t('loginPage.createAccountBtn'))}
                     </Button>
                   </form>
                     </div>
@@ -536,29 +575,29 @@ const LoginPage = () => {
               </Tabs>
 
               <div className="mt-6 pt-6 border-t space-y-3">
-                <p className="text-sm text-center text-muted-foreground mb-4">
-                  {t('loginPage.wantToSell', { name: getValue('platform_name') })}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      sessionStorage.setItem('pending_seller_upgrade', 'true');
-                      // Switch to register tab with buyer type
-                      setAccountType('buyer');
-                    }}
-                  >
-                    <Store className="h-4 w-4" />
-                    {t('loginPage.beSeller')}
-                  </Button>
-                  <Button variant="outline" asChild className="gap-2">
-                    <Link to="/">
-                      <ShoppingBag className="h-4 w-4" />
-                      {t('loginPage.explore')}
-                    </Link>
-                  </Button>
-                </div>
+                {accountType !== 'seller' && (
+                  <>
+                    <p className="text-sm text-center text-muted-foreground mb-4">
+                      {t('loginPage.wantToSell', { name: getValue('platform_name') })}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => setAccountType('seller')}
+                      >
+                        <Store className="h-4 w-4" />
+                        {t('loginPage.beSeller')}
+                      </Button>
+                      <Button variant="outline" asChild className="gap-2">
+                        <Link to="/">
+                          <ShoppingBag className="h-4 w-4" />
+                          {t('loginPage.explore')}
+                        </Link>
+                      </Button>
+                    </div>
+                  </>
+                )}
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <Button
                     variant="ghost"

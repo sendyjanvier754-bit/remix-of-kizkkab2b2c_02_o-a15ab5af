@@ -1,7 +1,7 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import { useState, useEffect, useRef, createContext, useContext, ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
-import { UpgradeToSellerModal } from "@/components/profile/UpgradeToSellerModal";
+import { SellerRegistrationModal } from "@/components/profile/SellerRegistrationModal";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SellerUpgradeContextType {
@@ -12,23 +12,56 @@ const SellerUpgradeContext = createContext<SellerUpgradeContextType>({ openUpgra
 
 export const useSellerUpgrade = () => useContext(SellerUpgradeContext);
 
+const REMINDER_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+
 export function SellerUpgradeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const reminderTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Check for pending_seller_upgrade flag on any page when user is authenticated
+  // ── For USER role: check pending_seller_upgrade flag ──
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || user.role !== UserRole.USER) return;
     
     const pending = sessionStorage.getItem('pending_seller_upgrade') === 'true';
-    if (pending && user.role === UserRole.USER) {
-      // Small delay to let page render first
+    const persistent = localStorage.getItem(`pending_seller_upgrade_${user.id}`) === 'true';
+    
+    if (pending || persistent) {
       const timer = setTimeout(() => setShowModal(true), 500);
       return () => clearTimeout(timer);
     }
   }, [user?.id, user?.role]);
 
-  // When user navigates away with incomplete onboarding, send email reminder
+  // ── For SELLER role: check if onboarding is incomplete → show modal every 30 min ──
+  useEffect(() => {
+    if (!user?.id || user.role !== UserRole.SELLER) return;
+
+    const checkOnboarding = async () => {
+      const { data: progress } = await supabase
+        .from('seller_onboarding_progress')
+        .select('is_complete')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // If onboarding exists and is NOT complete → show the modal
+      if (progress && !progress.is_complete) {
+        setShowModal(true);
+      }
+    };
+
+    // Check after page loads
+    const initialTimer = setTimeout(checkOnboarding, 1500);
+
+    // Set up 30-minute recurring reminder
+    reminderTimer.current = setInterval(checkOnboarding, REMINDER_INTERVAL_MS);
+
+    return () => {
+      clearTimeout(initialTimer);
+      if (reminderTimer.current) clearInterval(reminderTimer.current);
+    };
+  }, [user?.id, user?.role]);
+
+  // ── Email reminder for incomplete onboarding (once per 24h) ──
   useEffect(() => {
     if (!user?.id || user.role !== UserRole.SELLER) return;
 
@@ -40,12 +73,10 @@ export function SellerUpgradeProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (progress && !progress.is_complete) {
-        // Check if we already sent a reminder recently (last 24h)
         const lastReminder = localStorage.getItem(`seller_onboarding_reminder_${user.id}`);
         const now = Date.now();
         if (lastReminder && now - parseInt(lastReminder) < 24 * 60 * 60 * 1000) return;
 
-        // Send email reminder
         try {
           await supabase.functions.invoke('send-email', {
             body: {
@@ -77,41 +108,30 @@ export function SellerUpgradeProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // Check after a delay (don't block page load)
     const timer = setTimeout(checkAndNotify, 5000);
     return () => clearTimeout(timer);
   }, [user?.id, user?.role, user?.email, user?.name]);
 
   const handleClose = (open: boolean) => {
     setShowModal(open);
-    if (!open) {
-      // If closing without completing, keep flag for next visit
-      // The modal's onOpenChange(false) on success already removes it
-      const stillPending = sessionStorage.getItem('pending_seller_upgrade') === 'true';
-      if (stillPending) {
-        // User closed without completing - save to persist across sessions
-        if (user?.id) {
+    if (!open && user?.id) {
+      // If user role — persist upgrade flag for next visit
+      if (user.role === UserRole.USER) {
+        const stillPending = sessionStorage.getItem('pending_seller_upgrade') === 'true';
+        if (stillPending) {
           localStorage.setItem(`pending_seller_upgrade_${user.id}`, 'true');
         }
       }
+      // For sellers with incomplete onboarding, the 30-min timer will re-open it
     }
   };
-
-  // Also check localStorage for persistent pending upgrade
-  useEffect(() => {
-    if (!user?.id || user.role !== UserRole.USER) return;
-    const persistent = localStorage.getItem(`pending_seller_upgrade_${user.id}`) === 'true';
-    if (persistent) {
-      setShowModal(true);
-    }
-  }, [user?.id, user?.role]);
 
   const openUpgradeModal = () => setShowModal(true);
 
   return (
     <SellerUpgradeContext.Provider value={{ openUpgradeModal }}>
       {children}
-      {user && <UpgradeToSellerModal open={showModal} onOpenChange={handleClose} />}
+      {user && <SellerRegistrationModal open={showModal} onOpenChange={handleClose} />}
     </SellerUpgradeContext.Provider>
   );
 }

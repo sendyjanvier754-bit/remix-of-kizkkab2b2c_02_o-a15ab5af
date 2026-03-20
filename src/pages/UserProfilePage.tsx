@@ -205,7 +205,7 @@ export function UserProfilePage() {
         </div>
       )}
 
-      {/* ── Convertirse en Vendedor (solo para usuarios normales) ── */}
+      {/* ── Registro de vendedor (solo para usuarios normales) ── */}
       {user?.role === UserRole.USER && (
         <div className="mt-2 px-4">
           <button
@@ -213,7 +213,7 @@ export function UserProfilePage() {
             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-primary border border-primary/30 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors font-medium"
           >
             <StoreIcon className="w-4 h-4" />
-            Convertirse en Vendedor
+            Registro de vendedor
           </button>
         </div>
       )}
@@ -397,7 +397,7 @@ export function UserProfilePage() {
               className="w-full flex items-center gap-2 px-4 py-2.5 text-[13px] text-primary hover:bg-primary/5 transition-colors border-t border-border font-medium"
             >
               <StoreIcon className="w-3.5 h-3.5" />
-              Convertirse en Vendedor
+              Registro de vendedor
             </button>
           )}
 

@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBuyerOrders } from '@/hooks/useBuyerOrders';
 import { useSellerCredits } from '@/hooks/useSellerCredits';
 import { useKYC } from '@/hooks/useKYC';
+import { useSellerOnboarding } from '@/hooks/useSellerOnboarding';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,9 +25,11 @@ import {
   DollarSign,
   ChevronLeft,
   ChevronRight,
+  Store,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { SellerRegistrationModal } from '@/components/profile/SellerRegistrationModal';
 
 const SellerDashboard = () => {
   const { t } = useTranslation();
@@ -34,7 +37,9 @@ const SellerDashboard = () => {
   const { data: orders, isLoading: ordersLoading } = useBuyerOrders();
   const { credit, availableCredit } = useSellerCredits();
   const { isVerified } = useKYC();
+  const { progress, isLoading: onboardingLoading } = useSellerOnboarding();
   const [orderPage, setOrderPage] = useState(0);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const ORDERS_PER_PAGE = 5;
 
   const totalPages = orders ? Math.ceil(orders.length / ORDERS_PER_PAGE) : 0;
@@ -67,6 +72,25 @@ const SellerDashboard = () => {
               {t('sellerDashboard.welcome', { name: user?.name?.split(' ')[0] })}
             </h1>
           </div>
+
+          {/* Onboarding Incomplete Banner */}
+          {progress && !progress.is_complete && (
+            <Card className="p-4 mb-4 border-blue-200 bg-blue-50">
+              <div className="flex items-start gap-3">
+                <Store className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 mb-1">Completa la configuración de tu tienda</h3>
+                  <p className="text-sm text-blue-700 mb-3">
+                    Tu registro de vendedor está incompleto. Completa los pasos restantes para poder comprar lotes B2B y activar tu tienda.
+                  </p>
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowRegistrationModal(true)}>
+                    Continuar registro
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* KYC Alert */}
           {!isVerified && (
@@ -347,6 +371,8 @@ const SellerDashboard = () => {
 
         <Footer />
       </div>
+
+      <SellerRegistrationModal open={showRegistrationModal} onOpenChange={setShowRegistrationModal} />
     </SellerLayout>
   );
 };
