@@ -239,7 +239,44 @@ const ProductPage = () => {
   const recsRef = useRef<HTMLDivElement>(null);
   const buySection = useRef<HTMLDivElement>(null);
   const buyButtonRef = useRef<HTMLButtonElement>(null);
+  const galleryScrollRef = useRef<HTMLDivElement>(null);
 
+  // --- Image gallery mouse-drag scroll (PC) + sync selectedImage on scroll ---
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef(0);
+  const dragScrollLeft = useRef(0);
+
+  const handleGalleryMouseDown = (e: React.MouseEvent) => {
+    if (!galleryScrollRef.current) return;
+    setIsDragging(true);
+    dragStartX.current = e.pageX - galleryScrollRef.current.offsetLeft;
+    dragScrollLeft.current = galleryScrollRef.current.scrollLeft;
+  };
+  const handleGalleryMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !galleryScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - galleryScrollRef.current.offsetLeft;
+    const walk = (x - dragStartX.current) * 1.5;
+    galleryScrollRef.current.scrollLeft = dragScrollLeft.current - walk;
+  };
+  const handleGalleryMouseUp = () => setIsDragging(false);
+
+  const handleGalleryScroll = () => {
+    if (!galleryScrollRef.current || isDragging) return;
+    const container = galleryScrollRef.current;
+    const scrollPos = container.scrollLeft;
+    const itemWidth = container.offsetWidth;
+    const newIndex = Math.round(scrollPos / itemWidth);
+    if (newIndex >= 0 && newIndex < (images?.length || 0)) {
+      setSelectedImage(newIndex);
+    }
+  };
+
+  const scrollGalleryToIndex = (index: number) => {
+    if (!galleryScrollRef.current) return;
+    const itemWidth = galleryScrollRef.current.offsetWidth;
+    galleryScrollRef.current.scrollTo({ left: itemWidth * index, behavior: 'smooth' });
+  };
   // Get isMobile hook early (needed for useEffect)
   const isMobile = useIsMobile();
 
