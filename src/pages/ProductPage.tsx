@@ -964,28 +964,39 @@ const ProductPage = () => {
               onClick={() => !isMobile && setZoomOpen(true)}
               className={`relative bg-white overflow-hidden shadow-sm border-gray-100 cursor-zoom-in ${isMobile ? 'w-full aspect-[4/5] rounded-none border-y' : 'rounded-2xl aspect-square border'}`}
             >
-              {images.length > 0 ? (
+              {/* Thumbnails vertical box at left for desktop */}
+              {!isMobile && images.length > 1 && (
                 <div
-                  ref={galleryScrollRef}
-                  className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none select-none"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', cursor: isDragging ? 'grabbing' : 'grab' } as React.CSSProperties}
-                  onMouseDown={handleGalleryMouseDown}
-                  onMouseMove={handleGalleryMouseMove}
-                  onMouseUp={handleGalleryMouseUp}
-                  onMouseLeave={handleGalleryMouseUp}
-                  onScroll={handleGalleryScroll}
+                  className="absolute left-2 top-2 z-10 flex flex-col gap-2 bg-white/90 rounded-xl p-2 shadow-md overflow-y-auto"
+                  style={{
+                    width: '64px',
+                    maxHeight: '340px',
+                    scrollbarWidth: 'none', // Firefox
+                    msOverflowStyle: 'none' // IE/Edge
+                  }}
+                  /* Oculta scroll en navegadores Webkit */
+                  /* language=CSS */
+                  /* ::-webkit-scrollbar { display: none; } */
                 >
                   {images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={index === 0 ? product.nombre : ''}
-                      className={`w-full h-full flex-shrink-0 snap-center ${isMobile ? 'object-cover' : 'object-contain p-4'}`}
-                      referrerPolicy="no-referrer"
-                      crossOrigin="anonymous"
-                      draggable={false}
-                    />
+                    <button key={index} onClick={e => { e.stopPropagation(); setSelectedImage(index); }}
+                      className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-blue-600 ring-2 ring-blue-100" : "border-transparent bg-white"}`}
+                    >
+                      <img src={image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                    </button>
                   ))}
+                </div>
+              )}
+              {images.length > 0 ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <img
+                    src={images[selectedImage]}
+                    alt={product.nombre}
+                    className={`w-full h-full ${isMobile ? 'object-cover' : 'object-contain p-4'}`}
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
+                    draggable={false}
+                  />
                 </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-50">
@@ -1033,14 +1044,7 @@ const ProductPage = () => {
               </button>
             </div>
 
-            {/* Thumbnails for Desktop */}
-            {!isMobile && images.length > 1 && <div className="flex gap-3 overflow-x-auto pb-2 px-1">
-                {images.map((image, index) => (
-                  <button key={index} onClick={() => setSelectedImage(index)} className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-blue-600 ring-2 ring-blue-100" : "border-transparent bg-white"}`}>
-                    <img src={image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
-                  </button>
-                ))}
-              </div>}
+            {/* Thumbnails for Desktop (moved to overlay above) */}
 
             {/* Color Variants Grid for Mobile */}
             {isMobile && images.length > 0 && (
