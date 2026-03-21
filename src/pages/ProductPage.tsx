@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+﻿import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +21,6 @@ import { useBranding } from "@/hooks/useBranding";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
-import VariantThumbnails from "../components/variants/VariantThumbnails";
 import VariantDrawer from '@/components/products/VariantDrawer';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import ProductReviews from "@/components/products/ProductReviews";
@@ -240,44 +239,6 @@ const ProductPage = () => {
   const recsRef = useRef<HTMLDivElement>(null);
   const buySection = useRef<HTMLDivElement>(null);
   const buyButtonRef = useRef<HTMLButtonElement>(null);
-  const galleryScrollRef = useRef<HTMLDivElement>(null);
-
-  // --- Image gallery mouse-drag scroll (PC) + sync selectedImage on scroll ---
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartX = useRef(0);
-  const dragScrollLeft = useRef(0);
-
-  const handleGalleryMouseDown = (e: React.MouseEvent) => {
-    if (!galleryScrollRef.current) return;
-    setIsDragging(true);
-    dragStartX.current = e.pageX - galleryScrollRef.current.offsetLeft;
-    dragScrollLeft.current = galleryScrollRef.current.scrollLeft;
-  };
-  const handleGalleryMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !galleryScrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - galleryScrollRef.current.offsetLeft;
-    const walk = (x - dragStartX.current) * 1.5;
-    galleryScrollRef.current.scrollLeft = dragScrollLeft.current - walk;
-  };
-  const handleGalleryMouseUp = () => setIsDragging(false);
-
-  const handleGalleryScroll = () => {
-    if (!galleryScrollRef.current || isDragging) return;
-    const container = galleryScrollRef.current;
-    const scrollPos = container.scrollLeft;
-    const itemWidth = container.offsetWidth;
-    const newIndex = Math.round(scrollPos / itemWidth);
-    if (newIndex >= 0 && newIndex < images.length) {
-      setSelectedImage(newIndex);
-    }
-  };
-
-  const scrollGalleryToIndex = (index: number) => {
-    if (!galleryScrollRef.current) return;
-    const itemWidth = galleryScrollRef.current.offsetWidth;
-    galleryScrollRef.current.scrollTo({ left: itemWidth * index, behavior: 'smooth' });
-  };
 
   // Get isMobile hook early (needed for useEffect)
   const isMobile = useIsMobile();
@@ -466,9 +427,6 @@ const ProductPage = () => {
   // For B2C seller products: load seller-specific variants (only in-stock) from seller_catalog_variants
   const sellerCatalogIdForB2C = !isB2BUser && (product as any)?.type === 'seller_catalog' ? product?.id : null;
   const { data: sellerCatalogVariants = [] } = useB2CCatalogVariants(sellerCatalogIdForB2C);
-
-  // Debug: Mostrar variantes y sus imágenes en consola
-  console.log('sellerCatalogVariants:', sellerCatalogVariants);
 
   // Local state
   const [selectedImage, setSelectedImage] = useState(0);
@@ -746,21 +704,6 @@ const ProductPage = () => {
     
     // Add directly to cart
     if (isB2BUser) {
-              {/* Variant Thumbnails - arriba de sección de compra */}
-              {variations.length > 0 && (
-                <VariantThumbnails
-                  variants={variations.map((v, idx) => ({
-                    id: String(idx),
-                    name: v.label || '',
-                    imageUrl: (Array.isArray(product.images) ? product.images[idx] : product.images?.[idx]) || product.images?.[0] || ''
-                  }))}
-                  selectedVariantId={String(selectedImage)}
-                  onSelect={(variantIdx) => {
-                    const idx = Number(variantIdx);
-                    if (!isNaN(idx) && idx >= 0 && idx < images.length) setSelectedImage(idx);
-                  }}
-                />
-              )}
       const priceToAdd = product.precio_venta || costB2B;
       addItemB2B({
         productId: product.source_product?.id || product.id,
@@ -979,58 +922,40 @@ const ProductPage = () => {
 
         <div className={`${isMobile ? 'grid grid-cols-1 gap-4 mb-8 px-4' : 'grid grid-cols-2 gap-8 mb-8'}`}>
           {/* Image Gallery */}
-          <div ref={imageRef} className={`${isMobile ? 'w-full' : 'sticky top-0 h-fit'}`}>
+          <div ref={imageRef} className={`space-y-4 ${isMobile ? 'w-full' : 'sticky top-0 h-fit'}`}>
             <div 
               onClick={() => !isMobile && setZoomOpen(true)}
               className={`relative bg-white overflow-hidden shadow-sm border-gray-100 cursor-zoom-in ${isMobile ? 'w-full aspect-[4/5] rounded-none border-y' : 'rounded-2xl aspect-square border'}`}
             >
-              {/* Thumbnails overlay: vertical left column floating on top of main image */}
-              {images.length > 1 && (
-                <div className={`absolute left-2 bottom-3 z-10 flex flex-col-reverse gap-1.5 ${isMobile ? 'max-h-[calc(100%-16px)]' : 'max-h-[calc(100%-16px)]'} overflow-y-auto scrollbar-none`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                  {images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={(e) => { e.stopPropagation(); setSelectedImage(index); }}
-                      className={`flex-shrink-0 ${isMobile ? 'w-10 h-10' : 'w-14 h-14'} rounded-lg overflow-hidden border-2 transition-all shadow-md ${
-                        selectedImage === index
-                          ? 'border-blue-600 ring-2 ring-blue-200 scale-105'
-                          : 'border-white/80 hover:border-blue-400 bg-white'
-                      }`}
-                    >
-                      <img src={image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
               {images.length > 0 ? (
-                <div
-                  ref={galleryScrollRef}
-                  className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none select-none"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
-                  onMouseDown={handleGalleryMouseDown}
-                  onMouseMove={handleGalleryMouseMove}
-                  onMouseUp={handleGalleryMouseUp}
-                  onMouseLeave={handleGalleryMouseUp}
-                  onScroll={handleGalleryScroll}
-                >
-                  {images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={index === 0 ? product.nombre : ''}
-                      className={`w-full h-full flex-shrink-0 snap-center ${isMobile ? 'object-cover' : 'object-contain p-4'}`}
-                      referrerPolicy="no-referrer"
-                      crossOrigin="anonymous"
-                      draggable={false}
-                    />
-                  ))}
-                </div>
+                <img 
+                  src={images[selectedImage]} 
+                  alt={product.nombre} 
+                  className={`w-full h-full ${isMobile ? 'object-cover' : 'object-contain p-4'}`}
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-50">
                   <Package className="h-20 w-20 text-gray-300" />
                 </div>
               )}
+
+              {/* Navigation Arrows */}
+              {images.length > 1 && <>
+                  <button onClick={e => {
+                e.stopPropagation();
+                setSelectedImage(prev => prev === 0 ? images.length - 1 : prev - 1);
+              }} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 shadow-md rounded-full p-2 hover:bg-white">
+                    <ChevronLeft className="w-5 h-5 text-gray-700" />
+                  </button>
+                  <button onClick={e => {
+                e.stopPropagation();
+                setSelectedImage(prev => prev === images.length - 1 ? 0 : prev + 1);
+              }} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 shadow-md rounded-full p-2 hover:bg-white">
+                    <ChevronRight className="w-5 h-5 text-gray-700" />
+                  </button>
+                </>}
 
               {/* B2B Profit Badge Overlay */}
               {isB2BUser && businessSummary && businessSummary.profitPerUnit > 0 && <div className="absolute top-4 left-4 animate-blink">
@@ -1051,6 +976,51 @@ const ProductPage = () => {
                 />
               </button>
             </div>
+
+            {/* Thumbnails for Desktop */}
+            {!isMobile && images.length > 1 && <div className="flex gap-3 overflow-x-auto pb-2 px-1">
+                {images.map((image, index) => (
+                  <button key={index} onClick={() => setSelectedImage(index)} className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-blue-600 ring-2 ring-blue-100" : "border-transparent bg-white"}`}>
+                    <img src={image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                  </button>
+                ))}
+              </div>}
+
+            {/* Color Variants Grid for Mobile */}
+            {isMobile && images.length > 0 && (
+              <div className="px-4 py-4 bg-white border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('products.color')}</h4>
+                <div className="flex flex-wrap gap-3 justify-start">
+                  {images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`relative overflow-hidden rounded-full border-2 transition-all w-14 h-14 hover:border-gray-400 flex-shrink-0 ${
+                        selectedImage === index
+                          ? 'border-blue-600 ring-2 ring-blue-100'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      title={`Color ${index + 1}`}
+                    >
+                      <img 
+                        src={image} 
+                        alt={`Color ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                      />
+                      {selectedImage === index && (
+                        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">âœ“</span>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
 
@@ -1147,27 +1117,43 @@ const ProductPage = () => {
                 </div>}
             </div>
 
-              {/* Variant Selector - Inline on product page */}
-              <div className="mt-4 mb-2">
-                <VariantSelector
-                  productId={product?.source_product?.id || product?.id}
-                  basePrice={product?.precio_venta || 0}
-                  baseImage={product?.images?.[0] || images[0]}
-                  isB2B={isB2BUser}
-                  onVariantImageChange={(imageUrl) => {
-                    if (imageUrl) {
-                      const idx = images.indexOf(imageUrl);
-                      if (idx >= 0) {
-                        setSelectedImage(idx);
-                        scrollGalleryToIndex(idx);
-                      }
-                    }
-                  }}
-                />
+            {/* Color Variants List for Desktop */}
+            {!isMobile && images.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('products.color')}</h4>
+                <div className="flex flex-wrap gap-3">
+                  {images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`relative overflow-hidden rounded-full border-2 transition-all w-14 h-14 hover:border-gray-400 flex-shrink-0 ${
+                        selectedImage === index
+                          ? 'border-blue-600 ring-2 ring-blue-100'
+                          : 'border-gray-300'
+                      }`}
+                      title={`Color ${index + 1}`}
+                    >
+                      <img 
+                        src={image} 
+                        alt={`Color ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {selectedImage === index && (
+                        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">âœ“</span>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
 
-              {/* Buy Section */}
+              {/* Variant Selector - Uses database variants */}
               <div className="mt-3" ref={buySection}>
+                {/* Open VariantDrawer for both mobile and desktop */}
                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="mt-3 flex items-center gap-3">
                     <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
@@ -1188,6 +1174,7 @@ const ProductPage = () => {
                           sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
                           storeId: product.store?.id || sellerParam || undefined,
                         }, () => {
+                          // onComplete: scroll to recommendations
                           if (recsRef.current) {
                             const offset = isMobile ? 72 : 64;
                             const top = recsRef.current.getBoundingClientRect().top + window.scrollY - offset;
@@ -1203,7 +1190,6 @@ const ProductPage = () => {
                     </Button>
                   </div>
                 </div>
-              </div>
               </div>
 
             {/* Description */}
@@ -1435,7 +1421,7 @@ const ProductPage = () => {
           className="fixed bottom-32 right-6 z-40 bg-transparent border border-[#94111f] p-1 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 active:scale-95"
         >
           <svg className="w-8 h-8" viewBox="0 0 24 24" fill="#29892a" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 18C5.9 18 5 18.9 5 20s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            <path d="M7 18C5.9 18 5 18.9 5 20s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.16.12-.33.12-.5 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
           </svg>
         </button>
       )}
