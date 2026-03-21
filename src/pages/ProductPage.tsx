@@ -1005,8 +1005,14 @@ const ProductPage = () => {
 
               {images.length > 0 ? (
                 <div
+                  ref={galleryScrollRef}
                   className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none select-none"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', cursor: 'grab' }}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
+                  onMouseDown={handleGalleryMouseDown}
+                  onMouseMove={handleGalleryMouseMove}
+                  onMouseUp={handleGalleryMouseUp}
+                  onMouseLeave={handleGalleryMouseUp}
+                  onScroll={handleGalleryScroll}
                 >
                   {images.map((image, index) => (
                     <img
@@ -1017,7 +1023,6 @@ const ProductPage = () => {
                       referrerPolicy="no-referrer"
                       crossOrigin="anonymous"
                       draggable={false}
-                      style={{ display: index === selectedImage ? 'block' : 'none' }}
                     />
                   ))}
                 </div>
