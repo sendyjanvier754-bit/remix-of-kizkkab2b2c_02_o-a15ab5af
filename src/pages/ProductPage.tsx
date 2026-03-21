@@ -967,14 +967,8 @@ const ProductPage = () => {
 
               {images.length > 0 ? (
                 <div
-                  ref={galleryScrollRef}
                   className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none select-none"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
-                  onMouseDown={handleGalleryMouseDown}
-                  onMouseMove={handleGalleryMouseMove}
-                  onMouseUp={handleGalleryMouseUp}
-                  onMouseLeave={handleGalleryMouseUp}
-                  onScroll={handleGalleryScroll}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', cursor: 'grab' }}
                 >
                   {images.map((image, index) => (
                     <img
@@ -985,6 +979,7 @@ const ProductPage = () => {
                       referrerPolicy="no-referrer"
                       crossOrigin="anonymous"
                       draggable={false}
+                      style={{ display: index === selectedImage ? 'block' : 'none' }}
                     />
                   ))}
                 </div>
@@ -1109,27 +1104,9 @@ const ProductPage = () => {
                 </div>}
             </div>
 
-              {/* Variant Selector - Inline on product page */}
-              <div className="mt-4 mb-2">
-                <VariantSelector
-                  productId={product?.source_product?.id || product?.id}
-                  basePrice={product?.precio_venta || 0}
-                  baseImage={product?.images?.[0] || images[0]}
-                  isB2B={isB2BUser}
-                  onVariantImageChange={(imageUrl) => {
-                    if (imageUrl) {
-                      const idx = images.indexOf(imageUrl);
-                      if (idx >= 0) {
-                        setSelectedImage(idx);
-                        scrollGalleryToIndex(idx);
-                      }
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Buy Section */}
+              {/* Variant Selector - Uses database variants */}
               <div className="mt-3" ref={buySection}>
+                {/* Open VariantDrawer for both mobile and desktop */}
                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="mt-3 flex items-center gap-3">
                     <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
@@ -1150,6 +1127,7 @@ const ProductPage = () => {
                           sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
                           storeId: product.store?.id || sellerParam || undefined,
                         }, () => {
+                          // onComplete: scroll to recommendations
                           if (recsRef.current) {
                             const offset = isMobile ? 72 : 64;
                             const top = recsRef.current.getBoundingClientRect().top + window.scrollY - offset;
@@ -1273,44 +1251,7 @@ const ProductPage = () => {
                 </div>
               </DrawerContent>
             </Drawer>
-  const galleryScrollRef = useRef<HTMLDivElement>(null);
 
-  // --- Image gallery mouse-drag scroll (PC) ---
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartX = useRef(0);
-  const dragScrollLeft = useRef(0);
-
-  const handleGalleryMouseDown = (e: React.MouseEvent) => {
-    if (!galleryScrollRef.current) return;
-    setIsDragging(true);
-    dragStartX.current = e.pageX - galleryScrollRef.current.offsetLeft;
-    dragScrollLeft.current = galleryScrollRef.current.scrollLeft;
-  };
-  const handleGalleryMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !galleryScrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - galleryScrollRef.current.offsetLeft;
-    const walk = (x - dragStartX.current) * 1.5;
-    galleryScrollRef.current.scrollLeft = dragScrollLeft.current - walk;
-  };
-  const handleGalleryMouseUp = () => setIsDragging(false);
-
-  const handleGalleryScroll = () => {
-    if (!galleryScrollRef.current || isDragging) return;
-    const container = galleryScrollRef.current;
-    const scrollPos = container.scrollLeft;
-    const itemWidth = container.offsetWidth;
-    const newIndex = Math.round(scrollPos / itemWidth);
-    if (newIndex !== selectedImage && newIndex >= 0 && newIndex < images.length) {
-      setSelectedImage(newIndex);
-    }
-  };
-
-  const scrollGalleryToIndex = (index: number) => {
-    if (!galleryScrollRef.current) return;
-    const itemWidth = galleryScrollRef.current.offsetWidth;
-    galleryScrollRef.current.scrollTo({ left: itemWidth * index, behavior: 'smooth' });
-  };
 
             {/* Valoraciones - Using ProductReviews component */}
             {isMobile && (
