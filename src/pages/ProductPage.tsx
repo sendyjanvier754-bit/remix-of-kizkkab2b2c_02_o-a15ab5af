@@ -965,13 +965,28 @@ const ProductPage = () => {
               className={`relative bg-white overflow-hidden shadow-sm border-gray-100 cursor-zoom-in ${isMobile ? 'w-full aspect-[4/5] rounded-none border-y' : 'rounded-2xl aspect-square border'}`}
             >
               {images.length > 0 ? (
-                <img 
-                  src={images[selectedImage]} 
-                  alt={product.nombre} 
-                  className={`w-full h-full ${isMobile ? 'object-cover' : 'object-contain p-4'}`}
-                  referrerPolicy="no-referrer"
-                  crossOrigin="anonymous"
-                />
+                <div
+                  ref={galleryScrollRef}
+                  className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none select-none"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', cursor: isDragging ? 'grabbing' : 'grab' } as React.CSSProperties}
+                  onMouseDown={handleGalleryMouseDown}
+                  onMouseMove={handleGalleryMouseMove}
+                  onMouseUp={handleGalleryMouseUp}
+                  onMouseLeave={handleGalleryMouseUp}
+                  onScroll={handleGalleryScroll}
+                >
+                  {images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={index === 0 ? product.nombre : ''}
+                      className={`w-full h-full flex-shrink-0 snap-center ${isMobile ? 'object-cover' : 'object-contain p-4'}`}
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      draggable={false}
+                    />
+                  ))}
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-50">
                   <Package className="h-20 w-20 text-gray-300" />
