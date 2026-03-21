@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+﻿import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -995,10 +995,10 @@ const ProductPage = () => {
               {/* Thumbnails vertical box at left for ALL devices */}
               {images.length > 1 &&
               <div
-                className="absolute left-2 top-2 z-10 flex flex-col gap-2 bg-white/90 rounded-xl p-2 shadow-md overflow-y-auto"
+                className="absolute left-2 bottom-2 z-10 flex flex-col gap-2 bg-transparent rounded-xl p-2 shadow-md overflow-y-auto"
                 style={{
                   width: '64px',
-                  maxHeight: '340px',
+                  maxHeight: 'calc(100% - 16px)',
                   scrollbarWidth: 'none', // Firefox
                   msOverflowStyle: 'none' // IE/Edge
                 }}
