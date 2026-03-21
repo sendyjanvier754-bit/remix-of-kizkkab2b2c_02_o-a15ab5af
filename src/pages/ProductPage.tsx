@@ -240,6 +240,10 @@ const ProductPage = () => {
   const buySection = useRef<HTMLDivElement>(null);
   const buyButtonRef = useRef<HTMLButtonElement>(null);
   const galleryScrollRef = useRef<HTMLDivElement>(null);
+  // Touch scroll state
+  const [isTouchDragging, setIsTouchDragging] = useState(false);
+  const touchStartX = useRef(0);
+  const touchScrollLeft = useRef(0);
 
   // --- Image gallery mouse-drag scroll (PC) + sync selectedImage on scroll ---
   const [isDragging, setIsDragging] = useState(false);
@@ -260,6 +264,21 @@ const ProductPage = () => {
     galleryScrollRef.current.scrollLeft = dragScrollLeft.current - walk;
   };
   const handleGalleryMouseUp = () => setIsDragging(false);
+
+  // Touch events for mobile scroll
+  const handleGalleryTouchStart = (e: React.TouchEvent) => {
+    if (!galleryScrollRef.current) return;
+    setIsTouchDragging(true);
+    touchStartX.current = e.touches[0].pageX - galleryScrollRef.current.offsetLeft;
+    touchScrollLeft.current = galleryScrollRef.current.scrollLeft;
+  };
+  const handleGalleryTouchMove = (e: React.TouchEvent) => {
+    if (!isTouchDragging || !galleryScrollRef.current) return;
+    const x = e.touches[0].pageX - galleryScrollRef.current.offsetLeft;
+    const walk = (x - touchStartX.current) * 1.5;
+    galleryScrollRef.current.scrollLeft = touchScrollLeft.current - walk;
+  };
+  const handleGalleryTouchEnd = () => setIsTouchDragging(false);
 
   const handleGalleryScroll = () => {
     if (!galleryScrollRef.current || isDragging) return;
@@ -960,9 +979,18 @@ const ProductPage = () => {
         <div className={`${isMobile ? 'grid grid-cols-1 gap-4 mb-8 px-4' : 'grid grid-cols-2 gap-8 mb-8'}`}>
           {/* Image Gallery */}
           <div ref={imageRef} className={`space-y-4 ${isMobile ? 'w-full' : 'sticky top-0 h-fit'}`}>
-            <div 
+            <div
+              ref={galleryScrollRef}
               onClick={() => !isMobile && setZoomOpen(true)}
               className={`relative bg-white overflow-hidden shadow-sm border-gray-100 cursor-zoom-in ${isMobile ? 'w-full aspect-[4/5] rounded-none border-y' : 'rounded-2xl aspect-square border'}`}
+              style={{ touchAction: 'pan-y' }}
+              onMouseDown={handleGalleryMouseDown}
+              onMouseMove={handleGalleryMouseMove}
+              onMouseUp={handleGalleryMouseUp}
+              onMouseLeave={handleGalleryMouseUp}
+              onTouchStart={handleGalleryTouchStart}
+              onTouchMove={handleGalleryTouchMove}
+              onTouchEnd={handleGalleryTouchEnd}
             >
               {/* Thumbnails vertical box at left for ALL devices */}
               {images.length > 1 && (
