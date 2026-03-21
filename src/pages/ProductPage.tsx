@@ -964,8 +964,8 @@ const ProductPage = () => {
               onClick={() => !isMobile && setZoomOpen(true)}
               className={`relative bg-white overflow-hidden shadow-sm border-gray-100 cursor-zoom-in ${isMobile ? 'w-full aspect-[4/5] rounded-none border-y' : 'rounded-2xl aspect-square border'}`}
             >
-              {/* Thumbnails vertical box at left for desktop */}
-              {!isMobile && images.length > 1 && (
+              {/* Thumbnails vertical box at left for ALL devices */}
+              {images.length > 1 && (
                 <div
                   className="absolute left-2 top-2 z-10 flex flex-col gap-2 bg-white/90 rounded-xl p-2 shadow-md overflow-y-auto"
                   style={{
@@ -1081,6 +1081,7 @@ const ProductPage = () => {
                 </div>
               </div>
             )}
+            {/* Eliminada la cuadrícula de miniaturas para mobile, solo queda el box vertical a la izquierda */}
 
           </div>
 
