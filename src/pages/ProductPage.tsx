@@ -1169,39 +1169,24 @@ const ProductPage = () => {
                 </div>}
             </div>
 
-            {/* Color Variants List for Desktop */}
-            {!isMobile && images.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('products.color')}</h4>
-                <div className="flex flex-wrap gap-3">
-                  {images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`relative overflow-hidden rounded-full border-2 transition-all w-14 h-14 hover:border-gray-400 flex-shrink-0 ${
-                        selectedImage === index
-                          ? 'border-blue-600 ring-2 ring-blue-100'
-                          : 'border-gray-300'
-                      }`}
-                      title={`Color ${index + 1}`}
-                    >
-                      <img 
-                        src={image} 
-                        alt={`Color ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {selectedImage === index && (
-                        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
-                          <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">âœ“</span>
-                          </div>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Variant Selector - Inline on product page */}
+            <div className="mt-4">
+              <VariantSelector
+                productId={product?.source_product?.id || product?.id}
+                basePrice={product?.precio_venta || 0}
+                baseImage={product?.images?.[0] || images[0]}
+                isB2B={isB2BUser}
+                onVariantImageChange={(imageUrl) => {
+                  if (imageUrl) {
+                    const idx = images.indexOf(imageUrl);
+                    if (idx >= 0) {
+                      setSelectedImage(idx);
+                      scrollGalleryToIndex(idx);
+                    }
+                  }
+                }}
+              />
+            </div>
 
               {/* Variant Selector - Uses database variants */}
               <div className="mt-3" ref={buySection}>
