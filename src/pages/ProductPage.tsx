@@ -1109,9 +1109,27 @@ const ProductPage = () => {
                 </div>}
             </div>
 
-              {/* Variant Selector - Uses database variants */}
+              {/* Variant Selector - Inline on product page */}
+              <div className="mt-4 mb-2">
+                <VariantSelector
+                  productId={product?.source_product?.id || product?.id}
+                  basePrice={product?.precio_venta || 0}
+                  baseImage={product?.images?.[0] || images[0]}
+                  isB2B={isB2BUser}
+                  onVariantImageChange={(imageUrl) => {
+                    if (imageUrl) {
+                      const idx = images.indexOf(imageUrl);
+                      if (idx >= 0) {
+                        setSelectedImage(idx);
+                        scrollGalleryToIndex(idx);
+                      }
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Buy Section */}
               <div className="mt-3" ref={buySection}>
-                {/* Open VariantDrawer for both mobile and desktop */}
                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="mt-3 flex items-center gap-3">
                     <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
@@ -1132,7 +1150,6 @@ const ProductPage = () => {
                           sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
                           storeId: product.store?.id || sellerParam || undefined,
                         }, () => {
-                          // onComplete: scroll to recommendations
                           if (recsRef.current) {
                             const offset = isMobile ? 72 : 64;
                             const top = recsRef.current.getBoundingClientRect().top + window.scrollY - offset;
