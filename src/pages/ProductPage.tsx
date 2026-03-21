@@ -1075,10 +1075,7 @@ const ProductPage = () => {
             {/* Thumbnails for Desktop (moved to overlay above) */}
 
             {/* Color Variants Grid for Mobile */}
-            {isMobile && images.length > 0 &&
-            <div className="px-4 py-4 bg-white border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('products.color')}</h4>
-                
+            {isMobile && images.length > 0
 
 
 
@@ -1106,8 +1103,11 @@ const ProductPage = () => {
 
 
 
-              
-              </div>
+
+
+
+
+
             }
             {/* Eliminada la cuadrícula de miniaturas para mobile, solo queda el box vertical a la izquierda */}
 
