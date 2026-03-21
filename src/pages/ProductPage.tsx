@@ -997,13 +997,17 @@ const ProductPage = () => {
               {images.length > 1 && <>
                   <button onClick={e => {
                 e.stopPropagation();
-                setSelectedImage(prev => prev === 0 ? images.length - 1 : prev - 1);
+                const newIdx = selectedImage === 0 ? images.length - 1 : selectedImage - 1;
+                setSelectedImage(newIdx);
+                scrollGalleryToIndex(newIdx);
               }} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 shadow-md rounded-full p-2 hover:bg-white">
                     <ChevronLeft className="w-5 h-5 text-gray-700" />
                   </button>
                   <button onClick={e => {
                 e.stopPropagation();
-                setSelectedImage(prev => prev === images.length - 1 ? 0 : prev + 1);
+                const newIdx = selectedImage === images.length - 1 ? 0 : selectedImage + 1;
+                setSelectedImage(newIdx);
+                scrollGalleryToIndex(newIdx);
               }} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 shadow-md rounded-full p-2 hover:bg-white">
                     <ChevronRight className="w-5 h-5 text-gray-700" />
                   </button>
