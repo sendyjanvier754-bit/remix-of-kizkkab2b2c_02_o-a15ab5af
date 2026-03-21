@@ -9207,6 +9207,7 @@ export type Database = {
           suggested_pvp: number
         }[]
       }
+      cancel_seller_registration: { Args: never; Returns: Json }
       change_refund_status: {
         Args: {
           p_approved_amount?: number
@@ -9382,6 +9383,10 @@ export type Database = {
       update_po_reconciliation: {
         Args: { p_po_id: string }
         Returns: undefined
+      }
+      upgrade_to_seller: {
+        Args: { p_store_description?: string; p_store_name: string }
+        Returns: Json
       }
       validate_product_for_shipping: {
         Args: { p_product_id: string; p_tier_type?: string }
