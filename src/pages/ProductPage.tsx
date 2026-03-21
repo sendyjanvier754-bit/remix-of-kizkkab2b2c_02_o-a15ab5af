@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+﻿import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +21,6 @@ import { useBranding } from "@/hooks/useBranding";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
-import VariantThumbnails from "../components/variants/VariantThumbnails";
 import VariantDrawer from '@/components/products/VariantDrawer';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import ProductReviews from "@/components/products/ProductReviews";
@@ -81,9 +80,325 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
             store: sellerProduct.store,
             source_product: sellerProduct.source_product
           };
-        {/* Todo el contenido debe estar dentro del return principal (<main>...</main>) */}
-        {/* Elimina duplicados y cierres incorrectos. */}
-        {/* ...existing code... */}
+        }
+      }
+
+      // Otherwise search by SKU
+      if (!sku) return null;
+
+      const safeDecode = (value: string) => {
+        try {
+          return decodeURIComponent(value);
+        } catch {
+          return value;
+        }
+      };
+
+      // Normalize/clean SKU from route (defensive against malformed URLs)
+      const decodedSku = safeDecode(sku);
+      const cleanSku = decodedSku
+        .split('?')[0]
+        .replace(/-undefined$/, '')
+        .replace(/\/+$/, '')
+        .trim();
+
+      const normalizedStoreId = storeId?.split('?')[0]?.trim() || null;
+      if (!cleanSku) return null;
+
+      const skuCandidates = Array.from(
+        new Set(
+          [
+            cleanSku,
+            cleanSku.replace(/\s+/g, '_'),
+            cleanSku.replace(/_/g, ' '),
+          ].filter(Boolean)
+        )
+      );
+
+      const sellerSelect = `
+        *,
+        store:stores!seller_catalog_seller_store_id_fkey(
+          id, name, logo, whatsapp, is_active, slug
+        ),
+        source_product:products!seller_catalog_source_product_id_fkey(
+          id, categoria_id, precio_mayorista_base, precio_sugerido_venta, moq, stock_fisico, galeria_imagenes,
+          category:categories!products_categoria_id_fkey(id, name, slug)
+        )
+      `;
+
+      const createSellerQuery = () => {
+        let query = (supabase as any)
+          .from("seller_catalog")
+          .select(sellerSelect)
+          .eq("is_active", true);
+
+        if (normalizedStoreId) {
+          query = query.eq("seller_store_id", normalizedStoreId);
+        }
+
+        return query;
+      };
+
+      let { data: sellerProducts, error: sellerError } = await createSellerQuery()
+        .in("sku", skuCandidates)
+        .order("updated_at", { ascending: false })
+        .limit(1) as { data: any[]; error: any };
+
+      // Fallback 1: partial base-SKU match (inside selected seller when provided)
+      if ((!sellerProducts || sellerProducts.length === 0) && cleanSku.includes('-')) {
+        const baseSku = cleanSku.split('-')[0];
+
+        const { data: fallbackProducts, error: fallbackError } = await createSellerQuery()
+          .ilike("sku", `${baseSku}%`)
+          .order("updated_at", { ascending: false })
+          .limit(1) as { data: any[]; error: any };
+
+        sellerProducts = fallbackProducts;
+        sellerError = fallbackError;
+      }
+
+      // Fallback 2: if seller ID is malformed in URL, still recover by SKU globally
+      if ((!sellerProducts || sellerProducts.length === 0) && normalizedStoreId) {
+        const { data: globalSkuProducts, error: globalSkuError } = await (supabase as any)
+          .from("seller_catalog")
+          .select(sellerSelect)
+          .eq("is_active", true)
+          .in("sku", skuCandidates)
+          .order("updated_at", { ascending: false })
+          .limit(1) as { data: any[]; error: any };
+
+        sellerProducts = globalSkuProducts;
+        sellerError = globalSkuError;
+      }
+
+      if (sellerError) {
+        console.error("Error fetching seller product by SKU:", { cleanSku, normalizedStoreId, sellerError });
+      }
+
+      const sellerProduct = sellerProducts?.[0] || null;
+      if (sellerProduct) {
+        return {
+          type: 'seller_catalog' as const,
+          id: sellerProduct.id,
+          sku: sellerProduct.sku,
+          nombre: sellerProduct.nombre,
+          descripcion: sellerProduct.descripcion,
+          precio_venta: sellerProduct.precio_venta,
+          precio_costo: sellerProduct.precio_costo,
+          stock: sellerProduct.stock,
+          images: sellerProduct.images || sellerProduct.source_product?.galeria_imagenes || [],
+          store: sellerProduct.store,
+          source_product: sellerProduct.source_product
+        };
+      }
+
+      // If not found in seller_catalog, try products table (B2B)
+      const {
+        data: b2bProduct,
+        error: b2bError
+      } = await supabase.from("v_productos_con_precio_b2b").select("*").eq("sku_interno", cleanSku).eq("is_active", true).maybeSingle();
+      if (b2bProduct) {
+        const b2bAny = b2bProduct as any;
+        return {
+          type: 'products' as const,
+          id: b2bAny.id,
+          sku: b2bAny.sku_interno,
+          nombre: b2bAny.nombre,
+          descripcion: b2bAny.descripcion_larga || b2bAny.descripcion_corta,
+          precio_venta: b2bAny.precio_b2b,
+          precio_costo: b2bAny.costo_base_excel,
+          stock: b2bAny.stock_fisico,
+          images: b2bAny.galeria_imagenes || (b2bAny.imagen_principal ? [b2bAny.imagen_principal] : []),
+          store: null,
+          source_product: {
+            id: b2bAny.id,
+            categoria_id: b2bAny.categoria_id,
+            precio_mayorista_base: b2bAny.costo_base_excel,
+            precio_sugerido_venta: b2bAny.precio_b2b,
+            moq: b2bAny.moq,
+            stock_fisico: b2bAny.stock_fisico,
+            category: b2bAny.category
+          }
+        };
+      }
+      console.error("Product not found for SKU:", sku);
+      return null;
+    },
+    enabled: !!sku || !!catalogId
+  });
+};
+const ProductPage = () => {
+  const { t } = useTranslation();
+  const [showStickyNav, setShowStickyNav] = useState(false);
+  const [showCompactHeader, setShowCompactHeader] = useState(false);
+  const [showFloatingCart, setShowFloatingCart] = useState(false);
+  const { getValue } = useBranding();
+  const imageRef = useRef<HTMLDivElement>(null);
+  const descRef = useRef<HTMLDivElement>(null);
+  const reviewsRef = useRef<HTMLDivElement>(null);
+  const recsRef = useRef<HTMLDivElement>(null);
+  const buySection = useRef<HTMLDivElement>(null);
+  const buyButtonRef = useRef<HTMLButtonElement>(null);
+  const galleryScrollRef = useRef<HTMLDivElement>(null);
+
+  // --- Image gallery mouse-drag scroll (PC) + sync selectedImage on scroll ---
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef(0);
+  const dragScrollLeft = useRef(0);
+
+  const handleGalleryMouseDown = (e: React.MouseEvent) => {
+    if (!galleryScrollRef.current) return;
+    setIsDragging(true);
+    dragStartX.current = e.pageX - galleryScrollRef.current.offsetLeft;
+    dragScrollLeft.current = galleryScrollRef.current.scrollLeft;
+  };
+  const handleGalleryMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !galleryScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - galleryScrollRef.current.offsetLeft;
+    const walk = (x - dragStartX.current) * 1.5;
+    galleryScrollRef.current.scrollLeft = dragScrollLeft.current - walk;
+  };
+  const handleGalleryMouseUp = () => setIsDragging(false);
+
+  const handleGalleryScroll = () => {
+    if (!galleryScrollRef.current || isDragging) return;
+    const container = galleryScrollRef.current;
+    const scrollPos = container.scrollLeft;
+    const itemWidth = container.offsetWidth;
+    const newIndex = Math.round(scrollPos / itemWidth);
+    if (newIndex >= 0 && newIndex < (images?.length || 0)) {
+      setSelectedImage(newIndex);
+    }
+  };
+
+  const scrollGalleryToIndex = (index: number) => {
+    if (!galleryScrollRef.current) return;
+    const itemWidth = galleryScrollRef.current.offsetWidth;
+    galleryScrollRef.current.scrollTo({ left: itemWidth * index, behavior: 'smooth' });
+  };
+  // Get isMobile hook early (needed for useEffect)
+  const isMobile = useIsMobile();
+
+  // Detect scroll to buy section and past image - consolidated handler
+  useEffect(() => {
+    const handleScroll = () => {
+      let shouldShow = false;
+
+      // Check if buy section is visible
+      if (buySection.current) {
+        const buyRect = buySection.current.getBoundingClientRect();
+        shouldShow = buyRect.top <= 500;
+      }
+
+      // Also check if scrolled past image
+      if (imageRef.current) {
+        const imageRect = imageRef.current.getBoundingClientRect();
+        shouldShow = shouldShow || imageRect.bottom <= 64;
+      }
+
+      setShowCompactHeader(shouldShow);
+      setShowStickyNav(shouldShow);
+
+      // Detect if buy button is scrolled above view (show floating cart when button disappears up)
+      if (buyButtonRef.current && isMobile) {
+        const buttonRect = buyButtonRef.current.getBoundingClientRect();
+        setShowFloatingCart(buttonRect.bottom < 0);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
+
+  // Scroll to section
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current) {
+      const offset = isMobile ? 72 : 64;
+      const top = ref.current.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({
+        top,
+        behavior: 'smooth'
+      });
+    }
+  };
+  const {
+    sku: skuParam,
+    catalogId
+  } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const {
+    user
+  } = useAuth();
+  const { role } = useAuth();
+  const {
+    toast
+  } = useToast();
+  // Determine if user is B2B (Seller or Admin)
+  const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
+
+  const resolvedSku = useMemo(() => {
+    if (skuParam) return skuParam;
+    if (location.pathname.startsWith('/producto/catalogo/')) return undefined;
+    const routeMatch = location.pathname.match(/^\/producto\/([^/]+)/);
+    return routeMatch?.[1];
+  }, [skuParam, location.pathname]);
+
+  // Use separate favorite hooks for B2B and B2C
+  const b2bFav = useB2BFavorites();
+  const b2cFav = useB2CFavorites();
+
+  const toggleFavorite = () => {
+    if (!product) return;
+    if (isB2BUser) {
+      const productId = (product as any).source_product?.id || product.id;
+      b2bFav.toggle(productId);
+    } else {
+      const type = (product as any).type;
+      b2cFav.toggle({
+        productId: type !== 'seller_catalog' ? product.id : undefined,
+        sellerCatalogId: type === 'seller_catalog' ? product.id : undefined,
+      });
+    }
+  };
+
+  const isFavorite = (): boolean => {
+    if (!product) return false;
+    if (isB2BUser) {
+      return b2bFav.isInFavorites((product as any).source_product?.id || product.id);
+    }
+    const type = (product as any).type;
+    return b2cFav.isInFavorites(
+      type !== 'seller_catalog' ? product.id : undefined,
+      type === 'seller_catalog' ? product.id : undefined
+    );
+  };
+
+  // ===== SELLER / STORE SECTION =====
+  const [searchParams] = useSearchParams();
+  const sellerParam = searchParams.get('seller')?.trim() || null; // store ID from ?seller= URL param
+
+  // Fetch product data from both tables, filtered by seller if provided
+  const {
+    data: product,
+    isLoading
+  } = useProductBySku(resolvedSku, catalogId, sellerParam);
+
+  // Load store profile: prefer the FK-joined store on the product, fall back to ?seller= param
+  const {
+    data: storeData
+  } = useStore((product as any)?.store?.id || sellerParam || undefined);
+
+  // realStore: joined store object OR full storeData fetched via ?seller= param
+  const realStore = ((product as any)?.store || storeData) as { id: string; name: string; logo: string | null; slug: string | null } | null;
+
+  const { followStore, unfollowStore, checkIfFollowing } = useStoreFollow();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  const { data: storeFollowersCount = 0, refetch: refetchStoreFollowers } = useQuery({
+    queryKey: ["store-followers-count-pp", realStore?.id],
+    queryFn: async () => {
       const { count } = await supabase
         .from("store_followers")
         .select("id", { count: "exact", head: true })
@@ -149,9 +464,6 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
   // For B2C seller products: load seller-specific variants (only in-stock) from seller_catalog_variants
   const sellerCatalogIdForB2C = !isB2BUser && (product as any)?.type === 'seller_catalog' ? product?.id : null;
   const { data: sellerCatalogVariants = [] } = useB2CCatalogVariants(sellerCatalogIdForB2C);
-
-  // Debug: Mostrar variantes y sus imágenes en consola
-  console.log('sellerCatalogVariants:', sellerCatalogVariants);
 
   // Local state
   const [selectedImage, setSelectedImage] = useState(0);
@@ -429,21 +741,6 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
     
     // Add directly to cart
     if (isB2BUser) {
-              {/* Variant Thumbnails - arriba de sección de compra */}
-              {variations.length > 0 && (
-                <VariantThumbnails
-                  variants={variations.map((v, idx) => ({
-                    id: String(idx),
-                    name: v.label || '',
-                    imageUrl: (Array.isArray(product.images) ? product.images[idx] : product.images?.[idx]) || product.images?.[0] || ''
-                  }))}
-                  selectedVariantId={String(selectedImage)}
-                  onSelect={(variantIdx) => {
-                    const idx = Number(variantIdx);
-                    if (!isNaN(idx) && idx >= 0 && idx < images.length) setSelectedImage(idx);
-                  }}
-                />
-              )}
       const priceToAdd = product.precio_venta || costB2B;
       addItemB2B({
         productId: product.source_product?.id || product.id,
@@ -553,76 +850,6 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
       </div>
     );
   }
-        {!isMobile && <Footer />}
-        {/* Variant Drawer portal */}
-        <VariantDrawer />
-        {/* Floating Cart Icon - appears when buy button is not visible */}
-        {isMobile && showFloatingCart && product && (
-          <button
-            onClick={() => {
-              useVariantDrawerStore.getState().open({
-                id: product.id,
-                sku: product.sku,
-                nombre: product.nombre,
-                images: images,
-                price: product.precio_venta,
-                costB2B: costB2B,
-                moq: moq,
-                stock: isB2BUser ? stockB2B : product.stock,
-                source_product_id: product.source_product?.id,
-              });
-            }}
-            className="fixed bottom-32 right-6 z-40 bg-transparent border border-[#94111f] p-1 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 active:scale-95"
-          >
-            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="#29892a" xmlns="http://www.w3.org/2000/svg">
-              <path d="M7 18C5.9 18 5 18.9 5 20s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-            </svg>
-          </button>
-        )}
-        {/* Image Zoom Modal */}
-        <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-white">
-            <div className="relative w-full h-full flex flex-col">
-              <button 
-                onClick={() => setZoomOpen(false)}
-                className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100"
-              >
-                <X className="w-6 h-6" />
-              </button>
-              <div className="flex-1 flex items-center justify-center bg-gray-50 p-4 rounded-lg m-4">
-                {images.length > 0 ? (
-                  <img 
-                    src={images[selectedImage]} 
-                    alt={product?.nombre} 
-                    className="max-w-full max-h-[70vh] object-contain"
-                  />
-                ) : (
-                  <Package className="w-24 h-24 text-gray-300" />
-                )}
-              </div>
-              {/* Thumbnail Navigation */}
-              {images.length > 1 && (
-                <div className="flex gap-3 overflow-x-auto pb-4 px-4 justify-center">
-                  {images.map((image, index) => (
-                    <button 
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index 
-                          ? 'border-blue-600 ring-2 ring-blue-100' 
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      <img src={image} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      </main>
-    );
 
   if (!product) {
     return (
@@ -732,34 +959,21 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
 
         <div className={`${isMobile ? 'grid grid-cols-1 gap-4 mb-8 px-4' : 'grid grid-cols-2 gap-8 mb-8'}`}>
           {/* Image Gallery */}
-          <div ref={imageRef} className={`${isMobile ? 'w-full' : 'sticky top-0 h-fit'}`}>
+          <div ref={imageRef} className={`space-y-4 ${isMobile ? 'w-full' : 'sticky top-0 h-fit'}`}>
             <div 
               onClick={() => !isMobile && setZoomOpen(true)}
               className={`relative bg-white overflow-hidden shadow-sm border-gray-100 cursor-zoom-in ${isMobile ? 'w-full aspect-[4/5] rounded-none border-y' : 'rounded-2xl aspect-square border'}`}
             >
-              {/* Thumbnails overlay: vertical left column floating on top of main image */}
-              {images.length > 1 && (
-                <div className={`absolute left-2 bottom-3 z-10 flex flex-col-reverse gap-1.5 ${isMobile ? 'max-h-[calc(100%-16px)]' : 'max-h-[calc(100%-16px)]'} overflow-y-auto scrollbar-none`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                  {images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={(e) => { e.stopPropagation(); setSelectedImage(index); }}
-                      className={`flex-shrink-0 ${isMobile ? 'w-10 h-10' : 'w-14 h-14'} rounded-lg overflow-hidden border-2 transition-all shadow-md ${
-                        selectedImage === index
-                          ? 'border-blue-600 ring-2 ring-blue-200 scale-105'
-                          : 'border-white/80 hover:border-blue-400 bg-white'
-                      }`}
-                    >
-                      <img src={image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
               {images.length > 0 ? (
                 <div
+                  ref={galleryScrollRef}
                   className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none select-none"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', cursor: 'grab' }}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', cursor: isDragging ? 'grabbing' : 'grab' } as React.CSSProperties}
+                  onMouseDown={handleGalleryMouseDown}
+                  onMouseMove={handleGalleryMouseMove}
+                  onMouseUp={handleGalleryMouseUp}
+                  onMouseLeave={handleGalleryMouseUp}
+                  onScroll={handleGalleryScroll}
                 >
                   {images.map((image, index) => (
                     <img
@@ -770,7 +984,6 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
                       referrerPolicy="no-referrer"
                       crossOrigin="anonymous"
                       draggable={false}
-                      style={{ display: index === selectedImage ? 'block' : 'none' }}
                     />
                   ))}
                 </div>
@@ -779,6 +992,26 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
                   <Package className="h-20 w-20 text-gray-300" />
                 </div>
               )}
+
+              {/* Navigation Arrows */}
+              {images.length > 1 && <>
+                  <button onClick={e => {
+                e.stopPropagation();
+                const newIdx = selectedImage === 0 ? images.length - 1 : selectedImage - 1;
+                setSelectedImage(newIdx);
+                scrollGalleryToIndex(newIdx);
+              }} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 shadow-md rounded-full p-2 hover:bg-white">
+                    <ChevronLeft className="w-5 h-5 text-gray-700" />
+                  </button>
+                  <button onClick={e => {
+                e.stopPropagation();
+                const newIdx = selectedImage === images.length - 1 ? 0 : selectedImage + 1;
+                setSelectedImage(newIdx);
+                scrollGalleryToIndex(newIdx);
+              }} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 shadow-md rounded-full p-2 hover:bg-white">
+                    <ChevronRight className="w-5 h-5 text-gray-700" />
+                  </button>
+                </>}
 
               {/* B2B Profit Badge Overlay */}
               {isB2BUser && businessSummary && businessSummary.profitPerUnit > 0 && <div className="absolute top-4 left-4 animate-blink">
@@ -799,6 +1032,51 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
                 />
               </button>
             </div>
+
+            {/* Thumbnails for Desktop */}
+            {!isMobile && images.length > 1 && <div className="flex gap-3 overflow-x-auto pb-2 px-1">
+                {images.map((image, index) => (
+                  <button key={index} onClick={() => setSelectedImage(index)} className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-blue-600 ring-2 ring-blue-100" : "border-transparent bg-white"}`}>
+                    <img src={image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                  </button>
+                ))}
+              </div>}
+
+            {/* Color Variants Grid for Mobile */}
+            {isMobile && images.length > 0 && (
+              <div className="px-4 py-4 bg-white border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('products.color')}</h4>
+                <div className="flex flex-wrap gap-3 justify-start">
+                  {images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`relative overflow-hidden rounded-full border-2 transition-all w-14 h-14 hover:border-gray-400 flex-shrink-0 ${
+                        selectedImage === index
+                          ? 'border-blue-600 ring-2 ring-blue-100'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      title={`Color ${index + 1}`}
+                    >
+                      <img 
+                        src={image} 
+                        alt={`Color ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                      />
+                      {selectedImage === index && (
+                        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">âœ“</span>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
 
@@ -895,19 +1173,29 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
                 </div>}
             </div>
 
+            {/* Variant Selector - Inline on product page */}
+            <div className="mt-4">
+              <VariantSelector
+                productId={product?.source_product?.id || product?.id}
+                basePrice={product?.precio_venta || 0}
+                baseImage={product?.images?.[0] || images[0]}
+                isB2B={isB2BUser}
+                onVariantImageChange={(imageUrl) => {
+                  if (imageUrl) {
+                    const idx = images.indexOf(imageUrl);
+                    if (idx >= 0) {
+                      setSelectedImage(idx);
+                      scrollGalleryToIndex(idx);
+                    }
+                  }
+                }}
+              />
+            </div>
+
               {/* Variant Selector - Uses database variants */}
               <div className="mt-3" ref={buySection}>
-                {/* Sección de variantes arriba del botón de compra */}
-                {/* Sección de variantes igual que el modal VariantDrawer */}
-                {/* Sección de variantes sincronizada con VariantDrawer */}
-                <div className="mb-4">
-                  <VariantSelector
-                    productId={product?.source_product?.id || product?.id}
-                    basePrice={product?.precio_venta || 0}
-                    baseImage={product?.images?.[0]}
-                    isB2B={isB2BUser}
-                  />
-                </div>
+                {/* Open VariantDrawer for both mobile and desktop */}
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="mt-3 flex items-center gap-3">
                     <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
                       <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
@@ -1174,7 +1462,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
           className="fixed bottom-32 right-6 z-40 bg-transparent border border-[#94111f] p-1 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 active:scale-95"
         >
           <svg className="w-8 h-8" viewBox="0 0 24 24" fill="#29892a" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 18C5.9 18 5 18.9 5 20s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            <path d="M7 18C5.9 18 5 18.9 5 20s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.16.12-.33.12-.5 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
           </svg>
         </button>
       )}
@@ -1228,10 +1516,7 @@ const useProductBySku = (sku: string | undefined, catalogId: string | undefined,
 
       {!isMobile && <Footer />}
     </div>
-    {/* Variant Drawer portal */}
-    <VariantDrawer />
-    {!isMobile && <Footer />}
-  </main>
-}
+  );
+};
 
 export default ProductPage;
