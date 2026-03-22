@@ -450,6 +450,11 @@ const VariantSelector = ({
         }
       });
       
+      // Notify parent of attribute changes
+      if (onAttributeChangeRef.current) {
+        onAttributeChangeRef.current(newAttrs);
+      }
+      
       return newAttrs;
     });
   };
