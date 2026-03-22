@@ -720,15 +720,15 @@ const VariantSelector = ({
 
         {/* Show matching variant with quantity control and consolidated info */}
         {matchingVariant && (
-          <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-            {/* Top row: image + name/badges + quantity selector */}
-            <div className="flex items-center gap-4">
-              {/* Variant image thumbnail */}
-              {matchingVariant.images?.[0] && (
+          <div className={cn("p-3 rounded-lg border border-primary/20", minimal ? "bg-transparent" : "bg-primary/5")}>
+            {/* Top row: name/badges + quantity selector */}
+            <div className="flex items-center gap-3">
+              {/* Variant image thumbnail — hidden when hideVariantImage */}
+              {!hideVariantImage && matchingVariant.images?.[0] && (
                 <img 
                   src={matchingVariant.images[0]} 
                   alt={matchingVariant.name}
-                  className="w-16 h-16 object-cover rounded-lg border-2 border-primary/30 shadow-sm"
+                  className="w-12 h-12 object-cover rounded-full border-2 border-primary/30 shadow-sm"
                 />
               )}
               
