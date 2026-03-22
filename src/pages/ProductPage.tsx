@@ -1231,8 +1231,8 @@ const ProductPage = () => {
               {/* Variant Selector - Uses database variants */}
               <div className="mt-3" ref={buySection}>
                 {/* Open VariantDrawer for both mobile and desktop */}
-                <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                  <div className="mt-3 flex items-center gap-3">
+                <div className="p-3 rounded-lg">
+                  <div className="flex items-center gap-3">
                     <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
                       <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
                     </button>
