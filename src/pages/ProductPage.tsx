@@ -1218,6 +1218,11 @@ const ProductPage = () => {
                 minimal={true}
                 hideVariantImage={true}
                 onAttributeChange={(attrs) => setPdpSelectedAttributes(attrs)}
+                onSelectionChange={(list) => {
+                  const qtyMap: Record<string, number> = {};
+                  list.forEach((s: any) => { if (s.quantity > 0) qtyMap[s.variantId] = s.quantity; });
+                  setPdpSelectedQuantities(qtyMap);
+                }}
                 onVariantImageChange={(imageUrl) => {
                   if (imageUrl) {
                     const idx = images.indexOf(imageUrl);
