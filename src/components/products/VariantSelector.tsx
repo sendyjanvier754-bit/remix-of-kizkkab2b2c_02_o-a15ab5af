@@ -652,12 +652,6 @@ const VariantSelector = ({
                               <div className="w-8 h-0.5 bg-destructive rotate-45 rounded" />
                             </div>
                           )}
-                          {/* Color name tooltip on hover */}
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                            <span className="text-[8px] text-white font-medium truncate block text-center capitalize">
-                              {option}
-                            </span>
-                          </div>
                         </button>
                       );
                     }
