@@ -90,6 +90,7 @@ const VariantSelector = ({
   stockOverrides,
   availabilityOverrides,
   initialAttributes,
+  initialSelections,
   hideVariantImage = false,
   minimal = false,
   onAttributeChange,
