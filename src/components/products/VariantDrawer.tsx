@@ -23,7 +23,7 @@ const VariantDrawer: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { isOpen, product, close, onComplete, preSelectedAttributes } = useVariantDrawerStore();
+  const { isOpen, product, close, onComplete, preSelectedAttributes, preSelectedQuantities } = useVariantDrawerStore();
   
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [selections, setSelections] = useState<any[]>([]);
@@ -487,6 +487,7 @@ const VariantDrawer: React.FC = () => {
             stockOverrides={sellerVariantStockMap}
             availabilityOverrides={sellerVariantAvailabilityMap}
             initialAttributes={preSelectedAttributes}
+            initialSelections={preSelectedQuantities}
             onSelectionChange={(list, qty, price, _variant, isValid, errors) => {
               setSelections(list);
               setTotalQty(qty);

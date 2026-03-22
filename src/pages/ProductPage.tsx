@@ -489,6 +489,7 @@ const ProductPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [viewTracked, setViewTracked] = useState(false);
   const [pdpSelectedAttributes, setPdpSelectedAttributes] = useState<Record<string, string>>({});
+  const [pdpSelectedQuantities, setPdpSelectedQuantities] = useState<Record<string, number>>({});
   // Title collapse/expand
   const [titleExpanded, setTitleExpanded] = useState(false);
   const [showTitleToggle, setShowTitleToggle] = useState(false);
@@ -1217,6 +1218,11 @@ const ProductPage = () => {
                 minimal={true}
                 hideVariantImage={true}
                 onAttributeChange={(attrs) => setPdpSelectedAttributes(attrs)}
+                onSelectionChange={(list) => {
+                  const qtyMap: Record<string, number> = {};
+                  list.forEach((s: any) => { if (s.quantity > 0) qtyMap[s.variantId] = s.quantity; });
+                  setPdpSelectedQuantities(qtyMap);
+                }}
                 onVariantImageChange={(imageUrl) => {
                   if (imageUrl) {
                     const idx = images.indexOf(imageUrl);
@@ -1256,7 +1262,7 @@ const ProductPage = () => {
                           const top = recsRef.current.getBoundingClientRect().top + window.scrollY - offset;
                           window.scrollTo({ top, behavior: 'smooth' });
                         }
-                      }, pdpSelectedAttributes);
+                      }, pdpSelectedAttributes, pdpSelectedQuantities);
                     }}
                     className="w-auto px-3 h-10 text-sm font-semibold flex items-center gap-2"
                     ref={buyButtonRef}>
@@ -1492,7 +1498,7 @@ const ProductPage = () => {
             moq: moq,
             stock: isB2BUser ? stockB2B : product.stock,
             source_product_id: product.source_product?.id
-          });
+          }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
         }}
         className="fixed bottom-32 right-6 z-40 bg-transparent border border-[#94111f] p-1 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 active:scale-95">
         
