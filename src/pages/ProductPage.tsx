@@ -1498,7 +1498,7 @@ const ProductPage = () => {
             moq: moq,
             stock: isB2BUser ? stockB2B : product.stock,
             source_product_id: product.source_product?.id
-          });
+          }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
         }}
         className="fixed bottom-32 right-6 z-40 bg-transparent border border-[#94111f] p-1 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 active:scale-95">
         
