@@ -607,7 +607,7 @@ const VariantSelector = ({
                           onClick={() => !isOutOfStock && handleAttributeSelect(attrType, option)}
                           disabled={isOutOfStock}
                           className={cn(
-                            "relative w-16 h-16 sm:w-12 sm:h-12 rounded-lg border-2 transition-all overflow-hidden group",
+                            "relative w-11 h-11 rounded-full border-2 transition-all overflow-hidden group",
                             isSelected 
                               ? "border-primary ring-2 ring-primary/30 scale-105" 
                               : "border-border hover:border-primary/50",
