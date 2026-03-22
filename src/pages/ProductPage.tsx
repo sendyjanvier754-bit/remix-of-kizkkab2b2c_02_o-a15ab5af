@@ -488,6 +488,7 @@ const ProductPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [viewTracked, setViewTracked] = useState(false);
+  const [pdpSelectedAttributes, setPdpSelectedAttributes] = useState<Record<string, string>>({});
   // Title collapse/expand
   const [titleExpanded, setTitleExpanded] = useState(false);
   const [showTitleToggle, setShowTitleToggle] = useState(false);
@@ -1213,6 +1214,9 @@ const ProductPage = () => {
                 basePrice={product?.precio_venta || 0}
                 baseImage={product?.images?.[0] || images[0]}
                 isB2B={isB2BUser}
+                minimal={true}
+                hideVariantImage={true}
+                onAttributeChange={(attrs) => setPdpSelectedAttributes(attrs)}
                 onVariantImageChange={(imageUrl) => {
                   if (imageUrl) {
                     const idx = images.indexOf(imageUrl);
@@ -1222,14 +1226,13 @@ const ProductPage = () => {
                     }
                   }
                 }} />
-              
             </div>
 
               {/* Variant Selector - Uses database variants */}
               <div className="mt-3" ref={buySection}>
                 {/* Open VariantDrawer for both mobile and desktop */}
-                <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                  <div className="mt-3 flex items-center gap-3">
+                <div className="p-3 rounded-lg">
+                  <div className="flex items-center gap-3">
                     <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
                       <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
                     </button>
@@ -1248,13 +1251,12 @@ const ProductPage = () => {
                         sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
                         storeId: product.store?.id || sellerParam || undefined
                       }, () => {
-                        // onComplete: scroll to recommendations
                         if (recsRef.current) {
                           const offset = isMobile ? 72 : 64;
                           const top = recsRef.current.getBoundingClientRect().top + window.scrollY - offset;
                           window.scrollTo({ top, behavior: 'smooth' });
                         }
-                      });
+                      }, pdpSelectedAttributes);
                     }}
                     className="w-auto px-3 h-10 text-sm font-semibold flex items-center gap-2"
                     ref={buyButtonRef}>

@@ -23,7 +23,7 @@ const VariantDrawer: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { isOpen, product, close, onComplete } = useVariantDrawerStore();
+  const { isOpen, product, close, onComplete, preSelectedAttributes } = useVariantDrawerStore();
   
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [selections, setSelections] = useState<any[]>([]);
@@ -486,13 +486,13 @@ const VariantDrawer: React.FC = () => {
             allowedVariantIds={allowedVariantIds}
             stockOverrides={sellerVariantStockMap}
             availabilityOverrides={sellerVariantAvailabilityMap}
+            initialAttributes={preSelectedAttributes}
             onSelectionChange={(list, qty, price, _variant, isValid, errors) => {
               setSelections(list);
               setTotalQty(qty);
               setTotalPrice(price);
               setIsVariantValid(isValid ?? qty > 0);
               setValidationErrors(errors ?? []);
-              // Track the first selected variant for price display
               const firstSelected = list.find((s: any) => s.quantity > 0);
               setSelectedVariantId(firstSelected ? firstSelected.variantId : null);
             }}

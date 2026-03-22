@@ -24,6 +24,14 @@ interface VariantSelectorProps {
   stockOverrides?: Record<string, number>;
   /** Optional availability by product_variant.id (available | pending | out_of_stock) */
   availabilityOverrides?: Record<string, string>;
+  /** Pre-selected attributes to initialize with (from ProductPage) */
+  initialAttributes?: Record<string, string> | null;
+  /** Hide product image in quantity section (for inline product page use) */
+  hideVariantImage?: boolean;
+  /** Minimal style (no backgrounds on attribute boxes) */
+  minimal?: boolean;
+  /** Callback when attribute selection changes (for persisting to parent) */
+  onAttributeChange?: (attributes: Record<string, string>) => void;
   onSelectionChange?: (selections: VariantSelection[], totalQty: number, totalPrice: number, selectedVariant?: ProductVariant | null, isValid?: boolean, validationErrors?: string[]) => void;
   onVariantImageChange?: (imageUrl: string | null) => void;
 }
@@ -79,6 +87,10 @@ const VariantSelector = ({
   allowedVariantIds,
   stockOverrides,
   availabilityOverrides,
+  initialAttributes,
+  hideVariantImage = false,
+  minimal = false,
+  onAttributeChange,
   onSelectionChange,
   onVariantImageChange,
 }: VariantSelectorProps) => {
@@ -101,7 +113,8 @@ const VariantSelector = ({
     }, {} as Record<string, ProductVariant[]>);
   }, [variants, rawGrouped, allowedVariantIds]);
   const [selections, setSelections] = useState<Record<string, number>>({});
-  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(initialAttributes || {});
+  const onAttributeChangeRef = useRef(onAttributeChange);
   const onSelectionChangeRef = useRef(onSelectionChange);
   const onVariantImageChangeRef = useRef(onVariantImageChange);
 
@@ -123,7 +136,8 @@ const VariantSelector = ({
   useEffect(() => {
     onSelectionChangeRef.current = onSelectionChange;
     onVariantImageChangeRef.current = onVariantImageChange;
-  }, [onSelectionChange, onVariantImageChange]);
+    onAttributeChangeRef.current = onAttributeChange;
+  }, [onSelectionChange, onVariantImageChange, onAttributeChange]);
 
   // Extract attribute options from EAV data with images
   const attributeOptions = useMemo(() => {
@@ -436,6 +450,11 @@ const VariantSelector = ({
         }
       });
       
+      // Notify parent of attribute changes
+      if (onAttributeChangeRef.current) {
+        onAttributeChangeRef.current(newAttrs);
+      }
+      
       return newAttrs;
     });
   };
@@ -524,8 +543,9 @@ const VariantSelector = ({
 
           return (
             <div key={attrType} className={cn(
-              "p-3 rounded-lg border",
-              isMissing ? "bg-destructive/5 border-destructive/30" : "bg-muted/30 border-border/50"
+              "p-3 rounded-lg",
+              minimal ? "" : "border",
+              isMissing && !minimal ? "bg-destructive/5 border-destructive/30" : minimal ? "" : "bg-muted/30 border-border/50"
             )}>
               <div className="flex items-center justify-between mb-2">
                 <h4 className={cn(
@@ -587,7 +607,7 @@ const VariantSelector = ({
                           onClick={() => !isOutOfStock && handleAttributeSelect(attrType, option)}
                           disabled={isOutOfStock}
                           className={cn(
-                            "relative w-16 h-16 sm:w-12 sm:h-12 rounded-lg border-2 transition-all overflow-hidden group",
+                            "relative w-11 h-11 rounded-full border-2 transition-all overflow-hidden group",
                             isSelected 
                               ? "border-primary ring-2 ring-primary/30 scale-105" 
                               : "border-border hover:border-primary/50",
@@ -632,12 +652,6 @@ const VariantSelector = ({
                               <div className="w-8 h-0.5 bg-destructive rotate-45 rounded" />
                             </div>
                           )}
-                          {/* Color name tooltip on hover */}
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                            <span className="text-[8px] text-white font-medium truncate block text-center capitalize">
-                              {option}
-                            </span>
-                          </div>
                         </button>
                       );
                     }
@@ -649,7 +663,7 @@ const VariantSelector = ({
                         onClick={() => !isOutOfStock && handleAttributeSelect(attrType, option)}
                         disabled={isOutOfStock}
                         className={cn(
-                          "w-10 h-10 rounded-lg border-2 transition-all relative flex items-center justify-center",
+                          "w-9 h-9 rounded-full border-2 transition-all relative flex items-center justify-center",
                           isSelected 
                             ? "border-primary ring-2 ring-primary/30 scale-105" 
                             : "border-border hover:border-primary/50",
@@ -700,15 +714,15 @@ const VariantSelector = ({
 
         {/* Show matching variant with quantity control and consolidated info */}
         {matchingVariant && (
-          <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-            {/* Top row: image + name/badges + quantity selector */}
-            <div className="flex items-center gap-4">
-              {/* Variant image thumbnail */}
-              {matchingVariant.images?.[0] && (
+          <div className={cn("p-3 rounded-lg border border-primary/20", minimal ? "bg-transparent" : "bg-primary/5")}>
+            {/* Top row: name/badges + quantity selector */}
+            <div className="flex items-center gap-3">
+              {/* Variant image thumbnail — hidden when hideVariantImage */}
+              {!hideVariantImage && matchingVariant.images?.[0] && (
                 <img 
                   src={matchingVariant.images[0]} 
                   alt={matchingVariant.name}
-                  className="w-16 h-16 object-cover rounded-lg border-2 border-primary/30 shadow-sm"
+                  className="w-12 h-12 object-cover rounded-full border-2 border-primary/30 shadow-sm"
                 />
               )}
               
