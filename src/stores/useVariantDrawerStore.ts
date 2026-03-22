@@ -22,7 +22,9 @@ type State = {
   isOpen: boolean;
   product?: VariantDrawerProduct | null;
   onComplete?: (() => void) | null;
-  open: (product: VariantDrawerProduct, onComplete?: () => void) => void;
+  /** Pre-selected attributes from ProductPage VariantSelector */
+  preSelectedAttributes?: Record<string, string> | null;
+  open: (product: VariantDrawerProduct, onComplete?: () => void, preSelectedAttributes?: Record<string, string>) => void;
   close: () => void;
 };
 
@@ -30,8 +32,14 @@ export const useVariantDrawerStore = create<State>((set) => ({
   isOpen: false,
   product: null,
   onComplete: null,
-  open: (product, onComplete) => set({ isOpen: true, product, onComplete: onComplete || null }),
-  close: () => set({ isOpen: false, product: null, onComplete: null }),
+  preSelectedAttributes: null,
+  open: (product, onComplete, preSelectedAttributes) => set({
+    isOpen: true,
+    product,
+    onComplete: onComplete || null,
+    preSelectedAttributes: preSelectedAttributes || null,
+  }),
+  close: () => set({ isOpen: false, product: null, onComplete: null, preSelectedAttributes: null }),
 }));
 
 export default useVariantDrawerStore;

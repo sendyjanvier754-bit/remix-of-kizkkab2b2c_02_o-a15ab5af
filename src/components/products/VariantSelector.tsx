@@ -24,6 +24,14 @@ interface VariantSelectorProps {
   stockOverrides?: Record<string, number>;
   /** Optional availability by product_variant.id (available | pending | out_of_stock) */
   availabilityOverrides?: Record<string, string>;
+  /** Pre-selected attributes to initialize with (from ProductPage) */
+  initialAttributes?: Record<string, string> | null;
+  /** Hide product image in quantity section (for inline product page use) */
+  hideVariantImage?: boolean;
+  /** Minimal style (no backgrounds on attribute boxes) */
+  minimal?: boolean;
+  /** Callback when attribute selection changes (for persisting to parent) */
+  onAttributeChange?: (attributes: Record<string, string>) => void;
   onSelectionChange?: (selections: VariantSelection[], totalQty: number, totalPrice: number, selectedVariant?: ProductVariant | null, isValid?: boolean, validationErrors?: string[]) => void;
   onVariantImageChange?: (imageUrl: string | null) => void;
 }
