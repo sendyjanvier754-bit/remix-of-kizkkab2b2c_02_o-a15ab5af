@@ -1251,13 +1251,12 @@ const ProductPage = () => {
                         sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
                         storeId: product.store?.id || sellerParam || undefined
                       }, () => {
-                        // onComplete: scroll to recommendations
                         if (recsRef.current) {
                           const offset = isMobile ? 72 : 64;
                           const top = recsRef.current.getBoundingClientRect().top + window.scrollY - offset;
                           window.scrollTo({ top, behavior: 'smooth' });
                         }
-                      });
+                      }, pdpSelectedAttributes);
                     }}
                     className="w-auto px-3 h-10 text-sm font-semibold flex items-center gap-2"
                     ref={buyButtonRef}>
