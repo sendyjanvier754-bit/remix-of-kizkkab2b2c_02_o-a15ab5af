@@ -26,6 +26,8 @@ interface VariantSelectorProps {
   availabilityOverrides?: Record<string, string>;
   /** Pre-selected attributes to initialize with (from ProductPage) */
   initialAttributes?: Record<string, string> | null;
+  /** Pre-selected variant quantities (variantId → quantity) */
+  initialSelections?: Record<string, number> | null;
   /** Hide product image in quantity section (for inline product page use) */
   hideVariantImage?: boolean;
   /** Minimal style (no backgrounds on attribute boxes) */
