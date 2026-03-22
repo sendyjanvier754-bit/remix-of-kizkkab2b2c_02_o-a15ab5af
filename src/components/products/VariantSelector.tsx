@@ -543,8 +543,9 @@ const VariantSelector = ({
 
           return (
             <div key={attrType} className={cn(
-              "p-3 rounded-lg border",
-              isMissing ? "bg-destructive/5 border-destructive/30" : "bg-muted/30 border-border/50"
+              "p-3 rounded-lg",
+              minimal ? "" : "border",
+              isMissing && !minimal ? "bg-destructive/5 border-destructive/30" : minimal ? "" : "bg-muted/30 border-border/50"
             )}>
               <div className="flex items-center justify-between mb-2">
                 <h4 className={cn(
