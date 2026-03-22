@@ -113,7 +113,8 @@ const VariantSelector = ({
     }, {} as Record<string, ProductVariant[]>);
   }, [variants, rawGrouped, allowedVariantIds]);
   const [selections, setSelections] = useState<Record<string, number>>({});
-  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(initialAttributes || {});
+  const onAttributeChangeRef = useRef(onAttributeChange);
   const onSelectionChangeRef = useRef(onSelectionChange);
   const onVariantImageChangeRef = useRef(onVariantImageChange);
 
