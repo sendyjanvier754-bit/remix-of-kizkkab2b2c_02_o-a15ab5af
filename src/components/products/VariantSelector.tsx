@@ -136,7 +136,8 @@ const VariantSelector = ({
   useEffect(() => {
     onSelectionChangeRef.current = onSelectionChange;
     onVariantImageChangeRef.current = onVariantImageChange;
-  }, [onSelectionChange, onVariantImageChange]);
+    onAttributeChangeRef.current = onAttributeChange;
+  }, [onSelectionChange, onVariantImageChange, onAttributeChange]);
 
   // Extract attribute options from EAV data with images
   const attributeOptions = useMemo(() => {
