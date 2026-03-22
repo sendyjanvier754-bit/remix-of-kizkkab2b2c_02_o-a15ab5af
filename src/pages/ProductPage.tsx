@@ -1262,7 +1262,7 @@ const ProductPage = () => {
                           const top = recsRef.current.getBoundingClientRect().top + window.scrollY - offset;
                           window.scrollTo({ top, behavior: 'smooth' });
                         }
-                      }, pdpSelectedAttributes);
+                      }, pdpSelectedAttributes, pdpSelectedQuantities);
                     }}
                     className="w-auto px-3 h-10 text-sm font-semibold flex items-center gap-2"
                     ref={buyButtonRef}>

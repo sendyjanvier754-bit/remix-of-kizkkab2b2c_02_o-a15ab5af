@@ -115,7 +115,7 @@ const VariantSelector = ({
       return acc;
     }, {} as Record<string, ProductVariant[]>);
   }, [variants, rawGrouped, allowedVariantIds]);
-  const [selections, setSelections] = useState<Record<string, number>>({});
+  const [selections, setSelections] = useState<Record<string, number>>(initialSelections || {});
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(initialAttributes || {});
   const onAttributeChangeRef = useRef(onAttributeChange);
   const onSelectionChangeRef = useRef(onSelectionChange);

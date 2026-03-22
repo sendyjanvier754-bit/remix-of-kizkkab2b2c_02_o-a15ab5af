@@ -487,6 +487,7 @@ const VariantDrawer: React.FC = () => {
             stockOverrides={sellerVariantStockMap}
             availabilityOverrides={sellerVariantAvailabilityMap}
             initialAttributes={preSelectedAttributes}
+            initialSelections={preSelectedQuantities}
             onSelectionChange={(list, qty, price, _variant, isValid, errors) => {
               setSelections(list);
               setTotalQty(qty);
