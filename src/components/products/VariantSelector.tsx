@@ -87,6 +87,10 @@ const VariantSelector = ({
   allowedVariantIds,
   stockOverrides,
   availabilityOverrides,
+  initialAttributes,
+  hideVariantImage = false,
+  minimal = false,
+  onAttributeChange,
   onSelectionChange,
   onVariantImageChange,
 }: VariantSelectorProps) => {
