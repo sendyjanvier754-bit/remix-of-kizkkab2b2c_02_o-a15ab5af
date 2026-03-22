@@ -1214,6 +1214,9 @@ const ProductPage = () => {
                 basePrice={product?.precio_venta || 0}
                 baseImage={product?.images?.[0] || images[0]}
                 isB2B={isB2BUser}
+                minimal={true}
+                hideVariantImage={true}
+                onAttributeChange={(attrs) => setPdpSelectedAttributes(attrs)}
                 onVariantImageChange={(imageUrl) => {
                   if (imageUrl) {
                     const idx = images.indexOf(imageUrl);
@@ -1223,7 +1226,6 @@ const ProductPage = () => {
                     }
                   }
                 }} />
-              
             </div>
 
               {/* Variant Selector - Uses database variants */}
