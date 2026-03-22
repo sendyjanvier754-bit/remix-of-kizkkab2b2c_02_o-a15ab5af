@@ -488,6 +488,7 @@ const ProductPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [viewTracked, setViewTracked] = useState(false);
+  const [pdpSelectedAttributes, setPdpSelectedAttributes] = useState<Record<string, string>>({});
   // Title collapse/expand
   const [titleExpanded, setTitleExpanded] = useState(false);
   const [showTitleToggle, setShowTitleToggle] = useState(false);
