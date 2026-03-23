@@ -297,14 +297,8 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
     await (supabase as any).from('products').update({ embedding: null }).eq('id', productId);
   };
 
-  const handleDelete = async () => {
-    await confirmDelete(
-      product?.nombre || 'este producto',
-      () => {
-        onOpenChange(false);
-      },
-      productId
-    );
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
   };
 
   if (isLoading) {
