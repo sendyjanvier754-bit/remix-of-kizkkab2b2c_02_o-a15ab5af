@@ -24,7 +24,7 @@ import EmbeddingService from '@/services/ai/embeddingService';
 import VariantMatrixManager from './VariantMatrixManager';
 import MarketSelector from './MarketSelector';
 import { useProductMarkets } from '@/hooks/useMarkets';
-import { useProductDeletion } from '@/hooks/useProductDeletion';
+import ProductDeleteDialog from './ProductDeleteDialog';
 
 interface ProductEditDialogProps {
   productId: string;
@@ -69,7 +69,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
   const { productMarkets, assignProductToMarkets } = useProductMarkets(productId);
-  const { confirmDelete, isDeleting } = useProductDeletion();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [generatingEmbedding, setGeneratingEmbedding] = useState(false);
@@ -297,14 +297,8 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
     await (supabase as any).from('products').update({ embedding: null }).eq('id', productId);
   };
 
-  const handleDelete = async () => {
-    await confirmDelete(
-      product?.nombre || 'este producto',
-      () => {
-        onOpenChange(false);
-      },
-      productId
-    );
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
   };
 
   if (isLoading) {
@@ -794,6 +788,13 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                 <Trash2 className="h-4 w-4 mr-2" />
                 Eliminar
               </Button>
+              <ProductDeleteDialog
+                productId={productId}
+                productName={product?.nombre || 'este producto'}
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+                onDeleted={() => onOpenChange(false)}
+              />
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancelar

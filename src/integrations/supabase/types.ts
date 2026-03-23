@@ -9231,7 +9231,11 @@ export type Database = {
         Returns: Json
       }
       delete_product_cascade: {
-        Args: { p_delete_reason?: string; p_product_id: string }
+        Args: {
+          p_action?: string
+          p_delete_reason?: string
+          p_product_id: string
+        }
         Returns: Json
       }
       generate_hybrid_tracking_id: {
