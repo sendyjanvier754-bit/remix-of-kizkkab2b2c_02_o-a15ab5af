@@ -1,177 +1,117 @@
 import { useState, useCallback } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface DeleteProductResult {
+interface CheckResult {
   success: boolean;
+  action: string;
+  product_name: string;
+  pending_orders_b2b: number;
+  pending_orders_b2c: number;
+  total_pending: number;
+}
+
+interface DeleteResult {
+  success: boolean;
+  action?: string;
   product_id?: string;
   product_name?: string;
   variants_deleted?: number;
   orders_cancelled?: number;
   refunds_created?: number;
   images_marked_for_cleanup?: number;
-  delete_reason?: string;
+  pending_orders?: number;
+  message?: string;
   error?: string;
 }
 
-interface DeleteProductOptions {
-  productId: string;
-  productName: string;
-  deleteReason?: string;
-  onSuccess?: () => void;
-  onError?: (error: string) => void;
-}
-
-/**
- * useProductDeletion
- * 
- * Hook para eliminación segura de productos con:
- * - Eliminación de variantes y SKUs
- * - Marcado de imágenes para limpieza
- * - Cancelación automática de pedidos pendientes
- * - Generación automática de reembolsos
- */
 export function useProductDeletion() {
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteResult, setDeleteResult] = useState<DeleteProductResult | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<CheckResult | null>(null);
 
   /**
-   * Eliminar producto con cascada completa
+   * Verificar pedidos pendientes antes de eliminar
    */
-  const deleteProduct = useCallback(async ({
-    productId,
-    productName,
-    deleteReason = 'Producto descontinuado',
-    onSuccess,
-    onError,
-  }: DeleteProductOptions): Promise<DeleteProductResult | null> => {
-    setIsDeleting(true);
-    setDeleteResult(null);
-
+  const checkPendingOrders = useCallback(async (productId: string): Promise<CheckResult | null> => {
+    setIsChecking(true);
     try {
       const { data, error } = await supabase.rpc('delete_product_cascade', {
         p_product_id: productId,
-        p_delete_reason: deleteReason,
+        p_delete_reason: '',
+        p_action: 'check',
       });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const result = data as unknown as DeleteProductResult;
-
-      if (!result.success) {
-        throw new Error(result.error || 'Error eliminando producto');
-      }
-
-      setDeleteResult(result);
-
-      // Invalidar queries relacionadas
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['products'] }),
-        queryClient.invalidateQueries({ queryKey: ['orders'] }),
-        queryClient.invalidateQueries({ queryKey: ['refunds'] }),
-        queryClient.invalidateQueries({ queryKey: ['catalog'] }),
-      ]);
-
-      // Toast con resumen
-      let message = `✓ Producto "${productName}" eliminado`;
-      if (result.variants_deleted && result.variants_deleted > 0) {
-        message += `\n• ${result.variants_deleted} variante(s) eliminada(s)`;
-      }
-      if (result.orders_cancelled && result.orders_cancelled > 0) {
-        message += `\n• ${result.orders_cancelled} pedido(s) cancelado(s)`;
-      }
-      if (result.refunds_created && result.refunds_created > 0) {
-        message += `\n• ${result.refunds_created} reembolso(s) generado(s)`;
-      }
-
-      toast.success(message);
-
-      onSuccess?.();
+      if (error) throw new Error(error.message);
+      const result = data as unknown as CheckResult;
+      setCheckResult(result);
       return result;
-
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
-      toast.error(`Error al eliminar producto: ${errorMsg}`);
-      onError?.(errorMsg);
-      return { success: false, error: errorMsg };
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [queryClient]);
-
-  /**
-   * Mutation de React Query para usar en componentes
-   */
-  const deleteProductMutation = useMutation({
-    mutationFn: async (options: DeleteProductOptions) => {
-      return deleteProduct(options);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-    },
-  });
-
-  /**
-   * Limpiar imágenes huérfanas
-   */
-  const cleanupDeletedImages = useCallback(async () => {
-    try {
-      const { data, error } = await supabase.rpc('cleanup_deleted_product_images');
-
-      if (error) throw error;
-
-      if ((data as any)?.images_cleaned > 0) {
-        toast.info(`${(data as any).images_cleaned} imágenes marcadas como limpiadas`);
-      }
-
-      return data;
-    } catch (err) {
-      console.error('Error limpiando imágenes:', err);
+      const msg = err instanceof Error ? err.message : 'Error verificando pedidos';
+      toast.error(msg);
       return null;
+    } finally {
+      setIsChecking(false);
     }
   }, []);
 
   /**
-   * Confirmar eliminación con dialog
+   * Ejecutar eliminación con acción específica
    */
-  const confirmDelete = useCallback(async (
+  const executeDelete = useCallback(async (
+    productId: string,
     productName: string,
-    callback: () => void,
-    productId?: string
-  ) => {
-    const confirmed = window.confirm(
-      `¿Estás seguro de eliminar "${productName}"?\n\n` +
-      `Esta acción:\n` +
-      `• Eliminará todas las variantes y SKUs\n` +
-      `• Cancelará pedidos pendientes\n` +
-      `• Generará reembolsos automáticos\n` +
-      `• Marcará imágenes para limpieza\n\n` +
-      `Esta acción NO se puede deshacer.`
-    );
+    action: 'delete' | 'delete_cancel' | 'delete_keep',
+    deleteReason: string = 'Producto descontinuado',
+    onSuccess?: () => void,
+  ): Promise<DeleteResult | null> => {
+    setIsDeleting(true);
+    try {
+      const { data, error } = await supabase.rpc('delete_product_cascade', {
+        p_product_id: productId,
+        p_delete_reason: deleteReason,
+        p_action: action,
+      });
+      if (error) throw new Error(error.message);
+      const result = data as unknown as DeleteResult;
 
-    if (confirmed) {
-      if (productId) {
-        await deleteProduct({
-          productId,
-          productName,
-          onSuccess: callback,
-        });
+      if (!result.success) throw new Error(result.error || 'Error eliminando producto');
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['products'] }),
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['catalog'] }),
+      ]);
+
+      if (result.action === 'discontinued') {
+        toast.success(`"${productName}" desactivado. Los pedidos pendientes continuarán.`);
       } else {
-        callback();
+        let msg = `✓ "${productName}" eliminado`;
+        if (result.variants_deleted && result.variants_deleted > 0) msg += ` • ${result.variants_deleted} variante(s)`;
+        if (result.orders_cancelled && result.orders_cancelled > 0) msg += ` • ${result.orders_cancelled} pedido(s) cancelado(s)`;
+        if (result.refunds_created && result.refunds_created > 0) msg += ` • ${result.refunds_created} reembolso(s)`;
+        toast.success(msg);
       }
+
+      onSuccess?.();
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido';
+      toast.error(`Error al eliminar producto: ${msg}`);
+      return { success: false, error: msg };
+    } finally {
+      setIsDeleting(false);
+      setCheckResult(null);
     }
-  }, [deleteProduct]);
+  }, [queryClient]);
 
   return {
-    deleteProduct,
-    deleteProductMutation,
-    cleanupDeletedImages,
-    confirmDelete,
+    checkPendingOrders,
+    executeDelete,
     isDeleting,
-    deleteResult,
+    isChecking,
+    checkResult,
+    setCheckResult,
   };
 }
