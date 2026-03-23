@@ -788,6 +788,13 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                 <Trash2 className="h-4 w-4 mr-2" />
                 Eliminar
               </Button>
+              <ProductDeleteDialog
+                productId={productId}
+                productName={product?.nombre || 'este producto'}
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+                onDeleted={() => onOpenChange(false)}
+              />
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancelar
