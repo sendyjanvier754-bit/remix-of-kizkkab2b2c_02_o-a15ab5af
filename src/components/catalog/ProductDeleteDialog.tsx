@@ -129,7 +129,7 @@ export default function ProductDeleteDialog({
                   onClick={handleKeepOrders}
                   disabled={isDeleting}
                 >
-                  <ShieldCheck className="h-4 w-4 mr-3 text-green-600 shrink-0" />
+                  <ShieldCheck className="h-4 w-4 mr-3 text-primary shrink-0" />
                   <div className="text-left">
                     <p className="font-medium text-sm">Continuar con los pedidos</p>
                     <p className="text-xs text-muted-foreground">
