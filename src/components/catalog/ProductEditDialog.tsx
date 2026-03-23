@@ -24,7 +24,7 @@ import EmbeddingService from '@/services/ai/embeddingService';
 import VariantMatrixManager from './VariantMatrixManager';
 import MarketSelector from './MarketSelector';
 import { useProductMarkets } from '@/hooks/useMarkets';
-import { useProductDeletion } from '@/hooks/useProductDeletion';
+import ProductDeleteDialog from './ProductDeleteDialog';
 
 interface ProductEditDialogProps {
   productId: string;
