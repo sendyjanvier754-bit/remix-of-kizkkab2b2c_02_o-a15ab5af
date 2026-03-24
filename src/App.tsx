@@ -77,6 +77,7 @@ const AdminConciliacion = lazy(() => import("./pages/admin/AdminConciliacion"));
 const AdminCatalogo = lazy(() => import("./pages/admin/AdminCatalogo"));
 const AdminCategorias = lazy(() => import("./pages/admin/AdminCategorias"));
 const AdminVendedores = lazy(() => import("./pages/admin/AdminVendedores"));
+const AdminB2BSyncPage = lazy(() => import("./pages/admin/AdminB2BSyncPage"));
 const AdminBanners = lazy(() => import("./pages/admin/AdminBanners"));
 const AdminProveedores = lazy(() => import("./pages/admin/AdminProveedores"));
 const AdminPedidos = lazy(() => import("./pages/admin/AdminPedidos"));
@@ -239,6 +240,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminVendedores /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/b2b-sync" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminB2BSyncPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />

@@ -52,6 +52,7 @@ export function AdminSidebar() {
     { title: t('adminSidebar.suppliers'), url: "/admin/proveedores", icon: Truck },
     { title: t('adminSidebar.priceConfig'), url: "/admin/precios", icon: Calculator },
     { title: t('adminSidebar.sellers'), url: "/admin/vendedores", icon: Users },
+    { title: "Sync B2B → B2C", url: "/admin/b2b-sync", icon: RefreshCw },
     { title: t('adminSidebar.banners'), url: "/admin/banners", icon: ImageIcon },
     { title: t('adminSidebar.agentOrders'), url: "/admin/agente-pedidos", icon: Headset },
     { title: t('adminSidebar.liveChat'), url: "/admin/soporte-chat", icon: MessageCircle },
