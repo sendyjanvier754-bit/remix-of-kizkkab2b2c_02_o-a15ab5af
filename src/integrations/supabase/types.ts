@@ -981,6 +981,47 @@ export type Database = {
         }
         Relationships: []
       }
+      b2b_sync_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          products_added: number | null
+          products_removed: number | null
+          products_updated: number | null
+          store_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          products_added?: number | null
+          products_removed?: number | null
+          products_updated?: number | null
+          store_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          products_added?: number | null
+          products_removed?: number | null
+          products_updated?: number | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_sync_logs_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       b2c_cart_items: {
         Row: {
           cart_id: string
@@ -5942,11 +5983,13 @@ export type Database = {
           precio_b2b_base: number | null
           precio_costo: number | null
           precio_venta: number
+          price_override: boolean | null
           seller_store_id: string
           sku: string | null
           source_order_id: string | null
           source_product_id: string | null
           stock: number | null
+          sync_source: string | null
           updated_at: string
           variant_id: string | null
         }
@@ -5964,11 +6007,13 @@ export type Database = {
           precio_b2b_base?: number | null
           precio_costo?: number | null
           precio_venta: number
+          price_override?: boolean | null
           seller_store_id: string
           sku?: string | null
           source_order_id?: string | null
           source_product_id?: string | null
           stock?: number | null
+          sync_source?: string | null
           updated_at?: string
           variant_id?: string | null
         }
@@ -5986,11 +6031,13 @@ export type Database = {
           precio_b2b_base?: number | null
           precio_costo?: number | null
           precio_venta?: number
+          price_override?: boolean | null
           seller_store_id?: string
           sku?: string | null
           source_order_id?: string | null
           source_product_id?: string | null
           stock?: number | null
+          sync_source?: string | null
           updated_at?: string
           variant_id?: string | null
         }
@@ -7503,6 +7550,7 @@ export type Database = {
       stores: {
         Row: {
           allow_comments: boolean | null
+          auto_sync_b2b: boolean | null
           banner: string | null
           banner_images: string[] | null
           banner_slide_interval: number | null
@@ -7518,6 +7566,7 @@ export type Database = {
           instagram: string | null
           is_accepting_orders: boolean | null
           is_active: boolean | null
+          last_b2b_sync_at: string | null
           logo: string | null
           market_id: string | null
           metadata: Json | null
@@ -7533,6 +7582,7 @@ export type Database = {
         }
         Insert: {
           allow_comments?: boolean | null
+          auto_sync_b2b?: boolean | null
           banner?: string | null
           banner_images?: string[] | null
           banner_slide_interval?: number | null
@@ -7548,6 +7598,7 @@ export type Database = {
           instagram?: string | null
           is_accepting_orders?: boolean | null
           is_active?: boolean | null
+          last_b2b_sync_at?: string | null
           logo?: string | null
           market_id?: string | null
           metadata?: Json | null
@@ -7563,6 +7614,7 @@ export type Database = {
         }
         Update: {
           allow_comments?: boolean | null
+          auto_sync_b2b?: boolean | null
           banner?: string | null
           banner_images?: string[] | null
           banner_slide_interval?: number | null
@@ -7578,6 +7630,7 @@ export type Database = {
           instagram?: string | null
           is_accepting_orders?: boolean | null
           is_active?: boolean | null
+          last_b2b_sync_at?: string | null
           logo?: string | null
           market_id?: string | null
           metadata?: Json | null
@@ -9375,6 +9428,11 @@ export type Database = {
         Returns: undefined
       }
       refresh_suggested_pvp_cache: { Args: never; Returns: undefined }
+      sync_all_b2b_stores: { Args: never; Returns: Json }
+      sync_b2b_catalog_for_store: {
+        Args: { p_store_id: string }
+        Returns: Json
+      }
       sync_missing_profiles_and_roles: { Args: never; Returns: undefined }
       update_agent_dispatch_kpi: {
         Args: { p_agent_id: string }
