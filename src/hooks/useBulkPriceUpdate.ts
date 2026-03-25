@@ -146,7 +146,88 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
     }
   }, [storeId]);
 
-  return { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV, applyBusinessPanelPrices };
-};
+  const applyBusinessPanelPrices = useCallback(async (items: BulkPriceItem[]) => {
+    if (!storeId || items.length === 0) return { success: false, preview: [] as Array<{ id: string; sku: string; nombre: string; precioActual: number; pvpSugerido: number }> };
+    setIsUpdating(true);
+    try {
+      // Get unique source product IDs
+      const sourceIds = [...new Set(items.map(i => i.sourceProductId).filter(Boolean))] as string[];
+      if (sourceIds.length === 0) {
+        toast.error('No se encontraron productos con origen B2B');
+        return { success: false, preview: [] };
+      }
 
-// New method: sync prices from v_business_panel_data
+      // Fetch suggested PVP from v_business_panel_data
+      const { data: bpData, error } = await supabase
+        .from('v_business_panel_data')
+        .select('product_id, suggested_pvp_per_unit, item_name')
+        .in('product_id', sourceIds)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      const pvpMap = new Map((bpData || []).map((r: any) => [r.product_id, r.suggested_pvp_per_unit]));
+
+      const updates: Array<{ id: string; precio: number }> = [];
+      for (const item of items) {
+        if (!item.sourceProductId) continue;
+        const pvp = pvpMap.get(item.sourceProductId);
+        if (pvp != null && pvp > 0) {
+          updates.push({ id: item.id, precio: Number(pvp) });
+        }
+      }
+
+      if (updates.length === 0) {
+        toast.error('No hay precios sugeridos disponibles para tus productos');
+        return { success: false, preview: [] };
+      }
+
+      for (let i = 0; i < updates.length; i += 50) {
+        const chunk = updates.slice(i, i + 50);
+        const promises = chunk.map(u =>
+          supabase
+            .from('seller_catalog_variants' as any)
+            .update({ precio_override: u.precio, updated_at: new Date().toISOString() })
+            .eq('id', u.id)
+        );
+        const results = await Promise.all(promises);
+        const errors = results.filter(r => r.error);
+        if (errors.length > 0) throw new Error(`${errors.length} errores al actualizar`);
+      }
+
+      toast.success(`${updates.length} precios actualizados al PVP sugerido del Business Panel`);
+      return { success: true, preview: [] };
+    } catch (error: any) {
+      console.error('Error syncing business panel prices:', error);
+      toast.error(error.message || 'Error al sincronizar precios');
+      return { success: false, preview: [] };
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [storeId]);
+
+  const fetchBusinessPanelPreview = useCallback(async (items: BulkPriceItem[]) => {
+    const sourceIds = [...new Set(items.map(i => i.sourceProductId).filter(Boolean))] as string[];
+    if (sourceIds.length === 0) return [];
+
+    const { data: bpData } = await supabase
+      .from('v_business_panel_data')
+      .select('product_id, suggested_pvp_per_unit, item_name')
+      .in('product_id', sourceIds)
+      .eq('is_active', true);
+
+    const pvpMap = new Map((bpData || []).map((r: any) => [r.product_id, r.suggested_pvp_per_unit]));
+
+    return items
+      .filter(i => i.sourceProductId && pvpMap.has(i.sourceProductId))
+      .map(i => ({
+        id: i.id,
+        sku: i.sku,
+        nombre: i.nombre,
+        precioActual: i.precioActual,
+        pvpSugerido: Number(pvpMap.get(i.sourceProductId!)) || 0,
+      }));
+  }, []);
+
+  return { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV, applyBusinessPanelPrices, fetchBusinessPanelPreview };
+};
