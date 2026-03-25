@@ -5970,6 +5970,7 @@ export type Database = {
       }
       seller_catalog: {
         Row: {
+          availability_status: string | null
           category_id: string | null
           costo_logistica: number | null
           created_at: string
@@ -5994,6 +5995,7 @@ export type Database = {
           variant_id: string | null
         }
         Insert: {
+          availability_status?: string | null
           category_id?: string | null
           costo_logistica?: number | null
           created_at?: string
@@ -6018,6 +6020,7 @@ export type Database = {
           variant_id?: string | null
         }
         Update: {
+          availability_status?: string | null
           category_id?: string | null
           costo_logistica?: number | null
           created_at?: string
