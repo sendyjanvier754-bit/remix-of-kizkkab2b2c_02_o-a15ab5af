@@ -1232,6 +1232,8 @@ const ProductPage = () => {
                 basePrice={product?.precio_venta || 0}
                 baseImage={product?.images?.[0] || images[0]}
                 isB2B={isB2BUser}
+                variantPrices={inlineVariantPrices}
+                b2cVariantPrices={inlineB2cVariantPrices}
                 minimal={true}
                 hideVariantImage={true}
                 onAttributeChange={(attrs) => setPdpSelectedAttributes(attrs)}
