@@ -192,8 +192,12 @@ export default function SellerMiCatalogoPage() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Actualizar datos">
+                   <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Actualizar datos">
                     <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button variant="secondary" onClick={() => setBulkPriceDialogOpen(true)} className="gap-2" disabled={!storeId || productos.length === 0}>
+                    <DollarSign className="h-4 w-4" />
+                    <span className="hidden sm:inline">Precios Masivos</span>
                   </Button>
                   <Button onClick={() => setImportDialogOpen(true)} className="gap-2" disabled={!storeId || isRefreshing}>
                     <Download className="h-4 w-4" />
@@ -298,6 +302,13 @@ export default function SellerMiCatalogoPage() {
         storeId={storeId || ''}
         existingSkus={productos.flatMap(p => p.variantes.map(v => v.sku))}
         onSuccess={handleImportSuccess}
+      />
+      <BulkPriceUpdateDialog
+        open={bulkPriceDialogOpen}
+        onOpenChange={setBulkPriceDialogOpen}
+        productos={productos}
+        storeId={storeId}
+        onSuccess={handleRefresh}
       />
     </SellerLayout>
   );
