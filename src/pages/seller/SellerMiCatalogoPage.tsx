@@ -236,7 +236,7 @@ export default function SellerMiCatalogoPage() {
           <TabsContent value="inventory" className="space-y-4">
             <Card className="bg-card border-border">
               <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -248,6 +248,11 @@ export default function SellerMiCatalogoPage() {
                   </div>
                   <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Actualizar datos">
                     <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button variant="secondary" onClick={() => setBulkPriceDialogOpen(true)} className="gap-2" disabled={!storeId || productos.length === 0}>
+                    <DollarSign className="h-4 w-4" />
+                    <span className="hidden sm:inline">Precios Masivos</span>
+                  </Button>
                   </Button>
                 </div>
               </CardContent>
