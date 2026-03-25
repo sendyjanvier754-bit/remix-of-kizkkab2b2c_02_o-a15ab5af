@@ -42,6 +42,7 @@ export default function SellerMiCatalogoPage() {
   // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [bulkPriceDialogOpen, setBulkPriceDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<SellerCatalogItem | null>(null);
 
   // Get stats
