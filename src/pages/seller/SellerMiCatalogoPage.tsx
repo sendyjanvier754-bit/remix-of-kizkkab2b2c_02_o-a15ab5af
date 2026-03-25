@@ -253,7 +253,6 @@ export default function SellerMiCatalogoPage() {
                     <DollarSign className="h-4 w-4" />
                     <span className="hidden sm:inline">Precios Masivos</span>
                   </Button>
-                  </Button>
                 </div>
               </CardContent>
             </Card>
