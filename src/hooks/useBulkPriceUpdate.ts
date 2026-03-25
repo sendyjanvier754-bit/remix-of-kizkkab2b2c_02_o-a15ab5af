@@ -146,5 +146,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
     }
   }, [storeId]);
 
-  return { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV };
+  return { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV, applyBusinessPanelPrices };
 };
+
+// New method: sync prices from v_business_panel_data
