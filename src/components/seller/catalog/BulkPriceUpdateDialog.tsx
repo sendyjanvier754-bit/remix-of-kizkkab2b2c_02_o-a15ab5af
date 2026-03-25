@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Percent, Table2, Upload, ArrowUp, ArrowDown, Loader2, Download, AlertCircle } from 'lucide-react';
+import { Percent, Table2, Upload, ArrowUp, ArrowDown, Loader2, Download, AlertCircle, TrendingUp } from 'lucide-react';
 import { BulkPriceItem, useBulkPriceUpdate } from '@/hooks/useBulkPriceUpdate';
 import { ProductoConVariantes } from '@/hooks/useSellerCatalog';
 import * as XLSX from 'xlsx';
@@ -29,9 +29,11 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
   const [inlineItems, setInlineItems] = useState<BulkPriceItem[]>([]);
   const [csvData, setCsvData] = useState<Array<{ sku: string; precio: number }>>([]);
   const [csvFileName, setCsvFileName] = useState('');
+  const [bpPreview, setBpPreview] = useState<Array<{ id: string; sku: string; nombre: string; precioActual: number; pvpSugerido: number }>>([]);
+  const [bpLoading, setBpLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV } = useBulkPriceUpdate(storeId);
+  const { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV, applyBusinessPanelPrices, fetchBusinessPanelPreview } = useBulkPriceUpdate(storeId);
 
   // Flatten all variants into BulkPriceItems
   const allItems = useMemo<BulkPriceItem[]>(() => {
@@ -43,15 +45,22 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
         precioActual: v.precioVenta,
         precioNuevo: v.precioVenta,
         precioCosto: v.precioCosto,
+        sourceProductId: v.sourceProductId,
       }))
     );
   }, [productos]);
 
   // Initialize inline items when tab switches
-  const handleTabChange = (value: string) => {
+  const handleTabChange = async (value: string) => {
     setTab(value);
     if (value === 'inline') {
       setInlineItems(allItems.map(i => ({ ...i })));
+    }
+    if (value === 'business') {
+      setBpLoading(true);
+      const preview = await fetchBusinessPanelPreview(allItems);
+      setBpPreview(preview);
+      setBpLoading(false);
     }
   };
 
