@@ -10,6 +10,7 @@ export interface BulkPriceItem {
   precioNuevo: number;
   precioCosto: number;
   sourceProductId?: string | null;
+  sourceVariantId?: string | null; // product_variants.id for variant-level matching
 }
 
 export const useBulkPriceUpdate = (storeId: string | null) => {
@@ -150,28 +151,39 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
     if (!storeId || items.length === 0) return { success: false, preview: [] as Array<{ id: string; sku: string; nombre: string; precioActual: number; pvpSugerido: number }> };
     setIsUpdating(true);
     try {
-      // Get unique source product IDs
       const sourceIds = [...new Set(items.map(i => i.sourceProductId).filter(Boolean))] as string[];
       if (sourceIds.length === 0) {
         toast.error('No se encontraron productos con origen B2B');
         return { success: false, preview: [] };
       }
 
-      // Fetch suggested PVP from v_business_panel_data
+      // Fetch all business panel data (products + variants)
       const { data: bpData, error } = await supabase
         .from('v_business_panel_data')
-        .select('product_id, suggested_pvp_per_unit, item_name')
+        .select('product_id, variant_id, item_type, suggested_pvp_per_unit, item_name')
         .in('product_id', sourceIds)
         .eq('is_active', true);
 
       if (error) throw error;
 
-      const pvpMap = new Map((bpData || []).map((r: any) => [r.product_id, r.suggested_pvp_per_unit]));
+      // Build maps: variant-level takes priority, then product-level
+      const variantPvpMap = new Map<string, number>();
+      const productPvpMap = new Map<string, number>();
+      for (const r of (bpData || []) as any[]) {
+        if (r.suggested_pvp_per_unit == null || r.suggested_pvp_per_unit <= 0) continue;
+        if (r.item_type === 'variant' && r.variant_id) {
+          variantPvpMap.set(r.variant_id, r.suggested_pvp_per_unit);
+        } else if (r.item_type === 'product' && r.product_id) {
+          productPvpMap.set(r.product_id, r.suggested_pvp_per_unit);
+        }
+      }
 
       const updates: Array<{ id: string; precio: number }> = [];
       for (const item of items) {
-        if (!item.sourceProductId) continue;
-        const pvp = pvpMap.get(item.sourceProductId);
+        // Try variant-level first, then product-level
+        const pvp = (item.sourceVariantId && variantPvpMap.get(item.sourceVariantId))
+          || (item.sourceProductId && productPvpMap.get(item.sourceProductId))
+          || null;
         if (pvp != null && pvp > 0) {
           updates.push({ id: item.id, precio: Number(pvp) });
         }
@@ -212,21 +224,36 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
 
     const { data: bpData } = await supabase
       .from('v_business_panel_data')
-      .select('product_id, suggested_pvp_per_unit, item_name')
+      .select('product_id, variant_id, item_type, suggested_pvp_per_unit, item_name')
       .in('product_id', sourceIds)
       .eq('is_active', true);
 
-    const pvpMap = new Map((bpData || []).map((r: any) => [r.product_id, r.suggested_pvp_per_unit]));
+    const variantPvpMap = new Map<string, number>();
+    const productPvpMap = new Map<string, number>();
+    for (const r of (bpData || []) as any[]) {
+      if (r.suggested_pvp_per_unit == null || r.suggested_pvp_per_unit <= 0) continue;
+      if (r.item_type === 'variant' && r.variant_id) {
+        variantPvpMap.set(r.variant_id, r.suggested_pvp_per_unit);
+      } else if (r.item_type === 'product' && r.product_id) {
+        productPvpMap.set(r.product_id, r.suggested_pvp_per_unit);
+      }
+    }
 
     return items
-      .filter(i => i.sourceProductId && pvpMap.has(i.sourceProductId))
-      .map(i => ({
-        id: i.id,
-        sku: i.sku,
-        nombre: i.nombre,
-        precioActual: i.precioActual,
-        pvpSugerido: Number(pvpMap.get(i.sourceProductId!)) || 0,
-      }));
+      .map(i => {
+        const pvp = (i.sourceVariantId && variantPvpMap.get(i.sourceVariantId))
+          || (i.sourceProductId && productPvpMap.get(i.sourceProductId))
+          || null;
+        if (!pvp || pvp <= 0) return null;
+        return {
+          id: i.id,
+          sku: i.sku,
+          nombre: i.nombre,
+          precioActual: i.precioActual,
+          pvpSugerido: Number(pvp),
+        };
+      })
+      .filter(Boolean) as Array<{ id: string; sku: string; nombre: string; precioActual: number; pvpSugerido: number }>;
   }, []);
 
   return { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV, applyBusinessPanelPrices, fetchBusinessPanelPreview };

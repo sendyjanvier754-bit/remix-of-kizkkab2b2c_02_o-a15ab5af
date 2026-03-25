@@ -36,6 +36,7 @@ export interface SellerCatalogItem {
   gananciaPorUnidad: number;
   availabilityStatus: string;
   variantAttributes?: Record<string, any>;
+  productVariantId?: string | null; // product_variants.id (admin variant)
 }
 
 export interface ProductoConVariantes {
@@ -266,6 +267,7 @@ export const useSellerCatalog = (showAll: boolean = false, sourceType: SellerCat
             gananciaPorUnidad: 0,
             availabilityStatus: v.availability_status || 'available',
             variantAttributes: v.attributes || {},
+            productVariantId: v.product_variant_id || null,
           };
           variantes.push(item);
           allItems.push(item);
