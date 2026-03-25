@@ -1,0 +1,2 @@
+ALTER TABLE seller_catalog DROP CONSTRAINT seller_catalog_source_product_id_fkey;
+ALTER TABLE seller_catalog ADD CONSTRAINT seller_catalog_source_product_id_fkey FOREIGN KEY (source_product_id) REFERENCES products(id) ON DELETE CASCADE;
