@@ -9,6 +9,14 @@ export interface BulkPriceItem {
   precioActual: number;
   precioNuevo: number;
   precioCosto: number;
+  sourceProductId?: string | null;
+}
+  id: string;
+  sku: string;
+  nombre: string;
+  precioActual: number;
+  precioNuevo: number;
+  precioCosto: number;
 }
 
 export const useBulkPriceUpdate = (storeId: string | null) => {
