@@ -78,6 +78,11 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
     if (ok) { onSuccess(); onOpenChange(false); }
   };
 
+  const handleBusinessPanelApply = async () => {
+    const result = await applyBusinessPanelPrices(allItems);
+    if (result.success) { onSuccess(); onOpenChange(false); }
+  };
+
   const handleInlineApply = async () => {
     const ok = await applyInlineEdits(inlineItems);
     if (ok) { onSuccess(); onOpenChange(false); }
