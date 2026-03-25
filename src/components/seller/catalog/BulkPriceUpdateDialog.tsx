@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Percent, Table2, Upload, ArrowUp, ArrowDown, Loader2, Download, AlertCircle } from 'lucide-react';
+import { Percent, Table2, Upload, ArrowUp, ArrowDown, Loader2, Download, AlertCircle, TrendingUp } from 'lucide-react';
 import { BulkPriceItem, useBulkPriceUpdate } from '@/hooks/useBulkPriceUpdate';
 import { ProductoConVariantes } from '@/hooks/useSellerCatalog';
 import * as XLSX from 'xlsx';
@@ -29,9 +29,11 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
   const [inlineItems, setInlineItems] = useState<BulkPriceItem[]>([]);
   const [csvData, setCsvData] = useState<Array<{ sku: string; precio: number }>>([]);
   const [csvFileName, setCsvFileName] = useState('');
+  const [bpPreview, setBpPreview] = useState<Array<{ id: string; sku: string; nombre: string; precioActual: number; pvpSugerido: number }>>([]);
+  const [bpLoading, setBpLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV } = useBulkPriceUpdate(storeId);
+  const { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV, applyBusinessPanelPrices, fetchBusinessPanelPreview } = useBulkPriceUpdate(storeId);
 
   // Flatten all variants into BulkPriceItems
   const allItems = useMemo<BulkPriceItem[]>(() => {
@@ -43,15 +45,22 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
         precioActual: v.precioVenta,
         precioNuevo: v.precioVenta,
         precioCosto: v.precioCosto,
+        sourceProductId: v.sourceProductId,
       }))
     );
   }, [productos]);
 
   // Initialize inline items when tab switches
-  const handleTabChange = (value: string) => {
+  const handleTabChange = async (value: string) => {
     setTab(value);
     if (value === 'inline') {
       setInlineItems(allItems.map(i => ({ ...i })));
+    }
+    if (value === 'business') {
+      setBpLoading(true);
+      const preview = await fetchBusinessPanelPreview(allItems);
+      setBpPreview(preview);
+      setBpLoading(false);
     }
   };
 
@@ -67,6 +76,11 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
   const handlePercentageApply = async () => {
     const ok = await applyPercentageAdjustment(allItems, percentage, mode);
     if (ok) { onSuccess(); onOpenChange(false); }
+  };
+
+  const handleBusinessPanelApply = async () => {
+    const result = await applyBusinessPanelPrices(allItems);
+    if (result.success) { onSuccess(); onOpenChange(false); }
   };
 
   const handleInlineApply = async () => {
@@ -136,15 +150,18 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="percentage" className="gap-1.5 text-xs sm:text-sm">
-              <Percent className="h-3.5 w-3.5" /> Porcentaje
+              <Percent className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Porcentaje</span><span className="sm:hidden">%</span>
+            </TabsTrigger>
+            <TabsTrigger value="business" className="gap-1.5 text-xs sm:text-sm">
+              <TrendingUp className="h-3.5 w-3.5" /> <span className="hidden sm:inline">PVP Sugerido</span><span className="sm:hidden">PVP</span>
             </TabsTrigger>
             <TabsTrigger value="inline" className="gap-1.5 text-xs sm:text-sm">
               <Table2 className="h-3.5 w-3.5" /> Tabla
             </TabsTrigger>
             <TabsTrigger value="csv" className="gap-1.5 text-xs sm:text-sm">
-              <Upload className="h-3.5 w-3.5" /> Excel/CSV
+              <Upload className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Excel/CSV</span><span className="sm:hidden">CSV</span>
             </TabsTrigger>
           </TabsList>
 
@@ -215,7 +232,56 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
             </DialogFooter>
           </TabsContent>
 
-          {/* TAB 2: Inline Table */}
+          {/* TAB 2: Business Panel PVP */}
+          <TabsContent value="business" className="flex-1 overflow-auto space-y-4 mt-4">
+            <Alert className="border-primary/30 bg-primary/5">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-sm">
+                Actualiza todos los precios de tu tienda al <strong>PVP Sugerido</strong> calculado en el Business Panel 
+                (basado en precio B2B + logística + markup de categoría).
+              </AlertDescription>
+            </Alert>
+
+            {bpLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mr-2" />
+                <span className="text-sm text-muted-foreground">Cargando precios sugeridos...</span>
+              </div>
+            ) : bpPreview.length === 0 ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                No se encontraron precios sugeridos para tus productos.
+              </div>
+            ) : (
+              <div className="rounded-md border max-h-[300px] overflow-auto">
+                <div className="grid grid-cols-4 gap-2 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground sticky top-0">
+                  <span>SKU</span>
+                  <span>Nombre</span>
+                  <span className="text-right">Actual</span>
+                  <span className="text-right">PVP Sugerido</span>
+                </div>
+                {bpPreview.map(item => (
+                  <div key={item.id} className="grid grid-cols-4 gap-2 px-3 py-2 border-t text-sm">
+                    <span className="truncate font-mono text-xs">{item.sku}</span>
+                    <span className="truncate">{item.nombre}</span>
+                    <span className="text-right text-muted-foreground">${item.precioActual.toFixed(2)}</span>
+                    <span className="text-right font-medium text-primary">
+                      ${item.pvpSugerido.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button onClick={handleBusinessPanelApply} disabled={isUpdating || bpPreview.length === 0}>
+                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Aplicar PVP a {bpPreview.length} variantes
+              </Button>
+            </DialogFooter>
+          </TabsContent>
+
+          {/* TAB 3: Inline Table */}
           <TabsContent value="inline" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1 max-h-[400px] rounded-md border">
               <div className="grid grid-cols-[1fr_1.5fr_80px_100px] gap-2 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground sticky top-0">
