@@ -484,6 +484,23 @@ const ProductPage = () => {
   const sellerCatalogIdForB2C = !isB2BUser && (product as any)?.type === 'seller_catalog' ? product?.id : null;
   const { data: sellerCatalogVariants = [] } = useB2CCatalogVariants(sellerCatalogIdForB2C);
 
+  // Build variant price maps for inline VariantSelector (same logic as VariantDrawer)
+  const inlineVariantPrices = useMemo(() => {
+    if (!isB2BUser || !variants || variants.length === 0) return {};
+    return variants.reduce((acc: Record<string, number>, v: any) => {
+      if (v.precio_b2b_final) acc[v.id] = v.precio_b2b_final;
+      return acc;
+    }, {});
+  }, [variants, isB2BUser]);
+
+  const inlineB2cVariantPrices = useMemo(() => {
+    if (isB2BUser || sellerCatalogVariants.length === 0) return {};
+    return sellerCatalogVariants.reduce((acc: Record<string, number>, v: any) => {
+      if (v.productVariantId && v.price != null) acc[v.productVariantId] = Number(v.price);
+      return acc;
+    }, {});
+  }, [isB2BUser, sellerCatalogVariants]);
+
   // Local state
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
