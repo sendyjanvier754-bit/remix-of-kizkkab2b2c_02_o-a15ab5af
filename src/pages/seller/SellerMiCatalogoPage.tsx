@@ -11,7 +11,8 @@ import { B2BCatalogImportDialog } from '@/components/seller/B2BCatalogImportDial
 import { MiCatalogStatsCards } from '@/components/seller/catalog/MiCatalogStatsCards';
 import { MiCatalogTable } from '@/components/seller/catalog/MiCatalogTable';
 import { EditProductDialog } from '@/components/seller/catalog/EditProductDialog';
-import { Search, RefreshCw, Download, AlertCircle, Loader2, Globe, Package, ShoppingBag } from 'lucide-react';
+import { Search, RefreshCw, Download, AlertCircle, Loader2, Globe, Package, ShoppingBag, DollarSign } from 'lucide-react';
+import { BulkPriceUpdateDialog } from '@/components/seller/catalog/BulkPriceUpdateDialog';
 import { useNavigate } from 'react-router-dom';
 
 export default function SellerMiCatalogoPage() {
