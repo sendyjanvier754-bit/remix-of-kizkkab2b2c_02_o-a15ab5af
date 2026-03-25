@@ -150,15 +150,18 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="percentage" className="gap-1.5 text-xs sm:text-sm">
-              <Percent className="h-3.5 w-3.5" /> Porcentaje
+              <Percent className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Porcentaje</span><span className="sm:hidden">%</span>
+            </TabsTrigger>
+            <TabsTrigger value="business" className="gap-1.5 text-xs sm:text-sm">
+              <TrendingUp className="h-3.5 w-3.5" /> <span className="hidden sm:inline">PVP Sugerido</span><span className="sm:hidden">PVP</span>
             </TabsTrigger>
             <TabsTrigger value="inline" className="gap-1.5 text-xs sm:text-sm">
               <Table2 className="h-3.5 w-3.5" /> Tabla
             </TabsTrigger>
             <TabsTrigger value="csv" className="gap-1.5 text-xs sm:text-sm">
-              <Upload className="h-3.5 w-3.5" /> Excel/CSV
+              <Upload className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Excel/CSV</span><span className="sm:hidden">CSV</span>
             </TabsTrigger>
           </TabsList>
 
