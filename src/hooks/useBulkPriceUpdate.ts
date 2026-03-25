@@ -11,14 +11,6 @@ export interface BulkPriceItem {
   precioCosto: number;
   sourceProductId?: string | null;
 }
-  id: string;
-  sku: string;
-  nombre: string;
-  precioActual: number;
-  precioNuevo: number;
-  precioCosto: number;
-  sourceProductId?: string | null;
-}
 
 export const useBulkPriceUpdate = (storeId: string | null) => {
   const [isUpdating, setIsUpdating] = useState(false);
