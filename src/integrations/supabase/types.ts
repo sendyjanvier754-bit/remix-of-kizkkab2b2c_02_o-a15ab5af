@@ -9296,21 +9296,6 @@ export type Database = {
         Returns: string
       }
       get_agent_dashboard: { Args: { p_agent_id: string }; Returns: Json }
-      get_business_panel_data_for_country: {
-        Args: { p_country_id: string }
-        Returns: {
-          cost_per_unit: number
-          is_active: boolean
-          item_name: string
-          item_type: string
-          product_id: string
-          shipping_cost_per_unit: number
-          sku: string
-          suggested_pvp_per_unit: number
-          variant_id: string
-          weight_kg: number
-        }[]
-      }
       get_cart_shipping_cost: {
         Args: { cart_items: Json; p_shipping_type_id?: string }
         Returns: Json
