@@ -46,6 +46,7 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
         precioNuevo: v.precioVenta,
         precioCosto: v.precioCosto,
         sourceProductId: v.sourceProductId,
+        sourceVariantId: v.productVariantId,
       }))
     );
   }, [productos]);
