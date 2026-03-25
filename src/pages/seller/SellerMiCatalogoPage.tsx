@@ -11,7 +11,8 @@ import { B2BCatalogImportDialog } from '@/components/seller/B2BCatalogImportDial
 import { MiCatalogStatsCards } from '@/components/seller/catalog/MiCatalogStatsCards';
 import { MiCatalogTable } from '@/components/seller/catalog/MiCatalogTable';
 import { EditProductDialog } from '@/components/seller/catalog/EditProductDialog';
-import { Search, RefreshCw, Download, AlertCircle, Loader2, Globe, Package, ShoppingBag } from 'lucide-react';
+import { Search, RefreshCw, Download, AlertCircle, Loader2, Globe, Package, ShoppingBag, DollarSign } from 'lucide-react';
+import { BulkPriceUpdateDialog } from '@/components/seller/catalog/BulkPriceUpdateDialog';
 import { useNavigate } from 'react-router-dom';
 
 export default function SellerMiCatalogoPage() {
@@ -41,6 +42,7 @@ export default function SellerMiCatalogoPage() {
   // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [bulkPriceDialogOpen, setBulkPriceDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<SellerCatalogItem | null>(null);
 
   // Get stats
@@ -190,8 +192,12 @@ export default function SellerMiCatalogoPage() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Actualizar datos">
+                   <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Actualizar datos">
                     <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button variant="secondary" onClick={() => setBulkPriceDialogOpen(true)} className="gap-2" disabled={!storeId || productos.length === 0}>
+                    <DollarSign className="h-4 w-4" />
+                    <span className="hidden sm:inline">Precios Masivos</span>
                   </Button>
                   <Button onClick={() => setImportDialogOpen(true)} className="gap-2" disabled={!storeId || isRefreshing}>
                     <Download className="h-4 w-4" />
@@ -230,7 +236,7 @@ export default function SellerMiCatalogoPage() {
           <TabsContent value="inventory" className="space-y-4">
             <Card className="bg-card border-border">
               <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -242,6 +248,10 @@ export default function SellerMiCatalogoPage() {
                   </div>
                   <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Actualizar datos">
                     <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button variant="secondary" onClick={() => setBulkPriceDialogOpen(true)} className="gap-2" disabled={!storeId || productos.length === 0}>
+                    <DollarSign className="h-4 w-4" />
+                    <span className="hidden sm:inline">Precios Masivos</span>
                   </Button>
                 </div>
               </CardContent>
@@ -296,6 +306,13 @@ export default function SellerMiCatalogoPage() {
         storeId={storeId || ''}
         existingSkus={productos.flatMap(p => p.variantes.map(v => v.sku))}
         onSuccess={handleImportSuccess}
+      />
+      <BulkPriceUpdateDialog
+        open={bulkPriceDialogOpen}
+        onOpenChange={setBulkPriceDialogOpen}
+        productos={productos}
+        storeId={storeId}
+        onSuccess={handleRefresh}
       />
     </SellerLayout>
   );
