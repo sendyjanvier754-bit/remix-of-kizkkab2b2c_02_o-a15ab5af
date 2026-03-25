@@ -50,6 +50,9 @@ export const useB2BMarginRanges = () => {
       ['cart-products-details'],
       ['cart-variants-details'],
       ['trending-products'],
+      ['product-by-sku'],
+      ['b2b-favorites'],
+      ['seller-catalog'],
     ] as const;
 
     await Promise.all(
