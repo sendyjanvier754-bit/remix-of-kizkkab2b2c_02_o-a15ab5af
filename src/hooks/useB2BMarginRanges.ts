@@ -36,6 +36,29 @@ export interface B2BPriceResult {
 export const useB2BMarginRanges = () => {
   const queryClient = useQueryClient();
 
+  const refreshB2BPriceQueries = async () => {
+    const queryKeysToInvalidate = [
+      ['b2b-margin-ranges'],
+      ['products'],
+      ['b2b-products'],
+      ['business-panel'],
+      ['catalog'],
+      ['products-b2b-eav'],
+      ['products-b2b-featured-eav'],
+      ['product-variants'],
+      ['b2b-prices-map'],
+      ['cart-products-details'],
+      ['cart-variants-details'],
+      ['trending-products'],
+    ] as const;
+
+    await Promise.all(
+      queryKeysToInvalidate.map((queryKey) =>
+        queryClient.invalidateQueries({ queryKey })
+      )
+    );
+  };
+
   // Obtener todos los rangos de márgenes
   const useMarginRanges = () => useQuery({
     queryKey: ['b2b-margin-ranges'],
@@ -77,8 +100,8 @@ export const useB2BMarginRanges = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['b2b-margin-ranges'] });
+    onSuccess: async () => {
+      await refreshB2BPriceQueries();
       toast.success('Rango de margen creado');
     },
     onError: (err: any) => {
@@ -99,12 +122,8 @@ export const useB2BMarginRanges = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['b2b-margin-ranges'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['b2b-products'] });
-      queryClient.invalidateQueries({ queryKey: ['business-panel'] });
-      queryClient.invalidateQueries({ queryKey: ['catalog'] });
+    onSuccess: async () => {
+      await refreshB2BPriceQueries();
       toast.success('Rango de margen actualizado');
     },
     onError: (err: any) => {
@@ -122,8 +141,8 @@ export const useB2BMarginRanges = () => {
       
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['b2b-margin-ranges'] });
+    onSuccess: async () => {
+      await refreshB2BPriceQueries();
       toast.success('Rango de margen eliminado');
     },
     onError: (err: any) => {
@@ -141,8 +160,8 @@ export const useB2BMarginRanges = () => {
       
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['b2b-margin-ranges'] });
+    onSuccess: async () => {
+      await refreshB2BPriceQueries();
     },
     onError: (err: any) => {
       toast.error('Error al cambiar estado: ' + err.message);
