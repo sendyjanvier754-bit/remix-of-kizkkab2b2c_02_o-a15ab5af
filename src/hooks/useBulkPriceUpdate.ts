@@ -10,6 +10,7 @@ export interface BulkPriceItem {
   precioNuevo: number;
   precioCosto: number;
   sourceProductId?: string | null;
+  sourceVariantId?: string | null; // product_variants.id for variant-level matching
 }
 
 export const useBulkPriceUpdate = (storeId: string | null) => {
