@@ -232,7 +232,56 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
             </DialogFooter>
           </TabsContent>
 
-          {/* TAB 2: Inline Table */}
+          {/* TAB 2: Business Panel PVP */}
+          <TabsContent value="business" className="flex-1 overflow-auto space-y-4 mt-4">
+            <Alert className="border-primary/30 bg-primary/5">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-sm">
+                Actualiza todos los precios de tu tienda al <strong>PVP Sugerido</strong> calculado en el Business Panel 
+                (basado en precio B2B + logística + markup de categoría).
+              </AlertDescription>
+            </Alert>
+
+            {bpLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mr-2" />
+                <span className="text-sm text-muted-foreground">Cargando precios sugeridos...</span>
+              </div>
+            ) : bpPreview.length === 0 ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                No se encontraron precios sugeridos para tus productos.
+              </div>
+            ) : (
+              <div className="rounded-md border max-h-[300px] overflow-auto">
+                <div className="grid grid-cols-4 gap-2 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground sticky top-0">
+                  <span>SKU</span>
+                  <span>Nombre</span>
+                  <span className="text-right">Actual</span>
+                  <span className="text-right">PVP Sugerido</span>
+                </div>
+                {bpPreview.map(item => (
+                  <div key={item.id} className="grid grid-cols-4 gap-2 px-3 py-2 border-t text-sm">
+                    <span className="truncate font-mono text-xs">{item.sku}</span>
+                    <span className="truncate">{item.nombre}</span>
+                    <span className="text-right text-muted-foreground">${item.precioActual.toFixed(2)}</span>
+                    <span className="text-right font-medium text-primary">
+                      ${item.pvpSugerido.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button onClick={handleBusinessPanelApply} disabled={isUpdating || bpPreview.length === 0}>
+                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Aplicar PVP a {bpPreview.length} variantes
+              </Button>
+            </DialogFooter>
+          </TabsContent>
+
+          {/* TAB 3: Inline Table */}
           <TabsContent value="inline" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1 max-h-[400px] rounded-md border">
               <div className="grid grid-cols-[1fr_1.5fr_80px_100px] gap-2 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground sticky top-0">
