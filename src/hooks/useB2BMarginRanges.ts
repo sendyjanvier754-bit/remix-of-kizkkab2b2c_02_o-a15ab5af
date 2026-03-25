@@ -101,6 +101,10 @@ export const useB2BMarginRanges = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['b2b-margin-ranges'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['b2b-products'] });
+      queryClient.invalidateQueries({ queryKey: ['business-panel'] });
+      queryClient.invalidateQueries({ queryKey: ['catalog'] });
       toast.success('Rango de margen actualizado');
     },
     onError: (err: any) => {
