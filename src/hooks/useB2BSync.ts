@@ -46,7 +46,7 @@ export const useToggleAutoSync = () => {
     mutationFn: async ({ storeId, enabled }: { storeId: string; enabled: boolean }) => {
       const { error } = await supabase
         .from("stores")
-        .update({ auto_sync_b2b: enabled } as never)
+        .update({ auto_sync_b2b: enabled } as any)
         .eq("id", storeId);
 
       if (error) throw error;
@@ -54,8 +54,8 @@ export const useToggleAutoSync = () => {
       // If enabling, trigger immediate sync
       if (enabled) {
         const { data, error: rpcError } = await supabase.rpc(
-          "sync_b2b_catalog_for_store" as never,
-          { p_store_id: storeId } as never
+          "sync_b2b_catalog_for_store" as any,
+          { p_store_id: storeId } as any
         );
         if (rpcError) throw rpcError;
         return data;
