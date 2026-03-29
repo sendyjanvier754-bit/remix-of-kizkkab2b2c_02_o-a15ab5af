@@ -40,9 +40,33 @@ async function batchUpdate(
   }
 }
 
-// --- Fetch PVP data from business panel ---
+// --- Resolve store country ---
 
-async function fetchBpData(sourceIds: string[]) {
+async function resolveStoreCountry(storeId: string): Promise<string | null> {
+  const { data: storeData } = await supabase
+    .from('stores')
+    .select('market_id, destination_country_id')
+    .eq('id', storeId)
+    .maybeSingle();
+
+  const directCountryId = (storeData as any)?.destination_country_id;
+  if (directCountryId) return directCountryId;
+
+  const marketId = (storeData as any)?.market_id;
+  if (!marketId) return null;
+
+  const { data: market } = await supabase
+    .from('markets')
+    .select('destination_country_id')
+    .eq('id', marketId)
+    .maybeSingle();
+
+  return market?.destination_country_id || null;
+}
+
+// --- Fetch PVP data from business panel, with shipping fallback ---
+
+async function fetchBpData(sourceIds: string[], storeId?: string | null) {
   const { data, error } = await supabase
     .from('v_business_panel_data')
     .select('product_id, variant_id, item_type, suggested_pvp_per_unit, cost_per_unit, item_name')
@@ -54,20 +78,71 @@ async function fetchBpData(sourceIds: string[]) {
   const variantPvpMap = new Map<string, number>();
   const productPvpMap = new Map<string, number>();
 
+  // Collect items that need shipping cost resolution (null suggested_pvp)
+  const needsShipping: Array<{ product_id: string; variant_id: string | null; item_type: string; cost_per_unit: number }> = [];
+
   for (const r of (data || []) as any[]) {
-    // Use suggested_pvp if available, otherwise fallback to cost × 3
-    const pvp = (r.suggested_pvp_per_unit != null && r.suggested_pvp_per_unit > 0)
-      ? Number(r.suggested_pvp_per_unit)
-      : (r.cost_per_unit != null && r.cost_per_unit > 0)
-        ? Number(r.cost_per_unit) * 3
-        : null;
+    if (r.suggested_pvp_per_unit != null && r.suggested_pvp_per_unit > 0) {
+      // View already has the full PVP — use it directly
+      const pvp = Number(r.suggested_pvp_per_unit);
+      if (r.item_type === 'variant' && r.variant_id) {
+        variantPvpMap.set(r.variant_id, pvp);
+      } else if (r.item_type === 'product' && r.product_id) {
+        productPvpMap.set(r.product_id, pvp);
+      }
+    } else if (r.cost_per_unit != null && r.cost_per_unit > 0) {
+      needsShipping.push(r);
+    }
+  }
 
-    if (pvp == null || pvp <= 0) continue;
+  // For items missing PVP, resolve country from store and calculate shipping
+  if (needsShipping.length > 0 && storeId) {
+    const countryId = await resolveStoreCountry(storeId);
 
-    if (r.item_type === 'variant' && r.variant_id) {
-      variantPvpMap.set(r.variant_id, pvp);
-    } else if (r.item_type === 'product' && r.product_id) {
-      productPvpMap.set(r.product_id, pvp);
+    if (countryId) {
+      // Get unique product_ids that need shipping
+      const productIdsForShipping = [...new Set(needsShipping.map(r => r.product_id))];
+
+      // Call RPC for each product
+      const shippingResults = await Promise.all(
+        productIdsForShipping.map(pid =>
+          supabase.rpc('get_product_shipping_cost_by_country', {
+            p_product_id: pid,
+            p_destination_country_id: countryId,
+            p_tier_type: 'standard',
+          }).then(({ data, error }) => ({ pid, data, error }))
+        )
+      );
+
+      const shippingMap = new Map<string, number>();
+      for (const { pid, data: sData } of shippingResults) {
+        if (sData && sData[0]?.is_available) {
+          shippingMap.set(pid, Number(sData[0].shipping_cost_usd) || 0);
+        }
+      }
+
+      // Now calculate PVP = cost × 3 + shipping
+      for (const r of needsShipping) {
+        const shipping = shippingMap.get(r.product_id) ?? 0;
+        const cost = Number(r.cost_per_unit);
+        const pvp = Math.round((cost * 3 + shipping) * 100) / 100;
+
+        if (r.item_type === 'variant' && r.variant_id) {
+          variantPvpMap.set(r.variant_id, pvp);
+        } else if (r.item_type === 'product' && r.product_id) {
+          productPvpMap.set(r.product_id, pvp);
+        }
+      }
+    } else {
+      // No country found — fallback to cost × 3 (without shipping)
+      for (const r of needsShipping) {
+        const pvp = Math.round(Number(r.cost_per_unit) * 3 * 100) / 100;
+        if (r.item_type === 'variant' && r.variant_id) {
+          variantPvpMap.set(r.variant_id, pvp);
+        } else if (r.item_type === 'product' && r.product_id) {
+          productPvpMap.set(r.product_id, pvp);
+        }
+      }
     }
   }
 
@@ -195,7 +270,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
         return { success: false, preview: [] };
       }
 
-      const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds);
+      const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds, storeId);
 
       const updates: Array<{ id: string; precio: number; isManual: boolean }> = [];
       for (const item of syncableItems) {
@@ -228,7 +303,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
     const sourceIds = [...new Set(syncableItems.map(i => i.sourceProductId).filter(Boolean))] as string[];
     if (sourceIds.length === 0) return [];
 
-    const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds);
+    const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds, storeId);
 
     return syncableItems
       .map(i => {
@@ -243,7 +318,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
         };
       })
       .filter(Boolean) as Array<{ id: string; sku: string; nombre: string; precioActual: number; pvpSugerido: number }>;
-  }, []);
+  }, [storeId]);
 
   return { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV, applyBusinessPanelPrices, fetchBusinessPanelPreview };
 };
