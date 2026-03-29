@@ -269,6 +269,7 @@ export const useSellerCatalog = (showAll: boolean = false, sourceType: SellerCat
             availabilityStatus: v.availability_status || 'available',
             variantAttributes: v.attributes || {},
             productVariantId: v.product_variant_id || null,
+            isManualPrice: v.is_manual_price ?? false,
           };
           variantes.push(item);
           allItems.push(item);
