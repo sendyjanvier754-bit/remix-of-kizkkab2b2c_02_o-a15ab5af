@@ -6149,6 +6149,7 @@ export type Database = {
           created_at: string
           id: string
           is_available: boolean
+          is_manual_price: boolean
           precio_override: number | null
           seller_catalog_id: string
           sku: string
@@ -6161,6 +6162,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_available?: boolean
+          is_manual_price?: boolean
           precio_override?: number | null
           seller_catalog_id: string
           sku: string
@@ -6173,6 +6175,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_available?: boolean
+          is_manual_price?: boolean
           precio_override?: number | null
           seller_catalog_id?: string
           sku?: string
