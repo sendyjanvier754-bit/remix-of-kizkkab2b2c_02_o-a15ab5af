@@ -270,7 +270,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
         return { success: false, preview: [] };
       }
 
-      const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds);
+      const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds, storeId);
 
       const updates: Array<{ id: string; precio: number; isManual: boolean }> = [];
       for (const item of syncableItems) {
@@ -303,7 +303,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
     const sourceIds = [...new Set(syncableItems.map(i => i.sourceProductId).filter(Boolean))] as string[];
     if (sourceIds.length === 0) return [];
 
-    const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds);
+    const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds, storeId);
 
     return syncableItems
       .map(i => {
