@@ -10,8 +10,81 @@ export interface BulkPriceItem {
   precioNuevo: number;
   precioCosto: number;
   sourceProductId?: string | null;
-  sourceVariantId?: string | null; // product_variants.id for variant-level matching
+  sourceVariantId?: string | null;
+  isManualPrice?: boolean;
 }
+
+// --- Helpers for batch updates ---
+
+async function batchUpdate(
+  items: Array<{ id: string; precio: number; isManual: boolean }>,
+) {
+  for (let i = 0; i < items.length; i += 50) {
+    const chunk = items.slice(i, i + 50);
+    const promises = chunk.map(u =>
+      supabase
+        .from('seller_catalog_variants' as any)
+        .update({
+          precio_override: u.precio,
+          is_manual_price: u.isManual,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', u.id)
+    );
+    const results = await Promise.all(promises);
+    const errors = results.filter(r => r.error);
+    if (errors.length > 0) {
+      console.error('Batch update errors:', errors);
+      throw new Error(`${errors.length} errores al actualizar`);
+    }
+  }
+}
+
+// --- Fetch PVP data from business panel ---
+
+async function fetchBpData(sourceIds: string[]) {
+  const { data, error } = await supabase
+    .from('v_business_panel_data')
+    .select('product_id, variant_id, item_type, suggested_pvp_per_unit, cost_per_unit, item_name')
+    .in('product_id', sourceIds)
+    .eq('is_active', true);
+
+  if (error) throw error;
+
+  const variantPvpMap = new Map<string, number>();
+  const productPvpMap = new Map<string, number>();
+
+  for (const r of (data || []) as any[]) {
+    // Use suggested_pvp if available, otherwise fallback to cost × 3
+    const pvp = (r.suggested_pvp_per_unit != null && r.suggested_pvp_per_unit > 0)
+      ? Number(r.suggested_pvp_per_unit)
+      : (r.cost_per_unit != null && r.cost_per_unit > 0)
+        ? Number(r.cost_per_unit) * 3
+        : null;
+
+    if (pvp == null || pvp <= 0) continue;
+
+    if (r.item_type === 'variant' && r.variant_id) {
+      variantPvpMap.set(r.variant_id, pvp);
+    } else if (r.item_type === 'product' && r.product_id) {
+      productPvpMap.set(r.product_id, pvp);
+    }
+  }
+
+  return { variantPvpMap, productPvpMap };
+}
+
+function resolvePvp(
+  item: BulkPriceItem,
+  variantPvpMap: Map<string, number>,
+  productPvpMap: Map<string, number>,
+): number | null {
+  return (item.sourceVariantId && variantPvpMap.get(item.sourceVariantId))
+    || (item.sourceProductId && productPvpMap.get(item.sourceProductId))
+    || null;
+}
+
+// --- Hook ---
 
 export const useBulkPriceUpdate = (storeId: string | null) => {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -27,27 +100,10 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
       const multiplier = mode === 'increase' ? 1 + percentage / 100 : 1 - percentage / 100;
       const updates = items.map(item => ({
         id: item.id,
-        precio_override: Math.max(0, Math.round(item.precioActual * multiplier * 100) / 100),
-        updated_at: new Date().toISOString(),
+        precio: Math.max(0, Math.round(item.precioActual * multiplier * 100) / 100),
+        isManual: true, // manual adjustment
       }));
-
-      // Batch update in chunks of 50
-      for (let i = 0; i < updates.length; i += 50) {
-        const chunk = updates.slice(i, i + 50);
-        const promises = chunk.map(u =>
-          supabase
-            .from('seller_catalog_variants' as any)
-            .update({ precio_override: u.precio_override, updated_at: u.updated_at })
-            .eq('id', u.id)
-        );
-        const results = await Promise.all(promises);
-        const errors = results.filter(r => r.error);
-        if (errors.length > 0) {
-          console.error('Bulk update errors:', errors);
-          throw new Error(`${errors.length} errores al actualizar`);
-        }
-      }
-
+      await batchUpdate(updates);
       toast.success(`${updates.length} precios actualizados (${mode === 'increase' ? '+' : '-'}${percentage}%)`);
       return true;
     } catch (error: any) {
@@ -68,20 +124,11 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
         toast.info('No hay cambios para guardar');
         return true;
       }
-
-      for (let i = 0; i < changed.length; i += 50) {
-        const chunk = changed.slice(i, i + 50);
-        const promises = chunk.map(u =>
-          supabase
-            .from('seller_catalog_variants' as any)
-            .update({ precio_override: u.precioNuevo, updated_at: new Date().toISOString() })
-            .eq('id', u.id)
-        );
-        const results = await Promise.all(promises);
-        const errors = results.filter(r => r.error);
-        if (errors.length > 0) throw new Error(`${errors.length} errores al actualizar`);
-      }
-
+      await batchUpdate(changed.map(u => ({
+        id: u.id,
+        precio: u.precioNuevo,
+        isManual: true,
+      })));
       toast.success(`${changed.length} precios actualizados`);
       return true;
     } catch (error: any) {
@@ -118,18 +165,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
         return false;
       }
 
-      for (let i = 0; i < matched.length; i += 50) {
-        const chunk = matched.slice(i, i + 50);
-        const promises = chunk.map(u =>
-          supabase
-            .from('seller_catalog_variants' as any)
-            .update({ precio_override: u.precio, updated_at: new Date().toISOString() })
-            .eq('id', u.id)
-        );
-        const results = await Promise.all(promises);
-        const errors = results.filter(r => r.error);
-        if (errors.length > 0) throw new Error(`${errors.length} errores al actualizar`);
-      }
+      await batchUpdate(matched.map(u => ({ ...u, isManual: true })));
 
       const msg = `${matched.length} precios actualizados`;
       if (notFound.length > 0) {
@@ -148,44 +184,24 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
   }, [storeId]);
 
   const applyBusinessPanelPrices = useCallback(async (items: BulkPriceItem[]) => {
-    if (!storeId || items.length === 0) return { success: false, preview: [] as Array<{ id: string; sku: string; nombre: string; precioActual: number; pvpSugerido: number }> };
+    if (!storeId || items.length === 0) return { success: false, preview: [] as any[] };
     setIsUpdating(true);
     try {
-      const sourceIds = [...new Set(items.map(i => i.sourceProductId).filter(Boolean))] as string[];
+      // Only sync items that are NOT manually priced
+      const syncableItems = items.filter(i => !i.isManualPrice);
+      const sourceIds = [...new Set(syncableItems.map(i => i.sourceProductId).filter(Boolean))] as string[];
       if (sourceIds.length === 0) {
-        toast.error('No se encontraron productos con origen B2B');
+        toast.error('No se encontraron productos para sincronizar');
         return { success: false, preview: [] };
       }
 
-      // Fetch all business panel data (products + variants)
-      const { data: bpData, error } = await supabase
-        .from('v_business_panel_data')
-        .select('product_id, variant_id, item_type, suggested_pvp_per_unit, item_name')
-        .in('product_id', sourceIds)
-        .eq('is_active', true);
+      const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds);
 
-      if (error) throw error;
-
-      // Build maps: variant-level takes priority, then product-level
-      const variantPvpMap = new Map<string, number>();
-      const productPvpMap = new Map<string, number>();
-      for (const r of (bpData || []) as any[]) {
-        if (r.suggested_pvp_per_unit == null || r.suggested_pvp_per_unit <= 0) continue;
-        if (r.item_type === 'variant' && r.variant_id) {
-          variantPvpMap.set(r.variant_id, r.suggested_pvp_per_unit);
-        } else if (r.item_type === 'product' && r.product_id) {
-          productPvpMap.set(r.product_id, r.suggested_pvp_per_unit);
-        }
-      }
-
-      const updates: Array<{ id: string; precio: number }> = [];
-      for (const item of items) {
-        // Try variant-level first, then product-level
-        const pvp = (item.sourceVariantId && variantPvpMap.get(item.sourceVariantId))
-          || (item.sourceProductId && productPvpMap.get(item.sourceProductId))
-          || null;
+      const updates: Array<{ id: string; precio: number; isManual: boolean }> = [];
+      for (const item of syncableItems) {
+        const pvp = resolvePvp(item, variantPvpMap, productPvpMap);
         if (pvp != null && pvp > 0) {
-          updates.push({ id: item.id, precio: Number(pvp) });
+          updates.push({ id: item.id, precio: Number(pvp), isManual: false });
         }
       }
 
@@ -194,19 +210,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
         return { success: false, preview: [] };
       }
 
-      for (let i = 0; i < updates.length; i += 50) {
-        const chunk = updates.slice(i, i + 50);
-        const promises = chunk.map(u =>
-          supabase
-            .from('seller_catalog_variants' as any)
-            .update({ precio_override: u.precio, updated_at: new Date().toISOString() })
-            .eq('id', u.id)
-        );
-        const results = await Promise.all(promises);
-        const errors = results.filter(r => r.error);
-        if (errors.length > 0) throw new Error(`${errors.length} errores al actualizar`);
-      }
-
+      await batchUpdate(updates);
       toast.success(`${updates.length} precios actualizados al PVP sugerido del Business Panel`);
       return { success: true, preview: [] };
     } catch (error: any) {
@@ -219,31 +223,16 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
   }, [storeId]);
 
   const fetchBusinessPanelPreview = useCallback(async (items: BulkPriceItem[]) => {
-    const sourceIds = [...new Set(items.map(i => i.sourceProductId).filter(Boolean))] as string[];
+    // Only preview items that are NOT manually priced
+    const syncableItems = items.filter(i => !i.isManualPrice);
+    const sourceIds = [...new Set(syncableItems.map(i => i.sourceProductId).filter(Boolean))] as string[];
     if (sourceIds.length === 0) return [];
 
-    const { data: bpData } = await supabase
-      .from('v_business_panel_data')
-      .select('product_id, variant_id, item_type, suggested_pvp_per_unit, item_name')
-      .in('product_id', sourceIds)
-      .eq('is_active', true);
+    const { variantPvpMap, productPvpMap } = await fetchBpData(sourceIds);
 
-    const variantPvpMap = new Map<string, number>();
-    const productPvpMap = new Map<string, number>();
-    for (const r of (bpData || []) as any[]) {
-      if (r.suggested_pvp_per_unit == null || r.suggested_pvp_per_unit <= 0) continue;
-      if (r.item_type === 'variant' && r.variant_id) {
-        variantPvpMap.set(r.variant_id, r.suggested_pvp_per_unit);
-      } else if (r.item_type === 'product' && r.product_id) {
-        productPvpMap.set(r.product_id, r.suggested_pvp_per_unit);
-      }
-    }
-
-    return items
+    return syncableItems
       .map(i => {
-        const pvp = (i.sourceVariantId && variantPvpMap.get(i.sourceVariantId))
-          || (i.sourceProductId && productPvpMap.get(i.sourceProductId))
-          || null;
+        const pvp = resolvePvp(i, variantPvpMap, productPvpMap);
         if (!pvp || pvp <= 0) return null;
         return {
           id: i.id,
