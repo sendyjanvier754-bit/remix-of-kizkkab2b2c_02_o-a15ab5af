@@ -318,7 +318,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
         };
       })
       .filter(Boolean) as Array<{ id: string; sku: string; nombre: string; precioActual: number; pvpSugerido: number }>;
-  }, []);
+  }, [storeId]);
 
   return { isUpdating, applyPercentageAdjustment, applyInlineEdits, applyFromCSV, applyBusinessPanelPrices, fetchBusinessPanelPreview };
 };
