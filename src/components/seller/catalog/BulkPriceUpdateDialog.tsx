@@ -47,9 +47,13 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
         precioCosto: v.precioCosto,
         sourceProductId: v.sourceProductId,
         sourceVariantId: v.productVariantId,
+        isManualPrice: v.isManualPrice ?? false,
       }))
     );
   }, [productos]);
+
+  const manualCount = allItems.filter(i => i.isManualPrice).length;
+  const syncableCount = allItems.length - manualCount;
 
   // Initialize inline items when tab switches
   const handleTabChange = async (value: string) => {
@@ -240,6 +244,11 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
               <AlertDescription className="text-sm">
                 Actualiza todos los precios de tu tienda al <strong>PVP Sugerido</strong> calculado en el Business Panel 
                 (basado en precio B2B + logística + markup de categoría).
+                {manualCount > 0 && (
+                  <span className="block mt-1 text-muted-foreground">
+                    ⚠️ {manualCount} variante{manualCount > 1 ? 's' : ''} con precio manual no se sincronizará{manualCount > 1 ? 'n' : ''}.
+                  </span>
+                )}
               </AlertDescription>
             </Alert>
 
