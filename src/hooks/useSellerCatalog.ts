@@ -37,6 +37,7 @@ export interface SellerCatalogItem {
   availabilityStatus: string;
   variantAttributes?: Record<string, any>;
   productVariantId?: string | null; // product_variants.id (admin variant)
+  isManualPrice?: boolean;
 }
 
 export interface ProductoConVariantes {
