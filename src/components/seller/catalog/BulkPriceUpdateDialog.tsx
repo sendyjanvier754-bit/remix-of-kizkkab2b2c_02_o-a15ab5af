@@ -47,9 +47,13 @@ export function BulkPriceUpdateDialog({ open, onOpenChange, productos, storeId, 
         precioCosto: v.precioCosto,
         sourceProductId: v.sourceProductId,
         sourceVariantId: v.productVariantId,
+        isManualPrice: v.isManualPrice ?? false,
       }))
     );
   }, [productos]);
+
+  const manualCount = allItems.filter(i => i.isManualPrice).length;
+  const syncableCount = allItems.length - manualCount;
 
   // Initialize inline items when tab switches
   const handleTabChange = async (value: string) => {
