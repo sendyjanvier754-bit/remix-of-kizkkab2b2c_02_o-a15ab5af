@@ -134,9 +134,9 @@ async function fetchBpData(sourceIds: string[], storeId?: string | null) {
         }
       }
     } else {
-      // No country found — fallback to cost × 3 (without shipping)
+      // No country found — fallback: usar precio B2B directo (sin envío)
       for (const r of needsShipping) {
-        const pvp = Math.round(Number(r.cost_per_unit) * 3 * 100) / 100;
+        const pvp = Math.round(Number(r.cost_per_unit) * 100) / 100;
         if (r.item_type === 'variant' && r.variant_id) {
           variantPvpMap.set(r.variant_id, pvp);
         } else if (r.item_type === 'product' && r.product_id) {
