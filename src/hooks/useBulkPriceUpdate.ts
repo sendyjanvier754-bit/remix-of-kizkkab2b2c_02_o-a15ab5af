@@ -134,9 +134,10 @@ async function fetchBpData(sourceIds: string[], storeId?: string | null) {
         }
       }
     } else {
-      // No country found — fallback: usar precio B2B directo (sin envío)
+      // No country found — fallback: B2B × 3 sin envío (fórmula parcial del Business Panel)
       for (const r of needsShipping) {
-        const pvp = Math.round(Number(r.cost_per_unit) * 100) / 100;
+        const b2b = Number(r.cost_per_unit);
+        const pvp = Math.round((b2b * 3) * 100) / 100;
         if (r.item_type === 'variant' && r.variant_id) {
           variantPvpMap.set(r.variant_id, pvp);
         } else if (r.item_type === 'product' && r.product_id) {
