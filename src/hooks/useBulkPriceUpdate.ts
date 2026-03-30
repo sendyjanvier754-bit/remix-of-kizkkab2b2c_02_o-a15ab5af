@@ -121,11 +121,11 @@ async function fetchBpData(sourceIds: string[], storeId?: string | null) {
         }
       }
 
-      // Now calculate PVP = cost × 3 + shipping
+      // PVP = precio_B2B × 3 + shipping (fórmula del Business Panel)
       for (const r of needsShipping) {
         const shipping = shippingMap.get(r.product_id) ?? 0;
-        const cost = Number(r.cost_per_unit);
-        const pvp = Math.round((cost * 3 + shipping) * 100) / 100;
+        const b2b = Number(r.cost_per_unit);
+        const pvp = Math.round((b2b * 3 + shipping) * 100) / 100;
 
         if (r.item_type === 'variant' && r.variant_id) {
           variantPvpMap.set(r.variant_id, pvp);
@@ -134,9 +134,9 @@ async function fetchBpData(sourceIds: string[], storeId?: string | null) {
         }
       }
     } else {
-      // No country found — fallback to cost × 3 (without shipping)
+      // No country found — fallback: usar precio B2B directo (sin envío)
       for (const r of needsShipping) {
-        const pvp = Math.round(Number(r.cost_per_unit) * 3 * 100) / 100;
+        const pvp = Math.round(Number(r.cost_per_unit) * 100) / 100;
         if (r.item_type === 'variant' && r.variant_id) {
           variantPvpMap.set(r.variant_id, pvp);
         } else if (r.item_type === 'product' && r.product_id) {
