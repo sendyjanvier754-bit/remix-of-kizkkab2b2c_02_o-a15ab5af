@@ -88,7 +88,6 @@
     "contactStore": "Consultar a {{store}}",
     "qty": "Cant"
   },
-
   "header": {
     "shippingAbroad": "Envío desde el extranjero",
     "trends": "Tendencias",
@@ -115,7 +114,6 @@
     "micDenied": "Permiso de micrófono denegado.",
     "voiceError": "Error al reconocer voz. Intenta de nuevo."
   },
-
   "footer": {
     "tagline": "Tu tienda de compras en línea confiable con los mejores productos a los mejores precios.",
     "shopping": "COMPRAS",
@@ -141,7 +139,6 @@
     "securePayment": "Pago Seguro",
     "multiplePayments": "Múltiples opciones de pago"
   },
-
   "nav": {
     "home": "Inicio",
     "catalog": "Catálogo",
@@ -159,7 +156,6 @@
     "shipping": "Envíos",
     "payments": "Pagos"
   },
-
   "auth": {
     "login": "Iniciar Sesión",
     "logout": "Cerrar Sesión",
@@ -191,7 +187,6 @@
       "b2b": "Cliente B2B"
     }
   },
-
   "products": {
     "title": "Productos",
     "addProduct": "Agregar Producto",
@@ -237,7 +232,6 @@
       "nameDesc": "Nombre Z-A"
     }
   },
-
   "cart": {
     "title": "Mi Carrito",
     "empty": "Tu carrito está vacío",
@@ -273,7 +267,6 @@
     "lockedMessage": "Tienes un pago pendiente de ${{amount}}",
     "resumePayment": "Retomar Pago"
   },
-
   "orders": {
     "title": "Mis Pedidos",
     "myPurchases": "Mis Compras",
@@ -306,7 +299,6 @@
       "refunded": "Reembolsado"
     }
   },
-
   "shipping": {
     "title": "Envíos",
     "address": "Dirección de Envío",
@@ -322,7 +314,6 @@
     "calculate": "Calcular Envío",
     "selectMethod": "Selecciona un método de envío"
   },
-
   "payments": {
     "title": "Pagos",
     "method": "Método de Pago",
@@ -337,7 +328,6 @@
     "paymentPending": "Pago Pendiente",
     "accountLabel": "Cuenta:"
   },
-
   "profile": {
     "title": "Mi Perfil",
     "personalInfo": "Información Personal",
@@ -348,7 +338,6 @@
     "saveChanges": "Guardar Cambios",
     "profileUpdated": "Perfil actualizado correctamente"
   },
-
   "adminSidebar": {
     "main": "Principal",
     "dashboard": "Dashboard",
@@ -385,7 +374,6 @@
     "b2bPortal": "Portal B2B",
     "logoutSession": "Cerrar Sesión"
   },
-
   "sellerSidebar": {
     "dashboard": "Dashboard",
     "buyLots": "Comprar Lotes",
@@ -408,7 +396,6 @@
     "new": "Nuevo",
     "b2b": "B2B"
   },
-
   "admin": {
     "title": "Panel de Administración",
     "dashboard": "Dashboard",
@@ -424,7 +411,6 @@
     "reports": "Reportes",
     "analytics": "Analíticas"
   },
-
   "seller": {
     "title": "Panel de Vendedor",
     "dashboard": "Dashboard",
@@ -436,7 +422,6 @@
     "addProduct": "Agregar Producto",
     "seller": "Vendedor"
   },
-
   "b2b": {
     "title": "Portal B2B",
     "cart": "Carrito B2B",
@@ -448,7 +433,6 @@
     "approvedBuyer": "Comprador Aprobado",
     "pendingApproval": "Pendiente de Aprobación"
   },
-
   "chat": {
     "waiting": "En espera",
     "active": "Activo",
@@ -467,7 +451,6 @@
     "openSupport": "Abrir Chat de Soporte",
     "supportChats": "Chats de Soporte"
   },
-
   "settings": {
     "orderUpdates": "Actualizaciones de Pedidos",
     "orderNotifications": "Notificaciones sobre tus compras",
@@ -478,7 +461,6 @@
     "deleteContactSupport": "Para eliminar tu cuenta completamente, por favor contacta a soporte.",
     "goToStore": "Cuenta → Mi Tienda"
   },
-
   "language": {
     "select": "Idioma",
     "es": "Español",
@@ -486,7 +468,6 @@
     "fr": "Français",
     "ht": "Kreyòl"
   },
-
   "errors": {
     "generic": "Ocurrió un error inesperado",
     "notFound": "Página no encontrada",
@@ -501,7 +482,6 @@
     "emptyCart": "El carrito está vacío",
     "orderError": "Error al procesar el pedido"
   },
-
   "adminDashboard": {
     "title": "Dashboard",
     "subtitle": "Bienvenido al panel de administración",
@@ -532,7 +512,6 @@
     "paymentStatus": "Estado",
     "paymentDate": "Fecha"
   },
-
   "adminCatalog": {
     "title": "Catálogo Maestro B2B",
     "subtitle": "Logística Central - Gestión de Inventario",
@@ -562,7 +541,6 @@
     "noProductsInCatalog": "No hay productos en el catálogo",
     "viewSupplier": "Ver en proveedor"
   },
-
   "sellerDashboard": {
     "welcome": "¡Bienvenido, {{name}}!",
     "kycPendingTitle": "Verificación KYC Pendiente",
@@ -591,7 +569,6 @@
     "creditActive": "Crédito Activo",
     "noCredit": "Sin Crédito"
   },
-
   "checkout": {
     "title": "Finalizar Compra",
     "backToCart": "Volver al Carrito",
@@ -642,7 +619,6 @@
     "sellerPaymentInfo": "Información de pago del vendedor",
     "adminPaymentInfo": "Procesamiento automático vía plataforma"
   },
-
   "productPage": {
     "home": "Inicio",
     "categories": "Categorías",
@@ -686,7 +662,6 @@
     "youSave": "¡Ahorras ${{amount}}!",
     "view": "Vista"
   },
-
   "landing": {
     "completePlatform": "Plataforma Completa",
     "growBusiness": "Todo lo que necesitas para",
@@ -735,7 +710,6 @@
     "step4Feature2": "Guía automática",
     "step4Feature3": "Seguimiento en tiempo real"
   },
-
   "adminOrders": {
     "title": "Gestión de Pedidos B2B",
     "subtitle": "Administra todos los pedidos de mayoristas",
@@ -782,7 +756,6 @@
       "delivered": "Entregado"
     }
   },
-
   "adminSellers": {
     "title": "Gestión de Vendedores",
     "subtitle": "Verifica y gestiona las cuentas de vendedores",
@@ -816,7 +789,6 @@
     "fixedRate": "Tasa fija ($)",
     "reason": "Motivo"
   },
-
   "sellerOrders": {
     "title": "Mis Ventas B2C",
     "total": "Total",
@@ -847,7 +819,6 @@
     "paymentNotes": "Notas del pago",
     "rejectionReason": "Motivo del rechazo"
   },
-
   "sellerWallet": {
     "title": "Mi Billetera",
     "subtitle": "Gestiona tu saldo y retiros",
@@ -883,7 +854,6 @@
     "accountError": "Error: No se pudo identificar tu cuenta",
     "reloadPage": "Por favor recarga la página"
   },
-
   "sellerInventory": {
     "title": "Mi Inventario B2C",
     "subtitle": "Productos de tus compras B2B disponibles para reventa",
@@ -917,7 +887,6 @@
     "notImported": "No importado",
     "weight": "Peso"
   },
-
   "sellerCatalog": {
     "noProductsTitle": "Sin productos en tu catálogo",
     "noProductsDesc": "Compra lotes mayoristas en el catálogo B2B para agregar productos a tu tienda.",
@@ -942,7 +911,6 @@
     "edit": "Editar",
     "import": "Importar"
   },
-
   "editProductDialog": {
     "title": "Editar Producto",
     "subtitle": "Actualiza el precio y stock del producto",
@@ -958,7 +926,6 @@
     "invalidPrice": "Ingresa un precio válido",
     "invalidStock": "Ingresa un stock válido"
   },
-
   "catalogStats": {
     "products": "Productos",
     "skusInCatalog": "SKUs en catálogo",
@@ -969,7 +936,6 @@
     "avgMargin": "Margen Promedio",
     "avgProfit": "Ganancia promedio"
   },
-
   "stockAdjust": {
     "title": "Ajustar Stock",
     "currentStock": "Stock Actual",
@@ -981,14 +947,12 @@
     "saving": "Guardando...",
     "confirmAdjust": "Confirmar Ajuste"
   },
-
   "marginAlert": {
     "loss": "Pérdida",
     "lossDetail": "Precio ${{price}} < Costo ${{cost}}. Perderás ${{diff}}/unidad.",
     "lowMargin": "Margen bajo",
     "lowMarginDetail": "{{margin}}%. Considera aumentar el precio."
   },
-
   "inventarioTable": {
     "searchPlaceholder": "Buscar por nombre o SKU...",
     "image": "Imagen",
@@ -1010,7 +974,6 @@
     "publish": "Publicar",
     "ofProducts": "{{filtered}} de {{total}} productos"
   },
-
   "publicacionDialog": {
     "title": "Configurar Publicación B2C",
     "costs": "Costos",
@@ -1031,7 +994,6 @@
     "saving": "Guardando...",
     "save": "Guardar"
   },
-
   "paymentOverlay": {
     "verifyingOrder": "Verificando estado del pedido...",
     "processingPayment": "Procesando Pago",
@@ -1070,14 +1032,12 @@
     "retry": "Intentar de Nuevo",
     "copiedClipboard": "Copiado al portapapeles"
   },
-
   "cartLock": {
     "cartLocked": "Carrito bloqueado:",
     "pendingPayment": "Tienes un pago pendiente",
     "pendingPaymentAmount": "Tienes un pago pendiente de ${{amount}}",
     "resumePayment": "Retomar Pago"
   },
-
   "tracking": {
     "pending": "Pendiente",
     "inTransit": "En Tránsito",
@@ -1091,7 +1051,6 @@
     "trackingHistory": "Historial de Rastreo",
     "latestNews": "Últimas noticias"
   },
-
   "quotes": {
     "myQuotes": "Mis Cotizaciones",
     "noQuotes": "No has enviado cotizaciones aún",
@@ -1104,7 +1063,6 @@
     "products": "Productos",
     "adminResponse": "Respuesta del Admin"
   },
-
   "kyc": {
     "identityVerified": "Identidad Verificada",
     "verifiedDesc": "Tu identidad ha sido verificada exitosamente. Tienes acceso completo al sistema de créditos y referidos.",
@@ -1128,13 +1086,11 @@
     "uploadBack": "Subir foto trasera",
     "uploadFiscal": "Subir documento fiscal (opcional)"
   },
-
   "agentOTP": {
     "accessVerification": "Verificación de Acceso",
     "codeSentTo": "Se ha enviado un código de 6 dígitos a <strong>{{name}}</strong>. Solicítalo al usuario e ingrésalo aquí.",
     "verifyCode": "Verificar Código"
   },
-
   "creditReferral": {
     "verificationPending": "Tu verificación está en proceso. Una vez aprobada, podrás acceder al sistema de créditos y referidos.",
     "mustVerify": "Debes verificar tu identidad para acceder al sistema de créditos y referidos.",
@@ -1258,7 +1214,6 @@
       "until": "Hasta"
     }
   },
-
   "loginPage": {
     "welcome": "Bienvenido a {{name}}",
     "access": "Acceder",
@@ -1309,7 +1264,6 @@
     "legalTerms": "Términos Legales",
     "about": "Acerca de"
   },
-
   "settingsPanel": {
     "accountInfo": "Información de Cuenta",
     "emailLabel": "Correo electrónico",
@@ -1333,13 +1287,174 @@
     "passwordUpdated": "Contraseña actualizada correctamente",
     "passwordError": "Error al cambiar contraseña"
   },
-
   "recommendedProducts": {
     "title": "Tu mejor elección"
   },
-
   "footerExtra": {
     "aboutUs": "Sobre nosotros →",
     "allChannels": "Ver todos los canales →"
+  },
+  "toasts": {
+    "errorLoadingStats": "Error al cargar estadísticas",
+    "loadingClipModel": "Cargando modelo CLIP... Esto puede tomar unos segundos la primera vez.",
+    "errorGeneratingEmbeddings": "Error al generar embeddings",
+    "cartEmpty": "El carrito está vacío",
+    "quoteSaved": "Cotización guardada. Abriendo WhatsApp...",
+    "errorProcessingRequest": "Error al procesar la solicitud",
+    "errorUpdatingPrices": "Error al actualizar precios",
+    "mustLogin": "Debes iniciar sesión",
+    "joinedExistingChat": "Te has unido al chat existente para este pedido",
+    "copiedToClipboard": "Copiado al portapapeles",
+    "onlyImagesOrPdf": "Solo se permiten imágenes (JPG, PNG, WebP) o PDF",
+    "fileTooLarge8MB": "El archivo no puede superar 8 MB",
+    "proofUploaded": "Comprobante subido. El admin validará tu pago pronto.",
+    "errorUploadingProof": "Error al subir el comprobante",
+    "tryAgain": "Intenta de nuevo",
+    "paymentRefSaved": "Referencia de pago guardada",
+    "errorSavingRef": "Error al guardar la referencia",
+    "errorCreatingSellerAccount": "Error al crear cuenta de vendedor",
+    "unknownError": "Error desconocido",
+    "selectPOFirst": "Selecciona una PO primero",
+    "purchaseCreated": "Compra creada exitosamente",
+    "errorCreatingPurchase": "Error al crear la compra",
+    "infoUpdated": "Información actualizada",
+    "errorUpdating": "Error al actualizar",
+    "fileUploaded": "Archivo subido",
+    "errorUploadingFile": "Error al subir archivo",
+    "itemApproved": "Item aprobado",
+    "itemRejected": "Item rechazado",
+    "errorUpdatingQC": "Error al actualizar QC",
+    "photoUploaded": "Foto subida",
+    "errorUploadingPhoto": "Error al subir foto",
+    "shipmentCreated": "Envío creado exitosamente",
+    "errorCreatingShipment": "Error al crear envío",
+    "paymentLinkUpdated": "Link de pago actualizado",
+    "enterTrackingNumber": "Ingresa el número de tracking",
+    "trackingUpdated": "Tracking actualizado",
+    "errorUpdatingTracking": "Error al actualizar tracking",
+    "errorLoadingProducts": "Error al cargar productos",
+    "selectAtLeastOneProduct": "Selecciona al menos un producto",
+    "noValidProductsToImport": "No hay productos válidos para importar",
+    "someProductsAlreadyExist": "Algunos productos ya existen en tu catálogo",
+    "errorImportingProducts": "Error al importar productos",
+    "productsDeleted": "producto(s) eliminado(s)",
+    "errorDeletingProducts": "Error al eliminar productos",
+    "pdfGenerated": "Catálogo PDF generado y descargado",
+    "errorGeneratingPdf": "Error al generar catálogo",
+    "imageDownloaded": "Imagen descargada",
+    "errorDownloadingImage": "Error al descargar imagen",
+    "errorDownloadingImages": "Error al descargar imágenes",
+    "roleUpdated": "Rol actualizado correctamente",
+    "errorChangingRole": "Error al cambiar rol",
+    "requestApproved": "Solicitud aprobada",
+    "requestRejected": "Solicitud rechazada",
+    "draftCreated": "Borrador creado",
+    "errorCreatingDraft": "Error al crear borrador",
+    "errorAddingProduct": "Error al agregar producto",
+    "productRemoved": "Producto eliminado",
+    "errorSendingCart": "Error al enviar carrito",
+    "draftCancelled": "Borrador cancelado",
+    "agentSessionExpired": "Sesión de agente expirada",
+    "errorSendingCode": "Error al enviar código",
+    "sessionActivated": "Sesión activada. Tienes 2 horas.",
+    "errorVerifyingCode": "Error al verificar código",
+    "sessionClosed": "Sesión cerrada",
+    "sessionExpired": "Esta sesión ha expirado",
+    "discountRemoved": "Descuento removido",
+    "sessionExpiredLogin": "Tu sesión expiró. Por favor inicia sesión nuevamente.",
+    "errorSavingCart": "Error guardando cambios en el carrito",
+    "errorLoadingCart": "Error al cargar el carrito",
+    "cartNotAvailable": "Carrito no disponible",
+    "completeStoreSetup": "Debes completar la configuración de tu tienda antes de agregar productos al carrito.",
+    "errorAddingToCart": "Error al agregar producto",
+    "errorUpdatingQuantity": "Error al actualizar cantidad",
+    "productRemovedFromCart": "Producto eliminado del carrito",
+    "errorRemovingProduct": "Error al eliminar producto",
+    "errorClearingCart": "Error al vaciar carrito",
+    "cartEmptyOrNoAuth": "Carrito vacío o usuario no autenticado",
+    "errorCreatingOrder": "Error al crear pedido",
+    "paymentConfirmedProducts": "Pago confirmado. Los productos se agregarán a tu catálogo.",
+    "errorConfirmingPayment": "Error al confirmar pago",
+    "addedToFavoritesB2B": "Agregado a favoritos B2B ❤️",
+    "alreadyInFavorites": "Ya está en tus favoritos",
+    "errorAddingToFavorites": "Error al agregar a favoritos",
+    "removedFromFavorites": "Eliminado de favoritos",
+    "errorRemovingFromFavorites": "Error al eliminar de favoritos",
+    "loginToSaveFavorites": "Inicia sesión para guardar favoritos",
+    "marginRangeCreated": "Rango de margen creado",
+    "errorCreatingRange": "Error al crear rango",
+    "marginRangeUpdated": "Rango de margen actualizado",
+    "errorUpdatingRange": "Error al actualizar rango",
+    "marginRangeDeleted": "Rango de margen eliminado",
+    "errorDeletingRange": "Error al eliminar rango",
+    "addedToFavoritesB2C": "Agregado a favoritos ❤️",
+    "errorToggleFavorite": "Error al cambiar favorito",
+    "storeNotFound": "No se encontró tu tienda. Contacta a soporte.",
+    "productPublished": "Producto publicado correctamente",
+    "productHidden": "Producto oculto",
+    "errorPublishing": "Error al publicar el producto",
+    "priceUpdated": "Precio actualizado correctamente",
+    "errorUpdatingPrice": "Error al actualizar el precio",
+    "stockAdjusted": "Stock ajustado correctamente",
+    "errorAdjustingStock": "Error al ajustar stock",
+    "selectVariant": "Selecciona al menos una variante",
+    "selectCategory": "Por favor selecciona una categoría",
+    "salePriceRequired": "El precio de venta es obligatorio para publicar.",
+    "quantitiesMustBePositive": "Todas las cantidades deben ser mayores a 0",
+    "errorPublishingProduct": "Hubo un error al publicar el producto",
+    "fileTooLarge5MB": "El archivo es muy grande. Máximo 5MB.",
+    "orderCreated": "Pedido creado exitosamente",
+    "addressSaved": "Dirección guardada",
+    "errorSavingAddress": "Error al guardar dirección",
+    "addressDeleted": "Dirección eliminada",
+    "settingsSaved": "Configuración guardada",
+    "errorSavingSettings": "Error al guardar configuración",
+    "orderCancelled": "Pedido cancelado",
+    "errorCancellingOrder": "Error al cancelar pedido",
+    "paymentConfirmed": "Pago confirmado",
+    "paymentRejected": "Pago rechazado",
+    "orderUpdated": "Pedido actualizado",
+    "errorUpdatingOrder": "Error al actualizar pedido",
+    "sellerVerified": "Vendedor verificado",
+    "verificationRevoked": "Verificación revocada",
+    "commissionUpdated": "Comisión actualizada",
+    "bannerCreated": "Banner creado",
+    "bannerUpdated": "Banner actualizado",
+    "bannerDeleted": "Banner eliminado",
+    "categoryCreated": "Categoría creada",
+    "categoryUpdated": "Categoría actualizada",
+    "categoryDeleted": "Categoría eliminada",
+    "notificationSent": "Notificación enviada",
+    "productImported": "Producto importado correctamente",
+    "productUpdated": "Producto actualizado",
+    "productDeleted": "Producto eliminado",
+    "reviewPublished": "Reseña publicada",
+    "reviewUpdated": "Reseña actualizada",
+    "errorPublishingReview": "Error al publicar reseña",
+    "loginToFavorite": "Inicia sesión para agregar a favoritos",
+    "withdrawalRequested": "Solicitud de retiro enviada",
+    "errorWithdrawal": "Error al solicitar retiro",
+    "linkCopied": "Link copiado al portapapeles",
+    "codeCopied": "Código copiado al portapapeles",
+    "profileUpdated": "Perfil actualizado",
+    "errorUpdatingProfile": "Error al actualizar perfil",
+    "passwordChanged": "Contraseña cambiada",
+    "errorChangingPassword": "Error al cambiar contraseña",
+    "kycSubmitted": "Documentos enviados para verificación",
+    "popupCreated": "Pop-up creado",
+    "popupUpdated": "Pop-up actualizado",
+    "popupDeleted": "Pop-up eliminado",
+    "discountCreated": "Descuento creado",
+    "discountUpdated": "Descuento actualizado",
+    "discountDeleted": "Descuento eliminado"
+  },
+  "geolocation": {
+    "notSupported": "Geolocalización no soportada en este navegador",
+    "notSupportedShort": "Geolocalización no soportada",
+    "permissionDenied": "Permiso de ubicación denegado",
+    "positionUnavailable": "Posición no disponible",
+    "timeout": "Tiempo de espera agotado",
+    "unknownError": "Error desconocido de geolocalización",
+    "couldNotGetLocation": "No se pudo obtener tu ubicación"
   }
 }

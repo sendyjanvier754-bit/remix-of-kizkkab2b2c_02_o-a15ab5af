@@ -88,7 +88,6 @@
     "contactStore": "Kontakte {{store}}",
     "qty": "Kte"
   },
-
   "header": {
     "shippingAbroad": "Livrezon entènasyonal",
     "trends": "Tandans",
@@ -115,7 +114,6 @@
     "micDenied": "Pèmisyon mikwofòn refize.",
     "voiceError": "Erè rekonesans vwa. Eseye ankò."
   },
-
   "footer": {
     "tagline": "Boutik an liy ou ka fè konfyans ak pi bon pwodwi nan pi bon pri.",
     "shopping": "ACHA",
@@ -141,7 +139,6 @@
     "securePayment": "Peman Sekirize",
     "multiplePayments": "Plizyè opsyon peman"
   },
-
   "nav": {
     "home": "Akèy",
     "catalog": "Katalòg",
@@ -159,7 +156,6 @@
     "shipping": "Livrezon",
     "payments": "Peman"
   },
-
   "auth": {
     "login": "Konekte",
     "logout": "Dekonekte",
@@ -191,7 +187,6 @@
       "b2b": "Kliyan B2B"
     }
   },
-
   "products": {
     "title": "Pwodwi",
     "addProduct": "Ajoute Pwodwi",
@@ -237,7 +232,6 @@
       "nameDesc": "Non Z-A"
     }
   },
-
   "cart": {
     "title": "Panye Mwen",
     "empty": "Panye ou vid",
@@ -273,7 +267,6 @@
     "lockedMessage": "Ou gen yon peman an atant de ${{amount}}",
     "resumePayment": "Repran Peman"
   },
-
   "orders": {
     "title": "Kòmand Mwen",
     "myPurchases": "Acha Mwen",
@@ -306,7 +299,6 @@
       "refunded": "Ranbouse"
     }
   },
-
   "shipping": {
     "title": "Livrezon",
     "address": "Adrès Livrezon",
@@ -322,7 +314,6 @@
     "calculate": "Kalkile Livrezon",
     "selectMethod": "Chwazi yon metòd livrezon"
   },
-
   "payments": {
     "title": "Peman",
     "method": "Metòd Peman",
@@ -337,7 +328,6 @@
     "paymentPending": "Peman An Atant",
     "accountLabel": "Kont:"
   },
-
   "profile": {
     "title": "Pwofil Mwen",
     "personalInfo": "Enfòmasyon Pèsonèl",
@@ -348,7 +338,6 @@
     "saveChanges": "Anrejistre Chanjman",
     "profileUpdated": "Pwofil mete ajou avèk siksè"
   },
-
   "adminSidebar": {
     "main": "Prensipal",
     "dashboard": "Tablo Bò",
@@ -385,7 +374,6 @@
     "b2bPortal": "Pòtay B2B",
     "logoutSession": "Dekonekte"
   },
-
   "sellerSidebar": {
     "dashboard": "Tablo Bò",
     "buyLots": "Achte Lo",
@@ -408,7 +396,6 @@
     "new": "Nouvo",
     "b2b": "B2B"
   },
-
   "admin": {
     "title": "Pano Administrasyon",
     "dashboard": "Tablo Bò",
@@ -424,7 +411,6 @@
     "reports": "Rapò",
     "analytics": "Analitik"
   },
-
   "seller": {
     "title": "Pano Vandè",
     "dashboard": "Tablo Bò",
@@ -436,7 +422,6 @@
     "addProduct": "Ajoute Pwodwi",
     "seller": "Vandè"
   },
-
   "b2b": {
     "title": "Pòtay B2B",
     "cart": "Panye B2B",
@@ -448,7 +433,6 @@
     "approvedBuyer": "Achetè Apwouve",
     "pendingApproval": "An Atant Apwobasyon"
   },
-
   "chat": {
     "waiting": "An atant",
     "active": "Aktif",
@@ -467,7 +451,6 @@
     "openSupport": "Ouvri Chat Sipò",
     "supportChats": "Chat Sipò"
   },
-
   "settings": {
     "orderUpdates": "Mizajou Kòmand",
     "orderNotifications": "Notifikasyon sou acha ou yo",
@@ -478,7 +461,6 @@
     "deleteContactSupport": "Pou efase kont ou nèt, tanpri kontakte sipò.",
     "goToStore": "Kont → Boutik Mwen"
   },
-
   "language": {
     "select": "Lang",
     "es": "Español",
@@ -486,7 +468,6 @@
     "fr": "Français",
     "ht": "Kreyòl"
   },
-
   "errors": {
     "generic": "Yon erè inatandi fèt",
     "notFound": "Paj pa jwenn",
@@ -501,7 +482,6 @@
     "emptyCart": "Panye a vid",
     "orderError": "Erè nan tretman kòmand"
   },
-
   "adminDashboard": {
     "title": "Tablo Bò",
     "subtitle": "Byenveni nan pano administrasyon an",
@@ -532,7 +512,6 @@
     "paymentStatus": "Estati",
     "paymentDate": "Dat"
   },
-
   "adminCatalog": {
     "title": "Katalòg Mèt B2B",
     "subtitle": "Lojistik Santral - Jesyon Envantè",
@@ -562,7 +541,6 @@
     "noProductsInCatalog": "Pa gen pwodwi nan katalòg la",
     "viewSupplier": "Wè nan founisè"
   },
-
   "sellerDashboard": {
     "welcome": "Byenveni, {{name}}!",
     "kycPendingTitle": "Verifikasyon KYC An Atant",
@@ -591,7 +569,6 @@
     "creditActive": "Kredi Aktif",
     "noCredit": "Pa gen Kredi"
   },
-
   "checkout": {
     "title": "Finalize Acha",
     "backToCart": "Retounen nan Panye",
@@ -642,7 +619,6 @@
     "sellerPaymentInfo": "Enfòmasyon peman vandè a",
     "adminPaymentInfo": "Tretman otomatik pa platfòm nan"
   },
-
   "productPage": {
     "home": "Akèy",
     "categories": "Kategori",
@@ -686,7 +662,6 @@
     "youSave": "Ou ekonomize ${{amount}}!",
     "view": "Vi"
   },
-
   "landing": {
     "completePlatform": "Platfòm Konplè",
     "growBusiness": "Tout sa ou bezwen pou",
@@ -735,7 +710,6 @@
     "step4Feature2": "Etikèt otomatik",
     "step4Feature3": "Swivi an tan reyèl"
   },
-
   "adminOrders": {
     "title": "Jesyon Kòmand B2B",
     "subtitle": "Jere tout kòmand angwo yo",
@@ -782,7 +756,6 @@
       "delivered": "Livre"
     }
   },
-
   "adminSellers": {
     "title": "Jesyon Vandè",
     "subtitle": "Verifye epi jere kont vandè yo",
@@ -816,7 +789,6 @@
     "fixedRate": "To fiks ($)",
     "reason": "Rezon"
   },
-
   "sellerOrders": {
     "title": "Vant B2C Mwen",
     "total": "Total",
@@ -847,7 +819,6 @@
     "paymentNotes": "Nòt peman",
     "rejectionReason": "Rezon rejè"
   },
-
   "sellerWallet": {
     "title": "Bous Mwen",
     "subtitle": "Jere balans ou ak retrè",
@@ -883,7 +854,6 @@
     "accountError": "Erè: Pa kapab idantifye kont ou",
     "reloadPage": "Tanpri rechaje paj la"
   },
-
   "sellerInventory": {
     "title": "Envantè B2C Mwen",
     "subtitle": "Pwodwi nan acha B2B ou yo disponib pou revann",
@@ -917,7 +887,6 @@
     "notImported": "Pa enpòte",
     "weight": "Pwa"
   },
-
   "sellerCatalog": {
     "noProductsTitle": "Pa gen pwodwi nan katalòg ou",
     "noProductsDesc": "Achte lo angwo nan katalòg B2B pou ajoute pwodwi nan boutik ou.",
@@ -942,7 +911,6 @@
     "edit": "Modifye",
     "import": "Enpòte"
   },
-
   "editProductDialog": {
     "title": "Modifye Pwodwi",
     "subtitle": "Mete ajou pri ak estòk pwodwi a",
@@ -958,7 +926,6 @@
     "invalidPrice": "Antre yon pri valid",
     "invalidStock": "Antre yon estòk valid"
   },
-
   "catalogStats": {
     "products": "Pwodwi",
     "skusInCatalog": "SKU nan katalòg",
@@ -969,7 +936,6 @@
     "avgMargin": "Maj Mwayèn",
     "avgProfit": "Benefis mwayèn"
   },
-
   "stockAdjust": {
     "title": "Ajiste Estòk",
     "currentStock": "Estòk Aktyèl",
@@ -981,14 +947,12 @@
     "saving": "Anrejistreman...",
     "confirmAdjust": "Konfime Ajisteman"
   },
-
   "marginAlert": {
     "loss": "Pèt",
     "lossDetail": "Pri ${{price}} < Kou ${{cost}}. W ap pèdi ${{diff}}/inite.",
     "lowMargin": "Maj ba",
     "lowMarginDetail": "{{margin}}%. Konsidere ogmante pri a."
   },
-
   "inventarioTable": {
     "searchPlaceholder": "Chèche pa non oswa SKU...",
     "image": "Imaj",
@@ -1010,7 +974,6 @@
     "publish": "Pibliye",
     "ofProducts": "{{filtered}} nan {{total}} pwodwi"
   },
-
   "publicacionDialog": {
     "title": "Konfigire Piblikasyon B2C",
     "costs": "Kou",
@@ -1031,7 +994,6 @@
     "saving": "Anrejistreman...",
     "save": "Anrejistre"
   },
-
   "paymentOverlay": {
     "verifyingOrder": "Verifikasyon estati kòmand...",
     "processingPayment": "Tretman Peman",
@@ -1070,14 +1032,12 @@
     "retry": "Eseye Ankò",
     "copiedClipboard": "Kopye nan pòtpapye"
   },
-
   "cartLock": {
     "cartLocked": "Panye bloke:",
     "pendingPayment": "Ou gen yon peman an atant",
     "pendingPaymentAmount": "Ou gen yon peman an atant de ${{amount}}",
     "resumePayment": "Reprann Peman"
   },
-
   "tracking": {
     "pending": "An Atant",
     "inTransit": "An Tranzit",
@@ -1091,7 +1051,6 @@
     "trackingHistory": "Istwa Swivi",
     "latestNews": "Dènye nouvèl"
   },
-
   "quotes": {
     "myQuotes": "Kotasyon Mwen",
     "noQuotes": "Ou poko voye kotasyon",
@@ -1104,7 +1063,6 @@
     "products": "Pwodwi",
     "adminResponse": "Repons Admin"
   },
-
   "kyc": {
     "identityVerified": "Idantite Verifye",
     "verifiedDesc": "Idantite ou verifye avèk siksè. Ou gen aksè konplè nan sistèm kredi ak refirans.",
@@ -1128,13 +1086,11 @@
     "uploadBack": "Telechaje foto dèyè",
     "uploadFiscal": "Telechaje dokiman fiskal (opsyonèl)"
   },
-
   "agentOTP": {
     "accessVerification": "Verifikasyon Aksè",
     "codeSentTo": "Yon kòd 6 chif voye bay <strong>{{name}}</strong>. Mande itilizatè a epi antre li isit la.",
     "verifyCode": "Verifye Kòd"
   },
-
   "creditReferral": {
     "verificationPending": "Verifikasyon ou an pwosesis. Yon fwa apwouve, w ap kapab jwenn aksè nan sistèm kredi ak refirans.",
     "mustVerify": "Ou dwe verifye idantite ou pou jwenn aksè nan sistèm kredi ak refirans.",
@@ -1258,7 +1214,6 @@
       "until": "Jiska"
     }
   },
-
   "loginPage": {
     "welcome": "Byenveni nan {{name}}",
     "access": "Aksede",
@@ -1309,7 +1264,6 @@
     "legalTerms": "Tèm Legal",
     "about": "Konsènan"
   },
-
   "settingsPanel": {
     "accountInfo": "Enfòmasyon Kont",
     "emailLabel": "Imèl",
@@ -1333,13 +1287,174 @@
     "passwordUpdated": "Modpas mete ajou avèk siksè",
     "passwordError": "Erè nan chanje modpas"
   },
-
   "recommendedProducts": {
     "title": "Pi bon chwa ou"
   },
-
   "footerExtra": {
     "aboutUs": "Konsènan nou →",
     "allChannels": "Wè tout kanal →"
+  },
+  "toasts": {
+    "errorLoadingStats": "Erè nan chaje estatistik",
+    "loadingClipModel": "Chajman modèl CLIP... Sa ka pran kèk segonn premye fwa a.",
+    "errorGeneratingEmbeddings": "Erè nan jenere embeddings",
+    "cartEmpty": "Panye a vid",
+    "quoteSaved": "Kotasyon anrejistre. Ap ouvri WhatsApp...",
+    "errorProcessingRequest": "Erè nan tretman demann nan",
+    "errorUpdatingPrices": "Erè nan mete pri ajou",
+    "mustLogin": "Ou dwe konekte",
+    "joinedExistingChat": "Ou jwenn chat ki egziste deja pou kòmand sa a",
+    "copiedToClipboard": "Kopye nan pòtpapye",
+    "onlyImagesOrPdf": "Sèlman imaj (JPG, PNG, WebP) oswa PDF otorize",
+    "fileTooLarge8MB": "Fichye a pa ka depase 8 Mo",
+    "proofUploaded": "Prèv telechaje. Admin ap valide peman ou byento.",
+    "errorUploadingProof": "Erè nan telechaje prèv",
+    "tryAgain": "Eseye ankò",
+    "paymentRefSaved": "Referans peman anrejistre",
+    "errorSavingRef": "Erè nan anrejistre referans",
+    "errorCreatingSellerAccount": "Erè nan kreye kont vandè",
+    "unknownError": "Erè enkoni",
+    "selectPOFirst": "Chwazi yon PO dabò",
+    "purchaseCreated": "Acha kreye avèk siksè",
+    "errorCreatingPurchase": "Erè nan kreye acha",
+    "infoUpdated": "Enfòmasyon mete ajou",
+    "errorUpdating": "Erè nan mete ajou",
+    "fileUploaded": "Fichye telechaje",
+    "errorUploadingFile": "Erè nan telechaje fichye",
+    "itemApproved": "Atik apwouve",
+    "itemRejected": "Atik rejte",
+    "errorUpdatingQC": "Erè nan mete ajou KK",
+    "photoUploaded": "Foto telechaje",
+    "errorUploadingPhoto": "Erè nan telechaje foto",
+    "shipmentCreated": "Ekspedisyon kreye avèk siksè",
+    "errorCreatingShipment": "Erè nan kreye ekspedisyon",
+    "paymentLinkUpdated": "Lyen peman mete ajou",
+    "enterTrackingNumber": "Antre nimewo swivi",
+    "trackingUpdated": "Swivi mete ajou",
+    "errorUpdatingTracking": "Erè nan mete ajou swivi",
+    "errorLoadingProducts": "Erè nan chaje pwodwi",
+    "selectAtLeastOneProduct": "Chwazi omwen yon pwodwi",
+    "noValidProductsToImport": "Pa gen pwodwi valid pou enpòte",
+    "someProductsAlreadyExist": "Kèk pwodwi deja egziste nan katalòg ou",
+    "errorImportingProducts": "Erè nan enpòte pwodwi",
+    "productsDeleted": "pwodwi efase",
+    "errorDeletingProducts": "Erè nan efase pwodwi",
+    "pdfGenerated": "Katalòg PDF jenere epi telechaje",
+    "errorGeneratingPdf": "Erè nan jenere katalòg",
+    "imageDownloaded": "Imaj telechaje",
+    "errorDownloadingImage": "Erè nan telechaje imaj",
+    "errorDownloadingImages": "Erè nan telechaje imaj yo",
+    "roleUpdated": "Wòl mete ajou avèk siksè",
+    "errorChangingRole": "Erè nan chanje wòl",
+    "requestApproved": "Demann apwouve",
+    "requestRejected": "Demann rejte",
+    "draftCreated": "Bwouyon kreye",
+    "errorCreatingDraft": "Erè nan kreye bwouyon",
+    "errorAddingProduct": "Erè nan ajoute pwodwi",
+    "productRemoved": "Pwodwi retire",
+    "errorSendingCart": "Erè nan voye panye",
+    "draftCancelled": "Bwouyon anile",
+    "agentSessionExpired": "Sesyon ajan ekspire",
+    "errorSendingCode": "Erè nan voye kòd",
+    "sessionActivated": "Sesyon aktive. Ou gen 2 èdtan.",
+    "errorVerifyingCode": "Erè nan verifye kòd",
+    "sessionClosed": "Sesyon fèmen",
+    "sessionExpired": "Sesyon sa a ekspire",
+    "discountRemoved": "Rabè retire",
+    "sessionExpiredLogin": "Sesyon ou ekspire. Tanpri konekte ankò.",
+    "errorSavingCart": "Erè nan anrejistre chanjman panye",
+    "errorLoadingCart": "Erè nan chaje panye",
+    "cartNotAvailable": "Panye pa disponib",
+    "completeStoreSetup": "Ou dwe konplete konfigirasyon boutik ou anvan ajoute pwodwi nan panye a.",
+    "errorAddingToCart": "Erè nan ajoute pwodwi",
+    "errorUpdatingQuantity": "Erè nan mete kantite ajou",
+    "productRemovedFromCart": "Pwodwi retire nan panye",
+    "errorRemovingProduct": "Erè nan retire pwodwi",
+    "errorClearingCart": "Erè nan vid panye",
+    "cartEmptyOrNoAuth": "Panye vid oswa itilizatè pa otantifye",
+    "errorCreatingOrder": "Erè nan kreye kòmand",
+    "paymentConfirmedProducts": "Peman konfime. Pwodwi yo ap ajoute nan katalòg ou.",
+    "errorConfirmingPayment": "Erè nan konfime peman",
+    "addedToFavoritesB2B": "Ajoute nan favori B2B ❤️",
+    "alreadyInFavorites": "Deja nan favori ou",
+    "errorAddingToFavorites": "Erè nan ajoute nan favori",
+    "removedFromFavorites": "Retire nan favori",
+    "errorRemovingFromFavorites": "Erè nan retire nan favori",
+    "loginToSaveFavorites": "Konekte pou anrejistre favori",
+    "marginRangeCreated": "Ranj maj kreye",
+    "errorCreatingRange": "Erè nan kreye ranj",
+    "marginRangeUpdated": "Ranj maj mete ajou",
+    "errorUpdatingRange": "Erè nan mete ajou ranj",
+    "marginRangeDeleted": "Ranj maj efase",
+    "errorDeletingRange": "Erè nan efase ranj",
+    "addedToFavoritesB2C": "Ajoute nan favori ❤️",
+    "errorToggleFavorite": "Erè nan chanje favori",
+    "storeNotFound": "Pa jwenn boutik ou. Kontakte sipò.",
+    "productPublished": "Pwodwi pibliye avèk siksè",
+    "productHidden": "Pwodwi kache",
+    "errorPublishing": "Erè nan pibliye pwodwi",
+    "priceUpdated": "Pri mete ajou avèk siksè",
+    "errorUpdatingPrice": "Erè nan mete pri ajou",
+    "stockAdjusted": "Estòk ajiste avèk siksè",
+    "errorAdjustingStock": "Erè nan ajiste estòk",
+    "selectVariant": "Chwazi omwen yon variyant",
+    "selectCategory": "Tanpri chwazi yon kategori",
+    "salePriceRequired": "Pri vant obligatwa pou pibliye.",
+    "quantitiesMustBePositive": "Tout kantite dwe pi gran pase 0",
+    "errorPublishingProduct": "Erè nan pibliye pwodwi",
+    "fileTooLarge5MB": "Fichye a twò gwo. Maksimòm 5MB.",
+    "orderCreated": "Kòmand kreye avèk siksè",
+    "addressSaved": "Adrès anrejistre",
+    "errorSavingAddress": "Erè nan anrejistre adrès",
+    "addressDeleted": "Adrès efase",
+    "settingsSaved": "Konfigirasyon anrejistre",
+    "errorSavingSettings": "Erè nan anrejistre konfigirasyon",
+    "orderCancelled": "Kòmand anile",
+    "errorCancellingOrder": "Erè nan anile kòmand",
+    "paymentConfirmed": "Peman konfime",
+    "paymentRejected": "Peman rejte",
+    "orderUpdated": "Kòmand mete ajou",
+    "errorUpdatingOrder": "Erè nan mete ajou kòmand",
+    "sellerVerified": "Vandè verifye",
+    "verificationRevoked": "Verifikasyon revoke",
+    "commissionUpdated": "Komisyon mete ajou",
+    "bannerCreated": "Banyè kreye",
+    "bannerUpdated": "Banyè mete ajou",
+    "bannerDeleted": "Banyè efase",
+    "categoryCreated": "Kategori kreye",
+    "categoryUpdated": "Kategori mete ajou",
+    "categoryDeleted": "Kategori efase",
+    "notificationSent": "Notifikasyon voye",
+    "productImported": "Pwodwi enpòte avèk siksè",
+    "productUpdated": "Pwodwi mete ajou",
+    "productDeleted": "Pwodwi efase",
+    "reviewPublished": "Avi pibliye",
+    "reviewUpdated": "Avi mete ajou",
+    "errorPublishingReview": "Erè nan pibliye avi",
+    "loginToFavorite": "Konekte pou ajoute nan favori",
+    "withdrawalRequested": "Demann retrè soumèt",
+    "errorWithdrawal": "Erè nan mande retrè",
+    "linkCopied": "Lyen kopye nan pòtpapye",
+    "codeCopied": "Kòd kopye nan pòtpapye",
+    "profileUpdated": "Pwofil mete ajou",
+    "errorUpdatingProfile": "Erè nan mete ajou pwofil",
+    "passwordChanged": "Modpas chanje",
+    "errorChangingPassword": "Erè nan chanje modpas",
+    "kycSubmitted": "Dokiman soumèt pou verifikasyon",
+    "popupCreated": "Pop-up kreye",
+    "popupUpdated": "Pop-up mete ajou",
+    "popupDeleted": "Pop-up efase",
+    "discountCreated": "Rabè kreye",
+    "discountUpdated": "Rabè mete ajou",
+    "discountDeleted": "Rabè efase"
+  },
+  "geolocation": {
+    "notSupported": "Jewolokalizasyon pa sipòte nan navigatè sa a",
+    "notSupportedShort": "Jewolokalizasyon pa sipòte",
+    "permissionDenied": "Pèmisyon pozisyon refize",
+    "positionUnavailable": "Pozisyon pa disponib",
+    "timeout": "Tan an ekspire",
+    "unknownError": "Erè jewolokalizasyon enkoni",
+    "couldNotGetLocation": "Pa kapab jwenn pozisyon ou"
   }
 }

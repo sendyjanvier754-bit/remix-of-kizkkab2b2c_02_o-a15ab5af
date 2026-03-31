@@ -88,7 +88,6 @@
     "contactStore": "Contacter {{store}}",
     "qty": "Qté"
   },
-
   "header": {
     "shippingAbroad": "Livraison internationale",
     "trends": "Tendances",
@@ -115,7 +114,6 @@
     "micDenied": "Permission du microphone refusée.",
     "voiceError": "Erreur de reconnaissance vocale. Réessayez."
   },
-
   "footer": {
     "tagline": "Votre boutique en ligne de confiance avec les meilleurs produits aux meilleurs prix.",
     "shopping": "ACHATS",
@@ -141,7 +139,6 @@
     "securePayment": "Paiement Sécurisé",
     "multiplePayments": "Plusieurs options de paiement"
   },
-
   "nav": {
     "home": "Accueil",
     "catalog": "Catalogue",
@@ -159,7 +156,6 @@
     "shipping": "Livraison",
     "payments": "Paiements"
   },
-
   "auth": {
     "login": "Se Connecter",
     "logout": "Se Déconnecter",
@@ -191,7 +187,6 @@
       "b2b": "Client B2B"
     }
   },
-
   "products": {
     "title": "Produits",
     "addProduct": "Ajouter un Produit",
@@ -237,7 +232,6 @@
       "nameDesc": "Nom Z-A"
     }
   },
-
   "cart": {
     "title": "Mon Panier",
     "empty": "Votre panier est vide",
@@ -273,7 +267,6 @@
     "lockedMessage": "Vous avez un paiement en attente de ${{amount}}",
     "resumePayment": "Reprendre le Paiement"
   },
-
   "orders": {
     "title": "Mes Commandes",
     "myPurchases": "Mes Achats",
@@ -306,7 +299,6 @@
       "refunded": "Remboursé"
     }
   },
-
   "shipping": {
     "title": "Livraison",
     "address": "Adresse de Livraison",
@@ -322,7 +314,6 @@
     "calculate": "Calculer la Livraison",
     "selectMethod": "Sélectionnez une méthode de livraison"
   },
-
   "payments": {
     "title": "Paiements",
     "method": "Méthode de Paiement",
@@ -337,7 +328,6 @@
     "paymentPending": "Paiement en Attente",
     "accountLabel": "Compte :"
   },
-
   "profile": {
     "title": "Mon Profil",
     "personalInfo": "Informations Personnelles",
@@ -348,7 +338,6 @@
     "saveChanges": "Enregistrer les Modifications",
     "profileUpdated": "Profil mis à jour avec succès"
   },
-
   "adminSidebar": {
     "main": "Principal",
     "dashboard": "Tableau de Bord",
@@ -385,7 +374,6 @@
     "b2bPortal": "Portail B2B",
     "logoutSession": "Se Déconnecter"
   },
-
   "sellerSidebar": {
     "dashboard": "Tableau de Bord",
     "buyLots": "Acheter des Lots",
@@ -408,7 +396,6 @@
     "new": "Nouveau",
     "b2b": "B2B"
   },
-
   "admin": {
     "title": "Panneau d'Administration",
     "dashboard": "Tableau de Bord",
@@ -424,7 +411,6 @@
     "reports": "Rapports",
     "analytics": "Analytique"
   },
-
   "seller": {
     "title": "Panneau Vendeur",
     "dashboard": "Tableau de Bord",
@@ -436,7 +422,6 @@
     "addProduct": "Ajouter un Produit",
     "seller": "Vendeur"
   },
-
   "b2b": {
     "title": "Portail B2B",
     "cart": "Panier B2B",
@@ -448,7 +433,6 @@
     "approvedBuyer": "Acheteur Approuvé",
     "pendingApproval": "En Attente d'Approbation"
   },
-
   "chat": {
     "waiting": "En attente",
     "active": "Actif",
@@ -467,7 +451,6 @@
     "openSupport": "Ouvrir le chat de support",
     "supportChats": "Chats de Support"
   },
-
   "settings": {
     "orderUpdates": "Mises à jour des Commandes",
     "orderNotifications": "Notifications concernant vos achats",
@@ -478,7 +461,6 @@
     "deleteContactSupport": "Pour supprimer complètement votre compte, veuillez contacter le support.",
     "goToStore": "Compte → Ma Boutique"
   },
-
   "language": {
     "select": "Langue",
     "es": "Español",
@@ -486,7 +468,6 @@
     "fr": "Français",
     "ht": "Kreyòl"
   },
-
   "errors": {
     "generic": "Une erreur inattendue s'est produite",
     "notFound": "Page introuvable",
@@ -501,7 +482,6 @@
     "emptyCart": "Le panier est vide",
     "orderError": "Erreur lors du traitement de la commande"
   },
-
   "adminDashboard": {
     "title": "Tableau de Bord",
     "subtitle": "Bienvenue dans le panneau d'administration",
@@ -532,7 +512,6 @@
     "paymentStatus": "Statut",
     "paymentDate": "Date"
   },
-
   "adminCatalog": {
     "title": "Catalogue Maître B2B",
     "subtitle": "Logistique Centrale - Gestion d'Inventaire",
@@ -562,7 +541,6 @@
     "noProductsInCatalog": "Aucun produit dans le catalogue",
     "viewSupplier": "Voir chez le fournisseur"
   },
-
   "sellerDashboard": {
     "welcome": "Bienvenue, {{name}} !",
     "kycPendingTitle": "Vérification KYC En attente",
@@ -591,7 +569,6 @@
     "creditActive": "Crédit Actif",
     "noCredit": "Pas de Crédit"
   },
-
   "checkout": {
     "title": "Finaliser l'Achat",
     "backToCart": "Retour au Panier",
@@ -642,7 +619,6 @@
     "sellerPaymentInfo": "Informations de paiement du vendeur",
     "adminPaymentInfo": "Traitement automatique via la plateforme"
   },
-
   "productPage": {
     "home": "Accueil",
     "categories": "Catégories",
@@ -686,7 +662,6 @@
     "youSave": "Vous économisez ${{amount}} !",
     "view": "Vue"
   },
-
   "landing": {
     "completePlatform": "Plateforme Complète",
     "growBusiness": "Tout ce dont vous avez besoin pour",
@@ -735,7 +710,6 @@
     "step4Feature2": "Étiquette automatique",
     "step4Feature3": "Suivi en temps réel"
   },
-
   "adminOrders": {
     "title": "Gestion des Commandes B2B",
     "subtitle": "Gérez toutes les commandes grossistes",
@@ -782,7 +756,6 @@
       "delivered": "Livré"
     }
   },
-
   "adminSellers": {
     "title": "Gestion des Vendeurs",
     "subtitle": "Vérifiez et gérez les comptes vendeurs",
@@ -816,7 +789,6 @@
     "fixedRate": "Taux fixe ($)",
     "reason": "Motif"
   },
-
   "sellerOrders": {
     "title": "Mes Ventes B2C",
     "total": "Total",
@@ -847,7 +819,6 @@
     "paymentNotes": "Notes de paiement",
     "rejectionReason": "Motif du rejet"
   },
-
   "sellerWallet": {
     "title": "Mon Portefeuille",
     "subtitle": "Gérez votre solde et vos retraits",
@@ -883,7 +854,6 @@
     "accountError": "Erreur : Impossible d'identifier votre compte",
     "reloadPage": "Veuillez recharger la page"
   },
-
   "sellerInventory": {
     "title": "Mon Inventaire B2C",
     "subtitle": "Produits de vos achats B2B disponibles à la revente",
@@ -917,7 +887,6 @@
     "notImported": "Non importé",
     "weight": "Poids"
   },
-
   "sellerCatalog": {
     "noProductsTitle": "Aucun produit dans votre catalogue",
     "noProductsDesc": "Achetez des lots grossistes dans le catalogue B2B pour ajouter des produits à votre boutique.",
@@ -942,7 +911,6 @@
     "edit": "Modifier",
     "import": "Importer"
   },
-
   "editProductDialog": {
     "title": "Modifier le Produit",
     "subtitle": "Mettez à jour le prix et le stock du produit",
@@ -958,7 +926,6 @@
     "invalidPrice": "Entrez un prix valide",
     "invalidStock": "Entrez un stock valide"
   },
-
   "catalogStats": {
     "products": "Produits",
     "skusInCatalog": "SKUs dans le catalogue",
@@ -969,7 +936,6 @@
     "avgMargin": "Marge Moyenne",
     "avgProfit": "Profit moyen"
   },
-
   "stockAdjust": {
     "title": "Ajuster le Stock",
     "currentStock": "Stock Actuel",
@@ -981,14 +947,12 @@
     "saving": "Enregistrement...",
     "confirmAdjust": "Confirmer l'Ajustement"
   },
-
   "marginAlert": {
     "loss": "Perte",
     "lossDetail": "Prix ${{price}} < Coût ${{cost}}. Vous perdrez ${{diff}}/unité.",
     "lowMargin": "Marge faible",
     "lowMarginDetail": "{{margin}}%. Envisagez d'augmenter le prix."
   },
-
   "inventarioTable": {
     "searchPlaceholder": "Rechercher par nom ou SKU...",
     "image": "Image",
@@ -1010,7 +974,6 @@
     "publish": "Publier",
     "ofProducts": "{{filtered}} sur {{total}} produits"
   },
-
   "publicacionDialog": {
     "title": "Configurer la Publication B2C",
     "costs": "Coûts",
@@ -1031,7 +994,6 @@
     "saving": "Enregistrement...",
     "save": "Enregistrer"
   },
-
   "paymentOverlay": {
     "verifyingOrder": "Vérification du statut de la commande...",
     "processingPayment": "Traitement du Paiement",
@@ -1070,14 +1032,12 @@
     "retry": "Réessayer",
     "copiedClipboard": "Copié dans le presse-papiers"
   },
-
   "cartLock": {
     "cartLocked": "Panier verrouillé :",
     "pendingPayment": "Vous avez un paiement en attente",
     "pendingPaymentAmount": "Vous avez un paiement en attente de ${{amount}}",
     "resumePayment": "Reprendre le Paiement"
   },
-
   "tracking": {
     "pending": "En attente",
     "inTransit": "En Transit",
@@ -1091,7 +1051,6 @@
     "trackingHistory": "Historique de Suivi",
     "latestNews": "Dernières nouvelles"
   },
-
   "quotes": {
     "myQuotes": "Mes Devis",
     "noQuotes": "Vous n'avez pas encore envoyé de devis",
@@ -1104,7 +1063,6 @@
     "products": "Produits",
     "adminResponse": "Réponse de l'Admin"
   },
-
   "kyc": {
     "identityVerified": "Identité Vérifiée",
     "verifiedDesc": "Votre identité a été vérifiée avec succès. Vous avez un accès complet au système de crédits et de parrainage.",
@@ -1128,13 +1086,11 @@
     "uploadBack": "Télécharger photo verso",
     "uploadFiscal": "Télécharger document fiscal (optionnel)"
   },
-
   "agentOTP": {
     "accessVerification": "Vérification d'Accès",
     "codeSentTo": "Un code à 6 chiffres a été envoyé à <strong>{{name}}</strong>. Demandez-le à l'utilisateur et saisissez-le ici.",
     "verifyCode": "Vérifier le Code"
   },
-
   "creditReferral": {
     "verificationPending": "Votre vérification est en cours. Une fois approuvée, vous pourrez accéder au système de crédits et de parrainage.",
     "mustVerify": "Vous devez vérifier votre identité pour accéder au système de crédits et de parrainage.",
@@ -1258,7 +1214,6 @@
       "until": "Jusqu'à"
     }
   },
-
   "loginPage": {
     "welcome": "Bienvenue sur {{name}}",
     "access": "Accéder",
@@ -1309,7 +1264,6 @@
     "legalTerms": "Mentions Légales",
     "about": "À propos"
   },
-
   "settingsPanel": {
     "accountInfo": "Informations du Compte",
     "emailLabel": "E-mail",
@@ -1333,13 +1287,174 @@
     "passwordUpdated": "Mot de passe mis à jour avec succès",
     "passwordError": "Erreur lors du changement de mot de passe"
   },
-
   "recommendedProducts": {
     "title": "Votre meilleur choix"
   },
-
   "footerExtra": {
     "aboutUs": "À propos de nous →",
     "allChannels": "Voir tous les canaux →"
+  },
+  "toasts": {
+    "errorLoadingStats": "Erreur lors du chargement des statistiques",
+    "loadingClipModel": "Chargement du modèle CLIP... Cela peut prendre quelques secondes la première fois.",
+    "errorGeneratingEmbeddings": "Erreur lors de la génération des embeddings",
+    "cartEmpty": "Le panier est vide",
+    "quoteSaved": "Devis enregistré. Ouverture de WhatsApp...",
+    "errorProcessingRequest": "Erreur lors du traitement de la demande",
+    "errorUpdatingPrices": "Erreur lors de la mise à jour des prix",
+    "mustLogin": "Vous devez vous connecter",
+    "joinedExistingChat": "Vous avez rejoint le chat existant pour cette commande",
+    "copiedToClipboard": "Copié dans le presse-papiers",
+    "onlyImagesOrPdf": "Seules les images (JPG, PNG, WebP) ou PDF sont autorisées",
+    "fileTooLarge8MB": "Le fichier ne peut pas dépasser 8 Mo",
+    "proofUploaded": "Justificatif téléversé. L'admin validera votre paiement bientôt.",
+    "errorUploadingProof": "Erreur lors du téléversement du justificatif",
+    "tryAgain": "Réessayer",
+    "paymentRefSaved": "Référence de paiement enregistrée",
+    "errorSavingRef": "Erreur lors de l'enregistrement de la référence",
+    "errorCreatingSellerAccount": "Erreur lors de la création du compte vendeur",
+    "unknownError": "Erreur inconnue",
+    "selectPOFirst": "Sélectionnez d'abord un PO",
+    "purchaseCreated": "Achat créé avec succès",
+    "errorCreatingPurchase": "Erreur lors de la création de l'achat",
+    "infoUpdated": "Informations mises à jour",
+    "errorUpdating": "Erreur lors de la mise à jour",
+    "fileUploaded": "Fichier téléversé",
+    "errorUploadingFile": "Erreur lors du téléversement du fichier",
+    "itemApproved": "Article approuvé",
+    "itemRejected": "Article rejeté",
+    "errorUpdatingQC": "Erreur lors de la mise à jour du CQ",
+    "photoUploaded": "Photo téléversée",
+    "errorUploadingPhoto": "Erreur lors du téléversement de la photo",
+    "shipmentCreated": "Expédition créée avec succès",
+    "errorCreatingShipment": "Erreur lors de la création de l'expédition",
+    "paymentLinkUpdated": "Lien de paiement mis à jour",
+    "enterTrackingNumber": "Entrez le numéro de suivi",
+    "trackingUpdated": "Suivi mis à jour",
+    "errorUpdatingTracking": "Erreur lors de la mise à jour du suivi",
+    "errorLoadingProducts": "Erreur lors du chargement des produits",
+    "selectAtLeastOneProduct": "Sélectionnez au moins un produit",
+    "noValidProductsToImport": "Aucun produit valide à importer",
+    "someProductsAlreadyExist": "Certains produits existent déjà dans votre catalogue",
+    "errorImportingProducts": "Erreur lors de l'importation des produits",
+    "productsDeleted": "produit(s) supprimé(s)",
+    "errorDeletingProducts": "Erreur lors de la suppression des produits",
+    "pdfGenerated": "Catalogue PDF généré et téléchargé",
+    "errorGeneratingPdf": "Erreur lors de la génération du catalogue",
+    "imageDownloaded": "Image téléchargée",
+    "errorDownloadingImage": "Erreur lors du téléchargement de l'image",
+    "errorDownloadingImages": "Erreur lors du téléchargement des images",
+    "roleUpdated": "Rôle mis à jour avec succès",
+    "errorChangingRole": "Erreur lors du changement de rôle",
+    "requestApproved": "Demande approuvée",
+    "requestRejected": "Demande rejetée",
+    "draftCreated": "Brouillon créé",
+    "errorCreatingDraft": "Erreur lors de la création du brouillon",
+    "errorAddingProduct": "Erreur lors de l'ajout du produit",
+    "productRemoved": "Produit supprimé",
+    "errorSendingCart": "Erreur lors de l'envoi du panier",
+    "draftCancelled": "Brouillon annulé",
+    "agentSessionExpired": "Session d'agent expirée",
+    "errorSendingCode": "Erreur lors de l'envoi du code",
+    "sessionActivated": "Session activée. Vous avez 2 heures.",
+    "errorVerifyingCode": "Erreur lors de la vérification du code",
+    "sessionClosed": "Session fermée",
+    "sessionExpired": "Cette session a expiré",
+    "discountRemoved": "Réduction supprimée",
+    "sessionExpiredLogin": "Votre session a expiré. Veuillez vous reconnecter.",
+    "errorSavingCart": "Erreur lors de la sauvegarde du panier",
+    "errorLoadingCart": "Erreur lors du chargement du panier",
+    "cartNotAvailable": "Panier non disponible",
+    "completeStoreSetup": "Vous devez compléter la configuration de votre boutique avant d'ajouter des produits au panier.",
+    "errorAddingToCart": "Erreur lors de l'ajout du produit",
+    "errorUpdatingQuantity": "Erreur lors de la mise à jour de la quantité",
+    "productRemovedFromCart": "Produit retiré du panier",
+    "errorRemovingProduct": "Erreur lors de la suppression du produit",
+    "errorClearingCart": "Erreur lors du vidage du panier",
+    "cartEmptyOrNoAuth": "Panier vide ou utilisateur non authentifié",
+    "errorCreatingOrder": "Erreur lors de la création de la commande",
+    "paymentConfirmedProducts": "Paiement confirmé. Les produits seront ajoutés à votre catalogue.",
+    "errorConfirmingPayment": "Erreur lors de la confirmation du paiement",
+    "addedToFavoritesB2B": "Ajouté aux favoris B2B ❤️",
+    "alreadyInFavorites": "Déjà dans vos favoris",
+    "errorAddingToFavorites": "Erreur lors de l'ajout aux favoris",
+    "removedFromFavorites": "Retiré des favoris",
+    "errorRemovingFromFavorites": "Erreur lors de la suppression des favoris",
+    "loginToSaveFavorites": "Connectez-vous pour sauvegarder vos favoris",
+    "marginRangeCreated": "Plage de marge créée",
+    "errorCreatingRange": "Erreur lors de la création de la plage",
+    "marginRangeUpdated": "Plage de marge mise à jour",
+    "errorUpdatingRange": "Erreur lors de la mise à jour de la plage",
+    "marginRangeDeleted": "Plage de marge supprimée",
+    "errorDeletingRange": "Erreur lors de la suppression de la plage",
+    "addedToFavoritesB2C": "Ajouté aux favoris ❤️",
+    "errorToggleFavorite": "Erreur lors du changement de favori",
+    "storeNotFound": "Boutique introuvable. Contactez le support.",
+    "productPublished": "Produit publié avec succès",
+    "productHidden": "Produit masqué",
+    "errorPublishing": "Erreur lors de la publication du produit",
+    "priceUpdated": "Prix mis à jour avec succès",
+    "errorUpdatingPrice": "Erreur lors de la mise à jour du prix",
+    "stockAdjusted": "Stock ajusté avec succès",
+    "errorAdjustingStock": "Erreur lors de l'ajustement du stock",
+    "selectVariant": "Sélectionnez au moins une variante",
+    "selectCategory": "Veuillez sélectionner une catégorie",
+    "salePriceRequired": "Le prix de vente est obligatoire pour publier.",
+    "quantitiesMustBePositive": "Toutes les quantités doivent être supérieures à 0",
+    "errorPublishingProduct": "Erreur lors de la publication du produit",
+    "fileTooLarge5MB": "Le fichier est trop volumineux. Maximum 5 Mo.",
+    "orderCreated": "Commande créée avec succès",
+    "addressSaved": "Adresse enregistrée",
+    "errorSavingAddress": "Erreur lors de l'enregistrement de l'adresse",
+    "addressDeleted": "Adresse supprimée",
+    "settingsSaved": "Paramètres enregistrés",
+    "errorSavingSettings": "Erreur lors de l'enregistrement des paramètres",
+    "orderCancelled": "Commande annulée",
+    "errorCancellingOrder": "Erreur lors de l'annulation de la commande",
+    "paymentConfirmed": "Paiement confirmé",
+    "paymentRejected": "Paiement rejeté",
+    "orderUpdated": "Commande mise à jour",
+    "errorUpdatingOrder": "Erreur lors de la mise à jour de la commande",
+    "sellerVerified": "Vendeur vérifié",
+    "verificationRevoked": "Vérification révoquée",
+    "commissionUpdated": "Commission mise à jour",
+    "bannerCreated": "Bannière créée",
+    "bannerUpdated": "Bannière mise à jour",
+    "bannerDeleted": "Bannière supprimée",
+    "categoryCreated": "Catégorie créée",
+    "categoryUpdated": "Catégorie mise à jour",
+    "categoryDeleted": "Catégorie supprimée",
+    "notificationSent": "Notification envoyée",
+    "productImported": "Produit importé avec succès",
+    "productUpdated": "Produit mis à jour",
+    "productDeleted": "Produit supprimé",
+    "reviewPublished": "Avis publié",
+    "reviewUpdated": "Avis mis à jour",
+    "errorPublishingReview": "Erreur lors de la publication de l'avis",
+    "loginToFavorite": "Connectez-vous pour ajouter aux favoris",
+    "withdrawalRequested": "Demande de retrait soumise",
+    "errorWithdrawal": "Erreur lors de la demande de retrait",
+    "linkCopied": "Lien copié dans le presse-papiers",
+    "codeCopied": "Code copié dans le presse-papiers",
+    "profileUpdated": "Profil mis à jour",
+    "errorUpdatingProfile": "Erreur lors de la mise à jour du profil",
+    "passwordChanged": "Mot de passe changé",
+    "errorChangingPassword": "Erreur lors du changement de mot de passe",
+    "kycSubmitted": "Documents soumis pour vérification",
+    "popupCreated": "Pop-up créé",
+    "popupUpdated": "Pop-up mis à jour",
+    "popupDeleted": "Pop-up supprimé",
+    "discountCreated": "Réduction créée",
+    "discountUpdated": "Réduction mise à jour",
+    "discountDeleted": "Réduction supprimée"
+  },
+  "geolocation": {
+    "notSupported": "Géolocalisation non prise en charge dans ce navigateur",
+    "notSupportedShort": "Géolocalisation non prise en charge",
+    "permissionDenied": "Permission de localisation refusée",
+    "positionUnavailable": "Position indisponible",
+    "timeout": "Délai d'attente dépassé",
+    "unknownError": "Erreur de géolocalisation inconnue",
+    "couldNotGetLocation": "Impossible d'obtenir votre position"
   }
 }
