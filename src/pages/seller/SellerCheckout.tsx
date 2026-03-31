@@ -60,6 +60,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 type PaymentMethod = 'stripe' | 'moncash' | 'transfer';
 type DeliveryMethod = 'address' | 'pickup';
@@ -215,7 +216,7 @@ const SellerCheckout = () => {
     }
   ) => {
     if (!user?.id || items.length === 0) {
-      toast.error('Carrito vacío o usuario no autenticado');
+      toast.error(t('toasts.cartEmptyOrNoAuth'));
       return null;
     }
 
@@ -321,7 +322,7 @@ const SellerCheckout = () => {
     } catch (error) {
       console.error('❌ Error creating order:', error);
       console.error('❌ Error completo:', JSON.stringify(error, null, 2));
-      toast.error('Error al crear pedido');
+      toast.error(t('toasts.errorCreatingOrder'));
       return null;
     }
   };
@@ -763,7 +764,7 @@ const SellerCheckout = () => {
     setValidationErrors([]);
 
     if (!user) {
-      toast.error('Debes iniciar sesión');
+      toast.error(t('toasts.mustLogin'));
       return;
     }
 
@@ -935,7 +936,7 @@ const SellerCheckout = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copiado al portapapeles');
+    toast.success(t('toasts.copiedToClipboard'));
   };
 
   return (

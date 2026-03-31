@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import { useBranding } from '@/hooks/useBranding';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
+import { useTranslation } from 'react-i18next';
 
 interface B2CPaymentStateOverlayProps {
   order: {
@@ -67,7 +68,7 @@ export const B2CPaymentStateOverlay = ({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copiado al portapapeles');
+    toast.success(t('toasts.copiedToClipboard'));
   };
 
   const moncashDetails = {

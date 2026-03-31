@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface B2CFavoriteItem {
   id: string;
@@ -99,8 +100,8 @@ export const useB2CFavorites = () => {
       toast.success('Agregado a favoritos ❤️');
     },
     onError: (error: any) => {
-      if (error.code === '23505') toast.info('Ya está en tus favoritos');
-      else toast.error('Error al agregar a favoritos');
+      if (error.code === '23505') toast.info(t('toasts.alreadyInFavorites'));
+      else toast.error(t('toasts.errorAddingToFavorites'));
     },
   });
 
@@ -116,9 +117,9 @@ export const useB2CFavorites = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['b2c_favorites', user?.id] });
-      toast.success('Eliminado de favoritos');
+      toast.success(t('toasts.removedFromFavorites'));
     },
-    onError: () => toast.error('Error al eliminar de favoritos'),
+    onError: () => toast.error(t('toasts.errorRemovingFromFavorites')),
   });
 
   const isInFavorites = (productId?: string, sellerCatalogId?: string): boolean => {
@@ -128,7 +129,7 @@ export const useB2CFavorites = () => {
   };
 
   const toggle = (params: { productId?: string; sellerCatalogId?: string }) => {
-    if (!user?.id) { toast.error('Inicia sesión para guardar favoritos'); return; }
+    if (!user?.id) { toast.error(t('toasts.loginToSaveFavorites')); return; }
     if (isInFavorites(params.productId, params.sellerCatalogId)) {
       removeMutation.mutate(params);
     } else {

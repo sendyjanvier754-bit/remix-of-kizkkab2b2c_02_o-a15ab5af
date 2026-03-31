@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { syncBatchEntityTranslations, syncEntityTranslations } from '@/lib/translationSync';
+import { useTranslation } from 'react-i18next';
 
 export interface Product {
   id: string;
@@ -300,10 +301,10 @@ export const useCatalog = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['catalog-kpis'] });
-      toast({ title: 'Producto eliminado' });
+      toast({ title: t('toasts.productRemoved') });
     },
     onError: (error: Error) => {
-      toast({ title: 'Error al eliminar producto', description: error.message, variant: 'destructive' });
+      toast({ title: t('toasts.errorRemovingProduct'), description: error.message, variant: 'destructive' });
     },
   });
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface AgentSession {
   id: string;
@@ -49,7 +50,7 @@ export function useAgentSession() {
       setTimeRemaining(remaining);
       if (remaining <= 0) {
         setActiveSession(null);
-        toast.error('Sesión de agente expirada');
+        toast.error(t('toasts.agentSessionExpired'));
       }
     };
     update();
@@ -120,7 +121,7 @@ export function useAgentSession() {
 
       setActiveSession(updated as AgentSession);
       if (profile) setTargetUser(profile as TargetUserInfo);
-      toast.success('Sesión activada. Tienes 2 horas.');
+      toast.success(t('toasts.sessionActivated'));
       await loadSessions();
       return updated;
     } catch (err: any) {
@@ -142,14 +143,14 @@ export function useAgentSession() {
       setTargetUser(null);
     }
     await loadSessions();
-    toast.info('Sesión cerrada');
+    toast.info(t('toasts.sessionClosed'));
   }, [activeSession, loadSessions]);
 
   // Resume a session
   const resumeSession = useCallback(async (session: AgentSession) => {
     if (session.status !== 'active' || !session.session_expires_at) return;
     if (new Date(session.session_expires_at) < new Date()) {
-      toast.error('Esta sesión ha expirado');
+      toast.error(t('toasts.sessionExpired'));
       return;
     }
     const { data: profile } = await supabase

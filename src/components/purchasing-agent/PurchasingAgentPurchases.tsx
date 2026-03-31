@@ -15,6 +15,7 @@ import { usePurchasingAgent } from '@/hooks/usePurchasingAgent';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface AgentProfile {
   id: string;
@@ -51,7 +52,7 @@ export function PurchasingAgentPurchases({ agentProfile, selectedPOId, onSelectP
 
   const handleCreatePurchase = async () => {
     if (!selectedPOId) {
-      toast.error('Selecciona una PO primero');
+      toast.error(t('toasts.selectPOFirst'));
       return;
     }
     try {
@@ -61,9 +62,9 @@ export function PurchasingAgentPurchases({ agentProfile, selectedPOId, onSelectP
         sourcePlatform: newPlatform,
       });
       setCreateOpen(false);
-      toast.success('Compra creada exitosamente');
+      toast.success(t('toasts.purchaseCreated'));
     } catch (error) {
-      toast.error('Error al crear la compra');
+      toast.error(t('toasts.errorCreatingPurchase'));
     }
   };
 
@@ -78,9 +79,9 @@ export function PurchasingAgentPurchases({ agentProfile, selectedPOId, onSelectP
       });
       setCartLinkOpen(false);
       setSelectedPurchase(null);
-      toast.success('Información actualizada');
+      toast.success(t('toasts.infoUpdated'));
     } catch (error) {
-      toast.error('Error al actualizar');
+      toast.error(t('toasts.errorUpdating'));
     }
   };
 

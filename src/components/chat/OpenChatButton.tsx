@@ -39,7 +39,7 @@ export function OpenChatButton({
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Debes iniciar sesión');
+        toast.error(t('toasts.mustLogin'));
         return;
       }
 
@@ -62,7 +62,7 @@ export function OpenChatButton({
           { onConflict: 'chat_id,user_id' }
         );
 
-        toast.info('Te has unido al chat existente para este pedido');
+        toast.info(t('toasts.joinedExistingChat'));
       } else {
         // Create new chat
         const label = orderLabel || `Pedido #${orderId.slice(0, 8).toUpperCase()}`;

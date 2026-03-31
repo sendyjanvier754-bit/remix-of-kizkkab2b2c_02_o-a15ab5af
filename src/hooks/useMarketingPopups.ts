@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface MarketingPopup {
   id: string;
@@ -84,7 +85,7 @@ export function useMarketingPopups() {
       queryClient.invalidateQueries({ queryKey: ['marketing-popups'] });
       toast.success('Pop-up actualizado');
     },
-    onError: (e: any) => toast.error(e.message || 'Error al actualizar'),
+    onError: (e: any) => toast.error(e.message || t('toasts.errorUpdating')),
   });
 
   const togglePopup = useMutation({

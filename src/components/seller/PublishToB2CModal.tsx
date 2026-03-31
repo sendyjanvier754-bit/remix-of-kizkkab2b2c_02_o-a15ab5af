@@ -24,6 +24,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { InventarioB2CItem } from '@/hooks/useInventarioB2C';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { ShoppingCart, Package, DollarSign, Truck, Clock, TrendingUp, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PublishToB2CModalProps {
   open: boolean;
@@ -147,12 +148,12 @@ export function PublishToB2CModal({
 
   const handleSubmit = async () => {
     if (selectedVariantes.size === 0) {
-      alert('Selecciona al menos una variante para publicar');
+      alert(t('toasts.selectVariant'));
       return;
     }
 
     if (!categoryId) {
-      alert('Por favor selecciona una categoría');
+      alert(t('toasts.selectCategory'));
       return;
     }
 
@@ -163,7 +164,7 @@ export function PublishToB2CModal({
         return;
       }
       if (selection.cantidad <= 0) {
-        alert('Todas las cantidades deben ser mayores a 0');
+        alert(t('toasts.quantitiesMustBePositive'));
         return;
       }
     }
@@ -204,7 +205,7 @@ export function PublishToB2CModal({
       onClose();
     } catch (error) {
       console.error('Error al publicar:', error);
-      alert('Hubo un error al publicar el producto');
+      alert(t('toasts.errorPublishingProduct'));
     } finally {
       setIsPublishing(false);
     }

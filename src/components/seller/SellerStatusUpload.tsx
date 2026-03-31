@@ -3,6 +3,7 @@ import { Plus, X, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+import { useTranslation } from 'react-i18next';
   Dialog,
   DialogContent,
   DialogHeader,
@@ -27,7 +28,7 @@ export function SellerStatusUpload({ onUpload, hasActiveStatus }: SellerStatusUp
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('El archivo es muy grande. Máximo 5MB.');
+      alert(t('toasts.fileTooLarge5MB'));
       return;
     }
 

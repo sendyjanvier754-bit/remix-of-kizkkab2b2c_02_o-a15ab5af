@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface FavoriteItem {
   id: string;
@@ -87,9 +88,9 @@ export const useFavorites = () => {
     onError: (error: any) => {
       console.error('Error adding favorite:', error);
       if (error.code === '23505') {
-        toast.info('Ya está en tus favoritos');
+        toast.info(t('toasts.alreadyInFavorites'));
       } else {
-        toast.error('Error al agregar a favoritos');
+        toast.error(t('toasts.errorAddingToFavorites'));
       }
     },
   });
@@ -109,11 +110,11 @@ export const useFavorites = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['favorites', user?.id] });
-      toast.success('Eliminado de favoritos');
+      toast.success(t('toasts.removedFromFavorites'));
     },
     onError: (error) => {
       console.error('Error removing favorite:', error);
-      toast.error('Error al eliminar de favoritos');
+      toast.error(t('toasts.errorRemovingFromFavorites'));
     },
   });
 
@@ -125,7 +126,7 @@ export const useFavorites = () => {
   // Toggle favorite
   const toggleFavorite = (params: { sellerCatalogId: string; storeId?: string }) => {
     if (!user?.id) {
-      toast.error('Inicia sesión para guardar favoritos');
+      toast.error(t('toasts.loginToSaveFavorites'));
       return;
     }
 

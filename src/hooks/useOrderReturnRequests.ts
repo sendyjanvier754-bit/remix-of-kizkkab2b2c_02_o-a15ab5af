@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export type ReturnStatus =
   | 'pending'
@@ -199,6 +200,6 @@ export const useUpdateReturnRequest = () => {
       queryClient.invalidateQueries({ queryKey: ['return_requests'] });
       toast.success('Solicitud actualizada');
     },
-    onError: (e: any) => toast.error(e.message || 'Error al actualizar'),
+    onError: (e: any) => toast.error(e.message || t('toasts.errorUpdating')),
   });
 };

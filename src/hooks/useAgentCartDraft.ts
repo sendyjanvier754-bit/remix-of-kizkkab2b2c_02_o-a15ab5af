@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface DraftItem {
   id: string;
@@ -107,7 +108,7 @@ export function useAgentCartDraft() {
       if (error) throw error;
       await loadDrafts();
       setActiveDraft(data as Draft);
-      toast.success('Borrador creado');
+      toast.success(t('toasts.draftCreated'));
       return data;
     } catch (err: any) {
       toast.error(err.message || 'Error al crear borrador');
@@ -146,7 +147,7 @@ export function useAgentCartDraft() {
       await loadDraftItems(activeDraft.id);
       toast.success(`${item.nombre} agregado`);
     } catch (err: any) {
-      toast.error(err.message || 'Error al agregar producto');
+      toast.error(err.message || t('toasts.errorAddingToCart'));
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +172,7 @@ export function useAgentCartDraft() {
   const removeItem = useCallback(async (itemId: string) => {
     await supabase.from('agent_cart_draft_items').delete().eq('id', itemId);
     if (activeDraft) await loadDraftItems(activeDraft.id);
-    toast.info('Producto eliminado');
+    toast.info(t('toasts.productRemoved'));
   }, [activeDraft, loadDraftItems]);
 
   // Update shipping address
@@ -225,7 +226,7 @@ export function useAgentCartDraft() {
       .eq('id', draftId);
     if (activeDraft?.id === draftId) setActiveDraft(null);
     await loadDrafts();
-    toast.info('Borrador cancelado');
+    toast.info(t('toasts.draftCancelled'));
   }, [activeDraft, loadDrafts]);
 
   // Select draft

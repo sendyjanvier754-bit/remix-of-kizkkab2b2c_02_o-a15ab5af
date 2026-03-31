@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface B2BCartItem {
   id: string;
@@ -136,7 +137,7 @@ export const useB2BCartSupabase = () => {
       }
     } catch (error) {
       console.error('Error fetching/creating cart:', error);
-      toast.error('Error al cargar el carrito');
+      toast.error(t('toasts.errorLoadingCart'));
     } finally {
       setIsLoading(false);
     }
@@ -160,7 +161,7 @@ export const useB2BCartSupabase = () => {
     stockDisponible: number;
   }) => {
     if (!cart.id) {
-      toast.error('Carrito no disponible');
+      toast.error(t('toasts.cartNotAvailable'));
       return;
     }
 
@@ -254,7 +255,7 @@ export const useB2BCartSupabase = () => {
       await fetchOrCreateCart();
     } catch (error) {
       console.error('Error adding item:', error);
-      toast.error('Error al agregar producto');
+      toast.error(t('toasts.errorAddingToCart'));
     }
   }, [cart.id, cart.items, fetchOrCreateCart]);
 
@@ -287,7 +288,7 @@ export const useB2BCartSupabase = () => {
       await fetchOrCreateCart();
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('Error al actualizar cantidad');
+      toast.error(t('toasts.errorUpdatingQuantity'));
     }
   }, [cart.items, fetchOrCreateCart]);
 
@@ -302,10 +303,10 @@ export const useB2BCartSupabase = () => {
       if (error) throw error;
 
       await fetchOrCreateCart();
-      toast.success('Producto eliminado del carrito');
+      toast.success(t('toasts.productRemovedFromCart'));
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('Error al eliminar producto');
+      toast.error(t('toasts.errorRemovingProduct'));
     }
   }, [fetchOrCreateCart]);
 
@@ -324,7 +325,7 @@ export const useB2BCartSupabase = () => {
       await fetchOrCreateCart();
     } catch (error) {
       console.error('Error clearing cart:', error);
-      toast.error('Error al vaciar carrito');
+      toast.error(t('toasts.errorClearingCart'));
     }
   }, [cart.id, fetchOrCreateCart]);
 
@@ -344,7 +345,7 @@ export const useB2BCartSupabase = () => {
     }
   ) => {
     if (!cart.id || !user?.id || cart.items.length === 0) {
-      toast.error('Carrito vacío o usuario no autenticado');
+      toast.error(t('toasts.cartEmptyOrNoAuth'));
       return null;
     }
 
@@ -404,7 +405,7 @@ export const useB2BCartSupabase = () => {
       return order;
     } catch (error) {
       console.error('Error creating order:', error);
-      toast.error('Error al crear pedido');
+      toast.error(t('toasts.errorCreatingOrder'));
       return null;
     }
   }, [cart, user?.id]);
@@ -419,11 +420,11 @@ export const useB2BCartSupabase = () => {
 
       if (error) throw error;
 
-      toast.success('Pago confirmado. Los productos se agregarán a tu catálogo.');
+      toast.success(t('toasts.paymentConfirmedProducts'));
       return true;
     } catch (error) {
       console.error('Error marking order as paid:', error);
-      toast.error('Error al confirmar pago');
+      toast.error(t('toasts.errorConfirmingPayment'));
       return false;
     }
   }, []);

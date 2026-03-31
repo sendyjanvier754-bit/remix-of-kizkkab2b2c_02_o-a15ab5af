@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export type WishlistType = 'B2B' | 'B2C';
 
@@ -173,9 +174,9 @@ export const useWishlist = (type?: WishlistType) => {
     onError: (error: any) => {
       console.error('Error adding to wishlist:', error);
       if (error.code === '23505') {
-        toast.info('Ya está en tus favoritos');
+        toast.info(t('toasts.alreadyInFavorites'));
       } else {
-        toast.error('Error al agregar a favoritos');
+        toast.error(t('toasts.errorAddingToFavorites'));
       }
     },
   });
@@ -204,11 +205,11 @@ export const useWishlist = (type?: WishlistType) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['favorites', user?.id] }); // Legacy compatibility
-      toast.success('Eliminado de favoritos');
+      toast.success(t('toasts.removedFromFavorites'));
     },
     onError: (error) => {
       console.error('Error removing from wishlist:', error);
-      toast.error('Error al eliminar de favoritos');
+      toast.error(t('toasts.errorRemovingFromFavorites'));
     },
   });
 
@@ -226,7 +227,7 @@ export const useWishlist = (type?: WishlistType) => {
   // Toggle wishlist item
   const toggleWishlist = (params: AddToWishlistParams) => {
     if (!user?.id) {
-      toast.error('Inicia sesión para guardar favoritos');
+      toast.error(t('toasts.loginToSaveFavorites'));
       return;
     }
 

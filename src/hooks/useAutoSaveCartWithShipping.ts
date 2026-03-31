@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 // ============================================================================
 // Hook: useAutoSaveCartWithShipping
@@ -218,7 +219,7 @@ export function useAutoSaveCartWithShipping(
 
     } catch (err) {
       console.error('Error saving cart changes:', err);
-      toast.error('Error guardando cambios en el carrito');
+      toast.error(t('toasts.errorSavingCart'));
     } finally {
       setIsSaving(false);
     }

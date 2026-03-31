@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface MarketPODashboardItem {
   market_id: string;
@@ -242,7 +243,7 @@ export function usePOMasterPerMarket() {
       queryClient.invalidateQueries({ queryKey: ['po-orders'] });
       toast.success(`Tracking actualizado: ${data?.orders_updated} pedidos`);
     },
-    onError: () => toast.error('Error al actualizar tracking'),
+    onError: () => toast.error(t('toasts.errorUpdatingTracking')),
   });
 
   // Update/create market settings

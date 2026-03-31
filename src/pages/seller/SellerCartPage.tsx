@@ -52,6 +52,7 @@ import { useCartShippingCostView } from "@/hooks/useCartShippingCostView";
 import { useAutoSaveCartWithShipping } from "@/hooks/useAutoSaveCartWithShipping";
 import { useQueryClient } from "@tanstack/react-query";
 import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
+import { useTranslation } from 'react-i18next';
 
 const SellerCartPage = () => {
   const navigate = useNavigate();
@@ -376,7 +377,7 @@ const SellerCartPage = () => {
         .eq('id', itemId);
 
       if (error) throw error;
-      toast.success('Producto eliminado del carrito');
+      toast.success(t('toasts.productRemovedFromCart'));
       setShowRemoveItemDialog(false);
       setItemToRemove(null);
       refetch();
@@ -522,7 +523,7 @@ const SellerCartPage = () => {
       refetch();
     } catch (error) {
       console.error('Error clearing cart:', error);
-      toast.error('Error al vaciar carrito');
+      toast.error(t('toasts.errorClearingCart'));
     }
   };
 
@@ -713,7 +714,7 @@ const SellerCartPage = () => {
   // Handle adding selected variants to cart
   const handleAddVariantsToCart = useCallback(async () => {
     if (!user?.id || !selectedProductForVariants || variantSelections.length === 0) {
-      toast.error('Selecciona al menos una variante');
+      toast.error(t('toasts.selectVariant'));
       return;
     }
 

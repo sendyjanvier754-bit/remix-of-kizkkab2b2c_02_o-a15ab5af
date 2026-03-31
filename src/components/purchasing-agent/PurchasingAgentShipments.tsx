@@ -14,6 +14,7 @@ import { usePurchasingAgent } from '@/hooks/usePurchasingAgent';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface AgentProfile {
   id: string;
@@ -73,9 +74,9 @@ export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectP
     try {
       const url = await uploadFile(file, 'scale-photos');
       setScalePhotoUrl(url);
-      toast.success('Foto subida');
+      toast.success(t('toasts.photoUploaded'));
     } catch (error) {
-      toast.error('Error al subir foto');
+      toast.error(t('toasts.errorUploadingPhoto'));
     }
   };
 
@@ -95,9 +96,9 @@ export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectP
       });
       setCreateOpen(false);
       resetCreateForm();
-      toast.success('Envío creado exitosamente');
+      toast.success(t('toasts.shipmentCreated'));
     } catch (error) {
-      toast.error('Error al crear envío');
+      toast.error(t('toasts.errorCreatingShipment'));
     }
   };
 
@@ -112,15 +113,15 @@ export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectP
       });
       setFreightOpen(false);
       setSelectedShipment(null);
-      toast.success('Link de pago actualizado');
+      toast.success(t('toasts.paymentLinkUpdated'));
     } catch (error) {
-      toast.error('Error al actualizar');
+      toast.error(t('toasts.errorUpdating'));
     }
   };
 
   const handleUploadTracking = async (shipmentId: string) => {
     if (!trackingNumber) {
-      toast.error('Ingresa el número de tracking');
+      toast.error(t('toasts.enterTrackingNumber'));
       return;
     }
     
@@ -131,9 +132,9 @@ export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectP
         carrierName: '',
       });
       setTrackingNumber('');
-      toast.success('Tracking actualizado');
+      toast.success(t('toasts.trackingUpdated'));
     } catch (error) {
-      toast.error('Error al actualizar tracking');
+      toast.error(t('toasts.errorUpdatingTracking'));
     }
   };
 

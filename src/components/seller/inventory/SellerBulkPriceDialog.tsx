@@ -12,6 +12,7 @@ import { Loader2, AlertTriangle, DollarSign, Percent, Filter } from 'lucide-reac
 import { SellerCatalogItem } from '@/hooks/useSellerCatalog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface SellerBulkPriceDialogProps {
   open: boolean;
@@ -107,7 +108,7 @@ export function SellerBulkPriceDialog({ open, onOpenChange, items, onSuccess }: 
       handleClose();
     } catch (error) {
       console.error('Error updating prices:', error);
-      toast.error('Error al actualizar precios');
+      toast.error(t('toasts.errorUpdatingPrices'));
     } finally {
       setIsUpdating(false);
     }

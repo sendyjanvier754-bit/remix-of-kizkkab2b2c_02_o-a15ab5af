@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Play, RefreshCw, CheckCircle, XCircle, Image, Cpu } from 'lucide-react';
 import { useProductEmbeddings } from '@/hooks/useProductEmbeddings';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface Stats {
   total: number;
@@ -27,7 +28,7 @@ const ProductEmbeddingsManager = () => {
       setStats(data);
     } catch (err) {
       console.error('Error loading stats:', err);
-      toast.error('Error al cargar estadísticas');
+      toast.error(t('toasts.errorLoadingStats'));
     } finally {
       setIsLoadingStats(false);
     }
@@ -38,7 +39,7 @@ const ProductEmbeddingsManager = () => {
   }, []);
 
   const handleGenerateAll = async () => {
-    toast.info('Cargando modelo CLIP... Esto puede tomar unos segundos la primera vez.');
+    toast.info(t('toasts.loadingClipModel'));
     try {
       const result = await generateEmbeddingsForProducts(false);
       if (result) {
@@ -46,12 +47,12 @@ const ProductEmbeddingsManager = () => {
         loadStats();
       }
     } catch (err) {
-      toast.error('Error al generar embeddings');
+      toast.error(t('toasts.errorGeneratingEmbeddings'));
     }
   };
 
   const handleGenerateMissing = async () => {
-    toast.info('Cargando modelo CLIP... Esto puede tomar unos segundos la primera vez.');
+    toast.info(t('toasts.loadingClipModel'));
     try {
       const result = await generateEmbeddingsForProducts(true);
       if (result) {
@@ -59,7 +60,7 @@ const ProductEmbeddingsManager = () => {
         loadStats();
       }
     } catch (err) {
-      toast.error('Error al generar embeddings');
+      toast.error(t('toasts.errorGeneratingEmbeddings'));
     }
   };
 

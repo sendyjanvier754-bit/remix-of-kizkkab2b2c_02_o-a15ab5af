@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, CheckCircle, ExternalLink, Loader2, FileImage, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 type OrderTable = 'orders_b2b' | 'orders_b2c';
 
@@ -46,11 +47,11 @@ export const PaymentProofUpload = ({
 
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
     if (!validTypes.includes(file.type)) {
-      toast.error('Solo se permiten imágenes (JPG, PNG, WebP) o PDF');
+      toast.error(t('toasts.onlyImagesOrPdf'));
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
-      toast.error('El archivo no puede superar 8 MB');
+      toast.error(t('toasts.fileTooLarge8MB'));
       return;
     }
 
@@ -96,7 +97,7 @@ export const PaymentProofUpload = ({
 
       setProofUrl(publicUrl);
       onUploaded?.(publicUrl);
-      toast.success('Comprobante subido. El admin validará tu pago pronto.');
+      toast.success(t('toasts.proofUploaded'));
     } catch (err: any) {
       console.error('Error uploading proof:', err);
       toast.error('Error al subir el comprobante: ' + (err.message ?? 'Intenta de nuevo'));
@@ -115,9 +116,9 @@ export const PaymentProofUpload = ({
         .update({ payment_reference: referenceValue.trim() })
         .eq('id', orderId);
       if (error) throw error;
-      toast.success('Referencia de pago guardada');
+      toast.success(t('toasts.paymentRefSaved'));
     } catch (err: any) {
-      toast.error('Error al guardar la referencia');
+      toast.error(t('toasts.errorSavingRef'));
     }
   };
 
