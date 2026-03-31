@@ -9301,6 +9301,7 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: string
       }
+      generate_user_code: { Args: never; Returns: string }
       get_agent_dashboard: { Args: { p_agent_id: string }; Returns: Json }
       get_cart_shipping_cost: {
         Args: { cart_items: Json; p_shipping_type_id?: string }
