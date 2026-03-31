@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { LegalPagesModal } from '@/components/legal/LegalPagesModal';
 import { AboutModal } from '@/components/legal/AboutModal';
 import {
+import { useTranslation } from 'react-i18next';
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -144,7 +145,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       // For now, we just sign out and show a message
       await signOut();
       toast({
-        title: 'Sesión cerrada',
+        title: t('toasts.sessionClosed'),
         description: 'Para eliminar tu cuenta completamente, por favor contacta a soporte.',
       });
       onOpenChange(false);

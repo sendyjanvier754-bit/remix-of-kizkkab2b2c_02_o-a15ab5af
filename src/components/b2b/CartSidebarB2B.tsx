@@ -9,6 +9,7 @@ import { useCartProfitProjection } from '@/hooks/useB2CMarketPrices';
 import { useB2BCartLogistics } from '@/hooks/useB2BCartLogistics';
 import { B2BCartItem } from '@/hooks/useB2BCartItems';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from 'react-i18next';
 
 interface CartSidebarB2BProps {
   cart: CartB2B;
@@ -63,7 +64,7 @@ const CartSidebarB2B = ({
   const { data: profitProjection, isLoading: isProfitLoading } = useCartProfitProjection(cartItemsForProfit);
   const handleNegotiateViaWhatsApp = async () => {
     if (!user?.id || cart.items.length === 0) {
-      toast.error('El carrito está vacío');
+      toast.error(t('toasts.cartEmpty'));
       return;
     }
 
@@ -133,10 +134,10 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
       const whatsappUrl = `https://wa.me/${adminWhatsApp}?text=${encodedMessage}`;
       
       window.open(whatsappUrl, '_blank');
-      toast.success('Cotización guardada. Abriendo WhatsApp...');
+      toast.success(t('toasts.quoteSaved'));
     } catch (error) {
       console.error('Error al crear cotización:', error);
-      toast.error('Error al procesar la solicitud');
+      toast.error(t('toasts.errorProcessingRequest'));
     } finally {
       setIsNegotiating(false);
     }

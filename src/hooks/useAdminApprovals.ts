@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { generateStoreSlug, generateUniqueStoreSlug } from '@/utils/storeSlugGenerator';
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 // Local types that match what the code expects (DB enum may differ)
 export type ApprovalRequestType = 'kyc_verification' | 'referral_bonus' | 'credit_limit_increase' | 'credit_activation' | 'seller_upgrade' | 'withdrawal' | 'refund' | 'credit_purchase' | 'kyc_review';
@@ -310,7 +311,7 @@ export const useAdminApprovals = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-approvals-all'] });
       queryClient.invalidateQueries({ queryKey: ['admin-approval-stats'] });
       queryClient.invalidateQueries({ queryKey: ['admin-credits'] });
-      toast.success('Solicitud aprobada');
+      toast.success(t('toasts.requestApproved'));
     },
     onError: (error) => {
       toast.error('Error: ' + error.message);
@@ -343,7 +344,7 @@ export const useAdminApprovals = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-approvals-pending'] });
       queryClient.invalidateQueries({ queryKey: ['admin-approvals-all'] });
       queryClient.invalidateQueries({ queryKey: ['admin-approval-stats'] });
-      toast.success('Solicitud rechazada');
+      toast.success(t('toasts.requestRejected'));
     },
   });
 

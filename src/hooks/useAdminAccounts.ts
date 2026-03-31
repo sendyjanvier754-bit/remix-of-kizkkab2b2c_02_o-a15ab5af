@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { generateUniqueStoreSlug } from '@/utils/storeSlugGenerator';
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 export interface AccountProfile {
   id: string;
@@ -139,7 +140,7 @@ export const useAdminAccounts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-accounts'] });
-      toast.success('Rol actualizado correctamente');
+      toast.success(t('toasts.roleUpdated'));
     },
     onError: (error) => {
       toast.error('Error al cambiar rol: ' + error.message);

@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 // Types
 export type SiverMatchRole = 'investor' | 'gestor';
@@ -395,7 +396,7 @@ export const useSiverMatch = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siver-match-my-lots'] });
-      toast.success('Tracking actualizado');
+      toast.success(t('toasts.trackingUpdated'));
     },
   });
 

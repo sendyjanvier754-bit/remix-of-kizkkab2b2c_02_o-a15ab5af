@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 export interface PurchasingAgent {
   id: string;
@@ -388,7 +389,7 @@ export function usePurchasingAgent() {
       queryClient.invalidateQueries({ queryKey: ['po-reconciliation'] });
       toast.success('QC actualizado');
     },
-    onError: () => toast.error('Error al actualizar QC'),
+    onError: () => toast.error(t('toasts.errorUpdatingQC')),
   });
 
   // Create shipment
@@ -447,7 +448,7 @@ export function usePurchasingAgent() {
       queryClient.invalidateQueries({ queryKey: ['po-shipments'] });
       toast.success('Envío creado');
     },
-    onError: () => toast.error('Error al crear envío'),
+    onError: () => toast.error(t('toasts.errorCreatingShipment')),
   });
 
   // Update shipment freight

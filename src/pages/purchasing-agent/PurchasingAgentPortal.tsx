@@ -21,6 +21,7 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function PurchasingAgentPortal() {
   const [selectedPOId, setSelectedPOId] = useState<string | null>(null);
@@ -938,7 +939,7 @@ function TrackingForm({
 
   const handleSubmit = async () => {
     if (!tracking) {
-      toast.error('Ingresa el número de tracking');
+      toast.error(t('toasts.enterTrackingNumber'));
       return;
     }
     setIsSubmitting(true);

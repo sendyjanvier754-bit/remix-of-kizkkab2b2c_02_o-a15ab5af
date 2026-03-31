@@ -80,7 +80,7 @@ export default function SellerInventarioB2C() {
 
   const handlePublishSubmit = async (data: PublishData) => {
     if (!storeData?.id) {
-      alert('No se encontró tu tienda. Contacta a soporte.');
+      alert(t('toasts.storeNotFound'));
       return;
     }
 

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchOrderEmailData, sendOrderStatusChangeEmail, sendOrderCancelledEmail } from '@/hooks/useOrderEmails';
+import { useTranslation } from 'react-i18next';
 
 export type OrderStatus = 'draft' | 'placed' | 'paid' | 'preparing' | 'shipped' | 'cancelled';
 export type PaymentStatus = 'draft' | 'pending' | 'pending_validation' | 'paid' | 'failed' | 'expired' | 'cancelled';
@@ -459,7 +460,7 @@ export const useOrders = () => {
       toast({ title: '¡Pago confirmado!', description: 'El pedido ha sido marcado como pagado y vinculado a la PO activa.' });
     },
     onError: (error: Error) => {
-      toast({ title: 'Error al confirmar pago', description: error.message, variant: 'destructive' });
+      toast({ title: t('toasts.errorConfirmingPayment'), description: error.message, variant: 'destructive' });
     },
   });
 

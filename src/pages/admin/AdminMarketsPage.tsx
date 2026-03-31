@@ -41,6 +41,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 export default function AdminMarketsPage() {
   const navigate = useNavigate();
@@ -354,7 +355,7 @@ export default function AdminMarketsPage() {
       setShowAssignProductsDialog(true);
     } catch (error) {
       console.error('Error loading products:', error);
-      toast.error('Error al cargar productos');
+      toast.error(t('toasts.errorLoadingProducts'));
     } finally {
       setLoadingProducts(false);
     }

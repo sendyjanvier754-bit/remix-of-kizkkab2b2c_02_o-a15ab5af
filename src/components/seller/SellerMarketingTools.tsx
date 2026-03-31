@@ -44,6 +44,7 @@ import { useStore } from '@/hooks/useStore';
 import { useAuth } from '@/hooks/useAuth';
 import { B2BCatalogImportDialog } from '@/components/seller/B2BCatalogImportDialog';
 import { useMarketingAssets } from '@/hooks/useMarketingAssets';
+import { useTranslation } from 'react-i18next';
 
 interface CatalogProduct {
   id: string;          // sourceProductId (or item.id if no source)
@@ -175,11 +176,11 @@ export const SellerMarketingTools: React.FC = () => {
         clearSelection();
         setDeleteDialogOpen(false);
       } else {
-        toast.error(error || 'Error al eliminar productos');
+        toast.error(error || t('toasts.errorDeletingProducts'));
       }
     } catch (error) {
       console.error('Error deleting products:', error);
-      toast.error('Error al eliminar productos');
+      toast.error(t('toasts.errorDeletingProducts'));
     } finally {
       setIsDeleting(false);
     }
@@ -188,7 +189,7 @@ export const SellerMarketingTools: React.FC = () => {
   // Generate PDF Catalog — download real PDF AND save to DB
   const handleGeneratePDF = async () => {
     if (selectedProductsData.length === 0) {
-      toast.error('Selecciona al menos un producto');
+      toast.error(t('toasts.selectAtLeastOneProduct'));
       return;
     }
 
@@ -231,7 +232,7 @@ export const SellerMarketingTools: React.FC = () => {
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Error al generar catálogo', { id: 'pdf-generation' });
+      toast.error(t('toasts.errorGeneratingPdf'), { id: 'pdf-generation' });
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -247,17 +248,17 @@ export const SellerMarketingTools: React.FC = () => {
         storeLogo: store?.logo || undefined,
         storeSlug: store?.slug || '',
       });
-      toast.success('Imagen descargada');
+      toast.success(t('toasts.imageDownloaded'));
     } catch (error) {
       console.error('Error downloading image:', error);
-      toast.error('Error al descargar imagen');
+      toast.error(t('toasts.errorDownloadingImage'));
     }
   };
 
   // Download bulk WhatsApp status images
   const handleDownloadBulkStatus = async () => {
     if (selectedProductsData.length === 0) {
-      toast.error('Selecciona al menos un producto');
+      toast.error(t('toasts.selectAtLeastOneProduct'));
       return;
     }
 
@@ -278,7 +279,7 @@ export const SellerMarketingTools: React.FC = () => {
       toast.success(`${selectedProductsData.length} imágenes descargadas`);
     } catch (error) {
       console.error('Error downloading images:', error);
-      toast.error('Error al descargar imágenes');
+      toast.error(t('toasts.errorDownloadingImages'));
     } finally {
       setIsGeneratingImages(false);
       setDownloadProgress({ current: 0, total: 0 });

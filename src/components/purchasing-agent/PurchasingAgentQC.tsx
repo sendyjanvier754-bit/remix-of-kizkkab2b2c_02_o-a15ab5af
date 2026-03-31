@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { usePurchasingAgent } from '@/hooks/usePurchasingAgent';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface AgentProfile {
   id: string;
@@ -58,9 +59,9 @@ export function PurchasingAgentQC({ agentProfile, selectedPOId, onSelectPO }: Pu
         } else {
           setUploadedVideos(prev => [...prev, url]);
         }
-        toast.success('Archivo subido');
+        toast.success(t('toasts.fileUploaded'));
       } catch (error) {
-        toast.error('Error al subir archivo');
+        toast.error(t('toasts.errorUploadingFile'));
       }
     }
   };
@@ -81,9 +82,9 @@ export function PurchasingAgentQC({ agentProfile, selectedPOId, onSelectPO }: Pu
       setUploadedPhotos([]);
       setUploadedVideos([]);
       setQcNotes('');
-      toast.success(decision === 'approved' ? 'Item aprobado' : 'Item rechazado');
+      toast.success(decision === 'approved' ? t('toasts.itemApproved') : t('toasts.itemRejected'));
     } catch (error) {
-      toast.error('Error al actualizar QC');
+      toast.error(t('toasts.errorUpdatingQC'));
     }
   };
 

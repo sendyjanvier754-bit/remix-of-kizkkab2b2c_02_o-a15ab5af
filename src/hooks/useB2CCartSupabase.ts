@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface B2CCartItem {
   id: string;
@@ -352,7 +353,7 @@ export const useB2CCartSupabase = () => {
       });
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('Error al actualizar cantidad');
+      toast.error(t('toasts.errorUpdatingQuantity'));
     }
   }, []);
 
@@ -409,7 +410,7 @@ export const useB2CCartSupabase = () => {
       toast.success('Carrito vaciado');
     } catch (error) {
       console.error('Error clearing cart:', error);
-      toast.error('Error al vaciar carrito');
+      toast.error(t('toasts.errorClearingCart'));
     }
   }, [cart.id]);
 

@@ -37,6 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+import { useTranslation } from 'react-i18next';
   Plus,
   Image as ImageIcon,
   Pencil,
@@ -161,7 +162,7 @@ const AdminBanners = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("El archivo es muy grande. Máximo 5MB."); return; }
+    if (file.size > 5 * 1024 * 1024) { alert(t('toasts.fileTooLarge5MB')); return; }
     setUploading(true);
     const url = await uploadBannerImage(file);
     if (url) setFormData(prev => ({ ...prev, image_url: url }));
@@ -171,7 +172,7 @@ const AdminBanners = () => {
   const handleDesktopImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("El archivo es muy grande. Máximo 5MB."); return; }
+    if (file.size > 5 * 1024 * 1024) { alert(t('toasts.fileTooLarge5MB')); return; }
     setUploadingDesktop(true);
     const url = await uploadBannerImage(file);
     if (url) setFormData(prev => ({ ...prev, desktop_image_url: url }));

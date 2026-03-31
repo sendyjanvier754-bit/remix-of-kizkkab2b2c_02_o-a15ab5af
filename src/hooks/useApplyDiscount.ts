@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface AppliedDiscount {
   type: 'code' | 'customer';
@@ -29,7 +30,7 @@ export const useApplyDiscount = () => {
     storeId?: string | null
   ): Promise<ValidateDiscountResult> => {
     if (!user) {
-      return { valid: false, error: 'Debes iniciar sesión' };
+      return { valid: false, error: t('toasts.mustLogin') };
     }
 
     setIsValidating(true);
@@ -187,7 +188,7 @@ export const useApplyDiscount = () => {
 
   const removeDiscount = useCallback(() => {
     setAppliedDiscount(null);
-    toast.info('Descuento removido');
+    toast.info(t('toasts.discountRemoved'));
   }, []);
 
   const recordDiscountUse = useCallback(async (

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface BulkPriceItem {
   id: string;
@@ -184,7 +185,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
       return true;
     } catch (error: any) {
       console.error('Error in bulk percentage update:', error);
-      toast.error(error.message || 'Error al actualizar precios');
+      toast.error(error.message || t('toasts.errorUpdatingPrices'));
       return false;
     } finally {
       setIsUpdating(false);
@@ -209,7 +210,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
       return true;
     } catch (error: any) {
       console.error('Error in bulk inline update:', error);
-      toast.error(error.message || 'Error al actualizar precios');
+      toast.error(error.message || t('toasts.errorUpdatingPrices'));
       return false;
     } finally {
       setIsUpdating(false);
@@ -252,7 +253,7 @@ export const useBulkPriceUpdate = (storeId: string | null) => {
       return true;
     } catch (error: any) {
       console.error('Error in CSV bulk update:', error);
-      toast.error(error.message || 'Error al actualizar precios');
+      toast.error(error.message || t('toasts.errorUpdatingPrices'));
       return false;
     } finally {
       setIsUpdating(false);

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface B2BMarginRange {
   id: string;
@@ -105,7 +106,7 @@ export const useB2BMarginRanges = () => {
     },
     onSuccess: async () => {
       await refreshB2BPriceQueries();
-      toast.success('Rango de margen creado');
+      toast.success(t('toasts.marginRangeCreated'));
     },
     onError: (err: any) => {
       toast.error('Error al crear rango: ' + err.message);
@@ -127,7 +128,7 @@ export const useB2BMarginRanges = () => {
     },
     onSuccess: async () => {
       await refreshB2BPriceQueries();
-      toast.success('Rango de margen actualizado');
+      toast.success(t('toasts.marginRangeUpdated'));
     },
     onError: (err: any) => {
       toast.error('Error al actualizar rango: ' + err.message);
@@ -146,7 +147,7 @@ export const useB2BMarginRanges = () => {
     },
     onSuccess: async () => {
       await refreshB2BPriceQueries();
-      toast.success('Rango de margen eliminado');
+      toast.success(t('toasts.marginRangeDeleted'));
     },
     onError: (err: any) => {
       toast.error('Error al eliminar rango: ' + err.message);

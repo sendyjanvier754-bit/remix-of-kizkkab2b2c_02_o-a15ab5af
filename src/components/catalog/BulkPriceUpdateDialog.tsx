@@ -13,6 +13,7 @@ import { useCatalog, Product, Category, Supplier } from '@/hooks/useCatalog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 interface BulkPriceUpdateDialogProps {
   open: boolean;
@@ -137,7 +138,7 @@ export default function BulkPriceUpdateDialog({ open, onOpenChange }: BulkPriceU
       handleClose();
     } catch (error) {
       console.error('Error updating prices:', error);
-      toast.error('Error al actualizar precios');
+      toast.error(t('toasts.errorUpdatingPrices'));
     } finally {
       setIsUpdating(false);
     }

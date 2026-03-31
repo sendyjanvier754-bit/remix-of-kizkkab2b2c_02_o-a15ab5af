@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export interface CategoryAttributeTemplate {
   id: string;
@@ -144,7 +145,7 @@ export const useUpdateCategoryTemplate = () => {
       toast({ title: 'Plantilla actualizada' });
     },
     onError: (error: Error) => {
-      toast({ title: 'Error al actualizar', description: error.message, variant: 'destructive' });
+      toast({ title: t('toasts.errorUpdating'), description: error.message, variant: 'destructive' });
     },
   });
 };

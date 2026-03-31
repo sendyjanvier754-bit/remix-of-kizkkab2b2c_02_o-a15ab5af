@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Package, Loader2, Plus, Check, ImageOff, DollarSign } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface B2BProduct {
   id: string;
@@ -88,7 +89,7 @@ export function B2BCatalogImportDialog({
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Error al cargar productos');
+      toast.error(t('toasts.errorLoadingProducts'));
     } finally {
       setIsLoading(false);
     }
@@ -125,7 +126,7 @@ export function B2BCatalogImportDialog({
 
   const handleImport = async () => {
     if (selectedProducts.size === 0) {
-      toast.error('Selecciona al menos un producto');
+      toast.error(t('toasts.selectAtLeastOneProduct'));
       return;
     }
 
@@ -168,7 +169,7 @@ export function B2BCatalogImportDialog({
       }).filter(Boolean); // Remove nulls
 
       if (catalogItems.length === 0) {
-        toast.error('No hay productos válidos para importar');
+        toast.error(t('toasts.noValidProductsToImport'));
         setIsImporting(false);
         return;
       }
@@ -258,9 +259,9 @@ export function B2BCatalogImportDialog({
     } catch (error: any) {
       console.error('Error importing products:', error);
       if (error.code === '23505') {
-        toast.error('Algunos productos ya existen en tu catálogo');
+        toast.error(t('toasts.someProductsAlreadyExist'));
       } else {
-        toast.error('Error al importar productos');
+        toast.error(t('toasts.errorImportingProducts'));
       }
     } finally {
       setIsImporting(false);
