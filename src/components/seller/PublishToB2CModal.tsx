@@ -68,6 +68,7 @@ export function PublishToB2CModal({
   item,
   onPublish,
 }: PublishToB2CModalProps) {
+  const { t } = useTranslation();
   const { data: categories, isLoading: loadingCategories } = useCategories(true);
 
   // Cargar datos del business panel para mostrar PVP sugerido

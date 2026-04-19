@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
 export default function PurchasingAgentPortal() {
+  const { t } = useTranslation();
   const [selectedPOId, setSelectedPOId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('assignments');
   const [createPurchaseOpen, setCreatePurchaseOpen] = useState(false);

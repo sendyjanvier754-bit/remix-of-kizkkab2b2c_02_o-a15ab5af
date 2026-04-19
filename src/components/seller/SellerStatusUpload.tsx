@@ -2,8 +2,8 @@ import { useState, useRef } from 'react';
 import { Plus, X, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
 import { useTranslation } from 'react-i18next';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -16,6 +16,7 @@ interface SellerStatusUploadProps {
 }
 
 export function SellerStatusUpload({ onUpload, hasActiveStatus }: SellerStatusUploadProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

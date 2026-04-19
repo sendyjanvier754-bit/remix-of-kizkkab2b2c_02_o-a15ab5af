@@ -36,8 +36,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
 import { useTranslation } from 'react-i18next';
+import {
   Plus,
   Image as ImageIcon,
   Pencil,
@@ -64,6 +64,7 @@ const DEVICE_OPTIONS = [
 ];
 
 const AdminBanners = () => {
+  const { t } = useTranslation();
   const { banners, loading, createBanner, updateBanner, deleteBanner, uploadBannerImage } = useAdminBanners();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);

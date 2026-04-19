@@ -58,6 +58,7 @@ export interface OrderFilters {
 }
 
 export const useOrders = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();

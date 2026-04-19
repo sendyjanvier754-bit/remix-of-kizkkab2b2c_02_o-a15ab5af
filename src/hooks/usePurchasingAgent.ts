@@ -136,6 +136,7 @@ export interface POReconciliation {
 }
 
 export function usePurchasingAgent() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 

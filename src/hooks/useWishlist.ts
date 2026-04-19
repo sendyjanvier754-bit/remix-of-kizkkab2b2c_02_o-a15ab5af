@@ -51,6 +51,7 @@ interface AddToWishlistParams {
 }
 
 export const useWishlist = (type?: WishlistType) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 

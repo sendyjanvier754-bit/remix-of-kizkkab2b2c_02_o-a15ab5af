@@ -27,6 +27,7 @@ export interface ApprovalRequest {
 }
 
 export const useAdminApprovals = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: pendingRequests, isLoading } = useQuery({

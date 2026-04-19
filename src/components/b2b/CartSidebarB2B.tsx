@@ -26,6 +26,7 @@ const CartSidebarB2B = ({
   isOpen,
   onToggle,
 }: CartSidebarB2BProps) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [isNegotiating, setIsNegotiating] = useState(false);
 

@@ -39,6 +39,7 @@ const initialCart: B2BCart = {
 };
 
 export const useB2BCartSupabase = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [cart, setCart] = useState<B2BCart>(initialCart);
   const [isLoading, setIsLoading] = useState(true);

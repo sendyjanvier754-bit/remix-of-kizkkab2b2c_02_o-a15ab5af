@@ -35,6 +35,7 @@ export interface B2BPriceResult {
 }
 
 export const useB2BMarginRanges = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const refreshB2BPriceQueries = async () => {

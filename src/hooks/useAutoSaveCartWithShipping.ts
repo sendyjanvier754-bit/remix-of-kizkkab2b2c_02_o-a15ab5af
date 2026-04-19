@@ -36,6 +36,7 @@ export function useAutoSaveCartWithShipping(
   selectedShippingTypeId: string | null,
   onItemsChange?: () => void | Promise<void> // ✅ Callback para refrescar items
 ) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   

@@ -25,6 +25,7 @@ type AdjustmentType = 'percentage' | 'fixed';
 type AdjustmentOperation = 'increase' | 'decrease';
 
 export default function BulkPriceUpdateDialog({ open, onOpenChange }: BulkPriceUpdateDialogProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { useProducts, useCategories, useSuppliers } = useCatalog();
   

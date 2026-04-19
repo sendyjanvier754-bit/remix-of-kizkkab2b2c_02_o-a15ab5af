@@ -13,8 +13,8 @@ import { Settings, Lock, Bell, Shield, Loader2, Eye, EyeOff, FileText, Info } fr
 import { Link } from 'react-router-dom';
 import { LegalPagesModal } from '@/components/legal/LegalPagesModal';
 import { AboutModal } from '@/components/legal/AboutModal';
-import {
 import { useTranslation } from 'react-i18next';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -31,6 +31,7 @@ interface SettingsDialogProps {
 }
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   

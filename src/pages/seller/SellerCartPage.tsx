@@ -55,6 +55,7 @@ import RecommendedProductsSection from "@/components/products/RecommendedProduct
 import { useTranslation } from 'react-i18next';
 
 const SellerCartPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();

@@ -21,6 +21,7 @@ interface TargetUserInfo {
 }
 
 export function useAgentSession() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [sessions, setSessions] = useState<AgentSession[]>([]);
   const [activeSession, setActiveSession] = useState<AgentSession | null>(null);

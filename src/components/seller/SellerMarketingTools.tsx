@@ -67,6 +67,7 @@ interface CatalogProduct {
 }
 
 export const SellerMarketingTools: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { items: catalogItems, storeId, refetch, deleteItems } = useSellerCatalog(true);
   const { data: store } = useStore(storeId || undefined);

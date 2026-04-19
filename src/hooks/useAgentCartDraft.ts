@@ -38,6 +38,7 @@ interface Draft {
 }
 
 export function useAgentCartDraft() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [activeDraft, setActiveDraft] = useState<Draft | null>(null);

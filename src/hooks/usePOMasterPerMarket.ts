@@ -39,6 +39,7 @@ export interface POMarketSettings {
 }
 
 export function usePOMasterPerMarket() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   // Dashboard: all markets with their active POs

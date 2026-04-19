@@ -30,6 +30,7 @@ interface PurchasingAgentShipmentsProps {
 }
 
 export function PurchasingAgentShipments({ agentProfile, selectedPOId, onSelectPO }: PurchasingAgentShipmentsProps) {
+  const { t } = useTranslation();
   const [createOpen, setCreateOpen] = useState(false);
   const [freightOpen, setFreightOpen] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState<any>(null);
