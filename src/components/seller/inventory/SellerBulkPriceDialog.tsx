@@ -26,6 +26,7 @@ type AdjustmentType = 'percentage' | 'fixed';
 type AdjustmentOperation = 'increase' | 'decrease';
 
 export function SellerBulkPriceDialog({ open, onOpenChange, items, onSuccess }: SellerBulkPriceDialogProps) {
+  const { t } = useTranslation();
   const [selectionMode, setSelectionMode] = useState<SelectionMode>('all');
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   

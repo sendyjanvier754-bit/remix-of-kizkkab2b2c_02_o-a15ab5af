@@ -47,6 +47,7 @@ export const B2CPaymentStateOverlay = ({
   onConfirmPayment,
   onCancelOrder,
 }: B2CPaymentStateOverlayProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { getValue } = useBranding();
   const platformName = getValue('platform_name');

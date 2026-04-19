@@ -17,6 +17,7 @@ interface Stats {
 }
 
 const ProductEmbeddingsManager = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<Stats>({ total: 0, withEmbedding: 0, missing: 0 });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const { isProcessing, progress, errors, generateEmbeddingsForProducts, getEmbeddingStats } = useProductEmbeddings();

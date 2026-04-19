@@ -37,6 +37,7 @@ export function B2BCatalogImportDialog({
   existingSkus,
   onSuccess,
 }: B2BCatalogImportDialogProps) {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<B2BProduct[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [customPrices, setCustomPrices] = useState<Record<string, number>>({});

@@ -71,6 +71,7 @@ export const RETURN_STATUS_CONFIG: Record<ReturnStatus, { label: string; color: 
 
 // ── User: fetch own return requests ──────────────────────────────────────────
 export const useMyReturnRequests = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   return useQuery({
     queryKey: ['return_requests', 'buyer', user?.id],

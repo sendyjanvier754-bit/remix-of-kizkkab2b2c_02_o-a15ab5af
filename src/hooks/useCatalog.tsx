@@ -53,6 +53,7 @@ export interface ProductFilters {
 }
 
 export const useCatalog = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

@@ -64,6 +64,7 @@ const DEVICE_OPTIONS = [
 ];
 
 const AdminBanners = () => {
+  const { t } = useTranslation();
   const { banners, loading, createBanner, updateBanner, deleteBanner, uploadBannerImage } = useAdminBanners();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);

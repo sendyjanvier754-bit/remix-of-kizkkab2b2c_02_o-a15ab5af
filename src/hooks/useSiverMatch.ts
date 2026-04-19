@@ -153,6 +153,7 @@ export interface Badge {
 
 // Hook
 export const useSiverMatch = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 

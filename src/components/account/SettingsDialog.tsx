@@ -31,6 +31,7 @@ interface SettingsDialogProps {
 }
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   

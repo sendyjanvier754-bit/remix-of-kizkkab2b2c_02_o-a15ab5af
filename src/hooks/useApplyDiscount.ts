@@ -20,6 +20,7 @@ export interface ValidateDiscountResult {
 }
 
 export const useApplyDiscount = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [isValidating, setIsValidating] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);

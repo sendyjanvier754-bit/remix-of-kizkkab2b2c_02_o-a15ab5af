@@ -22,6 +22,7 @@ export interface B2BFavoriteItem {
 }
 
 export const useB2BFavorites = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 

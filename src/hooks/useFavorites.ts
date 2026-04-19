@@ -16,6 +16,7 @@ export interface FavoriteItem {
 }
 
 export const useFavorites = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 

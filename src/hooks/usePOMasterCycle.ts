@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
  * - Instrucciones de packing automáticas
  */
 export function usePOMasterCycle() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

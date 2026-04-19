@@ -28,6 +28,7 @@ const resolveCatalogImage = (catalog: any): string => {
 };
 
 export const useB2CFavorites = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 

@@ -14,6 +14,7 @@ export interface AccountProfile {
 }
 
 export const useAdminAccounts = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery({

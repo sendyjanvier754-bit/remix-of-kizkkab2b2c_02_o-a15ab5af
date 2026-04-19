@@ -28,6 +28,7 @@ export interface TemplateWithCategory extends CategoryAttributeTemplate {
 
 // Fetch all templates
 export const useCategoryAttributeTemplates = () => {
+  const { t } = useTranslation();
   return useQuery({
     queryKey: ['category-attribute-templates'],
     queryFn: async () => {

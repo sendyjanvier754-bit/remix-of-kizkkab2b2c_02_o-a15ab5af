@@ -36,6 +36,7 @@ export const PaymentProofUpload = ({
   orderTable = 'orders_b2b',
   showReferenceInput = false,
 }: PaymentProofUploadProps) => {
+  const { t } = useTranslation();
   const [isUploading, setIsUploading] = useState(false);
   const [proofUrl, setProofUrl] = useState<string | null>(existingUrl ?? null);
   const [referenceValue, setReferenceValue] = useState(existingReference ?? '');

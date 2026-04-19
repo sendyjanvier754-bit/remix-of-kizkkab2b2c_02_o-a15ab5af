@@ -28,6 +28,7 @@ interface PurchasingAgentQCProps {
 }
 
 export function PurchasingAgentQC({ agentProfile, selectedPOId, onSelectPO }: PurchasingAgentQCProps) {
+  const { t } = useTranslation();
   const [qcDialogOpen, setQcDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [qcNotes, setQcNotes] = useState('');

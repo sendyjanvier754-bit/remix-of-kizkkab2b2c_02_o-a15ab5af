@@ -31,6 +31,7 @@ interface PurchasingAgentPurchasesProps {
 }
 
 export function PurchasingAgentPurchases({ agentProfile, selectedPOId, onSelectPO }: PurchasingAgentPurchasesProps) {
+  const { t } = useTranslation();
   const [createOpen, setCreateOpen] = useState(false);
   const [cartLinkOpen, setCartLinkOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);

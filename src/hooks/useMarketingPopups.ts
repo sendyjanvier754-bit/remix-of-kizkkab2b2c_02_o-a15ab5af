@@ -38,6 +38,7 @@ export interface MarketingPopup {
 export type CreatePopupParams = Omit<MarketingPopup, 'id' | 'views_count' | 'clicks_count' | 'conversions_count' | 'created_at' | 'updated_at' | 'discount_code'>;
 
 export function useMarketingPopups() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: popups = [], isLoading } = useQuery({

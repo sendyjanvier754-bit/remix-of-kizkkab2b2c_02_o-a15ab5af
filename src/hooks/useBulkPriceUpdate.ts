@@ -20,6 +20,7 @@ export interface BulkPriceItem {
 async function batchUpdate(
   items: Array<{ id: string; precio: number; isManual: boolean }>,
 ) {
+  const { t } = useTranslation();
   for (let i = 0; i < items.length; i += 50) {
     const chunk = items.slice(i, i + 50);
     const promises = chunk.map(u =>

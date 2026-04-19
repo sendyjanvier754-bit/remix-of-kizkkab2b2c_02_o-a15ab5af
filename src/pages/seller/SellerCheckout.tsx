@@ -66,6 +66,7 @@ type PaymentMethod = 'stripe' | 'moncash' | 'transfer';
 type DeliveryMethod = 'address' | 'pickup';
 
 const SellerCheckout = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { items: allItems, isLoading: cartLoading } = useB2BCartItems();

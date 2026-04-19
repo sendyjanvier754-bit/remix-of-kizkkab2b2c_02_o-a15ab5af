@@ -16,6 +16,7 @@ interface SellerStatusUploadProps {
 }
 
 export function SellerStatusUpload({ onUpload, hasActiveStatus }: SellerStatusUploadProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
