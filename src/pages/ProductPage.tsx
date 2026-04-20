@@ -1365,6 +1365,7 @@ const ProductPage = () => {
                 </div>
               }
 
+              <div id="section-desc" ref={descRef} className="scroll-mt-20">
               <Accordion type="single" collapsible defaultValue="descripcion" className="w-full mt-4">
                 <AccordionItem value="descripcion" className="border border-gray-200 rounded-lg overflow-hidden">
                   <AccordionTrigger className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between">
@@ -1391,6 +1392,7 @@ const ProductPage = () => {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+              </div>
               </>
             }
 
