@@ -1,0 +1,1 @@
+DELETE FROM public.content_translations WHERE entity_type = 'category';
