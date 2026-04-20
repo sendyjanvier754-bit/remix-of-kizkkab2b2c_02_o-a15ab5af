@@ -647,57 +647,56 @@ const ProductPage = () => {
     }
   };
 
-  // IntersectionObserver to update active tab on scroll
+  // Scroll-based active tab detection (more reliable than IntersectionObserver here)
   useEffect(() => {
     if (!product) return;
 
-    const setup = () => {
-      const mapping: {
-        node: HTMLElement | null;
-        id: 'desc' | 'reviews' | 'recs';
-      }[] = [
-        { node: descRef.current, id: 'desc' },
-        { node: reviewsRef.current, id: 'reviews' },
-        { node: recsRef.current, id: 'recs' },
+    const ACTIVATION_OFFSET = 140; // px below viewport top where a section is "active"
+
+    const computeActive = () => {
+      const sections: { id: 'desc' | 'reviews' | 'recs'; node: HTMLElement | null }[] = [
+        { id: 'desc', node: descRef.current },
+        { id: 'reviews', node: reviewsRef.current },
+        { id: 'recs', node: recsRef.current },
       ];
 
-      const targets = mapping.filter((m) => m.node);
-      if (targets.length === 0) return null;
+      const present = sections.filter((s) => s.node) as { id: 'desc' | 'reviews' | 'recs'; node: HTMLElement }[];
+      if (present.length === 0) return;
 
-      const observer = new IntersectionObserver(
-        (entries) => {
-          // Pick the entry that is most visible / closest to the top of the active band
-          const visible = entries.filter((e) => e.isIntersecting);
-          if (visible.length === 0) return;
-          // Choose the one with the highest intersectionRatio
-          const best = visible.reduce((a, b) =>
-            a.intersectionRatio >= b.intersectionRatio ? a : b
-          );
-          const found = targets.find((m) => m.node === best.target);
-          if (found) setActiveTab(found.id);
-        },
-        {
-          root: null,
-          rootMargin: '-30% 0px -50% 0px',
-          threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+      // Pick the LAST section whose top has crossed the activation line.
+      // Fallback to the first present section if none has crossed yet.
+      let current: 'desc' | 'reviews' | 'recs' = present[0].id;
+      for (const s of present) {
+        const top = s.node.getBoundingClientRect().top;
+        if (top - ACTIVATION_OFFSET <= 0) {
+          current = s.id;
         }
-      );
-
-      targets.forEach((m) => m.node && observer.observe(m.node));
-      return observer;
+      }
+      setActiveTab((prev) => (prev === current ? prev : current));
     };
 
-    // Try immediately, and again on next frame in case nodes mount async
-    let observer = setup();
-    const raf = requestAnimationFrame(() => {
-      if (!observer) observer = setup();
-    });
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        computeActive();
+        ticking = false;
+      });
+    };
+
+    // Initial compute (after layout settles)
+    const raf = requestAnimationFrame(computeActive);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
 
     return () => {
       cancelAnimationFrame(raf);
-      observer?.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
     };
   }, [product]);
+
 
 
   // Cart hooks
