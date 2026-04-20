@@ -357,7 +357,7 @@ const SellerDesktopHeader = ({
             </Link>
 
             {/* Search Bar */}
-            <div ref={searchRef} className="flex-1 mx-8 max-w-xs relative">
+            <div ref={searchRef} className="flex-1 mx-8 max-w-[200px] relative">
               <form onSubmit={handleSearch} className="relative w-full flex items-center">
                 <Input
                   type="text"
