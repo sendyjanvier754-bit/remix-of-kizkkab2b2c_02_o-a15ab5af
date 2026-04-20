@@ -295,20 +295,21 @@ export function useTranslatedList<T extends { id: string }>(
    * Falls back to original text if not yet translated.
    */
   const getTranslated = (item: T): Record<string, string> => {
-    if (isSourceLang) {
-      const fields = fieldExtractor(item);
-      const result: Record<string, string> = {};
-      for (const [k, v] of Object.entries(fields)) {
-        result[k] = v || "";
-      }
-      return result;
+    const fields = fieldExtractor(item);
+    const fallback: Record<string, string> = {};
+    for (const [k, v] of Object.entries(fields)) fallback[k] = v || "";
+
+    if (isSourceLang) return fallback;
+
+    const translated = query.data?.get(item.id);
+    if (!translated) return fallback;
+
+    // Merge: prefer translated, fallback to original per-field
+    const result: Record<string, string> = {};
+    for (const [k, v] of Object.entries(fallback)) {
+      result[k] = translated[k] || v;
     }
-    return query.data?.get(item.id) || (() => {
-      const fields = fieldExtractor(item);
-      const result: Record<string, string> = {};
-      for (const [k, v] of Object.entries(fields)) result[k] = v || "";
-      return result;
-    })();
+    return result;
   };
 
   return {
