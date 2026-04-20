@@ -164,6 +164,7 @@ function resolvePvp(
 // --- Hook ---
 
 export const useBulkPriceUpdate = (storeId: string | null) => {
+  const { t } = useTranslation();
   const [isUpdating, setIsUpdating] = useState(false);
 
   const applyPercentageAdjustment = useCallback(async (
