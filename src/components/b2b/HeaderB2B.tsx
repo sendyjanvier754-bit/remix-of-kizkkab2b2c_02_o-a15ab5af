@@ -303,7 +303,7 @@ const HeaderB2B = ({
             </Link>
 
             {/* Search input with history */}
-            <div ref={searchContainerRef} className="flex-1 relative max-w-[48%]">
+            <div ref={searchContainerRef} className="flex-1 relative max-w-xs">
               <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
                 {/* Voice search button */}
                 <button type="button" onClick={voiceSupported ? startVoiceSearch : undefined} disabled={!voiceSupported} className={cn("p-1 transition-colors", !voiceSupported && "opacity-50 cursor-not-allowed", isListening ? "text-red-500 animate-pulse" : "text-gray-500 hover:text-blue-600")}>
