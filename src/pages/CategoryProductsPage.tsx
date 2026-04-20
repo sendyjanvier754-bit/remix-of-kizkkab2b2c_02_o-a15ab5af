@@ -12,7 +12,7 @@ import { usePublicCategories } from "@/hooks/useCategories";
 import { useSellerProductsByCategory } from "@/hooks/useSellerProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProductCard from "@/components/landing/ProductCard";
-import { useTranslatedContent } from "@/hooks/useTranslatedContent";
+import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
 
 type AnyProduct = Record<string, any>;
 
@@ -98,6 +98,11 @@ const CategoryProductsPage = () => {
   const isLoading = isCategoryLoading || (isB2BUser ? isProductsLoading : isSellerLoading);
 
   const subcategories = allCategories.filter((c: any) => c.parent_id === categoryId);
+  const { getTranslated: getSubTranslated } = useTranslatedList(
+    'category',
+    subcategories,
+    (s: any) => ({ name: s.name })
+  );
 
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [priceMin, setPriceMin] = useState<number | undefined>(undefined);
@@ -271,7 +276,7 @@ const CategoryProductsPage = () => {
                   >
                     <option value="">Todas</option>
                     {subcategories.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                      <option key={s.id} value={s.id}>{getSubTranslated(s).name || s.name}</option>
                     ))}
                   </select>
                 )}

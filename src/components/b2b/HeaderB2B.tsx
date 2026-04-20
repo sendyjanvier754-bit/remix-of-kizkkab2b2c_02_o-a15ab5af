@@ -10,6 +10,7 @@ import { searchProductsByImage } from "@/services/api/imageSearch";
 import { toast } from "sonner";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { useBranding } from "@/hooks/useBranding";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 const SEARCH_HISTORY_KEY = 'b2b_search_history';
 const MAX_HISTORY_ITEMS = 8;
 
@@ -180,6 +181,13 @@ const HeaderB2B = ({
     });
   };
   const rootCategories = categories.filter(c => !c.parent_id);
+  const { getTranslated: getCatTranslated } = useTranslatedList(
+    'category',
+    rootCategories,
+    (c) => ({ name: c.name })
+  );
+  const catLabel = (c: typeof rootCategories[number]) =>
+    getCatTranslated(c).name || c.name;
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -351,7 +359,7 @@ const HeaderB2B = ({
               Todos
             </button>
             {rootCategories.map(cat => <button key={cat.id} onClick={() => handleCategoryClick(cat.id)} className={cn("whitespace-nowrap text-sm font-medium px-3 py-1 rounded-full transition-colors", selectedCategoryId === cat.id ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300")}>
-                {cat.name}
+                {catLabel(cat)}
               </button>)}
           </div>
         </header>
@@ -475,7 +483,7 @@ const HeaderB2B = ({
                 Todos los productos
               </button>
               {categoriesLoading ? <div className="px-4 py-2 text-sm text-gray-500">Cargando...</div> : rootCategories.map(cat => <button key={cat.id} onClick={() => handleCategoryClick(cat.id)} className={cn("px-4 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap", selectedCategoryId === cat.id ? "bg-blue-600 text-white" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100")}>
-                    {cat.name}
+                    {catLabel(cat)}
                   </button>)}
             </div>
           </div>
