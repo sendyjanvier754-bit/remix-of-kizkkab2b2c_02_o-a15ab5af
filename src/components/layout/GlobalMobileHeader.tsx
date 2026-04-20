@@ -88,6 +88,12 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { data: categories = [] } = usePublicCategories();
+  const rootCategoriesForTranslation = categories.filter(c => !c.parent_id);
+  const { getTranslated: getCatTranslated } = useTranslatedList(
+    'category',
+    rootCategoriesForTranslation,
+    (c) => ({ name: c.name })
+  );
   const { items: b2cItems } = useB2CCartItems();
   const { items: b2bItems } = useB2BCartItems();
   const { role, user } = useAuth();
@@ -191,7 +197,8 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     }
   }
 
-  const rootCategories = categories.filter(c => !c.parent_id);
+  const rootCategories = rootCategoriesForTranslation;
+  const catLabel = (c: typeof rootCategories[number]) => getCatTranslated(c).name || c.name;
 
   const isCategoriesPage = location.pathname === '/categorias';
   const categorySlug = location.pathname.startsWith('/categoria/') ? location.pathname.split('/categoria/')[1] : null;
@@ -512,7 +519,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
                   : "text-white/80 hover:bg-white/10"
               )}
             >
-              {cat.name}
+              {catLabel(cat)}
             </button>
           ))}
         </div>
