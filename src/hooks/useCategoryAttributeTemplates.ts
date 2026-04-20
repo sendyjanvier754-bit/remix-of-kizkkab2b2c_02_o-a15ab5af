@@ -126,6 +126,7 @@ export const useCreateCategoryTemplate = () => {
 
 // Update a template
 export const useUpdateCategoryTemplate = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 

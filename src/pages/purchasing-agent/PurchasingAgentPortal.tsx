@@ -934,6 +934,7 @@ function TrackingForm({
   shipmentId: string; 
   onSubmit: (data: any) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [tracking, setTracking] = useState('');
   const [carrier, setCarrier] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

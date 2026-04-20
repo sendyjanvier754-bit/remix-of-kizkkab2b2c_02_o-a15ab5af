@@ -178,6 +178,7 @@ export const useCreateReturnRequest = () => {
 };
 
 export const useUpdateReturnRequest = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
