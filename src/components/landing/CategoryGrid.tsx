@@ -1,9 +1,19 @@
 import CategoryCard from "./CategoryCard";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 const CategoryGrid = () => {
   const { data: categories = [], isLoading } = usePublicCategories();
+
+  // Filter only root categories (no parent) for main display
+  const rootCategories = categories.filter(cat => !cat.parent_id);
+
+  const { getTranslated } = useTranslatedList(
+    'category',
+    rootCategories,
+    (cat) => ({ name: cat.name })
+  );
 
   if (isLoading) {
     return (
@@ -44,13 +54,13 @@ const CategoryGrid = () => {
     );
   }
 
-  // Filter only root categories (no parent) for main display
-  const rootCategories = categories.filter(cat => !cat.parent_id);
-
   // Split categories into two rows for mobile scroll
   const half = Math.ceil(rootCategories.length / 2);
   const firstRow = rootCategories.slice(0, half);
   const secondRow = rootCategories.slice(half);
+
+  const labelOf = (cat: typeof rootCategories[number]) =>
+    getTranslated(cat).name || cat.name;
 
   return (
     <section className="w-full py-6 md:py-10 px-4 overflow-x-hidden">
@@ -61,22 +71,22 @@ const CategoryGrid = () => {
             {/* First row */}
             <div className="flex gap-4">
               {firstRow.map((cat) => (
-                <CategoryCard 
+                <CategoryCard
                   key={cat.id}
-                  label={cat.name} 
-                  image={cat.icon} 
-                  href={`/categoria/${cat.slug}`} 
+                  label={labelOf(cat)}
+                  image={cat.icon}
+                  href={`/categoria/${cat.slug}`}
                 />
               ))}
             </div>
             {/* Second row */}
             <div className="flex gap-4">
               {secondRow.map((cat) => (
-                <CategoryCard 
+                <CategoryCard
                   key={cat.id}
-                  label={cat.name} 
-                  image={cat.icon} 
-                  href={`/categoria/${cat.slug}`} 
+                  label={labelOf(cat)}
+                  image={cat.icon}
+                  href={`/categoria/${cat.slug}`}
                 />
               ))}
             </div>
@@ -89,10 +99,10 @@ const CategoryGrid = () => {
           <div className="grid grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-x-4 gap-y-6 justify-items-center">
             {rootCategories.map((cat) => (
               <div key={cat.id} className="w-full flex flex-col items-center">
-                <CategoryCard 
-                  label={cat.name} 
-                  image={cat.icon} 
-                  href={`/categoria/${cat.slug}`} 
+                <CategoryCard
+                  label={labelOf(cat)}
+                  image={cat.icon}
+                  href={`/categoria/${cat.slug}`}
                 />
               </div>
             ))}
