@@ -16,6 +16,7 @@ import { useViewMode } from "@/contexts/ViewModeContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 import { useBranding } from "@/hooks/useBranding";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // Web Speech API types
@@ -204,6 +205,17 @@ const Header = ({
 
   const getSubcategories = (parentId) =>
     categories.filter((c) => c.parent_id === parentId);
+
+  // Translate all category names + descriptions in one batch
+  const { getTranslated: getTranslatedCategory } = useTranslatedList(
+    'category',
+    categories,
+    (cat) => ({ name: cat.name, description: cat.description })
+  );
+  const tCatName = (cat: typeof categories[number]) =>
+    getTranslatedCategory(cat).name || cat.name;
+  const tCatDesc = (cat: typeof categories[number]) =>
+    getTranslatedCategory(cat).description || cat.description || '';
 
   const accountLink = role === UserRole.SELLER ? "/seller/cuenta" : 
                     role === UserRole.ADMIN ? "/admin/dashboard" : 
@@ -448,7 +460,7 @@ const Header = ({
                   selectedCategoryId === cat.id ? "text-white border-b border-white" : "text-gray-300 hover:text-white"
                 )}
               >
-                {cat.name}
+                {tCatName(cat)}
               </button>
             ))}
           </div>
@@ -739,28 +751,32 @@ const Header = ({
                             : "text-gray-700 hover:text-[#071d7f] hover:bg-gray-50 border-transparent hover:border-[#071d7f]"
                         )}
                       >
-                        {cat.name}
+                        {tCatName(cat)}
                       </button>
 
                   {/* Subcategories dropdown on hover */}
                   {subs.length > 0 && (
                     <div className="absolute left-0 top-full mt-2 hidden group-hover:flex p-6 bg-white border border-gray-100 shadow-lg rounded-lg z-40 max-w-screen-lg">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {subs.map((sub) => (
+                        {subs.map((sub) => {
+                          const subName = tCatName(sub);
+                          const subDesc = tCatDesc(sub);
+                          return (
                           <button key={sub.id} type="button" onClick={() => handleCategoryClick(sub)} className="flex flex-col items-center text-center w-36">
                             <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center mb-2 border border-border">
                               {sub.icon ? (
-                                <img src={sub.icon} alt={sub.name} className="w-full h-full object-cover" />
+                                <img src={sub.icon} alt={subName} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full bg-muted flex items-center justify-center">
-                                  <span className="text-xl text-muted-foreground">{sub.name.charAt(0).toUpperCase()}</span>
+                                  <span className="text-xl text-muted-foreground">{subName.charAt(0).toUpperCase()}</span>
                                 </div>
                               )}
                             </div>
-                            <div className="text-sm text-gray-700 font-medium">{sub.name}</div>
-                            {sub.description && <div className="text-xs text-gray-500 mt-1 line-clamp-2">{sub.description}</div>}
+                            <div className="text-sm text-gray-700 font-medium">{subName}</div>
+                            {subDesc && <div className="text-xs text-gray-500 mt-1 line-clamp-2">{subDesc}</div>}
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -821,27 +837,30 @@ const Header = ({
                 return (
                   <div key={cat.id} className="border-b border-gray-100">
                     <div className="flex items-center justify-between w-full">
-                      <button onClick={() => { setOpenMobileCategory(isOpen ? null : cat.id); }} className="w-full text-left py-3 px-2 text-gray-800 hover:bg-gray-50 font-medium">{cat.name}</button>
+                      <button onClick={() => { setOpenMobileCategory(isOpen ? null : cat.id); }} className="w-full text-left py-3 px-2 text-gray-800 hover:bg-gray-50 font-medium">{tCatName(cat)}</button>
                       <button onClick={() => { setIsMenuOpen(false); handleCategoryClick(cat); }} className="px-3 py-2 text-gray-600">{t('common.go')}</button>
                     </div>
 
                     {isOpen && subs.length > 0 && (
                       <div className="px-2 py-2 bg-white">
                         <div className="grid grid-cols-3 gap-2">
-                          {subs.map((sub) => (
+                          {subs.map((sub) => {
+                            const subName = tCatName(sub);
+                            return (
                             <button key={sub.id} type="button" onClick={() => { setIsMenuOpen(false); handleCategoryClick(sub); }} className="flex flex-col items-center text-center p-2">
                               <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center mb-2 border border-border">
                                 {sub.icon ? (
-                                  <img src={sub.icon} alt={sub.name} className="w-full h-full object-cover" />
+                                  <img src={sub.icon} alt={subName} className="w-full h-full object-cover" />
                                 ) : (
                                   <div className="w-full h-full bg-muted flex items-center justify-center">
-                                    <span className="text-xl text-muted-foreground">{sub.name.charAt(0).toUpperCase()}</span>
+                                    <span className="text-xl text-muted-foreground">{subName.charAt(0).toUpperCase()}</span>
                                   </div>
                                 )}
                               </div>
-                              <div className="text-xs text-gray-700">{sub.name}</div>
+                              <div className="text-xs text-gray-700">{subName}</div>
                             </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
