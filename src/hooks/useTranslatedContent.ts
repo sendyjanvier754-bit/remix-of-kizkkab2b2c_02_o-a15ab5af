@@ -165,32 +165,37 @@ export function useTranslatedList<T extends { id: string }>(
 
   const ids = items?.map((i) => i.id).sort().join(",") || "";
 
-  const query = useQuery({
-    queryKey: ["translations-batch", entityType, currentLang, ids],
+  // ── Step 1: fast DB-only query (returns immediately with whatever is cached) ──
+  const cacheQuery = useQuery({
+    queryKey: ["translations-cache", entityType, currentLang, ids],
     queryFn: async () => {
       if (!items?.length) return new Map<string, Record<string, string>>();
-
-      // Fetch all cached translations for these entities at once
       const { data: cached } = await (supabase as any)
         .from("content_translations")
-        .select("entity_id, field_name, translated_text, source_text_hash")
+        .select("entity_id, field_name, translated_text")
         .eq("entity_type", entityType)
         .eq("language", currentLang)
         .in("entity_id", items.map((i) => i.id));
 
-      const cachedMap = new Map<
-        string,
-        Map<string, { text: string; sourceTextHash: string | null }>
-      >();
+      const result = new Map<string, Record<string, string>>();
       for (const row of cached || []) {
-        if (!cachedMap.has(row.entity_id)) cachedMap.set(row.entity_id, new Map());
-        cachedMap.get(row.entity_id)!.set(row.field_name, {
-          text: row.translated_text,
-          sourceTextHash: row.source_text_hash,
-        });
+        if (!result.has(row.entity_id)) result.set(row.entity_id, {});
+        result.get(row.entity_id)![row.field_name] = row.translated_text;
       }
+      return result;
+    },
+    enabled: !isSourceLang && !!items?.length,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
 
-      // Find items missing translations
+  // ── Step 2: background fill — call edge function for missing items ──
+  useQuery({
+    queryKey: ["translations-fill", entityType, currentLang, ids],
+    queryFn: async () => {
+      if (!items?.length) return null;
+
+      const cacheData = cacheQuery.data;
       const toTranslate: Array<{
         entity_type: string;
         entity_id: string;
@@ -205,115 +210,72 @@ export function useTranslatedList<T extends { id: string }>(
         for (const [k, v] of Object.entries(fields)) {
           if (v) cleanFields[k] = v;
         }
+        if (Object.keys(cleanFields).length === 0) continue;
 
-        const itemCache = cachedMap.get(item.id);
-        const sourceHashMap = new Map<string, string>();
+        const itemCache = cacheData?.get(item.id) || {};
+        const missingFields: Record<string, string> = {};
         for (const [k, v] of Object.entries(cleanFields)) {
-          sourceHashMap.set(k, await hashText(v));
+          if (!itemCache[k]) missingFields[k] = v;
         }
-
-        const allCached = Object.keys(cleanFields).every((k) => {
-          const cachedEntry = itemCache?.get(k);
-          const sourceHash = sourceHashMap.get(k);
-          return !!cachedEntry && cachedEntry.sourceTextHash === sourceHash;
-        });
-
-        if (!allCached) {
-          const missingFields: Record<string, string> = {};
-          for (const [k, v] of Object.entries(cleanFields)) {
-            const cachedEntry = itemCache?.get(k);
-            const sourceHash = sourceHashMap.get(k);
-            if (!cachedEntry || cachedEntry.sourceTextHash !== sourceHash) {
-              missingFields[k] = v;
-            }
-          }
-          if (Object.keys(missingFields).length > 0) {
-            toTranslate.push({
-              entity_type: entityType,
-              entity_id: item.id,
-              fields: missingFields,
-              target_language: currentLang,
-              source_language: sourceLang,
-            });
-          }
+        if (Object.keys(missingFields).length > 0) {
+          toTranslate.push({
+            entity_type: entityType,
+            entity_id: item.id,
+            fields: missingFields,
+            target_language: currentLang,
+            source_language: sourceLang,
+          });
         }
       }
 
-      // Batch translate missing items (max 10 at a time to avoid timeouts)
-      if (toTranslate.length > 0) {
-        const batches = [];
-        for (let i = 0; i < toTranslate.length; i += 10) {
-          batches.push(toTranslate.slice(i, i + 10));
-        }
+      if (toTranslate.length === 0) return null;
 
-        for (const batch of batches) {
-          try {
-            const { data } = await supabase.functions.invoke("translate-content", {
-              body: { items: batch },
-            });
-
-            if (data?.translations) {
-              for (const [entityId, fields] of Object.entries(data.translations)) {
-                if (!cachedMap.has(entityId)) cachedMap.set(entityId, new Map());
-                for (const [field, text] of Object.entries(fields as Record<string, string>)) {
-                  cachedMap.get(entityId)!.set(field, {
-                    text,
-                    sourceTextHash: null,
-                  });
-                }
-              }
-            }
-          } catch (err) {
-            console.warn("Batch translation failed:", err);
-          }
+      // Translate in batches of 10
+      for (let i = 0; i < toTranslate.length; i += 10) {
+        const batch = toTranslate.slice(i, i + 10);
+        try {
+          await supabase.functions.invoke("translate-content", {
+            body: { items: batch },
+          });
+        } catch (err) {
+          console.warn("Batch translation failed:", err);
         }
       }
 
-      // Build final result map
-      const result = new Map<string, Record<string, string>>();
-      for (const item of items) {
-        const fields = fieldExtractor(item);
-        const translated: Record<string, string> = {};
-        const itemCache = cachedMap.get(item.id);
-
-        for (const [k, v] of Object.entries(fields)) {
-          translated[k] = itemCache?.get(k)?.text || v || "";
-        }
-        result.set(item.id, translated);
-      }
-
-      return result;
+      // Refetch DB cache to get the new translations
+      await cacheQuery.refetch();
+      return null;
     },
-    enabled: !isSourceLang && !!items?.length,
+    enabled: !isSourceLang && !!items?.length && !cacheQuery.isLoading,
     staleTime: 1000 * 60 * 60,
     gcTime: 1000 * 60 * 60 * 24,
-    retry: 1,
+    retry: 0,
   });
 
   /**
    * Get translated fields for a specific item.
-   * Falls back to original text if not yet translated.
+   * Falls back to original text per-field if not yet translated.
    */
   const getTranslated = (item: T): Record<string, string> => {
-    if (isSourceLang) {
-      const fields = fieldExtractor(item);
-      const result: Record<string, string> = {};
-      for (const [k, v] of Object.entries(fields)) {
-        result[k] = v || "";
-      }
-      return result;
+    const fields = fieldExtractor(item);
+    const fallback: Record<string, string> = {};
+    for (const [k, v] of Object.entries(fields)) fallback[k] = v || "";
+
+    if (isSourceLang) return fallback;
+
+    const translated = cacheQuery.data?.get(item.id);
+    if (!translated) return fallback;
+
+    const result: Record<string, string> = {};
+    for (const [k, v] of Object.entries(fallback)) {
+      result[k] = translated[k] || v;
     }
-    return query.data?.get(item.id) || (() => {
-      const fields = fieldExtractor(item);
-      const result: Record<string, string> = {};
-      for (const [k, v] of Object.entries(fields)) result[k] = v || "";
-      return result;
-    })();
+    return result;
   };
 
   return {
     getTranslated,
-    isTranslating: query.isLoading,
+    isTranslating: cacheQuery.isLoading,
     isSourceLang,
   };
 }
