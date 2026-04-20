@@ -20,6 +20,7 @@ import { PopupRenderer } from "./components/marketing/PopupRenderer";
 import GlobalMobileHeader from "./components/layout/GlobalMobileHeader";
 import { BrandingApplier } from "@/components/BrandingApplier";
 import { SellerUpgradeProvider } from "./components/seller/SellerUpgradeProvider";
+import ScrollToTop from "./components/ScrollToTop";
 
 // Suspense Wrapper for lazy components
 const LazyRoute = ({ children }: { children: ReactNode }) => (
@@ -668,6 +669,7 @@ const App = () => (
   <ErrorBoundary>
     <TooltipProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ScrollToTop />
         <AuthProvider>
           <ViewModeProvider>
             <SellerUpgradeProvider>
