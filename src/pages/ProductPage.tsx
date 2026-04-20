@@ -250,35 +250,58 @@ const ProductPage = () => {
   const dragStartX = useRef(0);
   const dragScrollLeft = useRef(0);
 
+  // Swipe threshold (px) to advance/retreat one image
+  const SWIPE_THRESHOLD = 50;
+  const dragDeltaX = useRef(0);
+  const touchDeltaX = useRef(0);
+
+  const goToImage = (direction: 'prev' | 'next') => {
+    setSelectedImage((current) => {
+      const total = images?.length || 0;
+      if (total <= 1) return current;
+      if (direction === 'next') return current === total - 1 ? 0 : current + 1;
+      return current === 0 ? total - 1 : current - 1;
+    });
+  };
+
   const handleGalleryMouseDown = (e: React.MouseEvent) => {
-    if (!galleryScrollRef.current) return;
     setIsDragging(true);
-    dragStartX.current = e.pageX - galleryScrollRef.current.offsetLeft;
-    dragScrollLeft.current = galleryScrollRef.current.scrollLeft;
+    dragStartX.current = e.pageX;
+    dragDeltaX.current = 0;
   };
   const handleGalleryMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !galleryScrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - galleryScrollRef.current.offsetLeft;
-    const walk = (x - dragStartX.current) * 1.5;
-    galleryScrollRef.current.scrollLeft = dragScrollLeft.current - walk;
+    if (!isDragging) return;
+    dragDeltaX.current = e.pageX - dragStartX.current;
   };
-  const handleGalleryMouseUp = () => setIsDragging(false);
+  const handleGalleryMouseUp = () => {
+    if (!isDragging) return;
+    const delta = dragDeltaX.current;
+    setIsDragging(false);
+    dragDeltaX.current = 0;
+    if (Math.abs(delta) >= SWIPE_THRESHOLD) {
+      goToImage(delta < 0 ? 'next' : 'prev');
+    }
+  };
 
-  // Touch events for mobile scroll
+  // Touch events for mobile swipe
   const handleGalleryTouchStart = (e: React.TouchEvent) => {
-    if (!galleryScrollRef.current) return;
     setIsTouchDragging(true);
-    touchStartX.current = e.touches[0].pageX - galleryScrollRef.current.offsetLeft;
-    touchScrollLeft.current = galleryScrollRef.current.scrollLeft;
+    touchStartX.current = e.touches[0].pageX;
+    touchDeltaX.current = 0;
   };
   const handleGalleryTouchMove = (e: React.TouchEvent) => {
-    if (!isTouchDragging || !galleryScrollRef.current) return;
-    const x = e.touches[0].pageX - galleryScrollRef.current.offsetLeft;
-    const walk = (x - touchStartX.current) * 1.5;
-    galleryScrollRef.current.scrollLeft = touchScrollLeft.current - walk;
+    if (!isTouchDragging) return;
+    touchDeltaX.current = e.touches[0].pageX - touchStartX.current;
   };
-  const handleGalleryTouchEnd = () => setIsTouchDragging(false);
+  const handleGalleryTouchEnd = () => {
+    if (!isTouchDragging) return;
+    const delta = touchDeltaX.current;
+    setIsTouchDragging(false);
+    touchDeltaX.current = 0;
+    if (Math.abs(delta) >= SWIPE_THRESHOLD) {
+      goToImage(delta < 0 ? 'next' : 'prev');
+    }
+  };
 
   const handleGalleryScroll = () => {
     if (!galleryScrollRef.current || isDragging) return;
