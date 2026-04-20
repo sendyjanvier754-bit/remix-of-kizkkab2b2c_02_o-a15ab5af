@@ -1075,7 +1075,7 @@ const ProductPage = () => {
               }
 
               {/* Navigation Arrows */}
-              {images.length > 1 && <>
+              {images.length > 1 && !isMobile && <>
                   <button onClick={(e) => {
                   e.stopPropagation();
                   const newIdx = selectedImage === 0 ? images.length - 1 : selectedImage - 1;
