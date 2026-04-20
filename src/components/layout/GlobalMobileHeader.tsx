@@ -14,6 +14,7 @@ import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useViewMode } from "@/contexts/ViewModeContext";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 interface SearchResult {
   id: string;
