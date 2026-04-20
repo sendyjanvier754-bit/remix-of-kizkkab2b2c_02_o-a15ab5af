@@ -753,30 +753,34 @@ const VariantSelector = ({
                       <Badge variant="outline" className="text-xs">Min: {matchingVariant.moq}</Badge>
                     )}
                   </div>
-                  {/* Quantity controls — below the name */}
-                  <QuantitySelector
-                    value={selections[matchingVariant.id] || 0}
-                    onChange={(newQty) => updateQuantity(matchingVariant.id, newQty, matchingVariant)}
-                    min={0}
-                    max={getEffectiveStock(matchingVariant)}
-                    disabled={getEffectiveStock(matchingVariant) === 0}
-                    size="md"
-                  />
+                  {/* Quantity controls + price on the same row */}
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <QuantitySelector
+                      value={selections[matchingVariant.id] || 0}
+                      onChange={(newQty) => updateQuantity(matchingVariant.id, newQty, matchingVariant)}
+                      min={0}
+                      max={getEffectiveStock(matchingVariant)}
+                      disabled={getEffectiveStock(matchingVariant) === 0}
+                      size="md"
+                    />
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-lg font-bold text-primary whitespace-nowrap">
+                        ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)).toFixed(2)}
+                      </span>
+                      {matchingVariant.precio_promocional && matchingVariant.precio_promocional < (isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)) && (
+                        <span className="text-sm text-muted-foreground line-through whitespace-nowrap">
+                          ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Price row + stock — below quantity selector */}
-            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-3 pl-0">
-              <span className="text-lg font-bold text-primary whitespace-nowrap">
-                ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)).toFixed(2)}
-              </span>
-              {matchingVariant.precio_promocional && matchingVariant.precio_promocional < (isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)) && (
-                <span className="text-sm text-muted-foreground line-through whitespace-nowrap">
-                  ${(isB2B ? (variantPrices[matchingVariant.id] || 0) : (b2cVariantPrices[matchingVariant.id] ?? basePrice)).toFixed(2)}
-                </span>
-              )}
-              <span className="text-xs text-muted-foreground whitespace-nowrap ml-auto">
+            {/* Stock info — below quantity/price row */}
+            <div className="flex justify-end mt-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {getEffectiveStock(matchingVariant)} disponibles
               </span>
             </div>
