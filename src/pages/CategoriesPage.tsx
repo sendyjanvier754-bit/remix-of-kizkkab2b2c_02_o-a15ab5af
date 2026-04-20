@@ -99,7 +99,7 @@ const CategoriesPage = () => {
                   )}
                   onClick={() => setSelectedSecondaryId(cat.id)}
                 >
-                  {cat.name}
+                  {tName(cat)}
                 </div>
               ))
             ) : (
@@ -114,7 +114,7 @@ const CategoriesPage = () => {
             {selectedSecondary && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-gray-900 text-sm">{selectedSecondary.name}</h3>
+                  <h3 className="font-bold text-gray-900 text-sm">{tName(selectedSecondary)}</h3>
                   <button
                     onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
                     className="text-xs text-gray-500 flex items-center hover:text-black"
@@ -139,7 +139,7 @@ const CategoriesPage = () => {
                           )}
                         </div>
                         <span className="text-[10px] text-center text-gray-600 leading-tight line-clamp-2 font-medium">
-                          {sub.name}
+                          {tName(sub)}
                         </span>
                       </div>
                     ))}
@@ -151,7 +151,7 @@ const CategoriesPage = () => {
                       onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
                       className="mt-4 text-xs text-blue-600 font-medium"
                     >
-                      Ver productos en {selectedSecondary.name}
+                      Ver productos en {tName(selectedSecondary)}
                     </button>
                   </div>
                 )}
@@ -165,7 +165,7 @@ const CategoriesPage = () => {
                   onClick={() => navigate(`/categoria/${selectedRoot.slug}`)}
                   className="mt-4 text-xs text-blue-600 font-medium"
                 >
-                  Ver productos en {selectedRoot.name}
+                  Ver productos en {tName(selectedRoot)}
                 </button>
               </div>
             )}
@@ -190,13 +190,13 @@ const CategoriesPage = () => {
             {selectedRoot && (
               <>
                 <ChevronRight className="w-4 h-4" />
-                <span>{selectedRoot.name}</span>
+                <span>{tName(selectedRoot)}</span>
               </>
             )}
             {selectedSecondary && (
               <>
                 <ChevronRight className="w-4 h-4" />
-                <span>{selectedSecondary.name}</span>
+                <span>{tName(selectedSecondary)}</span>
               </>
             )}
           </div>
@@ -217,7 +217,7 @@ const CategoriesPage = () => {
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   )}
                 >
-                  {cat.name}
+                  {tName(cat)}
                 </button>
               ))}
             </div>
@@ -243,7 +243,7 @@ const CategoriesPage = () => {
                           : "text-gray-600 hover:bg-gray-100"
                       )}
                     >
-                      {cat.name}
+                      {tName(cat)}
                     </button>
                   ))}
                 </div>
@@ -259,7 +259,7 @@ const CategoriesPage = () => {
               {selectedSecondary && (
                 <>
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">{selectedSecondary.name}</h2>
+                    <h2 className="text-xl font-bold text-gray-900">{tName(selectedSecondary)}</h2>
                     <button
                       onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
                       className="text-sm text-blue-600 flex items-center hover:underline"
@@ -284,7 +284,7 @@ const CategoriesPage = () => {
                             )}
                           </div>
                           <span className="text-sm text-center text-gray-700 leading-tight line-clamp-2 font-medium group-hover:text-black">
-                            {sub.name}
+                            {tName(sub)}
                           </span>
                         </div>
                       ))}
@@ -296,7 +296,7 @@ const CategoriesPage = () => {
                         onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
                         className="mt-4 text-sm text-blue-600 font-medium hover:underline"
                       >
-                        Ver productos en {selectedSecondary.name}
+                        Ver productos en {tName(selectedSecondary)}
                       </button>
                     </div>
                   )}
@@ -310,7 +310,7 @@ const CategoriesPage = () => {
                     onClick={() => navigate(`/categoria/${selectedRoot.slug}`)}
                     className="mt-4 text-sm text-blue-600 font-medium hover:underline"
                   >
-                    Ver productos en {selectedRoot.name}
+                    Ver productos en {tName(selectedRoot)}
                   </button>
                 </div>
               )}
