@@ -649,36 +649,56 @@ const ProductPage = () => {
 
   // IntersectionObserver to update active tab on scroll
   useEffect(() => {
-    const mapping: {
-      ref: React.RefObject<HTMLDivElement>;
-      id: 'desc' | 'reviews' | 'recs';
-    }[] = [{
-      ref: descRef,
-      id: 'desc'
-    }, {
-      ref: reviewsRef,
-      id: 'reviews'
-    }, {
-      ref: recsRef,
-      id: 'recs'
-    }];
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const found = mapping.find((m) => m.ref.current === entry.target);
+    if (!product) return;
+
+    const setup = () => {
+      const mapping: {
+        node: HTMLElement | null;
+        id: 'desc' | 'reviews' | 'recs';
+      }[] = [
+        { node: descRef.current, id: 'desc' },
+        { node: reviewsRef.current, id: 'reviews' },
+        { node: recsRef.current, id: 'recs' },
+      ];
+
+      const targets = mapping.filter((m) => m.node);
+      if (targets.length === 0) return null;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // Pick the entry that is most visible / closest to the top of the active band
+          const visible = entries.filter((e) => e.isIntersecting);
+          if (visible.length === 0) return;
+          // Choose the one with the highest intersectionRatio
+          const best = visible.reduce((a, b) =>
+            a.intersectionRatio >= b.intersectionRatio ? a : b
+          );
+          const found = targets.find((m) => m.node === best.target);
           if (found) setActiveTab(found.id);
+        },
+        {
+          root: null,
+          rootMargin: '-30% 0px -50% 0px',
+          threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
         }
-      });
-    }, {
-      root: null,
-      rootMargin: '-40% 0px -40% 0px',
-      threshold: 0
+      );
+
+      targets.forEach((m) => m.node && observer.observe(m.node));
+      return observer;
+    };
+
+    // Try immediately, and again on next frame in case nodes mount async
+    let observer = setup();
+    const raf = requestAnimationFrame(() => {
+      if (!observer) observer = setup();
     });
-    mapping.forEach((m) => {
-      if (m.ref.current) observer.observe(m.ref.current);
-    });
-    return () => observer.disconnect();
-  }, [descRef, reviewsRef, recsRef]);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+    };
+  }, [product]);
+
 
   // Cart hooks
   const {
