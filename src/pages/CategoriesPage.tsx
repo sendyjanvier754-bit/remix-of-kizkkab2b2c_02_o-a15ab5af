@@ -7,12 +7,20 @@ import Footer from "@/components/layout/Footer";
 import { ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 const CategoriesPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories = [], isLoading } = usePublicCategories();
   const isMobile = useIsMobile();
+  const { getTranslated } = useTranslatedList(
+    'category',
+    categories,
+    (cat) => ({ name: cat.name })
+  );
+  const tName = (cat: Category | undefined | null) =>
+    cat ? (getTranslated(cat).name || cat.name) : '';
   
   // Read selected root from URL params
   const selectedRootId = searchParams.get('cat');
