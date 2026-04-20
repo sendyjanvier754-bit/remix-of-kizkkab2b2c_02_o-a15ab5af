@@ -1337,7 +1337,7 @@ const ProductPage = () => {
 
             {/* Description */}
             {isMobile ?
-            <div className="mt-10 scroll-mt-20">
+            <div id="section-desc" ref={descRef} className="mt-10 scroll-mt-20">
                 <Button
                 onClick={() => setIsDescriptionDrawerOpen(true)}
                 variant="outline"
