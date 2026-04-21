@@ -480,17 +480,17 @@ const LoginPage = () => {
                         <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                           <p className="text-xs text-green-700 font-medium flex items-center gap-1.5">
                             <Store className="h-3.5 w-3.5" />
-                            Registro de vendedor
+                            {t('loginPage.sellerRegistration')}
                           </p>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="seller-store-name">Nombre de tu tienda *</Label>
+                          <Label htmlFor="seller-store-name">{t('loginPage.storeName')} *</Label>
                           <div className="relative">
                             <Store className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               id="seller-store-name"
                               type="text"
-                              placeholder="Ej: Mi Boutique"
+                              placeholder={t('loginPage.storeNamePlaceholder')}
                               className="pl-10"
                               value={sellerStoreName}
                               onChange={(e) => setSellerStoreName(e.target.value)}
