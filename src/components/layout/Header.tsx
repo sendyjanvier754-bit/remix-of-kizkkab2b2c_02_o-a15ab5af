@@ -569,7 +569,7 @@ const Header = ({
           </Link>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 ml-0 mr-4 max-w-[340px]">
+          <div className="hidden md:flex flex-1 -ml-2 mr-4 max-w-[340px]">
             <div className="relative w-full flex items-center">
               <Input
                 type="text"
