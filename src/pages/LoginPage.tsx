@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound, ChevronRight, ArrowLeft, Shield, Info } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound, ChevronRight, ArrowLeft, Shield, Info, Warehouse } from "lucide-react";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { useBranding } from "@/hooks/useBranding";
@@ -38,9 +38,11 @@ const LoginPage = () => {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [accountType, setAccountType] = useState<'buyer' | 'seller' | null>(null);
+  const [accountType, setAccountType] = useState<'buyer' | 'seller' | 'grossiste' | null>(null);
   const [sellerStoreName, setSellerStoreName] = useState("");
   const [sellerStoreDescription, setSellerStoreDescription] = useState("");
+  const [grossisteBusinessName, setGrossisteBusinessName] = useState("");
+  const [grossisteDescription, setGrossisteDescription] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loginTermsAccepted, setLoginTermsAccepted] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
@@ -204,15 +206,29 @@ const LoginPage = () => {
             sessionStorage.setItem('pending_seller_store_description', sellerStoreDescription.trim());
           }
         }
-        setSuccess(accountType === 'seller' 
-          ? '¡Cuenta creada! Revisa tu email para confirmar y tu tienda se activará automáticamente al iniciar sesión.'
-          : t('loginPage.accountCreated'));
+        // If grossiste registration, store upgrade info for after login
+        if (accountType === 'grossiste' && grossisteBusinessName.trim()) {
+          sessionStorage.setItem('pending_grossiste_upgrade', 'true');
+          sessionStorage.setItem('pending_grossiste_business_name', grossisteBusinessName.trim());
+          if (grossisteDescription.trim()) {
+            sessionStorage.setItem('pending_grossiste_description', grossisteDescription.trim());
+          }
+        }
+        setSuccess(
+          accountType === 'seller'
+            ? '¡Cuenta creada! Revisa tu email para confirmar y tu tienda se activará automáticamente al iniciar sesión.'
+            : accountType === 'grossiste'
+            ? '¡Cuenta creada! Revisa tu email para confirmar. Al iniciar sesión activaremos tu cuenta de mayorista.'
+            : t('loginPage.accountCreated')
+        );
         setRegisterName("");
         setRegisterEmail("");
         setRegisterPassword("");
         setConfirmPassword("");
         setSellerStoreName("");
         setSellerStoreDescription("");
+        setGrossisteBusinessName("");
+        setGrossisteDescription("");
         setTermsAccepted(false);
       }
     } catch (err) {
@@ -423,14 +439,34 @@ const LoginPage = () => {
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition" />
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setAccountType('grossiste')}
+                        className="w-full flex items-center gap-4 p-4 border-2 border-border rounded-xl hover:border-emerald-500 hover:bg-emerald-50 transition group text-left"
+                      >
+                        <div className="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition">
+                          <Warehouse className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">Cuenta de mayorista (Grossiste)</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Publica al catálogo B2B y vende al por mayor</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-emerald-500 transition" />
+                      </button>
                     </div>
                   )}
 
-                  {(accountType === 'buyer' || accountType === 'seller') && (
+                  {(accountType === 'buyer' || accountType === 'seller' || accountType === 'grossiste') && (
                     <div>
                       <button
                         type="button"
-                        onClick={() => { setAccountType(null); setSellerStoreName(''); setSellerStoreDescription(''); }}
+                        onClick={() => {
+                          setAccountType(null);
+                          setSellerStoreName('');
+                          setSellerStoreDescription('');
+                          setGrossisteBusinessName('');
+                          setGrossisteDescription('');
+                        }}
                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition"
                       >
                         <ArrowLeft className="h-4 w-4" />
@@ -462,6 +498,45 @@ const LoginPage = () => {
                               required
                             />
                           </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Business name + description for grossiste registration */}
+                    {accountType === 'grossiste' && (
+                      <>
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                          <p className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
+                            <Warehouse className="h-3.5 w-3.5" />
+                            Registro de mayorista (Grossiste)
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="grossiste-business-name">Nombre comercial *</Label>
+                          <div className="relative">
+                            <Warehouse className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="grossiste-business-name"
+                              type="text"
+                              placeholder="Ej: Distribuidora Caribe"
+                              className="pl-10"
+                              value={grossisteBusinessName}
+                              onChange={(e) => setGrossisteBusinessName(e.target.value)}
+                              maxLength={120}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="grossiste-description">Descripción del negocio (opcional)</Label>
+                          <Input
+                            id="grossiste-description"
+                            type="text"
+                            placeholder="Categorías, mercados, etc."
+                            value={grossisteDescription}
+                            onChange={(e) => setGrossisteDescription(e.target.value)}
+                            maxLength={400}
+                          />
                         </div>
                       </>
                     )}
@@ -565,8 +640,23 @@ const LoginPage = () => {
                       </label>
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading || !termsAccepted || (accountType === 'seller' && !sellerStoreName.trim())}>
-                      {isLoading ? t('loginPage.creatingAccount') : (accountType === 'seller' ? 'Crear cuenta y tienda' : t('loginPage.createAccountBtn'))}
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={
+                        isLoading ||
+                        !termsAccepted ||
+                        (accountType === 'seller' && !sellerStoreName.trim()) ||
+                        (accountType === 'grossiste' && !grossisteBusinessName.trim())
+                      }
+                    >
+                      {isLoading
+                        ? t('loginPage.creatingAccount')
+                        : accountType === 'seller'
+                        ? 'Crear cuenta y tienda'
+                        : accountType === 'grossiste'
+                        ? 'Crear cuenta mayorista'
+                        : t('loginPage.createAccountBtn')}
                     </Button>
                   </form>
                     </div>
@@ -575,7 +665,7 @@ const LoginPage = () => {
               </Tabs>
 
               <div className="mt-6 pt-6 border-t space-y-3">
-                {accountType !== 'seller' && (
+                {accountType !== 'seller' && accountType !== 'grossiste' && (
                   <>
                     <p className="text-sm text-center text-muted-foreground mb-4">
                       {t('loginPage.wantToSell', { name: getValue('platform_name') })}

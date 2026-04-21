@@ -9525,6 +9525,10 @@ export type Database = {
         Args: { p_po_id: string }
         Returns: undefined
       }
+      upgrade_to_grossiste: {
+        Args: { p_business_name: string; p_description?: string }
+        Returns: Json
+      }
       upgrade_to_seller: {
         Args: { p_store_description?: string; p_store_name: string }
         Returns: Json
