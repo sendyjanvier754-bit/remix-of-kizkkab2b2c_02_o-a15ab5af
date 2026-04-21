@@ -54,10 +54,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return UserRole.USER;
       }
 
-      // Priority: admin > seller > user
+      // Priority: admin > purchasing_agent > grossiste > seller > sales_agent > user
       const roles = data.map(r => r.role as string);
       if (roles.includes('admin')) return UserRole.ADMIN;
       if (roles.includes('purchasing_agent')) return UserRole.PURCHASING_AGENT;
+      if (roles.includes('grossiste')) return UserRole.GROSSISTE;
       if (roles.includes('seller')) return UserRole.SELLER;
       if (roles.includes('sales_agent')) return UserRole.SALES_AGENT;
       return UserRole.USER;
@@ -235,6 +236,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   navigate('/seller/adquisicion-lotes', { replace: true });
                 } else if (userRole === UserRole.ADMIN) {
                   navigate('/admin/dashboard', { replace: true });
+                } else if (userRole === UserRole.GROSSISTE) {
+                  navigate('/grossiste/dashboard', { replace: true });
                 } else {
                   navigate('/', { replace: true });
                 }
