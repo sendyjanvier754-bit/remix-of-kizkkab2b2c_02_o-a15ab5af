@@ -435,7 +435,7 @@ const LoginPage = () => {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-foreground">{t('loginPage.sellerAccount')}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Registra tu cuenta y tu tienda en un solo paso</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t('loginPage.sellerAccountDesc')}</p>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition" />
                       </button>
@@ -448,8 +448,8 @@ const LoginPage = () => {
                           <Warehouse className="h-6 w-6 text-emerald-600" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-foreground">Cuenta de mayorista (Grossiste)</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Publica al catálogo B2B y vende al por mayor</p>
+                          <p className="font-semibold text-foreground">{t('loginPage.grossisteAccount')}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t('loginPage.grossisteAccountDesc')}</p>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-emerald-500 transition" />
                       </button>
