@@ -502,6 +502,45 @@ const LoginPage = () => {
                       </>
                     )}
 
+                    {/* Business name + description for grossiste registration */}
+                    {accountType === 'grossiste' && (
+                      <>
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                          <p className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
+                            <Warehouse className="h-3.5 w-3.5" />
+                            Registro de mayorista (Grossiste)
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="grossiste-business-name">Nombre comercial *</Label>
+                          <div className="relative">
+                            <Warehouse className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="grossiste-business-name"
+                              type="text"
+                              placeholder="Ej: Distribuidora Caribe"
+                              className="pl-10"
+                              value={grossisteBusinessName}
+                              onChange={(e) => setGrossisteBusinessName(e.target.value)}
+                              maxLength={120}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="grossiste-description">Descripción del negocio (opcional)</Label>
+                          <Input
+                            id="grossiste-description"
+                            type="text"
+                            placeholder="Categorías, mercados, etc."
+                            value={grossisteDescription}
+                            onChange={(e) => setGrossisteDescription(e.target.value)}
+                            maxLength={400}
+                          />
+                        </div>
+                      </>
+                    )}
+
                     <div className="space-y-2">
                       <Label htmlFor="register-name">{t('loginPage.fullName')}</Label>
                       <div className="relative">
@@ -601,8 +640,23 @@ const LoginPage = () => {
                       </label>
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading || !termsAccepted || (accountType === 'seller' && !sellerStoreName.trim())}>
-                      {isLoading ? t('loginPage.creatingAccount') : (accountType === 'seller' ? 'Crear cuenta y tienda' : t('loginPage.createAccountBtn'))}
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={
+                        isLoading ||
+                        !termsAccepted ||
+                        (accountType === 'seller' && !sellerStoreName.trim()) ||
+                        (accountType === 'grossiste' && !grossisteBusinessName.trim())
+                      }
+                    >
+                      {isLoading
+                        ? t('loginPage.creatingAccount')
+                        : accountType === 'seller'
+                        ? 'Crear cuenta y tienda'
+                        : accountType === 'grossiste'
+                        ? 'Crear cuenta mayorista'
+                        : t('loginPage.createAccountBtn')}
                     </Button>
                   </form>
                     </div>
