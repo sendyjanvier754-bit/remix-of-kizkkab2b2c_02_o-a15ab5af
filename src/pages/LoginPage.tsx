@@ -439,14 +439,34 @@ const LoginPage = () => {
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition" />
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setAccountType('grossiste')}
+                        className="w-full flex items-center gap-4 p-4 border-2 border-border rounded-xl hover:border-emerald-500 hover:bg-emerald-50 transition group text-left"
+                      >
+                        <div className="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition">
+                          <Warehouse className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">Cuenta de mayorista (Grossiste)</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Publica al catálogo B2B y vende al por mayor</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-emerald-500 transition" />
+                      </button>
                     </div>
                   )}
 
-                  {(accountType === 'buyer' || accountType === 'seller') && (
+                  {(accountType === 'buyer' || accountType === 'seller' || accountType === 'grossiste') && (
                     <div>
                       <button
                         type="button"
-                        onClick={() => { setAccountType(null); setSellerStoreName(''); setSellerStoreDescription(''); }}
+                        onClick={() => {
+                          setAccountType(null);
+                          setSellerStoreName('');
+                          setSellerStoreDescription('');
+                          setGrossisteBusinessName('');
+                          setGrossisteDescription('');
+                        }}
                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition"
                       >
                         <ArrowLeft className="h-4 w-4" />
