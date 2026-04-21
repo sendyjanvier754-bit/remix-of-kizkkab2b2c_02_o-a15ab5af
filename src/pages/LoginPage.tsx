@@ -665,7 +665,7 @@ const LoginPage = () => {
               </Tabs>
 
               <div className="mt-6 pt-6 border-t space-y-3">
-                {accountType !== 'seller' && (
+                {accountType !== 'seller' && accountType !== 'grossiste' && (
                   <>
                     <p className="text-sm text-center text-muted-foreground mb-4">
                       {t('loginPage.wantToSell', { name: getValue('platform_name') })}
