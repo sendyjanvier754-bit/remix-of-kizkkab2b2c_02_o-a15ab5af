@@ -621,20 +621,20 @@ const LoginPage = () => {
                         className="mt-0.5 shrink-0"
                       />
                       <label htmlFor="terms-accepted" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
-                        He leído y acepto los{' '}
+                        {t('loginPage.termsAcceptText')}{' '}
                         <button
                           type="button"
                           onClick={() => setShowLegal(true)}
                           className="text-primary underline hover:no-underline font-medium"
                         >
-                          Términos y Condiciones
+                          {t('loginPage.termsLink')}
                         </button>
                         ,{' '}
                         <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
-                          Política de Privacidad
-                        </a>{' '}y{' '}
+                          {t('loginPage.privacyLink')}
+                        </a>{' '}&{' '}
                         <a href="/devoluciones" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
-                          Política de Devoluciones
+                          {t('loginPage.returnsLink')}
                         </a>
                         .
                       </label>
