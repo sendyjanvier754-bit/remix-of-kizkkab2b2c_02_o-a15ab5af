@@ -215,6 +215,13 @@ export default function AdminAccountsPage() {
                   <span>La tienda del usuario será desactivada al quitar el rol de vendedor.</span>
                 </div>
               )}
+
+              {pendingChange.newRole === 'grossiste' && pendingChange.currentRole !== 'grossiste' && (
+                <div className="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm">
+                  <AlertTriangle className="w-4 h-4 text-emerald-700 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span>Se creará automáticamente un perfil de mayorista. El usuario tendrá acceso al panel /grossiste para gestionar productos B2B.</span>
+                </div>
+              )}
             </div>
           )}
 

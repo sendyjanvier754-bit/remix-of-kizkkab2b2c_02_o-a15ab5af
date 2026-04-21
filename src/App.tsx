@@ -111,9 +111,19 @@ const AdminEmailConfigPage = lazy(() => import("./pages/admin/AdminEmailConfigPa
 const AdminEmailTemplatesPage = lazy(() => import("./pages/admin/AdminEmailTemplatesPage"));
 const AdminAffiliatesPage = lazy(() => import("./pages/admin/AdminAffiliatesPage"));
 const AdminAccountsPage = lazy(() => import("./pages/admin/AdminAccountsPage"));
+const AdminGrossistesPage = lazy(() => import("./pages/admin/AdminGrossistesPage"));
 const AffiliatesDashboardPage = lazy(() => import("./pages/AffiliatesDashboardPage"));
 const PurchasingAgentDashboard = lazy(() => import("./pages/purchasing-agent/PurchasingAgentDashboard"));
 const PurchasingAgentLogin = lazy(() => import("./pages/purchasing-agent/PurchasingAgentLogin"));
+
+// Lazy loaded - Grossiste Pages
+const GrossisteDashboard = lazy(() => import("./pages/grossiste/GrossisteDashboard"));
+const GrossisteProductsPage = lazy(() => import("./pages/grossiste/GrossisteProductsPage"));
+const GrossisteImportPage = lazy(() => import("./pages/grossiste/GrossisteImportPage"));
+const GrossisteOrdersPage = lazy(() => import("./pages/grossiste/GrossisteOrdersPage"));
+const GrossisteSettlementsPage = lazy(() => import("./pages/grossiste/GrossisteSettlementsPage"));
+const GrossisteB2CStorefrontPage = lazy(() => import("./pages/grossiste/GrossisteB2CStorefrontPage"));
+const GrossisteProfilePage = lazy(() => import("./pages/grossiste/GrossisteProfilePage"));
 
 // Lazy loaded - Seller Pages
 const SellerAcquisicionLotes = lazy(() => import("./pages/seller/SellerAcquisicionLotes"));
@@ -656,6 +666,18 @@ const AppContent = () => {
               } 
             />
             
+            {/* ========== GROSSISTE (MAYORISTA) ROUTES ========== */}
+            <Route path="/grossiste/dashboard" element={<ProtectedRoute requiredRoles={[UserRole.GROSSISTE]}><LazyRoute><GrossisteDashboard /></LazyRoute></ProtectedRoute>} />
+            <Route path="/grossiste/productos" element={<ProtectedRoute requiredRoles={[UserRole.GROSSISTE]}><LazyRoute><GrossisteProductsPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/grossiste/importar" element={<ProtectedRoute requiredRoles={[UserRole.GROSSISTE]}><LazyRoute><GrossisteImportPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/grossiste/pedidos" element={<ProtectedRoute requiredRoles={[UserRole.GROSSISTE]}><LazyRoute><GrossisteOrdersPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/grossiste/liquidaciones" element={<ProtectedRoute requiredRoles={[UserRole.GROSSISTE]}><LazyRoute><GrossisteSettlementsPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/grossiste/tienda-b2c" element={<ProtectedRoute requiredRoles={[UserRole.GROSSISTE]}><LazyRoute><GrossisteB2CStorefrontPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/grossiste/perfil" element={<ProtectedRoute requiredRoles={[UserRole.GROSSISTE]}><LazyRoute><GrossisteProfilePage /></LazyRoute></ProtectedRoute>} />
+
+            {/* Admin: gestión de mayoristas */}
+            <Route path="/admin/grossistes" element={<ProtectedRoute requiredRoles={[UserRole.ADMIN]}><LazyRoute><AdminGrossistesPage /></LazyRoute></ProtectedRoute>} />
+
             {/* ========== 404 CATCH-ALL ========== */}
             <Route path="*" element={<NotFound />} />
           </Routes>
