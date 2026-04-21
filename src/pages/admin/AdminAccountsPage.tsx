@@ -14,6 +14,7 @@ import { format } from "date-fns";
 const ROLES = [
   { value: 'user', label: 'Usuario', color: 'bg-muted text-muted-foreground' },
   { value: 'seller', label: 'Vendedor', color: 'bg-primary/10 text-primary' },
+  { value: 'grossiste', label: 'Mayorista', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
   { value: 'admin', label: 'Admin', color: 'bg-destructive/10 text-destructive' },
   { value: 'sales_agent', label: 'Agente Ventas', color: 'bg-accent/80 text-accent-foreground' },
   { value: 'purchasing_agent', label: 'Agente Compras', color: 'bg-secondary text-secondary-foreground' },
@@ -212,6 +213,13 @@ export default function AdminAccountsPage() {
                 <div className="flex items-start gap-2 p-3 bg-destructive/5 border border-destructive/20 rounded-lg text-sm">
                   <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
                   <span>La tienda del usuario será desactivada al quitar el rol de vendedor.</span>
+                </div>
+              )}
+
+              {pendingChange.newRole === 'grossiste' && pendingChange.currentRole !== 'grossiste' && (
+                <div className="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm">
+                  <AlertTriangle className="w-4 h-4 text-emerald-700 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span>Se creará automáticamente un perfil de mayorista. El usuario tendrá acceso al panel /grossiste para gestionar productos B2B.</span>
                 </div>
               )}
             </div>

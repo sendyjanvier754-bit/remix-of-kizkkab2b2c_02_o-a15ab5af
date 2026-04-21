@@ -2404,6 +2404,217 @@ export type Database = {
           },
         ]
       }
+      grossiste_earnings: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          gross_amount: number
+          grossiste_user_id: string
+          id: string
+          metadata: Json | null
+          net_amount: number
+          order_id: string | null
+          order_item_id: string | null
+          product_id: string | null
+          settlement_id: string | null
+          status: string
+        }
+        Insert: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          gross_amount?: number
+          grossiste_user_id: string
+          id?: string
+          metadata?: Json | null
+          net_amount?: number
+          order_id?: string | null
+          order_item_id?: string | null
+          product_id?: string | null
+          settlement_id?: string | null
+          status?: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          gross_amount?: number
+          grossiste_user_id?: string
+          id?: string
+          metadata?: Json | null
+          net_amount?: number
+          order_id?: string | null
+          order_item_id?: string | null
+          product_id?: string | null
+          settlement_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grossiste_earnings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grossiste_earnings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_con_precio_b2b"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grossiste_earnings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_precio_base"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grossiste_earnings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grossiste_profiles: {
+        Row: {
+          address: string | null
+          b2c_store_id: string | null
+          banner_url: string | null
+          business_name: string | null
+          city: string | null
+          commission_rate: number
+          country: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          enable_b2c_storefront: boolean
+          legal_name: string | null
+          logo_url: string | null
+          metadata: Json | null
+          phone: string | null
+          tax_id: string | null
+          updated_at: string
+          user_id: string
+          verification_notes: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          address?: string | null
+          b2c_store_id?: string | null
+          banner_url?: string | null
+          business_name?: string | null
+          city?: string | null
+          commission_rate?: number
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          enable_b2c_storefront?: boolean
+          legal_name?: string | null
+          logo_url?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id: string
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          address?: string | null
+          b2c_store_id?: string | null
+          banner_url?: string | null
+          business_name?: string | null
+          city?: string | null
+          commission_rate?: number
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          enable_b2c_storefront?: boolean
+          legal_name?: string | null
+          logo_url?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grossiste_profiles_b2c_store_id_fkey"
+            columns: ["b2c_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grossiste_settlements: {
+        Row: {
+          commission_amount: number
+          created_at: string
+          gross_sales: number
+          grossiste_user_id: string
+          id: string
+          net_payable: number
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          period_end: string
+          period_start: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          commission_amount?: number
+          created_at?: string
+          gross_sales?: number
+          grossiste_user_id: string
+          id?: string
+          net_payable?: number
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string
+          gross_sales?: number
+          grossiste_user_id?: string
+          id?: string
+          net_payable?: number
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_movements: {
         Row: {
           change_amount: number
@@ -5326,6 +5537,8 @@ export type Database = {
       }
       products: {
         Row: {
+          approval_notes: string | null
+          approval_status: string
           categoria_id: string | null
           costo_base_excel: number | null
           created_at: string
@@ -5348,6 +5561,8 @@ export type Database = {
           origin_country: string | null
           origin_country_id: string | null
           origin_country_name: string | null
+          owner_role: Database["public"]["Enums"]["app_role"] | null
+          owner_user_id: string | null
           parent_product_id: string | null
           peso_g: number | null
           peso_kg: number | null
@@ -5359,6 +5574,8 @@ export type Database = {
           promo_starts_at: string | null
           proveedor_id: string | null
           rating: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           reviews_count: number | null
           shipping_mode: string | null
           sku_interno: string | null
@@ -5371,6 +5588,8 @@ export type Database = {
           width_cm: number | null
         }
         Insert: {
+          approval_notes?: string | null
+          approval_status?: string
           categoria_id?: string | null
           costo_base_excel?: number | null
           created_at?: string
@@ -5393,6 +5612,8 @@ export type Database = {
           origin_country?: string | null
           origin_country_id?: string | null
           origin_country_name?: string | null
+          owner_role?: Database["public"]["Enums"]["app_role"] | null
+          owner_user_id?: string | null
           parent_product_id?: string | null
           peso_g?: number | null
           peso_kg?: number | null
@@ -5404,6 +5625,8 @@ export type Database = {
           promo_starts_at?: string | null
           proveedor_id?: string | null
           rating?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           reviews_count?: number | null
           shipping_mode?: string | null
           sku_interno?: string | null
@@ -5416,6 +5639,8 @@ export type Database = {
           width_cm?: number | null
         }
         Update: {
+          approval_notes?: string | null
+          approval_status?: string
           categoria_id?: string | null
           costo_base_excel?: number | null
           created_at?: string
@@ -5438,6 +5663,8 @@ export type Database = {
           origin_country?: string | null
           origin_country_id?: string | null
           origin_country_name?: string | null
+          owner_role?: Database["public"]["Enums"]["app_role"] | null
+          owner_user_id?: string | null
           parent_product_id?: string | null
           peso_g?: number | null
           peso_kg?: number | null
@@ -5449,6 +5676,8 @@ export type Database = {
           promo_starts_at?: string | null
           proveedor_id?: string | null
           rating?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           reviews_count?: number | null
           shipping_mode?: string | null
           sku_interno?: string | null
@@ -8549,6 +8778,7 @@ export type Database = {
       v_productos_con_precio_b2b: {
         Row: {
           applied_margin_percent: number | null
+          approval_status: string | null
           categoria_id: string | null
           costo_base: number | null
           created_at: string | null
@@ -8569,6 +8799,11 @@ export type Database = {
           moq: number | null
           nombre: string | null
           origin_country_id: string | null
+          owner_business_name: string | null
+          owner_logo_url: string | null
+          owner_role: Database["public"]["Enums"]["app_role"] | null
+          owner_user_id: string | null
+          owner_verification_status: string | null
           peso_kg: number | null
           platform_fee: number | null
           precio_b2b: number | null
@@ -8587,88 +8822,6 @@ export type Database = {
           url_origen: string | null
           weight_kg: number | null
           width_cm: number | null
-        }
-        Insert: {
-          applied_margin_percent?: never
-          categoria_id?: string | null
-          costo_base?: number | null
-          created_at?: string | null
-          currency_code?: string | null
-          descripcion_corta?: string | null
-          descripcion_larga?: string | null
-          dimensiones_cm?: string | null
-          galeria_imagenes?: string[] | null
-          height_cm?: number | null
-          id?: string | null
-          imagen_principal?: string | null
-          is_active?: boolean | null
-          is_oversize?: boolean | null
-          is_parent?: boolean | null
-          last_calculated_at?: string | null
-          length_cm?: number | null
-          margin_value?: never
-          moq?: number | null
-          nombre?: string | null
-          origin_country_id?: string | null
-          peso_kg?: never
-          platform_fee?: never
-          precio_b2b?: never
-          precio_mayorista_base?: number | null
-          precio_promocional?: number | null
-          precio_sugerido_venta?: number | null
-          promo_active?: boolean | null
-          promo_ends_at?: string | null
-          promo_starts_at?: string | null
-          proveedor_id?: string | null
-          shipping_mode?: string | null
-          sku_interno?: string | null
-          stock_fisico?: number | null
-          stock_status?: Database["public"]["Enums"]["stock_status"] | null
-          updated_at?: string | null
-          url_origen?: string | null
-          weight_kg?: never
-          width_cm?: number | null
-        }
-        Update: {
-          applied_margin_percent?: never
-          categoria_id?: string | null
-          costo_base?: number | null
-          created_at?: string | null
-          currency_code?: string | null
-          descripcion_corta?: string | null
-          descripcion_larga?: string | null
-          dimensiones_cm?: string | null
-          galeria_imagenes?: string[] | null
-          height_cm?: number | null
-          id?: string | null
-          imagen_principal?: string | null
-          is_active?: boolean | null
-          is_oversize?: boolean | null
-          is_parent?: boolean | null
-          last_calculated_at?: string | null
-          length_cm?: number | null
-          margin_value?: never
-          moq?: number | null
-          nombre?: string | null
-          origin_country_id?: string | null
-          peso_kg?: never
-          platform_fee?: never
-          precio_b2b?: never
-          precio_mayorista_base?: number | null
-          precio_promocional?: number | null
-          precio_sugerido_venta?: number | null
-          promo_active?: boolean | null
-          promo_ends_at?: string | null
-          promo_starts_at?: string | null
-          proveedor_id?: string | null
-          shipping_mode?: string | null
-          sku_interno?: string | null
-          stock_fisico?: number | null
-          stock_status?: Database["public"]["Enums"]["stock_status"] | null
-          updated_at?: string | null
-          url_origen?: string | null
-          weight_kg?: never
-          width_cm?: number | null
         }
         Relationships: [
           {
@@ -8735,88 +8888,6 @@ export type Database = {
           url_origen: string | null
           weight_kg: number | null
           width_cm: number | null
-        }
-        Insert: {
-          applied_margin_percent?: never
-          categoria_id?: string | null
-          costo_base?: number | null
-          created_at?: string | null
-          currency_code?: string | null
-          descripcion_corta?: string | null
-          descripcion_larga?: string | null
-          dimensiones_cm?: string | null
-          galeria_imagenes?: string[] | null
-          height_cm?: number | null
-          id?: string | null
-          imagen_principal?: string | null
-          is_active?: boolean | null
-          is_oversize?: boolean | null
-          is_parent?: boolean | null
-          last_calculated_at?: string | null
-          length_cm?: number | null
-          margin_value?: never
-          moq?: number | null
-          nombre?: string | null
-          origin_country_id?: string | null
-          peso_kg?: never
-          platform_fee?: never
-          precio_b2b?: never
-          precio_mayorista_base?: number | null
-          precio_promocional?: number | null
-          precio_sugerido_venta?: number | null
-          promo_active?: boolean | null
-          promo_ends_at?: string | null
-          promo_starts_at?: string | null
-          proveedor_id?: string | null
-          shipping_mode?: string | null
-          sku_interno?: string | null
-          stock_fisico?: number | null
-          stock_status?: Database["public"]["Enums"]["stock_status"] | null
-          updated_at?: string | null
-          url_origen?: string | null
-          weight_kg?: never
-          width_cm?: number | null
-        }
-        Update: {
-          applied_margin_percent?: never
-          categoria_id?: string | null
-          costo_base?: number | null
-          created_at?: string | null
-          currency_code?: string | null
-          descripcion_corta?: string | null
-          descripcion_larga?: string | null
-          dimensiones_cm?: string | null
-          galeria_imagenes?: string[] | null
-          height_cm?: number | null
-          id?: string | null
-          imagen_principal?: string | null
-          is_active?: boolean | null
-          is_oversize?: boolean | null
-          is_parent?: boolean | null
-          last_calculated_at?: string | null
-          length_cm?: number | null
-          margin_value?: never
-          moq?: number | null
-          nombre?: string | null
-          origin_country_id?: string | null
-          peso_kg?: never
-          platform_fee?: never
-          precio_b2b?: never
-          precio_mayorista_base?: number | null
-          precio_promocional?: number | null
-          precio_sugerido_venta?: number | null
-          promo_active?: boolean | null
-          promo_ends_at?: string | null
-          promo_starts_at?: string | null
-          proveedor_id?: string | null
-          shipping_mode?: string | null
-          sku_interno?: string | null
-          stock_fisico?: number | null
-          stock_status?: Database["public"]["Enums"]["stock_status"] | null
-          updated_at?: string | null
-          url_origen?: string | null
-          weight_kg?: never
-          width_cm?: number | null
         }
         Relationships: [
           {
@@ -9430,6 +9501,7 @@ export type Database = {
       increment_popup_clicks: { Args: { popup_id: string }; Returns: undefined }
       increment_popup_views: { Args: { popup_id: string }; Returns: undefined }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_grossiste: { Args: { _user_id: string }; Returns: boolean }
       refresh_market_is_ready: {
         Args: { p_market_id: string }
         Returns: undefined
