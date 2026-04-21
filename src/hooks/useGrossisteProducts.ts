@@ -26,13 +26,13 @@ export function useGrossisteProducts() {
     queryKey: ['grossiste-products', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, sku_interno, nombre, descripcion_corta, costo_base_excel, precio_mayorista_base, stock_fisico, imagen_principal, is_active, approval_status, approval_notes, created_at' as any)
-        .eq('owner_user_id' as any, user!.id)
+      const query: any = supabase.from('products');
+      const { data, error } = await query
+        .select('id, sku_interno, nombre, descripcion_corta, costo_base_excel, precio_mayorista_base, stock_fisico, imagen_principal, is_active, approval_status, approval_notes, created_at')
+        .eq('owner_user_id', user!.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as GrossisteProduct[];
+      return (data || []) as GrossisteProduct[];
     },
   });
 

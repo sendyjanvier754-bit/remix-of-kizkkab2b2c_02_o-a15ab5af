@@ -27,10 +27,11 @@ export default function AdminGrossistesPage() {
   const { data: pendingProducts = [] } = useQuery({
     queryKey: ['admin-grossiste-pending-products'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('products')
-        .select('id, sku_interno, nombre, costo_base_excel, precio_mayorista_base, owner_user_id, created_at, imagen_principal' as any)
-        .eq('approval_status' as any, 'pending_review')
-        .eq('owner_role' as any, 'grossiste')
+      const query: any = supabase.from('products');
+      const { data, error } = await query
+        .select('id, sku_interno, nombre, costo_base_excel, precio_mayorista_base, owner_user_id, created_at, imagen_principal')
+        .eq('approval_status', 'pending_review')
+        .eq('owner_role', 'grossiste')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []) as any[];
