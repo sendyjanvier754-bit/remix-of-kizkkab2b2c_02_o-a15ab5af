@@ -653,9 +653,9 @@ const LoginPage = () => {
                       {isLoading
                         ? t('loginPage.creatingAccount')
                         : accountType === 'seller'
-                        ? 'Crear cuenta y tienda'
+                        ? t('loginPage.createAccountAndStore')
                         : accountType === 'grossiste'
-                        ? 'Crear cuenta mayorista'
+                        ? t('loginPage.createWholesalerAccount')
                         : t('loginPage.createAccountBtn')}
                     </Button>
                   </form>
