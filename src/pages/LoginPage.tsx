@@ -685,7 +685,7 @@ const LoginPage = () => {
                         onClick={() => setAccountType('grossiste')}
                       >
                         <Warehouse className="h-4 w-4" />
-                        Ser mayorista
+                        {t('loginPage.beGrossiste')}
                       </Button>
                       <Button variant="outline" asChild className="gap-2">
                         <Link to="/">
