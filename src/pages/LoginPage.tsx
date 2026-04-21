@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound, ChevronRight, ArrowLeft, Shield, Info } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Store, ShoppingBag, KeyRound, ChevronRight, ArrowLeft, Shield, Info, Warehouse } from "lucide-react";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { useBranding } from "@/hooks/useBranding";
@@ -38,9 +38,11 @@ const LoginPage = () => {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [accountType, setAccountType] = useState<'buyer' | 'seller' | null>(null);
+  const [accountType, setAccountType] = useState<'buyer' | 'seller' | 'grossiste' | null>(null);
   const [sellerStoreName, setSellerStoreName] = useState("");
   const [sellerStoreDescription, setSellerStoreDescription] = useState("");
+  const [grossisteBusinessName, setGrossisteBusinessName] = useState("");
+  const [grossisteDescription, setGrossisteDescription] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loginTermsAccepted, setLoginTermsAccepted] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
@@ -204,15 +206,29 @@ const LoginPage = () => {
             sessionStorage.setItem('pending_seller_store_description', sellerStoreDescription.trim());
           }
         }
-        setSuccess(accountType === 'seller' 
-          ? '¡Cuenta creada! Revisa tu email para confirmar y tu tienda se activará automáticamente al iniciar sesión.'
-          : t('loginPage.accountCreated'));
+        // If grossiste registration, store upgrade info for after login
+        if (accountType === 'grossiste' && grossisteBusinessName.trim()) {
+          sessionStorage.setItem('pending_grossiste_upgrade', 'true');
+          sessionStorage.setItem('pending_grossiste_business_name', grossisteBusinessName.trim());
+          if (grossisteDescription.trim()) {
+            sessionStorage.setItem('pending_grossiste_description', grossisteDescription.trim());
+          }
+        }
+        setSuccess(
+          accountType === 'seller'
+            ? '¡Cuenta creada! Revisa tu email para confirmar y tu tienda se activará automáticamente al iniciar sesión.'
+            : accountType === 'grossiste'
+            ? '¡Cuenta creada! Revisa tu email para confirmar. Al iniciar sesión activaremos tu cuenta de mayorista.'
+            : t('loginPage.accountCreated')
+        );
         setRegisterName("");
         setRegisterEmail("");
         setRegisterPassword("");
         setConfirmPassword("");
         setSellerStoreName("");
         setSellerStoreDescription("");
+        setGrossisteBusinessName("");
+        setGrossisteDescription("");
         setTermsAccepted(false);
       }
     } catch (err) {
