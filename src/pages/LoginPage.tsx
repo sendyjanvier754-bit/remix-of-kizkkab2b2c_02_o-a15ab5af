@@ -435,7 +435,7 @@ const LoginPage = () => {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-foreground">{t('loginPage.sellerAccount')}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Registra tu cuenta y tu tienda en un solo paso</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t('loginPage.sellerAccountDesc')}</p>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition" />
                       </button>
@@ -448,8 +448,8 @@ const LoginPage = () => {
                           <Warehouse className="h-6 w-6 text-emerald-600" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-foreground">Cuenta de mayorista (Grossiste)</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Publica al catálogo B2B y vende al por mayor</p>
+                          <p className="font-semibold text-foreground">{t('loginPage.grossisteAccount')}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t('loginPage.grossisteAccountDesc')}</p>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-emerald-500 transition" />
                       </button>
@@ -480,17 +480,17 @@ const LoginPage = () => {
                         <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                           <p className="text-xs text-green-700 font-medium flex items-center gap-1.5">
                             <Store className="h-3.5 w-3.5" />
-                            Registro de vendedor
+                            {t('loginPage.sellerRegistration')}
                           </p>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="seller-store-name">Nombre de tu tienda *</Label>
+                          <Label htmlFor="seller-store-name">{t('loginPage.storeName')} *</Label>
                           <div className="relative">
                             <Store className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               id="seller-store-name"
                               type="text"
-                              placeholder="Ej: Mi Boutique"
+                              placeholder={t('loginPage.storeNamePlaceholder')}
                               className="pl-10"
                               value={sellerStoreName}
                               onChange={(e) => setSellerStoreName(e.target.value)}
@@ -508,17 +508,17 @@ const LoginPage = () => {
                         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                           <p className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
                             <Warehouse className="h-3.5 w-3.5" />
-                            Registro de mayorista (Grossiste)
+                            {t('loginPage.grossisteRegistration')}
                           </p>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="grossiste-business-name">Nombre comercial *</Label>
+                          <Label htmlFor="grossiste-business-name">{t('loginPage.businessName')} *</Label>
                           <div className="relative">
                             <Warehouse className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               id="grossiste-business-name"
                               type="text"
-                              placeholder="Ej: Distribuidora Caribe"
+                              placeholder={t('loginPage.businessNamePlaceholder')}
                               className="pl-10"
                               value={grossisteBusinessName}
                               onChange={(e) => setGrossisteBusinessName(e.target.value)}
@@ -528,11 +528,11 @@ const LoginPage = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="grossiste-description">Descripción del negocio (opcional)</Label>
+                          <Label htmlFor="grossiste-description">{t('loginPage.businessDescription')}</Label>
                           <Input
                             id="grossiste-description"
                             type="text"
-                            placeholder="Categorías, mercados, etc."
+                            placeholder={t('loginPage.businessDescriptionPlaceholder')}
                             value={grossisteDescription}
                             onChange={(e) => setGrossisteDescription(e.target.value)}
                             maxLength={400}
@@ -621,20 +621,20 @@ const LoginPage = () => {
                         className="mt-0.5 shrink-0"
                       />
                       <label htmlFor="terms-accepted" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
-                        He leído y acepto los{' '}
+                        {t('loginPage.termsAcceptText')}{' '}
                         <button
                           type="button"
                           onClick={() => setShowLegal(true)}
                           className="text-primary underline hover:no-underline font-medium"
                         >
-                          Términos y Condiciones
+                          {t('loginPage.termsLink')}
                         </button>
                         ,{' '}
                         <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
-                          Política de Privacidad
-                        </a>{' '}y{' '}
+                          {t('loginPage.privacyLink')}
+                        </a>{' '}&{' '}
                         <a href="/devoluciones" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
-                          Política de Devoluciones
+                          {t('loginPage.returnsLink')}
                         </a>
                         .
                       </label>
@@ -653,9 +653,9 @@ const LoginPage = () => {
                       {isLoading
                         ? t('loginPage.creatingAccount')
                         : accountType === 'seller'
-                        ? 'Crear cuenta y tienda'
+                        ? t('loginPage.createAccountAndStore')
                         : accountType === 'grossiste'
-                        ? 'Crear cuenta mayorista'
+                        ? t('loginPage.createWholesalerAccount')
                         : t('loginPage.createAccountBtn')}
                     </Button>
                   </form>
