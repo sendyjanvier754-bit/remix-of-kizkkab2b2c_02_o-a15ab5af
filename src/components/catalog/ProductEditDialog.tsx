@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Upload, Trash2, Image as ImageIcon, Package, DollarSign, Ruler, History, X, Cpu, Layers, Globe } from 'lucide-react';
+import { Loader2, Upload, Trash2, Image as ImageIcon, Package, DollarSign, Ruler, History, X, Cpu, Layers, Globe, TrendingUp } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
