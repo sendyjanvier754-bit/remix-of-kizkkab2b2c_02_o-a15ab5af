@@ -1279,7 +1279,13 @@
     "privacyLink": "Privacy Policy",
     "returnsLink": "Returns Policy",
     "createAccountAndStore": "Create account and store",
-    "createWholesalerAccount": "Create wholesaler account"
+    "createWholesalerAccount": "Create wholesaler account",
+    "mustAcceptTerms": "You must accept the Terms and Conditions to continue.",
+    "sellerAccountSuccess": "Account created! Check your email to confirm and your store will be activated automatically on login.",
+    "grossisteAccountSuccess": "Account created! Check your email to confirm. Your wholesaler account will be activated on login.",
+    "loginAcceptPrefix": "I accept the",
+    "loginPrivacyAnd": "and the",
+    "languageLabel": "Language"
   },
   "settingsPanel": {
     "accountInfo": "Account Information",

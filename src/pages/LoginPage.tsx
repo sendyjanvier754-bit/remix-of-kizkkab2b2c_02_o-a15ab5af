@@ -18,9 +18,15 @@ import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
 import { AboutModal } from "@/components/legal/AboutModal";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "@/components/ui/checkbox";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+// Languages that require right-to-left layout
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
 const LoginPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = RTL_LANGUAGES.includes(i18n.language?.split('-')[0] ?? '');
+  const dir = isRTL ? 'rtl' : 'ltr';
   const { getValue } = useBranding();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -76,7 +82,7 @@ const LoginPage = () => {
     setError(null);
 
     if (!loginTermsAccepted) {
-      setError('Debes aceptar los Términos y Condiciones para continuar.');
+      setError(t('loginPage.mustAcceptTerms'));
       return;
     }
 
@@ -183,7 +189,7 @@ const LoginPage = () => {
     }
 
     if (!termsAccepted) {
-      setError('Debes aceptar los Términos y Condiciones para continuar.');
+      setError(t('loginPage.mustAcceptTerms'));
       return;
     }
 
@@ -216,9 +222,9 @@ const LoginPage = () => {
         }
         setSuccess(
           accountType === 'seller'
-            ? '¡Cuenta creada! Revisa tu email para confirmar y tu tienda se activará automáticamente al iniciar sesión.'
+            ? t('loginPage.sellerAccountSuccess')
             : accountType === 'grossiste'
-            ? '¡Cuenta creada! Revisa tu email para confirmar. Al iniciar sesión activaremos tu cuenta de mayorista.'
+            ? t('loginPage.grossisteAccountSuccess')
             : t('loginPage.accountCreated')
         );
         setRegisterName("");
@@ -239,10 +245,13 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" dir={dir}>
       <GlobalHeader />
       <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center pb-24 md:pb-8">
         <div className="w-full max-w-md">
+          <div className="flex justify-end mb-3">
+            <LanguageSwitcher compact variant="outline" />
+          </div>
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">{t('loginPage.welcome', { name: getValue('platform_name') })}</h1>
             <p className="text-muted-foreground">{getValue('platform_slogan')}</p>
@@ -335,16 +344,16 @@ const LoginPage = () => {
                         className="mt-0.5 shrink-0"
                       />
                       <label htmlFor="login-terms-accepted" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
-                        Acepto los{' '}
+                        {t('loginPage.loginAcceptPrefix')}{' '}
                         <button
                           type="button"
                           onClick={() => setShowLegal(true)}
                           className="text-primary underline hover:no-underline font-medium"
                         >
-                          Términos y Condiciones
-                        </button>{' '}y la{' '}
+                          {t('loginPage.termsLink')}
+                        </button>{' '}{t('loginPage.loginPrivacyAnd')}{' '}
                         <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
-                          Política de Privacidad
+                          {t('loginPage.privacyLink')}
                         </a>.
                       </label>
                     </div>
