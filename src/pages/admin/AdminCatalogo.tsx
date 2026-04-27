@@ -36,8 +36,18 @@ const AdminCatalogo = () => {
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
   const [dynamicPrices, setDynamicPrices] = useState<Record<string, number>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 9;
 
   const { data: products, isLoading: loadingProducts } = useProducts({ ...filters, search: searchTerm });
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filters.category, filters.supplier, filters.stockStatus]);
+
+  const totalPages = Math.max(1, Math.ceil((products?.length || 0) / PAGE_SIZE));
+  const paginatedProducts = products?.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
   const { data: kpis, isLoading: loadingKPIs } = useCatalogKPIs();
@@ -292,7 +302,7 @@ const AdminCatalogo = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    products?.map((product) => (
+                    paginatedProducts?.map((product) => (
                       <TableRow key={product.id} className="border-border hover:bg-muted/50">
                         <TableCell className="font-mono text-sm text-foreground">{product.sku_interno}</TableCell>
                         <TableCell>
@@ -347,6 +357,34 @@ const AdminCatalogo = () => {
                 </TableBody>
               </Table>
             </div>
+            {products && products.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-border">
+                <p className="text-xs text-muted-foreground">
+                  {((currentPage - 1) * PAGE_SIZE) + 1}-{Math.min(currentPage * PAGE_SIZE, products.length)} / {products.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    {t('common.previous', 'Anterior')}
+                  </Button>
+                  <span className="text-sm text-foreground">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    {t('common.next', 'Siguiente')}
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
         </TabsContent>
