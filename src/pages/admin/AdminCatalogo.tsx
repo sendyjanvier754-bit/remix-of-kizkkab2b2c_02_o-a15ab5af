@@ -302,7 +302,7 @@ const AdminCatalogo = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    products?.map((product) => (
+                    paginatedProducts?.map((product) => (
                       <TableRow key={product.id} className="border-border hover:bg-muted/50">
                         <TableCell className="font-mono text-sm text-foreground">{product.sku_interno}</TableCell>
                         <TableCell>
