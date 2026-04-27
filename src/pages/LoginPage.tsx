@@ -18,9 +18,15 @@ import { LegalPagesModal } from "@/components/legal/LegalPagesModal";
 import { AboutModal } from "@/components/legal/AboutModal";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "@/components/ui/checkbox";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+// Languages that require right-to-left layout
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
 const LoginPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = RTL_LANGUAGES.includes(i18n.language?.split('-')[0] ?? '');
+  const dir = isRTL ? 'rtl' : 'ltr';
   const { getValue } = useBranding();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
