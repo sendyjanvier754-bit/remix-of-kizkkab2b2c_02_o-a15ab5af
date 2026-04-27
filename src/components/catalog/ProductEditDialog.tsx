@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Upload, Trash2, Image as ImageIcon, Package, DollarSign, Ruler, History, X, Cpu, Layers, Globe } from 'lucide-react';
+import { Loader2, Upload, Trash2, Image as ImageIcon, Package, DollarSign, Ruler, History, X, Cpu, Layers, Globe, TrendingUp } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +25,7 @@ import VariantMatrixManager from './VariantMatrixManager';
 import MarketSelector from './MarketSelector';
 import { useProductMarkets } from '@/hooks/useMarkets';
 import ProductDeleteDialog from './ProductDeleteDialog';
+import PriceBreakdownDialog from './PriceBreakdownDialog';
 
 interface ProductEditDialogProps {
   productId: string;
@@ -70,6 +71,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
   const { data: suppliers } = useSuppliers();
   const { productMarkets, assignProductToMarkets } = useProductMarkets(productId);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [generatingEmbedding, setGeneratingEmbedding] = useState(false);
@@ -497,9 +499,21 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
               <TabsContent value="pricing" className="space-y-4 mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Reglas B2B
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Reglas B2B
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowPriceBreakdown(true)}
+                        className="gap-1.5"
+                      >
+                        <TrendingUp className="h-4 w-4" />
+                        Ver desglose por mercado
+                      </Button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -795,6 +809,18 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                 onOpenChange={setShowDeleteDialog}
                 onDeleted={() => onOpenChange(false)}
               />
+              {product && (
+                <PriceBreakdownDialog
+                  open={showPriceBreakdown}
+                  onOpenChange={setShowPriceBreakdown}
+                  productId={productId}
+                  sku={product.sku_interno}
+                  productName={product.nombre}
+                  factoryCost={Number(form.watch('precio_mayorista_base')) || product.precio_mayorista_base || 0}
+                  weight_g={product.peso_g}
+                  categoryId={product.categoria_id}
+                />
+              )}
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancelar
