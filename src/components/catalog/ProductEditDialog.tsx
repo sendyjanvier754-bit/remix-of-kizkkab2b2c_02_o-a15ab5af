@@ -809,6 +809,18 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                 onOpenChange={setShowDeleteDialog}
                 onDeleted={() => onOpenChange(false)}
               />
+              {product && (
+                <PriceBreakdownDialog
+                  open={showPriceBreakdown}
+                  onOpenChange={setShowPriceBreakdown}
+                  productId={productId}
+                  sku={product.sku_interno}
+                  productName={product.nombre}
+                  factoryCost={Number(form.watch('precio_mayorista_base')) || product.precio_mayorista_base || 0}
+                  weight_g={product.peso_g}
+                  categoryId={product.categoria_id}
+                />
+              )}
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancelar
