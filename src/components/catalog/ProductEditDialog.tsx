@@ -25,6 +25,7 @@ import VariantMatrixManager from './VariantMatrixManager';
 import MarketSelector from './MarketSelector';
 import { useProductMarkets } from '@/hooks/useMarkets';
 import ProductDeleteDialog from './ProductDeleteDialog';
+import PriceBreakdownDialog from './PriceBreakdownDialog';
 
 interface ProductEditDialogProps {
   productId: string;
