@@ -36,8 +36,18 @@ const AdminCatalogo = () => {
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
   const [dynamicPrices, setDynamicPrices] = useState<Record<string, number>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 9;
 
   const { data: products, isLoading: loadingProducts } = useProducts({ ...filters, search: searchTerm });
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filters.category, filters.supplier, filters.stockStatus]);
+
+  const totalPages = Math.max(1, Math.ceil((products?.length || 0) / PAGE_SIZE));
+  const paginatedProducts = products?.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const { data: categories } = useCategories();
   const { data: suppliers } = useSuppliers();
   const { data: kpis, isLoading: loadingKPIs } = useCatalogKPIs();
