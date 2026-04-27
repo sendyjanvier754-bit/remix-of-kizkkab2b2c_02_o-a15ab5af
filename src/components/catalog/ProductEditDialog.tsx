@@ -71,6 +71,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
   const { data: suppliers } = useSuppliers();
   const { productMarkets, assignProductToMarkets } = useProductMarkets(productId);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [generatingEmbedding, setGeneratingEmbedding] = useState(false);
