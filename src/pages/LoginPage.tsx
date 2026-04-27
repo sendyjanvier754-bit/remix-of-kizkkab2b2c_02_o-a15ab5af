@@ -341,16 +341,16 @@ const LoginPage = () => {
                         className="mt-0.5 shrink-0"
                       />
                       <label htmlFor="login-terms-accepted" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
-                        Acepto los{' '}
+                        {t('loginPage.loginAcceptPrefix')}{' '}
                         <button
                           type="button"
                           onClick={() => setShowLegal(true)}
                           className="text-primary underline hover:no-underline font-medium"
                         >
-                          Términos y Condiciones
-                        </button>{' '}y la{' '}
+                          {t('loginPage.termsLink')}
+                        </button>{' '}{t('loginPage.loginPrivacyAnd')}{' '}
                         <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline font-medium">
-                          Política de Privacidad
+                          {t('loginPage.privacyLink')}
                         </a>.
                       </label>
                     </div>
