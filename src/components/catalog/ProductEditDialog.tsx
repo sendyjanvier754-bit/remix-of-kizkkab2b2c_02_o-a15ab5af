@@ -499,9 +499,21 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
               <TabsContent value="pricing" className="space-y-4 mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Reglas B2B
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Reglas B2B
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowPriceBreakdown(true)}
+                        className="gap-1.5"
+                      >
+                        <TrendingUp className="h-4 w-4" />
+                        Ver desglose por mercado
+                      </Button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
