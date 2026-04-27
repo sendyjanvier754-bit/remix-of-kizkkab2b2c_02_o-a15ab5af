@@ -1279,7 +1279,13 @@
     "privacyLink": "Règleman Konfidansyalite",
     "returnsLink": "Règleman Retounen",
     "createAccountAndStore": "Kreye kont ak boutik",
-    "createWholesalerAccount": "Kreye kont gwosis"
+    "createWholesalerAccount": "Kreye kont gwosis",
+    "mustAcceptTerms": "Ou dwe aksepte Tèm ak Kondisyon yo pou kontinye.",
+    "sellerAccountSuccess": "Kont kreye! Tcheke imel ou pou konfime, boutik ou ap aktive otomatikman lè ou konekte.",
+    "grossisteAccountSuccess": "Kont kreye! Tcheke imel ou pou konfime. Kont gwosis ou ap aktive lè ou konekte.",
+    "loginAcceptPrefix": "Mwen aksepte",
+    "loginPrivacyAnd": "epi",
+    "languageLabel": "Lang"
   },
   "settingsPanel": {
     "accountInfo": "Enfòmasyon Kont",

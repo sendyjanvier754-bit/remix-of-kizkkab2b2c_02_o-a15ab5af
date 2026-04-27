@@ -1279,7 +1279,13 @@
     "privacyLink": "Política de Privacidad",
     "returnsLink": "Política de Devoluciones",
     "createAccountAndStore": "Crear cuenta y tienda",
-    "createWholesalerAccount": "Crear cuenta mayorista"
+    "createWholesalerAccount": "Crear cuenta mayorista",
+    "mustAcceptTerms": "Debes aceptar los Términos y Condiciones para continuar.",
+    "sellerAccountSuccess": "¡Cuenta creada! Revisa tu email para confirmar y tu tienda se activará automáticamente al iniciar sesión.",
+    "grossisteAccountSuccess": "¡Cuenta creada! Revisa tu email para confirmar. Al iniciar sesión activaremos tu cuenta de mayorista.",
+    "loginAcceptPrefix": "Acepto los",
+    "loginPrivacyAnd": "y la",
+    "languageLabel": "Idioma"
   },
   "settingsPanel": {
     "accountInfo": "Información de Cuenta",
