@@ -357,6 +357,34 @@ const AdminCatalogo = () => {
                 </TableBody>
               </Table>
             </div>
+            {products && products.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-border">
+                <p className="text-xs text-muted-foreground">
+                  {((currentPage - 1) * PAGE_SIZE) + 1}-{Math.min(currentPage * PAGE_SIZE, products.length)} / {products.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    {t('common.previous', 'Anterior')}
+                  </Button>
+                  <span className="text-sm text-foreground">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    {t('common.next', 'Siguiente')}
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
         </TabsContent>
