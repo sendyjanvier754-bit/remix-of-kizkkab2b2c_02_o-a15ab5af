@@ -187,6 +187,12 @@ const DestinationBreakdownRow = ({
           />
         </div>
 
+        {!result.logistics && (
+          <div className="text-[11px] rounded border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900 text-amber-800 dark:text-amber-300 px-2 py-1.5">
+            ⚠️ No hay ruta de envío activa configurada para este mercado. La logística se calcula como $0.00. Configúrala en <strong>Admin → Configuración de Precios → Rutas</strong>.
+          </div>
+        )}
+
         <div className="border-t pt-2 grid grid-cols-2 gap-3">
           <div className="bg-muted/40 rounded p-2">
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Precio B2B final</p>
