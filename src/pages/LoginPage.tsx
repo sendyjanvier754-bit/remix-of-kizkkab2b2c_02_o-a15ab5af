@@ -245,10 +245,13 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" dir={dir}>
       <GlobalHeader />
       <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center pb-24 md:pb-8">
         <div className="w-full max-w-md">
+          <div className="flex justify-end mb-3">
+            <LanguageSwitcher compact variant="outline" />
+          </div>
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">{t('loginPage.welcome', { name: getValue('platform_name') })}</h1>
             <p className="text-muted-foreground">{getValue('platform_slogan')}</p>
