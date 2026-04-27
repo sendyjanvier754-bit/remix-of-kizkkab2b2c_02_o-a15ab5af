@@ -222,9 +222,9 @@ const LoginPage = () => {
         }
         setSuccess(
           accountType === 'seller'
-            ? '¡Cuenta creada! Revisa tu email para confirmar y tu tienda se activará automáticamente al iniciar sesión.'
+            ? t('loginPage.sellerAccountSuccess')
             : accountType === 'grossiste'
-            ? '¡Cuenta creada! Revisa tu email para confirmar. Al iniciar sesión activaremos tu cuenta de mayorista.'
+            ? t('loginPage.grossisteAccountSuccess')
             : t('loginPage.accountCreated')
         );
         setRegisterName("");
