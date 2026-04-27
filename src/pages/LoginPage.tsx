@@ -189,7 +189,7 @@ const LoginPage = () => {
     }
 
     if (!termsAccepted) {
-      setError('Debes aceptar los Términos y Condiciones para continuar.');
+      setError(t('loginPage.mustAcceptTerms'));
       return;
     }
 
