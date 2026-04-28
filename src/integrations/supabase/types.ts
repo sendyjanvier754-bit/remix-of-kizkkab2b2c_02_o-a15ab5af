@@ -763,13 +763,6 @@ export type Database = {
             foreignKeyName: "b2b_cart_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "b2b_cart_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -879,13 +872,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "b2b_favorites_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -1186,13 +1172,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "b2c_favorites_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -2469,13 +2448,6 @@ export type Database = {
             foreignKeyName: "grossiste_earnings_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "grossiste_earnings_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -2668,13 +2640,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventory_movements_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -3489,13 +3454,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_b2b_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -5084,13 +5042,6 @@ export type Database = {
             foreignKeyName: "product_markets_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_markets_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -5140,13 +5091,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_price_history_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -5223,13 +5167,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_reviews_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -5321,13 +5258,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: true
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_shipping_classes_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: true
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -5440,13 +5370,6 @@ export type Database = {
             foreignKeyName: "product_variants_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_variants_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -5496,13 +5419,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_views_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -5716,13 +5632,6 @@ export type Database = {
             columns: ["parent_product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_parent_product_id_fkey"
-            columns: ["parent_product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -6306,13 +6215,6 @@ export type Database = {
             foreignKeyName: "seller_catalog_source_product_id_fkey"
             columns: ["source_product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "seller_catalog_source_product_id_fkey"
-            columns: ["source_product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -6585,13 +6487,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "seller_favorites_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -6919,13 +6814,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sensitive_products_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
@@ -7571,13 +7459,6 @@ export type Database = {
             foreignKeyName: "siver_match_sales_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "siver_match_sales_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -8128,13 +8009,6 @@ export type Database = {
             foreignKeyName: "user_favorites_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_favorites_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -8646,26 +8520,6 @@ export type Database = {
         }
         Relationships: []
       }
-      v_business_panel_data: {
-        Row: {
-          cost_per_unit: number | null
-          investment_1unit: number | null
-          is_active: boolean | null
-          item_name: string | null
-          item_type: string | null
-          last_updated: string | null
-          margin_percentage: number | null
-          product_id: string | null
-          profit_1unit: number | null
-          revenue_1unit: number | null
-          shipping_cost_per_unit: number | null
-          sku: string | null
-          suggested_pvp_per_unit: number | null
-          variant_id: string | null
-          weight_kg: number | null
-        }
-        Relationships: []
-      }
       v_cart_shipping_costs: {
         Row: {
           base_cost: number | null
@@ -8763,13 +8617,6 @@ export type Database = {
             foreignKeyName: "seller_catalog_source_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "seller_catalog_source_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -8806,72 +8653,7 @@ export type Database = {
           owner_verification_status: string | null
           peso_kg: number | null
           platform_fee: number | null
-          precio_b2b: number | null
-          precio_mayorista_base: number | null
-          precio_promocional: number | null
-          precio_sugerido_venta: number | null
-          promo_active: boolean | null
-          promo_ends_at: string | null
-          promo_starts_at: string | null
-          proveedor_id: string | null
-          shipping_mode: string | null
-          sku_interno: string | null
-          stock_fisico: number | null
-          stock_status: Database["public"]["Enums"]["stock_status"] | null
-          updated_at: string | null
-          url_origen: string | null
-          weight_kg: number | null
-          width_cm: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_categoria_id_fkey"
-            columns: ["categoria_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_origin_country_id_fkey"
-            columns: ["origin_country_id"]
-            isOneToOne: false
-            referencedRelation: "shipping_origins"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_proveedor_id_fkey"
-            columns: ["proveedor_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      v_productos_precio_base: {
-        Row: {
-          applied_margin_percent: number | null
-          categoria_id: string | null
-          costo_base: number | null
-          created_at: string | null
-          currency_code: string | null
-          descripcion_corta: string | null
-          descripcion_larga: string | null
-          dimensiones_cm: string | null
-          galeria_imagenes: string[] | null
-          height_cm: number | null
-          id: string | null
-          imagen_principal: string | null
-          is_active: boolean | null
-          is_oversize: boolean | null
-          is_parent: boolean | null
-          last_calculated_at: string | null
-          length_cm: number | null
-          margin_value: number | null
-          moq: number | null
-          nombre: string | null
-          origin_country_id: string | null
-          peso_kg: number | null
-          platform_fee: number | null
+          platform_fee_percent: number | null
           precio_b2b: number | null
           precio_mayorista_base: number | null
           precio_promocional: number | null
@@ -9038,13 +8820,6 @@ export type Database = {
             foreignKeyName: "seller_catalog_source_product_id_fkey"
             columns: ["source_product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "seller_catalog_source_product_id_fkey"
-            columns: ["source_product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -9103,13 +8878,6 @@ export type Database = {
             foreignKeyName: "seller_catalog_source_product_id_fkey"
             columns: ["source_product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "seller_catalog_source_product_id_fkey"
-            columns: ["source_product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -9155,13 +8923,6 @@ export type Database = {
             foreignKeyName: "product_variants_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_variants_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "v_products_without_weight"
             referencedColumns: ["id"]
           },
@@ -9189,13 +8950,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_productos_con_precio_b2b"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_variants_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "v_productos_precio_base"
             referencedColumns: ["id"]
           },
           {
