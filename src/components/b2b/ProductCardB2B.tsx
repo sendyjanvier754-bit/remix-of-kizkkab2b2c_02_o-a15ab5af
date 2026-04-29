@@ -12,6 +12,7 @@ import { SuggestedPricesDetailModal } from '@/components/seller/SuggestedPricesD
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { useB2BFavorites } from '@/hooks/useB2BFavorites';
 import { useTranslatedContent } from '@/hooks/useTranslatedContent';
+import ProductImage from '@/components/shared/ProductImage';
 
 interface ProductCardB2BProps {
   product: ProductB2BCard;
@@ -105,13 +106,11 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
       {/* Image Section */}
       <div className="relative aspect-square bg-muted overflow-hidden">
         <Link to={`/producto/${product.sku}`} className="block w-full h-full">
-          <img
+          <ProductImage
             src={product.imagen_principal}
+            fallbackSrcs={(product as any).galeria_imagenes as string[] | undefined}
             alt={displayName}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/placeholder.svg';
-            }}
+            className="w-full h-full group-hover:scale-105 transition-transform duration-500"
           />
         </Link>
         
