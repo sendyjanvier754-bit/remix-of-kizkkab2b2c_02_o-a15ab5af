@@ -1479,5 +1479,13 @@
     "timeout": "Tiempo de espera agotado",
     "unknownError": "Error desconocido de geolocalización",
     "couldNotGetLocation": "No se pudo obtener tu ubicación"
+  },
+  "authPrompt": {
+    "title": "Inicia sesión para continuar",
+    "unitsSelected": "{{count}} unidades seleccionadas",
+    "addToCart": "Agrega al carrito",
+    "description": "Necesitas una cuenta para agregar productos al carrito y realizar pedidos.",
+    "login": "Iniciar Sesión",
+    "register": "Crear Cuenta"
   }
 }

@@ -18,6 +18,7 @@ import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { useB2CCatalogVariants } from '@/hooks/useB2CCatalogVariants';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { useTranslatedContent } from '@/hooks/useTranslatedContent';
+import { useTranslation } from 'react-i18next';
 
 const VariantDrawer: React.FC = () => {
   const location = useLocation();
@@ -40,6 +41,7 @@ const VariantDrawer: React.FC = () => {
   const { user, role } = useAuth();
   const { toast } = useToast();
   const { isClientPreview } = useViewMode();
+  const { t } = useTranslation();
 
   const isB2BUser = (role === UserRole.SELLER || role === UserRole.ADMIN) && !isClientPreview;
 
@@ -351,7 +353,7 @@ const VariantDrawer: React.FC = () => {
       <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60">
         <div className="bg-background rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col gap-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Inicia sesión para continuar</h2>
+            <h2 className="text-lg font-bold text-foreground">{t('authPrompt.title')}</h2>
             <button onClick={() => { setShowAuthPrompt(false); close(); }} className="p-1 rounded-full hover:bg-muted transition">
               <X className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -365,12 +367,12 @@ const VariantDrawer: React.FC = () => {
             />
             <div>
               <p className="text-sm font-medium text-foreground line-clamp-2">{product.nombre}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{totalQty > 0 ? `${totalQty} unidades seleccionadas` : 'Agrega al carrito'}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{totalQty > 0 ? t('authPrompt.unitsSelected', { count: totalQty }) : t('authPrompt.addToCart')}</p>
             </div>
           </div>
 
           <p className="text-sm text-muted-foreground text-center">
-            Necesitas una cuenta para agregar productos al carrito y realizar pedidos.
+            {t('authPrompt.description')}
           </p>
 
           <div className="flex flex-col gap-2">
@@ -379,7 +381,7 @@ const VariantDrawer: React.FC = () => {
               onClick={() => { setShowAuthPrompt(false); close(); navigate('/login'); }}
             >
               <LogIn className="w-4 h-4" />
-              Iniciar Sesión
+              {t('authPrompt.login')}
             </Button>
             <Button
               variant="outline"
@@ -387,7 +389,7 @@ const VariantDrawer: React.FC = () => {
               onClick={() => { setShowAuthPrompt(false); close(); navigate('/login?tab=register'); }}
             >
               <UserPlus className="w-4 h-4" />
-              Crear Cuenta
+              {t('authPrompt.register')}
             </Button>
           </div>
         </div>

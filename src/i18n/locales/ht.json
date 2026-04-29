@@ -1479,5 +1479,13 @@
     "timeout": "Tan an ekspire",
     "unknownError": "Erè jewolokalizasyon enkoni",
     "couldNotGetLocation": "Pa kapab jwenn pozisyon ou"
+  },
+  "authPrompt": {
+    "title": "Konekte pou kontinye",
+    "unitsSelected": "{{count}} inite chwazi",
+    "addToCart": "Ajoute nan panye",
+    "description": "Ou bezwen yon kont pou ajoute pwodwi nan panye a epi pase kòmand.",
+    "login": "Konekte",
+    "register": "Kreye Kont"
   }
 }

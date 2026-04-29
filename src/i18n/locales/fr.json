@@ -1479,5 +1479,13 @@
     "timeout": "Délai d'attente dépassé",
     "unknownError": "Erreur de géolocalisation inconnue",
     "couldNotGetLocation": "Impossible d'obtenir votre position"
+  },
+  "authPrompt": {
+    "title": "Connectez-vous pour continuer",
+    "unitsSelected": "{{count}} unités sélectionnées",
+    "addToCart": "Ajouter au panier",
+    "description": "Vous devez avoir un compte pour ajouter des produits au panier et passer des commandes.",
+    "login": "Se connecter",
+    "register": "Créer un compte"
   }
 }

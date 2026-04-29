@@ -1479,5 +1479,13 @@
     "timeout": "Request timed out",
     "unknownError": "Unknown geolocation error",
     "couldNotGetLocation": "Could not get your location"
+  },
+  "authPrompt": {
+    "title": "Sign in to continue",
+    "unitsSelected": "{{count}} units selected",
+    "addToCart": "Add to cart",
+    "description": "You need an account to add products to the cart and place orders.",
+    "login": "Sign In",
+    "register": "Create Account"
   }
 }
