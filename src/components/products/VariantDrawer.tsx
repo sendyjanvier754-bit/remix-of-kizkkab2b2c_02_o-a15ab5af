@@ -41,6 +41,7 @@ const VariantDrawer: React.FC = () => {
   const { user, role } = useAuth();
   const { toast } = useToast();
   const { isClientPreview } = useViewMode();
+  const { t } = useTranslation();
 
   const isB2BUser = (role === UserRole.SELLER || role === UserRole.ADMIN) && !isClientPreview;
 
