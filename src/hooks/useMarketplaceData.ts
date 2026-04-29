@@ -9,6 +9,7 @@ export interface MarketplaceProduct {
   price: number;
   originalPrice?: number;
   image: string;
+  images?: string[];
   sku: string;
   stock: number;
   storeId?: string;
@@ -41,9 +42,22 @@ export interface TopStore {
 // Transform seller_catalog product to MarketplaceProduct
 const transformProduct = (item: any): MarketplaceProduct => {
   const images = item.images as any;
-  const mainImage = Array.isArray(images) && images.length > 0 
-    ? images[0] 
-    : typeof images === 'string' ? images : '';
+  let imageList: string[] = [];
+
+  if (Array.isArray(images)) {
+    imageList = images.filter((img): img is string => typeof img === 'string' && img.trim().length > 0);
+  } else if (typeof images === 'string' && images.trim().length > 0) {
+    try {
+      const parsed = JSON.parse(images);
+      imageList = Array.isArray(parsed)
+        ? parsed.filter((img): img is string => typeof img === 'string' && img.trim().length > 0)
+        : [images];
+    } catch {
+      imageList = [images];
+    }
+  }
+
+  const mainImage = imageList[0] || '';
 
   return {
     id: item.id,
@@ -51,6 +65,7 @@ const transformProduct = (item: any): MarketplaceProduct => {
     price: item.precio_venta,
     originalPrice: item.precio_costo > item.precio_venta ? item.precio_costo : undefined,
     image: mainImage,
+    images: imageList,
     sku: item.sku,
     stock: item.stock,
     storeId: item.store?.id,
