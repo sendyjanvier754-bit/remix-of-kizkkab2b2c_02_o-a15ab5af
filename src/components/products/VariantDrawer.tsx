@@ -18,6 +18,7 @@ import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { useB2CCatalogVariants } from '@/hooks/useB2CCatalogVariants';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { useTranslatedContent } from '@/hooks/useTranslatedContent';
+import { useTranslation } from 'react-i18next';
 
 const VariantDrawer: React.FC = () => {
   const location = useLocation();
