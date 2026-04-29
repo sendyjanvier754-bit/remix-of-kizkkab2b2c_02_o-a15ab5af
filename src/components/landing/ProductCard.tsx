@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Package, Store, TrendingUp, ShoppingCart, MessageCircle, ShieldCheck } from "lucide-react";
+import { Heart, Store, TrendingUp, ShoppingCart, MessageCircle, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,7 @@ import { useViewMode } from "@/contexts/ViewModeContext";
 import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useB2BFavorites } from "@/hooks/useB2BFavorites";
 import { useTranslatedContent } from "@/hooks/useTranslatedContent";
+import ProductImage from "@/components/shared/ProductImage";
 
 interface Product {
   id: string;
@@ -17,6 +18,7 @@ interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  images?: string[];
   discount?: number;
   badge?: string;
   sku: string;
@@ -159,19 +161,13 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
       {/* Image Container */}
       <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'} className="relative block">
         <div className="relative overflow-hidden aspect-square bg-muted">
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={displayName}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="h-12 w-12 text-muted-foreground/30" />
-            </div>
-          )}
+          <ProductImage
+            src={product.image}
+            fallbackSrcs={product.images}
+            alt={displayName}
+            className="w-full h-full group-hover:scale-105 transition duration-300"
+            loading="eager"
+          />
 
           {/* Promo/Discount Badge - Solo para B2C */}
           {!isB2BUser && discountPercentage > 0 && (
