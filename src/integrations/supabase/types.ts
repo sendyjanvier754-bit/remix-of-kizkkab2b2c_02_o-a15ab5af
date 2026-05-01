@@ -2063,6 +2063,96 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_routes: {
+        Row: {
+          accepted_at: string | null
+          completed_at: string | null
+          completed_stops: number | null
+          completion_bonus: number | null
+          created_at: string
+          created_by: string | null
+          destination_department_ids: string[] | null
+          driver_id: string | null
+          fee_amount: number
+          fee_type: string
+          id: string
+          name: string
+          notes: string | null
+          origin_department_id: string | null
+          route_code: string
+          route_type: string
+          scheduled_for: string | null
+          started_at: string | null
+          status: string
+          total_distance_km: number | null
+          total_stops: number | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          completed_at?: string | null
+          completed_stops?: number | null
+          completion_bonus?: number | null
+          created_at?: string
+          created_by?: string | null
+          destination_department_ids?: string[] | null
+          driver_id?: string | null
+          fee_amount?: number
+          fee_type?: string
+          id?: string
+          name: string
+          notes?: string | null
+          origin_department_id?: string | null
+          route_code?: string
+          route_type: string
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string
+          total_distance_km?: number | null
+          total_stops?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          completed_at?: string | null
+          completed_stops?: number | null
+          completion_bonus?: number | null
+          created_at?: string
+          created_by?: string | null
+          destination_department_ids?: string[] | null
+          driver_id?: string | null
+          fee_amount?: number
+          fee_type?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          origin_department_id?: string | null
+          route_code?: string
+          route_type?: string
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string
+          total_distance_km?: number | null
+          total_stops?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_routes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_routes_origin_department_id_fkey"
+            columns: ["origin_department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           code: string
@@ -2222,6 +2312,83 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drivers: {
+        Row: {
+          application_id: string | null
+          coverage_department_ids: string[] | null
+          created_at: string
+          current_lat: number | null
+          current_lng: number | null
+          current_status: string
+          full_name: string
+          id: string
+          is_active: boolean
+          last_location_at: string | null
+          license_number: string | null
+          phone: string
+          rating: number | null
+          total_completed_routes: number | null
+          total_earnings_usd: number | null
+          updated_at: string
+          user_id: string
+          vehicle_capacity_kg: number | null
+          vehicle_plate: string | null
+          vehicle_type: string
+        }
+        Insert: {
+          application_id?: string | null
+          coverage_department_ids?: string[] | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          current_status?: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          last_location_at?: string | null
+          license_number?: string | null
+          phone: string
+          rating?: number | null
+          total_completed_routes?: number | null
+          total_earnings_usd?: number | null
+          updated_at?: string
+          user_id: string
+          vehicle_capacity_kg?: number | null
+          vehicle_plate?: string | null
+          vehicle_type: string
+        }
+        Update: {
+          application_id?: string | null
+          coverage_department_ids?: string[] | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          current_status?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          last_location_at?: string | null
+          license_number?: string | null
+          phone?: string
+          rating?: number | null
+          total_completed_routes?: number | null
+          total_earnings_usd?: number | null
+          updated_at?: string
+          user_id?: string
+          vehicle_capacity_kg?: number | null
+          vehicle_plate?: string | null
+          vehicle_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drivers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "partner_applications"
             referencedColumns: ["id"]
           },
         ]
@@ -3977,6 +4144,232 @@ export type Database = {
           },
         ]
       }
+      partner_applications: {
+        Row: {
+          address: string | null
+          application_type: string
+          approved_user_id: string | null
+          business_hours: Json | null
+          business_name: string | null
+          commune_id: string | null
+          coverage_department_ids: string[] | null
+          created_at: string
+          department_id: string | null
+          documents: Json | null
+          email: string
+          estimated_capacity: number | null
+          full_name: string
+          has_storage_space: boolean | null
+          id: string
+          invitation_code: string | null
+          license_number: string | null
+          national_id: string | null
+          notes: string | null
+          phone: string
+          photo_url: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tracking_token: string | null
+          updated_at: string
+          vehicle_capacity_kg: number | null
+          vehicle_plate: string | null
+          vehicle_type: string | null
+        }
+        Insert: {
+          address?: string | null
+          application_type: string
+          approved_user_id?: string | null
+          business_hours?: Json | null
+          business_name?: string | null
+          commune_id?: string | null
+          coverage_department_ids?: string[] | null
+          created_at?: string
+          department_id?: string | null
+          documents?: Json | null
+          email: string
+          estimated_capacity?: number | null
+          full_name: string
+          has_storage_space?: boolean | null
+          id?: string
+          invitation_code?: string | null
+          license_number?: string | null
+          national_id?: string | null
+          notes?: string | null
+          phone: string
+          photo_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tracking_token?: string | null
+          updated_at?: string
+          vehicle_capacity_kg?: number | null
+          vehicle_plate?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          address?: string | null
+          application_type?: string
+          approved_user_id?: string | null
+          business_hours?: Json | null
+          business_name?: string | null
+          commune_id?: string | null
+          coverage_department_ids?: string[] | null
+          created_at?: string
+          department_id?: string | null
+          documents?: Json | null
+          email?: string
+          estimated_capacity?: number | null
+          full_name?: string
+          has_storage_space?: boolean | null
+          id?: string
+          invitation_code?: string | null
+          license_number?: string | null
+          national_id?: string | null
+          notes?: string | null
+          phone?: string
+          photo_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tracking_token?: string | null
+          updated_at?: string
+          vehicle_capacity_kg?: number | null
+          vehicle_plate?: string | null
+          vehicle_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_applications_commune_id_fkey"
+            columns: ["commune_id"]
+            isOneToOne: false
+            referencedRelation: "communes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_applications_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_chat_messages: {
+        Row: {
+          attachment_url: string | null
+          context_id: string
+          context_type: string
+          created_at: string
+          id: string
+          message: string
+          read_by: string[] | null
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          context_id: string
+          context_type: string
+          created_at?: string
+          id?: string
+          message: string
+          read_by?: string[] | null
+          sender_id: string
+          sender_role: string
+        }
+        Update: {
+          attachment_url?: string | null
+          context_id?: string
+          context_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          read_by?: string[] | null
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: []
+      }
+      partner_earnings: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          currency: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          order_delivery_id: string | null
+          paid_at: string | null
+          partner_type: string
+          partner_user_id: string
+          payment_reference: string | null
+          pickup_point_id: string | null
+          route_id: string | null
+          source_type: string
+          status: string
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          order_delivery_id?: string | null
+          paid_at?: string | null
+          partner_type: string
+          partner_user_id: string
+          payment_reference?: string | null
+          pickup_point_id?: string | null
+          route_id?: string | null
+          source_type: string
+          status?: string
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          order_delivery_id?: string | null
+          paid_at?: string | null
+          partner_type?: string
+          partner_user_id?: string
+          payment_reference?: string | null
+          pickup_point_id?: string | null
+          route_id?: string | null
+          source_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_earnings_order_delivery_id_fkey"
+            columns: ["order_delivery_id"]
+            isOneToOne: false
+            referencedRelation: "order_deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_earnings_pickup_point_id_fkey"
+            columns: ["pickup_point_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_earnings_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_methods: {
         Row: {
           account_holder: string | null
@@ -4132,6 +4525,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pickup_point_managers: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          pickup_point_id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          pickup_point_id: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          pickup_point_id?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_point_managers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "partner_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_point_managers_pickup_point_id_fkey"
+            columns: ["pickup_point_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_points"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pickup_point_staff: {
         Row: {
           created_at: string | null
@@ -4173,8 +4611,11 @@ export type Database = {
       pickup_points: {
         Row: {
           address: string | null
+          application_id: string | null
           capacity: number | null
           city: string | null
+          commission_per_day_storage: number | null
+          commission_per_package: number | null
           commune_id: string | null
           country: string | null
           created_at: string | null
@@ -4195,8 +4636,11 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          application_id?: string | null
           capacity?: number | null
           city?: string | null
+          commission_per_day_storage?: number | null
+          commission_per_package?: number | null
           commune_id?: string | null
           country?: string | null
           created_at?: string | null
@@ -4217,8 +4661,11 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          application_id?: string | null
           capacity?: number | null
           city?: string | null
+          commission_per_day_storage?: number | null
+          commission_per_package?: number | null
           commune_id?: string | null
           country?: string | null
           created_at?: string | null
@@ -4238,6 +4685,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pickup_points_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "partner_applications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pickup_points_commune_id_fkey"
             columns: ["commune_id"]
@@ -6193,6 +6647,97 @@ export type Database = {
             columns: ["shipping_route_id"]
             isOneToOne: false
             referencedRelation: "shipping_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      route_stops: {
+        Row: {
+          address: string | null
+          arrived_at: string | null
+          completed_at: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          estimated_weight_kg: number | null
+          hub_id: string | null
+          id: string
+          notes: string | null
+          order_id: string | null
+          order_type: string | null
+          package_count: number | null
+          pickup_point_id: string | null
+          proof_signature: string | null
+          proof_url: string | null
+          route_id: string
+          sequence: number
+          status: string
+          stop_type: string
+        }
+        Insert: {
+          address?: string | null
+          arrived_at?: string | null
+          completed_at?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          estimated_weight_kg?: number | null
+          hub_id?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          order_type?: string | null
+          package_count?: number | null
+          pickup_point_id?: string | null
+          proof_signature?: string | null
+          proof_url?: string | null
+          route_id: string
+          sequence: number
+          status?: string
+          stop_type: string
+        }
+        Update: {
+          address?: string | null
+          arrived_at?: string | null
+          completed_at?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          estimated_weight_kg?: number | null
+          hub_id?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          order_type?: string | null
+          package_count?: number | null
+          pickup_point_id?: string | null
+          proof_signature?: string | null
+          proof_url?: string | null
+          route_id?: string
+          sequence?: number
+          status?: string
+          stop_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_stops_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "transit_hubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_stops_pickup_point_id_fkey"
+            columns: ["pickup_point_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_stops_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_routes"
             referencedColumns: ["id"]
           },
         ]
@@ -9217,6 +9762,7 @@ export type Database = {
       }
     }
     Functions: {
+      accept_delivery_route: { Args: { p_route_id: string }; Returns: Json }
       admin_confirm_payment: {
         Args: {
           p_admin_user_id: string
@@ -9226,6 +9772,14 @@ export type Database = {
         Returns: Json
       }
       agent_push_cart_to_user: { Args: { p_draft_id: string }; Returns: Json }
+      approve_partner_application: {
+        Args: {
+          p_application_id: string
+          p_approved_user_id: string
+          p_pickup_point_id?: string
+        }
+        Returns: Json
+      }
       auto_assign_po_to_agent: { Args: { p_po_id: string }; Returns: Json }
       calculate_b2b_price: {
         Args: {
@@ -9366,6 +9920,10 @@ export type Database = {
       }
       close_po_and_open_new: {
         Args: { p_close_reason?: string; p_po_id: string }
+        Returns: Json
+      }
+      complete_route_stop: {
+        Args: { p_notes?: string; p_proof_url?: string; p_stop_id: string }
         Returns: Json
       }
       delete_product_cascade: {
@@ -9515,6 +10073,23 @@ export type Database = {
         Returns: undefined
       }
       refresh_suggested_pvp_cache: { Args: never; Returns: undefined }
+      reject_partner_application: {
+        Args: { p_application_id: string; p_reason: string }
+        Returns: undefined
+      }
+      submit_partner_application: {
+        Args: {
+          p_application_type: string
+          p_data?: Json
+          p_email: string
+          p_full_name: string
+          p_phone: string
+        }
+        Returns: {
+          application_id: string
+          tracking_token: string
+        }[]
+      }
       sync_all_b2b_stores: { Args: never; Returns: Json }
       sync_b2b_catalog_for_store: {
         Args: { p_store_id: string }
