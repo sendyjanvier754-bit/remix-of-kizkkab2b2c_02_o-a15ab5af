@@ -43,8 +43,9 @@ const AdminPartnerApplicationsPage = () => {
     setSearching(true);
     setFoundUserId(null);
     try {
-      const { data: { users }, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
       if (error) throw error;
+      const users = (data as any)?.users as Array<{ id: string; email?: string }> | undefined;
       const found = users?.find((u) => u.email?.toLowerCase() === selected.email.toLowerCase());
       if (found) {
         setFoundUserId(found.id);
@@ -84,10 +85,9 @@ const AdminPartnerApplicationsPage = () => {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout title="Solicitudes de socios">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Solicitudes de socios</h1>
           <p className="text-muted-foreground">Aprueba o rechaza nuevas postulaciones de puntos de retiro y conductores.</p>
         </div>
 
