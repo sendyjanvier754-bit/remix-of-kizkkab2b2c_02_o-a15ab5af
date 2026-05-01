@@ -345,6 +345,14 @@ const AppContent = () => {
               } 
             />
             <Route 
+              path="/admin/partner-applications" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminPartnerApplicationsPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/transit-hubs" 
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
