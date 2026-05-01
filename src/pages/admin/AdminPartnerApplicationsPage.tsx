@@ -39,31 +39,29 @@ const AdminPartnerApplicationsPage = () => {
   const [searching, setSearching] = useState(false);
 
   const handleSearchUser = async () => {
-    if (!selected?.email) return;
+    const targetEmail = (searchEmail || selected?.email || "").trim().toLowerCase();
+    if (!targetEmail) return;
     setSearching(true);
     setFoundUserId(null);
     try {
-      const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .ilike("email", targetEmail)
+        .maybeSingle();
       if (error) throw error;
-      const users = (data as any)?.users as Array<{ id: string; email?: string }> | undefined;
-      const found = users?.find((u) => u.email?.toLowerCase() === selected.email.toLowerCase());
-      if (found) {
-        setFoundUserId(found.id);
-        toast({ title: "Usuario encontrado", description: found.email });
+      if (data?.id) {
+        setFoundUserId(data.id);
+        toast({ title: "Usuario encontrado", description: data.email ?? targetEmail });
       } else {
         toast({
           title: "No encontrado",
-          description: "Este correo no tiene cuenta. Pídele que se registre primero.",
+          description: "Este correo no tiene cuenta. Pídele al socio que se registre primero.",
           variant: "destructive",
         });
       }
     } catch (e: any) {
-      // Fallback: invitar manualmente con el email del solicitante
-      toast({
-        title: "Búsqueda no disponible",
-        description: "Pídele al socio que cree una cuenta con su correo y vuelve a intentar.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally {
       setSearching(false);
     }
