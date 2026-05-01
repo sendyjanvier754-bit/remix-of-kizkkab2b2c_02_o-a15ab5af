@@ -89,6 +89,10 @@ const AdminCotizaciones = lazy(() => import("./pages/admin/AdminCotizaciones"));
 const AdminReembolsos = lazy(() => import("./pages/admin/AdminReembolsos"));
 const AdminCommissionPage = lazy(() => import("./pages/admin/AdminCommissionPage"));
 const AdminPickupPointsPage = lazy(() => import("./pages/admin/AdminPickupPointsPage"));
+const AdminPartnerApplicationsPage = lazy(() => import("./pages/admin/AdminPartnerApplicationsPage"));
+const BecomePartnerPage = lazy(() => import("./pages/partners/BecomePartnerPage"));
+const PickupPointRegistrationPage = lazy(() => import("./pages/partners/PickupPointRegistrationPage"));
+const DriverRegistrationPage = lazy(() => import("./pages/partners/DriverRegistrationPage"));
 const AdminTransitHubsPage = lazy(() => import("./pages/admin/AdminTransitHubsPage"));
 const AdminDiscountCodes = lazy(() => import("./pages/admin/AdminDiscountCodes"));
 const AdminPopupsPage = lazy(() => import("./pages/admin/AdminPopupsPage"));
@@ -212,6 +216,11 @@ const AppContent = () => {
             
             {/* Seller Onboarding (no auth required, just registered) */}
             <Route path="/seller/onboarding" element={<SellerOnboardingPage />} />
+
+            {/* Partner registration (public) */}
+            <Route path="/socios" element={<LazyRoute><BecomePartnerPage /></LazyRoute>} />
+            <Route path="/socios/punto-retiro/registro" element={<LazyRoute><PickupPointRegistrationPage /></LazyRoute>} />
+            <Route path="/socios/conductor/registro" element={<LazyRoute><DriverRegistrationPage /></LazyRoute>} />
             
             {/* ========== ADMIN ROUTES ========== */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -332,6 +341,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminPickupPointsPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/partner-applications" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminPartnerApplicationsPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
