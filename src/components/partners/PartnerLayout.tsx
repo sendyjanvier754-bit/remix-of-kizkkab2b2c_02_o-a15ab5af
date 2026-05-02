@@ -24,13 +24,13 @@ const pickupNav = [
 ];
 
 export default function PartnerLayout({ children, variant, title }: PartnerLayoutProps) {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const nav = variant === "driver" ? driverNav : pickupNav;
   const Icon = variant === "driver" ? Truck : Package;
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate("/cuenta", { replace: true });
   };
 
