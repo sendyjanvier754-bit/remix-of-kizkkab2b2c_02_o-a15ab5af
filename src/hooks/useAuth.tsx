@@ -54,13 +54,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return UserRole.USER;
       }
 
-      // Priority: admin > purchasing_agent > grossiste > seller > sales_agent > user
+      // Priority: admin > purchasing_agent > grossiste > seller > sales_agent > pickup_partner > driver_partner > staff_pickup > user
       const roles = data.map(r => r.role as string);
       if (roles.includes('admin')) return UserRole.ADMIN;
       if (roles.includes('purchasing_agent')) return UserRole.PURCHASING_AGENT;
       if (roles.includes('grossiste')) return UserRole.GROSSISTE;
       if (roles.includes('seller')) return UserRole.SELLER;
       if (roles.includes('sales_agent')) return UserRole.SALES_AGENT;
+      if (roles.includes('pickup_partner')) return UserRole.PICKUP_PARTNER;
+      if (roles.includes('driver_partner')) return UserRole.DRIVER_PARTNER;
+      if (roles.includes('staff_pickup')) return UserRole.STAFF_PICKUP;
       return UserRole.USER;
     } catch (error) {
       console.error('Error checking user role:', error);
