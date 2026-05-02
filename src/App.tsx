@@ -226,7 +226,46 @@ const AppContent = () => {
             <Route path="/socios" element={<LazyRoute><BecomePartnerPage /></LazyRoute>} />
             <Route path="/socios/punto-retiro/registro" element={<LazyRoute><PickupPointRegistrationPage /></LazyRoute>} />
             <Route path="/socios/conductor/registro" element={<LazyRoute><DriverRegistrationPage /></LazyRoute>} />
-            
+
+            {/* Driver portal */}
+            <Route path="/socio/conductor" element={
+              <ProtectedRoute requiredRoles={[UserRole.DRIVER_PARTNER, UserRole.ADMIN]}>
+                <LazyRoute><DriverAvailableRoutesPage /></LazyRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/socio/conductor/mis-rutas" element={
+              <ProtectedRoute requiredRoles={[UserRole.DRIVER_PARTNER, UserRole.ADMIN]}>
+                <LazyRoute><DriverMyRoutesPage /></LazyRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/socio/conductor/ruta/:routeId" element={
+              <ProtectedRoute requiredRoles={[UserRole.DRIVER_PARTNER, UserRole.ADMIN]}>
+                <LazyRoute><DriverRouteDetailPage /></LazyRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/socio/conductor/ganancias" element={
+              <ProtectedRoute requiredRoles={[UserRole.DRIVER_PARTNER, UserRole.ADMIN]}>
+                <LazyRoute><PartnerEarningsPage variant="driver" /></LazyRoute>
+              </ProtectedRoute>
+            } />
+
+            {/* Pickup partner portal */}
+            <Route path="/socio/punto" element={
+              <ProtectedRoute requiredRoles={[UserRole.PICKUP_PARTNER, UserRole.STAFF_PICKUP, UserRole.ADMIN]}>
+                <LazyRoute><PickupOrdersPage /></LazyRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/socio/punto/historial" element={
+              <ProtectedRoute requiredRoles={[UserRole.PICKUP_PARTNER, UserRole.STAFF_PICKUP, UserRole.ADMIN]}>
+                <LazyRoute><PickupOrdersPage historyMode /></LazyRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/socio/punto/ganancias" element={
+              <ProtectedRoute requiredRoles={[UserRole.PICKUP_PARTNER, UserRole.STAFF_PICKUP, UserRole.ADMIN]}>
+                <LazyRoute><PartnerEarningsPage variant="pickup" /></LazyRoute>
+              </ProtectedRoute>
+            } />
+
             {/* ========== ADMIN ROUTES ========== */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route 
