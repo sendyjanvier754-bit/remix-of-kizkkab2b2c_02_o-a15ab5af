@@ -11,10 +11,12 @@ export enum UserRole {
   SELLER = "seller", // Vendedor Siver509 - Acceso a módulo B2B
   USER = "user", // Usuario/Cliente Final - Acceso solo a experiencia B2C
   MODERATOR = "moderator", // Moderador
-  STAFF_PICKUP = "staff_pickup", // Staff de punto de recogida
+  STAFF_PICKUP = "staff_pickup", // Staff de punto de recogida (legacy)
   SALES_AGENT = "sales_agent", // Agente de ventas - Creación de pedidos remota
   PURCHASING_AGENT = "purchasing_agent", // Agente de compra internacional
   GROSSISTE = "grossiste", // Mayorista - Publica al catálogo B2B
+  PICKUP_PARTNER = "pickup_partner", // Socio: gestor de punto de recogida
+  DRIVER_PARTNER = "driver_partner", // Socio: conductor de entregas
 }
 
 // Alias para compatibilidad
