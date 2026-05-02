@@ -8511,6 +8511,7 @@ export type Database = {
         Row: {
           assigned_at: string | null
           assigned_to: string | null
+          chat_context: string
           close_reason: string | null
           closed_at: string | null
           closed_by: string | null
@@ -8522,6 +8523,7 @@ export type Database = {
           order_type: string | null
           paused_at: string | null
           paused_by: string | null
+          route_id: string | null
           status: Database["public"]["Enums"]["chat_status"]
           title: string
           unread_customer: number
@@ -8531,6 +8533,7 @@ export type Database = {
         Insert: {
           assigned_at?: string | null
           assigned_to?: string | null
+          chat_context?: string
           close_reason?: string | null
           closed_at?: string | null
           closed_by?: string | null
@@ -8542,6 +8545,7 @@ export type Database = {
           order_type?: string | null
           paused_at?: string | null
           paused_by?: string | null
+          route_id?: string | null
           status?: Database["public"]["Enums"]["chat_status"]
           title?: string
           unread_customer?: number
@@ -8551,6 +8555,7 @@ export type Database = {
         Update: {
           assigned_at?: string | null
           assigned_to?: string | null
+          chat_context?: string
           close_reason?: string | null
           closed_at?: string | null
           closed_by?: string | null
@@ -8562,13 +8567,22 @@ export type Database = {
           order_type?: string | null
           paused_at?: string | null
           paused_by?: string | null
+          route_id?: string | null
           status?: Database["public"]["Enums"]["chat_status"]
           title?: string
           unread_customer?: number
           unread_staff?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_chats_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_routes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transit_hubs: {
         Row: {
@@ -10008,6 +10022,15 @@ export type Database = {
       }
       get_market_po_dashboard: { Args: never; Returns: Json }
       get_or_create_market_po: { Args: { p_market_id: string }; Returns: Json }
+      get_or_create_partner_chat: {
+        Args: {
+          p_context: string
+          p_order_id?: string
+          p_route_id?: string
+          p_title?: string
+        }
+        Returns: string
+      }
       get_product_market_analysis: {
         Args: { p_product_id: string }
         Returns: {
@@ -10068,6 +10091,14 @@ export type Database = {
       increment_popup_views: { Args: { popup_id: string }; Returns: undefined }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_grossiste: { Args: { _user_id: string }; Returns: boolean }
+      is_order_pickup_manager: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_route_driver: {
+        Args: { _route_id: string; _user_id: string }
+        Returns: boolean
+      }
       refresh_market_is_ready: {
         Args: { p_market_id: string }
         Returns: undefined
