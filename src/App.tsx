@@ -93,6 +93,11 @@ const AdminPartnerApplicationsPage = lazy(() => import("./pages/admin/AdminPartn
 const BecomePartnerPage = lazy(() => import("./pages/partners/BecomePartnerPage"));
 const PickupPointRegistrationPage = lazy(() => import("./pages/partners/PickupPointRegistrationPage"));
 const DriverRegistrationPage = lazy(() => import("./pages/partners/DriverRegistrationPage"));
+const DriverAvailableRoutesPage = lazy(() => import("./pages/partners/driver/DriverAvailableRoutesPage"));
+const DriverMyRoutesPage = lazy(() => import("./pages/partners/driver/DriverMyRoutesPage"));
+const DriverRouteDetailPage = lazy(() => import("./pages/partners/driver/DriverRouteDetailPage"));
+const PickupOrdersPage = lazy(() => import("./pages/partners/pickup/PickupOrdersPage"));
+const PartnerEarningsPage = lazy(() => import("./pages/partners/PartnerEarningsPage"));
 const AdminTransitHubsPage = lazy(() => import("./pages/admin/AdminTransitHubsPage"));
 const AdminDiscountCodes = lazy(() => import("./pages/admin/AdminDiscountCodes"));
 const AdminPopupsPage = lazy(() => import("./pages/admin/AdminPopupsPage"));
