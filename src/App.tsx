@@ -22,6 +22,7 @@ import { BrandingApplier } from "@/components/BrandingApplier";
 import { SellerUpgradeProvider } from "./components/seller/SellerUpgradeProvider";
 import { GrossisteUpgradeProvider } from "./components/grossiste/GrossisteUpgradeProvider";
 import ScrollToTop from "./components/ScrollToTop";
+import LoginPromptModal from "@/components/auth/LoginPromptModal";
 
 // Suspense Wrapper for lazy components
 const LazyRoute = ({ children }: { children: ReactNode }) => (
@@ -171,6 +172,7 @@ const AppContent = () => {
       <Toaster />
       <Sonner />
       <VariantDrawer />
+      <LoginPromptModal />
       <Routes>
             {/* ========== PUBLIC ROUTES (B2C) ========== */}
             <Route path="/" element={<Index />} />
