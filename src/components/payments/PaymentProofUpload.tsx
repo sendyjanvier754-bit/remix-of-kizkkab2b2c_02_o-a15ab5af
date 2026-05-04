@@ -67,9 +67,12 @@ export const PaymentProofUpload = ({
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      // Bucket is private — use a long-lived signed URL (1 year)
+      const { data: signed, error: signedError } = await supabase.storage
         .from('payment-proofs')
-        .getPublicUrl(path);
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signedError) throw signedError;
+      const publicUrl = signed.signedUrl;
 
       // Patch metadata.payment_proof_url on the order
       const { data: orderRow } = await supabase
