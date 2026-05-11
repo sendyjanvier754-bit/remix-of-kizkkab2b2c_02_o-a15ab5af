@@ -55,15 +55,12 @@ export const LoginPromptModal = () => {
             Accede a tu cuenta para guardar favoritos, ver tus pedidos y disfrutar de descuentos exclusivos.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
-            Más tarde
-          </Button>
-          <Button onClick={goLogin} className="w-full sm:w-auto gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+          <Button onClick={goLogin} className="w-full sm:flex-1 gap-2">
             <LogIn className="h-4 w-4" />
             Iniciar sesión
           </Button>
-          <Button variant="secondary" onClick={goLogin} className="w-full sm:w-auto gap-2">
+          <Button variant="secondary" onClick={goLogin} className="w-full sm:flex-1 gap-2">
             <UserPlus className="h-4 w-4" />
             Crear cuenta
           </Button>
