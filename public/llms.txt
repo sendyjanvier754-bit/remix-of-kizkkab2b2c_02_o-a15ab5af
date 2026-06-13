@@ -1,0 +1,23 @@
+# Kizkka
+
+> Plataforma global de comercio B2B y B2C que conecta vendedores internacionales con compradores en Haití y el Caribe, con logística integrada y precios mayoristas.
+
+## Pages
+
+- [Inicio](/): Marketplace destacado, categorías y productos recomendados.
+- [Marketplace](/marketplace): Explora todos los productos disponibles con filtros y búsqueda.
+- [Categorías](/categorias): Navega el catálogo por categorías y subcategorías.
+- [Tendencias](/tendencias): Productos más vendidos y populares.
+- [Sobre nosotros](/sobre-nosotros): Quiénes somos y nuestra misión.
+- [Contacto](/contacto): Cómo contactarnos.
+- [Socios](/socios): Programa de socios (puntos de retiro, conductores).
+- [Registro vendedor](/registro-vendedor): Únete como vendedor en Kizkka.
+
+## Optional
+
+- [Términos](/terminos): Términos de servicio.
+- [Privacidad](/privacidad): Política de privacidad.
+- [Cookies](/cookies): Política de cookies.
+- [Devoluciones](/devoluciones): Política de devoluciones.
+- [Reembolsos](/reembolsos): Política de reembolsos.
+- [Cambios](/cambios): Política de cambios.
