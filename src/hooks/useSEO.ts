@@ -41,7 +41,19 @@ export const useSEO = (metadata: SEOMetadata) => {
     setOrCreateMeta("og:description", metadata.description);
     setOrCreateMeta("og:type", metadata.type || "website");
     setOrCreateMeta("og:image", metadata.image || defaultBrandImage);
-    if (metadata.url) setOrCreateMeta("og:url", metadata.url);
+    const pageUrl = metadata.url || (typeof window !== "undefined" ? window.location.href : "");
+    if (pageUrl) setOrCreateMeta("og:url", pageUrl);
+
+    // Canonical
+    if (pageUrl) {
+      let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+      if (!canonical) {
+        canonical = document.createElement("link");
+        canonical.rel = "canonical";
+        document.head.appendChild(canonical);
+      }
+      canonical.href = pageUrl;
+    }
 
     // Twitter Card
     setOrCreateMeta("twitter:card", "summary_large_image");

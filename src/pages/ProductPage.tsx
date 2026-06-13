@@ -735,7 +735,10 @@ const ProductPage = () => {
 
   useSEO({
     title: product?.nombre || 'Producto',
-    description: product?.descripcion || 'Detalle del producto en marketplace.',
+    description:
+      (product?.descripcion && product.descripcion.length >= 50)
+        ? product.descripcion
+        : `Descubre ${product?.nombre || 'este producto'} en Kizkka. Compra al mejor precio con envío seguro y atención dedicada a tu pedido.`,
     type: 'product',
     image: productMainImage || marketplaceShareImage,
     url: typeof window !== 'undefined' ? window.location.href : undefined
