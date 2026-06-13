@@ -385,6 +385,7 @@ const Header = ({
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={isImageSearching}
+                aria-label={t('header.imageSearch') || 'Buscar por imagen'}
                 className="p-1 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
               >
                 {isImageSearching ? (
@@ -398,6 +399,7 @@ const Header = ({
                 <button 
                   type="button" 
                   onClick={startVoiceSearch}
+                  aria-label={t('header.voiceSearch') || 'Buscar por voz'}
                   className={cn(
                     "p-1 transition-colors",
                     isListening 
@@ -430,12 +432,12 @@ const Header = ({
               <MessageCircle className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
             </button>
             {/* Favorites heart */}
-            <Link to={favoritesLink} className="relative flex-shrink-0">
+            <Link to={favoritesLink} aria-label={t('header.favorites') || 'Favoritos'} className="relative flex-shrink-0">
               <Heart className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#071d7f] rounded-full border-2 border-white" />
             </Link>
             {/* Profile */}
-            <Link to={accountLink} className="relative flex-shrink-0 text-gray-700 hover:text-[#071d7f] transition-colors">
+            <Link to={accountLink} aria-label={t('header.account') || 'Mi cuenta'} className="relative flex-shrink-0 text-gray-700 hover:text-[#071d7f] transition-colors">
               <User className="w-6 h-6" strokeWidth={1.5} />
             </Link>
           </div>

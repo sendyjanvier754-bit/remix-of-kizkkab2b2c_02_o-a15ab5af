@@ -362,16 +362,16 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
               placeholder={t('header.searchProducts')}
             />
             {searchQuery && (
-              <button type="button" onClick={clearSearch} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
+              <button type="button" onClick={clearSearch} aria-label={t('common.clear') || 'Limpiar búsqueda'} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">
                 <X className="w-4 h-4" />
               </button>
             )}
             <input ref={imageInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSearch} />
-            <button type="button" onClick={() => imageInputRef.current?.click()} disabled={isImageSearching} className="p-1 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50 flex-shrink-0">
+            <button type="button" onClick={() => imageInputRef.current?.click()} disabled={isImageSearching} aria-label={t('header.imageSearch') || 'Buscar por imagen'} className="p-1 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50 flex-shrink-0">
               {isImageSearching ? <Loader2 className="w-5 h-5 animate-spin" strokeWidth={1.5} /> : <Camera className="w-5 h-5" strokeWidth={1.5} />}
             </button>
             {voiceSupported && (
-              <button type="button" onClick={startVoiceSearch} className={cn("p-1 transition-colors flex-shrink-0", isListening ? "text-[#071d7f] animate-pulse" : "text-gray-500 hover:text-gray-700")}>
+              <button type="button" onClick={startVoiceSearch} aria-label={t('header.voiceSearch') || 'Buscar por voz'} className={cn("p-1 transition-colors flex-shrink-0", isListening ? "text-[#071d7f] animate-pulse" : "text-gray-500 hover:text-gray-700")}>
                 {isListening ? <MicOff className="w-5 h-5" strokeWidth={1.5} /> : <Mic className="w-5 h-5" strokeWidth={1.5} />}
               </button>
             )}
@@ -458,13 +458,13 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
 
         {/* Account User */}
         {(user && (role === UserRole.SELLER || role === UserRole.ADMIN)) && (
-          <Link to={accountLink} className="relative flex-shrink-0">
+          <Link to={accountLink} aria-label={t('header.account') || 'Mi cuenta'} className="relative flex-shrink-0">
             <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" strokeWidth={1.5} />
           </Link>
         )}
 
         {/* Favorites heart */}
-        <Link to={favoritesLink} className="relative flex-shrink-0">
+        <Link to={favoritesLink} aria-label={t('header.favorites') || 'Favoritos'} className="relative flex-shrink-0">
           <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" strokeWidth={1.5} />
           <span className={cn("absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white", accentColor)} />
         </Link>
