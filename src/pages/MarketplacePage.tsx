@@ -53,8 +53,9 @@ const MarketplacePage = () => {
     getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url');
 
   useSEO({
-    title: 'Marketplace',
-    description: 'Explora productos del marketplace y encuentra las mejores ofertas.',
+    title: 'Marketplace · Productos al mejor precio',
+    description:
+      'Explora miles de productos del marketplace Kizkka: filtra por categoría, tienda y precio para encontrar ofertas mayoristas y minoristas.',
     type: 'website',
     image: marketplaceShareImage,
     url: typeof window !== 'undefined' ? window.location.href : undefined,

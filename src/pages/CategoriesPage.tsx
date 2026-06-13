@@ -8,8 +8,19 @@ import { ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { useSEO } from "@/hooks/useSEO";
+import { useBranding } from "@/hooks/useBranding";
 
 const CategoriesPage = () => {
+  const { getValue } = useBranding();
+  useSEO({
+    title: 'Categorías · Explora el catálogo Kizkka',
+    description:
+      'Navega todas las categorías y subcategorías del marketplace Kizkka: encuentra productos por familia, segmento y especialidad en un solo lugar.',
+    type: 'website',
+    image: getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url'),
+    url: typeof window !== 'undefined' ? window.location.href : undefined,
+  });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories = [], isLoading } = usePublicCategories();

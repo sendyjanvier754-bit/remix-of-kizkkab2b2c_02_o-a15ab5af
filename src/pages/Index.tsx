@@ -12,12 +12,24 @@ import {
   useBestSellers,
   useNewArrivals,
 } from "@/hooks/useMarketplaceData";
+import { useSEO } from "@/hooks/useSEO";
+import { useBranding } from "@/hooks/useBranding";
 
 // How many products to show between each promotional section
 const CHUNK_SIZE = 30;
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const { getValue } = useBranding();
+
+  useSEO({
+    title: 'Kizkka · Marketplace global B2B y B2C',
+    description:
+      'Compra al mejor precio en Kizkka: marketplace que conecta vendedores internacionales con compradores en Haití y el Caribe, con logística integrada.',
+    type: 'website',
+    image: getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url'),
+    url: typeof window !== 'undefined' ? window.location.href : undefined,
+  });
 
   // Main feed: all seller products mixed
   const { data: allProducts = [], isLoading: loadingAll } = useAllSellerProducts(200);
@@ -49,6 +61,7 @@ const Index = () => {
       {!isMobile && <GlobalHeader />}
 
       <main className={`w-full overflow-x-hidden ${isMobile ? 'pb-14' : ''}`}>
+        <h1 className="sr-only">Kizkka — Marketplace global B2B y B2C para Haití y el Caribe</h1>
         <HeroSection />
         <CategoryGrid />
 
