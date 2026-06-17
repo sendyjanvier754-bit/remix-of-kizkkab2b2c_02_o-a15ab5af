@@ -5624,6 +5624,7 @@ export type Database = {
           parent_review_id: string | null
           product_id: string | null
           rating: number
+          reviewer_display: string | null
           seller_catalog_id: string | null
           title: string | null
           updated_at: string
@@ -5641,6 +5642,7 @@ export type Database = {
           parent_review_id?: string | null
           product_id?: string | null
           rating: number
+          reviewer_display?: string | null
           seller_catalog_id?: string | null
           title?: string | null
           updated_at?: string
@@ -5658,6 +5660,7 @@ export type Database = {
           parent_review_id?: string | null
           product_id?: string | null
           rating?: number
+          reviewer_display?: string | null
           seller_catalog_id?: string | null
           title?: string | null
           updated_at?: string
