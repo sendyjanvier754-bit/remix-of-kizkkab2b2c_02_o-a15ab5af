@@ -164,7 +164,7 @@ const ProductPage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("product_reviews")
-        .select("id, rating, title, comment, created_at, user_id, user_email, is_verified_purchase, helpful_count")
+        .select("id, rating, title, comment, created_at, user_id, reviewer_display, is_verified_purchase, helpful_count")
         .eq("seller_catalog_id", catalogItem!.id)
         .eq("is_approved", true)
         .order("created_at", { ascending: false });
