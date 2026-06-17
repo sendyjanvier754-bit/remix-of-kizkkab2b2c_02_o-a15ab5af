@@ -824,7 +824,7 @@ const ProductPage = () => {
                 comment: string | null;
                 created_at: string;
                 user_id: string;
-                user_email: string | null;
+                reviewer_display: string | null;
                 is_verified_purchase: boolean | null;
                 helpful_count: number | null;
               }) => (
@@ -832,11 +832,11 @@ const ProductPage = () => {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
-                        {(review.user_email?.[0] ?? "U").toUpperCase()}
+                        {(review.reviewer_display?.[0] ?? "U").toUpperCase()}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-800">
-                          {review.user_email ? review.user_email.split("@")[0] : "Usuario"}
+                          {review.reviewer_display || "Usuario"}
                         </p>
                         {review.is_verified_purchase && (
                           <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
