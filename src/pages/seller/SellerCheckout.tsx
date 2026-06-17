@@ -2096,17 +2096,8 @@ const SellerCheckout = () => {
                     <span className="text-xs text-muted-foreground">Cargando...</span>
                   </div>
                 ) : (
-                  <Select
-                    value={checkoutMarketId ?? ''}
-                    onValueChange={(val) => {
-                      setCheckoutMarketId(val);
-                      setSelectedShippingTypeId(null);
-                      setShippingSummary(null);
-                      setPickupDept('');
-                      setPickupComm('');
-                    }}
-                  >
-                    <SelectTrigger className="h-8 text-sm bg-white">
+                  <Select value={checkoutMarketId ?? ''} onValueChange={() => {}} disabled>
+                    <SelectTrigger className="h-8 text-sm bg-white opacity-90 cursor-not-allowed">
                       <SelectValue placeholder="Selecciona mercado / país" />
                     </SelectTrigger>
                     <SelectContent>
