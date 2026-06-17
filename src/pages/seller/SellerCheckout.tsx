@@ -1845,17 +1845,8 @@ const SellerCheckout = () => {
                       <Globe className="h-3 w-3" />
                       País de destino
                     </Label>
-                    <Select
-                      value={checkoutMarketId ?? ''}
-                      onValueChange={(val) => {
-                        setCheckoutMarketId(val);
-                        setSelectedShippingTypeId(null);
-                        setShippingSummary(null);
-                        setSelectedDept('');
-                        setSelectedComm('');
-                      }}
-                    >
-                      <SelectTrigger className="h-8 text-sm bg-white">
+                    <Select value={checkoutMarketId ?? ''} onValueChange={() => {}} disabled>
+                      <SelectTrigger className="h-8 text-sm bg-white opacity-90 cursor-not-allowed">
                         <SelectValue placeholder="Selecciona mercado / país" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1866,6 +1857,7 @@ const SellerCheckout = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-[10px] text-blue-600/80">No editable en el checkout.</p>
                     {checkoutCountryName && (
                       <p className="text-xs text-blue-700 flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
