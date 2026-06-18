@@ -17,34 +17,30 @@ import { lazy, ComponentType } from "react";
  *  3. If we've already retried once, rethrow so the ErrorBoundary handles it
  *     instead of looping reloads.
  */
-export function lazyWithRetry<T extends ComponentType>(
+export function lazyWithRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>
 ) {
   return lazy(async () => {
     const RETRY_KEY = "__lovable_chunk_retry__";
     try {
-      const mod = await factory();
-      sessionStorage.removeItem(RETRY_KEY);
-      return mod;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err || "");
-      const name = err instanceof Error ? err.name : "";
+      return await factory();
+    } catch (err: any) {
+      const message = String(err?.message || err || "");
       const isChunkError =
-        name === "ChunkLoadError" ||
-        /Loading chunk|Loading CSS chunk|dynamically imported module|Failed to fetch|error loading dynamically imported module|Importing a module script failed/i.test(
+        err?.name === "ChunkLoadError" ||
+        /Loading chunk|Loading CSS chunk|dynamically imported module|Failed to fetch/i.test(
           message
         );
 
       if (!isChunkError) throw err;
 
-      const lastRetryAt = Number(sessionStorage.getItem(RETRY_KEY) || 0);
-      const alreadyRetried = Number.isFinite(lastRetryAt) && Date.now() - lastRetryAt < 10_000;
+      const alreadyRetried = sessionStorage.getItem(RETRY_KEY) === "1";
       if (!alreadyRetried) {
-        sessionStorage.setItem(RETRY_KEY, String(Date.now()));
+        sessionStorage.setItem(RETRY_KEY, "1");
         window.location.reload();
         // Return a never-resolving promise so Suspense keeps the loader
         // visible until the reload happens.
-        return await new Promise<{ default: T }>(() => {});
+        return new Promise(() => {}) as any;
       }
       throw err;
     }
