@@ -41,6 +41,8 @@ import SellerOnboardingPage from "./pages/seller/SellerOnboardingPage";
 import SellerRegistrationPage from "./pages/SellerRegistrationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import SellerCheckout from "./pages/seller/SellerCheckout";
 
 // Lazy loaded - Public Pages
 const StorePage = lazyWithRetry(() => import("./pages/StorePage"));
@@ -55,7 +57,6 @@ const SearchResultsPage = lazyWithRetry(() => import("./pages/SearchResultsPage"
 const TrendsPage = lazyWithRetry(() => import("./pages/TrendsPage"));
 const MarketplacePage = lazyWithRetry(() => import("./pages/MarketplacePage"));
 const MyPurchasesPage = lazyWithRetry(() => import("./pages/MyPurchasesPage"));
-const CheckoutPage = lazyWithRetry(() => import("./pages/CheckoutPage"));
 const UserProfilePage = lazyWithRetry(() => import("./pages/UserProfilePage"));
 const EditProfilePage = lazyWithRetry(() => import("./pages/EditProfilePage"));
 const UserSupportPage = lazyWithRetry(() => import("./pages/UserSupportPage"));
@@ -139,7 +140,6 @@ const GrossisteProfilePage = lazyWithRetry(() => import("./pages/grossiste/Gross
 
 // Lazy loaded - Seller Pages
 const SellerAcquisicionLotes = lazyWithRetry(() => import("./pages/seller/SellerAcquisicionLotes"));
-const SellerCheckout = lazyWithRetry(() => import("./pages/seller/SellerCheckout"));
 const SellerAccountPage = lazyWithRetry(() => import("./pages/seller/SellerAccountPage"));
 const SellerWalletPage = lazyWithRetry(() => import("./pages/seller/SellerWalletPage"));
 const SellerDashboard = lazyWithRetry(() => import("./pages/seller/SellerDashboard"));

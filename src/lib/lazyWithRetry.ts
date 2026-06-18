@@ -23,20 +23,23 @@ export function lazyWithRetry<T extends ComponentType<any>>(
   return lazy(async () => {
     const RETRY_KEY = "__lovable_chunk_retry__";
     try {
-      return await factory();
+      const mod = await factory();
+      sessionStorage.removeItem(RETRY_KEY);
+      return mod;
     } catch (err: any) {
       const message = String(err?.message || err || "");
       const isChunkError =
         err?.name === "ChunkLoadError" ||
-        /Loading chunk|Loading CSS chunk|dynamically imported module|Failed to fetch/i.test(
+        /Loading chunk|Loading CSS chunk|dynamically imported module|Failed to fetch|error loading dynamically imported module|Importing a module script failed/i.test(
           message
         );
 
       if (!isChunkError) throw err;
 
-      const alreadyRetried = sessionStorage.getItem(RETRY_KEY) === "1";
+      const lastRetryAt = Number(sessionStorage.getItem(RETRY_KEY) || 0);
+      const alreadyRetried = Number.isFinite(lastRetryAt) && Date.now() - lastRetryAt < 10_000;
       if (!alreadyRetried) {
-        sessionStorage.setItem(RETRY_KEY, "1");
+        sessionStorage.setItem(RETRY_KEY, String(Date.now()));
         window.location.reload();
         // Return a never-resolving promise so Suspense keeps the loader
         // visible until the reload happens.
