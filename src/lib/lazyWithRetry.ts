@@ -17,7 +17,7 @@ import { lazy, ComponentType } from "react";
  *  3. If we've already retried once, rethrow so the ErrorBoundary handles it
  *     instead of looping reloads.
  */
-export function lazyWithRetry<T extends ComponentType<any>>(
+export function lazyWithRetry<T extends ComponentType>(
   factory: () => Promise<{ default: T }>
 ) {
   return lazy(async () => {
@@ -26,10 +26,11 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       const mod = await factory();
       sessionStorage.removeItem(RETRY_KEY);
       return mod;
-    } catch (err: any) {
-      const message = String(err?.message || err || "");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err || "");
+      const name = err instanceof Error ? err.name : "";
       const isChunkError =
-        err?.name === "ChunkLoadError" ||
+        name === "ChunkLoadError" ||
         /Loading chunk|Loading CSS chunk|dynamically imported module|Failed to fetch|error loading dynamically imported module|Importing a module script failed/i.test(
           message
         );
@@ -43,7 +44,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
         window.location.reload();
         // Return a never-resolving promise so Suspense keeps the loader
         // visible until the reload happens.
-        return new Promise(() => {}) as any;
+        return await new Promise<{ default: T }>(() => {});
       }
       throw err;
     }
