@@ -669,6 +669,10 @@ const SellerCheckout = () => {
   }
 
   if (orderPlaced) {
+    const orderTotal = items.reduce((s, i) => s + i.subtotal, 0)
+      + ((computedShippingData?.shippingCostTotalUsd) ?? 0)
+      - (appliedDiscount?.discountAmount ?? 0);
+    const needsCardPayment = paymentMethod === 'stripe' && !!orderId;
     return (
       <SellerLayout>
         <div className="min-h-screen bg-background">
@@ -680,9 +684,13 @@ const SellerCheckout = () => {
                     <Check className="w-10 h-10 text-green-600" />
                   </div>
                 </div>
-                <h1 className="text-2xl font-bold mb-2">¡Pedido Confirmado!</h1>
+                <h1 className="text-2xl font-bold mb-2">
+                  {needsCardPayment ? 'Pedido Creado · Falta el Pago' : '¡Pedido Confirmado!'}
+                </h1>
                 <p className="text-muted-foreground mb-4">
-                  Tu pedido ha sido creado exitosamente.
+                  {needsCardPayment
+                    ? 'Completa el pago con tarjeta para confirmar tu pedido.'
+                    : 'Tu pedido ha sido creado exitosamente.'}
                 </p>
                 {orderId && (
                   <div className="bg-muted p-4 rounded-lg mb-4">
@@ -690,7 +698,21 @@ const SellerCheckout = () => {
                     <p className="font-mono font-bold">{orderId.slice(0, 8).toUpperCase()}</p>
                   </div>
                 )}
-                
+
+                {needsCardPayment && (
+                  <div className="text-left mb-4">
+                    <StripeCardForm
+                      orderId={orderId}
+                      orderType="b2b"
+                      amount={Math.max(0.5, orderTotal)}
+                      currency="usd"
+                      onSuccess={() => {
+                        toast.success('Pago enviado. Recibirás la confirmación por correo.');
+                      }}
+                    />
+                  </div>
+                )}
+
                 {paymentMethod !== 'stripe' && (
                   <div className="text-left bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
                     <div className="flex items-start gap-3">
@@ -698,7 +720,7 @@ const SellerCheckout = () => {
                       <div>
                         <p className="font-semibold text-yellow-800">Pendiente de Verificación</p>
                         <p className="text-sm text-yellow-700 mt-1">
-                          Tu pedido está pendiente de verificación de pago. 
+                          Tu pedido está pendiente de verificación de pago.
                           Los productos serán agregados a tu catálogo una vez confirmado el pago.
                         </p>
                       </div>
@@ -722,6 +744,7 @@ const SellerCheckout = () => {
       </SellerLayout>
     );
   }
+
 
   const handlePlaceOrder = async () => {
     console.log('🚀 [CHECKOUT DEBUG] Iniciando handlePlaceOrder');
@@ -864,28 +887,16 @@ const SellerCheckout = () => {
 
       // Handle payment completion based on method
       if (paymentMethod === 'stripe') {
-        // For Stripe, mark order as paid (payment confirmed immediately)
-        // Setting payment_status='paid' triggers auto-linking to the Market's Master PO
-        const { error: updateError } = await supabase
-          .from('orders_b2b')
-          .update({ 
-            payment_status: 'paid' as any,
-            status: 'paid',
-            payment_verified_by: user.id,
-          })
-          .eq('id', order.id);
-        
-        if (!updateError) {
-          toast.success(useSiverCredit && creditAmount > 0 
-            ? 'Pago procesado con crédito combinado' 
-            : 'Pago procesado correctamente');
-        }
+        // For Stripe, the order STAYS pending until the webhook confirms the payment.
+        // The card form is rendered on the order-confirmed screen below.
+        toast.success('Pedido creado. Completa el pago con tarjeta para confirmarlo.');
       } else {
         // For MonCash/Transfer, order stays pending_validation until admin verifies and updates payment_status
         toast.success(useSiverCredit && creditAmount > 0
           ? 'Pedido creado con crédito aplicado. Pago restante pendiente de verificación.'
           : 'Pedido creado. Pendiente de verificación de pago.');
       }
+
 
       setOrderPlaced(true);
 
