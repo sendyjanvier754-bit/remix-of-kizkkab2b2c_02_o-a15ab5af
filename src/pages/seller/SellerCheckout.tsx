@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Globe } from 'lucide-react';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import Footer from '@/components/layout/Footer';
+import { StripeCardForm } from '@/components/payments/StripeCardForm';
 import { B2BShippingSelector } from '@/components/checkout/B2BShippingSelector';
 import { ShippingTypeSelector } from '@/components/seller/ShippingTypeSelector';
 import type { CartShippingSummary } from '@/hooks/useCartShippingCost';
@@ -669,9 +670,7 @@ const SellerCheckout = () => {
   }
 
   if (orderPlaced) {
-    const orderTotal = items.reduce((s, i) => s + i.subtotal, 0)
-      + ((computedShippingData?.shippingCostTotalUsd) ?? 0)
-      - (appliedDiscount?.discountAmount ?? 0);
+    const orderTotal = subtotal + shippingCostAmount + (localCost ?? 0) - (appliedDiscount?.discountAmount ?? 0) - (useSiverCredit ? creditAmount : 0);
     const needsCardPayment = paymentMethod === 'stripe' && !!orderId;
     return (
       <SellerLayout>
