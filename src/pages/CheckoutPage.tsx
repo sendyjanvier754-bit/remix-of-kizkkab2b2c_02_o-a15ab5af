@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import Footer from '@/components/layout/Footer';
+import { StripeCardForm } from '@/components/payments/StripeCardForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2CCartItems } from '@/hooks/useB2CCartItems';
 import { useCartSelectionStore } from '@/stores/useCartSelectionStore';
@@ -94,6 +95,8 @@ const CheckoutPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [realOrderId, setRealOrderId] = useState<string | null>(null);
+  const [stripeOrderAmount, setStripeOrderAmount] = useState<number>(0);
   const [paymentReference, setPaymentReference] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [showAddressDialog, setShowAddressDialog] = useState(false);
@@ -380,6 +383,23 @@ const CheckoutPage = () => {
                 </div>
               )}
 
+              {paymentMethod === 'stripe' && realOrderId && (
+                <div className="text-left mb-6">
+                  <p className="font-semibold mb-3 flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" /> Completa el pago con tarjeta
+                  </p>
+                  <StripeCardForm
+                    orderId={realOrderId}
+                    orderType="b2c"
+                    amount={Math.max(0.5, stripeOrderAmount)}
+                    currency="usd"
+                    onSuccess={() => {
+                      toast.success('Pago enviado. Recibirás la confirmación por correo.');
+                    }}
+                  />
+                </div>
+              )}
+
               {paymentMethod !== 'stripe' && (
                 <div className="text-left bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
                   <p className="font-semibold text-yellow-800">{t('checkout.pendingVerification')}</p>
@@ -388,6 +408,7 @@ const CheckoutPage = () => {
                   </p>
                 </div>
               )}
+
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild variant="outline">
@@ -478,6 +499,9 @@ const CheckoutPage = () => {
 
       if (order) {
         setOrderId(order.id.slice(0, 8).toUpperCase());
+        setRealOrderId(order.id);
+        setStripeOrderAmount(totalWithShipping);
+
         
         // Complete the cart by marking it as completed
         try {
