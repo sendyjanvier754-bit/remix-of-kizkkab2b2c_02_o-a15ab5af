@@ -8465,6 +8465,42 @@ export type Database = {
           },
         ]
       }
+      stripe_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          mode: string
+          publishable_key: string
+          secret_key: string
+          updated_at: string
+          updated_by: string | null
+          webhook_secret: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          mode?: string
+          publishable_key?: string
+          secret_key?: string
+          updated_at?: string
+          updated_by?: string | null
+          webhook_secret?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          mode?: string
+          publishable_key?: string
+          secret_key?: string
+          updated_at?: string
+          updated_by?: string | null
+          webhook_secret?: string
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           code: string | null
@@ -9956,6 +9992,13 @@ export type Database = {
         Returns: string
       }
       generate_user_code: { Args: never; Returns: string }
+      get_active_stripe_publishable_key: {
+        Args: never
+        Returns: {
+          mode: string
+          publishable_key: string
+        }[]
+      }
       get_agent_dashboard: { Args: { p_agent_id: string }; Returns: Json }
       get_cart_shipping_cost: {
         Args: { cart_items: Json; p_shipping_type_id?: string }
