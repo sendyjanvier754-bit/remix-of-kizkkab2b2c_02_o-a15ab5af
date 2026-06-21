@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import Footer from '@/components/layout/Footer';
+import { StripeCardForm } from '@/components/payments/StripeCardForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2CCartItems } from '@/hooks/useB2CCartItems';
 import { useCartSelectionStore } from '@/stores/useCartSelectionStore';
