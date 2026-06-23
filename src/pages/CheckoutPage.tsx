@@ -635,22 +635,18 @@ const CheckoutPage = () => {
 
             {/* Shipping Address */}
             {deliveryMethod === 'address' && (
-              <Card className={`p-6 ${hasFieldError(validationErrors, 'selectedAddress') ? 'border-red-500 border-2' : ''}`}>
-                <div className="flex items-center justify-between mb-4">
+              <Card className={`p-0 overflow-hidden ${hasFieldError(validationErrors, 'selectedAddress') ? 'border-red-500 border-2' : ''}`}>
+                <div className="bg-gray-200 px-4 py-3 flex items-center justify-between">
                   <h2 className="text-lg font-bold flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-[#071d7f]" />
+                    <MapPin className="h-4 w-4 text-[#071d7f]" />
                     {t('checkout.shippingAddress')}
                   </h2>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowAddressDialog(true)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
                     <Pencil className="h-4 w-4 mr-1" />
                     {t('checkout.manage')}
                   </Button>
                 </div>
-
+                <div className="p-4">
                 {hasFieldError(validationErrors, 'selectedAddress') && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -662,26 +658,19 @@ const CheckoutPage = () => {
                   <div className="text-center py-6 bg-muted/50 rounded-lg">
                     <MapPin className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground mb-3">{t('checkout.noAddresses')}</p>
-                    <Button 
-                      onClick={() => setShowAddressDialog(true)}
-                      className="bg-[#071d7f] hover:bg-[#0a2a9f]"
-                    >
+                    <Button onClick={() => setShowAddressDialog(true)} className="bg-[#071d7f] hover:bg-[#0a2a9f]">
                       <Plus className="h-4 w-4 mr-2" />
                       {t('checkout.addAddress')}
                     </Button>
                   </div>
                 ) : (
-                  <RadioGroup 
-                    value={selectedAddress || ''} 
-                    onValueChange={setSelectedAddress}
-                    className="space-y-3"
-                  >
+                  <RadioGroup value={selectedAddress || ''} onValueChange={setSelectedAddress} className="space-y-2">
                     {addresses.map((address) => (
                       <div
                         key={address.id}
-                        className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                           selectedAddress === address.id
-                            ? 'border-[#071d7f] bg-blue-50/50'
+                            ? 'border-[#071d7f] bg-[#071d7f]/5'
                             : 'border-border hover:border-muted-foreground'
                         }`}
                         onClick={() => setSelectedAddress(address.id)}
@@ -689,27 +678,26 @@ const CheckoutPage = () => {
                         <RadioGroupItem value={address.id} id={address.id} className="mt-1" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{address.label}</span>
+                            <span className="font-medium text-sm">{address.label}</span>
                             {address.is_default && (
                               <Badge variant="secondary" className="text-xs">
-                                 <Star className="h-3 w-3 mr-1" />
+                                <Star className="h-3 w-3 mr-1" />
                                 {t('checkout.default')}
                               </Badge>
                             )}
                           </div>
                           <p className="text-sm font-medium">{address.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{address.street_address}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">{address.street_address}</p>
+                          <p className="text-xs text-muted-foreground">
                             {address.city}{address.state ? `, ${address.state}` : ''} - {address.country}
                           </p>
-                          {address.phone && (
-                            <p className="text-sm text-muted-foreground">Tel: {address.phone}</p>
-                          )}
+                          {address.phone && <p className="text-xs text-muted-foreground">Tel: {address.phone}</p>}
                         </div>
                       </div>
                     ))}
                   </RadioGroup>
                 )}
+                </div>
               </Card>
             )}
 
