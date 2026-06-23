@@ -538,25 +538,38 @@ const CheckoutPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {!isMobile && <GlobalHeader />}
-      
-      <main className={`flex-1 container mx-auto px-4 py-6 ${isMobile ? 'pb-24' : 'pb-8'}`}>
-        <div className="mb-6">
-          <Link to="/carrito" className="flex items-center gap-2 text-[#071d7f] hover:underline mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            {t('checkout.backToCart')}
-          </Link>
-          <h1 className="text-2xl md:text-3xl font-bold">{t('checkout.title')}</h1>
-        </div>
 
+      {/* Checkout Header Bar (SellerCheckout style) */}
+      <div className="bg-white border-b border-border">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link to="/carrito" className="text-[#071d7f] hover:opacity-70">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="px-3 py-1.5 rounded-lg bg-[#071d7f]">
+              <span className="text-sm font-semibold text-white">Checkout B2C</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg">
+            <ShoppingBag className="h-4 w-4 text-[#071d7f]" />
+            <span className="text-sm font-semibold text-[#071d7f]">
+              {totalItems} {totalItems === 1 ? 'producto' : 'productos'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <main className={`flex-1 container mx-auto px-4 pt-4 ${isMobile ? 'pb-24' : 'pb-8'}`}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             {/* Delivery Method Selection */}
-            <Card className={`p-6 ${hasFieldError(validationErrors, 'deliveryMethod') ? 'border-red-500 border-2' : ''}`}>
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Truck className="h-5 w-5 text-[#071d7f]" />
-                {t('checkout.deliveryOption')}
-              </h2>
+            <Card className={`p-0 overflow-hidden ${hasFieldError(validationErrors, 'deliveryMethod') ? 'border-red-500 border-2' : ''}`}>
+              <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
+                <Truck className="h-4 w-4 text-[#071d7f]" />
+                <h2 className="text-lg font-bold">{t('checkout.deliveryOption')}</h2>
+              </div>
+              <div className="p-4">
               {hasFieldError(validationErrors, 'deliveryMethod') && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
