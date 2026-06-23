@@ -745,58 +745,60 @@ const CheckoutPage = () => {
             )}
 
             {/* Order Items */}
-            <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Package className="h-5 w-5 text-[#071d7f]" />
-                {t('common.orderSummary')} ({totalItems} {t('common.products')})
-              </h2>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-3 pb-3 border-b last:border-b-0">
-                    <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <Package className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm line-clamp-1">{item.name}</p>
-                      <div className="flex items-center gap-1 flex-wrap mt-0.5">
-                        {item.color && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
-                            {item.color}
-                          </span>
+            <Card className="p-0 overflow-hidden">
+              <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
+                <Package className="h-4 w-4 text-[#071d7f]" />
+                <h2 className="text-lg font-bold">Productos ({totalItems})</h2>
+              </div>
+              <div className="p-4">
+                <div className={`space-y-3 ${items.length > 4 ? 'max-h-[340px] overflow-y-auto pr-2' : ''}`}>
+                  {items.map((item) => (
+                    <div key={item.id} className="flex gap-3 pb-3 border-b last:border-b-0">
+                      <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="h-5 w-5 text-muted-foreground" />
                         )}
-                        {item.size && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
-                            {item.size}
-                          </span>
-                        )}
-                        <span className="text-xs text-muted-foreground">{item.quantity} x ${item.price.toFixed(2)}</span>
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm line-clamp-1">{item.name}</p>
+                        <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                          {item.color && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
+                              {item.color}
+                            </span>
+                          )}
+                          {item.size && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
+                              {item.size}
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">{item.quantity} x ${item.price.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <p className="font-semibold text-sm text-[#071d7f]">${(item.price * item.quantity).toFixed(2)}</p>
                     </div>
-                    <p className="font-semibold text-sm">${(item.price * item.quantity).toFixed(2)}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </Card>
 
             {/* Payment Method */}
-            <Card className={`p-6 ${hasFieldError(validationErrors, 'paymentMethod') ? 'border-red-500 border-2' : ''}`}>
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-[#071d7f]" />
-                {t('checkout.paymentMethod')}
-              </h2>
-              
+            <Card className={`p-0 overflow-hidden ${hasFieldError(validationErrors, 'paymentMethod') ? 'border-red-500 border-2' : ''}`}>
+              <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-[#071d7f]" />
+                <h2 className="text-lg font-bold">{t('checkout.paymentMethod')}</h2>
+              </div>
+              <div className="p-4">
               {hasFieldError(validationErrors, 'paymentMethod') && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-red-700">{getFieldError(validationErrors, 'paymentMethod')}</p>
                 </div>
               )}
-              
-              <div className="space-y-3">
+
+              <div className="space-y-2">
                 {paymentMethods.map((method) => {
                   const Icon = method.icon;
                   const isSelected = paymentMethod === method.id;
