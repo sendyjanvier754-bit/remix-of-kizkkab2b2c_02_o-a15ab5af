@@ -703,53 +703,44 @@ const CheckoutPage = () => {
 
             {/* Pickup Points */}
             {deliveryMethod === 'pickup' && (
-              <Card className="p-6">
-                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Store className="h-5 w-5 text-[#071d7f]" />
-                  {t('checkout.pickupPointTitle')}
-                </h2>
-
+              <Card className="p-0 overflow-hidden">
+                <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
+                  <Store className="h-4 w-4 text-[#071d7f]" />
+                  <h2 className="text-lg font-bold">{t('checkout.pickupPointTitle')}</h2>
+                </div>
+                <div className="p-4">
                 {pickupPoints.length === 0 ? (
                   <div className="text-center py-6 bg-muted/50 rounded-lg">
                     <Store className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground">{t('checkout.noPickupPoints')}</p>
                   </div>
                 ) : (
-                  <RadioGroup 
-                    value={selectedPickupPoint || ''} 
-                    onValueChange={setSelectedPickupPoint}
-                    className="space-y-3"
-                  >
+                  <RadioGroup value={selectedPickupPoint || ''} onValueChange={setSelectedPickupPoint} className="space-y-2">
                     {pickupPoints.map((point) => (
                       <div
                         key={point.id}
-                        className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                           selectedPickupPoint === point.id
-                            ? 'border-[#071d7f] bg-blue-50/50'
+                            ? 'border-[#071d7f] bg-[#071d7f]/5'
                             : 'border-border hover:border-muted-foreground'
                         }`}
                         onClick={() => setSelectedPickupPoint(point.id)}
                       >
                         <RadioGroupItem value={point.id} id={`pickup-${point.id}`} className="mt-1" />
                         <div className="flex-1">
-                          <p className="font-semibold">{point.name}</p>
-                          <p className="text-sm text-muted-foreground">{point.address}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {point.city}, {point.country}
-                          </p>
-                          {point.phone && (
-                            <p className="text-sm text-muted-foreground">Tel: {point.phone}</p>
-                          )}
+                          <p className="font-semibold text-sm">{point.name}</p>
+                          <p className="text-xs text-muted-foreground">{point.address}</p>
+                          <p className="text-xs text-muted-foreground">{point.city}, {point.country}</p>
+                          {point.phone && <p className="text-xs text-muted-foreground">Tel: {point.phone}</p>}
                         </div>
                         {point.is_active && (
-                          <Badge variant="outline" className="text-green-600">
-                            Activo
-                          </Badge>
+                          <Badge variant="outline" className="text-green-600">Activo</Badge>
                         )}
                       </div>
                     ))}
                   </RadioGroup>
                 )}
+                </div>
               </Card>
             )}
 
