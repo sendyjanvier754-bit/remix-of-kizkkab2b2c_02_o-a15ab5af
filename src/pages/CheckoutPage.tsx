@@ -1053,18 +1053,22 @@ const CheckoutPage = () => {
                   )}
                 </div>
               )}
-
+              </div>
             </Card>
 
             {/* Order Notes */}
-            <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4">{t('checkout.orderNotes')}</h2>
-              <Textarea
-                value={orderNotes}
-                onChange={(e) => setOrderNotes(e.target.value)}
-                placeholder={t('checkout.orderNotesPlaceholder')}
-                rows={3}
-              />
+            <Card className="p-0 overflow-hidden">
+              <div className="bg-gray-200 px-4 py-3">
+                <h2 className="text-lg font-bold">{t('checkout.orderNotes')}</h2>
+              </div>
+              <div className="p-4">
+                <Textarea
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  placeholder={t('checkout.orderNotesPlaceholder')}
+                  rows={3}
+                />
+              </div>
             </Card>
           </div>
 
