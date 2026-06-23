@@ -630,6 +630,7 @@ const CheckoutPage = () => {
                   </div>
                 </div>
               </RadioGroup>
+              </div>
             </Card>
 
             {/* Shipping Address */}
