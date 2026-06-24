@@ -579,6 +579,7 @@ export function UserProfilePage() {
       <div className="hidden md:block"><DesktopLayout /></div>
       <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />
       <AboutModal open={showAbout} onOpenChange={setShowAbout} />
+      <PaymentHubModal open={showPaymentHub} onOpenChange={setShowPaymentHub} />
       
     </PageWrapper>
   );
