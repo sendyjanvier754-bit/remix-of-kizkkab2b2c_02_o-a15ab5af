@@ -20,10 +20,9 @@ import {
   Check,
   XCircle,
   Copy,
-  Smartphone,
-  Building2,
   Upload,
   CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useBranding } from '@/hooks/useBranding';
@@ -123,34 +122,45 @@ export const B2CPaymentStateOverlay = ({
     );
   }
 
-  // Pending Validation - MonCash/Transfer
+  // Pending Validation - MonCash/Transfer (estilo SellerCheckout)
   if (order.payment_status === 'pending_validation') {
     const isMonCash = order.payment_method === 'moncash';
+    const methodLabel = isMonCash ? 'MonCash' : 'Transferencia Bancaria';
 
     return (
       <>
-        <Card className="p-6">
-          <div className="text-center mb-6">
-            {isMonCash ? (
-              <Smartphone className="h-12 w-12 text-orange-600 mx-auto mb-2" />
-            ) : (
-              <Building2 className="h-12 w-12 text-green-600 mx-auto mb-2" />
-            )}
-            <h2 className="text-xl font-bold mb-2">
-              {isMonCash ? 'Pago con MonCash' : 'Transferencia Bancaria'}
-            </h2>
-            <p className="text-muted-foreground">
-              Tu pedido está reservado. El vendedor está validando tu pago.
-            </p>
+        <Card className="p-8 text-center">
+          <div className="mb-4">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <Check className="w-10 h-10 text-green-600" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold mb-2">¡Pedido Creado!</h1>
+          <p className="text-muted-foreground mb-4">
+            Tu pedido ha sido creado exitosamente. Completa el pago con {methodLabel} para confirmarlo.
+          </p>
+
+          <div className="bg-muted p-4 rounded-lg mb-4">
+            <p className="text-sm text-muted-foreground">ID del Pedido</p>
+            <p className="font-mono font-bold">{order.id.slice(0, 8).toUpperCase()}</p>
+            <p className="text-lg font-bold mt-2">${order.total_amount.toFixed(2)}</p>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
-            <p className="font-semibold text-yellow-800 mb-2">Instrucciones de Pago</p>
+          <div className="text-left bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
+            <div className="flex items-start gap-3 mb-3">
+              <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-yellow-800">Pendiente de Verificación</p>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Realiza el pago con los siguientes datos y luego sube el comprobante.
+                </p>
+              </div>
+            </div>
 
             {isMonCash ? (
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm pl-8">
                 <div className="flex justify-between items-center">
-                  <span>Número MonCash:</span>
+                  <span className="text-yellow-800">Número MonCash:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold">{moncashDetails.number}</span>
                     <Button
@@ -164,18 +174,18 @@ export const B2CPaymentStateOverlay = ({
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span>Nombre:</span>
+                  <span className="text-yellow-800">Nombre:</span>
                   <span className="font-semibold">{moncashDetails.name}</span>
                 </div>
               </div>
             ) : (
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm pl-8">
                 <div className="flex justify-between">
-                  <span>Banco:</span>
+                  <span className="text-yellow-800">Banco:</span>
                   <span className="font-semibold">{bankDetails.bank}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Cuenta:</span>
+                  <span className="text-yellow-800">Cuenta:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold">{bankDetails.account}</span>
                     <Button
@@ -189,32 +199,24 @@ export const B2CPaymentStateOverlay = ({
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span>Beneficiario:</span>
+                  <span className="text-yellow-800">Beneficiario:</span>
                   <span className="font-semibold">{bankDetails.beneficiary}</span>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="bg-muted p-4 rounded-lg mb-4 text-center">
-            <p className="text-sm text-muted-foreground">Monto a Pagar</p>
-            <p className="text-2xl font-bold text-primary">${order.total_amount.toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Orden: {order.id.slice(0, 8).toUpperCase()}
-            </p>
-          </div>
-
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               variant="outline"
               onClick={onCancelOrder}
-              className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+              className="border-red-300 text-red-600 hover:bg-red-50"
             >
               Cancelar
             </Button>
             <Button
               onClick={() => setProofModalOpen(true)}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700"
             >
               <Upload className="h-4 w-4 mr-2" />
               Ya Realicé el Pago
