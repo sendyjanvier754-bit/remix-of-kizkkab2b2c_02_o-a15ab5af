@@ -31,6 +31,7 @@ import { SupportMenuPopover } from "@/components/profile/SupportMenuPopover";
 import { useMyReturnRequests } from "@/hooks/useOrderReturnRequests";
 import { useUnreadChatCount } from "@/hooks/useSupportChat";
 import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
+import { PaymentHubModal } from "@/components/profile/PaymentHubModal";
 
 type ActiveSection = 'orders' | 'favorites' | 'addresses' | 'payment' | 'settings' | 'returns';
 
@@ -41,6 +42,7 @@ export function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showPaymentHub, setShowPaymentHub] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>('orders');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Mi Cuenta": true,
@@ -157,7 +159,7 @@ export function UserProfilePage() {
         <div className="grid grid-cols-5 gap-1">
           {[
             { icon: <HelpCircle className="w-7 h-7" />, label: "Centro de Ayuda", action: () => navigate("/soporte"), badge: 0 },
-            { icon: <CreditCard className="w-7 h-7" />, label: "Pago", action: () => setActiveSection('payment'), badge: 0 },
+            { icon: <CreditCard className="w-7 h-7" />, label: "Pago", action: () => setShowPaymentHub(true), badge: 0 },
             { icon: <MessageCircle className="w-7 h-7" />, label: "Live Chat", action: () => navigate("/soporte"), badge: unreadChats },
             { icon: <Wallet className="w-7 h-7" />, label: "Créditos de compra", action: () => {}, badge: 0 },
             { icon: <Info className="w-7 h-7" />, label: "Sugerencias", action: () => setShowAbout(true), badge: 0 },
