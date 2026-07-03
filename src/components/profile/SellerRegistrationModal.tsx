@@ -407,10 +407,8 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
       sessionStorage.removeItem("pending_seller_upgrade");
       if (user?.id) localStorage.removeItem(`pending_seller_upgrade_${user.id}`);
 
-      toast.success("¡Registro completado! Tu verificación está en proceso.");
       queryClient.invalidateQueries({ queryKey: ["store"] });
-      onOpenChange(false);
-      window.location.href = "/seller/cuenta";
+      setShowSuccess(true);
     } catch (err: any) {
       console.error("Step 5 error:", err);
       toast.error(err.message || "Error al enviar verificación");
