@@ -2927,6 +2927,8 @@ export type Database = {
           document_type: string | null
           fiscal_document_url: string | null
           id: string
+          id_back_url: string | null
+          id_front_url: string | null
           metadata: Json | null
           rejection_reason: string | null
           reviewed_at: string | null
@@ -2948,6 +2950,8 @@ export type Database = {
           document_type?: string | null
           fiscal_document_url?: string | null
           id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
           metadata?: Json | null
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -2969,6 +2973,8 @@ export type Database = {
           document_type?: string | null
           fiscal_document_url?: string | null
           id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
           metadata?: Json | null
           rejection_reason?: string | null
           reviewed_at?: string | null
