@@ -44,6 +44,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // ── Step 1: Account ──
   const [storeName, setStoreName] = useState("");
@@ -406,10 +407,8 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
       sessionStorage.removeItem("pending_seller_upgrade");
       if (user?.id) localStorage.removeItem(`pending_seller_upgrade_${user.id}`);
 
-      toast.success("¡Registro completado! Tu verificación está en proceso.");
       queryClient.invalidateQueries({ queryKey: ["store"] });
-      onOpenChange(false);
-      window.location.href = "/seller/cuenta";
+      setShowSuccess(true);
     } catch (err: any) {
       console.error("Step 5 error:", err);
       toast.error(err.message || "Error al enviar verificación");
@@ -455,6 +454,55 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!loading) onOpenChange(v); }}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        {showSuccess ? (
+          <div className="py-2">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <Check className="w-6 h-6 text-green-600" />
+                </div>
+              </DialogTitle>
+              <DialogDescription className="text-center pt-2">
+                <span className="block text-lg font-semibold text-foreground">¡Cuenta creada con éxito!</span>
+                <span className="block mt-1 text-sm">Tu registro fue completado. La verificación de tu cuenta está pendiente — mientras tanto ya puedes comprar y usar tu cuenta con normalidad.</span>
+              </DialogDescription>
+            </DialogHeader>
+
+            <ol className="mt-6 space-y-3">
+              {[
+                { label: "Cuenta creada", done: true },
+                { label: "Tienda configurada", done: true },
+                { label: "Métodos de pago añadidos", done: true },
+                { label: "Documentos enviados", done: true },
+                { label: "Verificación de la cuenta", done: false, pending: true },
+              ].map((s, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
+                    s.done ? "bg-green-500 text-white" : s.pending ? "bg-amber-100 text-amber-700 border border-amber-300" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {s.done ? <Check className="w-4 h-4" /> : s.pending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : i + 1}
+                  </div>
+                  <span className={`text-sm ${s.done ? "text-foreground" : "text-muted-foreground"}`}>
+                    {s.label}
+                    {s.pending && <span className="ml-2 text-xs text-amber-600">(pendiente)</span>}
+                  </span>
+                </li>
+              ))}
+            </ol>
+
+            <Button
+              className="w-full mt-6"
+              onClick={() => {
+                setShowSuccess(false);
+                onOpenChange(false);
+                window.location.href = "/seller/cuenta";
+              }}
+            >
+              Ir a mi cuenta
+            </Button>
+          </div>
+        ) : (
+        <>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Store className="w-5 h-5 text-primary" />
@@ -771,6 +819,8 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
             </Button>
           )}
         </div>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
