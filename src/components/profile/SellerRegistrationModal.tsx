@@ -44,6 +44,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // ── Step 1: Account ──
   const [storeName, setStoreName] = useState("");
