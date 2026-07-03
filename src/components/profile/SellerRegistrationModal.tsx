@@ -819,6 +819,8 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
             </Button>
           )}
         </div>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
