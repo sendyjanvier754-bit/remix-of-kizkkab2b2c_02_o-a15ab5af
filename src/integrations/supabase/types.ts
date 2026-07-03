@@ -2925,6 +2925,7 @@ export type Database = {
           document_front_url: string | null
           document_number: string | null
           document_type: string | null
+          fiscal_document_url: string | null
           id: string
           metadata: Json | null
           rejection_reason: string | null
@@ -2945,6 +2946,7 @@ export type Database = {
           document_front_url?: string | null
           document_number?: string | null
           document_type?: string | null
+          fiscal_document_url?: string | null
           id?: string
           metadata?: Json | null
           rejection_reason?: string | null
@@ -2965,6 +2967,7 @@ export type Database = {
           document_front_url?: string | null
           document_number?: string | null
           document_type?: string | null
+          fiscal_document_url?: string | null
           id?: string
           metadata?: Json | null
           rejection_reason?: string | null
