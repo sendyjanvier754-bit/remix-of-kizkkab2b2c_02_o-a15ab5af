@@ -298,6 +298,14 @@ const AppContent = () => {
               } 
             />
             <Route 
+              path="/admin/catalogo/1688/revision/:batchId" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><Import1688ReviewPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/categorias" 
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
