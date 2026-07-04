@@ -2782,6 +2782,169 @@ export type Database = {
         }
         Relationships: []
       }
+      import_batch_products: {
+        Row: {
+          batch_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          raw_payload: Json
+          row_index: number
+          sku: string | null
+          source_description_zh: string | null
+          source_product_id_1688: string | null
+          source_title_zh: string | null
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          raw_payload?: Json
+          row_index: number
+          sku?: string | null
+          source_description_zh?: string | null
+          source_product_id_1688?: string | null
+          source_title_zh?: string | null
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          raw_payload?: Json
+          row_index?: number
+          sku?: string | null
+          source_description_zh?: string | null
+          source_product_id_1688?: string | null
+          source_title_zh?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batch_products_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_batch_translations: {
+        Row: {
+          ai_text: string | null
+          approved_at: string | null
+          approved_by: string | null
+          batch_product_id: string
+          created_at: string
+          edited_text: string | null
+          field: Database["public"]["Enums"]["import_translation_field"]
+          id: string
+          language_code: string
+          notes: string | null
+          status: Database["public"]["Enums"]["import_translation_status"]
+          updated_at: string
+        }
+        Insert: {
+          ai_text?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          batch_product_id: string
+          created_at?: string
+          edited_text?: string | null
+          field: Database["public"]["Enums"]["import_translation_field"]
+          id?: string
+          language_code: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["import_translation_status"]
+          updated_at?: string
+        }
+        Update: {
+          ai_text?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          batch_product_id?: string
+          created_at?: string
+          edited_text?: string | null
+          field?: Database["public"]["Enums"]["import_translation_field"]
+          id?: string
+          language_code?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["import_translation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batch_translations_batch_product_id_fkey"
+            columns: ["batch_product_id"]
+            isOneToOne: false
+            referencedRelation: "import_batch_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          exported_by: string | null
+          id: string
+          languages: Json
+          last_exported_at: string | null
+          market_id: string | null
+          name: string | null
+          source_filename: string | null
+          status: Database["public"]["Enums"]["import_batch_status"]
+          total_products: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          exported_by?: string | null
+          id?: string
+          languages?: Json
+          last_exported_at?: string | null
+          market_id?: string | null
+          name?: string | null
+          source_filename?: string | null
+          status?: Database["public"]["Enums"]["import_batch_status"]
+          total_products?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          exported_by?: string | null
+          id?: string
+          languages?: Json
+          last_exported_at?: string | null
+          market_id?: string | null
+          name?: string | null
+          source_filename?: string | null
+          status?: Database["public"]["Enums"]["import_batch_status"]
+          total_products?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batches_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_batches_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets_dashboard"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           change_amount: number
@@ -10231,6 +10394,9 @@ export type Database = {
         | "credit_activation"
       approval_status: "pending" | "approved" | "rejected"
       chat_status: "waiting" | "active" | "paused" | "closed"
+      import_batch_status: "draft" | "in_review" | "exported" | "archived"
+      import_translation_field: "title" | "description"
+      import_translation_status: "pending_approval" | "approved" | "rejected"
       payment_method:
         | "bank_transfer"
         | "moncash"
@@ -10455,6 +10621,9 @@ export const Constants = {
       ],
       approval_status: ["pending", "approved", "rejected"],
       chat_status: ["waiting", "active", "paused", "closed"],
+      import_batch_status: ["draft", "in_review", "exported", "archived"],
+      import_translation_field: ["title", "description"],
+      import_translation_status: ["pending_approval", "approved", "rejected"],
       payment_method: [
         "bank_transfer",
         "moncash",

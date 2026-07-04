@@ -79,6 +79,7 @@ const GestorDashboard = lazyWithRetry(() => import("./pages/siver-match/GestorDa
 const AdminDashboard = lazyWithRetry(() => import("./pages/admin/AdminDashboard"));
 const AdminConciliacion = lazyWithRetry(() => import("./pages/admin/AdminConciliacion"));
 const AdminCatalogo = lazyWithRetry(() => import("./pages/admin/AdminCatalogo"));
+const Import1688ReviewPage = lazyWithRetry(() => import("./pages/admin/Import1688ReviewPage"));
 const AdminCategorias = lazyWithRetry(() => import("./pages/admin/AdminCategorias"));
 const AdminVendedores = lazyWithRetry(() => import("./pages/admin/AdminVendedores"));
 const AdminB2BSyncPage = lazyWithRetry(() => import("./pages/admin/AdminB2BSyncPage"));
@@ -293,6 +294,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminCatalogo /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/catalogo/1688/revision/:batchId" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><Import1688ReviewPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
