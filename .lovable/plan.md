@@ -1,109 +1,87 @@
-## Plan: Pago con Tarjetas + UI Admin de Keys + Rediseño Checkout B2C
+# Revisión humana de traducciones 1688
 
-### 1. Base de datos: tabla `stripe_settings`
-Nueva tabla con una sola fila activa (UNIQUE en `is_active=true`):
-- `publishable_key` (text, visible al frontend al estar activa)
-- `secret_key_encrypted` (text, leído solo por edge functions con service_role)
-- `webhook_secret_encrypted` (text, igual)
-- `mode` ('test' | 'live')
-- `is_active`, `updated_by`, timestamps
+## Objetivo
 
-RLS:
-- SELECT solo admins (vía `has_role`)
-- INSERT/UPDATE/DELETE solo admins
-- Edge functions leen con `service_role` (bypass RLS)
+Insertar una **segunda etapa** en el flujo `Importar 1688`, entre la carga del Excel de origen y la generación del Excel final. En esa etapa la IA propone traducciones (título + descripción) para cada idioma del mercado seleccionado, un admin las corrige/aprueba campo por campo, y sólo entonces se genera el Excel final con los textos aprobados.
 
-GRANT a `authenticated` y `service_role` (no `anon`).
+## Flujo de usuario (nuevo)
 
-Aviso de seguridad: las keys sk_live viven en una tabla. Cualquier admin comprometido las puede ver. Recomiendo restringir el rol admin estrictamente.
+```text
+1. Admin → /admin/catalogo → Importar 1688
+2. Sube Excel origen  ─────────────────┐
+3. Selecciona MERCADO (define idiomas) │  Etapa 1: Extracción (existente, se preserva)
+4. IA traduce a los idiomas del mercado│
+                                       ▼
+5. Se crea un "Import Batch" en BD con estado draft
+   Cada producto × idioma × campo (title|description) = fila con status = pending_approval
+                                       ▼
+6. Etapa 2 NUEVA: Panel de Revisión
+   - Lista de productos del batch
+   - Editor lado a lado: Original (ZH) | IA | Editado
+   - Checkbox "Aprobar" por campo/idioma
+   - Guarda edited_text, approved_by, approved_at
+                                       ▼
+7. Botón "Generar Excel final"
+   - Habilitado siempre; usa texto aprobado donde exista
+   - Los pendientes se marcan en el Excel para que el humano vea qué falta
+   - Registra generated_by / generated_at en el batch
+```
 
-### 2. UI Admin de Keys
-Nueva página `src/pages/admin/AdminPaymentKeys.tsx`:
-- Formulario con: modo (test/live), publishable_key, secret_key, webhook_secret
-- Las secret/webhook se muestran enmascaradas (`sk_live_••••1234`) tras guardar
-- Botón "Probar conexión" que llama edge function `stripe-test-connection`
-- Sección con la URL del webhook a copiar:
-  `https://fonvunyiaxcjkodrnpox.supabase.co/functions/v1/stripe-webhook`
-- Lista de eventos a habilitar en Stripe Dashboard: `payment_intent.succeeded`, `payment_intent.payment_failed`
+## Cambios de base de datos (Supabase)
 
-Ruta añadida en `App.tsx` con guard de admin.
+Nuevas tablas en `public`:
 
-### 3. Edge Functions
-Todas leen keys desde la tabla `stripe_settings` (where `is_active=true`) usando service_role.
+- **`import_batches`**: un lote por cada Excel subido.
+  - `market_id`, `source_filename`, `status` (draft | in_review | exported | archived), `created_by`, `total_products`, `languages` (jsonb array de códigos), `last_exported_at`, `exported_by`.
+- **`import_batch_products`**: un producto del lote.
+  - `batch_id`, `row_index`, `source_product_id_1688`, `sku`, `image_url`, `source_title_zh`, `source_description_zh`, `raw_payload` (jsonb con todo lo original: variantes, precios, etc.).
+- **`import_batch_translations`**: la unidad de aprobación (por campo × idioma).
+  - `batch_product_id`, `language_code` (es|en|fr|ht|…), `field` ('title' | 'description'), `ai_text`, `edited_text` (nullable, si difiere), `status` ('pending_approval' | 'approved' | 'rejected'), `approved_by`, `approved_at`, `notes`.
+  - Índice único `(batch_product_id, language_code, field)`.
 
-- **`create-payment-intent`** (verify_jwt = false, valida JWT en código)
-  - Input: `{ order_id, order_type: 'b2b'|'b2c', amount, currency }`
-  - Verifica que el order pertenece al user (RLS check vía cliente con anon + JWT del header)
-  - Crea PaymentIntent con `metadata: { order_id, order_type }`
-  - Devuelve `client_secret` + `publishable_key`
+Todas con RLS: sólo `admin` (via `has_role(auth.uid(),'admin')`) puede leer/escribir. `GRANT` estándar a `authenticated` y `service_role`. Triggers `updated_at`.
 
-- **`stripe-webhook`** (verify_jwt = false, público)
-  - Verifica firma con `webhook_secret`
-  - En `payment_intent.succeeded`: actualiza `orders_b2b` o `orders_b2c` (según metadata) → `payment_status='paid'`, `status='paid'`
-  - En `payment_intent.payment_failed`: marca `payment_status='failed'`
+Idiomas del mercado: se leen de `markets` / `market_destination_countries` existentes (ya usados por el sistema i18n). El admin selecciona un mercado en la Etapa 1 y eso determina qué filas de `import_batch_translations` se crean.
 
-- **`stripe-test-connection`** (verify_jwt = false, admin-only en código)
-  - Hace `stripe.balance.retrieve()` para validar la secret key
-  - Devuelve `{ ok: true, mode, account_id }` o error
+## Cambios en Edge Functions
 
-### 4. Componente `<StripeCardForm />`
-`src/components/payments/StripeCardForm.tsx`:
-- Usa `@stripe/stripe-js` + `@stripe/react-stripe-js` (ya o por instalar)
-- Props: `orderId`, `orderType`, `amount`, `onSuccess`, `onError`
-- Flujo: pide client_secret a `create-payment-intent` → `stripe.confirmCardPayment(...)`
-- Muestra spinner; al confirmar, llama `onSuccess()` que cambia el order a `pending_validation` (la confirmación final llega vía webhook)
+- **`process-1688-import`** (existente): se refactoriza para aceptar `target_languages: string[]` y devolver traducciones por idioma. Sigue usando `google/gemini-3-flash-preview` vía Lovable AI Gateway (regla del proyecto).
+- **`create-import-batch`** (nueva): recibe filas parseadas del Excel + market_id, llama a `process-1688-import` en tandas, inserta `import_batches` + `import_batch_products` + `import_batch_translations` (todo `pending_approval`).
+- **`export-import-batch`** (nueva): dado un `batch_id`, arma el Excel final usando `edited_text ?? ai_text` sólo para filas `approved`. Marca `status = exported`, guarda `exported_by`/`last_exported_at`.
 
-Hook `usePublicStripeKey()` que lee la `publishable_key` activa (consulta pública limitada vía vista o RPC `get_active_stripe_publishable_key`).
+Todas con `verify_jwt = false` + validación manual de JWT y rol admin (regla del proyecto: CORS con preflight y `x-supabase-client-*`).
 
-### 5. Integración en checkouts
-- **`SellerCheckout.tsx`** (B2B): donde detecta `paymentMethod === 'tarjeta'`, renderiza `<StripeCardForm>` en vez de confirmar el pedido inmediatamente. El pedido se crea como `pending_payment` antes de mostrar el form.
-- **`CheckoutPage.tsx`** (B2C): mismo flujo.
+## Cambios de frontend
 
-Comportamiento corregido: ya no se marca "pedido confirmado" al iniciar — queda en `pending_payment` hasta que el webhook reciba `payment_intent.succeeded`.
+- **`Import1688Dialog.tsx`**: se convierte en un wizard de 2 pasos.
+  1. **Paso 1 – Cargar**: Excel + selector de mercado. Al continuar, llama a `create-import-batch` (muestra progreso por chunks). Al terminar, redirige al panel de revisión con el `batch_id`.
+  2. Se elimina la generación directa del Excel desde este diálogo.
 
-### 6. Rediseño visual `CheckoutPage.tsx` (B2C)
-Solo presentación, sin tocar lógica de carga, splits por tienda, ni métodos por país.
+- **Nueva ruta `/admin/catalogo/1688/revision/:batchId`** (`Import1688ReviewPage.tsx`):
+  - Tabla de productos del lote con progreso `X / Y campos aprobados`.
+  - Al seleccionar un producto: panel expandible con **una fila por (idioma, campo)**:
+    - Columna 1: Original (ZH, read-only)
+    - Columna 2: IA (read-only)
+    - Columna 3: Editable (`Textarea` para descripción, `Input` para título) prellenado con `edited_text ?? ai_text`
+    - Checkbox `Aprobar` → llama a Supabase para setear `status='approved' + approved_by=auth.uid() + approved_at=now() + edited_text`.
+  - Botones globales: `Aprobar todo el visible`, `Generar Excel final`.
+  - `Generar Excel final`: llama a `export-import-batch`, descarga el archivo, y muestra cuántos productos fueron incluidos totalmente vs. parcialmente. Si hay campos sin aprobar, el Excel los marca con prefijo `[PENDIENTE]` para que el humano los corrija en la próxima ronda.
 
-Replicar el layout de `SellerCheckout` (según las capturas):
-- Header chip "Checkout B2C" + badge "N productos"
-- Grid 2 columnas en desktop: izquierda secciones, derecha resumen sticky
-- Cards uniformes con título e iconos lucide:
-  - Dirección (con botón editar)
-  - "Opción de Entrega" (Domicilio / Punto de Retiro)
-  - "Tipo de Envío" (Express / Estándar con badges)
-  - "Productos (N)" (lista compacta)
-  - "Forma de pago" (Tarjeta / MonCash / Transferencia)
-- Resumen lateral: Subtotal, Logística, ETA, código descuento, Total a Pagar, botón "Confirmar Pedido"
-- Mobile: cards apiladas, resumen al final con CTA fijo abajo
+- **`AdminCatalogo.tsx`**: sección nueva "Lotes 1688 en revisión" con listado (badge de pendientes) para volver a cada batch.
 
-Reutilizo `B2BOrderSummary` solo como referencia de estilos; creo `B2COrderSummary` análogo para no mezclar tipos.
+## Trazabilidad
 
-### 7. Archivos
-**Nuevos**
-- `supabase/migrations/<timestamp>_stripe_settings.sql`
-- `supabase/functions/create-payment-intent/index.ts`
-- `supabase/functions/stripe-webhook/index.ts`
-- `supabase/functions/stripe-test-connection/index.ts`
-- `src/pages/admin/AdminPaymentKeys.tsx`
-- `src/components/payments/StripeCardForm.tsx`
-- `src/components/payments/StripeProvider.tsx`
-- `src/hooks/useStripeSettings.ts`
-- `src/components/checkout/B2COrderSummary.tsx`
+Cada `import_batch_translations` guarda `approved_by` (uuid) + `approved_at` (timestamptz). Cada `import_batches` guarda `created_by`, `exported_by`, `last_exported_at`. El panel muestra `Aprobado por Fulano · hace 3 min`.
 
-**Editados**
-- `src/App.tsx` (ruta admin)
-- `src/pages/admin/<sidebar>` (link a Payment Keys)
-- `src/pages/CheckoutPage.tsx` (rediseño + integración tarjeta)
-- `src/pages/seller/SellerCheckout.tsx` (integración tarjeta)
-- `package.json` (`@stripe/stripe-js`, `@stripe/react-stripe-js`)
+## Fuera de alcance
 
-### 8. Configuración Stripe (instrucciones para ti)
-Tras desplegar, debes:
-1. Ir a /admin/payment-keys, pegar pk + sk + mode
-2. Stripe Dashboard → Webhooks → Add endpoint con la URL del webhook + eventos
-3. Copiar el "Signing secret" del webhook y pegarlo en /admin/payment-keys
-4. Click "Probar conexión" para validar
+- No se toca `SmartBulkImportDialog` (import genérico) ni el resto del catálogo.
+- No se automatiza publicación a `products`: el resultado final sigue siendo un Excel para el flujo actual.
+- No se traducen variantes/atributos en esta versión (mismo comportamiento que hoy: variantes se traducen automáticamente sin revisión, sólo título y descripción entran a revisión — según pedido explícito).
 
----
+## Detalles técnicos
 
-¿Procedo con todo el plan? Es grande (~9 archivos nuevos, 4 editados, migración + 3 edge functions).
+- Chunking IA: 10 productos × llamada, `Promise.all` limitado a 3 concurrentes para no saturar el gateway (respeta 429).
+- Idiomas por mercado: `SELECT languages FROM markets WHERE id = :market_id` (ya existe columna o se lee de `market_destination_countries.language`).
+- El editor guarda con debounce 600ms; el checkbox `Aprobar` es explícito (no auto-aprueba al editar).
+- Errores 429 / 402 del gateway se muestran con toast claro (rate limit / créditos).
