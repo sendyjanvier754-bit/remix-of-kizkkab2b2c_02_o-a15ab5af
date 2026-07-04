@@ -33,6 +33,7 @@ const AdminCatalogo = () => {
   const [preloaded1688Products, setPreloaded1688Products] = useState<GroupedProduct[] | undefined>(undefined);
   const [preloaded1688File, setPreloaded1688File] = useState<File | undefined>(undefined);
   const [import1688Open, setImport1688Open] = useState(false);
+  const [import1688ReviewOpen, setImport1688ReviewOpen] = useState(false);
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
