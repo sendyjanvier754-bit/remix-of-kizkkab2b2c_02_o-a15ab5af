@@ -143,9 +143,13 @@ const AdminCatalogo = () => {
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-4">
           <div className="flex flex-wrap gap-2">
+            <Button variant="default" onClick={() => setImport1688ReviewOpen(true)}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Importar 1688 (con revisión)
+            </Button>
             <Button variant="outline" onClick={() => setImport1688Open(true)}>
               <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Importar 1688
+              Importar 1688 (directo)
             </Button>
             <Button variant="outline" onClick={() => setBulkPriceOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
