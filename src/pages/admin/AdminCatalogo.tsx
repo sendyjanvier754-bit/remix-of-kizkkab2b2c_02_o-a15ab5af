@@ -14,6 +14,7 @@ import type { GroupedProduct } from '@/hooks/useSmartProductGrouper';
 import { Package, AlertTriangle, TrendingDown, Search, Upload, Plus, Download, Settings, Loader2, Cpu, ExternalLink, DollarSign, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import SmartBulkImportDialog from '@/components/catalog/SmartBulkImportDialog';
 import Import1688Dialog from '@/components/catalog/Import1688Dialog';
+import Import1688ReviewUploadDialog from '@/components/catalog/Import1688ReviewUploadDialog';
 import ProductFormDialog from '@/components/catalog/ProductFormDialog';
 import ProductEditDialog from '@/components/catalog/ProductEditDialog';
 import ProductEmbeddingsManager from '@/components/admin/ProductEmbeddingsManager';
