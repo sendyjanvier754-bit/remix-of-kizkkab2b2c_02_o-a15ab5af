@@ -421,6 +421,10 @@ const AdminCatalogo = () => {
           setSmartImportOpen(true);
         }}
       />
+      <Import1688ReviewUploadDialog
+        open={import1688ReviewOpen}
+        onOpenChange={setImport1688ReviewOpen}
+      />
       <ProductFormDialog open={newProductOpen} onOpenChange={setNewProductOpen} />
       <BulkPriceUpdateDialog open={bulkPriceOpen} onOpenChange={setBulkPriceOpen} />
       {editProductId && (
