@@ -12,6 +12,15 @@ interface ProductRow {
   variant2?: string;
 }
 
+const LANG_NAMES: Record<string, string> = {
+  es: "Spanish (español)",
+  en: "English",
+  fr: "French (français)",
+  ht: "Haitian Creole (kreyòl ayisyen)",
+  pt: "Portuguese (português)",
+  zh: "Simplified Chinese (简体中文)",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -23,7 +32,10 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { items } = (await req.json()) as { items: ProductRow[] };
+    const body = await req.json();
+    const items: ProductRow[] = body?.items ?? [];
+    const language: string = (body?.language ?? "es").toLowerCase();
+    const langName = LANG_NAMES[language] ?? language;
 
     if (!items || items.length === 0) {
       return new Response(JSON.stringify({ translations: [] }), {
@@ -52,15 +64,15 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `You are a product translator for a B2B wholesale platform. Translate Chinese product titles and variants to commercial Spanish. Rules:
-- nombre: Traducción fiel y comercial del título original al español. No inventar nombres nuevos ni creativos. Mantener la esencia del producto original.
-- variante_color: Traducir SOLO al español (ej: pink → Rosa; white → Blanco). NUNCA incluir el texto original entre paréntesis ni en otro idioma. Si variant1 contiene color + número/talla al final (ej: "钻石银 36") y existe variant2 con esa talla; devolver SOLO la parte descriptiva sin el número (ej: "Diamante plata"). Si variant1 es una descripción completa de variante/modelo/acabado; mantenerla completa pero sin números de talla finales. Si es un código de modelo; mantener exactamente igual.
-- variante_talla: Mantener tallas y códigos numéricos/alfanuméricos exactamente como están. No traducir ni modificar.
-- descripcion: Generar descripción comercial detallada en español basada en el título del producto. Sin límite de caracteres. PROHIBIDO usar comas (,) bajo ninguna circunstancia. Usar puntos; punto y coma o saltos de línea en su lugar.`,
+              content: `You are a product translator for a B2B wholesale platform. Translate Chinese product titles and variants into ${langName}. Rules:
+- nombre: Faithful commercial translation of the original title into ${langName}. Do not invent new or creative names. Keep the essence of the original product.
+- variante_color: Translate ONLY into ${langName} (e.g. pink -> Rosa/Pink/Rose/Woz depending on target). NEVER include the original text in parentheses or another language. If variant1 contains color + number/size at the end (e.g. "钻石银 36") and variant2 exists with that size; return ONLY the descriptive part without the number. If variant1 is a full description of variant/model/finish; keep it complete but without trailing size numbers. If it is a model code; keep it exactly as-is.
+- variante_talla: Keep sizes and numeric/alphanumeric codes exactly as they are. Do not translate or modify.
+- descripcion: Generate a detailed commercial description in ${langName} based on the product title. No character limit. FORBIDDEN to use commas (,) under any circumstance. Use periods; semicolons or line breaks instead.`,
             },
             {
               role: "user",
-              content: `Translate these ${items.length} products:\n${itemsList}`,
+              content: `Translate these ${items.length} products into ${langName}:\n${itemsList}`,
             },
           ],
           tools: [
