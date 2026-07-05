@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2, Globe, ShieldCheck } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
