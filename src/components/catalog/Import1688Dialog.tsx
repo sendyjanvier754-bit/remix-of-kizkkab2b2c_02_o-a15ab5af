@@ -419,6 +419,161 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     }
   };
 
+  // ─── Multi-language translation & approval helpers ─────────────────────
+  const seedSpanishMultiLangAndTranslateOthers = async (baseItems: ProcessedRow[]) => {
+    // Read latest processedData (which has Spanish translations applied)
+    setProcessedData((current) => {
+      const seed: Record<string, Record<string, MultiLangEntry>> = {};
+      for (const row of current) {
+        seed[row.sku_interno] = {
+          es: {
+            nombre: row.nombre,
+            descripcion: row.descripcion_corta,
+            variante_color: row.variante_1_color,
+            variante_talla: row.variante_2_talla,
+          },
+        };
+      }
+      setMultiLang(seed);
+      return current;
+    });
+
+    const otherLangs = selectedLanguages.filter((l) => l !== "es");
+    if (otherLangs.length === 0) return;
+
+    // Translate each language sequentially (server-side rate limits are tight)
+    for (const lang of otherLangs) {
+      setLangProgress((p) => ({ ...p, [lang]: { current: 0, total: baseItems.length } }));
+      for (let i = 0; i < baseItems.length; i += BATCH_SIZE) {
+        await translateBatchForLanguage(baseItems, i, lang);
+        setLangProgress((p) => ({
+          ...p,
+          [lang]: { current: Math.min(i + BATCH_SIZE, baseItems.length), total: baseItems.length },
+        }));
+      }
+    }
+  };
+
+  const translateBatchForLanguage = async (
+    items: ProcessedRow[],
+    startIdx: number,
+    language: string,
+  ): Promise<void> => {
+    const batchItems = items.slice(startIdx, startIdx + BATCH_SIZE).map((row) => ({
+      title: row.nombre_original,
+      variant1: row.variante_1_color || undefined,
+      variant2: row.variante_2_talla || undefined,
+    }));
+    try {
+      const { data, error } = await supabase.functions.invoke("process-1688-import", {
+        body: { items: batchItems, language },
+      });
+      if (error) {
+        console.error(`Translation batch error [${language}]`, error);
+        toast.error(`Error traduciendo lote a ${LANG_LABEL[language] ?? language}`);
+        return;
+      }
+      const translations = data?.translations || [];
+      setMultiLang((prev) => {
+        const next = { ...prev };
+        for (const t of translations) {
+          const idx = startIdx + (t.index - 1);
+          const sku = items[idx]?.sku_interno;
+          if (!sku) continue;
+          const bag = { ...(next[sku] ?? {}) };
+          bag[language] = {
+            nombre: t.nombre ?? "",
+            descripcion: t.descripcion ?? "",
+            variante_color: t.variante_color ?? "",
+            variante_talla: t.variante_talla ?? "",
+          };
+          next[sku] = bag;
+        }
+        return next;
+      });
+    } catch (err) {
+      console.error("Translation error:", err);
+    }
+  };
+
+  const toggleApproval = (sku: string, lang: string, field: "title" | "description", value: boolean) => {
+    setApprovals((prev) => {
+      const forSku = { ...(prev[sku] ?? {}) };
+      const entry: ApprovalEntry = {
+        title: false,
+        description: false,
+        ...forSku[lang],
+        [field]: value,
+      };
+      // Update trace metadata only when at least one field is approved
+      const anyApproved = entry.title || entry.description;
+      if (anyApproved) {
+        entry.approvedBy = currentUserId ?? entry.approvedBy;
+        entry.approvedAt = new Date().toISOString();
+      } else {
+        delete entry.approvedBy;
+        delete entry.approvedAt;
+      }
+      forSku[lang] = entry;
+      return { ...prev, [sku]: forSku };
+    });
+  };
+
+  const updateMultiLangField = (sku: string, lang: string, field: "nombre" | "descripcion", value: string) => {
+    setMultiLang((prev) => {
+      const forSku = { ...(prev[sku] ?? {}) };
+      forSku[lang] = { ...(forSku[lang] ?? { nombre: "", descripcion: "" }), [field]: value };
+      return { ...prev, [sku]: forSku };
+    });
+    // Editing invalidates approval for that field
+    setApprovals((prev) => {
+      const forSku = { ...(prev[sku] ?? {}) };
+      const entry = { title: false, description: false, ...forSku[lang] };
+      entry[field === "nombre" ? "title" : "description"] = false;
+      forSku[lang] = entry;
+      return { ...prev, [sku]: forSku };
+    });
+  };
+
+  const approveAllPending = () => {
+    if (!currentUserId) {
+      toast.error("Debes iniciar sesión para aprobar traducciones");
+      return;
+    }
+    const now = new Date().toISOString();
+    setApprovals((prev) => {
+      const next: Record<string, Record<string, ApprovalEntry>> = { ...prev };
+      for (const row of processedData) {
+        const bag = { ...(next[row.sku_interno] ?? {}) };
+        for (const lang of selectedLanguages) {
+          const entry: ApprovalEntry = { title: true, description: true, approvedBy: currentUserId, approvedAt: now, ...bag[lang] };
+          entry.title = true;
+          entry.description = true;
+          entry.approvedBy = currentUserId;
+          entry.approvedAt = now;
+          bag[lang] = entry;
+        }
+        next[row.sku_interno] = bag;
+      }
+      return next;
+    });
+    toast.success("Todas las traducciones aprobadas");
+  };
+
+  const approvalStats = useMemo(() => {
+    const totalFields = processedData.length * selectedLanguages.length * 2;
+    let approvedFields = 0;
+    for (const row of processedData) {
+      const bag = approvals[row.sku_interno] ?? {};
+      for (const lang of selectedLanguages) {
+        const e = bag[lang];
+        if (e?.title) approvedFields++;
+        if (e?.description) approvedFields++;
+      }
+    }
+    return { totalFields, approvedFields, pending: totalFields - approvedFields };
+  }, [approvals, processedData, selectedLanguages]);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
