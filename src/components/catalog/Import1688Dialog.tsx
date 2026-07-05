@@ -84,6 +84,31 @@ type Step = "upload" | "mapping" | "preview" | "export";
 
 const BATCH_SIZE = 15;
 
+const AVAILABLE_LANGS: { code: string; label: string }[] = [
+  { code: "es", label: "Español" },
+  { code: "en", label: "English" },
+  { code: "fr", label: "Français" },
+  { code: "ht", label: "Kreyòl" },
+  { code: "pt", label: "Português" },
+];
+
+const LANG_LABEL: Record<string, string> = Object.fromEntries(
+  AVAILABLE_LANGS.map((l) => [l.code, l.label]),
+);
+
+interface MultiLangEntry {
+  nombre: string;
+  descripcion: string;
+  variante_color?: string;
+  variante_talla?: string;
+}
+interface ApprovalEntry {
+  title: boolean;
+  description: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
 const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: string[] }[] = [
   { key: "sku_interno", label: "SKU Interno", keywords: ["SKU ID", "ID", "商品ID", "id"] },
   { key: "nombre", label: "Título Original", keywords: ["Nombre del SKU", "标题", "Title", "título", "商品标题"] },
