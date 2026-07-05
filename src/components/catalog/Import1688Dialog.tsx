@@ -27,6 +27,7 @@ import {
 import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2, Globe, ShieldCheck } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
