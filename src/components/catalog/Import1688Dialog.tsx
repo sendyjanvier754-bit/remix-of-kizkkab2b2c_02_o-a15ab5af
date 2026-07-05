@@ -159,6 +159,25 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [failedImageSkus, setFailedImageSkus] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Market + multi-language review state
+  const [markets, setMarkets] = useState<{ id: string; name: string }[]>([]);
+  const [selectedMarketId, setSelectedMarketId] = useState<string>("");
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es"]);
+  const [multiLang, setMultiLang] = useState<Record<string, Record<string, MultiLangEntry>>>({});
+  const [approvals, setApprovals] = useState<Record<string, Record<string, ApprovalEntry>>>({});
+  const [langProgress, setLangProgress] = useState<Record<string, { current: number; total: number }>>({});
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [editorLangTab, setEditorLangTab] = useState<string>("es");
+
+  // Load markets and current user once when opened
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("markets").select("id,name").eq("is_active", true).order("sort_order").then(({ data }) => {
+      setMarkets((data ?? []) as any);
+    });
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
+  }, [open]);
+
   const resetState = () => {
     setStep("upload");
     setRawData([]);
@@ -177,6 +196,12 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setEditingVariant(null);
     setEditDraft({});
     setFailedImageSkus(new Set());
+    setSelectedMarketId("");
+    setSelectedLanguages(["es"]);
+    setMultiLang({});
+    setApprovals({});
+    setLangProgress({});
+    setEditorLangTab("es");
   };
 
   const handleOpenChange = (newOpen: boolean) => {
