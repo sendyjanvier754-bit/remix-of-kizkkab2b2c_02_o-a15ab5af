@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2, Globe, ShieldCheck } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +85,31 @@ type Step = "upload" | "mapping" | "preview" | "export";
 
 const BATCH_SIZE = 15;
 
+const AVAILABLE_LANGS: { code: string; label: string }[] = [
+  { code: "es", label: "Español" },
+  { code: "en", label: "English" },
+  { code: "fr", label: "Français" },
+  { code: "ht", label: "Kreyòl" },
+  { code: "pt", label: "Português" },
+];
+
+const LANG_LABEL: Record<string, string> = Object.fromEntries(
+  AVAILABLE_LANGS.map((l) => [l.code, l.label]),
+);
+
+interface MultiLangEntry {
+  nombre: string;
+  descripcion: string;
+  variante_color?: string;
+  variante_talla?: string;
+}
+interface ApprovalEntry {
+  title: boolean;
+  description: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
 const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: string[] }[] = [
   { key: "sku_interno", label: "SKU Interno", keywords: ["SKU ID", "ID", "商品ID", "id"] },
   { key: "nombre", label: "Título Original", keywords: ["Nombre del SKU", "标题", "Title", "título", "商品标题"] },
@@ -131,6 +160,25 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [failedImageSkus, setFailedImageSkus] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Market + multi-language review state
+  const [markets, setMarkets] = useState<{ id: string; name: string }[]>([]);
+  const [selectedMarketId, setSelectedMarketId] = useState<string>("");
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es"]);
+  const [multiLang, setMultiLang] = useState<Record<string, Record<string, MultiLangEntry>>>({});
+  const [approvals, setApprovals] = useState<Record<string, Record<string, ApprovalEntry>>>({});
+  const [langProgress, setLangProgress] = useState<Record<string, { current: number; total: number }>>({});
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [editorLangTab, setEditorLangTab] = useState<string>("es");
+
+  // Load markets and current user once when opened
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("markets").select("id,name").eq("is_active", true).order("sort_order").then(({ data }) => {
+      setMarkets((data ?? []) as any);
+    });
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
+  }, [open]);
+
   const resetState = () => {
     setStep("upload");
     setRawData([]);
@@ -149,6 +197,12 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setEditingVariant(null);
     setEditDraft({});
     setFailedImageSkus(new Set());
+    setSelectedMarketId("");
+    setSelectedLanguages(["es"]);
+    setMultiLang({});
+    setApprovals({});
+    setLangProgress({});
+    setEditorLangTab("es");
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -284,7 +338,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         console.warn("File title translation failed:", err);
       }
 
-      // Translate in batches
+      // Translate in batches (Spanish — main flow that also normalizes variant color/size)
       const total = processed.length;
       setTranslationProgress({ current: 0, total });
 
@@ -292,6 +346,10 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         await translateBatch(processed, i);
         setTranslationProgress({ current: Math.min(i + BATCH_SIZE, total), total });
       }
+
+      // Seed multiLang with the freshly translated Spanish version, then translate to the
+      // other selected languages in parallel batches.
+      await seedSpanishMultiLangAndTranslateOthers(processed);
 
       setIsTranslationDone(true);
       toast.success(`${processed.length} variantes procesadas`);
@@ -362,6 +420,161 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     }
   };
 
+  // ─── Multi-language translation & approval helpers ─────────────────────
+  const seedSpanishMultiLangAndTranslateOthers = async (baseItems: ProcessedRow[]) => {
+    // Read latest processedData (which has Spanish translations applied)
+    setProcessedData((current) => {
+      const seed: Record<string, Record<string, MultiLangEntry>> = {};
+      for (const row of current) {
+        seed[row.sku_interno] = {
+          es: {
+            nombre: row.nombre,
+            descripcion: row.descripcion_corta,
+            variante_color: row.variante_1_color,
+            variante_talla: row.variante_2_talla,
+          },
+        };
+      }
+      setMultiLang(seed);
+      return current;
+    });
+
+    const otherLangs = selectedLanguages.filter((l) => l !== "es");
+    if (otherLangs.length === 0) return;
+
+    // Translate each language sequentially (server-side rate limits are tight)
+    for (const lang of otherLangs) {
+      setLangProgress((p) => ({ ...p, [lang]: { current: 0, total: baseItems.length } }));
+      for (let i = 0; i < baseItems.length; i += BATCH_SIZE) {
+        await translateBatchForLanguage(baseItems, i, lang);
+        setLangProgress((p) => ({
+          ...p,
+          [lang]: { current: Math.min(i + BATCH_SIZE, baseItems.length), total: baseItems.length },
+        }));
+      }
+    }
+  };
+
+  const translateBatchForLanguage = async (
+    items: ProcessedRow[],
+    startIdx: number,
+    language: string,
+  ): Promise<void> => {
+    const batchItems = items.slice(startIdx, startIdx + BATCH_SIZE).map((row) => ({
+      title: row.nombre_original,
+      variant1: row.variante_1_color || undefined,
+      variant2: row.variante_2_talla || undefined,
+    }));
+    try {
+      const { data, error } = await supabase.functions.invoke("process-1688-import", {
+        body: { items: batchItems, language },
+      });
+      if (error) {
+        console.error(`Translation batch error [${language}]`, error);
+        toast.error(`Error traduciendo lote a ${LANG_LABEL[language] ?? language}`);
+        return;
+      }
+      const translations = data?.translations || [];
+      setMultiLang((prev) => {
+        const next = { ...prev };
+        for (const t of translations) {
+          const idx = startIdx + (t.index - 1);
+          const sku = items[idx]?.sku_interno;
+          if (!sku) continue;
+          const bag = { ...(next[sku] ?? {}) };
+          bag[language] = {
+            nombre: t.nombre ?? "",
+            descripcion: t.descripcion ?? "",
+            variante_color: t.variante_color ?? "",
+            variante_talla: t.variante_talla ?? "",
+          };
+          next[sku] = bag;
+        }
+        return next;
+      });
+    } catch (err) {
+      console.error("Translation error:", err);
+    }
+  };
+
+  const toggleApproval = (sku: string, lang: string, field: "title" | "description", value: boolean) => {
+    setApprovals((prev) => {
+      const forSku = { ...(prev[sku] ?? {}) };
+      const entry: ApprovalEntry = {
+        title: false,
+        description: false,
+        ...forSku[lang],
+        [field]: value,
+      };
+      // Update trace metadata only when at least one field is approved
+      const anyApproved = entry.title || entry.description;
+      if (anyApproved) {
+        entry.approvedBy = currentUserId ?? entry.approvedBy;
+        entry.approvedAt = new Date().toISOString();
+      } else {
+        delete entry.approvedBy;
+        delete entry.approvedAt;
+      }
+      forSku[lang] = entry;
+      return { ...prev, [sku]: forSku };
+    });
+  };
+
+  const updateMultiLangField = (sku: string, lang: string, field: "nombre" | "descripcion", value: string) => {
+    setMultiLang((prev) => {
+      const forSku = { ...(prev[sku] ?? {}) };
+      forSku[lang] = { ...(forSku[lang] ?? { nombre: "", descripcion: "" }), [field]: value };
+      return { ...prev, [sku]: forSku };
+    });
+    // Editing invalidates approval for that field
+    setApprovals((prev) => {
+      const forSku = { ...(prev[sku] ?? {}) };
+      const entry = { title: false, description: false, ...forSku[lang] };
+      entry[field === "nombre" ? "title" : "description"] = false;
+      forSku[lang] = entry;
+      return { ...prev, [sku]: forSku };
+    });
+  };
+
+  const approveAllPending = () => {
+    if (!currentUserId) {
+      toast.error("Debes iniciar sesión para aprobar traducciones");
+      return;
+    }
+    const now = new Date().toISOString();
+    setApprovals((prev) => {
+      const next: Record<string, Record<string, ApprovalEntry>> = { ...prev };
+      for (const row of processedData) {
+        const bag = { ...(next[row.sku_interno] ?? {}) };
+        for (const lang of selectedLanguages) {
+          const entry: ApprovalEntry = { title: true, description: true, approvedBy: currentUserId, approvedAt: now, ...bag[lang] };
+          entry.title = true;
+          entry.description = true;
+          entry.approvedBy = currentUserId;
+          entry.approvedAt = now;
+          bag[lang] = entry;
+        }
+        next[row.sku_interno] = bag;
+      }
+      return next;
+    });
+    toast.success("Todas las traducciones aprobadas");
+  };
+
+  const approvalStats = useMemo(() => {
+    const totalFields = processedData.length * selectedLanguages.length * 2;
+    let approvedFields = 0;
+    for (const row of processedData) {
+      const bag = approvals[row.sku_interno] ?? {};
+      for (const lang of selectedLanguages) {
+        const e = bag[lang];
+        if (e?.title) approvedFields++;
+        if (e?.description) approvedFields++;
+      }
+    }
+    return { totalFields, approvedFields, pending: totalFields - approvedFields };
+  }, [approvals, processedData, selectedLanguages]);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -400,10 +613,11 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
   const buildExcelWorkbook = (resolvedMainImg?: string, resolvedVariantImages?: Record<string, string>) => {
     const mainImgSafe = resolvedMainImg ?? (productMainImage?.startsWith("data:") ? "" : (productMainImage || ""));
+    const marketName = markets.find((m) => m.id === selectedMarketId)?.name ?? "";
     const exportData = processedData.map((row, idx) => {
       const rawUrl = row.url_imagen || "";
       const imageUrl = resolvedVariantImages?.[rawUrl] ?? (rawUrl.startsWith("data:") ? "" : rawUrl);
-      return {
+      const base: Record<string, string | number> = {
         SKU_Interno: row.sku_interno,
         Titulo_Producto: translatedFileTitle || row.nombre,
         Imagen_Principal: idx === 0 ? mainImgSafe : "",
@@ -416,7 +630,22 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         MOQ: row.moq,
         Stock: row.stock,
         URL_Imagen_Origen: imageUrl,
+        Mercado: marketName,
       };
+      // Per-language approved translations. Fields not approved are prefixed with [PENDIENTE].
+      const bag = multiLang[row.sku_interno] ?? {};
+      const approvalBag = approvals[row.sku_interno] ?? {};
+      for (const lang of selectedLanguages) {
+        const entry = bag[lang];
+        const ap = approvalBag[lang];
+        const title = entry?.nombre ?? "";
+        const desc = entry?.descripcion ?? "";
+        base[`Titulo_${lang}`] = ap?.title ? title : (title ? `[PENDIENTE] ${title}` : "");
+        base[`Descripcion_${lang}`] = ap?.description ? desc : (desc ? `[PENDIENTE] ${desc}` : "");
+        base[`Aprobado_${lang}_por`] = ap && (ap.title || ap.description) ? (ap.approvedBy ?? "") : "";
+        base[`Aprobado_${lang}_en`] = ap && (ap.title || ap.description) ? (ap.approvedAt ?? "") : "";
+      }
+      return base;
     });
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -670,46 +899,97 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
         {/* Step 1: Upload */}
         {step === "upload" && (
-          <div
-            className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-              isDragging
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-            }`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-          >
-            {isProcessing ? (
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-muted-foreground">Procesando {fileName}...</p>
+          <div className="space-y-5">
+            {/* Market + languages (drive multi-language translation and approval) */}
+            <div className="border rounded-lg p-4 bg-muted/20 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Globe className="h-4 w-4 text-primary" />
+                Mercado e idiomas
               </div>
-            ) : (
-              <>
-                <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-                <p className="text-lg font-medium text-foreground mb-2">
-                  Arrastra tu archivo de 1688 aquí
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Soporta archivos Excel (.xlsx, .xls) y CSV
-                </p>
-                <label>
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    className="hidden"
-                    onChange={handleFileInput}
-                  />
-                  <Button variant="outline" asChild>
-                    <span>Seleccionar archivo</span>
-                  </Button>
-                </label>
-              </>
-            )}
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Mercado destino</Label>
+                  <Select value={selectedMarketId || "__none__"} onValueChange={(v) => setSelectedMarketId(v === "__none__" ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona mercado" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Sin mercado —</SelectItem>
+                      {markets.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Idiomas a traducir y revisar</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_LANGS.map((l) => {
+                      const active = selectedLanguages.includes(l.code);
+                      const disabled = l.code === "es"; // Spanish is always required for the base flow
+                      return (
+                        <label
+                          key={l.code}
+                          className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md border cursor-pointer select-none ${active ? "bg-primary/10 border-primary/40 text-foreground" : "bg-background hover:bg-muted"}`}
+                        >
+                          <Checkbox
+                            checked={active}
+                            disabled={disabled}
+                            onCheckedChange={(v) => {
+                              setSelectedLanguages((prev) =>
+                                v ? Array.from(new Set([...prev, l.code])) : prev.filter((x) => x !== l.code),
+                              );
+                            }}
+                          />
+                          {l.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Se traducirá al español (base) y a los idiomas seleccionados. Aprobarás cada campo por idioma antes de descargar el Excel.</p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+                isDragging
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              }`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
+              {isProcessing ? (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                  <p className="text-muted-foreground">Procesando {fileName}...</p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium text-foreground mb-2">
+                    Arrastra tu archivo de 1688 aquí
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Soporta archivos Excel (.xlsx, .xls) y CSV
+                  </p>
+                  <label>
+                    <input
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                      onChange={handleFileInput}
+                    />
+                    <Button variant="outline" asChild>
+                      <span>Seleccionar archivo</span>
+                    </Button>
+                  </label>
+                </>
+              )}
+            </div>
           </div>
         )}
 
@@ -877,6 +1157,19 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                 <Badge variant="secondary">
                   {processedData.length} variante{processedData.length !== 1 ? "s" : ""}
                 </Badge>
+                <Badge variant="outline" className="gap-1">
+                  <Globe className="h-3 w-3" />
+                  {selectedLanguages.length} idioma{selectedLanguages.length !== 1 ? "s" : ""}
+                </Badge>
+                {isTranslationDone && (
+                  <Badge
+                    variant={approvalStats.pending === 0 ? "secondary" : "outline"}
+                    className={`gap-1 ${approvalStats.pending === 0 ? "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400" : "border-amber-400/60 text-amber-700 dark:text-amber-400"}`}
+                  >
+                    <ShieldCheck className="h-3 w-3" />
+                    {approvalStats.approvedFields}/{approvalStats.totalFields} aprobados
+                  </Badge>
+                )}
                 {isProcessing && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -884,16 +1177,31 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                   </div>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button variant="ghost" size="sm" onClick={() => setStep("mapping")}>
                   Volver al mapeo
                 </Button>
+                {isTranslationDone && approvalStats.pending > 0 && (
+                  <Button variant="outline" size="sm" onClick={approveAllPending}>
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Aprobar todo
+                  </Button>
+                )}
                 <Button onClick={downloadExcel} disabled={isProcessing || !isTranslationDone || isDownloading || previewValidation.hasErrors}>
                   {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                  {isDownloading ? "Preparando..." : "Descargar Excel Procesado"}
+                  {isDownloading ? "Preparando..." : approvalStats.pending > 0 ? `Descargar Excel (${approvalStats.pending} pendientes)` : "Descargar Excel Procesado"}
                 </Button>
               </div>
             </div>
+            {isTranslationDone && Object.keys(langProgress).length > 0 && (
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                {Object.entries(langProgress).map(([lang, p]) => (
+                  <span key={lang} className="px-2 py-0.5 rounded bg-muted">
+                    {LANG_LABEL[lang] ?? lang}: {p.current}/{p.total}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Translation in progress banner */}
             {isProcessing && !isTranslationDone && (
@@ -1448,6 +1756,96 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                 </div>
               </div>
             </div>
+
+            {/* Multi-language translation review + per-field approval */}
+            {editingVariant && selectedLanguages.length > 0 && (
+              <div className="mx-6 mb-4 border rounded-lg bg-muted/20">
+                <div className="flex items-center justify-between p-3 border-b">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-primary" />
+                    Traducciones ({selectedLanguages.length} idiomas)
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Aprueba cada campo por idioma para exportarlo sin marca <span className="font-mono">[PENDIENTE]</span>
+                  </div>
+                </div>
+                <Tabs value={editorLangTab} onValueChange={setEditorLangTab} className="p-3">
+                  <TabsList className="flex flex-wrap h-auto">
+                    {selectedLanguages.map((lang) => {
+                      const ap = approvals[editingVariant.sku_interno]?.[lang];
+                      const done = !!(ap?.title && ap?.description);
+                      return (
+                        <TabsTrigger key={lang} value={lang} className="gap-1.5">
+                          {LANG_LABEL[lang] ?? lang}
+                          {done && <Check className="h-3 w-3 text-green-600" />}
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+                  {selectedLanguages.map((lang) => {
+                    const entry = multiLang[editingVariant.sku_interno]?.[lang];
+                    const ap = approvals[editingVariant.sku_interno]?.[lang];
+                    const loading = !entry && lang !== "es";
+                    return (
+                      <TabsContent key={lang} value={lang} className="space-y-3 pt-3">
+                        {loading ? (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Traduciendo a {LANG_LABEL[lang] ?? lang}...
+                          </div>
+                        ) : (
+                          <>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground">Título</Label>
+                                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                                  <Checkbox
+                                    checked={!!ap?.title}
+                                    onCheckedChange={(v) => toggleApproval(editingVariant.sku_interno, lang, "title", !!v)}
+                                  />
+                                  <span className={ap?.title ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>
+                                    {ap?.title ? "Aprobado" : "Aprobar título"}
+                                  </span>
+                                </label>
+                              </div>
+                              <Input
+                                value={entry?.nombre ?? ""}
+                                onChange={(e) => updateMultiLangField(editingVariant.sku_interno, lang, "nombre", e.target.value)}
+                                placeholder="Título traducido"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground">Descripción</Label>
+                                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                                  <Checkbox
+                                    checked={!!ap?.description}
+                                    onCheckedChange={(v) => toggleApproval(editingVariant.sku_interno, lang, "description", !!v)}
+                                  />
+                                  <span className={ap?.description ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>
+                                    {ap?.description ? "Aprobada" : "Aprobar descripción"}
+                                  </span>
+                                </label>
+                              </div>
+                              <Textarea
+                                rows={4}
+                                value={entry?.descripcion ?? ""}
+                                onChange={(e) => updateMultiLangField(editingVariant.sku_interno, lang, "descripcion", e.target.value)}
+                                placeholder="Descripción traducida"
+                              />
+                            </div>
+                            {ap && (ap.title || ap.description) && ap.approvedAt && (
+                              <p className="text-[11px] text-muted-foreground">
+                                Aprobado por <span className="font-mono">{ap.approvedBy?.slice(0, 8) ?? "—"}</span> el {new Date(ap.approvedAt).toLocaleString()}
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </TabsContent>
+                    );
+                  })}
+                </Tabs>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="flex items-center justify-between gap-3 p-4 border-t">
