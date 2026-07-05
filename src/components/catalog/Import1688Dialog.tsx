@@ -612,10 +612,11 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
   const buildExcelWorkbook = (resolvedMainImg?: string, resolvedVariantImages?: Record<string, string>) => {
     const mainImgSafe = resolvedMainImg ?? (productMainImage?.startsWith("data:") ? "" : (productMainImage || ""));
+    const marketName = markets.find((m) => m.id === selectedMarketId)?.name ?? "";
     const exportData = processedData.map((row, idx) => {
       const rawUrl = row.url_imagen || "";
       const imageUrl = resolvedVariantImages?.[rawUrl] ?? (rawUrl.startsWith("data:") ? "" : rawUrl);
-      return {
+      const base: Record<string, string | number> = {
         SKU_Interno: row.sku_interno,
         Titulo_Producto: translatedFileTitle || row.nombre,
         Imagen_Principal: idx === 0 ? mainImgSafe : "",
@@ -628,7 +629,22 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         MOQ: row.moq,
         Stock: row.stock,
         URL_Imagen_Origen: imageUrl,
+        Mercado: marketName,
       };
+      // Per-language approved translations. Fields not approved are prefixed with [PENDIENTE].
+      const bag = multiLang[row.sku_interno] ?? {};
+      const approvalBag = approvals[row.sku_interno] ?? {};
+      for (const lang of selectedLanguages) {
+        const entry = bag[lang];
+        const ap = approvalBag[lang];
+        const title = entry?.nombre ?? "";
+        const desc = entry?.descripcion ?? "";
+        base[`Titulo_${lang}`] = ap?.title ? title : (title ? `[PENDIENTE] ${title}` : "");
+        base[`Descripcion_${lang}`] = ap?.description ? desc : (desc ? `[PENDIENTE] ${desc}` : "");
+        base[`Aprobado_${lang}_por`] = ap && (ap.title || ap.description) ? (ap.approvedBy ?? "") : "";
+        base[`Aprobado_${lang}_en`] = ap && (ap.title || ap.description) ? (ap.approvedAt ?? "") : "";
+      }
+      return base;
     });
 
     const ws = XLSX.utils.json_to_sheet(exportData);
