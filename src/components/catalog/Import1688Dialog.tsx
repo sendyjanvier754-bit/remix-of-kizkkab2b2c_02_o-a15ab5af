@@ -337,7 +337,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         console.warn("File title translation failed:", err);
       }
 
-      // Translate in batches
+      // Translate in batches (Spanish — main flow that also normalizes variant color/size)
       const total = processed.length;
       setTranslationProgress({ current: 0, total });
 
@@ -345,6 +345,10 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         await translateBatch(processed, i);
         setTranslationProgress({ current: Math.min(i + BATCH_SIZE, total), total });
       }
+
+      // Seed multiLang with the freshly translated Spanish version, then translate to the
+      // other selected languages in parallel batches.
+      await seedSpanishMultiLangAndTranslateOthers(processed);
 
       setIsTranslationDone(true);
       toast.success(`${processed.length} variantes procesadas`);
