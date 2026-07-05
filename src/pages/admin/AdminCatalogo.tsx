@@ -14,7 +14,7 @@ import type { GroupedProduct } from '@/hooks/useSmartProductGrouper';
 import { Package, AlertTriangle, TrendingDown, Search, Upload, Plus, Download, Settings, Loader2, Cpu, ExternalLink, DollarSign, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import SmartBulkImportDialog from '@/components/catalog/SmartBulkImportDialog';
 import Import1688Dialog from '@/components/catalog/Import1688Dialog';
-import Import1688ReviewUploadDialog from '@/components/catalog/Import1688ReviewUploadDialog';
+
 import ProductFormDialog from '@/components/catalog/ProductFormDialog';
 import ProductEditDialog from '@/components/catalog/ProductEditDialog';
 import ProductEmbeddingsManager from '@/components/admin/ProductEmbeddingsManager';
@@ -33,7 +33,7 @@ const AdminCatalogo = () => {
   const [preloaded1688Products, setPreloaded1688Products] = useState<GroupedProduct[] | undefined>(undefined);
   const [preloaded1688File, setPreloaded1688File] = useState<File | undefined>(undefined);
   const [import1688Open, setImport1688Open] = useState(false);
-  const [import1688ReviewOpen, setImport1688ReviewOpen] = useState(false);
+  
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
@@ -143,13 +143,9 @@ const AdminCatalogo = () => {
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-4">
           <div className="flex flex-wrap gap-2">
-            <Button variant="default" onClick={() => setImport1688ReviewOpen(true)}>
+            <Button variant="default" onClick={() => setImport1688Open(true)}>
               <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Importar 1688 (con revisión)
-            </Button>
-            <Button variant="outline" onClick={() => setImport1688Open(true)}>
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Importar 1688 (directo)
+              Importar 1688
             </Button>
             <Button variant="outline" onClick={() => setBulkPriceOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
@@ -420,10 +416,6 @@ const AdminCatalogo = () => {
           setPreloaded1688File(processedFile);
           setSmartImportOpen(true);
         }}
-      />
-      <Import1688ReviewUploadDialog
-        open={import1688ReviewOpen}
-        onOpenChange={setImport1688ReviewOpen}
       />
       <ProductFormDialog open={newProductOpen} onOpenChange={setNewProductOpen} />
       <BulkPriceUpdateDialog open={bulkPriceOpen} onOpenChange={setBulkPriceOpen} />
