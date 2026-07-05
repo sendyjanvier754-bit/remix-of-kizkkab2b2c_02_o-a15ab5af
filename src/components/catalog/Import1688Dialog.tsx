@@ -898,46 +898,97 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
         {/* Step 1: Upload */}
         {step === "upload" && (
-          <div
-            className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-              isDragging
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-            }`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-          >
-            {isProcessing ? (
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-muted-foreground">Procesando {fileName}...</p>
+          <div className="space-y-5">
+            {/* Market + languages (drive multi-language translation and approval) */}
+            <div className="border rounded-lg p-4 bg-muted/20 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Globe className="h-4 w-4 text-primary" />
+                Mercado e idiomas
               </div>
-            ) : (
-              <>
-                <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-                <p className="text-lg font-medium text-foreground mb-2">
-                  Arrastra tu archivo de 1688 aquí
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Soporta archivos Excel (.xlsx, .xls) y CSV
-                </p>
-                <label>
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    className="hidden"
-                    onChange={handleFileInput}
-                  />
-                  <Button variant="outline" asChild>
-                    <span>Seleccionar archivo</span>
-                  </Button>
-                </label>
-              </>
-            )}
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Mercado destino</Label>
+                  <Select value={selectedMarketId || "__none__"} onValueChange={(v) => setSelectedMarketId(v === "__none__" ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona mercado" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Sin mercado —</SelectItem>
+                      {markets.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Idiomas a traducir y revisar</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_LANGS.map((l) => {
+                      const active = selectedLanguages.includes(l.code);
+                      const disabled = l.code === "es"; // Spanish is always required for the base flow
+                      return (
+                        <label
+                          key={l.code}
+                          className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md border cursor-pointer select-none ${active ? "bg-primary/10 border-primary/40 text-foreground" : "bg-background hover:bg-muted"}`}
+                        >
+                          <Checkbox
+                            checked={active}
+                            disabled={disabled}
+                            onCheckedChange={(v) => {
+                              setSelectedLanguages((prev) =>
+                                v ? Array.from(new Set([...prev, l.code])) : prev.filter((x) => x !== l.code),
+                              );
+                            }}
+                          />
+                          {l.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Se traducirá al español (base) y a los idiomas seleccionados. Aprobarás cada campo por idioma antes de descargar el Excel.</p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+                isDragging
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              }`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
+              {isProcessing ? (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                  <p className="text-muted-foreground">Procesando {fileName}...</p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium text-foreground mb-2">
+                    Arrastra tu archivo de 1688 aquí
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Soporta archivos Excel (.xlsx, .xls) y CSV
+                  </p>
+                  <label>
+                    <input
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                      onChange={handleFileInput}
+                    />
+                    <Button variant="outline" asChild>
+                      <span>Seleccionar archivo</span>
+                    </Button>
+                  </label>
+                </>
+              )}
+            </div>
           </div>
         )}
 
