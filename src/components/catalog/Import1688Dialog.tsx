@@ -1756,6 +1756,96 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
               </div>
             </div>
 
+            {/* Multi-language translation review + per-field approval */}
+            {editingVariant && selectedLanguages.length > 0 && (
+              <div className="mx-6 mb-4 border rounded-lg bg-muted/20">
+                <div className="flex items-center justify-between p-3 border-b">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-primary" />
+                    Traducciones ({selectedLanguages.length} idiomas)
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Aprueba cada campo por idioma para exportarlo sin marca <span className="font-mono">[PENDIENTE]</span>
+                  </div>
+                </div>
+                <Tabs value={editorLangTab} onValueChange={setEditorLangTab} className="p-3">
+                  <TabsList className="flex flex-wrap h-auto">
+                    {selectedLanguages.map((lang) => {
+                      const ap = approvals[editingVariant.sku_interno]?.[lang];
+                      const done = !!(ap?.title && ap?.description);
+                      return (
+                        <TabsTrigger key={lang} value={lang} className="gap-1.5">
+                          {LANG_LABEL[lang] ?? lang}
+                          {done && <Check className="h-3 w-3 text-green-600" />}
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+                  {selectedLanguages.map((lang) => {
+                    const entry = multiLang[editingVariant.sku_interno]?.[lang];
+                    const ap = approvals[editingVariant.sku_interno]?.[lang];
+                    const loading = !entry && lang !== "es";
+                    return (
+                      <TabsContent key={lang} value={lang} className="space-y-3 pt-3">
+                        {loading ? (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Traduciendo a {LANG_LABEL[lang] ?? lang}...
+                          </div>
+                        ) : (
+                          <>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground">Título</Label>
+                                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                                  <Checkbox
+                                    checked={!!ap?.title}
+                                    onCheckedChange={(v) => toggleApproval(editingVariant.sku_interno, lang, "title", !!v)}
+                                  />
+                                  <span className={ap?.title ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>
+                                    {ap?.title ? "Aprobado" : "Aprobar título"}
+                                  </span>
+                                </label>
+                              </div>
+                              <Input
+                                value={entry?.nombre ?? ""}
+                                onChange={(e) => updateMultiLangField(editingVariant.sku_interno, lang, "nombre", e.target.value)}
+                                placeholder="Título traducido"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground">Descripción</Label>
+                                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                                  <Checkbox
+                                    checked={!!ap?.description}
+                                    onCheckedChange={(v) => toggleApproval(editingVariant.sku_interno, lang, "description", !!v)}
+                                  />
+                                  <span className={ap?.description ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>
+                                    {ap?.description ? "Aprobada" : "Aprobar descripción"}
+                                  </span>
+                                </label>
+                              </div>
+                              <Textarea
+                                rows={4}
+                                value={entry?.descripcion ?? ""}
+                                onChange={(e) => updateMultiLangField(editingVariant.sku_interno, lang, "descripcion", e.target.value)}
+                                placeholder="Descripción traducida"
+                              />
+                            </div>
+                            {ap && (ap.title || ap.description) && ap.approvedAt && (
+                              <p className="text-[11px] text-muted-foreground">
+                                Aprobado por <span className="font-mono">{ap.approvedBy?.slice(0, 8) ?? "—"}</span> el {new Date(ap.approvedAt).toLocaleString()}
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </TabsContent>
+                    );
+                  })}
+                </Tabs>
+              </div>
+            )}
+
             {/* Footer */}
             <div className="flex items-center justify-between gap-3 p-4 border-t">
               <Button
