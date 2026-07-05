@@ -1156,6 +1156,19 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                 <Badge variant="secondary">
                   {processedData.length} variante{processedData.length !== 1 ? "s" : ""}
                 </Badge>
+                <Badge variant="outline" className="gap-1">
+                  <Globe className="h-3 w-3" />
+                  {selectedLanguages.length} idioma{selectedLanguages.length !== 1 ? "s" : ""}
+                </Badge>
+                {isTranslationDone && (
+                  <Badge
+                    variant={approvalStats.pending === 0 ? "secondary" : "outline"}
+                    className={`gap-1 ${approvalStats.pending === 0 ? "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400" : "border-amber-400/60 text-amber-700 dark:text-amber-400"}`}
+                  >
+                    <ShieldCheck className="h-3 w-3" />
+                    {approvalStats.approvedFields}/{approvalStats.totalFields} aprobados
+                  </Badge>
+                )}
                 {isProcessing && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -1163,16 +1176,31 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                   </div>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button variant="ghost" size="sm" onClick={() => setStep("mapping")}>
                   Volver al mapeo
                 </Button>
+                {isTranslationDone && approvalStats.pending > 0 && (
+                  <Button variant="outline" size="sm" onClick={approveAllPending}>
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Aprobar todo
+                  </Button>
+                )}
                 <Button onClick={downloadExcel} disabled={isProcessing || !isTranslationDone || isDownloading || previewValidation.hasErrors}>
                   {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                  {isDownloading ? "Preparando..." : "Descargar Excel Procesado"}
+                  {isDownloading ? "Preparando..." : approvalStats.pending > 0 ? `Descargar Excel (${approvalStats.pending} pendientes)` : "Descargar Excel Procesado"}
                 </Button>
               </div>
             </div>
+            {isTranslationDone && Object.keys(langProgress).length > 0 && (
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                {Object.entries(langProgress).map(([lang, p]) => (
+                  <span key={lang} className="px-2 py-0.5 rounded bg-muted">
+                    {LANG_LABEL[lang] ?? lang}: {p.current}/{p.total}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Translation in progress banner */}
             {isProcessing && !isTranslationDone && (
