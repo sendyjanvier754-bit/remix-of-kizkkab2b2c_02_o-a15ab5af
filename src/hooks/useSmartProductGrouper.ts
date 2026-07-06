@@ -437,6 +437,81 @@ export const importGroupedProducts = async (
 
       productCreated = true;
 
+      // 1b. Persist per-language translations from Excel columns (Titulo_<lang>, Descripcion_<lang>)
+      try {
+        const firstRow = representativeVariant.originalRow || {};
+        const headerKeys = Object.keys(firstRow);
+        const langRegex = /^(Titulo|Descripcion)_([a-zA-Z]{2})$/;
+        const perLang: Record<string, { name?: string; description?: string }> = {};
+        for (const key of headerKeys) {
+          const m = key.match(langRegex);
+          if (!m) continue;
+          const kind = m[1].toLowerCase();
+          const lang = m[2].toLowerCase();
+          if (lang === 'es') continue; // source language
+          let value = (firstRow[key] || '').toString().trim();
+          if (!value) continue;
+          value = value.replace(/^\[PENDIENTE\]\s*/i, '').trim();
+          if (!value) continue;
+          if (!perLang[lang]) perLang[lang] = {};
+          if (kind === 'titulo') perLang[lang].name = value;
+          else perLang[lang].description = value;
+        }
+
+        const sourceName = group.parentName || '';
+        const sourceDesc = group.description || '';
+        const hashText = async (t: string): Promise<string> => {
+          const data = new TextEncoder().encode(t.trim());
+          const buf = await crypto.subtle.digest('SHA-256', data);
+          return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        };
+        const sourceNameHash = sourceName ? await hashText(sourceName) : '';
+        const sourceDescHash = sourceDesc ? await hashText(sourceDesc) : '';
+
+        const upserts: any[] = [];
+        for (const [lang, entry] of Object.entries(perLang)) {
+          if (entry.name && sourceName) {
+            upserts.push({
+              entity_type: 'product',
+              entity_id: product.id,
+              field_name: 'name',
+              language: lang,
+              source_text: sourceName,
+              source_text_hash: sourceNameHash,
+              translated_text: entry.name,
+              is_auto_translated: false,
+              updated_at: new Date().toISOString(),
+            });
+          }
+          if (entry.description && sourceDesc) {
+            upserts.push({
+              entity_type: 'product',
+              entity_id: product.id,
+              field_name: 'description',
+              language: lang,
+              source_text: sourceDesc,
+              source_text_hash: sourceDescHash,
+              translated_text: entry.description,
+              is_auto_translated: false,
+              updated_at: new Date().toISOString(),
+            });
+          }
+        }
+
+        if (upserts.length > 0) {
+          const { error: trErr } = await supabase
+            .from('content_translations')
+            .upsert(upserts, { onConflict: 'entity_type,entity_id,field_name,language' });
+          if (trErr) {
+            console.warn('content_translations upsert error:', trErr);
+            groupErrors.push(`Traducciones: ${trErr.message}`);
+          }
+        }
+      } catch (trCatch) {
+        console.warn('Translation persistence failed:', trCatch);
+      }
+
+
       // 2. Create/get attributes and options
       const attributeCache: Record<string, string> = {}; // name -> id
       const optionCache: Record<string, Record<string, string>> = {}; // attrId -> { value -> optionId }
