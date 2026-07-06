@@ -879,7 +879,12 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     closeVariantEditor();
   };
 
-  const stepLabel = step === "upload" ? "Paso 1/4" : step === "mapping" ? "Paso 2/4" : step === "preview" ? "Paso 3/4" : "Paso 4/4";
+  const stepLabel =
+    step === "upload" ? "Paso 1/5"
+    : step === "mapping" ? "Paso 2/5"
+    : step === "preview" ? "Paso 3/5"
+    : step === "translation" ? "Paso 4/5"
+    : "Paso 5/5";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
