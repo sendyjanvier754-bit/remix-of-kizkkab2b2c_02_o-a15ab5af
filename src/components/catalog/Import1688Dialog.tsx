@@ -81,7 +81,7 @@ interface ColumnMapping {
   imagen_principal: string;
 }
 
-type Step = "upload" | "mapping" | "preview" | "export";
+type Step = "upload" | "mapping" | "preview" | "translation" | "export";
 
 const BATCH_SIZE = 15;
 
@@ -879,7 +879,12 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     closeVariantEditor();
   };
 
-  const stepLabel = step === "upload" ? "Paso 1/4" : step === "mapping" ? "Paso 2/4" : step === "preview" ? "Paso 3/4" : "Paso 4/4";
+  const stepLabel =
+    step === "upload" ? "Paso 1/5"
+    : step === "mapping" ? "Paso 2/5"
+    : step === "preview" ? "Paso 3/5"
+    : step === "translation" ? "Paso 4/5"
+    : "Paso 5/5";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -1187,9 +1192,10 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     Aprobar todo
                   </Button>
                 )}
-                <Button onClick={downloadExcel} disabled={isProcessing || !isTranslationDone || isDownloading || previewValidation.hasErrors}>
-                  {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                  {isDownloading ? "Preparando..." : approvalStats.pending > 0 ? `Descargar Excel (${approvalStats.pending} pendientes)` : "Descargar Excel Procesado"}
+                <Button onClick={() => setStep("translation")} disabled={isProcessing || !isTranslationDone || previewValidation.hasErrors}>
+                  <Globe className="h-4 w-4 mr-2" />
+                  Revisar traducciones ({selectedLanguages.length} idioma{selectedLanguages.length !== 1 ? "s" : ""})
+                  <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
             </div>
@@ -1537,7 +1543,158 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
           </div>
         )}
 
-        {/* Step 4: Export & Confirm */}
+        {/* Step 4: Translation review — per-language editable titles & descriptions */}
+        {step === "translation" && (
+          <div className="flex flex-col flex-1 min-h-0 gap-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="gap-1">
+                  <Globe className="h-3 w-3" />
+                  {selectedLanguages.length} idioma{selectedLanguages.length !== 1 ? "s" : ""}
+                </Badge>
+                <Badge variant="secondary">
+                  {processedData.length} variante{processedData.length !== 1 ? "s" : ""}
+                </Badge>
+                <Badge
+                  variant={approvalStats.pending === 0 ? "secondary" : "outline"}
+                  className={`gap-1 ${approvalStats.pending === 0 ? "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400" : "border-amber-400/60 text-amber-700 dark:text-amber-400"}`}
+                >
+                  <ShieldCheck className="h-3 w-3" />
+                  {approvalStats.approvedFields}/{approvalStats.totalFields} aprobados
+                </Badge>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="ghost" size="sm" onClick={() => setStep("preview")}>
+                  Volver a variantes
+                </Button>
+                {approvalStats.pending > 0 && (
+                  <Button variant="outline" size="sm" onClick={approveAllPending}>
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Aprobar todo
+                  </Button>
+                )}
+                <Button onClick={downloadExcel} disabled={isDownloading}>
+                  {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                  {isDownloading ? "Preparando..." : approvalStats.pending > 0 ? `Descargar Excel (${approvalStats.pending} pendientes)` : "Descargar Excel Procesado"}
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Revisa y edita los títulos y descripciones traducidas por la IA para cada idioma del mercado. Marca &quot;Aprobar&quot; cuando el texto esté listo. Editar un campo lo desmarca automáticamente.
+            </p>
+
+            <Tabs defaultValue={selectedLanguages[0] ?? "es"} className="flex flex-col flex-1 min-h-0">
+              <TabsList className="w-full justify-start flex-wrap h-auto">
+                {selectedLanguages.map((lang) => {
+                  let approved = 0;
+                  let total = 0;
+                  for (const row of processedData) {
+                    const ap = approvals[row.sku_interno]?.[lang];
+                    total += 2;
+                    if (ap?.title) approved++;
+                    if (ap?.description) approved++;
+                  }
+                  return (
+                    <TabsTrigger key={lang} value={lang} className="gap-2">
+                      {LANG_LABEL[lang] ?? lang}
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] px-1.5 py-0 h-4 ${approved === total ? "border-green-500/40 text-green-700 dark:text-green-400" : "border-amber-400/60 text-amber-700 dark:text-amber-400"}`}
+                      >
+                        {approved}/{total}
+                      </Badge>
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+
+              {selectedLanguages.map((lang) => (
+                <TabsContent key={lang} value={lang} className="flex-1 min-h-0 overflow-auto mt-3 pr-1">
+                  <div className="space-y-3">
+                    {processedData.map((row, idx) => {
+                      const entry = multiLang[row.sku_interno]?.[lang] ?? { nombre: "", descripcion: "" };
+                      const ap = approvals[row.sku_interno]?.[lang] ?? { title: false, description: false };
+                      const originalTitle = row.nombre_original || row.nombre;
+                      return (
+                        <div key={row.sku_interno} className="border rounded-lg p-3 bg-card">
+                          <div className="flex gap-3">
+                            <div className="w-14 h-14 rounded-md overflow-hidden bg-muted border flex-shrink-0">
+                              {row.url_imagen ? (
+                                <img src={row.url_imagen} alt="" className="w-full h-full object-cover" loading="lazy" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ImageOff className="h-4 w-4 text-muted-foreground/40" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="text-xs font-mono text-muted-foreground">#{idx + 1}</span>
+                                <span className="text-xs font-medium">{row.sku_interno}</span>
+                                {row.variante_1_color && (
+                                  <Badge variant="outline" className="text-[10px]">{row.variante_1_color}</Badge>
+                                )}
+                                {row.variante_2_talla && (
+                                  <Badge variant="outline" className="text-[10px]">{row.variante_2_talla}</Badge>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-muted-foreground line-clamp-2" title={originalTitle}>
+                                Original: {originalTitle}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <Label className="text-xs font-medium">Título ({LANG_LABEL[lang] ?? lang})</Label>
+                                <label className="flex items-center gap-1.5 text-[11px] cursor-pointer select-none">
+                                  <Checkbox
+                                    checked={ap.title}
+                                    onCheckedChange={(v) => toggleApproval(row.sku_interno, lang, "title", !!v)}
+                                  />
+                                  Aprobar
+                                </label>
+                              </div>
+                              <Input
+                                value={entry.nombre}
+                                onChange={(e) => updateMultiLangField(row.sku_interno, lang, "nombre", e.target.value)}
+                                placeholder={`Título en ${LANG_LABEL[lang] ?? lang}`}
+                                className={ap.title ? "border-green-500/50" : ""}
+                              />
+                            </div>
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <Label className="text-xs font-medium">Descripción ({LANG_LABEL[lang] ?? lang})</Label>
+                                <label className="flex items-center gap-1.5 text-[11px] cursor-pointer select-none">
+                                  <Checkbox
+                                    checked={ap.description}
+                                    onCheckedChange={(v) => toggleApproval(row.sku_interno, lang, "description", !!v)}
+                                  />
+                                  Aprobar
+                                </label>
+                              </div>
+                              <Textarea
+                                value={entry.descripcion}
+                                onChange={(e) => updateMultiLangField(row.sku_interno, lang, "descripcion", e.target.value)}
+                                placeholder={`Descripción en ${LANG_LABEL[lang] ?? lang}`}
+                                rows={3}
+                                className={ap.description ? "border-green-500/50" : ""}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        )}
+
+        {/* Step 5: Export & Confirm */}
         {step === "export" && (
           <div className="flex flex-col items-center gap-6 py-8">
             <div className="flex items-center gap-3">
