@@ -81,7 +81,7 @@ interface ColumnMapping {
   imagen_principal: string;
 }
 
-type Step = "upload" | "mapping" | "preview" | "export";
+type Step = "upload" | "mapping" | "preview" | "translation" | "export";
 
 const BATCH_SIZE = 15;
 
