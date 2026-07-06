@@ -1192,9 +1192,10 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     Aprobar todo
                   </Button>
                 )}
-                <Button onClick={downloadExcel} disabled={isProcessing || !isTranslationDone || isDownloading || previewValidation.hasErrors}>
-                  {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                  {isDownloading ? "Preparando..." : approvalStats.pending > 0 ? `Descargar Excel (${approvalStats.pending} pendientes)` : "Descargar Excel Procesado"}
+                <Button onClick={() => setStep("translation")} disabled={isProcessing || !isTranslationDone || previewValidation.hasErrors}>
+                  <Globe className="h-4 w-4 mr-2" />
+                  Revisar traducciones ({selectedLanguages.length} idioma{selectedLanguages.length !== 1 ? "s" : ""})
+                  <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
             </div>
