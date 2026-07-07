@@ -437,24 +437,28 @@ export const importGroupedProducts = async (
 
       productCreated = true;
 
-      // 1b. Persist per-language translations from Excel columns (Titulo_<lang>, Descripcion_<lang>)
+      // 1b. Persist per-language PARENT product translations from Excel
+      // (Titulo_Producto_<lang> / Descripcion_Producto_<lang>). Per-variant
+      // translation columns (Titulo_<lang>) are intentionally ignored here
+      // because they contain variant-flavored titles that would pollute the
+      // product-level translations displayed on cards and the product page.
       try {
         const firstRow = representativeVariant.originalRow || {};
         const headerKeys = Object.keys(firstRow);
-        const langRegex = /^(Titulo|Descripcion)_([a-zA-Z]{2})$/;
+        const parentLangRegex = /^(Titulo_Producto|Descripcion_Producto)_([a-zA-Z]{2})$/;
         const perLang: Record<string, { name?: string; description?: string }> = {};
         for (const key of headerKeys) {
-          const m = key.match(langRegex);
+          const m = key.match(parentLangRegex);
           if (!m) continue;
-          const kind = m[1].toLowerCase();
+          const kind = m[1];
           const lang = m[2].toLowerCase();
-          if (lang === 'es') continue; // source language
+          if (lang === 'es') continue;
           let value = (firstRow[key] || '').toString().trim();
           if (!value) continue;
           value = value.replace(/^\[PENDIENTE\]\s*/i, '').trim();
           if (!value) continue;
           if (!perLang[lang]) perLang[lang] = {};
-          if (kind === 'titulo') perLang[lang].name = value;
+          if (kind === 'Titulo_Producto') perLang[lang].name = value;
           else perLang[lang].description = value;
         }
 
