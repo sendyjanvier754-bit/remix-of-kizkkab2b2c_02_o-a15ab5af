@@ -165,6 +165,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [selectedMarketId, setSelectedMarketId] = useState<string>("");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es"]);
   const [multiLang, setMultiLang] = useState<Record<string, Record<string, MultiLangEntry>>>({});
+  const [productTitleByLang, setProductTitleByLang] = useState<Record<string, string>>({});
   const [approvals, setApprovals] = useState<Record<string, Record<string, ApprovalEntry>>>({});
   const [langProgress, setLangProgress] = useState<Record<string, { current: number; total: number }>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -200,6 +201,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setSelectedMarketId("");
     setSelectedLanguages(["es"]);
     setMultiLang({});
+    setProductTitleByLang({});
     setApprovals({});
     setLangProgress({});
     setEditorLangTab("es");
@@ -442,6 +444,29 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     const otherLangs = selectedLanguages.filter((l) => l !== "es");
     if (otherLangs.length === 0) return;
 
+    // Translate the PARENT product title (clean, without variant info) into each
+    // selected language so we can persist a proper per-language product name.
+    const parentTitleEs = (translatedFileTitle || cleanFileTitle || "").trim();
+    if (parentTitleEs) {
+      setProductTitleByLang((prev) => ({ ...prev, es: parentTitleEs }));
+      await Promise.all(
+        otherLangs.map(async (lang) => {
+          try {
+            const { data } = await supabase.functions.invoke("process-1688-import", {
+              body: { items: [{ title: parentTitleEs }], language: lang },
+            });
+            const t = data?.translations?.[0];
+            const name = (t?.nombre || "").trim();
+            if (name) {
+              setProductTitleByLang((prev) => ({ ...prev, [lang]: name }));
+            }
+          } catch (err) {
+            console.warn(`Parent title translation failed [${lang}]`, err);
+          }
+        }),
+      );
+    }
+
     // Translate each language sequentially (server-side rate limits are tight)
     for (const lang of otherLangs) {
       setLangProgress((p) => ({ ...p, [lang]: { current: 0, total: baseItems.length } }));
@@ -644,6 +669,12 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         base[`Descripcion_${lang}`] = ap?.description ? desc : (desc ? `[PENDIENTE] ${desc}` : "");
         base[`Aprobado_${lang}_por`] = ap && (ap.title || ap.description) ? (ap.approvedBy ?? "") : "";
         base[`Aprobado_${lang}_en`] = ap && (ap.title || ap.description) ? (ap.approvedAt ?? "") : "";
+        // Parent product title per language (only on first row — used by importer to
+        // persist per-language product name into content_translations).
+        const parentTitleLang = lang === "es"
+          ? (translatedFileTitle || row.nombre)
+          : (productTitleByLang[lang] || "");
+        base[`Titulo_Producto_${lang}`] = idx === 0 ? parentTitleLang : "";
       }
       return base;
     });
