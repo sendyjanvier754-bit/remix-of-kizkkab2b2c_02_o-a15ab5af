@@ -669,6 +669,12 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         base[`Descripcion_${lang}`] = ap?.description ? desc : (desc ? `[PENDIENTE] ${desc}` : "");
         base[`Aprobado_${lang}_por`] = ap && (ap.title || ap.description) ? (ap.approvedBy ?? "") : "";
         base[`Aprobado_${lang}_en`] = ap && (ap.title || ap.description) ? (ap.approvedAt ?? "") : "";
+        // Parent product title per language (only on first row — used by importer to
+        // persist per-language product name into content_translations).
+        const parentTitleLang = lang === "es"
+          ? (translatedFileTitle || row.nombre)
+          : (productTitleByLang[lang] || "");
+        base[`Titulo_Producto_${lang}`] = idx === 0 ? parentTitleLang : "";
       }
       return base;
     });
