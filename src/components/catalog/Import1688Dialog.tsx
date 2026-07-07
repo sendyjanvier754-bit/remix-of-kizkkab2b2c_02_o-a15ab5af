@@ -165,6 +165,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [selectedMarketId, setSelectedMarketId] = useState<string>("");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es"]);
   const [multiLang, setMultiLang] = useState<Record<string, Record<string, MultiLangEntry>>>({});
+  const [productTitleByLang, setProductTitleByLang] = useState<Record<string, string>>({});
   const [approvals, setApprovals] = useState<Record<string, Record<string, ApprovalEntry>>>({});
   const [langProgress, setLangProgress] = useState<Record<string, { current: number; total: number }>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
