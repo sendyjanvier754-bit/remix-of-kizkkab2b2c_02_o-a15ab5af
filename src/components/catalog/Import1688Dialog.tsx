@@ -444,6 +444,29 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     const otherLangs = selectedLanguages.filter((l) => l !== "es");
     if (otherLangs.length === 0) return;
 
+    // Translate the PARENT product title (clean, without variant info) into each
+    // selected language so we can persist a proper per-language product name.
+    const parentTitleEs = (translatedFileTitle || cleanFileTitle || "").trim();
+    if (parentTitleEs) {
+      setProductTitleByLang((prev) => ({ ...prev, es: parentTitleEs }));
+      await Promise.all(
+        otherLangs.map(async (lang) => {
+          try {
+            const { data } = await supabase.functions.invoke("process-1688-import", {
+              body: { items: [{ title: parentTitleEs }], language: lang },
+            });
+            const t = data?.translations?.[0];
+            const name = (t?.nombre || "").trim();
+            if (name) {
+              setProductTitleByLang((prev) => ({ ...prev, [lang]: name }));
+            }
+          } catch (err) {
+            console.warn(`Parent title translation failed [${lang}]`, err);
+          }
+        }),
+      );
+    }
+
     // Translate each language sequentially (server-side rate limits are tight)
     for (const lang of otherLangs) {
       setLangProgress((p) => ({ ...p, [lang]: { current: 0, total: baseItems.length } }));
