@@ -1214,13 +1214,13 @@ const ProductPage = () => {
               <div className="flex flex-col gap-2">
                 <h1 className={`text-lg md:text-xl font-semibold text-gray-900 leading-tight mb-0`}>
                   {titleExpanded ? <div className="flex items-start gap-2">
-                      <div className="whitespace-normal">{product.nombre}</div>
+                      <div className="whitespace-normal">{displayName}</div>
                       {showTitleToggle && <button onClick={() => setTitleExpanded(false)} className="ml-2 text-xs font-semibold px-2 py-1 rounded border border-[#071d7f] text-[#071d7f] pulse-btn bg-white z-10" aria-expanded={true} aria-label="Collapse product title">
                           View less
                         </button>}
                     </div> : <div className="flex items-baseline gap-1">
                       <div className="flex-1 line-clamp-2 break-words">
-                        {product.nombre}
+                        {displayName}
                       </div>
                       {showTitleToggle && <button onClick={() => setTitleExpanded(true)} className="inline-block align-baseline ml-1 text-xs font-semibold px-2 py-1 rounded border border-[#071d7f] text-[#071d7f] pulse-btn bg-white z-10" aria-expanded={false} aria-label="Expand product title">
                           View more
