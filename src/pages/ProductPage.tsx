@@ -1413,7 +1413,7 @@ const ProductPage = () => {
                       style={{ borderColor: '#071d7f' }}>
                       
                       <p className="text-sm text-gray-700 whitespace-pre-line prose prose-sm max-w-none text-gray-600">
-                        {product?.descripcion}
+                        {displayDescription}
                       </p>
                     </div>
                   </AccordionContent>
