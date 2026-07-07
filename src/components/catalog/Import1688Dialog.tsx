@@ -201,6 +201,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setSelectedMarketId("");
     setSelectedLanguages(["es"]);
     setMultiLang({});
+    setProductTitleByLang({});
     setApprovals({});
     setLangProgress({});
     setEditorLangTab("es");
