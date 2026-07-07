@@ -435,6 +435,19 @@ const ProductPage = () => {
   // realStore: joined store object OR full storeData fetched via ?seller= param
   const realStore = ((product as any)?.store || storeData) as {id: string;name: string;logo: string | null;slug: string | null;} | null;
 
+  // Translate product name and description into current UI language
+  const translationEntityId = (product as any)?.source_product?.id || (product as any)?.id || null;
+  const { translated: translatedProduct } = useTranslatedContent(
+    'product',
+    translationEntityId,
+    {
+      name: (product as any)?.nombre,
+      description: (product as any)?.descripcion,
+    }
+  );
+  const displayName: string = (translatedProduct as any)?.name || (product as any)?.nombre || '';
+  const displayDescription: string = (translatedProduct as any)?.description || (product as any)?.descripcion || '';
+
   const { followStore, unfollowStore, checkIfFollowing } = useStoreFollow();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
