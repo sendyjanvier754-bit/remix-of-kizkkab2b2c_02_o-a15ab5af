@@ -18,6 +18,7 @@ import { useRecommendedProducts } from "@/hooks/useMarketplaceData";
 import { useStoreFollow } from "@/hooks/useTrendingStores";
 import { useSEO } from "@/hooks/useSEO";
 import { useBranding } from "@/hooks/useBranding";
+import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
