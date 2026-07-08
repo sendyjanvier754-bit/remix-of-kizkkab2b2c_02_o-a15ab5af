@@ -371,10 +371,17 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       const total = processed.length;
       setTranslationProgress({ current: 0, total });
 
+      const spanishTasks: (() => Promise<void>)[] = [];
+      let doneCount = 0;
       for (let i = 0; i < total; i += BATCH_SIZE) {
-        await translateBatch(processed, i);
-        setTranslationProgress({ current: Math.min(i + BATCH_SIZE, total), total });
+        const startIdx = i;
+        spanishTasks.push(async () => {
+          await translateBatch(processed, startIdx);
+          doneCount += Math.min(BATCH_SIZE, total - startIdx);
+          setTranslationProgress({ current: Math.min(doneCount, total), total });
+        });
       }
+      await runWithConcurrency(spanishTasks, MAX_PARALLEL_BATCHES);
 
       // Seed multiLang with the freshly translated Spanish version, then translate to the
       // other selected languages in parallel batches.
