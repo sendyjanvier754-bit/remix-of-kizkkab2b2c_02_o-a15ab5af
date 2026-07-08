@@ -210,6 +210,9 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setApprovals({});
     setLangProgress({});
     setEditorLangTab("es");
+    setTitleSourceMode("description");
+    setCustomTitleSource("");
+    setIsRegeneratingTitles(false);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
