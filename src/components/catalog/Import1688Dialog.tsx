@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2, Globe, ShieldCheck } from "lucide-react";
+import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2, Globe, ShieldCheck, Sparkles, Wand2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -171,6 +171,11 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [editorLangTab, setEditorLangTab] = useState<string>("es");
 
+  // Title regeneration (parent product title, all languages)
+  const [titleSourceMode, setTitleSourceMode] = useState<"description" | "custom">("description");
+  const [customTitleSource, setCustomTitleSource] = useState<string>("");
+  const [isRegeneratingTitles, setIsRegeneratingTitles] = useState(false);
+
   // Load markets and current user once when opened
   useEffect(() => {
     if (!open) return;
@@ -205,6 +210,9 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setApprovals({});
     setLangProgress({});
     setEditorLangTab("es");
+    setTitleSourceMode("description");
+    setCustomTitleSource("");
+    setIsRegeneratingTitles(false);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -521,6 +529,71 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       console.error("Translation error:", err);
     }
   };
+
+  /** Regenerate the parent product title in ALL selected languages from a source text
+   *  (either the current ES description or a custom text provided by the admin). */
+  const regenerateAllTitles = async () => {
+    const sourceText = (
+      titleSourceMode === "custom"
+        ? customTitleSource
+        : (multiLang[processedData[0]?.sku_interno]?.es?.descripcion || processedData[0]?.descripcion_corta || "")
+    ).trim();
+
+    if (!sourceText) {
+      toast.error(
+        titleSourceMode === "custom"
+          ? "Escribe un texto base para generar los títulos"
+          : "No hay descripción en español disponible para generar el título",
+      );
+      return;
+    }
+    if (selectedLanguages.length === 0) {
+      toast.error("Selecciona al menos un idioma");
+      return;
+    }
+
+    setIsRegeneratingTitles(true);
+    try {
+      const results = await Promise.all(
+        selectedLanguages.map(async (lang) => {
+          try {
+            const { data, error } = await supabase.functions.invoke("process-1688-import", {
+              body: {
+                items: [{ title: sourceText }],
+                language: lang,
+              },
+            });
+            if (error) throw error;
+            const name = (data?.translations?.[0]?.nombre || "").trim();
+            return { lang, name };
+          } catch (err) {
+            console.warn(`regenerateAllTitles failed [${lang}]`, err);
+            return { lang, name: "" };
+          }
+        }),
+      );
+
+      const updates: Record<string, string> = {};
+      for (const { lang, name } of results) {
+        if (name) updates[lang] = name;
+      }
+      if (Object.keys(updates).length === 0) {
+        toast.error("No se pudo regenerar ningún título");
+        return;
+      }
+
+      // Update parent title map (used for Titulo_Producto_<lang> in the Excel export)
+      setProductTitleByLang((prev) => ({ ...prev, ...updates }));
+
+      // Also update Spanish helper used by export fallback
+      if (updates.es) setTranslatedFileTitle(updates.es);
+
+      toast.success(`Títulos regenerados en ${Object.keys(updates).length} idioma(s)`);
+    } finally {
+      setIsRegeneratingTitles(false);
+    }
+  };
+
 
   const toggleApproval = (sku: string, lang: string, field: "title" | "description", value: boolean) => {
     setApprovals((prev) => {
@@ -1614,6 +1687,94 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
             <p className="text-sm text-muted-foreground">
               Revisa y edita los títulos y descripciones traducidas por la IA para cada idioma del mercado. Marca &quot;Aprobar&quot; cuando el texto esté listo. Editar un campo lo desmarca automáticamente.
             </p>
+
+            {/* ── Parent product title: regenerate in ALL languages ── */}
+            <div className="border rounded-lg p-3 bg-muted/30 space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-semibold">Título principal del producto</h4>
+                <span className="text-xs text-muted-foreground">
+                  Se aplicará a todos los idiomas seleccionados ({selectedLanguages.length})
+                </span>
+              </div>
+
+              {/* Current parent title per language (editable) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {selectedLanguages.map((lang) => (
+                  <div key={lang} className="space-y-1">
+                    <Label className="text-[11px] font-medium text-muted-foreground">
+                      {LANG_LABEL[lang] ?? lang}
+                    </Label>
+                    <Input
+                      value={
+                        lang === "es"
+                          ? (productTitleByLang.es ?? translatedFileTitle ?? "")
+                          : (productTitleByLang[lang] ?? "")
+                      }
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setProductTitleByLang((prev) => ({ ...prev, [lang]: v }));
+                        if (lang === "es") setTranslatedFileTitle(v);
+                      }}
+                      placeholder={`Título principal (${LANG_LABEL[lang] ?? lang})`}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Regeneration source picker */}
+              <div className="space-y-2 pt-1 border-t">
+                <div className="flex items-center gap-3 flex-wrap text-xs">
+                  <span className="font-medium">Regenerar a partir de:</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="titleSource"
+                      checked={titleSourceMode === "description"}
+                      onChange={() => setTitleSourceMode("description")}
+                    />
+                    Descripción en español
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="titleSource"
+                      checked={titleSourceMode === "custom"}
+                      onChange={() => setTitleSourceMode("custom")}
+                    />
+                    Texto personalizado
+                  </label>
+                </div>
+
+                {titleSourceMode === "custom" && (
+                  <Textarea
+                    value={customTitleSource}
+                    onChange={(e) => setCustomTitleSource(e.target.value)}
+                    placeholder="Escribe aquí el texto base (en cualquier idioma). La IA generará un título comercial en cada idioma seleccionado."
+                    rows={2}
+                    className="text-sm"
+                  />
+                )}
+
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={regenerateAllTitles}
+                    disabled={isRegeneratingTitles}
+                  >
+                    {isRegeneratingTitles ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-4 w-4 mr-2" />
+                    )}
+                    {isRegeneratingTitles ? "Regenerando..." : "Regenerar títulos en todos los idiomas"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+
 
             <Tabs defaultValue={selectedLanguages[0] ?? "es"} className="flex flex-col flex-1 min-h-0">
               <TabsList className="w-full justify-start flex-wrap h-auto">
