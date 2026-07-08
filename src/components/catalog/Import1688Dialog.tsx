@@ -625,7 +625,50 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       // Also update Spanish helper used by export fallback
       if (updates.es) setTranslatedFileTitle(updates.es);
 
-      toast.success(`Títulos regenerados en ${Object.keys(updates).length} idioma(s)`);
+      // Propagate the new parent title down to every variant's per-language title so
+      // variant titles stay consistent with the parent (color/size stay on their own
+      // dedicated fields). Editing a variant title afterwards still works normally.
+      setMultiLang((prev) => {
+        const next: Record<string, Record<string, MultiLangEntry>> = { ...prev };
+        for (const row of processedData) {
+          const bag = { ...(next[row.sku_interno] ?? {}) };
+          for (const [lang, newTitle] of Object.entries(updates)) {
+            bag[lang] = {
+              nombre: newTitle,
+              descripcion: bag[lang]?.descripcion ?? "",
+              variante_color: bag[lang]?.variante_color ?? "",
+              variante_talla: bag[lang]?.variante_talla ?? "",
+            };
+          }
+          next[row.sku_interno] = bag;
+        }
+        return next;
+      });
+
+      // Mirror ES variant title into the base processedData so the preview step (and
+      // any Spanish-only consumers) reflect the new title too.
+      if (updates.es) {
+        setProcessedData((prev) => prev.map((r) => ({ ...r, nombre: updates.es })));
+      }
+
+      // Invalidate approvals for titles in the affected languages — descriptions stay
+      // untouched, so their approvals are preserved.
+      setApprovals((prev) => {
+        const next: Record<string, Record<string, ApprovalEntry>> = { ...prev };
+        for (const row of processedData) {
+          const bag = { ...(next[row.sku_interno] ?? {}) };
+          for (const lang of Object.keys(updates)) {
+            const cur = bag[lang] ?? { title: false, description: false };
+            bag[lang] = { ...cur, title: false };
+          }
+          next[row.sku_interno] = bag;
+        }
+        return next;
+      });
+
+      toast.success(
+        `Títulos regenerados en ${Object.keys(updates).length} idioma(s) y aplicados a las ${processedData.length} variantes`,
+      );
     } finally {
       setIsRegeneratingTitles(false);
     }
