@@ -501,17 +501,28 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       );
     }
 
-    // Translate each language sequentially (server-side rate limits are tight)
-    for (const lang of otherLangs) {
-      setLangProgress((p) => ({ ...p, [lang]: { current: 0, total: baseItems.length } }));
-      for (let i = 0; i < baseItems.length; i += BATCH_SIZE) {
-        await translateBatchForLanguage(baseItems, i, lang);
-        setLangProgress((p) => ({
-          ...p,
-          [lang]: { current: Math.min(i + BATCH_SIZE, baseItems.length), total: baseItems.length },
-        }));
-      }
-    }
+    // Translate all other languages in parallel; within each language, run its
+    // batches with a bounded concurrency pool so we stay well within provider
+    // rate limits while cutting total wall-clock time dramatically.
+    await Promise.all(
+      otherLangs.map(async (lang) => {
+        setLangProgress((p) => ({ ...p, [lang]: { current: 0, total: baseItems.length } }));
+        let done = 0;
+        const tasks: (() => Promise<void>)[] = [];
+        for (let i = 0; i < baseItems.length; i += BATCH_SIZE) {
+          const startIdx = i;
+          tasks.push(async () => {
+            await translateBatchForLanguage(baseItems, startIdx, lang);
+            done += Math.min(BATCH_SIZE, baseItems.length - startIdx);
+            setLangProgress((p) => ({
+              ...p,
+              [lang]: { current: Math.min(done, baseItems.length), total: baseItems.length },
+            }));
+          });
+        }
+        await runWithConcurrency(tasks, MAX_PARALLEL_BATCHES);
+      }),
+    );
   };
 
   const translateBatchForLanguage = async (
