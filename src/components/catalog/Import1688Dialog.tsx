@@ -171,6 +171,11 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [editorLangTab, setEditorLangTab] = useState<string>("es");
 
+  // Title regeneration (parent product title, all languages)
+  const [titleSourceMode, setTitleSourceMode] = useState<"description" | "custom">("description");
+  const [customTitleSource, setCustomTitleSource] = useState<string>("");
+  const [isRegeneratingTitles, setIsRegeneratingTitles] = useState(false);
+
   // Load markets and current user once when opened
   useEffect(() => {
     if (!open) return;
