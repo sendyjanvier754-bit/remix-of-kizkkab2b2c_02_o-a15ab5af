@@ -83,7 +83,26 @@ interface ColumnMapping {
 
 type Step = "upload" | "mapping" | "preview" | "translation" | "export";
 
-const BATCH_SIZE = 15;
+const BATCH_SIZE = 25;
+const MAX_PARALLEL_BATCHES = 5;
+
+/** Run async tasks with a bounded concurrency pool. */
+async function runWithConcurrency<T>(
+  tasks: (() => Promise<T>)[],
+  limit: number,
+): Promise<T[]> {
+  const results: T[] = new Array(tasks.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+    while (true) {
+      const idx = cursor++;
+      if (idx >= tasks.length) return;
+      results[idx] = await tasks[idx]();
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 
 const AVAILABLE_LANGS: { code: string; label: string }[] = [
   { code: "es", label: "Español" },
@@ -352,10 +371,17 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       const total = processed.length;
       setTranslationProgress({ current: 0, total });
 
+      const spanishTasks: (() => Promise<void>)[] = [];
+      let doneCount = 0;
       for (let i = 0; i < total; i += BATCH_SIZE) {
-        await translateBatch(processed, i);
-        setTranslationProgress({ current: Math.min(i + BATCH_SIZE, total), total });
+        const startIdx = i;
+        spanishTasks.push(async () => {
+          await translateBatch(processed, startIdx);
+          doneCount += Math.min(BATCH_SIZE, total - startIdx);
+          setTranslationProgress({ current: Math.min(doneCount, total), total });
+        });
       }
+      await runWithConcurrency(spanishTasks, MAX_PARALLEL_BATCHES);
 
       // Seed multiLang with the freshly translated Spanish version, then translate to the
       // other selected languages in parallel batches.
@@ -475,17 +501,28 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       );
     }
 
-    // Translate each language sequentially (server-side rate limits are tight)
-    for (const lang of otherLangs) {
-      setLangProgress((p) => ({ ...p, [lang]: { current: 0, total: baseItems.length } }));
-      for (let i = 0; i < baseItems.length; i += BATCH_SIZE) {
-        await translateBatchForLanguage(baseItems, i, lang);
-        setLangProgress((p) => ({
-          ...p,
-          [lang]: { current: Math.min(i + BATCH_SIZE, baseItems.length), total: baseItems.length },
-        }));
-      }
-    }
+    // Translate all other languages in parallel; within each language, run its
+    // batches with a bounded concurrency pool so we stay well within provider
+    // rate limits while cutting total wall-clock time dramatically.
+    await Promise.all(
+      otherLangs.map(async (lang) => {
+        setLangProgress((p) => ({ ...p, [lang]: { current: 0, total: baseItems.length } }));
+        let done = 0;
+        const tasks: (() => Promise<void>)[] = [];
+        for (let i = 0; i < baseItems.length; i += BATCH_SIZE) {
+          const startIdx = i;
+          tasks.push(async () => {
+            await translateBatchForLanguage(baseItems, startIdx, lang);
+            done += Math.min(BATCH_SIZE, baseItems.length - startIdx);
+            setLangProgress((p) => ({
+              ...p,
+              [lang]: { current: Math.min(done, baseItems.length), total: baseItems.length },
+            }));
+          });
+        }
+        await runWithConcurrency(tasks, MAX_PARALLEL_BATCHES);
+      }),
+    );
   };
 
   const translateBatchForLanguage = async (
