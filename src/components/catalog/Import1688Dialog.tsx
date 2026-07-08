@@ -1688,6 +1688,94 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
               Revisa y edita los títulos y descripciones traducidas por la IA para cada idioma del mercado. Marca &quot;Aprobar&quot; cuando el texto esté listo. Editar un campo lo desmarca automáticamente.
             </p>
 
+            {/* ── Parent product title: regenerate in ALL languages ── */}
+            <div className="border rounded-lg p-3 bg-muted/30 space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-semibold">Título principal del producto</h4>
+                <span className="text-xs text-muted-foreground">
+                  Se aplicará a todos los idiomas seleccionados ({selectedLanguages.length})
+                </span>
+              </div>
+
+              {/* Current parent title per language (editable) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {selectedLanguages.map((lang) => (
+                  <div key={lang} className="space-y-1">
+                    <Label className="text-[11px] font-medium text-muted-foreground">
+                      {LANG_LABEL[lang] ?? lang}
+                    </Label>
+                    <Input
+                      value={
+                        lang === "es"
+                          ? (productTitleByLang.es ?? translatedFileTitle ?? "")
+                          : (productTitleByLang[lang] ?? "")
+                      }
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setProductTitleByLang((prev) => ({ ...prev, [lang]: v }));
+                        if (lang === "es") setTranslatedFileTitle(v);
+                      }}
+                      placeholder={`Título principal (${LANG_LABEL[lang] ?? lang})`}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Regeneration source picker */}
+              <div className="space-y-2 pt-1 border-t">
+                <div className="flex items-center gap-3 flex-wrap text-xs">
+                  <span className="font-medium">Regenerar a partir de:</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="titleSource"
+                      checked={titleSourceMode === "description"}
+                      onChange={() => setTitleSourceMode("description")}
+                    />
+                    Descripción en español
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="titleSource"
+                      checked={titleSourceMode === "custom"}
+                      onChange={() => setTitleSourceMode("custom")}
+                    />
+                    Texto personalizado
+                  </label>
+                </div>
+
+                {titleSourceMode === "custom" && (
+                  <Textarea
+                    value={customTitleSource}
+                    onChange={(e) => setCustomTitleSource(e.target.value)}
+                    placeholder="Escribe aquí el texto base (en cualquier idioma). La IA generará un título comercial en cada idioma seleccionado."
+                    rows={2}
+                    className="text-sm"
+                  />
+                )}
+
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={regenerateAllTitles}
+                    disabled={isRegeneratingTitles}
+                  >
+                    {isRegeneratingTitles ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-4 w-4 mr-2" />
+                    )}
+                    {isRegeneratingTitles ? "Regenerando..." : "Regenerar títulos en todos los idiomas"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+
+
             <Tabs defaultValue={selectedLanguages[0] ?? "es"} className="flex flex-col flex-1 min-h-0">
               <TabsList className="w-full justify-start flex-wrap h-auto">
                 {selectedLanguages.map((lang) => {
