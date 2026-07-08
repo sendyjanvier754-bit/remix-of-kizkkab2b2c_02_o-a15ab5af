@@ -530,6 +530,71 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     }
   };
 
+  /** Regenerate the parent product title in ALL selected languages from a source text
+   *  (either the current ES description or a custom text provided by the admin). */
+  const regenerateAllTitles = async () => {
+    const sourceText = (
+      titleSourceMode === "custom"
+        ? customTitleSource
+        : (multiLang[processedData[0]?.sku_interno]?.es?.descripcion || processedData[0]?.descripcion_corta || "")
+    ).trim();
+
+    if (!sourceText) {
+      toast.error(
+        titleSourceMode === "custom"
+          ? "Escribe un texto base para generar los títulos"
+          : "No hay descripción en español disponible para generar el título",
+      );
+      return;
+    }
+    if (selectedLanguages.length === 0) {
+      toast.error("Selecciona al menos un idioma");
+      return;
+    }
+
+    setIsRegeneratingTitles(true);
+    try {
+      const results = await Promise.all(
+        selectedLanguages.map(async (lang) => {
+          try {
+            const { data, error } = await supabase.functions.invoke("process-1688-import", {
+              body: {
+                items: [{ title: sourceText }],
+                language: lang,
+              },
+            });
+            if (error) throw error;
+            const name = (data?.translations?.[0]?.nombre || "").trim();
+            return { lang, name };
+          } catch (err) {
+            console.warn(`regenerateAllTitles failed [${lang}]`, err);
+            return { lang, name: "" };
+          }
+        }),
+      );
+
+      const updates: Record<string, string> = {};
+      for (const { lang, name } of results) {
+        if (name) updates[lang] = name;
+      }
+      if (Object.keys(updates).length === 0) {
+        toast.error("No se pudo regenerar ningún título");
+        return;
+      }
+
+      // Update parent title map (used for Titulo_Producto_<lang> in the Excel export)
+      setProductTitleByLang((prev) => ({ ...prev, ...updates }));
+
+      // Also update Spanish helper used by export fallback
+      if (updates.es) setTranslatedFileTitle(updates.es);
+
+      toast.success(`Títulos regenerados en ${Object.keys(updates).length} idioma(s)`);
+    } finally {
+      setIsRegeneratingTitles(false);
+    }
+  };
+
+
   const toggleApproval = (sku: string, lang: string, field: "title" | "description", value: boolean) => {
     setApprovals((prev) => {
       const forSku = { ...(prev[sku] ?? {}) };
