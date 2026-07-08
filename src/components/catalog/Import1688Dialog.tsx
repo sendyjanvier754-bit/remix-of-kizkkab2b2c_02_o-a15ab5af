@@ -83,7 +83,26 @@ interface ColumnMapping {
 
 type Step = "upload" | "mapping" | "preview" | "translation" | "export";
 
-const BATCH_SIZE = 15;
+const BATCH_SIZE = 25;
+const MAX_PARALLEL_BATCHES = 5;
+
+/** Run async tasks with a bounded concurrency pool. */
+async function runWithConcurrency<T>(
+  tasks: (() => Promise<T>)[],
+  limit: number,
+): Promise<T[]> {
+  const results: T[] = new Array(tasks.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+    while (true) {
+      const idx = cursor++;
+      if (idx >= tasks.length) return;
+      results[idx] = await tasks[idx]();
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 
 const AVAILABLE_LANGS: { code: string; label: string }[] = [
   { code: "es", label: "Español" },
