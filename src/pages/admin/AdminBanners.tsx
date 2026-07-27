@@ -592,12 +592,21 @@ const AdminBanners = () => {
                   {formData.desktop_image_url ? (
                     <div className="space-y-2">
                       <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                        <img src={formData.desktop_image_url} alt="Desktop preview" className="w-full h-full object-cover"
-                          style={{
-                            objectPosition: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
-                            transform: `scale(${formData.desktop_scale / 100})`,
-                            transformOrigin: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
-                          }} />
+                        {isVideoUrl(formData.desktop_image_url) ? (
+                          <video src={formData.desktop_image_url} muted loop autoPlay playsInline className="w-full h-full object-cover"
+                            style={{
+                              objectPosition: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
+                              transform: `scale(${formData.desktop_scale / 100})`,
+                              transformOrigin: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
+                            }} />
+                        ) : (
+                          <img src={formData.desktop_image_url} alt="Desktop preview" className="w-full h-full object-cover"
+                            style={{
+                              objectPosition: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
+                              transform: `scale(${formData.desktop_scale / 100})`,
+                              transformOrigin: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
+                            }} />
+                        )}
                         <Button variant="secondary" size="sm" className="absolute bottom-1 right-1 text-xs px-2 py-1 h-auto"
                           onClick={() => fileInputDesktopRef.current?.click()} disabled={uploadingDesktop}>
                           {uploadingDesktop ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Cambiar'}
