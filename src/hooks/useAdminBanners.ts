@@ -163,7 +163,11 @@ export function useAdminBanners(targetAudience?: string) {
 
       const { error: uploadError } = await supabase.storage
         .from('product-images')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          contentType: file.type || undefined,
+          cacheControl: '3600',
+          upsert: false,
+        });
 
       if (uploadError) throw uploadError;
 
@@ -173,8 +177,8 @@ export function useAdminBanners(targetAudience?: string) {
 
       return publicUrl.publicUrl;
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({ title: 'Error', description: 'No se pudo subir la imagen', variant: 'destructive' });
+      console.error('Error uploading media:', error);
+      toast({ title: 'Error', description: 'No se pudo subir el archivo', variant: 'destructive' });
       return null;
     }
   };
