@@ -1,6 +1,7 @@
 ﻿import { useState, useRef, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminBanners, AdminBanner } from "@/hooks/useAdminBanners";
+import { isVideoUrl } from "@/lib/mediaType";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -163,7 +164,12 @@ const AdminBanners = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert(t('toasts.fileTooLarge5MB')); return; }
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(isVideo ? 'El video no debe superar 50MB' : t('toasts.fileTooLarge5MB'));
+      return;
+    }
     setUploading(true);
     const url = await uploadBannerImage(file);
     if (url) setFormData(prev => ({ ...prev, image_url: url }));
@@ -173,7 +179,12 @@ const AdminBanners = () => {
   const handleDesktopImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert(t('toasts.fileTooLarge5MB')); return; }
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(isVideo ? 'El video no debe superar 50MB' : t('toasts.fileTooLarge5MB'));
+      return;
+    }
     setUploadingDesktop(true);
     const url = await uploadBannerImage(file);
     if (url) setFormData(prev => ({ ...prev, desktop_image_url: url }));
@@ -345,7 +356,11 @@ const AdminBanners = () => {
           const BannerCard = ({ banner, previewImage }: { banner: AdminBanner; previewImage: string }) => (
             <Card className={`overflow-hidden ${!banner.is_active ? 'opacity-60' : ''}`}>
               <div className="aspect-[16/6] relative bg-muted overflow-hidden">
-                <img src={previewImage} alt={banner.title} className="w-full h-full object-cover" />
+                {isVideoUrl(previewImage) ? (
+                  <video src={previewImage} muted loop autoPlay playsInline className="w-full h-full object-cover" />
+                ) : (
+                  <img src={previewImage} alt={banner.title} className="w-full h-full object-cover" />
+                )}
                 <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
                   <Badge variant={banner.is_active ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
                     {banner.is_active ? "Activo" : "Inactivo"}
@@ -521,12 +536,21 @@ const AdminBanners = () => {
                   {formData.image_url ? (
                     <div className="space-y-2">
                       <div className="relative aspect-[7/3] rounded-lg overflow-hidden bg-muted max-w-md mx-auto">
-                        <img src={formData.image_url} alt="Mobile preview" className="w-full h-full object-cover"
-                          style={{
-                            objectPosition: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
-                            transform: `scale(${formData.mobile_scale / 100})`,
-                            transformOrigin: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
-                          }} />
+                        {isVideoUrl(formData.image_url) ? (
+                          <video src={formData.image_url} muted loop autoPlay playsInline className="w-full h-full object-cover"
+                            style={{
+                              objectPosition: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
+                              transform: `scale(${formData.mobile_scale / 100})`,
+                              transformOrigin: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
+                            }} />
+                        ) : (
+                          <img src={formData.image_url} alt="Mobile preview" className="w-full h-full object-cover"
+                            style={{
+                              objectPosition: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
+                              transform: `scale(${formData.mobile_scale / 100})`,
+                              transformOrigin: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
+                            }} />
+                        )}
                         <Button variant="secondary" size="sm" className="absolute bottom-1 right-1 text-xs px-2 py-1 h-auto"
                           onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                           {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Cambiar'}
@@ -552,27 +576,37 @@ const AdminBanners = () => {
                       className="aspect-[7/3] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors max-w-md mx-auto">
                       {uploading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : (
                         <><Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen</p></>
+                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen o video</p>
+                          <p className="text-[10px] text-muted-foreground/60 text-center px-2 mt-0.5">Imagen ≤5MB · Video ≤50MB (mp4, webm)</p></>
                       )}
                     </div>
                   )}
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime" onChange={handleImageUpload} className="hidden" />
                 </div>
               )}
 
               {/* Desktop tab (≥ 1024px) */}
               {activeImageTab === 'desktop' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Imagen para PC (≥ 1024px) · Recomendado: 950×250 px</p>
+                  <p className="text-xs text-muted-foreground">Imagen o video para PC (≥ 1024px) · Recomendado: 950×250 px</p>
                   {formData.desktop_image_url ? (
                     <div className="space-y-2">
                       <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                        <img src={formData.desktop_image_url} alt="Desktop preview" className="w-full h-full object-cover"
-                          style={{
-                            objectPosition: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
-                            transform: `scale(${formData.desktop_scale / 100})`,
-                            transformOrigin: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
-                          }} />
+                        {isVideoUrl(formData.desktop_image_url) ? (
+                          <video src={formData.desktop_image_url} muted loop autoPlay playsInline className="w-full h-full object-cover"
+                            style={{
+                              objectPosition: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
+                              transform: `scale(${formData.desktop_scale / 100})`,
+                              transformOrigin: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
+                            }} />
+                        ) : (
+                          <img src={formData.desktop_image_url} alt="Desktop preview" className="w-full h-full object-cover"
+                            style={{
+                              objectPosition: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
+                              transform: `scale(${formData.desktop_scale / 100})`,
+                              transformOrigin: `${formData.desktop_position_x}% ${formData.desktop_position_y}%`,
+                            }} />
+                        )}
                         <Button variant="secondary" size="sm" className="absolute bottom-1 right-1 text-xs px-2 py-1 h-auto"
                           onClick={() => fileInputDesktopRef.current?.click()} disabled={uploadingDesktop}>
                           {uploadingDesktop ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Cambiar'}
@@ -602,12 +636,12 @@ const AdminBanners = () => {
                       className="aspect-video rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
                       {uploadingDesktop ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : (
                         <><Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen desktop</p>
-                          <p className="text-xs text-muted-foreground/60 text-center px-2 mt-0.5">(opcional)</p></>
+                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen o video desktop</p>
+                          <p className="text-xs text-muted-foreground/60 text-center px-2 mt-0.5">(opcional) Imagen ≤5MB · Video ≤50MB</p></>
                       )}
                     </div>
                   )}
-                  <input ref={fileInputDesktopRef} type="file" accept="image/*" onChange={handleDesktopImageUpload} className="hidden" />
+                  <input ref={fileInputDesktopRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime" onChange={handleDesktopImageUpload} className="hidden" />
                 </div>
               )}
 

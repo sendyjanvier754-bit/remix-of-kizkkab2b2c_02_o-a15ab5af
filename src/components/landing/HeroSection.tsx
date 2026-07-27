@@ -4,6 +4,7 @@ import { useMarketplaceBanners } from "@/hooks/useMarketplaceData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { isVideoUrl } from "@/lib/mediaType";
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -139,19 +140,36 @@ const HeroSection = () => {
             }`}
             onClick={() => handleSlideClick(slide.link_url)}
           >
-            <img
-              src={slide.image_url}
-              alt={bannerTitle}
-              loading={index === 0 ? 'eager' : 'lazy'}
-              fetchPriority={index === 0 ? 'high' : 'low'}
-              decoding="async"
-              className="w-full h-full object-cover"
-              style={{
-                objectPosition: (slide as { objectPosition?: string }).objectPosition ?? '50% 50%',
-                transform: `scale(${(slide as { objectScale?: number }).objectScale ?? 1})`,
-                transformOrigin: (slide as { objectOrigin?: string }).objectOrigin ?? '50% 50%',
-              }}
-            />
+            {isVideoUrl(slide.image_url) ? (
+              <video
+                src={slide.image_url}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload={index === 0 ? 'auto' : 'metadata'}
+                className="w-full h-full object-cover"
+                style={{
+                  objectPosition: (slide as { objectPosition?: string }).objectPosition ?? '50% 50%',
+                  transform: `scale(${(slide as { objectScale?: number }).objectScale ?? 1})`,
+                  transformOrigin: (slide as { objectOrigin?: string }).objectOrigin ?? '50% 50%',
+                }}
+              />
+            ) : (
+              <img
+                src={slide.image_url}
+                alt={bannerTitle}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                fetchPriority={index === 0 ? 'high' : 'low'}
+                decoding="async"
+                className="w-full h-full object-cover"
+                style={{
+                  objectPosition: (slide as { objectPosition?: string }).objectPosition ?? '50% 50%',
+                  transform: `scale(${(slide as { objectScale?: number }).objectScale ?? 1})`,
+                  transformOrigin: (slide as { objectOrigin?: string }).objectOrigin ?? '50% 50%',
+                }}
+              />
+            )}
           </div>
             );
           })()
