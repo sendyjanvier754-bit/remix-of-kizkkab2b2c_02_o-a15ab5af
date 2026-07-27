@@ -636,12 +636,12 @@ const AdminBanners = () => {
                       className="aspect-video rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
                       {uploadingDesktop ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : (
                         <><Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen desktop</p>
-                          <p className="text-xs text-muted-foreground/60 text-center px-2 mt-0.5">(opcional)</p></>
+                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen o video desktop</p>
+                          <p className="text-xs text-muted-foreground/60 text-center px-2 mt-0.5">(opcional) Imagen ≤5MB · Video ≤50MB</p></>
                       )}
                     </div>
                   )}
-                  <input ref={fileInputDesktopRef} type="file" accept="image/*" onChange={handleDesktopImageUpload} className="hidden" />
+                  <input ref={fileInputDesktopRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime" onChange={handleDesktopImageUpload} className="hidden" />
                 </div>
               )}
 
