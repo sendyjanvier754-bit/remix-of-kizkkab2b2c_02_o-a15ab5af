@@ -4,6 +4,7 @@ import { useMarketplaceBanners } from "@/hooks/useMarketplaceData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { isVideoUrl } from "@/lib/mediaType";
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
