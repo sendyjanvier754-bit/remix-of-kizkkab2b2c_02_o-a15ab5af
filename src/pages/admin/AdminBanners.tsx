@@ -356,7 +356,11 @@ const AdminBanners = () => {
           const BannerCard = ({ banner, previewImage }: { banner: AdminBanner; previewImage: string }) => (
             <Card className={`overflow-hidden ${!banner.is_active ? 'opacity-60' : ''}`}>
               <div className="aspect-[16/6] relative bg-muted overflow-hidden">
-                <img src={previewImage} alt={banner.title} className="w-full h-full object-cover" />
+                {isVideoUrl(previewImage) ? (
+                  <video src={previewImage} muted loop autoPlay playsInline className="w-full h-full object-cover" />
+                ) : (
+                  <img src={previewImage} alt={banner.title} className="w-full h-full object-cover" />
+                )}
                 <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
                   <Badge variant={banner.is_active ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
                     {banner.is_active ? "Activo" : "Inactivo"}
