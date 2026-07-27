@@ -163,7 +163,12 @@ const AdminBanners = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert(t('toasts.fileTooLarge5MB')); return; }
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(isVideo ? 'El video no debe superar 50MB' : t('toasts.fileTooLarge5MB'));
+      return;
+    }
     setUploading(true);
     const url = await uploadBannerImage(file);
     if (url) setFormData(prev => ({ ...prev, image_url: url }));
@@ -173,7 +178,12 @@ const AdminBanners = () => {
   const handleDesktopImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert(t('toasts.fileTooLarge5MB')); return; }
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(isVideo ? 'El video no debe superar 50MB' : t('toasts.fileTooLarge5MB'));
+      return;
+    }
     setUploadingDesktop(true);
     const url = await uploadBannerImage(file);
     if (url) setFormData(prev => ({ ...prev, desktop_image_url: url }));
