@@ -1,6 +1,7 @@
 ﻿import { useState, useRef, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminBanners, AdminBanner } from "@/hooks/useAdminBanners";
+import { isVideoUrl } from "@/lib/mediaType";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
