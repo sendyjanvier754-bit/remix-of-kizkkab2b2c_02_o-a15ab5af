@@ -536,12 +536,21 @@ const AdminBanners = () => {
                   {formData.image_url ? (
                     <div className="space-y-2">
                       <div className="relative aspect-[7/3] rounded-lg overflow-hidden bg-muted max-w-md mx-auto">
-                        <img src={formData.image_url} alt="Mobile preview" className="w-full h-full object-cover"
-                          style={{
-                            objectPosition: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
-                            transform: `scale(${formData.mobile_scale / 100})`,
-                            transformOrigin: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
-                          }} />
+                        {isVideoUrl(formData.image_url) ? (
+                          <video src={formData.image_url} muted loop autoPlay playsInline className="w-full h-full object-cover"
+                            style={{
+                              objectPosition: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
+                              transform: `scale(${formData.mobile_scale / 100})`,
+                              transformOrigin: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
+                            }} />
+                        ) : (
+                          <img src={formData.image_url} alt="Mobile preview" className="w-full h-full object-cover"
+                            style={{
+                              objectPosition: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
+                              transform: `scale(${formData.mobile_scale / 100})`,
+                              transformOrigin: `${formData.mobile_position_x}% ${formData.mobile_position_y}%`,
+                            }} />
+                        )}
                         <Button variant="secondary" size="sm" className="absolute bottom-1 right-1 text-xs px-2 py-1 h-auto"
                           onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                           {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Cambiar'}
