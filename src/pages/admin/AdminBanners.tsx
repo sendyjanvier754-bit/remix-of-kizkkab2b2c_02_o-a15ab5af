@@ -576,18 +576,19 @@ const AdminBanners = () => {
                       className="aspect-[7/3] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors max-w-md mx-auto">
                       {uploading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : (
                         <><Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen</p></>
+                          <p className="text-xs text-muted-foreground text-center px-2">Subir imagen o video</p>
+                          <p className="text-[10px] text-muted-foreground/60 text-center px-2 mt-0.5">Imagen ≤5MB · Video ≤50MB (mp4, webm)</p></>
                       )}
                     </div>
                   )}
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime" onChange={handleImageUpload} className="hidden" />
                 </div>
               )}
 
               {/* Desktop tab (≥ 1024px) */}
               {activeImageTab === 'desktop' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Imagen para PC (≥ 1024px) · Recomendado: 950×250 px</p>
+                  <p className="text-xs text-muted-foreground">Imagen o video para PC (≥ 1024px) · Recomendado: 950×250 px</p>
                   {formData.desktop_image_url ? (
                     <div className="space-y-2">
                       <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
