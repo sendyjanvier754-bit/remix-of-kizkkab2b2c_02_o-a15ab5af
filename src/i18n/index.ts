@@ -26,10 +26,10 @@ i18n
       fr: { translation: fr },
       ht: { translation: ht },
     },
-    fallbackLng: 'es',
+    fallbackLng: 'fr',
     supportedLngs: ['es', 'en', 'fr', 'ht'],
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage'],
       lookupLocalStorage: 'i18n_language',
       caches: ['localStorage'],
     },
