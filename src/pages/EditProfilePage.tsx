@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function EditProfilePage() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,6 +92,7 @@ export function EditProfilePage() {
       if (profileError) throw profileError;
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await refreshProfile();
       toast.success("Foto de perfil actualizada");
     } catch (error: any) {
       console.error("Error uploading avatar:", error);
@@ -122,6 +123,7 @@ export function EditProfilePage() {
         .eq("id", user.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await refreshProfile();
       toast.success("Perfil actualizado correctamente");
       navigate("/perfil");
     } catch (error) {
