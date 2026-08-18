@@ -98,6 +98,9 @@ export function UserProfilePage() {
         </Avatar>
         <div className="flex-1 min-w-0">
           <h1 className="text-base font-bold text-foreground truncate">{user?.name || "Usuario"}</h1>
+          {user?.phone && (
+            <span className="text-xs text-muted-foreground truncate">{user.phone}</span>
+          )}
         </div>
         <button onClick={() => navigate("/editar-perfil")} className="p-2 hover:bg-muted rounded-full transition-colors">
           <Settings className="w-5 h-5 text-muted-foreground" />
