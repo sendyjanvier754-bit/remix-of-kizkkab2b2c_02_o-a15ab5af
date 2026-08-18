@@ -816,6 +816,38 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     });
   };
 
+  /** Copy the description of one variant to every other variant in the SAME language. */
+  const applyDescriptionToAllVariants = (sku: string, lang: string) => {
+    const text = multiLang[sku]?.[lang]?.descripcion ?? "";
+    if (!text.trim()) {
+      toast.error("Escribe una descripción antes de aplicarla a las demás variantes");
+      return;
+    }
+    setMultiLang((prev) => {
+      const next = { ...prev };
+      for (const row of processedData) {
+        const s = row.sku_interno;
+        const forSku = { ...(next[s] ?? {}) };
+        forSku[lang] = { ...(forSku[lang] ?? { nombre: "", descripcion: "" }), descripcion: text };
+        next[s] = forSku;
+      }
+      return next;
+    });
+    setApprovals((prev) => {
+      const next = { ...prev };
+      for (const row of processedData) {
+        const s = row.sku_interno;
+        if (s === sku) continue;
+        const forSku = { ...(next[s] ?? {}) };
+        forSku[lang] = { title: false, description: false, ...forSku[lang], description: false };
+        next[s] = forSku;
+      }
+      return next;
+    });
+    toast.success(`Descripción aplicada a ${processedData.length} variantes (${LANG_LABEL[lang] ?? lang})`);
+  };
+
+
   const approveAllPending = (): Record<string, Record<string, ApprovalEntry>> | null => {
     if (!currentUserId) {
       toast.error("Debes iniciar sesión para aprobar traducciones");
