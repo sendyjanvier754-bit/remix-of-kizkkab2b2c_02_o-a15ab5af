@@ -94,20 +94,20 @@ const CategoryGrid = () => {
         </div>
       </div>
 
-      {/* Desktop: Column layout - fills complete columns, no orphan rows */}
+      {/* Desktop: Grid layout - full width */}
       <div className="hidden lg:block w-full px-4">
-        <div className="columns-8 xl:columns-10 2xl:columns-12 gap-x-4">
-          {rootCategories.map((cat) => (
-            <div key={cat.id} className="break-inside-avoid mb-6 flex justify-center">
-              <CategoryCard
-                label={labelOf(cat)}
-                image={cat.icon}
-                href={`/categoria/${cat.slug}`}
-              />
-            </div>
-          ))}
+          <div className="grid grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-x-4 gap-y-6 justify-items-center">
+            {rootCategories.map((cat) => (
+              <div key={cat.id} className="w-full flex flex-col items-center">
+                <CategoryCard
+                  label={labelOf(cat)}
+                  image={cat.icon}
+                  href={`/categoria/${cat.slug}`}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
     </section>
   );
 };
