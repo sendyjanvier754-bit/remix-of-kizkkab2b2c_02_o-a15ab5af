@@ -1228,7 +1228,7 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
                     <CardContent>
                       <div className="flex flex-wrap gap-2">
                         {unusedColumns.map(col => (
-                          <Badge key={col} variant="outline" className="cursor-pointer hover:bg-primary/10 gap-1.5 py-1.5 px-3" onClick={() => addAttributeConfig(col)}>
+                          <Badge key={col} variant="outline" className="cursor-pointer hover:bg-primary/10 gap-1.5 py-1.5 px-3" onClick={() => openAddAttributeModal(col)}>
                             {getAttributeIcon(col)} {col} <Plus className="h-3 w-3 text-primary" />
                           </Badge>
                         ))}
