@@ -1757,6 +1757,78 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* Modal to name a variant when selecting an available column */}
+    <Dialog open={!!pendingAttributeColumn} onOpenChange={(open) => { if (!open) cancelAddAttribute(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+              {attributeConfigs.length + 1}
+            </span>
+            Confirmar nombre de la variante
+          </DialogTitle>
+          <DialogDescription>
+            Revisa los valores de la columna seleccionada y escribe el nombre que verán los compradores.
+          </DialogDescription>
+        </DialogHeader>
+
+        {pendingAttributeColumn && (
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                {getAttributeIcon(pendingAttributeColumn)}
+                Columna seleccionada: <span className="font-semibold">{pendingAttributeColumn}</span>
+              </div>
+              {pendingAttributePreview.sample && (
+                <div className="flex flex-wrap gap-1.5">
+                  {pendingAttributePreview.uniqueValues.slice(0, 6).map(v => (
+                    <Badge key={v} variant="secondary" className="text-[11px] font-normal">{v}</Badge>
+                  ))}
+                  {pendingAttributePreview.uniqueValues.length > 6 && (
+                    <Badge variant="outline" className="text-[11px] font-normal">+{pendingAttributePreview.uniqueValues.length - 6}</Badge>
+                  )}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {pendingAttributePreview.count} {pendingAttributePreview.count === 1 ? 'valor único encontrado' : 'valores únicos encontrados'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-attr-name" className="text-sm font-semibold">
+                Nombre visible para los compradores
+              </Label>
+              <Input
+                id="new-attr-name"
+                value={pendingAttributeName}
+                onChange={(e) => setPendingAttributeName(e.target.value)}
+                placeholder="Ej: Color, Talla, Material..."
+                className="h-10"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') confirmAddAttribute();
+                  if (e.key === 'Escape') cancelAddAttribute();
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Puedes personalizarlo o dejar el nombre de la columna.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button type="button" variant="outline" onClick={cancelAddAttribute}>
+            Cancelar
+          </Button>
+          <Button type="button" onClick={confirmAddAttribute} disabled={!pendingAttributeName.trim()}>
+            <CheckCircle2 className="h-4 w-4 mr-1.5" />
+            Confirmar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   );
 };
