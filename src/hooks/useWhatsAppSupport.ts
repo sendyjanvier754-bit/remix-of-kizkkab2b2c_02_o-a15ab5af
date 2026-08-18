@@ -15,6 +15,9 @@ export interface WhatsAppLeadInput {
 export const useWhatsAppSupport = () => {
   const { getValue } = useBranding();
 
+  // Preferred: a full WhatsApp link configured by the admin (e.g. https://wa.me/message/XXXX)
+  const configuredLink = (getValue('whatsapp_support_link') || '').trim();
+
   const rawNumber =
     getValue('whatsapp_support_number') ||
     getValue('social_whatsapp') ||
@@ -25,10 +28,16 @@ export const useWhatsAppSupport = () => {
   const number = /^521\d{10}$/.test(digits) ? `52${digits.slice(3)}` : digits;
   const defaultMessage =
     getValue('whatsapp_support_message') || 'Hola, necesito ayuda con mi compra.';
-  const isEnabled = number.length >= 6;
+  const isEnabled = configuredLink.length > 0 || number.length >= 6;
 
   const buildLink = (message?: string) => {
     const text = encodeURIComponent(message || defaultMessage);
+
+    if (configuredLink) {
+      const sep = configuredLink.includes('?') ? '&' : '?';
+      return `${configuredLink}${sep}text=${text}`;
+    }
+
     const isMobileDevice =
       typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -38,6 +47,7 @@ export const useWhatsAppSupport = () => {
       ? `https://wa.me/${number}?text=${text}`
       : `https://web.whatsapp.com/send?phone=${number}&text=${text}`;
   };
+
 
   /**
    * Opens WhatsApp in a real new tab.
