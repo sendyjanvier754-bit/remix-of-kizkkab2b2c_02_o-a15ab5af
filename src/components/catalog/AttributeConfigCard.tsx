@@ -256,11 +256,7 @@ export const AttributeConfigCard = ({
             <Select
               value={config.valueColumn}
               onValueChange={(value) => {
-                const updates: Partial<AttributeConfig> = { valueColumn: value };
-                if (config.nameType === 'column' || !config.nameValue?.trim()) {
-                  updates.nameValue = value;
-                }
-                onUpdate(config.id, updates);
+                openNameModal(value);
               }}
             >
               <SelectTrigger className="h-10">
