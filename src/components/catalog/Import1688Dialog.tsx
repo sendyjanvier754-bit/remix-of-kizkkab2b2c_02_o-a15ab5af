@@ -1953,6 +1953,68 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
               </div>
             </div>
 
+            {/* ── Product description: generate in ALL languages ── */}
+            <div className="border rounded-lg p-3 bg-muted/30 space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-semibold">Descripción del producto</h4>
+                <span className="text-xs text-muted-foreground">
+                  Se generará en todos los idiomas seleccionados ({selectedLanguages.length})
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 flex-wrap text-xs">
+                  <span className="font-medium">Generar a partir de:</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="descSource"
+                      checked={descSourceMode === "title"}
+                      onChange={() => setDescSourceMode("title")}
+                    />
+                    Título en español
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="descSource"
+                      checked={descSourceMode === "custom"}
+                      onChange={() => setDescSourceMode("custom")}
+                    />
+                    Texto personalizado
+                  </label>
+                </div>
+
+                {descSourceMode === "custom" && (
+                  <Textarea
+                    value={customDescSource}
+                    onChange={(e) => setCustomDescSource(e.target.value)}
+                    placeholder="Escribe aquí el texto base (en cualquier idioma). La IA generará una descripción comercial en cada idioma seleccionado."
+                    rows={3}
+                    className="text-sm"
+                  />
+                )}
+
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={regenerateAllDescriptions}
+                    disabled={isRegeneratingDescriptions}
+                  >
+                    {isRegeneratingDescriptions ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-4 w-4 mr-2" />
+                    )}
+                    {isRegeneratingDescriptions ? "Generando..." : "Generar descripciones en todos los idiomas"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+
+
 
 
             <Tabs defaultValue={selectedLanguages[0] ?? "es"} className="flex flex-col flex-1 min-h-0">
