@@ -27,6 +27,14 @@ export interface AssetProcessingState {
   currentItemIndex: number;
 }
 
+// Ensure the caller's JWT is forwarded to the edge function (it requires admin auth)
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Debes iniciar sesión como administrador para procesar imágenes');
+  return { Authorization: `Bearer ${token}` };
+}
+
 export function useAssetProcessing() {
   const [state, setState] = useState<AssetProcessingState>({
     isProcessing: false,
@@ -46,7 +54,8 @@ export function useAssetProcessing() {
       setState(prev => ({ ...prev, isProcessing: true }));
 
       const { data, error } = await supabase.functions.invoke('process-product-images', {
-        body: { action: 'create_job', items }
+        body: { action: 'create_job', items },
+        headers: await getAuthHeaders()
       });
 
       if (error) throw error;
@@ -102,7 +111,8 @@ export function useAssetProcessing() {
       console.log(`Starting to process item ${itemId}`);
       
       const { error } = await supabase.functions.invoke('process-product-images', {
-        body: { action: 'process_item', itemId }
+        body: { action: 'process_item', itemId },
+        headers: await getAuthHeaders()
       });
       
       if (error) {
@@ -262,7 +272,8 @@ export function useAssetProcessing() {
     try {
       // Reset item status
       await supabase.functions.invoke('process-product-images', {
-        body: { action: 'retry_item', itemId }
+        body: { action: 'retry_item', itemId },
+        headers: await getAuthHeaders()
       });
       
       // Update local state
@@ -319,7 +330,8 @@ export function useAssetProcessing() {
     
     try {
       const { data, error } = await supabase.functions.invoke('process-product-images', {
-        body: { action: 'get_job_status', jobId: state.job.id }
+        body: { action: 'get_job_status', jobId: state.job.id },
+        headers: await getAuthHeaders()
       });
       
       if (error) throw error;
