@@ -151,7 +151,7 @@ export const AttributeConfigCard = ({
             </div>
             <div>
               <CardTitle className="text-sm font-medium">
-                Atributo {index + 1}: {displayName || 'Sin configurar'}
+                Variante {index + 1}: {displayName || 'Sin configurar'}
               </CardTitle>
               {uniqueValues.length > 0 && (
                 <p className="text-xs text-muted-foreground">
