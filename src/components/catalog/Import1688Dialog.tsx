@@ -1100,7 +1100,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
       const grouped = buildGroupedProducts();
       // Build a File object from the Excel workbook for auto-loading in SmartBulkImportDialog
-      const wb = buildExcelWorkbook(resolvedMainImg, resolvedVariantImages, approvalsOverride);
+      const wb = buildExcelWorkbook(resolvedMainImg, resolvedVariantImages);
       const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const processedFile = new File([blob], getExcelFileName(), { type: blob.type });
