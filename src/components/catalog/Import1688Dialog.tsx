@@ -679,6 +679,100 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     }
   };
 
+  /** Regenerate the product description in ALL selected languages from a source text
+   *  (either the current parent/ES title or a custom text provided by the admin). */
+  const regenerateAllDescriptions = async () => {
+    const sourceText = (
+      descSourceMode === "custom"
+        ? customDescSource
+        : (productTitleByLang.es || translatedFileTitle || processedData[0]?.nombre || "")
+    ).trim();
+
+    if (!sourceText) {
+      toast.error(
+        descSourceMode === "custom"
+          ? "Escribe un texto base para generar las descripciones"
+          : "No hay título en español disponible para generar la descripción",
+      );
+      return;
+    }
+    if (selectedLanguages.length === 0) {
+      toast.error("Selecciona al menos un idioma");
+      return;
+    }
+
+    setIsRegeneratingDescriptions(true);
+    try {
+      const results = await Promise.all(
+        selectedLanguages.map(async (lang) => {
+          try {
+            const { data, error } = await supabase.functions.invoke("process-1688-import", {
+              body: { items: [{ title: sourceText }], language: lang },
+            });
+            if (error) throw error;
+            const descripcion = (data?.translations?.[0]?.descripcion || "").trim();
+            return { lang, descripcion };
+          } catch (err) {
+            console.warn(`regenerateAllDescriptions failed [${lang}]`, err);
+            return { lang, descripcion: "" };
+          }
+        }),
+      );
+
+      const updates: Record<string, string> = {};
+      for (const { lang, descripcion } of results) {
+        if (descripcion) updates[lang] = descripcion;
+      }
+      if (Object.keys(updates).length === 0) {
+        toast.error("No se pudo generar ninguna descripción");
+        return;
+      }
+
+      // Apply the new description to every variant, per language.
+      setMultiLang((prev) => {
+        const next: Record<string, Record<string, MultiLangEntry>> = { ...prev };
+        for (const row of processedData) {
+          const bag = { ...(next[row.sku_interno] ?? {}) };
+          for (const [lang, desc] of Object.entries(updates)) {
+            bag[lang] = {
+              nombre: bag[lang]?.nombre ?? "",
+              descripcion: desc,
+              variante_color: bag[lang]?.variante_color ?? "",
+              variante_talla: bag[lang]?.variante_talla ?? "",
+            };
+          }
+          next[row.sku_interno] = bag;
+        }
+        return next;
+      });
+
+      // Mirror the Spanish description into the base data used by the preview step.
+      if (updates.es) {
+        setProcessedData((prev) => prev.map((r) => ({ ...r, descripcion_corta: updates.es })));
+      }
+
+      // Invalidate only description approvals for the affected languages.
+      setApprovals((prev) => {
+        const next: Record<string, Record<string, ApprovalEntry>> = { ...prev };
+        for (const row of processedData) {
+          const bag = { ...(next[row.sku_interno] ?? {}) };
+          for (const lang of Object.keys(updates)) {
+            const cur = bag[lang] ?? { title: false, description: false };
+            bag[lang] = { ...cur, description: false };
+          }
+          next[row.sku_interno] = bag;
+        }
+        return next;
+      });
+
+      toast.success(
+        `Descripciones generadas en ${Object.keys(updates).length} idioma(s) y aplicadas a las ${processedData.length} variantes`,
+      );
+    } finally {
+      setIsRegeneratingDescriptions(false);
+    }
+  };
+
 
   const toggleApproval = (sku: string, lang: string, field: "title" | "description", value: boolean) => {
     setApprovals((prev) => {
