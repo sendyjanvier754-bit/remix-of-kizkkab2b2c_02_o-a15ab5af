@@ -28,9 +28,22 @@ export const useWhatsAppSupport = () => {
   const buildLink = (message?: string) =>
     `https://wa.me/${number}?text=${encodeURIComponent(message || defaultMessage)}`;
 
+  /**
+   * Opens WhatsApp in a real new tab.
+   * Uses a synthetic anchor click because window.open from an embedded
+   * preview iframe gets blocked (ERR_BLOCKED_BY_RESPONSE) by WhatsApp.
+   */
   const openWhatsApp = (message?: string) => {
     if (!isEnabled) return;
-    window.open(buildLink(message), '_blank', 'noopener,noreferrer');
+    const url = buildLink(message);
+    if (typeof document === 'undefined') return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   /** Registers a visitor lead so the sales team can follow up later. */
