@@ -106,6 +106,49 @@ export const AttributeConfigCard = ({
   onUpdate,
   onRemove,
 }: AttributeConfigCardProps) => {
+  const [pendingColumn, setPendingColumn] = useState<string | null>(null);
+  const [tempName, setTempName] = useState('');
+
+  const openNameModal = (column: string) => {
+    setPendingColumn(column);
+    // Pre-fill with current manual name, or the column name, or existing valueColumn name
+    const prefill =
+      config.nameType === 'manual' && config.nameValue?.trim()
+        ? config.nameValue
+        : column;
+    setTempName(prefill);
+  };
+
+  const confirmColumnSelection = () => {
+    if (!pendingColumn) return;
+    onUpdate(config.id, {
+      valueColumn: pendingColumn,
+      nameType: 'manual',
+      nameValue: tempName.trim() || pendingColumn,
+    });
+    setPendingColumn(null);
+    setTempName('');
+  };
+
+  const cancelColumnSelection = () => {
+    setPendingColumn(null);
+    setTempName('');
+  };
+
+  // Preview data for the pending column inside the modal
+  const pendingPreview = useMemo(() => {
+    if (!pendingColumn) return { count: 0, sample: '', uniqueValues: [] as string[] };
+    const idx = headers.indexOf(pendingColumn);
+    if (idx === -1) return { count: 0, sample: '', uniqueValues: [] as string[] };
+    const set = new Set<string>();
+    rawData.forEach(row => {
+      const v = row[idx]?.trim();
+      if (v && v.toLowerCase() !== 'n/a') set.add(v);
+    });
+    const vals = Array.from(set);
+    return { count: vals.length, sample: vals.slice(0, 3).join(', '), uniqueValues: vals };
+  }, [pendingColumn, headers, rawData]);
+
   // Get unique values with their corresponding image URLs from the same row
   const valueImagePairs = useMemo(() => {
     if (!config.valueColumn) return [];
