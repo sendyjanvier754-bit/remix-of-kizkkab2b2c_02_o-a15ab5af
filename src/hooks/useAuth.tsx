@@ -10,6 +10,7 @@ interface AppUser {
   email: string;
   name: string;
   role: UserRole;
+  phone: string | null;
   avatar_url: string | null;
   banner_url: string | null;
   user_code: string | null;  // Código personal KZ...
@@ -92,6 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: data.email || '',
         name: data.full_name || 'Usuario',
         role: UserRole.USER, // Se obtiene de la tabla user_roles
+        phone: (data as any).phone || null,
         avatar_url: data.avatar_url || null,
         banner_url: data.banner_url || null,
         user_code: data.user_code || null,  // Código KZ...
