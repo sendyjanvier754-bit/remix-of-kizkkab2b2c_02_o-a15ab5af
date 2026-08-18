@@ -816,30 +816,37 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     });
   };
 
-  const approveAllPending = () => {
+  const approveAllPending = (): Record<string, Record<string, ApprovalEntry>> | null => {
     if (!currentUserId) {
       toast.error("Debes iniciar sesión para aprobar traducciones");
-      return;
+      return null;
     }
     const now = new Date().toISOString();
-    setApprovals((prev) => {
-      const next: Record<string, Record<string, ApprovalEntry>> = { ...prev };
-      for (const row of processedData) {
-        const bag = { ...(next[row.sku_interno] ?? {}) };
-        for (const lang of selectedLanguages) {
-          const entry: ApprovalEntry = { title: true, description: true, approvedBy: currentUserId, approvedAt: now, ...bag[lang] };
-          entry.title = true;
-          entry.description = true;
-          entry.approvedBy = currentUserId;
-          entry.approvedAt = now;
-          bag[lang] = entry;
-        }
-        next[row.sku_interno] = bag;
+    const next: Record<string, Record<string, ApprovalEntry>> = { ...approvals };
+    for (const row of processedData) {
+      const bag = { ...(next[row.sku_interno] ?? {}) };
+      for (const lang of selectedLanguages) {
+        bag[lang] = {
+          ...(bag[lang] ?? {}),
+          title: true,
+          description: true,
+          approvedBy: currentUserId,
+          approvedAt: now,
+        };
       }
-      return next;
-    });
+      next[row.sku_interno] = bag;
+    }
+    setApprovals(next);
     toast.success("Todas las traducciones aprobadas");
+    return next;
   };
+
+  const approveAllAndDownload = async () => {
+    const next = approveAllPending();
+    if (!next) return;
+    await downloadExcel(next);
+  };
+
 
   const approvalStats = useMemo(() => {
     const totalFields = processedData.length * selectedLanguages.length * 2;
@@ -891,7 +898,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     }
   };
 
-  const buildExcelWorkbook = (resolvedMainImg?: string, resolvedVariantImages?: Record<string, string>) => {
+  const buildExcelWorkbook = (resolvedMainImg?: string, resolvedVariantImages?: Record<string, string>, approvalsOverride?: Record<string, Record<string, ApprovalEntry>>) => {
+    const approvalsSrc = approvalsOverride ?? approvals;
     const mainImgSafe = resolvedMainImg ?? (productMainImage?.startsWith("data:") ? "" : (productMainImage || ""));
     const marketName = markets.find((m) => m.id === selectedMarketId)?.name ?? "";
     const exportData = processedData.map((row, idx) => {
@@ -914,7 +922,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       };
       // Per-language approved translations. Fields not approved are prefixed with [PENDIENTE].
       const bag = multiLang[row.sku_interno] ?? {};
-      const approvalBag = approvals[row.sku_interno] ?? {};
+      const approvalBag = approvalsSrc[row.sku_interno] ?? {};
       for (const lang of selectedLanguages) {
         const entry = bag[lang];
         const ap = approvalBag[lang];
@@ -948,7 +956,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     return `${baseName}_${date}.xlsx`;
   };
 
-  const downloadExcel = async () => {
+  const downloadExcel = async (approvalsOverride?: Record<string, Record<string, ApprovalEntry>>) => {
     setIsDownloading(true);
     try {
     const dataUrlsToUpload = new Set<string>();
@@ -973,7 +981,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       }
     }
 
-    const wb = buildExcelWorkbook(resolvedMainImg, resolvedVariantImages);
+    const wb = buildExcelWorkbook(resolvedMainImg, resolvedVariantImages, approvalsOverride);
     XLSX.writeFile(wb, getExcelFileName());
 
     setHasDownloaded(true);
@@ -1473,7 +1481,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                   Volver al mapeo
                 </Button>
                 {isTranslationDone && approvalStats.pending > 0 && (
-                  <Button variant="outline" size="sm" onClick={approveAllPending}>
+                  <Button variant="outline" size="sm" onClick={() => approveAllPending()}>
                     <ShieldCheck className="h-4 w-4 mr-2" />
                     Aprobar todo
                   </Button>
@@ -1854,12 +1862,13 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                   Volver a variantes
                 </Button>
                 {approvalStats.pending > 0 && (
-                  <Button variant="outline" size="sm" onClick={approveAllPending}>
+                  <Button variant="outline" size="sm" onClick={approveAllAndDownload} disabled={isDownloading}>
                     <ShieldCheck className="h-4 w-4 mr-2" />
-                    Aprobar todo
+                    Aprobar todo y descargar
                   </Button>
                 )}
-                <Button onClick={downloadExcel} disabled={isDownloading}>
+                <Button onClick={() => downloadExcel()} disabled={isDownloading}>
+
                   {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                   {isDownloading ? "Preparando..." : approvalStats.pending > 0 ? `Descargar Excel (${approvalStats.pending} pendientes)` : "Descargar Excel Procesado"}
                 </Button>
@@ -2193,7 +2202,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
               </div>
             )}
             <div className="flex gap-3">
-              <Button variant="outline" onClick={downloadExcel} disabled={isProcessing || !isTranslationDone || isDownloading || previewValidation.hasErrors}>
+              <Button variant="outline" onClick={() => downloadExcel()} disabled={isProcessing || !isTranslationDone || isDownloading || previewValidation.hasErrors}>
                 {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                 {isDownloading ? 'Preparando...' : 'Descargar de nuevo'}
               </Button>
