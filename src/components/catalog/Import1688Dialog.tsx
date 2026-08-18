@@ -2202,7 +2202,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
               </div>
             )}
             <div className="flex gap-3">
-              <Button variant="outline" onClick={downloadExcel} disabled={isProcessing || !isTranslationDone || isDownloading || previewValidation.hasErrors}>
+              <Button variant="outline" onClick={() => downloadExcel()} disabled={isProcessing || !isTranslationDone || isDownloading || previewValidation.hasErrors}>
                 {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                 {isDownloading ? 'Preparando...' : 'Descargar de nuevo'}
               </Button>
