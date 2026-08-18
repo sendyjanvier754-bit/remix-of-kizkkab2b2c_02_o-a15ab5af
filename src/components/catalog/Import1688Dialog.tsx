@@ -2144,13 +2144,25 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                             <div>
                               <div className="flex items-center justify-between mb-1">
                                 <Label className="text-xs font-medium">Descripción ({LANG_LABEL[lang] ?? lang})</Label>
-                                <label className="flex items-center gap-1.5 text-[11px] cursor-pointer select-none">
-                                  <Checkbox
-                                    checked={ap.description}
-                                    onCheckedChange={(v) => toggleApproval(row.sku_interno, lang, "description", !!v)}
-                                  />
-                                  Aprobar
-                                </label>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-[11px]"
+                                    onClick={() => applyDescriptionToAllVariants(row.sku_interno, lang)}
+                                  >
+                                    Aplicar a todas
+                                  </Button>
+                                  <label className="flex items-center gap-1.5 text-[11px] cursor-pointer select-none">
+                                    <Checkbox
+                                      checked={ap.description}
+                                      onCheckedChange={(v) => toggleApproval(row.sku_interno, lang, "description", !!v)}
+                                    />
+                                    Aprobar
+                                  </label>
+                                </div>
+
                               </div>
                               <Textarea
                                 value={entry.descripcion}
