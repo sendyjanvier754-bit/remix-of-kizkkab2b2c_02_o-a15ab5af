@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function EditProfilePage() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,14 +25,28 @@ export function EditProfilePage() {
   });
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        nombre: user.name || "",
-        email: user.email || "",
-        telefono: "",
-      });
-    }
-  }, [user]);
+    if (!user?.id) return;
+    setFormData({
+      nombre: user.name || "",
+      email: user.email || "",
+      telefono: user.phone || "",
+    });
+    // Fetch latest phone directly from DB in case auth context is stale
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("phone, full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data) {
+        setFormData((prev) => ({
+          ...prev,
+          nombre: (data as any).full_name || prev.nombre,
+          telefono: (data as any).phone || "",
+        }));
+      }
+    })();
+  }, [user?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -78,6 +92,7 @@ export function EditProfilePage() {
       if (profileError) throw profileError;
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await refreshProfile();
       toast.success("Foto de perfil actualizada");
     } catch (error: any) {
       console.error("Error uploading avatar:", error);
@@ -108,6 +123,7 @@ export function EditProfilePage() {
         .eq("id", user.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await refreshProfile();
       toast.success("Perfil actualizado correctamente");
       navigate("/perfil");
     } catch (error) {
