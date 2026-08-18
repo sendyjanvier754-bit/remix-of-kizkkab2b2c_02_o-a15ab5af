@@ -168,6 +168,7 @@ const ContactPage = () => {
         </Card>
       </main>
       <Footer />
+      <WhatsAppSupportDialog open={waDialogOpen} onOpenChange={setWaDialogOpen} />
     </div>
   );
 };
