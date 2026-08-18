@@ -135,7 +135,24 @@ export const AttributeConfigCard = ({
     }));
   }, [config.valueColumn, headers, rawData, imageColumnName]);
 
+  const columnPreviews = useMemo(() => {
+    const out: Record<string, { count: number; sample: string }> = {};
+    availableColumns.forEach(col => {
+      const idx = headers.indexOf(col);
+      if (idx === -1) return;
+      const set = new Set<string>();
+      rawData.forEach(row => {
+        const v = row[idx]?.trim();
+        if (v && v.toLowerCase() !== 'n/a') set.add(v);
+      });
+      const vals = Array.from(set);
+      out[col] = { count: vals.length, sample: vals.slice(0, 3).join(', ') };
+    });
+    return out;
+  }, [availableColumns, headers, rawData]);
+
   const uniqueValues = valueImagePairs.map(p => p.value);
+
   const valuesWithImages = valueImagePairs.filter(p => p.imageUrl).length;
 
   const displayName = config.nameType === 'manual' ? config.nameValue : config.valueColumn;
