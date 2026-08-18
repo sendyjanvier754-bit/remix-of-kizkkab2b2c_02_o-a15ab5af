@@ -65,6 +65,8 @@ export function SupportMenuPopover({ children }: Props) {
   ];
 
   return (
+    <>
+    <WhatsAppSupportDialog open={waDialogOpen} onOpenChange={setWaDialogOpen} />
     <Popover>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-0">
