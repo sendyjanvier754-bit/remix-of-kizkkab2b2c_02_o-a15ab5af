@@ -77,15 +77,17 @@ const ContactPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-2">Escríbenos por WhatsApp:</p>
-              <a 
-                href={whatsappHref}
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline font-medium"
+              <p className="text-sm text-muted-foreground mb-2">Soporte y ventas por WhatsApp:</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleWhatsAppClick}
+                disabled={!waEnabled}
+                className="gap-2"
               >
-                {contactPhone}
-              </a>
+                <MessageCircle className="h-4 w-4 text-green-600" />
+                {waEnabled ? 'Abrir WhatsApp' : 'No disponible'}
+              </Button>
               <p className="text-xs text-muted-foreground mt-2">Respuesta rápida en horario laboral.</p>
             </CardContent>
           </Card>
