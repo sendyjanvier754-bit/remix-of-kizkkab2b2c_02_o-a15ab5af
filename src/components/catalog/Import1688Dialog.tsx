@@ -1828,7 +1828,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
         {/* Step 4: Translation review — per-language editable titles & descriptions */}
         {step === "translation" && (
-          <div className="flex flex-col flex-1 min-h-0 gap-4">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="outline" className="gap-1">
@@ -2017,7 +2017,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
 
 
-            <Tabs defaultValue={selectedLanguages[0] ?? "es"} className="flex flex-col flex-1 min-h-0">
+            <Tabs defaultValue={selectedLanguages[0] ?? "es"} className="flex flex-col">
               <TabsList className="w-full justify-start flex-wrap h-auto">
                 {selectedLanguages.map((lang) => {
                   let approved = 0;
@@ -2043,7 +2043,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
               </TabsList>
 
               {selectedLanguages.map((lang) => (
-                <TabsContent key={lang} value={lang} className="flex-1 min-h-0 overflow-auto mt-3 pr-1">
+                <TabsContent key={lang} value={lang} className="mt-3 pr-1">
                   <div className="space-y-3">
                     {processedData.map((row, idx) => {
                       const entry = multiLang[row.sku_interno]?.[lang] ?? { nombre: "", descripcion: "" };
