@@ -679,30 +679,25 @@ const LoginPage = () => {
                     <p className="text-sm text-center text-muted-foreground mb-4">
                       {t('loginPage.wantToSell', { name: getValue('platform_name') })}
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Button
                         variant="outline"
-                        className="gap-2"
+                        className="gap-2 w-full min-w-0 whitespace-normal text-center leading-tight h-auto min-h-10 py-2 px-3 text-sm"
                         onClick={() => setAccountType('seller')}
                       >
-                        <Store className="h-4 w-4" />
-                        {t('loginPage.beSeller')}
+                        <Store className="h-4 w-4 shrink-0" />
+                        <span className="min-w-0 break-words">{t('loginPage.beSeller')}</span>
                       </Button>
                       <Button
                         variant="outline"
-                        className="gap-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                        className="gap-2 w-full min-w-0 whitespace-normal text-center leading-tight h-auto min-h-10 py-2 px-3 text-sm border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
                         onClick={() => setAccountType('grossiste')}
                       >
-                        <Warehouse className="h-4 w-4" />
-                        {t('loginPage.beGrossiste')}
-                      </Button>
-                      <Button variant="outline" asChild className="gap-2">
-                        <Link to="/">
-                          <ShoppingBag className="h-4 w-4" />
-                          {t('loginPage.explore')}
-                        </Link>
+                        <Warehouse className="h-4 w-4 shrink-0" />
+                        <span className="min-w-0 break-words">{t('loginPage.beGrossiste')}</span>
                       </Button>
                     </div>
+
                   </>
                 )}
                 <div className="grid grid-cols-2 gap-3 pt-1">
