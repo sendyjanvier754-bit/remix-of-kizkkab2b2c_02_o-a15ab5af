@@ -51,7 +51,7 @@ export function CompleteProfilePrompt() {
           <Button
             onClick={() => {
               dismiss();
-              navigate('/perfil/editar');
+              navigate('/editar-perfil');
             }}
             className="sm:flex-1"
           >
