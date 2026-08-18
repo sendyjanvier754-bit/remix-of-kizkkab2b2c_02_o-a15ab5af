@@ -41,14 +41,14 @@ export function WhatsAppSupportDialog({ open, onOpenChange }: Props) {
     const cleanName = name.trim();
     const cleanEmail = email.trim();
     const cleanMessage = message.trim();
-    setSubmitting(true);
-    await registerLead({ name: cleanName, email: cleanEmail, message: cleanMessage });
-    setSubmitting(false);
-
     const text = `Hola, soy ${cleanName} (${cleanEmail}).${
       cleanMessage ? ` ${cleanMessage}` : ' Necesito ayuda.'
     }`;
+    // Preserve the browser's user gesture so WhatsApp opens outside the preview iframe.
     openWhatsApp(text);
+    setSubmitting(true);
+    await registerLead({ name: cleanName, email: cleanEmail, message: cleanMessage });
+    setSubmitting(false);
     onOpenChange(false);
     setMessage('');
   };

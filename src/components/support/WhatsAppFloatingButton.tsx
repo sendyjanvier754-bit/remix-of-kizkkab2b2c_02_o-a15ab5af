@@ -19,12 +19,12 @@ export function WhatsAppFloatingButton() {
 
   const handleClick = async () => {
     if (user) {
+      openWhatsApp(`Hola, soy ${user.name || user.email}. Necesito ayuda.`);
       await registerLead({
         name: user.name || 'Cliente',
         email: user.email || '',
         phone: user.phone || undefined,
       });
-      openWhatsApp(`Hola, soy ${user.name || user.email}. Necesito ayuda.`);
       return;
     }
     setDialogOpen(true);
