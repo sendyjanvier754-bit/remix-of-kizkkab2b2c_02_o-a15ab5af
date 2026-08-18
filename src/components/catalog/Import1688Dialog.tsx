@@ -182,7 +182,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   // Market + multi-language review state
   const [markets, setMarkets] = useState<{ id: string; name: string }[]>([]);
   const [selectedMarketId, setSelectedMarketId] = useState<string>("");
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es"]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(AVAILABLE_LANGS.map((l) => l.code));
   const [multiLang, setMultiLang] = useState<Record<string, Record<string, MultiLangEntry>>>({});
   const [productTitleByLang, setProductTitleByLang] = useState<Record<string, string>>({});
   const [approvals, setApprovals] = useState<Record<string, Record<string, ApprovalEntry>>>({});
@@ -204,7 +204,10 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   useEffect(() => {
     if (!open) return;
     supabase.from("markets").select("id,name").eq("is_active", true).order("sort_order").then(({ data }) => {
-      setMarkets((data ?? []) as any);
+      const list = (data ?? []) as { id: string; name: string }[];
+      setMarkets(list);
+      // Auto-select the first available market when none is chosen yet
+      setSelectedMarketId((prev) => prev || list[0]?.id || "");
     });
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
   }, [open]);
@@ -228,7 +231,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setEditDraft({});
     setFailedImageSkus(new Set());
     setSelectedMarketId("");
-    setSelectedLanguages(["es"]);
+    setSelectedLanguages(AVAILABLE_LANGS.map((l) => l.code));
     setMultiLang({});
     setProductTitleByLang({});
     setApprovals({});
