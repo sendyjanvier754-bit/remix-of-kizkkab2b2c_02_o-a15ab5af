@@ -25,14 +25,28 @@ export function EditProfilePage() {
   });
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        nombre: user.name || "",
-        email: user.email || "",
-        telefono: "",
-      });
-    }
-  }, [user]);
+    if (!user?.id) return;
+    setFormData({
+      nombre: user.name || "",
+      email: user.email || "",
+      telefono: user.phone || "",
+    });
+    // Fetch latest phone directly from DB in case auth context is stale
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("phone, full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data) {
+        setFormData((prev) => ({
+          ...prev,
+          nombre: (data as any).full_name || prev.nombre,
+          telefono: (data as any).phone || "",
+        }));
+      }
+    })();
+  }, [user?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
