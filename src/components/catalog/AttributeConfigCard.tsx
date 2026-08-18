@@ -172,94 +172,34 @@ export const AttributeConfigCard = ({
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* STEP 1: Which column holds the variant values */}
+        {/* Variant display name */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">1</span>
-            <Label className="text-sm font-semibold">¿Qué columna contiene esta variante?</Label>
-          </div>
-          <p className="text-xs text-muted-foreground pl-7">
-            Elige la columna del Excel con los valores (ej. Rojo, Verde, S, M, L).
-          </p>
-
-          <div className="pl-7">
-            <Select
-              value={config.valueColumn}
-              onValueChange={(value) => {
-                openNameModal(value);
-              }}
-            >
-              <SelectTrigger className="h-10">
-                <SelectValue placeholder="Seleccionar columna..." />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {availableColumns.map(col => {
-                  const preview = columnPreviews[col];
-                  return (
-                    <SelectItem key={col} value={col}>
-                      <span className="flex flex-col items-start">
-                        <span className="flex items-center gap-2 font-medium">
-                          {getAttributeIcon(col)}
-                          {col}
-                        </span>
-                        {preview?.sample && (
-                          <span className="text-[11px] text-muted-foreground">
-                            {preview.count} valores · {preview.sample}
-                          </span>
-                        )}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-
-            {config.valueColumn && uniqueValues.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {uniqueValues.slice(0, 6).map(v => (
-                  <Badge key={v} variant="secondary" className="text-[11px] font-normal">{v}</Badge>
-                ))}
-                {uniqueValues.length > 6 && (
-                  <Badge variant="outline" className="text-[11px] font-normal">+{uniqueValues.length - 6}</Badge>
-                )}
-              </div>
+          <Label className="text-sm font-semibold">Nombre visible para los compradores</Label>
+          <div className="flex gap-2">
+            <Input
+              value={config.nameType === 'column' ? config.valueColumn : config.nameValue}
+              onChange={(e) => onUpdate(config.id, { nameType: 'manual', nameValue: e.target.value })}
+              placeholder="Ej: Color, Talla, Material..."
+              className="h-10"
+            />
+            {config.valueColumn && config.nameType !== 'column' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-10 whitespace-nowrap"
+                onClick={() => onUpdate(config.id, { nameType: 'column', nameValue: config.valueColumn })}
+              >
+                <Tag className="h-3.5 w-3.5 mr-1" />
+                Usar columna
+              </Button>
             )}
           </div>
-        </div>
-
-        {/* STEP 2: Display name */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">2</span>
-            <Label className="text-sm font-semibold">¿Cómo se llamará para los compradores?</Label>
-          </div>
-          <div className="pl-7 space-y-2">
-            <div className="flex gap-2">
-              <Input
-                value={config.nameType === 'column' ? config.valueColumn : config.nameValue}
-                onChange={(e) => onUpdate(config.id, { nameType: 'manual', nameValue: e.target.value })}
-                placeholder="Ej: Color, Talla, Material..."
-                className="h-10"
-              />
-              {config.valueColumn && config.nameType !== 'column' && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-10 whitespace-nowrap"
-                  onClick={() => onUpdate(config.id, { nameType: 'column', nameValue: config.valueColumn })}
-                >
-                  <Tag className="h-3.5 w-3.5 mr-1" />
-                  Usar nombre de la columna
-                </Button>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {config.nameType === 'column'
-                ? `Se usará el nombre de la columna: "${config.valueColumn}". Escribe encima para personalizarlo.`
-                : 'Este es el nombre que verán los compradores en la ficha del producto.'}
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {config.nameType === 'column'
+              ? `Se usará el nombre de la columna: "${config.valueColumn}". Escribe encima para personalizarlo.`
+              : 'Este es el nombre que verán los compradores en la ficha del producto.'}
+          </p>
         </div>
 
 
