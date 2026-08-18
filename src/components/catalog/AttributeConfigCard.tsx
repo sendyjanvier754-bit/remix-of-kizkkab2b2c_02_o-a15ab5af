@@ -5,9 +5,17 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Palette, Ruler, Zap, Package, ImageIcon, CheckCircle2, Tag, List, LinkIcon } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Trash2, Palette, Ruler, Zap, Package, ImageIcon, CheckCircle2, Tag, List, LinkIcon, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 export interface AttributeConfig {
   id: string;
@@ -98,6 +106,49 @@ export const AttributeConfigCard = ({
   onUpdate,
   onRemove,
 }: AttributeConfigCardProps) => {
+  const [pendingColumn, setPendingColumn] = useState<string | null>(null);
+  const [tempName, setTempName] = useState('');
+
+  const openNameModal = (column: string) => {
+    setPendingColumn(column);
+    // Pre-fill with current manual name, or the column name, or existing valueColumn name
+    const prefill =
+      config.nameType === 'manual' && config.nameValue?.trim()
+        ? config.nameValue
+        : column;
+    setTempName(prefill);
+  };
+
+  const confirmColumnSelection = () => {
+    if (!pendingColumn) return;
+    onUpdate(config.id, {
+      valueColumn: pendingColumn,
+      nameType: 'manual',
+      nameValue: tempName.trim() || pendingColumn,
+    });
+    setPendingColumn(null);
+    setTempName('');
+  };
+
+  const cancelColumnSelection = () => {
+    setPendingColumn(null);
+    setTempName('');
+  };
+
+  // Preview data for the pending column inside the modal
+  const pendingPreview = useMemo(() => {
+    if (!pendingColumn) return { count: 0, sample: '', uniqueValues: [] as string[] };
+    const idx = headers.indexOf(pendingColumn);
+    if (idx === -1) return { count: 0, sample: '', uniqueValues: [] as string[] };
+    const set = new Set<string>();
+    rawData.forEach(row => {
+      const v = row[idx]?.trim();
+      if (v && v.toLowerCase() !== 'n/a') set.add(v);
+    });
+    const vals = Array.from(set);
+    return { count: vals.length, sample: vals.slice(0, 3).join(', '), uniqueValues: vals };
+  }, [pendingColumn, headers, rawData]);
+
   // Get unique values with their corresponding image URLs from the same row
   const valueImagePairs = useMemo(() => {
     if (!config.valueColumn) return [];
@@ -205,11 +256,7 @@ export const AttributeConfigCard = ({
             <Select
               value={config.valueColumn}
               onValueChange={(value) => {
-                const updates: Partial<AttributeConfig> = { valueColumn: value };
-                if (config.nameType === 'column' || !config.nameValue?.trim()) {
-                  updates.nameValue = value;
-                }
-                onUpdate(config.id, updates);
+                openNameModal(value);
               }}
             >
               <SelectTrigger className="h-10">
@@ -343,6 +390,78 @@ export const AttributeConfigCard = ({
           </div>
         )}
       </CardContent>
+
+      {/* Name confirmation modal that opens right after selecting a column */}
+      <Dialog open={!!pendingColumn} onOpenChange={(open) => { if (!open) cancelColumnSelection(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+                {index + 1}
+              </span>
+              Confirmar nombre de la variante
+            </DialogTitle>
+            <DialogDescription>
+              Revisa los valores de la columna seleccionada y escribe el nombre que verán los compradores.
+            </DialogDescription>
+          </DialogHeader>
+
+          {pendingColumn && (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  {getAttributeIcon(pendingColumn)}
+                  Columna seleccionada: <span className="font-semibold">{pendingColumn}</span>
+                </div>
+                {pendingPreview.sample && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {pendingPreview.uniqueValues.slice(0, 6).map(v => (
+                      <Badge key={v} variant="secondary" className="text-[11px] font-normal">{v}</Badge>
+                    ))}
+                    {pendingPreview.uniqueValues.length > 6 && (
+                      <Badge variant="outline" className="text-[11px] font-normal">+{pendingPreview.uniqueValues.length - 6}</Badge>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  {pendingPreview.count} {pendingPreview.count === 1 ? 'valor único encontrado' : 'valores únicos encontrados'}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`attr-name-${config.id}`} className="text-sm font-semibold">
+                  Nombre visible para los compradores
+                </Label>
+                <Input
+                  id={`attr-name-${config.id}`}
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder="Ej: Color, Talla, Material..."
+                  className="h-10"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') confirmColumnSelection();
+                    if (e.key === 'Escape') cancelColumnSelection();
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Puedes personalizarlo o dejar el nombre de la columna.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={cancelColumnSelection}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={confirmColumnSelection} disabled={!tempName.trim()}>
+              <Check className="h-4 w-4 mr-1.5" />
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
