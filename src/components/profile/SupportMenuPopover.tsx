@@ -97,5 +97,6 @@ export function SupportMenuPopover({ children }: Props) {
         </div>
       </PopoverContent>
     </Popover>
+    </>
   );
 }
