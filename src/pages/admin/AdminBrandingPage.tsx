@@ -293,15 +293,17 @@ export default function AdminBrandingPage() {
               <CardDescription>Información de contacto visible en la plataforma, facturas y páginas legales</CardDescription>
             </div>
             <EditButton onClick={() => openEditor('contact', [
-              'contact_email', 'contact_phone', 'whatsapp_support_number', 'whatsapp_support_message',
+              'contact_email', 'contact_phone', 'whatsapp_support_link', 'whatsapp_support_number', 'whatsapp_support_message',
             ])} />
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <ReadRow label="Email de Contacto" value={form.contact_email} />
             <ReadRow label="Teléfono" value={form.contact_phone} />
+            <ReadRow label="Enlace de WhatsApp" value={form.whatsapp_support_link} />
             <ReadRow label="WhatsApp de Soporte/Ventas" value={form.whatsapp_support_number} />
             <ReadRow label="Mensaje predeterminado de WhatsApp" value={form.whatsapp_support_message} />
           </CardContent>
+
         </Card>
 
         {/* ── Top Bar ── */}
