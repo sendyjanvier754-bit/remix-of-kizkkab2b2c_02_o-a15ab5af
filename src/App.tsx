@@ -24,6 +24,8 @@ import { SellerUpgradeProvider } from "./components/seller/SellerUpgradeProvider
 import { GrossisteUpgradeProvider } from "./components/grossiste/GrossisteUpgradeProvider";
 import ScrollToTop from "./components/ScrollToTop";
 import LoginPromptModal from "@/components/auth/LoginPromptModal";
+import { WhatsAppFloatingButton } from "@/components/support/WhatsAppFloatingButton";
+import { CompleteProfilePrompt } from "@/components/profile/CompleteProfilePrompt";
 
 // Suspense Wrapper for lazy components
 const LazyRoute = ({ children }: { children: ReactNode }) => (
