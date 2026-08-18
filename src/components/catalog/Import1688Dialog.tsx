@@ -898,7 +898,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     }
   };
 
-  const buildExcelWorkbook = (resolvedMainImg?: string, resolvedVariantImages?: Record<string, string>) => {
+  const buildExcelWorkbook = (resolvedMainImg?: string, resolvedVariantImages?: Record<string, string>, approvalsOverride?: Record<string, Record<string, ApprovalEntry>>) => {
+    const approvalsSrc = approvalsOverride ?? approvals;
     const mainImgSafe = resolvedMainImg ?? (productMainImage?.startsWith("data:") ? "" : (productMainImage || ""));
     const marketName = markets.find((m) => m.id === selectedMarketId)?.name ?? "";
     const exportData = processedData.map((row, idx) => {
@@ -921,7 +922,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       };
       // Per-language approved translations. Fields not approved are prefixed with [PENDIENTE].
       const bag = multiLang[row.sku_interno] ?? {};
-      const approvalBag = approvals[row.sku_interno] ?? {};
+      const approvalBag = approvalsSrc[row.sku_interno] ?? {};
       for (const lang of selectedLanguages) {
         const entry = bag[lang];
         const ap = approvalBag[lang];
@@ -955,7 +956,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     return `${baseName}_${date}.xlsx`;
   };
 
-  const downloadExcel = async () => {
+  const downloadExcel = async (approvalsOverride?: Record<string, Record<string, ApprovalEntry>>) => {
     setIsDownloading(true);
     try {
     const dataUrlsToUpload = new Set<string>();
@@ -980,7 +981,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       }
     }
 
-    const wb = buildExcelWorkbook(resolvedMainImg, resolvedVariantImages);
+    const wb = buildExcelWorkbook(resolvedMainImg, resolvedVariantImages, approvalsOverride);
     XLSX.writeFile(wb, getExcelFileName());
 
     setHasDownloaded(true);
@@ -1099,7 +1100,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
       const grouped = buildGroupedProducts();
       // Build a File object from the Excel workbook for auto-loading in SmartBulkImportDialog
-      const wb = buildExcelWorkbook(resolvedMainImg, resolvedVariantImages);
+      const wb = buildExcelWorkbook(resolvedMainImg, resolvedVariantImages, approvalsOverride);
       const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const processedFile = new File([blob], getExcelFileName(), { type: blob.type });
@@ -1480,7 +1481,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                   Volver al mapeo
                 </Button>
                 {isTranslationDone && approvalStats.pending > 0 && (
-                  <Button variant="outline" size="sm" onClick={approveAllPending}>
+                  <Button variant="outline" size="sm" onClick={() => approveAllPending()}>
                     <ShieldCheck className="h-4 w-4 mr-2" />
                     Aprobar todo
                   </Button>
@@ -1861,7 +1862,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                   Volver a variantes
                 </Button>
                 {approvalStats.pending > 0 && (
-                  <Button variant="outline" size="sm" onClick={approveAllPending}>
+                  <Button variant="outline" size="sm" onClick={() => approveAllPending()}>
                     <ShieldCheck className="h-4 w-4 mr-2" />
                     Aprobar todo
                   </Button>
