@@ -589,11 +589,13 @@ export default function AdminBrandingPage() {
             <div className="grid gap-4 sm:grid-cols-2 py-2">
               {dField('contact_email', 'Email de Contacto', 'info@tuempresa.com')}
               {dField('contact_phone', 'Teléfono', '+509 ...')}
-              {dField('whatsapp_support_number', 'WhatsApp de Soporte/Ventas', '+509...')}
+              {dField('whatsapp_support_link', 'Enlace de WhatsApp (recomendado)', 'https://wa.me/message/H65RWQ5L2JNXN1')}
+              {dField('whatsapp_support_number', 'WhatsApp de Soporte/Ventas (alternativo)', '+509...')}
               {dField('whatsapp_support_message', 'Mensaje predeterminado de WhatsApp', 'Hola, necesito ayuda con mi compra.')}
               <p className="text-xs text-muted-foreground sm:col-span-2">
-                Si dejas vacío el WhatsApp de soporte se usará el número de redes sociales o el teléfono de contacto.
+                Si defines un enlace de WhatsApp, se usará siempre ese enlace y el usuario solo escribe su mensaje. Si lo dejas vacío se usará el número de soporte, el de redes sociales o el teléfono de contacto.
               </p>
+
             </div>
             <DialogSaveFooter onSave={() => saveDraft()} />
           </DialogContent>
