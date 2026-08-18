@@ -230,7 +230,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setEditingVariant(null);
     setEditDraft({});
     setFailedImageSkus(new Set());
-    setSelectedMarketId("");
+    setSelectedMarketId(markets[0]?.id ?? "");
     setSelectedLanguages(AVAILABLE_LANGS.map((l) => l.code));
     setMultiLang({});
     setProductTitleByLang({});
