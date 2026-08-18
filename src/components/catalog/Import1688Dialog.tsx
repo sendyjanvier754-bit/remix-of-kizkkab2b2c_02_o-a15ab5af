@@ -816,30 +816,37 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     });
   };
 
-  const approveAllPending = () => {
+  const approveAllPending = (): Record<string, Record<string, ApprovalEntry>> | null => {
     if (!currentUserId) {
       toast.error("Debes iniciar sesión para aprobar traducciones");
-      return;
+      return null;
     }
     const now = new Date().toISOString();
-    setApprovals((prev) => {
-      const next: Record<string, Record<string, ApprovalEntry>> = { ...prev };
-      for (const row of processedData) {
-        const bag = { ...(next[row.sku_interno] ?? {}) };
-        for (const lang of selectedLanguages) {
-          const entry: ApprovalEntry = { title: true, description: true, approvedBy: currentUserId, approvedAt: now, ...bag[lang] };
-          entry.title = true;
-          entry.description = true;
-          entry.approvedBy = currentUserId;
-          entry.approvedAt = now;
-          bag[lang] = entry;
-        }
-        next[row.sku_interno] = bag;
+    const next: Record<string, Record<string, ApprovalEntry>> = { ...approvals };
+    for (const row of processedData) {
+      const bag = { ...(next[row.sku_interno] ?? {}) };
+      for (const lang of selectedLanguages) {
+        bag[lang] = {
+          ...(bag[lang] ?? {}),
+          title: true,
+          description: true,
+          approvedBy: currentUserId,
+          approvedAt: now,
+        };
       }
-      return next;
-    });
+      next[row.sku_interno] = bag;
+    }
+    setApprovals(next);
     toast.success("Todas las traducciones aprobadas");
+    return next;
   };
+
+  const approveAllAndDownload = async () => {
+    const next = approveAllPending();
+    if (!next) return;
+    await downloadExcel(next);
+  };
+
 
   const approvalStats = useMemo(() => {
     const totalFields = processedData.length * selectedLanguages.length * 2;
