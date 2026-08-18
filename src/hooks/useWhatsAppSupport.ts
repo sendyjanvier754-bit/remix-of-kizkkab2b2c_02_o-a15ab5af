@@ -1,0 +1,54 @@
+import { useBranding } from '@/hooks/useBranding';
+import { supabase } from '@/integrations/supabase/client';
+
+export interface WhatsAppLeadInput {
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+}
+
+/**
+ * WhatsApp support/sales channel.
+ * The number and default message are configured from Identidad (branding_settings).
+ */
+export const useWhatsAppSupport = () => {
+  const { getValue } = useBranding();
+
+  const rawNumber =
+    getValue('whatsapp_support_number') ||
+    getValue('social_whatsapp') ||
+    getValue('contact_phone');
+
+  const number = (rawNumber || '').replace(/[^0-9]/g, '');
+  const defaultMessage =
+    getValue('whatsapp_support_message') || 'Hola, necesito ayuda con mi compra.';
+  const isEnabled = number.length >= 6;
+
+  const buildLink = (message?: string) =>
+    `https://wa.me/${number}?text=${encodeURIComponent(message || defaultMessage)}`;
+
+  const openWhatsApp = (message?: string) => {
+    if (!isEnabled) return;
+    window.open(buildLink(message), '_blank', 'noopener,noreferrer');
+  };
+
+  /** Registers a visitor lead so the sales team can follow up later. */
+  const registerLead = async (lead: WhatsAppLeadInput) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      await supabase.from('whatsapp_leads').insert({
+        name: lead.name.trim(),
+        email: lead.email.trim().toLowerCase(),
+        phone: lead.phone?.trim() || null,
+        message: lead.message?.trim() || null,
+        page_url: typeof window !== 'undefined' ? window.location.pathname : null,
+        user_id: userData?.user?.id ?? null,
+      });
+    } catch {
+      // Never block the WhatsApp redirect because of a logging failure
+    }
+  };
+
+  return { number, isEnabled, defaultMessage, buildLink, openWhatsApp, registerLead };
+};
