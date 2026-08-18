@@ -50,7 +50,7 @@ const LoginPage = () => {
   const [grossisteBusinessName, setGrossisteBusinessName] = useState("");
   const [grossisteDescription, setGrossisteDescription] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [loginTermsAccepted, setLoginTermsAccepted] = useState(false);
+  const [loginTermsAccepted, setLoginTermsAccepted] = useState(true);
   const [showLegal, setShowLegal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   
