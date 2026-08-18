@@ -679,7 +679,7 @@ const LoginPage = () => {
                     <p className="text-sm text-center text-muted-foreground mb-4">
                       {t('loginPage.wantToSell', { name: getValue('platform_name') })}
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[260px] mx-auto sm:max-w-none sm:mx-0">
                       <Button
                         variant="outline"
                         className="gap-2 w-full min-w-0 whitespace-normal text-center leading-tight h-auto min-h-10 py-2 px-3 text-sm"
