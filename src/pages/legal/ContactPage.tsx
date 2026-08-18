@@ -1,3 +1,4 @@
+import { useState } from "react";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useBranding } from '@/hooks/useBranding';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';
+import { useWhatsAppSupport } from '@/hooks/useWhatsAppSupport';
+import { WhatsAppSupportDialog } from '@/components/support/WhatsAppSupportDialog';
 
 const ContactPage = () => {
   const { getValue } = useBranding();
@@ -14,7 +17,21 @@ const ContactPage = () => {
   const navigate = useNavigate();
   const contactEmail = getValue('contact_email') || 'contacto@empresa.com';
   const contactPhone = getValue('contact_phone') || '+509 3234-5678';
-  const whatsappHref = `https://wa.me/${contactPhone.replace(/[^0-9]/g, '')}`;
+  const { isEnabled: waEnabled, openWhatsApp, registerLead } = useWhatsAppSupport();
+  const [waDialogOpen, setWaDialogOpen] = useState(false);
+
+  const handleWhatsAppClick = async () => {
+    if (user) {
+      await registerLead({
+        name: user.name || 'Cliente',
+        email: user.email || '',
+        phone: user.phone || undefined,
+      });
+      openWhatsApp(`Hola, soy ${user.name || user.email}. Necesito ayuda.`);
+      return;
+    }
+    setWaDialogOpen(true);
+  };
 
   const supportChatPath = (role === UserRole.ADMIN || role === UserRole.SELLER || role === UserRole.SALES_AGENT)
     ? '/admin/soporte-chat'
