@@ -1862,12 +1862,13 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                   Volver a variantes
                 </Button>
                 {approvalStats.pending > 0 && (
-                  <Button variant="outline" size="sm" onClick={() => approveAllPending()}>
+                  <Button variant="outline" size="sm" onClick={approveAllAndDownload} disabled={isDownloading}>
                     <ShieldCheck className="h-4 w-4 mr-2" />
-                    Aprobar todo
+                    Aprobar todo y descargar
                   </Button>
                 )}
-                <Button onClick={downloadExcel} disabled={isDownloading}>
+                <Button onClick={() => downloadExcel()} disabled={isDownloading}>
+
                   {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                   {isDownloading ? "Preparando..." : approvalStats.pending > 0 ? `Descargar Excel (${approvalStats.pending} pendientes)` : "Descargar Excel Procesado"}
                 </Button>
