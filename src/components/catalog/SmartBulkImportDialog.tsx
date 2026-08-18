@@ -139,6 +139,8 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
   const [attributeConfigs, setAttributeConfigs] = useState<AttributeConfig[]>([]);
   const [showTemplateHint, setShowTemplateHint] = useState(false);
   const [processedUrlMap, setProcessedUrlMap] = useState<Record<string, string>>({});
+  const [pendingAttributeColumn, setPendingAttributeColumn] = useState<string | null>(null);
+  const [pendingAttributeName, setPendingAttributeName] = useState('');
   const [isPreparingPreloadedFile, setIsPreparingPreloadedFile] = useState(false);
   
   // Asset processing hook
