@@ -38,12 +38,15 @@ export function WhatsAppSupportDialog({ open, onOpenChange }: Props) {
       return;
     }
     setErrors({});
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+    const cleanMessage = message.trim();
     setSubmitting(true);
-    await registerLead(parsed.data);
+    await registerLead({ name: cleanName, email: cleanEmail, message: cleanMessage });
     setSubmitting(false);
 
-    const text = `Hola, soy ${parsed.data.name} (${parsed.data.email}).${
-      parsed.data.message ? ` ${parsed.data.message}` : ' Necesito ayuda.'
+    const text = `Hola, soy ${cleanName} (${cleanEmail}).${
+      cleanMessage ? ` ${cleanMessage}` : ' Necesito ayuda.'
     }`;
     openWhatsApp(text);
     onOpenChange(false);
