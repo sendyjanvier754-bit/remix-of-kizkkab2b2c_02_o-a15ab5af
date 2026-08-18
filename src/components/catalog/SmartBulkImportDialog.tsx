@@ -697,6 +697,43 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     return availableColumns.filter(col => !usedCols.has(col));
   }, [availableColumns, attributeConfigs]);
 
+  const pendingAttributePreview = useMemo(() => {
+    if (!pendingAttributeColumn) return { count: 0, sample: '', uniqueValues: [] as string[] };
+    const idx = headers.indexOf(pendingAttributeColumn);
+    if (idx === -1) return { count: 0, sample: '', uniqueValues: [] as string[] };
+    const set = new Set<string>();
+    rawData.forEach(row => {
+      const v = row[idx]?.trim();
+      if (v && v.toLowerCase() !== 'n/a') set.add(v);
+    });
+    const vals = Array.from(set);
+    return { count: vals.length, sample: vals.slice(0, 3).join(', '), uniqueValues: vals };
+  }, [pendingAttributeColumn, headers, rawData]);
+
+  const openAddAttributeModal = (column: string) => {
+    setPendingAttributeColumn(column);
+    setPendingAttributeName(column);
+  };
+
+  const confirmAddAttribute = () => {
+    if (!pendingAttributeColumn) return;
+    const newConfig: AttributeConfig = {
+      id: `attr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      nameType: 'manual',
+      nameValue: pendingAttributeName.trim() || pendingAttributeColumn,
+      valueColumn: pendingAttributeColumn,
+      imageColumn: undefined,
+    };
+    setAttributeConfigs(prev => [...prev, newConfig]);
+    setPendingAttributeColumn(null);
+    setPendingAttributeName('');
+  };
+
+  const cancelAddAttribute = () => {
+    setPendingAttributeColumn(null);
+    setPendingAttributeName('');
+  };
+
   const currentStepIndex = STEPS.findIndex(s => s.id === step);
 
   return (
