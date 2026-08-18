@@ -98,6 +98,9 @@ export function UserProfilePage() {
         </Avatar>
         <div className="flex-1 min-w-0">
           <h1 className="text-base font-bold text-foreground truncate">{user?.name || "Usuario"}</h1>
+          {user?.phone && (
+            <span className="text-xs text-muted-foreground truncate">{user.phone}</span>
+          )}
         </div>
         <button onClick={() => navigate("/editar-perfil")} className="p-2 hover:bg-muted rounded-full transition-colors">
           <Settings className="w-5 h-5 text-muted-foreground" />
@@ -431,13 +434,10 @@ export function UserProfilePage() {
                   <h1 className="text-lg font-bold text-foreground leading-tight">
                     Hola, <span className="text-primary">{user?.name || user?.email?.split("@")[0] || "Usuario"}</span>
                   </h1>
-                  <div className="text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                    <span>{user?.email}</span>
+                  <div className="text-xs text-muted-foreground flex flex-col">
+                    <span className="hidden lg:inline">{user?.email}</span>
                     {user?.phone && (
-                      <>
-                        <span className="hidden sm:inline">·</span>
-                        <span>{user.phone}</span>
-                      </>
+                      <span className="lg:mt-0">{user.phone}</span>
                     )}
                   </div>
                 </div>
