@@ -839,7 +839,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         const s = row.sku_interno;
         if (s === sku) continue;
         const forSku = { ...(next[s] ?? {}) };
-        forSku[lang] = { title: false, description: false, ...forSku[lang], description: false };
+        forSku[lang] = { title: false, ...forSku[lang], description: false };
         next[s] = forSku;
       }
       return next;
