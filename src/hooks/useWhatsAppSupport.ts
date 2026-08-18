@@ -20,13 +20,24 @@ export const useWhatsAppSupport = () => {
     getValue('social_whatsapp') ||
     getValue('contact_phone');
 
-  const number = (rawNumber || '').replace(/[^0-9]/g, '');
+  const digits = (rawNumber || '').replace(/[^0-9]/g, '');
+  // Mexico no longer uses the legacy extra "1" between country code and mobile number.
+  const number = /^521\d{10}$/.test(digits) ? `52${digits.slice(3)}` : digits;
   const defaultMessage =
     getValue('whatsapp_support_message') || 'Hola, necesito ayuda con mi compra.';
   const isEnabled = number.length >= 6;
 
-  const buildLink = (message?: string) =>
-    `https://wa.me/${number}?text=${encodeURIComponent(message || defaultMessage)}`;
+  const buildLink = (message?: string) => {
+    const text = encodeURIComponent(message || defaultMessage);
+    const isMobileDevice =
+      typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // wa.me redirects desktop browsers to api.whatsapp.com, which refuses to
+    // load from embedded previews. web.whatsapp.com is the stable desktop URL.
+    return isMobileDevice
+      ? `https://wa.me/${number}?text=${text}`
+      : `https://web.whatsapp.com/send?phone=${number}&text=${text}`;
+  };
 
   /**
    * Opens WhatsApp in a real new tab.
