@@ -195,6 +195,11 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [customTitleSource, setCustomTitleSource] = useState<string>("");
   const [isRegeneratingTitles, setIsRegeneratingTitles] = useState(false);
 
+  // Description regeneration (product description, all languages)
+  const [descSourceMode, setDescSourceMode] = useState<"title" | "custom">("title");
+  const [customDescSource, setCustomDescSource] = useState<string>("");
+  const [isRegeneratingDescriptions, setIsRegeneratingDescriptions] = useState(false);
+
   // Load markets and current user once when opened
   useEffect(() => {
     if (!open) return;
