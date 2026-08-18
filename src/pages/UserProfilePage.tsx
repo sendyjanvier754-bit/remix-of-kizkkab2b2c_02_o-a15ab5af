@@ -434,13 +434,10 @@ export function UserProfilePage() {
                   <h1 className="text-lg font-bold text-foreground leading-tight">
                     Hola, <span className="text-primary">{user?.name || user?.email?.split("@")[0] || "Usuario"}</span>
                   </h1>
-                  <div className="text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                    <span>{user?.email}</span>
+                  <div className="text-xs text-muted-foreground flex flex-col">
+                    <span className="hidden lg:inline">{user?.email}</span>
                     {user?.phone && (
-                      <>
-                        <span className="hidden sm:inline">·</span>
-                        <span>{user.phone}</span>
-                      </>
+                      <span className="lg:mt-0">{user.phone}</span>
                     )}
                   </div>
                 </div>
