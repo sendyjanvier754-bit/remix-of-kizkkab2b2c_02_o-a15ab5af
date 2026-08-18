@@ -9297,6 +9297,45 @@ export type Database = {
           },
         ]
       }
+      whatsapp_leads: {
+        Row: {
+          converted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          page_url: string | null
+          phone: string | null
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          page_url?: string | null
+          phone?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          page_url?: string | null
+          phone?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       withdrawal_requests: {
         Row: {
           admin_notes: string | null

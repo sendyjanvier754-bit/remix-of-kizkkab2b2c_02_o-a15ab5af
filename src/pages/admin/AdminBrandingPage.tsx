@@ -583,7 +583,12 @@ export default function AdminBrandingPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               {field('contact_email', 'Email de Contacto', 'info@tuempresa.com')}
               {field('contact_phone', 'Teléfono', '+509 ...')}
+              {field('whatsapp_support_number', 'WhatsApp de Soporte/Ventas', '+509...')}
+              {field('whatsapp_support_message', 'Mensaje predeterminado de WhatsApp', 'Hola, necesito ayuda con mi compra.')}
             </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Si dejas vacío el WhatsApp de soporte se usará el número de redes sociales o el teléfono de contacto.
+            </p>
           </CardContent>
         </Card>
 
