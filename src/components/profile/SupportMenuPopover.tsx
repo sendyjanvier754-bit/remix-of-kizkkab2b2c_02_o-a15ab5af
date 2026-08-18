@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MessageCircle, Phone, Mail, HelpCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useWhatsAppSupport } from "@/hooks/useWhatsAppSupport";
+import { WhatsAppSupportDialog } from "@/components/support/WhatsAppSupportDialog";
 
 interface Props {
   children: React.ReactNode;
@@ -8,6 +12,22 @@ interface Props {
 
 export function SupportMenuPopover({ children }: Props) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isEnabled: waEnabled, openWhatsApp, registerLead } = useWhatsAppSupport();
+  const [waDialogOpen, setWaDialogOpen] = useState(false);
+
+  const handleWhatsApp = async () => {
+    if (user) {
+      await registerLead({
+        name: user.name || "Cliente",
+        email: user.email || "",
+        phone: user.phone || undefined,
+      });
+      openWhatsApp(`Hola, soy ${user.name || user.email}. Necesito ayuda.`);
+      return;
+    }
+    setWaDialogOpen(true);
+  };
 
   const channels = [
     {
@@ -17,6 +37,17 @@ export function SupportMenuPopover({ children }: Props) {
       action: () => navigate("/soporte"),
       available: true,
     },
+    ...(waEnabled
+      ? [
+          {
+            icon: <MessageCircle className="w-4 h-4 text-green-600" />,
+            label: "WhatsApp",
+            description: "Soporte y ventas por WhatsApp",
+            action: handleWhatsApp,
+            available: true,
+          },
+        ]
+      : []),
     {
       icon: <Phone className="w-4 h-4 text-muted-foreground" />,
       label: "Llamada",
