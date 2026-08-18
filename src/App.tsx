@@ -176,6 +176,8 @@ const AppContent = () => {
       <Sonner />
       <VariantDrawer />
       <LoginPromptModal />
+      <WhatsAppFloatingButton />
+      <CompleteProfilePrompt />
       <Routes>
             {/* ========== PUBLIC ROUTES (B2C) ========== */}
             <Route path="/" element={<Index />} />
