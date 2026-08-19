@@ -17,21 +17,10 @@ const ContactPage = () => {
   const navigate = useNavigate();
   const contactEmail = getValue('contact_email') || 'contacto@empresa.com';
   const contactPhone = getValue('contact_phone') || '+509 3234-5678';
-  const { isEnabled: waEnabled, openWhatsApp, registerLead } = useWhatsAppSupport();
+  const { isEnabled: waEnabled } = useWhatsAppSupport();
   const [waDialogOpen, setWaDialogOpen] = useState(false);
 
-  const handleWhatsAppClick = async () => {
-    if (user) {
-      openWhatsApp(`Hola, soy ${user.name || user.email}. Necesito ayuda.`);
-      await registerLead({
-        name: user.name || 'Cliente',
-        email: user.email || '',
-        phone: user.phone || undefined,
-      });
-      return;
-    }
-    setWaDialogOpen(true);
-  };
+  const handleWhatsAppClick = () => setWaDialogOpen(true);
 
   const supportChatPath = (role === UserRole.ADMIN || role === UserRole.SELLER || role === UserRole.SALES_AGENT)
     ? '/admin/soporte-chat'

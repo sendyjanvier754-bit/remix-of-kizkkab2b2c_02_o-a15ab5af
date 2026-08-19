@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MessageCircle, Phone, Mail, HelpCircle } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 import { useWhatsAppSupport } from "@/hooks/useWhatsAppSupport";
 import { WhatsAppSupportDialog } from "@/components/support/WhatsAppSupportDialog";
 
@@ -12,22 +11,10 @@ interface Props {
 
 export function SupportMenuPopover({ children }: Props) {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { isEnabled: waEnabled, openWhatsApp, registerLead } = useWhatsAppSupport();
+  const { isEnabled: waEnabled } = useWhatsAppSupport();
   const [waDialogOpen, setWaDialogOpen] = useState(false);
 
-  const handleWhatsApp = async () => {
-    if (user) {
-      await registerLead({
-        name: user.name || "Cliente",
-        email: user.email || "",
-        phone: user.phone || undefined,
-      });
-      openWhatsApp(`Hola, soy ${user.name || user.email}. Necesito ayuda.`);
-      return;
-    }
-    setWaDialogOpen(true);
-  };
+  const handleWhatsApp = () => setWaDialogOpen(true);
 
   const channels = [
     {

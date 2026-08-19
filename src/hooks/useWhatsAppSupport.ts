@@ -34,8 +34,12 @@ export const useWhatsAppSupport = () => {
     const text = encodeURIComponent(message || defaultMessage);
 
     if (configuredLink) {
-      // Short invite links (wa.me/message/CODE) don't support a prefilled text
-      // parameter — appending it breaks the redirect. Open them exactly as configured.
+      // Branded wa.me/message links ignore prefilled text. When the admin also
+      // configured the contact number, use that same contact directly so the
+      // captured form data is actually delivered in the WhatsApp message.
+      if (/wa\.me\/message\//i.test(configuredLink) && number) {
+        return `https://wa.me/${number}?text=${text}`;
+      }
       if (/wa\.me\/message\//i.test(configuredLink)) return configuredLink;
       const sep = configuredLink.includes('?') ? '&' : '?';
       return `${configuredLink}${sep}text=${text}`;
@@ -70,13 +74,18 @@ export const useWhatsAppSupport = () => {
         // ignore clipboard failures
       }
     }
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    // Open directly from the submit click. This avoids the preview shell
+    // treating WhatsApp as iframe content, which WhatsApp explicitly blocks.
+    const opened = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!opened) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
   };
 
 
