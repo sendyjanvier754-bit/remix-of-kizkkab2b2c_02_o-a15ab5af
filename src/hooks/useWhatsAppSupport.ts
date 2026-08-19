@@ -34,6 +34,9 @@ export const useWhatsAppSupport = () => {
     const text = encodeURIComponent(message || defaultMessage);
 
     if (configuredLink) {
+      // Short invite links (wa.me/message/CODE) don't support a prefilled text
+      // parameter — appending it breaks the redirect. Open them exactly as configured.
+      if (/wa\.me\/message\//i.test(configuredLink)) return configuredLink;
       const sep = configuredLink.includes('?') ? '&' : '?';
       return `${configuredLink}${sep}text=${text}`;
     }
@@ -49,6 +52,7 @@ export const useWhatsAppSupport = () => {
   };
 
 
+
   /**
    * Opens WhatsApp in a real new tab.
    * Uses a synthetic anchor click because window.open from an embedded
@@ -58,6 +62,14 @@ export const useWhatsAppSupport = () => {
     if (!isEnabled) return;
     const url = buildLink(message);
     if (typeof document === 'undefined') return;
+    // Short invite links can't carry the text, so leave it on the clipboard.
+    if (/wa\.me\/message\//i.test(url)) {
+      try {
+        navigator.clipboard?.writeText(message || defaultMessage);
+      } catch {
+        // ignore clipboard failures
+      }
+    }
     const a = document.createElement('a');
     a.href = url;
     a.target = '_blank';
@@ -66,6 +78,7 @@ export const useWhatsAppSupport = () => {
     a.click();
     a.remove();
   };
+
 
   /** Registers a visitor lead so the sales team can follow up later. */
   const registerLead = async (lead: WhatsAppLeadInput) => {
