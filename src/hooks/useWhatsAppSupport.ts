@@ -62,6 +62,14 @@ export const useWhatsAppSupport = () => {
     if (!isEnabled) return;
     const url = buildLink(message);
     if (typeof document === 'undefined') return;
+    // Short invite links can't carry the text, so leave it on the clipboard.
+    if (/wa\.me\/message\//i.test(url)) {
+      try {
+        navigator.clipboard?.writeText(message || defaultMessage);
+      } catch {
+        // ignore clipboard failures
+      }
+    }
     const a = document.createElement('a');
     a.href = url;
     a.target = '_blank';
@@ -70,6 +78,7 @@ export const useWhatsAppSupport = () => {
     a.click();
     a.remove();
   };
+
 
   /** Registers a visitor lead so the sales team can follow up later. */
   const registerLead = async (lead: WhatsAppLeadInput) => {
