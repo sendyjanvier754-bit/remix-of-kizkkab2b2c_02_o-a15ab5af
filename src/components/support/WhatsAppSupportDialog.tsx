@@ -11,6 +11,7 @@ import { useWhatsAppSupport } from '@/hooks/useWhatsAppSupport';
 const leadSchema = z.object({
   name: z.string().trim().min(2, 'Ingresa tu nombre').max(80, 'Nombre demasiado largo'),
   email: z.string().trim().email('Correo inválido').max(255, 'Correo demasiado largo'),
+  phone: z.string().trim().max(30, 'Teléfono demasiado largo').optional(),
   message: z.string().trim().max(500, 'Mensaje demasiado largo').optional(),
 });
 
@@ -23,12 +24,13 @@ export function WhatsAppSupportDialog({ open, onOpenChange }: Props) {
   const { registerLead, openWhatsApp } = useWhatsAppSupport();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    const parsed = leadSchema.safeParse({ name, email, message });
+    const parsed = leadSchema.safeParse({ name, email, phone, message });
     if (!parsed.success) {
       const next: Record<string, string> = {};
       parsed.error.issues.forEach((i) => {
@@ -40,14 +42,17 @@ export function WhatsAppSupportDialog({ open, onOpenChange }: Props) {
     setErrors({});
     const cleanName = name.trim();
     const cleanEmail = email.trim();
+    const cleanPhone = phone.trim();
     const cleanMessage = message.trim();
-    const text = `Hola, soy ${cleanName} (${cleanEmail}).${
+    const text = `Hola, soy ${cleanName}. Correo: ${cleanEmail}.${
+      cleanPhone ? ` Teléfono: ${cleanPhone}.` : ''
+    }${
       cleanMessage ? ` ${cleanMessage}` : ' Necesito ayuda.'
     }`;
     // Preserve the browser's user gesture so WhatsApp opens outside the preview iframe.
     openWhatsApp(text);
     setSubmitting(true);
-    await registerLead({ name: cleanName, email: cleanEmail, message: cleanMessage });
+    await registerLead({ name: cleanName, email: cleanEmail, phone: cleanPhone, message: cleanMessage });
     setSubmitting(false);
     onOpenChange(false);
     setMessage('');
@@ -76,6 +81,11 @@ export function WhatsAppSupportDialog({ open, onOpenChange }: Props) {
             <Label htmlFor="wa-email">Correo electrónico</Label>
             <Input id="wa-email" type="email" value={email} maxLength={255} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" />
             {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="wa-phone">Teléfono (opcional)</Label>
+            <Input id="wa-phone" type="tel" value={phone} maxLength={30} onChange={(e) => setPhone(e.target.value)} placeholder="Tu número de teléfono" />
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="wa-message">¿En qué podemos ayudarte? (opcional)</Label>
