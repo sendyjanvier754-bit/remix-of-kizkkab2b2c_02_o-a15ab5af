@@ -34,6 +34,9 @@ export const useWhatsAppSupport = () => {
     const text = encodeURIComponent(message || defaultMessage);
 
     if (configuredLink) {
+      // Short invite links (wa.me/message/CODE) don't support a prefilled text
+      // parameter — appending it breaks the redirect. Open them exactly as configured.
+      if (/wa\.me\/message\//i.test(configuredLink)) return configuredLink;
       const sep = configuredLink.includes('?') ? '&' : '?';
       return `${configuredLink}${sep}text=${text}`;
     }
@@ -47,6 +50,7 @@ export const useWhatsAppSupport = () => {
       ? `https://wa.me/${number}?text=${text}`
       : `https://web.whatsapp.com/send?phone=${number}&text=${text}`;
   };
+
 
 
   /**
