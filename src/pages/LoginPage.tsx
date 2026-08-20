@@ -652,7 +652,7 @@ const LoginPage = () => {
 
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full h-11 text-base"
                       disabled={
                         isLoading ||
                         !termsAccepted ||
