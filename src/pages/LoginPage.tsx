@@ -247,33 +247,34 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col" dir={dir}>
       <GlobalHeader />
-      <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center pb-24 md:pb-8">
+      <main className="flex-1 container mx-auto px-3 py-5 lg:py-8 flex items-start lg:items-center justify-center pb-24 lg:pb-8">
         <div className="w-full max-w-md">
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-end mb-2">
             <LanguageSwitcher compact variant="outline" />
           </div>
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">{t('loginPage.welcome', { name: getValue('platform_name') })}</h1>
-            <p className="text-muted-foreground">{getValue('platform_slogan')}</p>
+          <div className="text-center mb-5 lg:mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-1.5">{t('loginPage.welcome', { name: getValue('platform_name') })}</h1>
+            <p className="text-sm text-muted-foreground">{getValue('platform_slogan')}</p>
           </div>
 
-          <Card>
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">{t('loginPage.access')}</CardTitle>
-              <CardDescription className="text-center">
+          <Card className="border-0 shadow-none lg:border lg:shadow-sm bg-transparent lg:bg-card">
+            <CardHeader className="space-y-1 px-0 lg:px-6 pb-4">
+              <CardTitle className="text-xl lg:text-2xl text-center">{t('loginPage.access')}</CardTitle>
+              <CardDescription className="text-center text-sm">
                 {t('loginPage.loginOrCreate')}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-0 lg:px-6">
               <Tabs defaultValue={defaultTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="login">{t('loginPage.passwordTab')}</TabsTrigger>
-                  <TabsTrigger value="otp">
-                    <KeyRound className="h-3 w-3 mr-1" />
-                    {t('loginPage.emailCodeTab')}
+                <TabsList className="grid w-full grid-cols-3 mb-5 h-11 p-1">
+                  <TabsTrigger value="login" className="text-xs lg:text-sm h-9">{t('loginPage.passwordTab')}</TabsTrigger>
+                  <TabsTrigger value="otp" className="text-xs lg:text-sm h-9 gap-1">
+                    <KeyRound className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{t('loginPage.emailCodeTab')}</span>
                   </TabsTrigger>
-                  <TabsTrigger value="register">{t('loginPage.registerTab')}</TabsTrigger>
+                  <TabsTrigger value="register" className="text-xs lg:text-sm h-9">{t('loginPage.registerTab')}</TabsTrigger>
                 </TabsList>
+
 
                 {error && (
                   <Alert variant="destructive" className="mb-4">
