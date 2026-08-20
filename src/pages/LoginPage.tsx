@@ -295,12 +295,12 @@ const LoginPage = () => {
                     <div className="space-y-2">
                       <Label htmlFor="login-email">{t('auth.email')}</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="login-email"
                           type="email"
                           placeholder="tu@email.com"
-                          className="pl-10"
+                          className="pl-10 h-11"
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
                           required
@@ -316,12 +316,12 @@ const LoginPage = () => {
                         </Link>
                       </div>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="login-password"
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
-                          className="pl-10 pr-10"
+                          className="pl-10 pr-10 h-11"
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
                           required
@@ -329,7 +329,7 @@ const LoginPage = () => {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                          className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -359,7 +359,7 @@ const LoginPage = () => {
                       </label>
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading || !loginTermsAccepted}>
+                    <Button type="submit" className="w-full h-11 text-base" disabled={isLoading || !loginTermsAccepted}>
                       {isLoading ? t('loginPage.loggingIn') : t('loginPage.loginButton')}
                     </Button>
                   </form>
@@ -374,19 +374,19 @@ const LoginPage = () => {
                       <div className="space-y-2">
                         <Label htmlFor="otp-email">{t('auth.email')}</Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                           <Input
                             id="otp-email"
                             type="email"
                             placeholder="tu@email.com"
-                            className="pl-10"
+                            className="pl-10 h-11"
                             value={otpEmail}
                             onChange={(e) => setOtpEmail(e.target.value)}
                             required
                           />
                         </div>
                       </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
+                      <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
                         {isLoading ? t('loginPage.sending') : t('loginPage.sendCode')}
                       </Button>
                     </form>
@@ -407,7 +407,7 @@ const LoginPage = () => {
                           </InputOTPGroup>
                         </InputOTP>
                       </div>
-                      <Button type="submit" className="w-full" disabled={isLoading || otpCode.length !== 6}>
+                      <Button type="submit" className="w-full h-11 text-base" disabled={isLoading || otpCode.length !== 6}>
                         {isLoading ? t('loginPage.verifying') : t('loginPage.verifyCode')}
                       </Button>
                       <Button type="button" variant="ghost" className="w-full" onClick={() => { setOtpSent(false); setOtpCode(""); setError(null); setSuccess(null); }}>
@@ -496,12 +496,12 @@ const LoginPage = () => {
                         <div className="space-y-2">
                           <Label htmlFor="seller-store-name">{t('loginPage.storeName')} *</Label>
                           <div className="relative">
-                            <Store className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Store className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                             <Input
                               id="seller-store-name"
                               type="text"
                               placeholder={t('loginPage.storeNamePlaceholder')}
-                              className="pl-10"
+                              className="pl-10 h-11"
                               value={sellerStoreName}
                               onChange={(e) => setSellerStoreName(e.target.value)}
                               maxLength={80}
@@ -524,12 +524,12 @@ const LoginPage = () => {
                         <div className="space-y-2">
                           <Label htmlFor="grossiste-business-name">{t('loginPage.businessName')} *</Label>
                           <div className="relative">
-                            <Warehouse className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Warehouse className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                             <Input
                               id="grossiste-business-name"
                               type="text"
                               placeholder={t('loginPage.businessNamePlaceholder')}
-                              className="pl-10"
+                              className="pl-10 h-11"
                               value={grossisteBusinessName}
                               onChange={(e) => setGrossisteBusinessName(e.target.value)}
                               maxLength={120}
@@ -554,12 +554,12 @@ const LoginPage = () => {
                     <div className="space-y-2">
                       <Label htmlFor="register-name">{t('loginPage.fullName')}</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="register-name"
                           type="text"
                           placeholder={t('loginPage.yourName')}
-                          className="pl-10"
+                          className="pl-10 h-11"
                           value={registerName}
                           onChange={(e) => setRegisterName(e.target.value)}
                           required
@@ -570,12 +570,12 @@ const LoginPage = () => {
                     <div className="space-y-2">
                       <Label htmlFor="register-email">{t('auth.email')}</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="register-email"
                           type="email"
                           placeholder="tu@email.com"
-                          className="pl-10"
+                          className="pl-10 h-11"
                           value={registerEmail}
                           onChange={(e) => setRegisterEmail(e.target.value)}
                           required
@@ -586,12 +586,12 @@ const LoginPage = () => {
                     <div className="space-y-2">
                       <Label htmlFor="register-password">{t('loginPage.passwordLabel')}</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="register-password"
                           type={showPassword ? "text" : "password"}
                           placeholder={t('loginPage.minChars')}
-                          className="pl-10 pr-10"
+                          className="pl-10 pr-10 h-11"
                           value={registerPassword}
                           onChange={(e) => setRegisterPassword(e.target.value)}
                           required
@@ -599,7 +599,7 @@ const LoginPage = () => {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                          className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -609,12 +609,12 @@ const LoginPage = () => {
                     <div className="space-y-2">
                       <Label htmlFor="confirm-password">{t('loginPage.confirmPassword')}</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="confirm-password"
                           type={showPassword ? "text" : "password"}
                           placeholder={t('loginPage.repeatPassword')}
-                          className="pl-10"
+                          className="pl-10 h-11"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
