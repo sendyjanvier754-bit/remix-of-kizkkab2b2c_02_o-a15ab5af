@@ -97,18 +97,62 @@ const CartPage = () => {
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
 
-  // Fallback: when sellerCatalogId is missing (old cart items), resolve it from seller_catalog by SKU + storeId
+  // Fallback: when sellerCatalogId is missing (old cart items), resolve it from seller_catalog
+  // by SKU + store, then by variant SKU, then by the variant's source product.
   const { data: resolvedCatalogId } = useQuery({
-    queryKey: ['resolve-catalog-id', selectedItemForVariants?.sku, selectedItemForVariants?.storeId],
+    queryKey: ['resolve-catalog-id', selectedItemForVariants?.sku, selectedItemForVariants?.storeId, selectedItemForVariants?.variantId],
     queryFn: async () => {
-      const { data } = await supabase
+      const item = selectedItemForVariants!;
+
+      // 1) Direct catalog SKU match
+      const { data: direct } = await supabase
         .from('seller_catalog')
         .select('id')
-        .eq('seller_store_id', selectedItemForVariants!.storeId!)
-        .eq('sku', selectedItemForVariants!.sku)
+        .eq('seller_store_id', item.storeId!)
+        .eq('sku', item.sku)
         .eq('is_active', true)
         .maybeSingle();
-      return (data as any)?.id ?? null;
+      if ((direct as any)?.id) return (direct as any).id as string;
+
+      // 2) Match through the seller's variant rows (cart sku may be a variant sku)
+      const { data: scv } = await supabase
+        .from('seller_catalog_variants')
+        .select('seller_catalog_id, seller_catalog:seller_catalog_id(seller_store_id)')
+        .eq('sku', item.sku)
+        .limit(5);
+      const scvMatch = (scv || []).find((r: any) => r.seller_catalog?.seller_store_id === item.storeId);
+      if (scvMatch) return (scvMatch as any).seller_catalog_id as string;
+
+      // 3) Resolve the source product from the product variant, then find the catalog entry
+      let sourceProductId: string | null = null;
+      if (item.variantId) {
+        const { data: pv } = await supabase
+          .from('product_variants')
+          .select('product_id')
+          .eq('id', item.variantId)
+          .maybeSingle();
+        sourceProductId = (pv as any)?.product_id ?? null;
+      }
+      if (!sourceProductId) {
+        const { data: pvBySku } = await supabase
+          .from('product_variants')
+          .select('product_id')
+          .eq('sku', item.sku)
+          .limit(1)
+          .maybeSingle();
+        sourceProductId = (pvBySku as any)?.product_id ?? null;
+      }
+      if (!sourceProductId) return null;
+
+      const { data: byProduct } = await supabase
+        .from('seller_catalog')
+        .select('id')
+        .eq('seller_store_id', item.storeId!)
+        .eq('source_product_id', sourceProductId)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      return (byProduct as any)?.id ?? null;
     },
     enabled:
       !!selectedItemForVariants &&
@@ -117,6 +161,7 @@ const CartPage = () => {
       !!selectedItemForVariants.sku,
     staleTime: 60_000,
   });
+
 
   const effectiveCatalogId =
     selectedItemForVariants?.sellerCatalogId ?? resolvedCatalogId ?? null;
