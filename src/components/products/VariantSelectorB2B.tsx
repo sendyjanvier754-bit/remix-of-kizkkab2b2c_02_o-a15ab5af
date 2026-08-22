@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Package, Palette, Check, Ruler, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { AttributeCombination } from "@/types/b2b";
 
 interface VariantInfo {
@@ -62,12 +63,12 @@ interface VariantSelectorB2BProps {
 }
 
 // Attribute type display configuration
-const ATTRIBUTE_CONFIG: Record<string, { icon: typeof Palette; displayName: string; order: number }> = {
-  color: { icon: Palette, displayName: 'Color', order: 1 },
-  size: { icon: Ruler, displayName: 'Talla', order: 2 },
-  talla: { icon: Ruler, displayName: 'Talla', order: 2 },
-  age: { icon: Ruler, displayName: 'Edad', order: 3 },
-};
+const getAttributeConfig = (t: (k: string) => string): Record<string, { icon: typeof Palette; displayName: string; order: number }> => ({
+  color: { icon: Palette, displayName: t('catalogExtra.variantSelectorB2B.attributes.color', { defaultValue: 'Color' }), order: 1 },
+  size: { icon: Ruler, displayName: t('catalogExtra.variantSelectorB2B.attributes.size', { defaultValue: 'Talla' }), order: 2 },
+  talla: { icon: Ruler, displayName: t('catalogExtra.variantSelectorB2B.attributes.size', { defaultValue: 'Talla' }), order: 2 },
+  age: { icon: Ruler, displayName: t('catalogExtra.variantSelectorB2B.attributes.age', { defaultValue: 'Edad' }), order: 3 },
+});
 
 // Normalize attribute key to canonical type
 const normalizeAttributeType = (key: string): string => {
@@ -125,6 +126,8 @@ const VariantSelectorB2B = ({
   onSelectionChange,
   onVariantImageChange,
 }: VariantSelectorB2BProps) => {
+  const { t } = useTranslation();
+  const ATTRIBUTE_CONFIG = useMemo(() => getAttributeConfig(t), [t]);
   // Selected values for each attribute type
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
   // Quantities per variant
@@ -352,7 +355,7 @@ const VariantSelectorB2B = ({
       <div className="space-y-2">
         <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
           <Package className="w-4 h-4 text-primary" />
-          Variantes
+          {t('catalogExtra.variantSelectorB2B.variantsLabel')}
           <Badge variant="secondary" className="text-[10px]">{variants.length}</Badge>
         </h4>
         {variants.map(variant => {
@@ -372,7 +375,7 @@ const VariantSelectorB2B = ({
                 <span className="font-medium text-sm">{variant.label}</span>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="font-semibold text-primary">${variant.precio.toFixed(2)}</span>
-                  <span>· {variant.stock} disp.</span>
+                  <span>· {variant.stock} {t('catalogExtra.variantSelectorB2B.availableShort')}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -394,7 +397,7 @@ const VariantSelectorB2B = ({
         {totalQty > 0 && (
           <div className="p-3 bg-primary/5 rounded-lg border border-primary/20 mt-3">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">{totalQty} unidades</div>
+              <div className="text-sm font-medium">{totalQty} {t('catalogExtra.variantSelector.unitsFull')}</div>
               <div className="text-lg font-bold text-primary">${totalPrice.toFixed(2)}</div>
             </div>
           </div>
@@ -427,7 +430,7 @@ const VariantSelectorB2B = ({
               <Icon className="w-4 h-4 text-primary" />
               {config.displayName}
               <Badge variant="secondary" className="text-[10px]">
-                {availableOptions.length} opciones
+                {t('catalogExtra.variantSelectorB2B.options', { count: availableOptions.length })}
               </Badge>
             </h4>
 
@@ -455,7 +458,7 @@ const VariantSelectorB2B = ({
                           : "border-border hover:border-primary/50",
                         !isAvailable && "opacity-30 cursor-not-allowed"
                       )}
-                      title={`${value} - ${stock} disponibles`}
+                      title={t('catalogExtra.variantSelectorB2B.availableTooltip', { count: stock })}
                     >
                       {/* Priority: Image > Color Hex > Letter fallback */}
                       {optionImage ? (
@@ -528,7 +531,7 @@ const VariantSelectorB2B = ({
                           : "border-border bg-background hover:border-primary/50",
                         !isAvailable && "opacity-30 cursor-not-allowed line-through"
                       )}
-                      title={`${value} - ${stock} disponibles`}
+                      title={t('catalogExtra.variantSelectorB2B.availableTooltip', { count: stock })}
                     >
                       {value}
                     </button>

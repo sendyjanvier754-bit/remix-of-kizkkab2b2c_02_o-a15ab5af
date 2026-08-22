@@ -10,8 +10,10 @@ import { cn } from "@/lib/utils";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { useSEO } from "@/hooks/useSEO";
 import { useBranding } from "@/hooks/useBranding";
+import { useTranslation } from "react-i18next";
 
 const CategoriesPage = () => {
+  const { t } = useTranslation();
   const { getValue } = useBranding();
   useSEO({
     title: 'Categorías · Explora el catálogo Kizkka',
@@ -115,7 +117,7 @@ const CategoriesPage = () => {
               ))
             ) : (
               <div className="px-2 py-4 text-xs text-center text-gray-400">
-                Sin subcategorías
+                t('pagesExtra.categories.noSubcategories')
               </div>
             )}
           </aside>
@@ -130,7 +132,7 @@ const CategoriesPage = () => {
                     onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
                     className="text-xs text-gray-500 flex items-center hover:text-black"
                   >
-                    Ver todo <ChevronRight className="w-3 h-3 ml-1" />
+                    {t('pagesExtra.categories.viewAll')} <ChevronRight className="w-3 h-3 ml-1" />
                   </button>
                 </div>
 
@@ -157,12 +159,12 @@ const CategoriesPage = () => {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                    <p className="text-sm">No hay más subcategorías</p>
+                    <p className="text-sm">{t('pagesExtra.categories.noMoreSubcategories')}</p>
                     <button
                       onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
                       className="mt-4 text-xs text-blue-600 font-medium"
                     >
-                      Ver productos en {tName(selectedSecondary)}
+                      {t('pagesExtra.categories.viewProductsIn', { name: tName(selectedSecondary) })}
                     </button>
                   </div>
                 )}
@@ -171,12 +173,12 @@ const CategoriesPage = () => {
 
             {!selectedSecondary && secondaryCategories.length === 0 && selectedRoot && (
               <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                <p className="text-sm">No hay subcategorías</p>
+                <p className="text-sm">{t('pagesExtra.categories.noSubcategoriesMobile')}</p>
                 <button
                   onClick={() => navigate(`/categoria/${selectedRoot.slug}`)}
                   className="mt-4 text-xs text-blue-600 font-medium"
                 >
-                  Ver productos en {tName(selectedRoot)}
+                  {t('pagesExtra.categories.viewProductsIn', { name: tName(selectedRoot) })}
                 </button>
               </div>
             )}
@@ -195,9 +197,9 @@ const CategoriesPage = () => {
         {/* Breadcrumb */}
         <div className="mb-4">
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <button onClick={() => navigate("/")} className="hover:text-blue-600">Inicio</button>
+            <button onClick={() => navigate("/")} className="hover:text-blue-600">{t('pagesExtra.categories.home')}</button>
             <ChevronRight className="w-4 h-4" />
-            <span>Categorías</span>
+            <span>{t('pagesExtra.categories.categoriesLabel')}</span>
             {selectedRoot && (
               <>
                 <ChevronRight className="w-4 h-4" />
@@ -240,7 +242,7 @@ const CategoriesPage = () => {
           {/* Sidebar - Secondary Categories */}
           <aside className="w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Subcategorías</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">{t('pagesExtra.categories.subcategoriesTitle')}</h3>
               {secondaryCategories.length > 0 ? (
                 <div className="space-y-1">
                   {secondaryCategories.map(cat => (
@@ -259,7 +261,7 @@ const CategoriesPage = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">Sin subcategorías</p>
+                <p className="text-sm text-gray-400">{t('pagesExtra.categories.noSubcategories')}</p>
               )}
             </div>
           </aside>
@@ -275,7 +277,7 @@ const CategoriesPage = () => {
                       onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
                       className="text-sm text-blue-600 flex items-center hover:underline"
                     >
-                      Ver todos los productos <ChevronRight className="w-4 h-4 ml-1" />
+                      {t('pagesExtra.categories.viewAllProducts')} <ChevronRight className="w-4 h-4 ml-1" />
                     </button>
                   </div>
 
@@ -302,12 +304,12 @@ const CategoriesPage = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-                      <p className="text-base">No hay más subcategorías en este nivel</p>
+                      <p className="text-base">{t('pagesExtra.categories.noMoreSubcategoriesLevel')}</p>
                       <button
                         onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
                         className="mt-4 text-sm text-blue-600 font-medium hover:underline"
                       >
-                        Ver productos en {tName(selectedSecondary)}
+                        {t('pagesExtra.categories.viewProductsIn', { name: tName(selectedSecondary) })}
                       </button>
                     </div>
                   )}
@@ -316,12 +318,12 @@ const CategoriesPage = () => {
 
               {!selectedSecondary && secondaryCategories.length === 0 && selectedRoot && (
                 <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-                  <p className="text-base">Esta categoría no tiene subcategorías</p>
+                  <p className="text-base">{t('pagesExtra.categories.noSubcategoriesInCategory')}</p>
                   <button
                     onClick={() => navigate(`/categoria/${selectedRoot.slug}`)}
                     className="mt-4 text-sm text-blue-600 font-medium hover:underline"
                   >
-                    Ver productos en {tName(selectedRoot)}
+                    {t('pagesExtra.categories.viewProductsIn', { name: tName(selectedRoot) })}
                   </button>
                 </div>
               )}

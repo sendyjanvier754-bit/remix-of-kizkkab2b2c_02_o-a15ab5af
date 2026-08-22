@@ -1,0 +1,321 @@
+{
+  "profilePanels": {
+    "orders": {
+      "title": "My Orders",
+      "count_one": "{{count}} order",
+      "count_other": "{{count}} orders",
+      "itemsCount_one": "{{count}} item",
+      "itemsCount_other": "{{count}} items",
+      "status": {
+        "draft": "Draft",
+        "placed": "Confirmed",
+        "paid": "Paid",
+        "shipped": "On the way",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled",
+        "in_transit": "In transit",
+        "preparing": "Preparing"
+      },
+      "refundStatus": {
+        "none": "No refund",
+        "requested": "Requested",
+        "processing": "Processing",
+        "completed": "Completed",
+        "rejected": "Rejected"
+      },
+      "tabs": {
+        "all": "All",
+        "placed": "Confirmed",
+        "paid": "Paid",
+        "shipped": "On the way",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+      },
+      "logisticsB2B": {
+        "payment_pending": { "label": "Payment Pending", "description": "Waiting for payment confirmation" },
+        "payment_validated": { "label": "Payment Validated", "description": "Your payment was confirmed" },
+        "in_china": { "label": "In China", "description": "Product at origin warehouse" },
+        "in_transit_usa": { "label": "USA Transit", "description": "On its way to the United States" },
+        "in_haiti_hub": { "label": "Haiti Hub", "description": "Arrived at distribution center" },
+        "ready_for_delivery": { "label": "Ready for Delivery", "description": "Available for pickup/delivery" },
+        "delivered": { "label": "Delivered", "description": "Order completed" }
+      },
+      "logisticsB2C": {
+        "payment_pending": { "label": "Payment Pending", "description": "Waiting for payment confirmation" },
+        "payment_validated": { "label": "Payment Confirmed", "description": "Your payment was confirmed" },
+        "preparing": { "label": "Preparing", "description": "The seller is preparing your order" },
+        "shipped": { "label": "Shipped", "description": "Your order is on its way" },
+        "delivered": { "label": "Delivered", "description": "Order completed" }
+      },
+      "poStatus": {
+        "open": "Open",
+        "closed": "Closed",
+        "in_transit": "In Transit",
+        "arrived_hub": "At Hub"
+      },
+      "card": {
+        "orderNumber": "Order #{{id}}",
+        "andMore": "and {{count}} more",
+        "po": "PO: {{number}}",
+        "tracking": "Tracking:"
+      },
+      "returnDialog": {
+        "titleExisting": "Return Request",
+        "titleNew": "Request Return",
+        "orderSummary": "Order #{{id}} · ${{amount}}",
+        "existingMessage": "A return request already exists for this order.",
+        "close": "Close",
+        "reasonLabel": "Reason *",
+        "reasonPlaceholder": "Select the type of issue",
+        "reasons": {
+          "producto_danado": "Damaged / defective product",
+          "producto_incorrecto": "Incorrect product received",
+          "no_llego": "Order did not arrive",
+          "descripcion_incorrecta": "Does not match description",
+          "calidad": "Quality issue",
+          "otro": "Other reason"
+        },
+        "descriptionLabel": "Detailed description *",
+        "descriptionPlaceholder": "Describe the issue in detail...",
+        "amountLabel": "Amount to request (optional)",
+        "amountHelper": "Leave empty to request the full order amount",
+        "cancel": "Cancel",
+        "submit": "Submit Request"
+      },
+      "detail": {
+        "poCardTitle": "Consolidated Purchase Order",
+        "poNumber": "PO Number:",
+        "hybridId": "Hybrid ID:",
+        "chinaTracking": "China Tracking:",
+        "poStatusLabel": "PO Status:",
+        "trackingTitle": "Real-Time Tracking",
+        "syncedWithPO": "Synced with PO",
+        "updatedAt": "Updated: {{date}}",
+        "paymentValidatedAt": "Payment validated on {{date}}",
+        "shippingCardTitle": "Shipping Label",
+        "carrier": "Carrier",
+        "carrierUnspecified": "Not specified",
+        "trackingNumber": "Tracking Number",
+        "estimatedDelivery": "Estimated delivery:",
+        "trackWith": "Track with {{carrier}}",
+        "trackWithDefault": "Carrier",
+        "productsTitle": "Products ({{count}})",
+        "sku": "SKU: {{sku}} · Qty: {{qty}}",
+        "total": "Total",
+        "cancelledTitle": "Order Cancelled",
+        "cancelledReason": "Reason:",
+        "cancelledAt": "Cancelled on {{date}}",
+        "refundStatusTitle": "Refund Status",
+        "refundAmount": "Amount: {{currency}} ${{amount}}",
+        "reorder": "Buy Again",
+        "returnLabel": "Return:",
+        "requestReturn": "Request Return",
+        "cancelOrder": "Cancel Order"
+      },
+      "cancelDialog": {
+        "title": "Cancel Order",
+        "description": "This action cannot be undone. Please indicate the reason for the cancellation.",
+        "reasonLabel": "Cancellation reason *",
+        "reasonPlaceholder": "Write the reason...",
+        "refundLabel": "Request refund",
+        "refundHelper": "Your order was already paid. Amount: {{currency}} ${{amount}}",
+        "back": "Back",
+        "confirm": "Confirm Cancellation"
+      },
+      "empty": {
+        "message": "You have no orders in this category",
+        "cta": "Go to Store"
+      },
+      "pagination": "{{from}}-{{to}} of {{total}}",
+      "toast": {
+        "noItemsTitle": "No products to add",
+        "addedTitle": "Products added to cart",
+        "addedDescription": "{{count}} products added"
+      }
+    },
+    "favorites": {
+      "title": "My Favorites",
+      "emptyTitle": "You don't have favorites yet",
+      "emptyDescription": "Save products you like to see them here",
+      "exploreStores": "Explore stores",
+      "add": "Add",
+      "addedToCart": "Added to cart"
+    },
+    "addresses": {
+      "title": "My Addresses",
+      "new": "New",
+      "emptyTitle": "You have no saved addresses",
+      "addAddress": "Add address",
+      "default": "Default",
+      "setAsDefault": "Set as default",
+      "toastNameAddressRequired": "Name and address are required",
+      "toastSelectDepartment": "Select a department",
+      "toastSelectCommune": "Select a commune",
+      "dialog": {
+        "editTitle": "Edit address",
+        "createTitle": "New address",
+        "labelField": "Label *",
+        "labelPlaceholder": "Home, Work…",
+        "country": "Country",
+        "fullName": "Full name *",
+        "fullNamePlaceholder": "John Doe",
+        "phone": "Phone",
+        "department": "Department *",
+        "departmentPlaceholder": "Select department",
+        "commune": "Commune *",
+        "communePlaceholder": "Select commune",
+        "communePlaceholderDisabled": "Select a department first",
+        "streetAddress": "Address *",
+        "streetAddressPlaceholder": "Street, number, sector…",
+        "notes": "Delivery notes",
+        "notesPlaceholder": "Instructions for the courier…",
+        "setDefault": "Set as default",
+        "cancel": "Cancel",
+        "saveChanges": "Save changes",
+        "createAddress": "Create address"
+      },
+      "deleteDialog": {
+        "title": "Delete address?",
+        "description": "This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      }
+    },
+    "payment": {
+      "methodLabels": {
+        "bank": "Bank Transfer",
+        "moncash": "MonCash",
+        "natcash": "NatCash",
+        "stripe": "Credit Card"
+      },
+      "title": "My Payment Methods",
+      "subtitle": "Set up your accounts to pay and receive refunds",
+      "configured": "Configured",
+      "bank": {
+        "bankName": "Bank:",
+        "accountHolder": "Holder:",
+        "accountNumber": "Account:"
+      },
+      "mobile": {
+        "number": "Number:",
+        "name": "Name:"
+      },
+      "setDefault": "Set as default",
+      "edit": "Edit",
+      "delete": "Delete",
+      "notConfigured": "Not configured",
+      "configure": "Configure",
+      "noMethods": "No payment methods available at this time",
+      "stripeNotice": "🔒 Card details are processed securely by Stripe. We never store card numbers.",
+      "configDialog": {
+        "editTitle": "Edit {{name}}",
+        "configureTitle": "Configure {{name}}",
+        "aliasLabel": "Alias (optional)",
+        "aliasPlaceholder": "E.g.: My main {{name}}",
+        "bankNameLabel": "Bank name",
+        "bankNamePlaceholder": "E.g.: BNC, Digicel Bank…",
+        "accountHolderLabel": "Account holder",
+        "accountHolderPlaceholder": "Full name",
+        "accountNumberLabel": "Account number",
+        "accountNumberPlaceholder": "0000 0000 0000",
+        "accountTypeLabel": "Account type",
+        "accountTypePlaceholder": "Checking / Savings",
+        "phoneLabel": "Phone number",
+        "phonePlaceholder": "+509 XXXX XXXX",
+        "holderNameLabel": "Holder name",
+        "holderNamePlaceholder": "Name registered on the account",
+        "stripeTitle": "Credit/Debit Card",
+        "stripeDescription": "When saving, you'll be redirected to Stripe's secure form to add your card. Your card number is never stored on our servers.",
+        "stripeCurrentCard": "Current card: {{brand}} •••• {{last4}}",
+        "cancel": "Cancel",
+        "update": "Update",
+        "save": "Save"
+      },
+      "deleteDialog": {
+        "title": "Delete payment method?",
+        "description": "The saved information will be deleted. You can set it up again anytime.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      }
+    },
+    "returns": {
+      "title": "My Returns",
+      "newRequest": "New request",
+      "infoBanner": "For B2C order returns, the seller will review your request. For B2B orders, the admin will manage the process.",
+      "emptyTitle": "You have no return requests",
+      "emptyDescription": "When you request a return it will appear here",
+      "orderNumber": "Order #{{id}}",
+      "noReason": "No reason",
+      "amountRequested": "Amount requested:",
+      "amountApproved": "Approved:",
+      "sellerNotes": "Seller: \"{{notes}}\"",
+      "reasonTypes": {
+        "damaged": "Damaged product",
+        "wrong_item": "Wrong product",
+        "not_as_desc": "Not as described",
+        "missing_part": "Missing part",
+        "other": "Other reason"
+      },
+      "dialog": {
+        "title": "New Return Request",
+        "orderIdLabel": "Order ID *",
+        "orderIdPlaceholder": "Paste the order ID",
+        "orderIdHelper": "You'll find it in your order details",
+        "orderTypeLabel": "Order type *",
+        "orderTypeB2C": "B2C — Online store",
+        "orderTypeB2B": "B2B — Wholesale catalog",
+        "reasonTypeLabel": "Return reason *",
+        "reasonTypePlaceholder": "Select a reason",
+        "descriptionLabel": "Detailed description *",
+        "descriptionPlaceholder": "Explain what happened with the product…",
+        "amountLabel": "Amount to refund (optional)",
+        "cancel": "Cancel",
+        "submit": "Submit request"
+      }
+    },
+    "paymentHub": {
+      "title": "Payment Center",
+      "description": "Manage your methods, review pending payments and transaction history.",
+      "tabs": {
+        "methods": "Methods",
+        "pending": "Pending",
+        "history": "History"
+      },
+      "status": {
+        "paid": "Paid",
+        "pendingValidation": "Under review",
+        "pending": "Pending"
+      },
+      "noPending": "You have no pending payments.",
+      "noHistory": "You have no payment history yet.",
+      "close": "Close"
+    },
+    "support": {
+      "title": "Help Center",
+      "subtitle": "How can we help you?",
+      "liveChat": {
+        "label": "Live chat",
+        "description": "Talk to support now"
+      },
+      "whatsapp": {
+        "label": "WhatsApp",
+        "description": "Support and sales via WhatsApp"
+      },
+      "call": {
+        "label": "Call",
+        "description": "Coming soon"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Coming soon"
+      }
+    },
+    "completeProfile": {
+      "title": "Complete your account",
+      "description": "Some data is missing from your profile{{phoneNote}}. Complete it to speed up your purchases and get faster support.",
+      "phoneNote": " (phone)",
+      "later": "Later",
+      "completeNow": "Complete now"
+    }
+  }
+}

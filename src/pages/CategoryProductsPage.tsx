@@ -13,6 +13,7 @@ import { useSellerProductsByCategory } from "@/hooks/useSellerProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProductCard from "@/components/landing/ProductCard";
 import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
+import { useTranslation } from "react-i18next";
 
 type AnyProduct = Record<string, any>;
 
@@ -22,6 +23,7 @@ type FilterOptions = {
 };
 
 const CategoryProductsPage = () => {
+  const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { role } = useAuth();
@@ -173,17 +175,17 @@ const CategoryProductsPage = () => {
   const handleViewStore = (sellerId: string) => navigate(`/tienda/${sellerId}`);
 
   const getSku = (p: AnyProduct) => p.sku_interno ?? p.sku ?? p.id;
-  const getName = (p: AnyProduct) => p.nombre ?? p.name ?? "Producto";
+  const getName = (p: AnyProduct) => p.nombre ?? p.name ?? t('pagesExtra.categoryProducts.defaultProductName');
   const getPrice = (p: AnyProduct) => p.precio ?? 0;  // B2C price (default Supabase field)
   const getImage = (p: AnyProduct) => p.imagen ?? (p.galeria_imagenes && p.galeria_imagenes[0]) ?? p.image ?? "https://via.placeholder.com/400x500?text=Sin+imagen";
-  const getSeller = (p: AnyProduct) => p.vendedor ?? p.seller ?? { id: "", nombre: "Tienda" };
+  const getSeller = (p: AnyProduct) => p.vendedor ?? p.seller ?? { id: "", nombre: t('pagesExtra.categoryProducts.defaultStoreName') };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
         {!isMobile && <GlobalHeader />}
         <main className={`container mx-auto px-4 ${isMobile ? 'pb-20' : 'pb-8'}`}>
-          <h1 className="text-3xl font-bold mb-8">Cargando...</h1>
+          <h1 className="text-3xl font-bold mb-8">{t('pagesExtra.categoryProducts.loading')}</h1>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="aspect-square" />
@@ -203,9 +205,9 @@ const CategoryProductsPage = () => {
         {/* Breadcrumb */}
         <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <button onClick={() => navigate("/")} className="hover:text-blue-600">Inicio</button>
+            <button onClick={() => navigate("/")} className="hover:text-blue-600">{t('pagesExtra.categoryProducts.home')}</button>
             <ChevronRight className="w-4 h-4" />
-            <button onClick={() => navigate("/categorias")} className="hover:text-blue-600">Categorías</button>
+            <button onClick={() => navigate("/categorias")} className="hover:text-blue-600">{t('pagesExtra.categoryProducts.categoriesLabel')}</button>
             <ChevronRight className="w-4 h-4" />
             <span className="capitalize">{displayCategoryName ?? slug?.replace("-", " ")}</span>
           </div>
@@ -214,7 +216,7 @@ const CategoryProductsPage = () => {
         {/* Category Header */}
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-gray-900 capitalize mb-1">{displayCategoryName ?? slug}</h1>
-          <p className="text-sm text-gray-600">{visibleProductsCount} productos disponibles</p>
+          <p className="text-sm text-gray-600">{t('pagesExtra.categoryProducts.productsAvailable', { count: visibleProductsCount })}</p>
         </div>
 
         {/* Compact Filters Bar */}
@@ -229,18 +231,18 @@ const CategoryProductsPage = () => {
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as FilterOptions["sortBy"] })}
                 className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-fit"
               >
-                <option value="newest">Más Nuevo</option>
-                <option value="price_asc">Precio: ↑</option>
-                <option value="price_desc">Precio: ↓</option>
-                <option value="rating">⭐ Rating</option>
+                <option value="newest">{t('pagesExtra.categoryProducts.sortNewest')}</option>
+                <option value="price_asc">{t('pagesExtra.categoryProducts.sortPriceAsc')}</option>
+                <option value="price_desc">{t('pagesExtra.categoryProducts.sortPriceDesc')}</option>
+                <option value="rating">{t('pagesExtra.categoryProducts.sortRating')}</option>
               </select>
 
               {/* Price Range Compact */}
               <div className="flex items-center gap-1">
-                <span className="text-sm text-gray-600">Precio:</span>
+                <span className="text-sm text-gray-600">{t('pagesExtra.categoryProducts.priceLabel')}</span>
                 <input 
                   type="number" 
-                  placeholder="Mín" 
+                  placeholder={t('pagesExtra.categoryProducts.min')} 
                   value={priceMin ?? ""}
                   onChange={(e) => { setPriceMin(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
                   className="w-16 px-2 py-1.5 border border-gray-300 rounded text-sm"
@@ -248,7 +250,7 @@ const CategoryProductsPage = () => {
                 <span className="text-gray-400">-</span>
                 <input 
                   type="number" 
-                  placeholder="Máx" 
+                  placeholder={t('pagesExtra.categoryProducts.max')} 
                   value={priceMax ?? ""}
                   onChange={(e) => { setPriceMax(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
                   className="w-16 px-2 py-1.5 border border-gray-300 rounded text-sm"
@@ -274,7 +276,7 @@ const CategoryProductsPage = () => {
                     onChange={(e) => { setSelectedSubcategory(e.target.value || null); setCurrentPage(1); }}
                     className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Todas</option>
+                    <option value="">{t('pagesExtra.categoryProducts.all')}</option>
                     {subcategories.map((s: any) => (
                       <option key={s.id} value={s.id}>{getSubTranslated(s).name || s.name}</option>
                     ))}
@@ -287,7 +289,7 @@ const CategoryProductsPage = () => {
                   onChange={(e) => { setMinRating(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
                   className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Rating</option>
+                  <option value="">{t('pagesExtra.categoryProducts.ratingLabel')}</option>
                   <option value="4">⭐ 4+</option>
                   <option value="3">⭐ 3+</option>
                   <option value="2">⭐ 2+</option>
@@ -301,7 +303,7 @@ const CategoryProductsPage = () => {
                     onChange={(e) => { setOnlyPromo(e.target.checked); setCurrentPage(1); }}
                     className="w-4 h-4 rounded border-gray-300"
                   />
-                  <span>Promociones</span>
+                  <span>{t('pagesExtra.categoryProducts.promotions')}</span>
                 </label>
 
                 {/* Stock Filter */}
@@ -312,7 +314,7 @@ const CategoryProductsPage = () => {
                     onChange={(e) => { setInStockOnly(e.target.checked); setCurrentPage(1); }}
                     className="w-4 h-4 rounded border-gray-300"
                   />
-                  <span>En Stock</span>
+                  <span>{t('pagesExtra.categoryProducts.inStock')}</span>
                 </label>
 
                 {/* Clear Filters */}
@@ -329,7 +331,7 @@ const CategoryProductsPage = () => {
                     }}
                     className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 font-medium"
                   >
-                    Limpiar
+                    {t('pagesExtra.categoryProducts.clear')}
                   </button>
                 )}
               </div>
@@ -374,11 +376,11 @@ const CategoryProductsPage = () => {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-12">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Anterior</button>
+            <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">{t('pagesExtra.categoryProducts.previous')}</button>
             {Array.from({ length: totalPages }).map((_, i) => (
               <button key={i + 1} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded-lg ${currentPage === i + 1 ? "bg-blue-600 text-white" : "border border-gray-300 hover:bg-gray-50"}`}>{i + 1}</button>
             ))}
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Siguiente</button>
+            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">{t('pagesExtra.categoryProducts.next')}</button>
           </div>
         )}
       </main>

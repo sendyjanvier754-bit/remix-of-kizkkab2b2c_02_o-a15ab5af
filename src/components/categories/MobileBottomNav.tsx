@@ -6,9 +6,11 @@ import { UserRole } from "@/types/auth";
 import { useB2CCartItems } from "@/hooks/useB2CCartItems";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const MobileBottomNav = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { role, user } = useAuth();
@@ -35,17 +37,17 @@ const MobileBottomNav = () => {
   
   // Different nav items based on role - B2B users get B2B link, regular users/public get account link
   const navItems = isB2B ? [
-    { href: "/", icon: Home, label: "Inicio" },
-    { href: categoriesLink, icon: LayoutGrid, label: "Categorías" },
+    { href: "/", icon: Home, label: t("bottomNav.home") },
+    { href: categoriesLink, icon: LayoutGrid, label: t("bottomNav.categories") },
     { href: "/seller/adquisicion-lotes", icon: Package, label: "B2B" },
-    { href: cartLink, icon: ShoppingBag, label: "Carrito", badge: cartBadge },
-    { href: "/tendencias", icon: Sparkles, label: "Tendencias", hasDot: true },
+    { href: cartLink, icon: ShoppingBag, label: t("bottomNav.cart"), badge: cartBadge },
+    { href: "/tendencias", icon: Sparkles, label: t("bottomNav.trends"), hasDot: true },
   ] : [
-    { href: "/", icon: Home, label: "Inicio" },
-    { href: categoriesLink, icon: LayoutGrid, label: "Categorías" },
-    { href: "/tendencias", icon: Sparkles, label: "Tendencias", hasDot: true },
-    { href: cartLink, icon: ShoppingBag, label: "Carrito", badge: cartBadge },
-    { href: user ? "/cuenta" : "/login", icon: User, label: user ? "Cuenta" : "Login" },
+    { href: "/", icon: Home, label: t("bottomNav.home") },
+    { href: categoriesLink, icon: LayoutGrid, label: t("bottomNav.categories") },
+    { href: "/tendencias", icon: Sparkles, label: t("bottomNav.trends"), hasDot: true },
+    { href: cartLink, icon: ShoppingBag, label: t("bottomNav.cart"), badge: cartBadge },
+    { href: user ? "/cuenta" : "/login", icon: User, label: user ? t("bottomNav.account") : t("bottomNav.login") },
   ];
 
   return (

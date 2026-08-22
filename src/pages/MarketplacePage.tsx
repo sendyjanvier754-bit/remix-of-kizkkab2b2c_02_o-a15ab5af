@@ -18,8 +18,10 @@ import useVariantDrawerStore from "@/stores/useVariantDrawerStore";
 import { useSEO } from "@/hooks/useSEO";
 import { useBranding } from "@/hooks/useBranding";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { useTranslation } from "react-i18next";
 
 const MarketplacePage = () => {
+  const { t } = useTranslation();
   const { getValue } = useBranding();
   const isMobile = useIsMobile();
   const {
@@ -141,7 +143,7 @@ const MarketplacePage = () => {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">
-            {isClientPreview ? "Marketplace" : "Adquisición de Lotes"}
+            {isClientPreview ? t('pagesExtra.marketplace.titleClientPreview') : t('pagesExtra.marketplace.titleDefault')}
           </h1>
         </div>
 
@@ -151,19 +153,19 @@ const MarketplacePage = () => {
             {/* Search */}
             <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar productos..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 text-sm h-9" />
+              <Input placeholder={t('pagesExtra.marketplace.searchPlaceholder')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 text-sm h-9" />
             </div>
 
             {/* Sort Dropdown */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full md:w-[140px] h-9 text-sm px-2">
-                <SelectValue placeholder="Ordenar" />
+                <SelectValue placeholder={t('pagesExtra.marketplace.sortPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">Más Nuevo</SelectItem>
-                <SelectItem value="price-asc">Precio ↑</SelectItem>
-                <SelectItem value="price-desc">Precio ↓</SelectItem>
-                <SelectItem value="name">Nombre</SelectItem>
+                <SelectItem value="newest">{t('pagesExtra.marketplace.sortNewest')}</SelectItem>
+                <SelectItem value="price-asc">{t('pagesExtra.marketplace.sortPriceAsc')}</SelectItem>
+                <SelectItem value="price-desc">{t('pagesExtra.marketplace.sortPriceDesc')}</SelectItem>
+                <SelectItem value="name">{t('pagesExtra.marketplace.sortName')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -183,7 +185,7 @@ const MarketplacePage = () => {
             <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Price Range */}
               <div className="space-y-2">
-                <label className="text-xs font-medium">Precio mínimo</label>
+                <label className="text-xs font-medium">{t('pagesExtra.marketplace.minPriceLabel')}</label>
                 <Input
                   type="number"
                   placeholder="0"
@@ -193,7 +195,7 @@ const MarketplacePage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-medium">Precio máximo</label>
+                <label className="text-xs font-medium">{t('pagesExtra.marketplace.maxPriceLabel')}</label>
                 <Input
                   type="number"
                   placeholder="9999"
@@ -213,7 +215,7 @@ const MarketplacePage = () => {
                   className="h-4 w-4"
                 />
                 <label htmlFor="stock-filter" className="text-sm font-medium cursor-pointer">
-                  Solo con stock
+                  {t('pagesExtra.marketplace.onlyStock')}
                 </label>
               </div>
 
@@ -227,35 +229,35 @@ const MarketplacePage = () => {
                   className="h-4 w-4"
                 />
                 <label htmlFor="promo-filter" className="text-sm font-medium cursor-pointer">
-                  Solo promociones
+                  {t('pagesExtra.marketplace.onlyPromos')}
                 </label>
               </div>
 
               {/* Rating Filter */}
               <div className="space-y-2">
-                <label className="text-xs font-medium">Calificación mínima</label>
+                <label className="text-xs font-medium">{t('pagesExtra.marketplace.minRatingLabel')}</label>
                 <Select value={minRating.toString()} onValueChange={(val) => setMinRating(Number(val))}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">Todas</SelectItem>
-                    <SelectItem value="3">3+ estrellas</SelectItem>
-                    <SelectItem value="4">4+ estrellas</SelectItem>
-                    <SelectItem value="5">5 estrellas</SelectItem>
+                    <SelectItem value="0">{t('pagesExtra.marketplace.allRatings')}</SelectItem>
+                    <SelectItem value="3">{t('pagesExtra.marketplace.rating3')}</SelectItem>
+                    <SelectItem value="4">{t('pagesExtra.marketplace.rating4')}</SelectItem>
+                    <SelectItem value="5">{t('pagesExtra.marketplace.rating5')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Store Filter */}
               <div className="space-y-2">
-                <label className="text-xs font-medium">Tienda</label>
+                <label className="text-xs font-medium">{t('pagesExtra.marketplace.storeLabel')}</label>
                 <Select value={selectedStore} onValueChange={setSelectedStore}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas las tiendas</SelectItem>
+                    <SelectItem value="all">{t('pagesExtra.marketplace.allStores')}</SelectItem>
                     {stores.map(store => (
                       <SelectItem key={store.id} value={store.id}>
                         {store.name}
@@ -269,7 +271,7 @@ const MarketplacePage = () => {
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs col-span-full">
                   <X className="h-3 w-3 mr-1" />
-                  Limpiar filtros
+                  {t('pagesExtra.marketplace.clearFilters')}
                 </Button>
               )}
             </div>
@@ -293,13 +295,13 @@ const MarketplacePage = () => {
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-16">
             <Package className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-            <p className="text-lg font-medium text-foreground mb-2">No hay productos disponibles</p>
+            <p className="text-lg font-medium text-foreground mb-2">{t('pagesExtra.marketplace.noProductsAvailable')}</p>
             <p className="text-muted-foreground text-sm mb-4">
-              {hasActiveFilters ? "Intenta ajustar los filtros de búsqueda" : "Los vendedores aún no han publicado productos"}
+              {hasActiveFilters ? t('pagesExtra.marketplace.adjustFilters') : t('pagesExtra.marketplace.noSellersYet')}
             </p>
             {hasActiveFilters && (
               <Button variant="outline" onClick={clearFilters}>
-                Limpiar filtros
+                {t('pagesExtra.marketplace.clearFilters')}
               </Button>
             )}
           </div>
@@ -339,7 +341,7 @@ const MarketplacePage = () => {
                       {/* Stock Badge */}
                       {product.stock <= 0 && (
                         <div className="absolute top-2 right-2 px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded font-medium">
-                          Agotado
+                          {t('pagesExtra.marketplace.outOfStock')}
                         </div>
                       )}
                     </div>
@@ -359,7 +361,7 @@ const MarketplacePage = () => {
                       </span>
                       {product.stock > 0 && (
                         <span className="text-xs text-muted-foreground">
-                          Stock: {product.stock}
+                          {t('pagesExtra.marketplace.stockLabel', { count: product.stock })}
                         </span>
                       )}
                     </div>

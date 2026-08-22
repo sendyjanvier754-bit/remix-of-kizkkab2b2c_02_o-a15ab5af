@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ShoppingCart, ShoppingBag } from 'lucide-react';
 
 interface CartModeTabsProps {
@@ -11,6 +12,7 @@ interface CartModeTabsProps {
  * Renders as navigation tabs at the top of cart pages.
  */
 const CartModeTabs = ({ b2cCount = 0, b2bCount = 0 }: CartModeTabsProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,7 +30,7 @@ const CartModeTabs = ({ b2cCount = 0, b2bCount = 0 }: CartModeTabsProps) => {
         }`}
       >
         <ShoppingCart className="w-4 h-4" />
-        <span className="whitespace-nowrap">Mi Carrito</span>
+        <span className="whitespace-nowrap">{t('cartExtra.myCart')}</span>
         {b2cCount > 0 && (
           <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
             isB2C ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
@@ -46,7 +48,7 @@ const CartModeTabs = ({ b2cCount = 0, b2bCount = 0 }: CartModeTabsProps) => {
         }`}
       >
         <ShoppingBag className="w-4 h-4" />
-        <span className="whitespace-nowrap">Carrito B2B</span>
+        <span className="whitespace-nowrap">{t('cartExtra.b2bCart')}</span>
         {b2bCount > 0 && (
           <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
             isB2B ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'

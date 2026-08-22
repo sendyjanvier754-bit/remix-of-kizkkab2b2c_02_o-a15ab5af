@@ -77,7 +77,7 @@ export const B2CPaymentStateOverlay = ({
   };
 
   const bankDetails = {
-    bank: 'Banco Nacional de Haití',
+    bank: t('cartExtra.nationalBankHaiti'),
     account: '001-234567-89',
     beneficiary: `${platformName} SRL`,
   };
@@ -99,16 +99,16 @@ export const B2CPaymentStateOverlay = ({
     return (
       <Card className="p-8 text-center">
         <Loader2 className="h-16 w-16 animate-spin text-blue-600 mx-auto mb-4" />
-        <h2 className="text-xl font-bold mb-2">Procesando Pago</h2>
+        <h2 className="text-xl font-bold mb-2">{t('cartExtra.processingPayment')}</h2>
         <p className="text-muted-foreground mb-4">
-          Esperando confirmación bancaria...
+          {t('cartExtra.waitingBankConfirmation')}
         </p>
         <div className="bg-blue-50 p-4 rounded-lg mb-4">
           <p className="text-sm text-blue-800">
-            <strong>Orden:</strong> {order.id.slice(0, 8).toUpperCase()}
+            <strong>{t('cartExtra.orderLabel')}:</strong> {order.id.slice(0, 8).toUpperCase()}
           </p>
           <p className="text-sm text-blue-800">
-            <strong>Total:</strong> ${order.total_amount.toFixed(2)}
+            <strong>{t('common.total')}:</strong> ${order.total_amount.toFixed(2)}
           </p>
         </div>
         <Button
@@ -116,7 +116,7 @@ export const B2CPaymentStateOverlay = ({
           onClick={onCancelOrder}
           className="border-red-300 text-red-600 hover:bg-red-50"
         >
-          Cancelar Pedido
+          {t('cartExtra.cancelOrder')}
         </Button>
       </Card>
     );
@@ -125,7 +125,7 @@ export const B2CPaymentStateOverlay = ({
   // Pending Validation - MonCash/Transfer (estilo SellerCheckout)
   if (order.payment_status === 'pending_validation') {
     const isMonCash = order.payment_method === 'moncash';
-    const methodLabel = isMonCash ? 'MonCash' : 'Transferencia Bancaria';
+    const methodLabel = isMonCash ? 'MonCash' : t('payments.bankTransfer');
 
     return (
       <>
@@ -135,13 +135,13 @@ export const B2CPaymentStateOverlay = ({
               <Check className="w-10 h-10 text-green-600" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold mb-2">¡Pedido Creado!</h1>
+          <h1 className="text-2xl font-bold mb-2">{t('cartExtra.orderCreated')}</h1>
           <p className="text-muted-foreground mb-4">
-            Tu pedido ha sido creado exitosamente. Completa el pago con {methodLabel} para confirmarlo.
+            {t('cartExtra.orderCreatedMessage', { method: methodLabel })}
           </p>
 
           <div className="bg-muted p-4 rounded-lg mb-4">
-            <p className="text-sm text-muted-foreground">ID del Pedido</p>
+            <p className="text-sm text-muted-foreground">{t('cartExtra.orderIdLabel')}</p>
             <p className="font-mono font-bold">{order.id.slice(0, 8).toUpperCase()}</p>
             <p className="text-lg font-bold mt-2">${order.total_amount.toFixed(2)}</p>
           </div>
@@ -150,9 +150,9 @@ export const B2CPaymentStateOverlay = ({
             <div className="flex items-start gap-3 mb-3">
               <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-yellow-800">Pendiente de Verificación</p>
+                <p className="font-semibold text-yellow-800">{t('cartExtra.pendingVerificationTitle')}</p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Realiza el pago con los siguientes datos y luego sube el comprobante.
+                  {t('cartExtra.payWithDetailsAndUpload')}
                 </p>
               </div>
             </div>
@@ -160,7 +160,7 @@ export const B2CPaymentStateOverlay = ({
             {isMonCash ? (
               <div className="space-y-2 text-sm pl-8">
                 <div className="flex justify-between items-center">
-                  <span className="text-yellow-800">Número MonCash:</span>
+                  <span className="text-yellow-800">{t('cartExtra.moncashNumberLabel')}:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold">{moncashDetails.number}</span>
                     <Button
@@ -174,18 +174,18 @@ export const B2CPaymentStateOverlay = ({
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-yellow-800">Nombre:</span>
+                  <span className="text-yellow-800">{t('cartExtra.nameLabel')}:</span>
                   <span className="font-semibold">{moncashDetails.name}</span>
                 </div>
               </div>
             ) : (
               <div className="space-y-2 text-sm pl-8">
                 <div className="flex justify-between">
-                  <span className="text-yellow-800">Banco:</span>
+                  <span className="text-yellow-800">{t('cartExtra.bankLabel')}:</span>
                   <span className="font-semibold">{bankDetails.bank}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-yellow-800">Cuenta:</span>
+                  <span className="text-yellow-800">{t('cartExtra.accountLabel')}:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold">{bankDetails.account}</span>
                     <Button
@@ -199,7 +199,7 @@ export const B2CPaymentStateOverlay = ({
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-yellow-800">Beneficiario:</span>
+                  <span className="text-yellow-800">{t('cartExtra.beneficiaryLabel')}:</span>
                   <span className="font-semibold">{bankDetails.beneficiary}</span>
                 </div>
               </div>
@@ -212,14 +212,14 @@ export const B2CPaymentStateOverlay = ({
               onClick={onCancelOrder}
               className="border-red-300 text-red-600 hover:bg-red-50"
             >
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() => setProofModalOpen(true)}
               className="bg-green-600 hover:bg-green-700"
             >
               <Upload className="h-4 w-4 mr-2" />
-              Ya Realicé el Pago
+              {t('cartExtra.iAlreadyPaid')}
             </Button>
           </div>
         </Card>
@@ -230,22 +230,22 @@ export const B2CPaymentStateOverlay = ({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5 text-green-600" />
-                Enviar Comprobante de Pago
+                {t('cartExtra.sendPaymentProof')}
               </DialogTitle>
               <DialogDescription>
-                Sube el comprobante de tu pago (captura de pantalla o PDF) y la referencia de la transacción. El admin lo verificará y confirmará tu pedido.
+                {t('cartExtra.uploadProofInstructions')}
               </DialogDescription>
             </DialogHeader>
 
             <div className="py-2 space-y-4">
               {/* Amount reminder */}
               <div className="bg-muted rounded-lg p-3 flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total pagado</span>
+                <span className="text-sm text-muted-foreground">{t('cartExtra.totalPaid')}</span>
                 <span className="font-bold text-lg">${order.total_amount.toFixed(2)}</span>
               </div>
 
               <div>
-                <p className="text-sm font-medium mb-2">Adjunta tu comprobante *</p>
+                <p className="text-sm font-medium mb-2">{t('cartExtra.attachProof')} *</p>
                 <PaymentProofUpload
                   orderId={order.id}
                   existingUrl={proofUrl}
@@ -257,7 +257,7 @@ export const B2CPaymentStateOverlay = ({
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-xs text-amber-700">
-                  <strong>Nota:</strong> Tu pago permanecerá como «pendiente de validación» hasta que el administrador lo confirme. Recibirás una notificación cuando sea aprobado.
+                  <strong>{t('cartExtra.noteLabel')}:</strong> {t('cartExtra.pendingValidationNote')}
                 </p>
               </div>
             </div>
@@ -268,7 +268,7 @@ export const B2CPaymentStateOverlay = ({
                 onClick={() => setProofModalOpen(false)}
                 disabled={isConfirming}
               >
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleConfirmWithProof}
@@ -280,7 +280,7 @@ export const B2CPaymentStateOverlay = ({
                 ) : (
                   <CheckCircle className="h-4 w-4 mr-2" />
                 )}
-                Enviar Comprobante
+                {t('cartExtra.sendProof')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -304,22 +304,22 @@ export const B2CPaymentStateOverlay = ({
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Check className="w-10 h-10 text-green-600" />
         </div>
-        <h2 className="text-2xl font-bold mb-2">¡Pago Confirmado!</h2>
+        <h2 className="text-2xl font-bold mb-2">{t('cartExtra.paymentConfirmed')}</h2>
         <p className="text-muted-foreground mb-4">
-          Tu pedido ha sido procesado exitosamente.
+          {t('cartExtra.orderProcessedSuccessfully')}
         </p>
 
         <div className="bg-muted p-4 rounded-lg mb-6">
-          <p className="text-sm text-muted-foreground">Número de Pedido</p>
+          <p className="text-sm text-muted-foreground">{t('cartExtra.orderIdLabel')}</p>
           <p className="font-mono font-bold text-lg">{order.id.slice(0, 8).toUpperCase()}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button variant="outline" onClick={() => navigate('/mis-compras')}>
-            Ver Mis Pedidos
+            {t('cartExtra.viewMyOrders')}
           </Button>
           <Button onClick={() => navigate('/')} className="bg-[#071d7f] hover:bg-[#0a2a9f]">
-            Seguir Comprando
+            {t('cartExtra.continueShopping')}
           </Button>
         </div>
       </Card>
@@ -334,20 +334,20 @@ export const B2CPaymentStateOverlay = ({
           <XCircle className="w-10 h-10 text-red-600" />
         </div>
         <h2 className="text-2xl font-bold mb-2">
-          {order.payment_status === 'expired' ? 'Pedido Expirado' : 'Pago Fallido'}
+          {order.payment_status === 'expired' ? t('cartExtra.orderExpired') : t('cartExtra.paymentFailed')}
         </h2>
         <p className="text-muted-foreground mb-6">
           {order.payment_status === 'expired'
-            ? 'El tiempo de reserva ha expirado. Los productos han vuelto al inventario.'
-            : 'Hubo un problema procesando tu pago. Por favor intenta nuevamente.'}
+            ? t('cartExtra.reservationExpiredMessage')
+            : t('cartExtra.paymentFailedMessage')}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button variant="outline" onClick={() => navigate('/carrito')}>
-            Volver al Carrito
+            {t('cartExtra.backToCart')}
           </Button>
           <Button onClick={() => navigate('/')} className="bg-[#071d7f] hover:bg-[#0a2a9f]">
-            Seguir Comprando
+            {t('cartExtra.continueShopping')}
           </Button>
         </div>
       </Card>

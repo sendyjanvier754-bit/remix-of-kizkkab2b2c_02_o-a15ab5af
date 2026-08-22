@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { PageWrapper } from "@/components/PageWrapper";
@@ -36,6 +37,7 @@ import { PaymentHubModal } from "@/components/profile/PaymentHubModal";
 type ActiveSection = 'orders' | 'favorites' | 'addresses' | 'payment' | 'settings' | 'returns';
 
 export function UserProfilePage() {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { openUpgradeModal } = useSellerUpgrade();
@@ -64,10 +66,10 @@ export function UserProfilePage() {
     try {
       setIsLoading(true);
       await signOut();
-      toast.success("Sesión cerrada");
+      toast.success(t("userProfile.sessionClosed"));
       navigate("/");
     } catch {
-      toast.error("Error al cerrar sesión");
+      toast.error(t("userProfile.logoutError"));
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +99,7 @@ export function UserProfilePage() {
           <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">{getInitials()}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <h1 className="text-base font-bold text-foreground truncate">{user?.name || "Usuario"}</h1>
+          <h1 className="text-base font-bold text-foreground truncate">{user?.name || t("userProfile.user")}</h1>
           {user?.phone && (
             <span className="text-xs text-muted-foreground truncate">{user.phone}</span>
           )}
@@ -116,18 +118,18 @@ export function UserProfilePage() {
       {/* ── Mis Pedidos: 5 icon grid ── */}
       <div className="bg-background mt-2 px-4 py-3">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[15px] font-bold text-foreground">Mis pedidos</h2>
+          <h2 className="text-[15px] font-bold text-foreground">{t("userProfile.myOrders")}</h2>
           <button onClick={() => navigate("/mis-compras")} className="text-xs text-primary flex items-center gap-0.5 font-medium">
-            Ver todo <ChevronRight className="w-3.5 h-3.5" />
+            {t("userProfile.viewAll")} <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
         <div className="grid grid-cols-5 gap-1">
           {[
-            { icon: <Wallet className="w-7 h-7" />, label: "Pendientes de pago", count: pendingPayment, action: () => navigate("/mis-compras") },
-            { icon: <Package className="w-7 h-7" />, label: "Pendientes de envío", count: pendingShipment, action: () => navigate("/mis-compras") },
-            { icon: <Truck className="w-7 h-7" />, label: "Enviado", count: shipped, action: () => navigate("/mis-compras") },
-            { icon: <Star className="w-7 h-7" />, label: "Añadir reseñas", count: 0, action: () => navigate("/mis-compras") },
-            { icon: <RotateCcw className="w-7 h-7" />, label: "Devoluciones", count: pendingReturns, action: () => setActiveSection('returns') },
+            { icon: <Wallet className="w-7 h-7" />, label: t("userProfile.pendingPayment"), count: pendingPayment, action: () => navigate("/mis-compras") },
+            { icon: <Package className="w-7 h-7" />, label: t("userProfile.pendingShipment"), count: pendingShipment, action: () => navigate("/mis-compras") },
+            { icon: <Truck className="w-7 h-7" />, label: t("userProfile.shipped"), count: shipped, action: () => navigate("/mis-compras") },
+            { icon: <Star className="w-7 h-7" />, label: t("userProfile.addReviews"), count: 0, action: () => navigate("/mis-compras") },
+            { icon: <RotateCcw className="w-7 h-7" />, label: t("userProfile.returns"), count: pendingReturns, action: () => setActiveSection('returns') },
           ].map((item, i) => (
             <button key={i} onClick={item.action} className="flex flex-col items-center gap-1.5 py-2 relative">
               <div className="text-foreground/70">{item.icon}</div>
@@ -144,10 +146,10 @@ export function UserProfilePage() {
       <div className="bg-background mt-2 px-4 py-4">
         <div className="grid grid-cols-4 gap-3">
           {[
-            { icon: <Clock className="w-7 h-7" />, label: "Historial", action: () => navigate("/mis-compras") },
-            { icon: <Heart className="w-7 h-7" />, label: "Lista de deseos", action: () => navigate("/favoritos") },
-            { icon: <MapPin className="w-7 h-7" />, label: "Mis direcciones", action: () => navigate("/mis-direcciones") },
-            { icon: <Settings className="w-7 h-7" />, label: "Configuración", action: () => setActiveSection('settings') },
+            { icon: <Clock className="w-7 h-7" />, label: t("userProfile.history"), action: () => navigate("/mis-compras") },
+            { icon: <Heart className="w-7 h-7" />, label: t("userProfile.wishlist"), action: () => navigate("/favoritos") },
+            { icon: <MapPin className="w-7 h-7" />, label: t("userProfile.myAddresses"), action: () => navigate("/mis-direcciones") },
+            { icon: <Settings className="w-7 h-7" />, label: t("userProfile.settings"), action: () => setActiveSection('settings') },
           ].map((item, i) => (
             <button key={i} onClick={item.action} className="flex flex-col items-center gap-1.5 py-1">
               <div className="text-foreground/70">{item.icon}</div>
@@ -161,11 +163,11 @@ export function UserProfilePage() {
       <div className="bg-background mt-2 px-4 py-4">
         <div className="grid grid-cols-5 gap-1">
           {[
-            { icon: <HelpCircle className="w-7 h-7" />, label: "Centro de Ayuda", action: () => navigate("/soporte"), badge: 0 },
-            { icon: <CreditCard className="w-7 h-7" />, label: "Pago", action: () => setShowPaymentHub(true), badge: 0 },
-            { icon: <MessageCircle className="w-7 h-7" />, label: "Live Chat", action: () => navigate("/soporte"), badge: unreadChats },
-            { icon: <Wallet className="w-7 h-7" />, label: "Créditos de compra", action: () => {}, badge: 0 },
-            { icon: <Info className="w-7 h-7" />, label: "Sugerencias", action: () => setShowAbout(true), badge: 0 },
+            { icon: <HelpCircle className="w-7 h-7" />, label: t("userProfile.helpCenter"), action: () => navigate("/soporte"), badge: 0 },
+            { icon: <CreditCard className="w-7 h-7" />, label: t("userProfile.payment"), action: () => setShowPaymentHub(true), badge: 0 },
+            { icon: <MessageCircle className="w-7 h-7" />, label: t("userProfile.liveChat"), action: () => navigate("/soporte"), badge: unreadChats },
+            { icon: <Wallet className="w-7 h-7" />, label: t("userProfile.purchaseCredits"), action: () => {}, badge: 0 },
+            { icon: <Info className="w-7 h-7" />, label: t("userProfile.suggestions"), action: () => setShowAbout(true), badge: 0 },
           ].map((item, i) => (
             <button key={i} onClick={item.action} className="flex flex-col items-center gap-1.5 py-1 relative">
               <div className="text-foreground/70">{item.icon}</div>
@@ -184,7 +186,7 @@ export function UserProfilePage() {
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
           <div className="flex items-center gap-2.5">
             <Shield className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm text-foreground">Términos Legales</span>
+            <span className="text-sm text-foreground">{t("userProfile.legalTerms")}</span>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -192,7 +194,7 @@ export function UserProfilePage() {
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
           <div className="flex items-center gap-2.5">
             <Info className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm text-foreground">Acerca de</span>
+            <span className="text-sm text-foreground">{t("userProfile.about")}</span>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -218,7 +220,7 @@ export function UserProfilePage() {
             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-primary border border-primary/30 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors font-medium"
           >
             <StoreIcon className="w-4 h-4" />
-            Registro de vendedor
+            {t("userProfile.sellerRegistration")}
           </button>
         </div>
       )}
@@ -231,7 +233,7 @@ export function UserProfilePage() {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-destructive border border-destructive/30 rounded-lg bg-background hover:bg-destructive/5 transition-colors font-medium"
         >
           <LogOut className="w-4 h-4" />
-          {isLoading ? "Cerrando sesión..." : "Cerrar Sesión"}
+          {isLoading ? t("userProfile.closingSession") : t("userProfile.logout")}
         </button>
       </div>
 
@@ -276,22 +278,22 @@ export function UserProfilePage() {
         {/* LEFT SIDEBAR */}
         <aside className="bg-background border border-border rounded-md overflow-hidden self-start sticky top-4">
           <div className="px-4 py-3 border-b border-border">
-            <h2 className="text-sm font-bold text-foreground">Centro personal</h2>
+            <h2 className="text-sm font-bold text-foreground">{t("userProfile.personalCenter")}</h2>
           </div>
 
           {/* Mi Cuenta group */}
           <div className="border-b border-border">
             <button onClick={() => toggleGroup("Mi Cuenta")}
               className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
-              <span className="text-sm font-semibold text-foreground">Mi Cuenta</span>
+              <span className="text-sm font-semibold text-foreground">{t("userProfile.myAccount")}</span>
               <span className="text-muted-foreground text-xs">{expandedGroups["Mi Cuenta"] ? "−" : "+"}</span>
             </button>
             {expandedGroups["Mi Cuenta"] && (
               <ul className="pb-1">
-                <li><NavButton icon={User} label="Mi perfil" section={undefined} /></li>
-                <li><NavButton icon={MapPin} label="Mis direcciones" section="addresses" /></li>
-                <li><NavButton icon={CreditCard} label="Métodos de pago" section="payment" /></li>
-                <li><NavButton icon={Settings} label="Configuración" section="settings" /></li>
+                <li><NavButton icon={User} label={t("userProfile.myProfile")} section={undefined} /></li>
+                <li><NavButton icon={MapPin} label={t("userProfile.myAddresses")} section="addresses" /></li>
+                <li><NavButton icon={CreditCard} label={t("userProfile.paymentMethods")} section="payment" /></li>
+                <li><NavButton icon={Settings} label={t("userProfile.settings")} section="settings" /></li>
               </ul>
             )}
           </div>
@@ -300,16 +302,16 @@ export function UserProfilePage() {
           <div className="border-b border-border">
             <button onClick={() => toggleGroup("Mis Pedidos")}
               className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
-              <span className="text-sm font-semibold text-foreground">Mis Pedidos</span>
+              <span className="text-sm font-semibold text-foreground">{t("userProfile.myOrdersGroup")}</span>
               <span className="text-muted-foreground text-xs">{expandedGroups["Mis Pedidos"] ? "−" : "+"}</span>
             </button>
             {expandedGroups["Mis Pedidos"] && (
               <ul className="pb-1">
-                <li><NavButton icon={ShoppingBag} label="Ver todos" section="orders" /></li>
+                <li><NavButton icon={ShoppingBag} label={t("userProfile.viewAllOrders")} section="orders" /></li>
                 <li>
                   <NavButton
                     icon={RotateCcw}
-                    label="Mis devoluciones"
+                    label={t("userProfile.myReturns")}
                     section="returns"
                     badge={pendingReturns}
                   />
@@ -322,12 +324,12 @@ export function UserProfilePage() {
           <div className="border-b border-border">
             <button onClick={() => toggleGroup("Mis Intereses")}
               className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
-              <span className="text-sm font-semibold text-foreground">Mis Intereses</span>
+              <span className="text-sm font-semibold text-foreground">{t("userProfile.myInterests")}</span>
               <span className="text-muted-foreground text-xs">{expandedGroups["Mis Intereses"] ? "−" : "+"}</span>
             </button>
             {expandedGroups["Mis Intereses"] && (
               <ul className="pb-1">
-                <li><NavButton icon={Heart} label="Favoritos" section="favorites" /></li>
+                <li><NavButton icon={Heart} label={t("userProfile.favorites")} section="favorites" /></li>
               </ul>
             )}
           </div>
@@ -337,7 +339,7 @@ export function UserProfilePage() {
             <button onClick={() => toggleGroup("Centro de Ayuda")}
               className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
               <span className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                Centro de Ayuda
+                {t("userProfile.helpCenter")}
                 {unreadChats > 0 && (
                   <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{unreadChats}</Badge>
                 )}
@@ -351,7 +353,7 @@ export function UserProfilePage() {
                     onClick={() => navigate("/notificaciones")}
                     className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
                   >
-                    <Bell className="w-3.5 h-3.5" /> Notificaciones
+                    <Bell className="w-3.5 h-3.5" /> {t("userProfile.notifications")}
                   </button>
                 </li>
                 <li>
@@ -360,7 +362,7 @@ export function UserProfilePage() {
                     className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
-                    <span className="flex-1 text-left">Live Chat</span>
+                    <span className="flex-1 text-left">{t("userProfile.liveChat")}</span>
                     {unreadChats > 0 && (
                       <Badge className="h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">{unreadChats}</Badge>
                     )}
@@ -374,7 +376,7 @@ export function UserProfilePage() {
           <div className="border-b border-border">
             <button onClick={() => toggleGroup("Política")}
               className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors">
-              <span className="text-sm font-semibold text-foreground">Política</span>
+              <span className="text-sm font-semibold text-foreground">{t("userProfile.policy")}</span>
               <span className="text-muted-foreground text-xs">{expandedGroups["Política"] ? "−" : "+"}</span>
             </button>
             {expandedGroups["Política"] && (
@@ -382,13 +384,13 @@ export function UserProfilePage() {
                 <li>
                   <button onClick={() => setShowLegal(true)}
                     className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
-                    <Shield className="w-3.5 h-3.5" /> Términos y condiciones
+                    <Shield className="w-3.5 h-3.5" /> {t("userProfile.termsConditions")}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => setShowAbout(true)}
                     className="w-full flex items-center gap-2 px-6 py-1.5 text-[13px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
-                    <Info className="w-3.5 h-3.5" /> Acerca de
+                    <Info className="w-3.5 h-3.5" /> {t("userProfile.about")}
                   </button>
                 </li>
               </ul>
@@ -402,7 +404,7 @@ export function UserProfilePage() {
               className="w-full flex items-center gap-2 px-4 py-2.5 text-[13px] text-primary hover:bg-primary/5 transition-colors border-t border-border font-medium"
             >
               <StoreIcon className="w-3.5 h-3.5" />
-              Registro de vendedor
+              {t("userProfile.sellerRegistration")}
             </button>
           )}
 
@@ -413,7 +415,7 @@ export function UserProfilePage() {
             className="w-full flex items-center gap-2 px-4 py-2.5 text-[13px] text-destructive hover:bg-destructive/5 transition-colors border-t border-border"
           >
             <LogOut className="w-3.5 h-3.5" />
-            {isLoading ? "Cerrando..." : "Cerrar Sesión"}
+            {isLoading ? t("userProfile.closing") : t("userProfile.logout")}
           </button>
         </aside>
 
@@ -432,7 +434,7 @@ export function UserProfilePage() {
                 </Avatar>
                 <div>
                   <h1 className="text-lg font-bold text-foreground leading-tight">
-                    Hola, <span className="text-primary">{user?.name || user?.email?.split("@")[0] || "Usuario"}</span>
+                    {t("userProfile.hello")}, <span className="text-primary">{user?.name || user?.email?.split("@")[0] || t("userProfile.user")}</span>
                   </h1>
                   <div className="text-xs text-muted-foreground flex flex-col">
                     <span className="hidden lg:inline">{user?.email}</span>
@@ -446,7 +448,7 @@ export function UserProfilePage() {
                 onClick={() => navigate("/editar-perfil")}
                 className="text-xs text-primary hover:underline flex items-center gap-1"
               >
-                Editar perfil <ChevronRight className="w-3.5 h-3.5" />
+                {t("userProfile.editProfile")} <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -457,21 +459,21 @@ export function UserProfilePage() {
                 className={`flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors ${activeSection === 'orders' ? 'bg-primary/5' : ''}`}
               >
                 <span className="text-xl font-bold text-foreground">{totalOrders}</span>
-                <span className="text-[11px] text-muted-foreground">Pedidos</span>
+                <span className="text-[11px] text-muted-foreground">{t("userProfile.orders")}</span>
               </button>
               <button
                 onClick={() => setActiveSection('favorites')}
                 className={`flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors ${activeSection === 'favorites' ? 'bg-primary/5' : ''}`}
               >
                 <span className="text-xl font-bold text-foreground">{favorites.length}</span>
-                <span className="text-[11px] text-muted-foreground">Favoritos</span>
+                <span className="text-[11px] text-muted-foreground">{t("userProfile.favorites")}</span>
               </button>
               <button
                 onClick={() => setActiveSection('returns')}
                 className={`flex flex-col items-center py-3 gap-0.5 hover:bg-muted/40 cursor-pointer transition-colors relative ${activeSection === 'returns' ? 'bg-primary/5' : ''}`}
               >
                 <span className="text-xl font-bold text-foreground">{myReturns.length}</span>
-                <span className="text-[11px] text-muted-foreground">Devoluciones</span>
+                <span className="text-[11px] text-muted-foreground">{t("userProfile.returns")}</span>
                 {pendingReturns > 0 && (
                   <span className="absolute top-1 right-2 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
                     {pendingReturns}
@@ -480,7 +482,7 @@ export function UserProfilePage() {
               </button>
               <div className="flex flex-col items-center py-3 gap-0.5">
                 <span className="text-xl font-bold text-foreground">0</span>
-                <span className="text-[11px] text-muted-foreground">Puntos</span>
+                <span className="text-[11px] text-muted-foreground">{t("userProfile.points")}</span>
               </div>
             </div>
           </div>
@@ -500,18 +502,18 @@ export function UserProfilePage() {
           {/* Support widget */}
           <div className="bg-background border border-border rounded-md overflow-hidden">
             <div className="px-4 py-2.5 border-b border-border">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Centro de Ayuda</h3>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">{t("userProfile.helpCenter")}</h3>
             </div>
             <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
               <button onClick={() => navigate("/notificaciones")}
                 className="flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors">
                 <Bell className="w-5 h-5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground leading-tight text-center">Notificaciones</span>
+                <span className="text-[10px] text-muted-foreground leading-tight text-center">{t("userProfile.notifications")}</span>
               </button>
               <button onClick={() => navigate("/soporte")}
                 className="relative flex flex-col items-center gap-1.5 py-3 hover:bg-muted/40 transition-colors w-full">
                 <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground leading-tight text-center">Live Chat</span>
+                <span className="text-[10px] text-muted-foreground leading-tight text-center">{t("userProfile.liveChat")}</span>
                 {unreadChats > 0 && (
                   <span className="absolute top-1.5 right-3 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
                     {unreadChats}
@@ -529,10 +531,10 @@ export function UserProfilePage() {
             >
               <div className="flex items-center gap-2">
                 <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-                <span className="text-xs font-semibold text-foreground">Favoritos</span>
+                <span className="text-xs font-semibold text-foreground">{t("userProfile.favorites")}</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-xs">{favorites.length} artículo{favorites.length !== 1 ? "s" : ""}</span>
+                <span className="text-xs">{t("userProfile.items", { count: favorites.length })}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </button>
@@ -542,9 +544,9 @@ export function UserProfilePage() {
             >
               <div className="flex items-center gap-2">
                 <Package className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold text-foreground">Mis Pedidos</span>
+                <span className="text-xs font-semibold text-foreground">{t("userProfile.myOrdersGroup")}</span>
               </div>
-              <span className="text-xs text-muted-foreground">{totalOrders} total</span>
+              <span className="text-xs text-muted-foreground">{t("userProfile.totalCount", { count: totalOrders })}</span>
             </button>
             <button
               onClick={() => setActiveSection('returns')}
@@ -552,7 +554,7 @@ export function UserProfilePage() {
             >
               <div className="flex items-center gap-2">
                 <RotateCcw className="w-4 h-4 text-muted-foreground" />
-                <span className="text-xs font-semibold text-foreground">Devoluciones</span>
+                <span className="text-xs font-semibold text-foreground">{t("userProfile.returns")}</span>
               </div>
               <div className="flex items-center gap-1">
                 {pendingReturns > 0 && (
@@ -567,11 +569,11 @@ export function UserProfilePage() {
           <div className="bg-background border border-border rounded-md overflow-hidden">
             <button onClick={() => setShowLegal(true)}
               className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors border-b border-border">
-              <Shield className="w-3.5 h-3.5" /> Términos Legales
+              <Shield className="w-3.5 h-3.5" /> {t("userProfile.legalTerms")}
             </button>
             <button onClick={() => setShowAbout(true)}
               className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
-              <Info className="w-3.5 h-3.5" /> Acerca de
+              <Info className="w-3.5 h-3.5" /> {t("userProfile.about")}
             </button>
           </div>
         </aside>
@@ -582,7 +584,7 @@ export function UserProfilePage() {
   );
 
   return (
-    <PageWrapper seo={{ title: "Mi Cuenta", description: "Gestiona tu cuenta y perfil" }}>
+    <PageWrapper seo={{ title: t("userProfile.seoTitle"), description: t("userProfile.seoDescription") }}>
       <div className="md:hidden"><MobileLayout /></div>
       <div className="hidden md:block"><DesktopLayout /></div>
       <LegalPagesModal open={showLegal} onOpenChange={setShowLegal} />

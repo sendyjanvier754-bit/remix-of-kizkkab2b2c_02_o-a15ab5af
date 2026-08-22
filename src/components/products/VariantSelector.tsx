@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { Minus, Plus, Package, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface VariantSelection {
   variantId: string;
@@ -38,19 +39,19 @@ interface VariantSelectorProps {
   onVariantImageChange?: (imageUrl: string | null) => void;
 }
 
-// Attribute display configuration
-const ATTRIBUTE_CONFIG: Record<string, { displayName: string; order: number }> = {
-  color: { displayName: 'Color', order: 1 },
-  size: { displayName: 'Talla', order: 2 },
-  talla: { displayName: 'Talla', order: 2 },
-  age: { displayName: 'Edad', order: 3 },
-  edad: { displayName: 'Edad', order: 3 },
-  model: { displayName: 'Modelo', order: 4 },
-  modelo: { displayName: 'Modelo', order: 4 },
-  voltage: { displayName: 'Voltaje', order: 5 },
-  watts: { displayName: 'Watts', order: 6 },
-  material: { displayName: 'Material', order: 7 },
-};
+// Attribute display configuration (display names resolved via i18n inside component)
+const getAttributeConfig = (t: (k: string) => string): Record<string, { displayName: string; order: number }> => ({
+  color: { displayName: t('catalogExtra.variantSelector.attributeNames.color'), order: 1 },
+  size: { displayName: t('catalogExtra.variantSelector.attributeNames.size'), order: 2 },
+  talla: { displayName: t('catalogExtra.variantSelector.attributeNames.size'), order: 2 },
+  age: { displayName: t('catalogExtra.variantSelector.attributeNames.age'), order: 3 },
+  edad: { displayName: t('catalogExtra.variantSelector.attributeNames.age'), order: 3 },
+  model: { displayName: t('catalogExtra.variantSelector.attributeNames.model'), order: 4 },
+  modelo: { displayName: t('catalogExtra.variantSelector.attributeNames.model'), order: 4 },
+  voltage: { displayName: t('catalogExtra.variantSelector.attributeNames.voltage'), order: 5 },
+  watts: { displayName: t('catalogExtra.variantSelector.attributeNames.watts'), order: 6 },
+  material: { displayName: t('catalogExtra.variantSelector.attributeNames.material'), order: 7 },
+});
 
 // Color hex mapping (fallback when no image available)
 const COLOR_HEX_MAP: Record<string, string> = {
@@ -97,6 +98,8 @@ const VariantSelector = ({
   onSelectionChange,
   onVariantImageChange,
 }: VariantSelectorProps) => {
+  const { t } = useTranslation();
+  const ATTRIBUTE_CONFIG = useMemo(() => getAttributeConfig(t), [t]);
   const { grouped: rawGrouped, variants: rawVariants, attrDisplayNames, isLoading } = useGroupedVariants(productId);
 
   // Filter to only the variants the seller has in their inventory (B2C only)
@@ -395,7 +398,7 @@ const VariantSelector = ({
   const validationState = useMemo(() => {
     if (!hasEAVAttributes || orderedAttributeTypes.length === 0) {
       // No EAV attributes - valid if we have quantity
-      return { isValid: totalQty > 0, errors: totalQty === 0 ? ['Selecciona una cantidad'] : [] };
+      return { isValid: totalQty > 0, errors: totalQty === 0 ? [t('catalogExtra.variantSelector.selectQuantity')] : [] };
     }
 
     const errors: string[] = [];
@@ -404,13 +407,13 @@ const VariantSelector = ({
     requiredAttributeTypes.forEach(attrType => {
       if (!selectedAttributes[attrType]) {
         const displayName = getAttributeDisplayName(attrType);
-        errors.push(`Selecciona ${displayName}`);
+        errors.push(t('catalogExtra.variantSelector.selectAttribute', { attribute: displayName }));
       }
     });
 
     // If all required attributes are selected, check quantity
     if (errors.length === 0 && totalQty === 0) {
-      errors.push('Selecciona una cantidad');
+      errors.push(t('catalogExtra.variantSelector.selectQuantity'));
     }
 
     return { isValid: errors.length === 0, errors };
@@ -510,7 +513,7 @@ const VariantSelector = ({
             } else if (hasSizeValues) {
               displayName = 'Talla';
             } else {
-              displayName = `Opción ${idx + 1}`;
+              displayName = t('catalogExtra.variantSelector.attributeNames.option', { index: idx + 1 });
             }
           }
           
@@ -561,7 +564,7 @@ const VariantSelector = ({
                 <div className="flex items-center gap-1">
                   {isAutoSelected && (
                     <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
-                      Única opción
+                      {t('catalogExtra.variantSelector.onlyOption')}
                     </Badge>
                   )}
                   {selectedValue && (
@@ -616,7 +619,7 @@ const VariantSelector = ({
                               : "border-border hover:border-primary/50",
                             isOutOfStock && "opacity-40 cursor-not-allowed"
                           )}
-                          title={`${option}${isOutOfStock ? ' (Agotado)' : ''}`}
+                          title={`${option}${isOutOfStock ? ` (${t('catalogExtra.variantSelector.outOfStock')})` : ''}`}
                         >
                           {optionImage && (
                             <img 
@@ -673,7 +676,7 @@ const VariantSelector = ({
                           isOutOfStock && "opacity-40 cursor-not-allowed"
                         )}
                         style={{ backgroundColor: colorHex || '#E5E7EB' }}
-                        title={`${option}${isOutOfStock ? ' (Agotado)' : ''}`}
+                        title={`${option}${isOutOfStock ? ` (${t('catalogExtra.variantSelector.outOfStock')})` : ''}`}
                       >
                         {isSelected && (
                           <Check className={cn(
@@ -737,20 +740,20 @@ const VariantSelector = ({
                       {Object.values(selectedAttributes).join(' / ')}
                     </span>
                     {getEffectiveStock(matchingVariant) === 0 && (
-                      <Badge variant="secondary" className="text-xs">Agotado</Badge>
+                      <Badge variant="secondary" className="text-xs">{t('catalogExtra.variantSelector.outOfStock')}</Badge>
                     )}
                     {getAvailabilityStatus(matchingVariant) === 'pending' && getEffectiveStock(matchingVariant) > 0 && (
                       <Badge variant="outline" className="text-xs text-blue-700 border-blue-300 bg-blue-50">
-                        Disponible pronto · Pre-compra
+                        {t('catalogExtra.variantSelector.soonAvailable')}
                       </Badge>
                     )}
                     {getAvailabilityStatus(matchingVariant) !== 'pending' && getEffectiveStock(matchingVariant) > 0 && getEffectiveStock(matchingVariant) <= 5 && (
                       <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
-                        ¡Últimas {getEffectiveStock(matchingVariant)}!
+                        {t('catalogExtra.variantSelector.lastUnits', { count: getEffectiveStock(matchingVariant) })}
                       </Badge>
                     )}
                     {isB2B && matchingVariant.moq > 1 && (
-                      <Badge variant="outline" className="text-xs">Min: {matchingVariant.moq}</Badge>
+                      <Badge variant="outline" className="text-xs">{t('catalogExtra.variantSelector.min', { count: matchingVariant.moq })}</Badge>
                     )}
                   </div>
                   {/* Quantity controls + price on the same row */}
@@ -781,7 +784,7 @@ const VariantSelector = ({
             {/* Stock info — below quantity/price row */}
             <div className="flex justify-end mt-2">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {getEffectiveStock(matchingVariant)} disponibles
+                {t('catalogExtra.variantSelector.available', { count: getEffectiveStock(matchingVariant) })}
               </span>
             </div>
           </div>
@@ -792,7 +795,7 @@ const VariantSelector = ({
           <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
             <div className="flex items-center justify-between gap-2">
               <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-xs sm:text-sm">
-                {totalQty} uds
+                {totalQty} {t('catalogExtra.variantSelector.units')}
               </span>
               <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-sm">
                 ${totalPrice.toFixed(2)}
@@ -810,7 +813,7 @@ const VariantSelector = ({
       {optionTypes.map((type) => (
         <div key={type} className="p-2 sm:p-3 bg-muted/30 rounded-lg border border-border/50">
           <h4 className="text-xs sm:text-sm font-semibold text-foreground mb-2 sm:mb-3 capitalize">
-            {type === "size" ? "Talla" : type === "color" ? "Color" : type === "age" ? "Edad" : type}
+            {type === "size" ? t('catalogExtra.variantSelector.attributeNames.size') : type === "color" ? t('catalogExtra.variantSelector.attributeNames.color') : type === "age" ? t('catalogExtra.variantSelector.attributeNames.age') : type}
           </h4>
           <div className="space-y-1.5 sm:space-y-2">
             {grouped[type].map((variant) => {
@@ -848,17 +851,17 @@ const VariantSelector = ({
                       </span>
                       {outOfStock && (
                         <Badge variant="secondary" className="text-[10px] sm:text-xs px-1 py-0">
-                          Agotado
+                          {t('catalogExtra.variantSelector.outOfStock')}
                         </Badge>
                       )}
                       {isPending && !outOfStock && (
                         <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0 text-blue-700 border-blue-300 bg-blue-50">
-                          Disponible pronto
+                          {t('catalogExtra.variantSelector.soonAvailable')}
                         </Badge>
                       )}
                       {isB2B && variant.moq > 1 && (
                         <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
-                          Min:{variant.moq}
+                          {t('catalogExtra.variantSelector.min', { count: variant.moq })}
                         </Badge>
                       )}
                     </div>
@@ -872,7 +875,7 @@ const VariantSelector = ({
                         </span>
                       )}
                       <span className="text-[10px] sm:text-xs text-muted-foreground hidden xs:inline">
-                        · {effectiveStock} disp.
+                        · {effectiveStock} {t('catalogExtra.variantSelector.availableShort')}
                       </span>
                     </div>
                   </div>
@@ -898,7 +901,7 @@ const VariantSelector = ({
         <div className="p-2 sm:p-3 bg-primary/5 rounded-lg border border-primary/20">
           <div className="flex items-center justify-between gap-2">
             <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-xs sm:text-sm">
-              {totalQty} uds
+              {totalQty} {t('catalogExtra.variantSelector.units')}
             </span>
             <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-xs sm:text-sm">
               ${totalPrice.toFixed(2)}

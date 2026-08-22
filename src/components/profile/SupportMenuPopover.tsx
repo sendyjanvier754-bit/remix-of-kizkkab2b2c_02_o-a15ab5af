@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MessageCircle, Phone, Mail, HelpCircle } from "lucide-react";
 import { useWhatsAppSupport } from "@/hooks/useWhatsAppSupport";
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function SupportMenuPopover({ children }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isEnabled: waEnabled } = useWhatsAppSupport();
   const [waDialogOpen, setWaDialogOpen] = useState(false);
@@ -19,8 +21,8 @@ export function SupportMenuPopover({ children }: Props) {
   const channels = [
     {
       icon: <MessageCircle className="w-4 h-4 text-green-600" />,
-      label: "Chat en vivo",
-      description: "Habla con soporte ahora",
+      label: t('profilePanels.support.liveChat.label'),
+      description: t('profilePanels.support.liveChat.description'),
       action: () => navigate("/soporte"),
       available: true,
     },
@@ -28,8 +30,8 @@ export function SupportMenuPopover({ children }: Props) {
       ? [
           {
             icon: <MessageCircle className="w-4 h-4 text-green-600" />,
-            label: "WhatsApp",
-            description: "Soporte y ventas por WhatsApp",
+            label: t('profilePanels.support.whatsapp.label'),
+            description: t('profilePanels.support.whatsapp.description'),
             action: handleWhatsApp,
             available: true,
           },
@@ -37,15 +39,15 @@ export function SupportMenuPopover({ children }: Props) {
       : []),
     {
       icon: <Phone className="w-4 h-4 text-muted-foreground" />,
-      label: "Llamada",
-      description: "Próximamente",
+      label: t('profilePanels.support.call.label'),
+      description: t('profilePanels.support.call.description'),
       action: () => {},
       available: false,
     },
     {
       icon: <Mail className="w-4 h-4 text-muted-foreground" />,
-      label: "Correo electrónico",
-      description: "Próximamente",
+      label: t('profilePanels.support.email.label'),
+      description: t('profilePanels.support.email.description'),
       action: () => {},
       available: false,
     },
@@ -60,9 +62,9 @@ export function SupportMenuPopover({ children }: Props) {
         <div className="px-4 py-2.5 border-b border-border">
           <div className="flex items-center gap-2">
             <HelpCircle className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">Centro de Ayuda</span>
+            <span className="text-sm font-semibold text-foreground">{t('profilePanels.support.title')}</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">¿Cómo podemos ayudarte?</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{t('profilePanels.support.subtitle')}</p>
         </div>
         <div className="py-1">
           {channels.map((ch) => (
