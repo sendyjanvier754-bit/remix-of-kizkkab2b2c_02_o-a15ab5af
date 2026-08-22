@@ -6,9 +6,11 @@ import { UserRole } from "@/types/auth";
 import { useB2CCartItems } from "@/hooks/useB2CCartItems";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const MobileBottomNav = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { role, user } = useAuth();
