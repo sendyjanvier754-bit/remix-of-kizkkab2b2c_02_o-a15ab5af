@@ -1,0 +1,321 @@
+{
+  "profilePanels": {
+    "orders": {
+      "title": "Mes Commandes",
+      "count_one": "{{count}} commande",
+      "count_other": "{{count}} commandes",
+      "itemsCount_one": "{{count}} article",
+      "itemsCount_other": "{{count}} articles",
+      "status": {
+        "draft": "Brouillon",
+        "placed": "Confirmée",
+        "paid": "Payée",
+        "shipped": "En route",
+        "delivered": "Livrée",
+        "cancelled": "Annulée",
+        "in_transit": "En transit",
+        "preparing": "En préparation"
+      },
+      "refundStatus": {
+        "none": "Aucun remboursement",
+        "requested": "Demandé",
+        "processing": "En cours",
+        "completed": "Terminé",
+        "rejected": "Rejeté"
+      },
+      "tabs": {
+        "all": "Toutes",
+        "placed": "Confirmées",
+        "paid": "Payées",
+        "shipped": "En route",
+        "delivered": "Livrées",
+        "cancelled": "Annulées"
+      },
+      "logisticsB2B": {
+        "payment_pending": { "label": "Paiement en attente", "description": "En attente de confirmation du paiement" },
+        "payment_validated": { "label": "Paiement validé", "description": "Votre paiement a été confirmé" },
+        "in_china": { "label": "En Chine", "description": "Produit à l'entrepôt d'origine" },
+        "in_transit_usa": { "label": "Transit USA", "description": "En route vers les États-Unis" },
+        "in_haiti_hub": { "label": "Hub Haïti", "description": "Arrivé au centre de distribution" },
+        "ready_for_delivery": { "label": "Prêt pour livraison", "description": "Disponible pour récupération/livraison" },
+        "delivered": { "label": "Livrée", "description": "Commande terminée" }
+      },
+      "logisticsB2C": {
+        "payment_pending": { "label": "Paiement en attente", "description": "En attente de confirmation du paiement" },
+        "payment_validated": { "label": "Paiement confirmé", "description": "Votre paiement a été confirmé" },
+        "preparing": { "label": "En préparation", "description": "Le vendeur prépare votre commande" },
+        "shipped": { "label": "Expédiée", "description": "Votre commande est en route" },
+        "delivered": { "label": "Livrée", "description": "Commande terminée" }
+      },
+      "poStatus": {
+        "open": "Ouverte",
+        "closed": "Fermée",
+        "in_transit": "En transit",
+        "arrived_hub": "Au hub"
+      },
+      "card": {
+        "orderNumber": "Commande #{{id}}",
+        "andMore": "et {{count}} de plus",
+        "po": "BC : {{number}}",
+        "tracking": "Suivi :"
+      },
+      "returnDialog": {
+        "titleExisting": "Demande de retour",
+        "titleNew": "Demander un retour",
+        "orderSummary": "Commande #{{id}} · ${{amount}}",
+        "existingMessage": "Une demande de retour existe déjà pour cette commande.",
+        "close": "Fermer",
+        "reasonLabel": "Motif *",
+        "reasonPlaceholder": "Sélectionnez le type de problème",
+        "reasons": {
+          "producto_danado": "Produit endommagé / défectueux",
+          "producto_incorrecto": "Produit incorrect reçu",
+          "no_llego": "Commande non reçue",
+          "descripcion_incorrecta": "Ne correspond pas à la description",
+          "calidad": "Problème de qualité",
+          "otro": "Autre motif"
+        },
+        "descriptionLabel": "Description détaillée *",
+        "descriptionPlaceholder": "Décrivez le problème en détail...",
+        "amountLabel": "Montant à demander (facultatif)",
+        "amountHelper": "Laissez vide pour demander le montant total de la commande",
+        "cancel": "Annuler",
+        "submit": "Envoyer la demande"
+      },
+      "detail": {
+        "poCardTitle": "Bon de commande consolidé",
+        "poNumber": "Numéro de BC :",
+        "hybridId": "ID Hybride :",
+        "chinaTracking": "Suivi Chine :",
+        "poStatusLabel": "Statut du BC :",
+        "trackingTitle": "Suivi en temps réel",
+        "syncedWithPO": "Synchronisé avec le BC",
+        "updatedAt": "Mis à jour : {{date}}",
+        "paymentValidatedAt": "Paiement validé le {{date}}",
+        "shippingCardTitle": "Étiquette d'expédition",
+        "carrier": "Transporteur",
+        "carrierUnspecified": "Non spécifié",
+        "trackingNumber": "Numéro de suivi",
+        "estimatedDelivery": "Livraison estimée :",
+        "trackWith": "Suivre avec {{carrier}}",
+        "trackWithDefault": "Transporteur",
+        "productsTitle": "Produits ({{count}})",
+        "sku": "SKU : {{sku}} · Qté : {{qty}}",
+        "total": "Total",
+        "cancelledTitle": "Commande annulée",
+        "cancelledReason": "Motif :",
+        "cancelledAt": "Annulée le {{date}}",
+        "refundStatusTitle": "Statut du remboursement",
+        "refundAmount": "Montant : {{currency}} ${{amount}}",
+        "reorder": "Racheter",
+        "returnLabel": "Retour :",
+        "requestReturn": "Demander un retour",
+        "cancelOrder": "Annuler la commande"
+      },
+      "cancelDialog": {
+        "title": "Annuler la commande",
+        "description": "Cette action est irréversible. Veuillez indiquer le motif de l'annulation.",
+        "reasonLabel": "Motif d'annulation *",
+        "reasonPlaceholder": "Écrivez le motif...",
+        "refundLabel": "Demander un remboursement",
+        "refundHelper": "Votre commande a déjà été payée. Montant : {{currency}} ${{amount}}",
+        "back": "Retour",
+        "confirm": "Confirmer l'annulation"
+      },
+      "empty": {
+        "message": "Vous n'avez aucune commande dans cette catégorie",
+        "cta": "Aller à la boutique"
+      },
+      "pagination": "{{from}}-{{to}} sur {{total}}",
+      "toast": {
+        "noItemsTitle": "Aucun produit à ajouter",
+        "addedTitle": "Produits ajoutés au panier",
+        "addedDescription": "{{count}} produits ajoutés"
+      }
+    },
+    "favorites": {
+      "title": "Mes Favoris",
+      "emptyTitle": "Vous n'avez pas encore de favoris",
+      "emptyDescription": "Enregistrez les produits que vous aimez pour les retrouver ici",
+      "exploreStores": "Explorer les boutiques",
+      "add": "Ajouter",
+      "addedToCart": "Ajouté au panier"
+    },
+    "addresses": {
+      "title": "Mes Adresses",
+      "new": "Nouvelle",
+      "emptyTitle": "Vous n'avez aucune adresse enregistrée",
+      "addAddress": "Ajouter une adresse",
+      "default": "Par défaut",
+      "setAsDefault": "Définir par défaut",
+      "toastNameAddressRequired": "Le nom et l'adresse sont requis",
+      "toastSelectDepartment": "Sélectionnez un département",
+      "toastSelectCommune": "Sélectionnez une commune",
+      "dialog": {
+        "editTitle": "Modifier l'adresse",
+        "createTitle": "Nouvelle adresse",
+        "labelField": "Étiquette *",
+        "labelPlaceholder": "Maison, Travail…",
+        "country": "Pays",
+        "fullName": "Nom complet *",
+        "fullNamePlaceholder": "Jean Dupont",
+        "phone": "Téléphone",
+        "department": "Département *",
+        "departmentPlaceholder": "Sélectionner un département",
+        "commune": "Commune *",
+        "communePlaceholder": "Sélectionner une commune",
+        "communePlaceholderDisabled": "Sélectionnez d'abord un département",
+        "streetAddress": "Adresse *",
+        "streetAddressPlaceholder": "Rue, numéro, secteur…",
+        "notes": "Notes de livraison",
+        "notesPlaceholder": "Instructions pour le livreur…",
+        "setDefault": "Définir par défaut",
+        "cancel": "Annuler",
+        "saveChanges": "Enregistrer",
+        "createAddress": "Créer l'adresse"
+      },
+      "deleteDialog": {
+        "title": "Supprimer l'adresse ?",
+        "description": "Cette action est irréversible.",
+        "cancel": "Annuler",
+        "confirm": "Supprimer"
+      }
+    },
+    "payment": {
+      "methodLabels": {
+        "bank": "Virement bancaire",
+        "moncash": "MonCash",
+        "natcash": "NatCash",
+        "stripe": "Carte de crédit"
+      },
+      "title": "Mes Moyens de Paiement",
+      "subtitle": "Configurez vos comptes pour payer et recevoir des remboursements",
+      "configured": "Configuré",
+      "bank": {
+        "bankName": "Banque :",
+        "accountHolder": "Titulaire :",
+        "accountNumber": "Compte :"
+      },
+      "mobile": {
+        "number": "Numéro :",
+        "name": "Nom :"
+      },
+      "setDefault": "Définir par défaut",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "notConfigured": "Non configuré",
+      "configure": "Configurer",
+      "noMethods": "Aucun moyen de paiement disponible actuellement",
+      "stripeNotice": "🔒 Les données de carte sont traitées de manière sécurisée par Stripe. Nous ne stockons jamais les numéros de carte.",
+      "configDialog": {
+        "editTitle": "Modifier {{name}}",
+        "configureTitle": "Configurer {{name}}",
+        "aliasLabel": "Alias (facultatif)",
+        "aliasPlaceholder": "Ex : Mon {{name}} principal",
+        "bankNameLabel": "Nom de la banque",
+        "bankNamePlaceholder": "Ex : BNC, Digicel Bank…",
+        "accountHolderLabel": "Titulaire du compte",
+        "accountHolderPlaceholder": "Nom complet",
+        "accountNumberLabel": "Numéro de compte",
+        "accountNumberPlaceholder": "0000 0000 0000",
+        "accountTypeLabel": "Type de compte",
+        "accountTypePlaceholder": "Courant / Épargne",
+        "phoneLabel": "Numéro de téléphone",
+        "phonePlaceholder": "+509 XXXX XXXX",
+        "holderNameLabel": "Nom du titulaire",
+        "holderNamePlaceholder": "Nom enregistré sur le compte",
+        "stripeTitle": "Carte de crédit/débit",
+        "stripeDescription": "En enregistrant, vous serez redirigé vers le formulaire sécurisé de Stripe pour ajouter votre carte. Votre numéro de carte n'est jamais stocké sur nos serveurs.",
+        "stripeCurrentCard": "Carte actuelle : {{brand}} •••• {{last4}}",
+        "cancel": "Annuler",
+        "update": "Mettre à jour",
+        "save": "Enregistrer"
+      },
+      "deleteDialog": {
+        "title": "Supprimer ce moyen de paiement ?",
+        "description": "Les informations enregistrées seront supprimées. Vous pourrez le reconfigurer à tout moment.",
+        "cancel": "Annuler",
+        "confirm": "Supprimer"
+      }
+    },
+    "returns": {
+      "title": "Mes Retours",
+      "newRequest": "Nouvelle demande",
+      "infoBanner": "Pour les retours de commandes B2C, le vendeur examinera votre demande. Pour les commandes B2B, l'administrateur gérera le processus.",
+      "emptyTitle": "Vous n'avez aucune demande de retour",
+      "emptyDescription": "Lorsque vous demanderez un retour, il apparaîtra ici",
+      "orderNumber": "Commande #{{id}}",
+      "noReason": "Aucun motif",
+      "amountRequested": "Montant demandé :",
+      "amountApproved": "Approuvé :",
+      "sellerNotes": "Vendeur : \"{{notes}}\"",
+      "reasonTypes": {
+        "damaged": "Produit endommagé",
+        "wrong_item": "Produit incorrect",
+        "not_as_desc": "Ne correspond pas à la description",
+        "missing_part": "Pièce manquante",
+        "other": "Autre motif"
+      },
+      "dialog": {
+        "title": "Nouvelle demande de retour",
+        "orderIdLabel": "ID de la commande *",
+        "orderIdPlaceholder": "Collez l'ID de la commande",
+        "orderIdHelper": "Vous le trouverez dans le détail de votre commande",
+        "orderTypeLabel": "Type de commande *",
+        "orderTypeB2C": "B2C — Boutique en ligne",
+        "orderTypeB2B": "B2B — Catalogue de gros",
+        "reasonTypeLabel": "Motif de retour *",
+        "reasonTypePlaceholder": "Sélectionnez un motif",
+        "descriptionLabel": "Description détaillée *",
+        "descriptionPlaceholder": "Expliquez ce qui s'est passé avec le produit…",
+        "amountLabel": "Montant à rembourser (facultatif)",
+        "cancel": "Annuler",
+        "submit": "Envoyer la demande"
+      }
+    },
+    "paymentHub": {
+      "title": "Centre de Paiement",
+      "description": "Gérez vos moyens de paiement, consultez les paiements en attente et l'historique des transactions.",
+      "tabs": {
+        "methods": "Moyens",
+        "pending": "En attente",
+        "history": "Historique"
+      },
+      "status": {
+        "paid": "Payé",
+        "pendingValidation": "En validation",
+        "pending": "En attente"
+      },
+      "noPending": "Vous n'avez aucun paiement en attente.",
+      "noHistory": "Vous n'avez pas encore d'historique de paiements.",
+      "close": "Fermer"
+    },
+    "support": {
+      "title": "Centre d'Aide",
+      "subtitle": "Comment pouvons-nous vous aider ?",
+      "liveChat": {
+        "label": "Chat en direct",
+        "description": "Parlez au support maintenant"
+      },
+      "whatsapp": {
+        "label": "WhatsApp",
+        "description": "Support et ventes via WhatsApp"
+      },
+      "call": {
+        "label": "Appel",
+        "description": "Bientôt disponible"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Bientôt disponible"
+      }
+    },
+    "completeProfile": {
+      "title": "Complétez votre compte",
+      "description": "Certaines informations manquent dans votre profil{{phoneNote}}. Complétez-les pour accélérer vos achats et bénéficier d'un support plus rapide.",
+      "phoneNote": " (téléphone)",
+      "later": "Plus tard",
+      "completeNow": "Compléter maintenant"
+    }
+  }
+}

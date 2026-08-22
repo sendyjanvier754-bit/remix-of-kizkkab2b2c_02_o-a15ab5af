@@ -8,6 +8,7 @@ import GlobalHeader from '@/components/layout/GlobalHeader';
 import Footer from '@/components/layout/Footer';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import { ShoppingCart, Package, Clock, AlertTriangle, Loader2, Check } from 'lucide-react';
 
 interface SharedCartItem {
@@ -27,6 +28,7 @@ interface SharedCartItem {
 }
 
 const SharedCartPage = () => {
+  const { t } = useTranslation();
   const { shareCode } = useParams<{ shareCode: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -69,7 +71,7 @@ const SharedCartPage = () => {
 
   const handleAddAll = async () => {
     if (!user?.id) {
-      toast.error('Inicia sesión para agregar productos a tu carrito');
+      toast.error(t('cartExtra.loginToAddProducts'));
       navigate('/cuenta');
       return;
     }
@@ -97,10 +99,10 @@ const SharedCartPage = () => {
         });
       }
       setAdded(true);
-      toast.success(`${items.length} productos agregados a tu carrito`);
+      toast.success(t('cartExtra.productsAddedToCart', { count: items.length }));
     } catch (err) {
       console.error('Error adding shared cart items:', err);
-      toast.error('Error al agregar productos');
+      toast.error(t('cartExtra.addProductsError'));
     } finally {
       setIsAdding(false);
     }
@@ -121,9 +123,9 @@ const SharedCartPage = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">
             <AlertTriangle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-xl font-bold mb-2">Carrito no encontrado</h1>
-            <p className="text-muted-foreground mb-4">Este enlace no es válido o ya no existe.</p>
-            <Button asChild><Link to="/">Ir al inicio</Link></Button>
+            <h1 className="text-xl font-bold mb-2">{t('cartExtra.cartNotFound')}</h1>
+            <p className="text-muted-foreground mb-4">{t('cartExtra.linkInvalidOrExpired')}</p>
+            <Button asChild><Link to="/">{t('cartExtra.goHome')}</Link></Button>
           </div>
         </div>
         {!isMobile && <Footer />}
@@ -138,9 +140,9 @@ const SharedCartPage = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">
             <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-xl font-bold mb-2">Enlace expirado</h1>
-            <p className="text-muted-foreground mb-4">Este carrito compartido ha expirado (7 días).</p>
-            <Button asChild><Link to="/">Ir al inicio</Link></Button>
+            <h1 className="text-xl font-bold mb-2">{t('cartExtra.linkExpired')}</h1>
+            <p className="text-muted-foreground mb-4">{t('cartExtra.sharedCartExpiredMessage')}</p>
+            <Button asChild><Link to="/">{t('cartExtra.goHome')}</Link></Button>
           </div>
         </div>
         {!isMobile && <Footer />}
@@ -158,10 +160,10 @@ const SharedCartPage = () => {
           <div className="p-4 border-b bg-muted/30">
             <div className="flex items-center gap-2 mb-1">
               <ShoppingCart className="w-5 h-5 text-primary" />
-              <h1 className="font-bold text-lg">Carrito compartido</h1>
+              <h1 className="font-bold text-lg">{t('cartExtra.sharedCart')}</h1>
             </div>
             <p className="text-sm text-muted-foreground">
-              {totalQty} productos · ${totalPrice.toFixed(2)} total estimado
+              {t('cartExtra.sharedCartSummary', { count: totalQty, total: totalPrice.toFixed(2) })}
             </p>
           </div>
 
@@ -201,7 +203,7 @@ const SharedCartPage = () => {
           {/* Footer */}
           <div className="p-4 border-t bg-muted/20 space-y-3">
             <div className="flex justify-between items-center">
-              <span className="font-semibold">Total estimado</span>
+              <span className="font-semibold">{t('cartExtra.estimatedTotal')}</span>
               <span className="text-lg font-bold text-primary">${totalPrice.toFixed(2)}</span>
             </div>
 
@@ -209,10 +211,10 @@ const SharedCartPage = () => {
               <div className="flex flex-col items-center gap-2">
                 <div className="flex items-center gap-2 text-green-600">
                   <Check className="w-5 h-5" />
-                  <span className="font-semibold">Productos agregados</span>
+                  <span className="font-semibold">{t('cartExtra.productsAdded')}</span>
                 </div>
                 <Button asChild className="w-full">
-                  <Link to="/carrito">Ver mi carrito</Link>
+                  <Link to="/carrito">{t('cartExtra.viewMyCart')}</Link>
                 </Button>
               </div>
             ) : (
@@ -227,7 +229,7 @@ const SharedCartPage = () => {
                 ) : (
                   <ShoppingCart className="w-4 h-4 mr-2" />
                 )}
-                Agregar todo a mi carrito
+                {t('cartExtra.addAllToCart')}
               </Button>
             )}
           </div>

@@ -11,6 +11,7 @@ import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useB2BFavorites } from "@/hooks/useB2BFavorites";
 import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 import ProductImage from "@/components/shared/ProductImage";
+import { useTranslation } from "react-i18next";
 
 interface Product {
   id: string;
@@ -55,6 +56,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, b2bData }: ProductCardProps) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { isClientPreview } = useViewMode();
@@ -172,7 +174,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
           {/* Promo/Discount Badge - Solo para B2C */}
           {!isB2BUser && discountPercentage > 0 && (
             <div className={`absolute top-2 left-2 ${promoActive ? 'bg-red-600' : 'bg-[#071d7f]'} text-white px-2 py-1 rounded text-xs font-bold z-10`}>
-              {promoActive ? `🔥 ${discountPercentage}% OFF` : `${discountPercentage}% DESC`}
+              {promoActive ? `🔥 ${discountPercentage}% ${t('catalogExtra.productCard.off')}` : `${discountPercentage}% ${t('catalogExtra.productCard.desc')}`}
             </div>
           )}
 
@@ -180,7 +182,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
           {isB2BUser && profit > 0 && (
             <Badge className="absolute top-2 left-2 bg-green-600 hover:bg-green-700 text-white gap-1 z-10 shadow-sm border-0">
               <TrendingUp className="h-3 w-3" />
-              Ganas: ${profit.toFixed(2)}
+              {t('catalogExtra.productCard.gain')}: ${profit.toFixed(2)}
             </Badge>
           )}
 
@@ -203,7 +205,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
           {!isB2BUser && product.isSellerVerified && !product.badge && (
             <div className="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] font-bold text-muted-foreground bg-white/90 px-1.5 py-0.5 rounded z-10">
               <ShieldCheck className="w-3 h-3 text-orange-500" />
-              Verified
+              {t('catalogExtra.productCard.verified')}
             </div>
           )}
 
@@ -232,7 +234,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
         {/* MOQ Label for Seller */}
         {isB2BUser && moq > 1 && (
           <div className="text-xs text-amber-600 font-medium mb-2">
-            Mínimo: {moq} unidades
+            {t('catalogExtra.productCard.minUnits', { count: moq })}
           </div>
         )}
 
@@ -253,7 +255,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
             
             {isB2BUser && strikethroughPrice && strikethroughPrice > displayPrice && (
               <span className="text-[9px] text-green-600 font-semibold">
-                ${strikethroughPrice.toFixed(2)} PVP
+                ${strikethroughPrice.toFixed(2)} {t('catalogExtra.productCard.pvp')}
               </span>
             )}
             {!isB2BUser && strikethroughPrice && strikethroughPrice > displayPrice && (
@@ -272,7 +274,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
             target="_blank"
             rel="noopener noreferrer"
             className="p-1.5 rounded-lg transition shadow-sm flex items-center justify-center bg-green-500 hover:bg-green-600 text-white"
-            title="Contactar por WhatsApp"
+            title={t('catalogExtra.productCard.contactWhatsapp')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -285,7 +287,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
             className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition shadow-sm flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-white`}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
-            {isB2BUser ? "B2B" : "Carrito"}
+            {isB2BUser ? "B2B" : t('catalogExtra.productCard.cart')}
           </button>
         </div>
       </div>

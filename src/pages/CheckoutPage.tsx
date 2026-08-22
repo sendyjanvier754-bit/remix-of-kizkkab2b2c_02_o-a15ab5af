@@ -394,7 +394,7 @@ const CheckoutPage = () => {
                     amount={Math.max(0.5, stripeOrderAmount)}
                     currency="usd"
                     onSuccess={() => {
-                      toast.success('Pago enviado. Recibirás la confirmación por correo.');
+                      toast.success(t('cartExtra.paymentSentEmailConfirmation'));
                     }}
                   />
                 </div>
@@ -547,13 +547,13 @@ const CheckoutPage = () => {
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div className="px-3 py-1.5 rounded-lg bg-[#071d7f]">
-              <span className="text-sm font-semibold text-white">Checkout B2C</span>
+              <span className="text-sm font-semibold text-white">{t('cartExtra.checkoutB2C')}</span>
             </div>
           </div>
           <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg">
             <ShoppingBag className="h-4 w-4 text-[#071d7f]" />
             <span className="text-sm font-semibold text-[#071d7f]">
-              {totalItems} {totalItems === 1 ? 'producto' : 'productos'}
+              {t('cartExtra.productsCount', { count: totalItems })}
             </span>
           </div>
         </div>
@@ -691,7 +691,7 @@ const CheckoutPage = () => {
                           <p className="text-xs text-muted-foreground">
                             {address.city}{address.state ? `, ${address.state}` : ''} - {address.country}
                           </p>
-                          {address.phone && <p className="text-xs text-muted-foreground">Tel: {address.phone}</p>}
+                          {address.phone && <p className="text-xs text-muted-foreground">{t('cartExtra.phoneLabel')}: {address.phone}</p>}
                         </div>
                       </div>
                     ))}
@@ -731,10 +731,10 @@ const CheckoutPage = () => {
                           <p className="font-semibold text-sm">{point.name}</p>
                           <p className="text-xs text-muted-foreground">{point.address}</p>
                           <p className="text-xs text-muted-foreground">{point.city}, {point.country}</p>
-                          {point.phone && <p className="text-xs text-muted-foreground">Tel: {point.phone}</p>}
+                          {point.phone && <p className="text-xs text-muted-foreground">{t('cartExtra.phoneLabel')}: {point.phone}</p>}
                         </div>
                         {point.is_active && (
-                          <Badge variant="outline" className="text-green-600">Activo</Badge>
+                          <Badge variant="outline" className="text-green-600">{t('cartExtra.active')}</Badge>
                         )}
                       </div>
                     ))}
@@ -748,7 +748,7 @@ const CheckoutPage = () => {
             <Card className="p-0 overflow-hidden">
               <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
                 <Package className="h-4 w-4 text-[#071d7f]" />
-                <h2 className="text-lg font-bold">Productos ({totalItems})</h2>
+                <h2 className="text-lg font-bold">{t('cartExtra.productsWithCount', { count: totalItems })}</h2>
               </div>
               <div className="p-4">
                 <div className={`space-y-3 ${items.length > 4 ? 'max-h-[340px] overflow-y-auto pr-2' : ''}`}>
@@ -835,19 +835,19 @@ const CheckoutPage = () => {
               {/* Payment Details */}
               {paymentMethod === 'transfer' && platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-2">Datos Bancarios - {platformPaymentInfo.platformName}</h4>
+                  <h4 className="font-semibold text-green-800 mb-2">{t('cartExtra.bankDetailsFor', { platform: platformPaymentInfo.platformName })}</h4>
                   <div className="space-y-1 text-sm text-green-700">
-                    <p><span className="font-medium">Banco:</span> {platformPaymentInfo.bank.bank_name || 'No configurado'}</p>
-                    <p><span className="font-medium">Tipo:</span> {platformPaymentInfo.bank.account_type || 'No configurado'}</p>
-                    <p><span className="font-medium">Cuenta:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
-                    <p><span className="font-medium">Beneficiario:</span> {platformPaymentInfo.bank.account_holder || 'No configurado'}</p>
+                    <p><span className="font-medium">{t('cartExtra.bankLabel')}:</span> {platformPaymentInfo.bank.bank_name || t('cartExtra.notConfigured')}</p>
+                    <p><span className="font-medium">{t('cartExtra.typeLabel')}:</span> {platformPaymentInfo.bank.account_type || t('cartExtra.notConfigured')}</p>
+                    <p><span className="font-medium">{t('cartExtra.accountLabel')}:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
+                    <p><span className="font-medium">{t('cartExtra.beneficiaryLabel')}:</span> {platformPaymentInfo.bank.account_holder || t('cartExtra.notConfigured')}</p>
                   </div>
                    <div className="mt-3">
-                    <Label>Referencia de Transferencia <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarla al subir el comprobante)</span></Label>
+                    <Label>{t('cartExtra.transferReference')} <span className="text-xs text-muted-foreground font-normal">{t('cartExtra.optionalUploadHint')}</span></Label>
                     <Input
                       value={paymentReference}
                       onChange={(e) => setPaymentReference(e.target.value)}
-                      placeholder="Número de referencia (opcional)"
+                      placeholder={t('cartExtra.referenceNumberPlaceholder')}
                       className="mt-1"
                     />
                   </div>
@@ -856,7 +856,7 @@ const CheckoutPage = () => {
 
               {paymentMethod === 'transfer' && !platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-700">No se han configurado datos bancarios en la plataforma.</p>
+                  <p className="text-sm text-yellow-700">{t('cartExtra.noBankDataConfigured')}</p>
                 </div>
               )}
 
@@ -866,7 +866,7 @@ const CheckoutPage = () => {
                   {/* Mode selector when both available */}
                   {moncashAutoAvailable && moncashManualAvailable && (
                     <div className="p-4 bg-muted/30 rounded-lg space-y-3">
-                      <Label className="font-medium">¿Cómo desea pagar?</Label>
+                      <Label className="font-medium">{t('cartExtra.howToPay')}</Label>
                       <div className="grid gap-2">
                         <div 
                           className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${
@@ -882,10 +882,10 @@ const CheckoutPage = () => {
                           <div className="flex-1">
                             <span className="font-medium flex items-center gap-2">
                               <Smartphone className="h-4 w-4 text-yellow-500" />
-                              Pago Automático
+                              {t('cartExtra.automaticPayment')}
                             </span>
                             <p className="text-xs text-muted-foreground">
-                              Pago instantáneo vía API, confirmación automática
+                              {t('cartExtra.automaticPaymentDesc')}
                             </p>
                           </div>
                         </div>
@@ -901,9 +901,9 @@ const CheckoutPage = () => {
                             {paymentMode === 'manual' && <Check className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">Pago Manual</span>
+                            <span className="font-medium">{t('cartExtra.manualPayment')}</span>
                             <p className="text-xs text-muted-foreground">
-                              Pague y proporcione el código de transacción
+                              {t('cartExtra.manualPaymentDesc')}
                             </p>
                           </div>
                         </div>
@@ -916,11 +916,10 @@ const CheckoutPage = () => {
                     <div className="p-4 rounded-lg border-2 border-yellow-300 bg-yellow-50/50">
                       <div className="flex items-center gap-2 mb-2">
                         <Smartphone className="h-5 w-5 text-[#94111f]" />
-                        <h4 className="font-semibold text-[#94111f]">Pago Automático MonCash</h4>
+                        <h4 className="font-semibold text-[#94111f]">{t('cartExtra.automaticPaymentMoncash')}</h4>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        Al confirmar, será redirigido a MonCash para completar el pago de forma segura.
-                        La confirmación será automática una vez procesado.
+                        {t('cartExtra.moncashRedirectMessage')}
                       </p>
                     </div>
                   )}
@@ -929,18 +928,18 @@ const CheckoutPage = () => {
                   {paymentMode === 'manual' && moncashManualAvailable && platformPaymentInfo?.moncash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#94111f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#94111f' }}>
-                        Datos MonCash - {platformPaymentInfo.platformName}
+                        {t('cartExtra.moncashDetailsFor', { platform: platformPaymentInfo.platformName })}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#94111f' }}>
-                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.moncash.phone_number || 'No configurado'}</p>
-                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.moncash.name || 'No configurado'}</p>
+                        <p><span className="font-medium">{t('cartExtra.numberLabel')}:</span> {platformPaymentInfo.moncash.phone_number || t('cartExtra.notConfigured')}</p>
+                        <p><span className="font-medium">{t('cartExtra.nameLabel')}:</span> {platformPaymentInfo.moncash.name || t('cartExtra.notConfigured')}</p>
                       </div>
                       <div className="mt-3">
-                        <Label>Código de Transacción <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarlo al subir el comprobante)</span></Label>
+                        <Label>{t('cartExtra.transactionCode')} <span className="text-xs text-muted-foreground font-normal">{t('cartExtra.optionalUploadHint')}</span></Label>
                         <Input
                           value={paymentReference}
                           onChange={(e) => setPaymentReference(e.target.value)}
-                          placeholder="Código de transacción MonCash (opcional)"
+                          placeholder={t('cartExtra.moncashTransactionPlaceholder')}
                           className="mt-1"
                         />
                       </div>
@@ -951,7 +950,7 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!moncashAutoAvailable && !moncashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">MonCash no está disponible actualmente.</p>
+                      <p className="text-sm text-yellow-700">{t('cartExtra.moncashUnavailable')}</p>
                     </div>
                   )}
                 </div>
@@ -963,7 +962,7 @@ const CheckoutPage = () => {
                   {/* Mode selector when both available */}
                   {natcashAutoAvailable && natcashManualAvailable && (
                     <div className="p-4 bg-muted/30 rounded-lg space-y-3">
-                      <Label className="font-medium">¿Cómo desea pagar?</Label>
+                      <Label className="font-medium">{t('cartExtra.howToPay')}</Label>
                       <div className="grid gap-2">
                         <div 
                           className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${
@@ -979,10 +978,10 @@ const CheckoutPage = () => {
                           <div className="flex-1">
                             <span className="font-medium flex items-center gap-2">
                               <Smartphone className="h-4 w-4 text-yellow-500" />
-                              Pago Automático
+                              {t('cartExtra.automaticPayment')}
                             </span>
                             <p className="text-xs text-muted-foreground">
-                              Pago instantáneo vía API, confirmación automática
+                              {t('cartExtra.automaticPaymentDesc')}
                             </p>
                           </div>
                         </div>
@@ -998,9 +997,9 @@ const CheckoutPage = () => {
                             {paymentMode === 'manual' && <Check className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">Pago Manual</span>
+                            <span className="font-medium">{t('cartExtra.manualPayment')}</span>
                             <p className="text-xs text-muted-foreground">
-                              Pague y proporcione el código de transacción
+                              {t('cartExtra.manualPaymentDesc')}
                             </p>
                           </div>
                         </div>
@@ -1013,11 +1012,10 @@ const CheckoutPage = () => {
                     <div className="p-4 rounded-lg border-2 border-yellow-300 bg-yellow-50/50">
                       <div className="flex items-center gap-2 mb-2">
                         <Smartphone className="h-5 w-5 text-[#071d7f]" />
-                        <h4 className="font-semibold text-[#071d7f]">Pago Automático NatCash</h4>
+                        <h4 className="font-semibold text-[#071d7f]">{t('cartExtra.automaticPaymentNatcash')}</h4>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        Al confirmar, será redirigido a NatCash para completar el pago de forma segura.
-                        La confirmación será automática una vez procesado.
+                        {t('cartExtra.natcashRedirectMessage')}
                       </p>
                     </div>
                   )}
@@ -1026,18 +1024,18 @@ const CheckoutPage = () => {
                   {paymentMode === 'manual' && natcashManualAvailable && platformPaymentInfo?.natcash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#071d7f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#071d7f' }}>
-                        Datos NatCash - {platformPaymentInfo.platformName}
+                        {t('cartExtra.natcashDetailsFor', { platform: platformPaymentInfo.platformName })}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#071d7f' }}>
-                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.natcash.phone_number || 'No configurado'}</p>
-                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.natcash.name || 'No configurado'}</p>
+                        <p><span className="font-medium">{t('cartExtra.numberLabel')}:</span> {platformPaymentInfo.natcash.phone_number || t('cartExtra.notConfigured')}</p>
+                        <p><span className="font-medium">{t('cartExtra.nameLabel')}:</span> {platformPaymentInfo.natcash.name || t('cartExtra.notConfigured')}</p>
                       </div>
                       <div className="mt-3">
-                        <Label>Código de Transacción <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarlo al subir el comprobante)</span></Label>
+                        <Label>{t('cartExtra.transactionCode')} <span className="text-xs text-muted-foreground font-normal">{t('cartExtra.optionalUploadHint')}</span></Label>
                         <Input
                           value={paymentReference}
                           onChange={(e) => setPaymentReference(e.target.value)}
-                          placeholder="Código de transacción NatCash (opcional)"
+                          placeholder={t('cartExtra.natcashTransactionPlaceholder')}
                           className="mt-1"
                         />
                       </div>
@@ -1048,7 +1046,7 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!natcashAutoAvailable && !natcashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">NatCash no está disponible actualmente.</p>
+                      <p className="text-sm text-yellow-700">{t('cartExtra.natcashUnavailable')}</p>
                     </div>
                   )}
                 </div>
@@ -1086,7 +1084,7 @@ const CheckoutPage = () => {
                 {/* Shipping cost breakdown */}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    {t('shipping.cost')}{storeIds.length > 1 ? ` (${storeIds.length} tiendas)` : ''}
+                    {t('shipping.cost')}{storeIds.length > 1 ? ` (${t('cartExtra.storesCount', { count: storeIds.length })})` : ''}
                   </span>
                   <span>
                     {deliveryMethod === 'pickup'
@@ -1103,12 +1101,12 @@ const CheckoutPage = () => {
                         <Tag className="h-4 w-4 text-green-600" />
                         <div>
                           <p className="text-sm font-medium text-green-800">
-                            {appliedDiscount.code || 'Descuento Cliente'}
+                            {appliedDiscount.code || t('cartExtra.customerDiscount')}
                           </p>
                           <p className="text-xs text-green-600">
                             {appliedDiscount.discountType === 'percentage' 
-                              ? `${appliedDiscount.discountValue}% de descuento`
-                              : `$${appliedDiscount.discountValue.toFixed(2)} de descuento`
+                              ? t('cartExtra.percentDiscount', { value: appliedDiscount.discountValue })
+                              : t('cartExtra.amountDiscount', { value: appliedDiscount.discountValue.toFixed(2) })
                             }
                           </p>
                         </div>
@@ -1129,7 +1127,7 @@ const CheckoutPage = () => {
                         <Input
                           value={discountCode}
                           onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                          placeholder="Ingresa código"
+                          placeholder={t('cartExtra.enterCodePlaceholder')}
                           className="text-sm"
                         />
                         <Button
@@ -1175,7 +1173,7 @@ const CheckoutPage = () => {
 
               {deliveryMethod === 'pickup' && pickupPoints.find(p => p.id === selectedPickupPoint) && (
                 <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Retiro en:</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t('cartExtra.pickupAt')}:</p>
                   <p className="text-sm font-medium">{pickupPoints.find(p => p.id === selectedPickupPoint)?.name}</p>
                   <p className="text-xs text-muted-foreground">{pickupPoints.find(p => p.id === selectedPickupPoint)?.city}</p>
                 </div>
@@ -1205,7 +1203,7 @@ const CheckoutPage = () => {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground mt-3">
-                Al confirmar, aceptas nuestros términos y condiciones
+                {t('cartExtra.confirmTermsAgreement')}
               </p>
             </Card>
           </div>

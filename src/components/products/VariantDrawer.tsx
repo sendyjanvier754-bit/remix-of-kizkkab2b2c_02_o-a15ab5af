@@ -233,8 +233,8 @@ const VariantDrawer: React.FC = () => {
     // Allow adding if combined total meets MOQ
     if (isB2BUser && !meetsMOQWithSelection && totalQty > 0) {
       toast({ 
-        title: 'Cantidad mínima no alcanzada', 
-        description: `Necesitas ${quantityStillNeeded} unidades más para alcanzar el mínimo de ${productMoq}. Puedes combinar diferentes tallas y colores.`, 
+        title: t('catalogExtra.variantDrawer.minQtyTitle'), 
+        description: t('catalogExtra.variantDrawer.minQtyDescription', { count: quantityStillNeeded, moq: productMoq }), 
         variant: 'destructive' 
       });
       return;
@@ -252,8 +252,8 @@ const VariantDrawer: React.FC = () => {
     // If product has variants, require variant selection — don't allow adding without one
     if (hasVariants && !hasVariantSelections) {
       toast({
-        title: 'Selecciona una variante',
-        description: 'Este producto tiene variantes disponibles. Selecciona al menos una antes de agregar.',
+        title: t('catalogExtra.variantDrawer.selectVariantTitle'),
+        description: t('catalogExtra.variantDrawer.selectVariantDescription'),
         variant: 'destructive'
       });
       return;
@@ -307,7 +307,7 @@ const VariantDrawer: React.FC = () => {
           });
         }
       }
-      toast({ title: isB2BUser ? 'Agregado al pedido B2B' : 'Agregado al carrito', description: `${displayName} (${totalQty} uds)` });
+      toast({ title: isB2BUser ? t('catalogExtra.variantDrawer.addedToB2BOrder') : t('catalogExtra.variantDrawer.addedToCart'), description: `${displayName} ${t('catalogExtra.variantDrawer.unitsSuffix', { count: totalQty })}` });
     } else if (totalQty > 0) {
       // No variants exist for this product — add directly
       if (isB2BUser) {
@@ -320,7 +320,7 @@ const VariantDrawer: React.FC = () => {
           quantity: totalQty,
           image: product.images?.[0] || undefined,
         });
-        toast({ title: 'Agregado al pedido B2B', description: `${displayName} (${totalQty} uds)` });
+        toast({ title: t('catalogExtra.variantDrawer.addedToB2BOrder'), description: `${displayName} ${t('catalogExtra.variantDrawer.unitsSuffix', { count: totalQty })}` });
       } else {
         await addItemB2C({
           userId: user.id,
@@ -332,7 +332,7 @@ const VariantDrawer: React.FC = () => {
           storeId: product.storeId || null,
           sellerCatalogId: product.sellerCatalogId || null,
         });
-        toast({ title: 'Agregado al carrito' });
+        toast({ title: t('catalogExtra.variantDrawer.addedToCart') });
       }
     }
 
@@ -430,7 +430,7 @@ const VariantDrawer: React.FC = () => {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-bold text-foreground">Seleccionar variantes</h3>
+          <h3 className="text-lg font-bold text-foreground">{t('catalogExtra.variantDrawer.title')}</h3>
           <button onClick={() => close()} className="p-1 hover:bg-muted rounded-full transition">
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -467,13 +467,13 @@ const VariantDrawer: React.FC = () => {
                   </div>
                 ) : (
                   <div className="mt-1 text-xs text-muted-foreground italic">
-                    Selecciona una variante para ver el precio
+                    {t('catalogExtra.variantDrawer.selectVariantPrompt')}
                   </div>
                 )
               ) : (
                 <div className="mt-1 text-lg font-bold text-foreground">${displayPrice.toFixed(2)}</div>
               )}
-              {isB2BUser && <span className="text-[10px] text-muted-foreground">costo</span>}
+              {isB2BUser && <span className="text-[10px] text-muted-foreground">{t('catalogExtra.variantDrawer.cost')}</span>}
             </div>
           </div>
 
@@ -517,7 +517,7 @@ const VariantDrawer: React.FC = () => {
         <div className="p-4 border-t bg-background">
           <div className="flex items-center justify-between mb-3 gap-2">
             <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold text-sm">
-              {totalQty} uds
+              {totalQty} {t('catalogExtra.variantDrawer.units')}
             </div>
             <div className="text-center px-4 py-1 bg-muted rounded-full">
               <span className="text-sm font-bold">${totalPrice.toFixed(2)}</span>
@@ -528,7 +528,7 @@ const VariantDrawer: React.FC = () => {
               disabled={!isVariantValid}
               title={validationErrors.length > 0 ? validationErrors.join(', ') : undefined}
             >
-              🛒 Agregar ({totalQty})
+              {t('catalogExtra.variantDrawer.addButton', { count: totalQty })}
             </Button>
           </div>
           {/* Flexible MOQ messaging for B2B */}
@@ -537,7 +537,7 @@ const VariantDrawer: React.FC = () => {
               {/* Show current cart total if exists */}
               {currentCartQty > 0 && (
                 <div className="text-xs text-center text-muted-foreground bg-muted/50 rounded-md py-1">
-                  Ya tienes <span className="font-semibold text-foreground">{currentCartQty}</span> unidades en el carrito
+                  {t('catalogExtra.variantDrawer.alreadyInCart', { count: currentCartQty })}
                 </div>
               )}
               
@@ -545,18 +545,18 @@ const VariantDrawer: React.FC = () => {
               {meetsMOQWithSelection ? (
                 <div className="text-xs text-center text-green-600 flex items-center justify-center gap-1">
                   <Info className="w-3 h-3" />
-                  ✓ Mínimo de {productMoq} unidades alcanzado
+                  {t('catalogExtra.variantDrawer.moqReached', { moq: productMoq })}
                 </div>
               ) : (
                 <div className="text-xs text-center text-amber-600 flex items-center justify-center gap-1">
                   <Info className="w-3 h-3" />
-                  Te faltan {quantityStillNeeded} unidades (Min: {productMoq})
+                  {t('catalogExtra.variantDrawer.moqMissing', { count: quantityStillNeeded, moq: productMoq })}
                 </div>
               )}
               
               {/* Combine variants message */}
               <div className="text-[10px] text-center text-muted-foreground">
-                💡 Puedes combinar tallas y colores para llegar al mínimo
+                {t('catalogExtra.variantDrawer.combineHint')}
               </div>
             </div>
           )}

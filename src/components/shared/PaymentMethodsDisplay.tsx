@@ -4,6 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Building2, Smartphone, CreditCard, Copy, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 export interface BankInfo {
   bank_name?: string;
@@ -48,10 +49,12 @@ export const PaymentMethodsDisplay = ({
   paymentData, 
   showEditButton = false, 
   onEdit,
-  title = "Métodos de Pago",
+  title,
   compact = false
 }: PaymentMethodsDisplayProps) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
+  const displayTitle = title ?? t('cartExtra.paymentMethods');
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const { bank_info, moncash_info, natcash_info } = paymentData || {};
@@ -72,14 +75,14 @@ export const PaymentMethodsDisplay = ({
       await navigator.clipboard.writeText(text);
       setCopiedField(fieldName);
       toast({
-        title: "Copiado",
-        description: `${fieldName} copiado al portapapeles`,
+        title: t('cartExtra.copiedTitle'),
+        description: t('cartExtra.copiedToClipboard', { field: fieldName }),
       });
       setTimeout(() => setCopiedField(null), 2000);
     } catch (err) {
       toast({
-        title: "Error",
-        description: "No se pudo copiar",
+        title: t('common.error'),
+        description: t('cartExtra.copyError'),
         variant: "destructive",
       });
     }
@@ -92,7 +95,7 @@ export const PaymentMethodsDisplay = ({
         copyToClipboard(text, fieldName);
       }}
       className="ml-2 p-1 rounded hover:bg-gray-100 transition-colors"
-      title="Copiar"
+      title={t('cartExtra.copy')}
     >
       {copiedField === fieldName ? (
         <CheckCircle className="h-4 w-4 text-green-500" />
@@ -107,14 +110,14 @@ export const PaymentMethodsDisplay = ({
       <div className="space-y-3">
         <h4 className="font-semibold text-gray-900 flex items-center gap-2">
           <CreditCard className="h-4 w-4" />
-          {title}
+          {displayTitle}
         </h4>
         
         <div className="flex flex-wrap gap-2">
           {hasBankInfo && (
             <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200">
               <Building2 className="h-3 w-3 mr-1" />
-              Transferencia
+              {t('payments.bankTransfer')}
             </Badge>
           )}
           {hasMoncash && (
@@ -140,14 +143,14 @@ export const PaymentMethodsDisplay = ({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-gray-600" />
-            {title}
+            {displayTitle}
           </CardTitle>
           {showEditButton && onEdit && (
             <button
               onClick={onEdit}
               className="text-sm text-primary hover:underline font-medium"
             >
-              Editar
+              {t('cartExtra.edit')}
             </button>
           )}
         </div>
@@ -163,8 +166,8 @@ export const PaymentMethodsDisplay = ({
                     <Building2 className="h-5 w-5 text-violet-600" />
                   </div>
                   <div className="text-left">
-                    <p className="font-medium text-gray-900">Transferencia Bancaria</p>
-                    <p className="text-sm text-gray-500">{bank_info?.bank_name || 'Banco'}</p>
+                    <p className="font-medium text-gray-900">{t('payments.bankTransfer')}</p>
+                    <p className="text-sm text-gray-500">{bank_info?.bank_name || t('cartExtra.bankLabel')}</p>
                   </div>
                 </div>
               </AccordionTrigger>
@@ -172,13 +175,13 @@ export const PaymentMethodsDisplay = ({
                 <div className="ml-12 space-y-3 text-sm">
                   {bank_info?.bank_name && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Banco:</span>
+                      <span className="text-gray-500">{t('cartExtra.bankLabel')}:</span>
                       <span className="font-medium text-gray-900">{bank_info.bank_name}</span>
                     </div>
                   )}
                   {bank_info?.account_type && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Tipo:</span>
+                      <span className="text-gray-500">{t('cartExtra.typeLabel')}:</span>
                       <Badge variant="secondary" className="font-medium">
                         {bank_info.account_type}
                       </Badge>
@@ -186,18 +189,18 @@ export const PaymentMethodsDisplay = ({
                   )}
                   {bank_info?.account_number && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Cuenta:</span>
+                      <span className="text-gray-500">{t('cartExtra.accountLabel')}:</span>
                       <div className="flex items-center">
                         <span className="font-mono font-medium text-gray-900">
                           {maskAccountNumber(bank_info.account_number)}
                         </span>
-                        <CopyButton text={bank_info.account_number} fieldName="Número de cuenta" />
+                        <CopyButton text={bank_info.account_number} fieldName={t('cartExtra.accountNumber')} />
                       </div>
                     </div>
                   )}
                   {bank_info?.account_holder && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Titular:</span>
+                      <span className="text-gray-500">{t('cartExtra.holderLabel')}:</span>
                       <span className="font-medium text-gray-900">{bank_info.account_holder}</span>
                     </div>
                   )}
@@ -216,7 +219,7 @@ export const PaymentMethodsDisplay = ({
                   </div>
                   <div className="text-left">
                     <p className="font-medium text-gray-900">MonCash</p>
-                    <p className="text-sm text-gray-500">{moncash_info?.name || 'Billetera digital'}</p>
+                    <p className="text-sm text-gray-500">{moncash_info?.name || t('cartExtra.digitalWallet')}</p>
                   </div>
                 </div>
               </AccordionTrigger>
@@ -224,18 +227,18 @@ export const PaymentMethodsDisplay = ({
                 <div className="ml-12 space-y-3 text-sm">
                   {moncash_info?.phone_number && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Número:</span>
+                      <span className="text-gray-500">{t('cartExtra.numberLabel')}:</span>
                       <div className="flex items-center">
                         <span className="font-mono font-medium text-gray-900">
                           {maskPhoneNumber(moncash_info.phone_number)}
                         </span>
-                        <CopyButton text={moncash_info.phone_number} fieldName="Número MonCash" />
+                        <CopyButton text={moncash_info.phone_number} fieldName={t('cartExtra.moncashNumberLabel')} />
                       </div>
                     </div>
                   )}
                   {moncash_info?.name && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Nombre:</span>
+                      <span className="text-gray-500">{t('cartExtra.nameLabel')}:</span>
                       <span className="font-medium text-gray-900">{moncash_info.name}</span>
                     </div>
                   )}
@@ -254,7 +257,7 @@ export const PaymentMethodsDisplay = ({
                   </div>
                   <div className="text-left">
                     <p className="font-medium text-gray-900">NatCash</p>
-                    <p className="text-sm text-gray-500">{natcash_info?.name || 'Billetera digital'}</p>
+                    <p className="text-sm text-gray-500">{natcash_info?.name || t('cartExtra.digitalWallet')}</p>
                   </div>
                 </div>
               </AccordionTrigger>
@@ -262,18 +265,18 @@ export const PaymentMethodsDisplay = ({
                 <div className="ml-12 space-y-3 text-sm">
                   {natcash_info?.phone_number && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Número:</span>
+                      <span className="text-gray-500">{t('cartExtra.numberLabel')}:</span>
                       <div className="flex items-center">
                         <span className="font-mono font-medium text-gray-900">
                           {maskPhoneNumber(natcash_info.phone_number)}
                         </span>
-                        <CopyButton text={natcash_info.phone_number} fieldName="Número NatCash" />
+                        <CopyButton text={natcash_info.phone_number} fieldName={t('cartExtra.natcashNumberLabel')} />
                       </div>
                     </div>
                   )}
                   {natcash_info?.name && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Nombre:</span>
+                      <span className="text-gray-500">{t('cartExtra.nameLabel')}:</span>
                       <span className="font-medium text-gray-900">{natcash_info.name}</span>
                     </div>
                   )}

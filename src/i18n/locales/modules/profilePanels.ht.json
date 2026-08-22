@@ -1,0 +1,321 @@
+{
+  "profilePanels": {
+    "orders": {
+      "title": "Kòmand Mwen Yo",
+      "count_one": "{{count}} kòmand",
+      "count_other": "{{count}} kòmand",
+      "itemsCount_one": "{{count}} atik",
+      "itemsCount_other": "{{count}} atik",
+      "status": {
+        "draft": "Bouyon",
+        "placed": "Konfime",
+        "paid": "Peye",
+        "shipped": "Nan wout",
+        "delivered": "Livre",
+        "cancelled": "Anile",
+        "in_transit": "An transit",
+        "preparing": "N ap prepare"
+      },
+      "refundStatus": {
+        "none": "Pa gen ranbousman",
+        "requested": "Mande",
+        "processing": "N ap trete",
+        "completed": "Fini",
+        "rejected": "Rejte"
+      },
+      "tabs": {
+        "all": "Tout",
+        "placed": "Konfime",
+        "paid": "Peye",
+        "shipped": "Nan wout",
+        "delivered": "Livre",
+        "cancelled": "Anile"
+      },
+      "logisticsB2B": {
+        "payment_pending": { "label": "Peman an atant", "description": "N ap tann konfimasyon peman an" },
+        "payment_validated": { "label": "Peman Valide", "description": "Peman ou a konfime" },
+        "in_china": { "label": "Nan Lachin", "description": "Pwodwi a nan depo orijin lan" },
+        "in_transit_usa": { "label": "An transit Ozetazini", "description": "N ap rive Ozetazini" },
+        "in_haiti_hub": { "label": "Hub Ayiti", "description": "Rive nan sant distribisyon an" },
+        "ready_for_delivery": { "label": "Pare pou livrezon", "description": "Disponib pou pran/livre" },
+        "delivered": { "label": "Livre", "description": "Kòmand fini" }
+      },
+      "logisticsB2C": {
+        "payment_pending": { "label": "Peman an atant", "description": "N ap tann konfimasyon peman an" },
+        "payment_validated": { "label": "Peman Konfime", "description": "Peman ou a konfime" },
+        "preparing": { "label": "N ap prepare", "description": "Vandè a ap prepare kòmand ou a" },
+        "shipped": { "label": "Voye", "description": "Kòmand ou a nan wout" },
+        "delivered": { "label": "Livre", "description": "Kòmand fini" }
+      },
+      "poStatus": {
+        "open": "Louvri",
+        "closed": "Fèmen",
+        "in_transit": "An transit",
+        "arrived_hub": "Nan Hub"
+      },
+      "card": {
+        "orderNumber": "Kòmand #{{id}}",
+        "andMore": "ak {{count}} lòt",
+        "po": "PO: {{number}}",
+        "tracking": "Swiv:"
+      },
+      "returnDialog": {
+        "titleExisting": "Demann Retou",
+        "titleNew": "Mande Retou",
+        "orderSummary": "Kòmand #{{id}} · ${{amount}}",
+        "existingMessage": "Gen deja yon demann retou pou kòmand sa a.",
+        "close": "Fèmen",
+        "reasonLabel": "Rezon *",
+        "reasonPlaceholder": "Chwazi kalite pwoblèm nan",
+        "reasons": {
+          "producto_danado": "Pwodwi domaje / defektye",
+          "producto_incorrecto": "Move pwodwi resevwa",
+          "no_llego": "Kòmand pa rive",
+          "descripcion_incorrecta": "Pa koresponn ak deskripsyon an",
+          "calidad": "Pwoblèm kalite",
+          "otro": "Lòt rezon"
+        },
+        "descriptionLabel": "Deskripsyon detaye *",
+        "descriptionPlaceholder": "Dekri pwoblèm nan an detay...",
+        "amountLabel": "Montan pou mande (opsyonèl)",
+        "amountHelper": "Kite vid pou mande montan total kòmand nan",
+        "cancel": "Anile",
+        "submit": "Voye Demann"
+      },
+      "detail": {
+        "poCardTitle": "Kòmand Acha Konsolide",
+        "poNumber": "Nimewo PO:",
+        "hybridId": "ID Ibrid:",
+        "chinaTracking": "Swiv Lachin:",
+        "poStatusLabel": "Estati PO:",
+        "trackingTitle": "Swivi an Tan Reyèl",
+        "syncedWithPO": "Senkwonize ak PO",
+        "updatedAt": "Mizajou: {{date}}",
+        "paymentValidatedAt": "Peman valide le {{date}}",
+        "shippingCardTitle": "Etikèt Livrezon",
+        "carrier": "Konpayi Livrezon",
+        "carrierUnspecified": "Pa presize",
+        "trackingNumber": "Nimewo Swivi",
+        "estimatedDelivery": "Livrezon estime:",
+        "trackWith": "Swiv ak {{carrier}}",
+        "trackWithDefault": "Konpayi Livrezon",
+        "productsTitle": "Pwodwi ({{count}})",
+        "sku": "SKU: {{sku}} · Kantite: {{qty}}",
+        "total": "Total",
+        "cancelledTitle": "Kòmand Anile",
+        "cancelledReason": "Rezon:",
+        "cancelledAt": "Anile le {{date}}",
+        "refundStatusTitle": "Estati Ranbousman",
+        "refundAmount": "Montan: {{currency}} ${{amount}}",
+        "reorder": "Achte Ankò",
+        "returnLabel": "Retou:",
+        "requestReturn": "Mande Retou",
+        "cancelOrder": "Anile Kòmand"
+      },
+      "cancelDialog": {
+        "title": "Anile Kòmand",
+        "description": "Aksyon sa a pa ka anile. Tanpri endike rezon anilasyon an.",
+        "reasonLabel": "Rezon anilasyon *",
+        "reasonPlaceholder": "Ekri rezon an...",
+        "refundLabel": "Mande ranbousman",
+        "refundHelper": "Kòmand ou a te deja peye. Montan: {{currency}} ${{amount}}",
+        "back": "Retounen",
+        "confirm": "Konfime Anilasyon"
+      },
+      "empty": {
+        "message": "Ou pa gen kòmand nan kategori sa a",
+        "cta": "Ale nan Magazen an"
+      },
+      "pagination": "{{from}}-{{to}} sou {{total}}",
+      "toast": {
+        "noItemsTitle": "Pa gen pwodwi pou ajoute",
+        "addedTitle": "Pwodwi ajoute nan panyen an",
+        "addedDescription": "{{count}} pwodwi ajoute"
+      }
+    },
+    "favorites": {
+      "title": "Favori Mwen Yo",
+      "emptyTitle": "Ou poko gen favori",
+      "emptyDescription": "Sove pwodwi ou renmen pou wè yo isit la",
+      "exploreStores": "Eksplore magazen yo",
+      "add": "Ajoute",
+      "addedToCart": "Ajoute nan panyen an"
+    },
+    "addresses": {
+      "title": "Adrès Mwen Yo",
+      "new": "Nouvo",
+      "emptyTitle": "Ou pa gen adrès sove",
+      "addAddress": "Ajoute adrès",
+      "default": "Adrès prensipal",
+      "setAsDefault": "Mete kòm prensipal",
+      "toastNameAddressRequired": "Non ak adrès obligatwa",
+      "toastSelectDepartment": "Chwazi yon depatman",
+      "toastSelectCommune": "Chwazi yon komin",
+      "dialog": {
+        "editTitle": "Modifye adrès",
+        "createTitle": "Nouvo adrès",
+        "labelField": "Etikèt *",
+        "labelPlaceholder": "Kay, Travay…",
+        "country": "Peyi",
+        "fullName": "Non konplè *",
+        "fullNamePlaceholder": "Jan Pyè",
+        "phone": "Telefòn",
+        "department": "Depatman *",
+        "departmentPlaceholder": "Chwazi depatman",
+        "commune": "Komin *",
+        "communePlaceholder": "Chwazi komin",
+        "communePlaceholderDisabled": "Chwazi yon depatman anvan",
+        "streetAddress": "Adrès *",
+        "streetAddressPlaceholder": "Ri, nimewo, sektè…",
+        "notes": "Nòt livrezon",
+        "notesPlaceholder": "Enstriksyon pou livrè a…",
+        "setDefault": "Mete kòm prensipal",
+        "cancel": "Anile",
+        "saveChanges": "Sove chanjman yo",
+        "createAddress": "Kreye adrès"
+      },
+      "deleteDialog": {
+        "title": "Efase adrès la?",
+        "description": "Aksyon sa a pa ka anile.",
+        "cancel": "Anile",
+        "confirm": "Efase"
+      }
+    },
+    "payment": {
+      "methodLabels": {
+        "bank": "Transfè Bankè",
+        "moncash": "MonCash",
+        "natcash": "NatCash",
+        "stripe": "Kat Kredi"
+      },
+      "title": "Metòd Peman Mwen Yo",
+      "subtitle": "Konfigire kont ou yo pou peye ak resevwa ranbousman",
+      "configured": "Konfigire",
+      "bank": {
+        "bankName": "Bank:",
+        "accountHolder": "Detantè:",
+        "accountNumber": "Kont:"
+      },
+      "mobile": {
+        "number": "Nimewo:",
+        "name": "Non:"
+      },
+      "setDefault": "Mete kòm prensipal",
+      "edit": "Modifye",
+      "delete": "Efase",
+      "notConfigured": "Pa konfigire",
+      "configure": "Konfigire",
+      "noMethods": "Pa gen metòd peman disponib kounye a",
+      "stripeNotice": "🔒 Enfòmasyon kat yo trete an sekirite pa Stripe. Nou pa janm sere nimewo kat.",
+      "configDialog": {
+        "editTitle": "Modifye {{name}}",
+        "configureTitle": "Konfigire {{name}}",
+        "aliasLabel": "Alias (opsyonèl)",
+        "aliasPlaceholder": "Egz: {{name}} prensipal mwen",
+        "bankNameLabel": "Non bank lan",
+        "bankNamePlaceholder": "Egz: BNC, Digicel Bank…",
+        "accountHolderLabel": "Detantè kont lan",
+        "accountHolderPlaceholder": "Non konplè",
+        "accountNumberLabel": "Nimewo kont",
+        "accountNumberPlaceholder": "0000 0000 0000",
+        "accountTypeLabel": "Kalite kont",
+        "accountTypePlaceholder": "Kouran / Epay",
+        "phoneLabel": "Nimewo telefòn",
+        "phonePlaceholder": "+509 XXXX XXXX",
+        "holderNameLabel": "Non detantè a",
+        "holderNamePlaceholder": "Non ki anrejistre sou kont lan",
+        "stripeTitle": "Kat Kredi/Debi",
+        "stripeDescription": "Lè w sove, w ap redirije nan fòm sekirize Stripe pou ajoute kat ou. Nimewo kat ou pa janm sere sou sèvè nou yo.",
+        "stripeCurrentCard": "Kat aktyèl: {{brand}} •••• {{last4}}",
+        "cancel": "Anile",
+        "update": "Mizajou",
+        "save": "Sove"
+      },
+      "deleteDialog": {
+        "title": "Efase metòd peman sa a?",
+        "description": "Enfòmasyon ki sove yo ap efase. Ou ka rekonfigire l nenpòt lè.",
+        "cancel": "Anile",
+        "confirm": "Efase"
+      }
+    },
+    "returns": {
+      "title": "Retou Mwen Yo",
+      "newRequest": "Nouvo demann",
+      "infoBanner": "Pou retou kòmand B2C, vandè a ap revize demann ou. Pou kòmand B2B, administratè a ap jere pwosesis la.",
+      "emptyTitle": "Ou pa gen demann retou",
+      "emptyDescription": "Lè ou mande yon retou, l ap parèt isit la",
+      "orderNumber": "Kòmand #{{id}}",
+      "noReason": "Pa gen rezon",
+      "amountRequested": "Montan mande:",
+      "amountApproved": "Apwouve:",
+      "sellerNotes": "Vandè: \"{{notes}}\"",
+      "reasonTypes": {
+        "damaged": "Pwodwi domaje",
+        "wrong_item": "Move pwodwi",
+        "not_as_desc": "Pa koresponn ak deskripsyon",
+        "missing_part": "Pyès ki manke",
+        "other": "Lòt rezon"
+      },
+      "dialog": {
+        "title": "Nouvo Demann Retou",
+        "orderIdLabel": "ID Kòmand *",
+        "orderIdPlaceholder": "Kole ID kòmand lan",
+        "orderIdHelper": "Ou ka jwenn li nan detay kòmand ou",
+        "orderTypeLabel": "Kalite kòmand *",
+        "orderTypeB2C": "B2C — Magazen anliy",
+        "orderTypeB2B": "B2B — Katalòg an gwo",
+        "reasonTypeLabel": "Rezon retou *",
+        "reasonTypePlaceholder": "Chwazi yon rezon",
+        "descriptionLabel": "Deskripsyon detaye *",
+        "descriptionPlaceholder": "Eksplike sa ki te pase ak pwodwi a…",
+        "amountLabel": "Montan pou ranbouse (opsyonèl)",
+        "cancel": "Anile",
+        "submit": "Voye demann"
+      }
+    },
+    "paymentHub": {
+      "title": "Sant Peman",
+      "description": "Jere metòd ou yo, gade peman an atant ak istwa tranzaksyon yo.",
+      "tabs": {
+        "methods": "Metòd",
+        "pending": "An atant",
+        "history": "Istwa"
+      },
+      "status": {
+        "paid": "Peye",
+        "pendingValidation": "An validasyon",
+        "pending": "An atant"
+      },
+      "noPending": "Ou pa gen peman an atant.",
+      "noHistory": "Ou poko gen istwa peman.",
+      "close": "Fèmen"
+    },
+    "support": {
+      "title": "Sant Èd",
+      "subtitle": "Kijan nou ka ede w?",
+      "liveChat": {
+        "label": "Chat an dirèk",
+        "description": "Pale ak sipò kounye a"
+      },
+      "whatsapp": {
+        "label": "WhatsApp",
+        "description": "Sipò ak vant atravè WhatsApp"
+      },
+      "call": {
+        "label": "Rele",
+        "description": "Byento"
+      },
+      "email": {
+        "label": "Imèl",
+        "description": "Byento"
+      }
+    },
+    "completeProfile": {
+      "title": "Konplete kont ou",
+      "description": "Gen kèk enfòmasyon ki manke nan pwofil ou{{phoneNote}}. Konplete yo pou akselere acha ou yo ak resevwa sipò pi vit.",
+      "phoneNote": " (telefòn)",
+      "later": "Pita",
+      "completeNow": "Konplete kounye a"
+    }
+  }
+}
