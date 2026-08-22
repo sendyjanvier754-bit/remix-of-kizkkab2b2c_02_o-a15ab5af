@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { Heart, ShoppingCart, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 
 export function InlineFavoritesPanel() {
+  const { t } = useTranslation();
   const { items, isLoading, toggle, isRemoving } = useB2CFavorites();
   const { addItem } = useCart();
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export function InlineFavoritesPanel() {
       <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-          <h2 className="text-sm font-bold text-foreground">Mis Favoritos</h2>
+          <h2 className="text-sm font-bold text-foreground">{t('profilePanels.favorites.title')}</h2>
           <Badge variant="secondary" className="text-xs">{items.length}</Badge>
         </div>
       </div>
@@ -33,15 +35,15 @@ export function InlineFavoritesPanel() {
       {items.length === 0 ? (
         <div className="py-16 flex flex-col items-center gap-3 text-center">
           <Heart className="w-12 h-12 text-muted-foreground/30" />
-          <p className="text-sm font-medium text-muted-foreground">Aún no tienes favoritos</p>
-          <p className="text-xs text-muted-foreground">Guarda productos que te gusten para verlos aquí</p>
+          <p className="text-sm font-medium text-muted-foreground">{t('profilePanels.favorites.emptyTitle')}</p>
+          <p className="text-xs text-muted-foreground">{t('profilePanels.favorites.emptyDescription')}</p>
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate("/tiendas")}
             className="mt-2"
           >
-            Explorar tiendas
+            {t('profilePanels.favorites.exploreStores')}
           </Button>
         </div>
       ) : (
@@ -95,11 +97,11 @@ export function InlineFavoritesPanel() {
                       sku: item.sku,
                       store_id: item.store_id ?? undefined,
                     } as any);
-                    toast.success("Agregado al carrito");
+                    toast.success(t('profilePanels.favorites.addedToCart'));
                   }}
                   className="flex-1 flex items-center justify-center gap-1 py-1 rounded border border-border text-[10px] text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                 >
-                  <ShoppingCart className="w-3 h-3" /> Agregar
+                  <ShoppingCart className="w-3 h-3" /> {t('profilePanels.favorites.add')}
                 </button>
                 {item.store_id && (
                   <button

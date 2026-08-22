@@ -640,7 +640,7 @@ const ProductPage = () => {
     if (isB2BUser && totalSelectedQty > 0 && totalSelectedQty < currentMoq) {
       toast({
         title: t('pagesExtra.product.minQuantityTitle'),
-        description: `El pedido total debe ser al menos ${currentMoq} unidades.`,
+        description: t('pagesExtra.product.minQuantityDesc', { moq: currentMoq }),
         className: 'bg-yellow-100'
       });
       return;
