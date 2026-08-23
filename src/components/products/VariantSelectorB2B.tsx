@@ -63,7 +63,7 @@ interface VariantSelectorB2BProps {
 }
 
 // Attribute type display configuration
-const getAttributeConfig = (t: (k: string) => string): Record<string, { icon: typeof Palette; displayName: string; order: number }> => ({
+const getAttributeConfig = (t: (k: string, o?: Record<string, unknown>) => string): Record<string, { icon: typeof Palette; displayName: string; order: number }> => ({
   color: { icon: Palette, displayName: t('catalogExtra.variantSelectorB2B.attributes.color', { defaultValue: 'Color' }), order: 1 },
   size: { icon: Ruler, displayName: t('catalogExtra.variantSelectorB2B.attributes.size', { defaultValue: 'Talla' }), order: 2 },
   talla: { icon: Ruler, displayName: t('catalogExtra.variantSelectorB2B.attributes.size', { defaultValue: 'Talla' }), order: 2 },
