@@ -13,6 +13,7 @@
  * Reuses the exact same data hooks, components, and logic as MyPurchasesPage.
  */
 import { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,35 +59,35 @@ import {
 } from "@/hooks/useOrderReturnRequests";
 
 // ── status config (mirrors MyPurchasesPage) ──────────────────────────────────
-const statusConfig: Record<BuyerOrderStatus, { label: string; color: string; icon: React.ReactNode; bgColor: string }> = {
-  draft:      { label: "Borrador",    color: "text-gray-600",    icon: <Clock className="h-4 w-4" />,       bgColor: "bg-gray-100"   },
-  placed:     { label: "Confirmado",  color: "text-blue-600",    icon: <Package className="h-4 w-4" />,     bgColor: "bg-blue-100"   },
-  paid:       { label: "Pagado",      color: "text-amber-600",   icon: <CheckCircle className="h-4 w-4" />, bgColor: "bg-amber-100"  },
-  shipped:    { label: "En camino",   color: "text-purple-600",  icon: <Truck className="h-4 w-4" />,       bgColor: "bg-purple-100" },
-  delivered:  { label: "Entregado",   color: "text-green-600",   icon: <CheckCircle className="h-4 w-4" />, bgColor: "bg-green-100"  },
-  cancelled:  { label: "Cancelado",   color: "text-red-600",     icon: <XCircle className="h-4 w-4" />,     bgColor: "bg-red-100"    },
-  in_transit: { label: "En tránsito", color: "text-indigo-600",  icon: <Truck className="h-4 w-4" />,       bgColor: "bg-indigo-100" },
-  preparing:  { label: "Preparando",  color: "text-orange-600",  icon: <Package className="h-4 w-4" />,     bgColor: "bg-orange-100" },
-};
+const getStatusConfig = (t: (k: string, o?: Record<string, unknown>) => string): Record<BuyerOrderStatus, { label: string; color: string; icon: React.ReactNode; bgColor: string }> => ({
+  draft:      { label: t("profilePanels.orders.status.draft"),      color: "text-gray-600",    icon: <Clock className="h-4 w-4" />,       bgColor: "bg-gray-100"   },
+  placed:     { label: t("profilePanels.orders.status.placed"),     color: "text-blue-600",    icon: <Package className="h-4 w-4" />,     bgColor: "bg-blue-100"   },
+  paid:       { label: t("profilePanels.orders.status.paid"),       color: "text-amber-600",   icon: <CheckCircle className="h-4 w-4" />, bgColor: "bg-amber-100"  },
+  shipped:    { label: t("profilePanels.orders.status.shipped"),    color: "text-purple-600",  icon: <Truck className="h-4 w-4" />,       bgColor: "bg-purple-100" },
+  delivered:  { label: t("profilePanels.orders.status.delivered"),  color: "text-green-600",   icon: <CheckCircle className="h-4 w-4" />, bgColor: "bg-green-100"  },
+  cancelled:  { label: t("profilePanels.orders.status.cancelled"),  color: "text-red-600",     icon: <XCircle className="h-4 w-4" />,     bgColor: "bg-red-100"    },
+  in_transit: { label: t("profilePanels.orders.status.in_transit"), color: "text-indigo-600",  icon: <Truck className="h-4 w-4" />,       bgColor: "bg-indigo-100" },
+  preparing:  { label: t("profilePanels.orders.status.preparing"),  color: "text-orange-600",  icon: <Package className="h-4 w-4" />,     bgColor: "bg-orange-100" },
+});
 
-const refundStatusConfig: Record<RefundStatus, { label: string; color: string; bgColor: string }> = {
-  none:       { label: "Sin reembolso", color: "text-gray-600",  bgColor: "bg-gray-100"  },
-  requested:  { label: "Solicitado",    color: "text-amber-600", bgColor: "bg-amber-100" },
-  processing: { label: "En proceso",    color: "text-blue-600",  bgColor: "bg-blue-100"  },
-  completed:  { label: "Completado",    color: "text-green-600", bgColor: "bg-green-100" },
-  rejected:   { label: "Rechazado",     color: "text-red-600",   bgColor: "bg-red-100"   },
-};
+const getRefundStatusConfig = (t: (k: string, o?: Record<string, unknown>) => string): Record<RefundStatus, { label: string; color: string; bgColor: string }> => ({
+  none:       { label: t("profilePanels.orders.refundStatus.none"),       color: "text-gray-600",  bgColor: "bg-gray-100"  },
+  requested:  { label: t("profilePanels.orders.refundStatus.requested"),  color: "text-amber-600", bgColor: "bg-amber-100" },
+  processing: { label: t("profilePanels.orders.refundStatus.processing"), color: "text-blue-600",  bgColor: "bg-blue-100"  },
+  completed:  { label: t("profilePanels.orders.refundStatus.completed"),  color: "text-green-600", bgColor: "bg-green-100" },
+  rejected:   { label: t("profilePanels.orders.refundStatus.rejected"),   color: "text-red-600",   bgColor: "bg-red-100"   },
+});
 
 type LogisticsStage = 'payment_pending' | 'payment_validated' | 'in_china' | 'in_transit_usa' | 'in_haiti_hub' | 'ready_for_delivery' | 'delivered';
 
-const logisticsStages: { key: LogisticsStage; label: string; icon: React.ReactNode; description: string }[] = [
-  { key: 'payment_pending',    label: 'Pago Pendiente',      icon: <Clock className="h-4 w-4" />,        description: 'Esperando confirmación de pago' },
-  { key: 'payment_validated',  label: 'Pago Validado',       icon: <CheckCircle className="h-4 w-4" />,  description: 'Tu pago fue confirmado' },
-  { key: 'in_china',           label: 'En China',            icon: <Package className="h-4 w-4" />,      description: 'Producto en almacén de origen' },
-  { key: 'in_transit_usa',     label: 'Tránsito USA',        icon: <Plane className="h-4 w-4" />,        description: 'En camino a Estados Unidos' },
-  { key: 'in_haiti_hub',       label: 'Hub Haití',           icon: <Warehouse className="h-4 w-4" />,    description: 'Llegó al centro de distribución' },
-  { key: 'ready_for_delivery', label: 'Listo para Entrega',  icon: <PackageCheck className="h-4 w-4" />, description: 'Disponible para recoger/entregar' },
-  { key: 'delivered',          label: 'Entregado',           icon: <CheckCircle className="h-4 w-4" />,  description: 'Pedido completado' },
+const getLogisticsStages = (t: (k: string, o?: Record<string, unknown>) => string): { key: LogisticsStage; label: string; icon: React.ReactNode; description: string }[] => [
+  { key: 'payment_pending',    label: t("profilePanels.orders.logisticsB2B.payment_pending.label"),    icon: <Clock className="h-4 w-4" />,        description: t("profilePanels.orders.logisticsB2B.payment_pending.description") },
+  { key: 'payment_validated',  label: t("profilePanels.orders.logisticsB2B.payment_validated.label"),  icon: <CheckCircle className="h-4 w-4" />,  description: t("profilePanels.orders.logisticsB2B.payment_validated.description") },
+  { key: 'in_china',           label: t("profilePanels.orders.logisticsB2B.in_china.label"),           icon: <Package className="h-4 w-4" />,      description: t("profilePanels.orders.logisticsB2B.in_china.description") },
+  { key: 'in_transit_usa',     label: t("profilePanels.orders.logisticsB2B.in_transit_usa.label"),     icon: <Plane className="h-4 w-4" />,        description: t("profilePanels.orders.logisticsB2B.in_transit_usa.description") },
+  { key: 'in_haiti_hub',       label: t("profilePanels.orders.logisticsB2B.in_haiti_hub.label"),       icon: <Warehouse className="h-4 w-4" />,    description: t("profilePanels.orders.logisticsB2B.in_haiti_hub.description") },
+  { key: 'ready_for_delivery', label: t("profilePanels.orders.logisticsB2B.ready_for_delivery.label"), icon: <PackageCheck className="h-4 w-4" />, description: t("profilePanels.orders.logisticsB2B.ready_for_delivery.description") },
+  { key: 'delivered',          label: t("profilePanels.orders.logisticsB2B.delivered.label"),          icon: <CheckCircle className="h-4 w-4" />,  description: t("profilePanels.orders.logisticsB2B.delivered.description") },
 ];
 
 const carrierUrls: Record<string, string> = {
@@ -115,13 +116,13 @@ const getLogisticsStage = (order: BuyerOrder, poInfo?: OrderPOInfo): LogisticsSt
 };
 
 // ── STATUS TABS ───────────────────────────────────────────────────────────────
-const STATUS_TABS: { value: BuyerOrderStatus | 'all'; label: string }[] = [
-  { value: 'all',       label: 'Todos'       },
-  { value: 'placed',    label: 'Confirmados' },
-  { value: 'paid',      label: 'Pagados'     },
-  { value: 'shipped',   label: 'En camino'   },
-  { value: 'delivered', label: 'Entregados'  },
-  { value: 'cancelled', label: 'Cancelados'  },
+const getStatusTabs = (t: (k: string, o?: Record<string, unknown>) => string): { value: BuyerOrderStatus | 'all'; label: string }[] => [
+  { value: 'all',       label: t("profilePanels.orders.tabs.all") },
+  { value: 'placed',    label: t("profilePanels.orders.tabs.placed") },
+  { value: 'paid',      label: t("profilePanels.orders.tabs.paid") },
+  { value: 'shipped',   label: t("profilePanels.orders.tabs.shipped") },
+  { value: 'delivered', label: t("profilePanels.orders.tabs.delivered") },
+  { value: 'cancelled', label: t("profilePanels.orders.tabs.cancelled") },
 ];
 
 // ── ORDER CARD ────────────────────────────────────────────────────────────────
