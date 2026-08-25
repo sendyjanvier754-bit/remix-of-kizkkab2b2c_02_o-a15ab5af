@@ -1268,7 +1268,7 @@ const ProductPage = () => {
                     B2B
                   </span>}
                 {isB2BUser && dynamicPrice !== null && <span className="text-xs font-medium text-white bg-blue-600 px-2 py-0.5 rounded">
-                    Motor DinÃ¡mico âš¡
+                    {t('pagesExtra.product.dynamicEngine')} ⚡
                   </span>}
               </div>
 
@@ -1279,7 +1279,7 @@ const ProductPage = () => {
                   </div>
                   <div className="h-4 w-px bg-gray-300"></div>
                   <div className="text-green-600 font-medium">
-                    Margen: {businessSummary?.profitPercentage}%
+                    {t('pagesExtra.product.marginLabel', { percent: businessSummary?.profitPercentage })}
                   </div>
                 </div>}
             </div>

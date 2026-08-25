@@ -132,6 +132,8 @@ const OrderCard = ({
   poInfo,
   returnStatus,
 }: { order: BuyerOrder; onClick: () => void; poInfo?: OrderPOInfo; returnStatus?: string | null }) => {
+  const { t } = useTranslation();
+  const statusConfig = getStatusConfig(t);
   const status = statusConfig[order.status] || statusConfig.draft;
   const itemCount = order.order_items_b2b?.length || 0;
   const firstItem = order.order_items_b2b?.[0];
@@ -161,7 +163,7 @@ const OrderCard = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-semibold text-xs sm:text-sm text-foreground">
-                  Pedido #{order.id.slice(0, 8).toUpperCase()}
+                  {t("profilePanels.orders.card.orderNumber", { id: order.id.slice(0, 8).toUpperCase() })}
                 </span>
                 <Badge variant="outline" className={`${status.color} border-current text-[10px] sm:text-xs px-1.5`}>
                   {status.label}
@@ -186,11 +188,11 @@ const OrderCard = ({
                 {format(new Date(order.created_at), "d 'de' MMMM, yyyy", { locale: es })}
               </p>
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate mt-0.5 max-w-[200px] sm:max-w-none">
-                {firstItem?.nombre}{itemCount > 1 && ` y ${itemCount - 1} más`}
+                {firstItem?.nombre}{itemCount > 1 && ` ${t("profilePanels.orders.card.andMore", { count: itemCount - 1 })}`}
               </p>
               {poInfo && (
                 <p className="text-[11px] sm:text-xs text-blue-600 mt-1 flex items-center gap-1">
-                  <Package className="h-3 w-3" />PO: {poInfo.po_number}
+                  <Package className="h-3 w-3" />{t("profilePanels.orders.card.po", { number: poInfo.po_number })}
                 </p>
               )}
             </div>
@@ -202,7 +204,7 @@ const OrderCard = ({
                 {order.currency} ${order.total_amount.toLocaleString()}
               </p>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                {order.total_quantity} {order.total_quantity === 1 ? 'art.' : 'arts.'}
+                {t("profilePanels.orders.itemsCount", { count: order.total_quantity })}
               </p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
@@ -211,7 +213,7 @@ const OrderCard = ({
         {order.status === 'shipped' && order.metadata?.tracking_number && (
           <div className="mt-2.5 pt-2.5 border-t flex items-center gap-2 text-[11px] sm:text-xs">
             <Truck className="h-3.5 w-3.5 text-purple-600 shrink-0" />
-            <span className="text-muted-foreground">Rastreo:</span>
+            <span className="text-muted-foreground">{t("profilePanels.orders.card.tracking")}</span>
             <span className="font-medium text-purple-600 truncate">{order.metadata.tracking_number}</span>
           </div>
         )}
