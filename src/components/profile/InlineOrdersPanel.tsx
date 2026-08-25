@@ -13,6 +13,7 @@
  * Reuses the exact same data hooks, components, and logic as MyPurchasesPage.
  */
 import { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,35 +59,35 @@ import {
 } from "@/hooks/useOrderReturnRequests";
 
 // ── status config (mirrors MyPurchasesPage) ──────────────────────────────────
-const statusConfig: Record<BuyerOrderStatus, { label: string; color: string; icon: React.ReactNode; bgColor: string }> = {
-  draft:      { label: "Borrador",    color: "text-gray-600",    icon: <Clock className="h-4 w-4" />,       bgColor: "bg-gray-100"   },
-  placed:     { label: "Confirmado",  color: "text-blue-600",    icon: <Package className="h-4 w-4" />,     bgColor: "bg-blue-100"   },
-  paid:       { label: "Pagado",      color: "text-amber-600",   icon: <CheckCircle className="h-4 w-4" />, bgColor: "bg-amber-100"  },
-  shipped:    { label: "En camino",   color: "text-purple-600",  icon: <Truck className="h-4 w-4" />,       bgColor: "bg-purple-100" },
-  delivered:  { label: "Entregado",   color: "text-green-600",   icon: <CheckCircle className="h-4 w-4" />, bgColor: "bg-green-100"  },
-  cancelled:  { label: "Cancelado",   color: "text-red-600",     icon: <XCircle className="h-4 w-4" />,     bgColor: "bg-red-100"    },
-  in_transit: { label: "En tránsito", color: "text-indigo-600",  icon: <Truck className="h-4 w-4" />,       bgColor: "bg-indigo-100" },
-  preparing:  { label: "Preparando",  color: "text-orange-600",  icon: <Package className="h-4 w-4" />,     bgColor: "bg-orange-100" },
-};
+const getStatusConfig = (t: (k: string, o?: Record<string, unknown>) => string): Record<BuyerOrderStatus, { label: string; color: string; icon: React.ReactNode; bgColor: string }> => ({
+  draft:      { label: t("profilePanels.orders.status.draft"),      color: "text-gray-600",    icon: <Clock className="h-4 w-4" />,       bgColor: "bg-gray-100"   },
+  placed:     { label: t("profilePanels.orders.status.placed"),     color: "text-blue-600",    icon: <Package className="h-4 w-4" />,     bgColor: "bg-blue-100"   },
+  paid:       { label: t("profilePanels.orders.status.paid"),       color: "text-amber-600",   icon: <CheckCircle className="h-4 w-4" />, bgColor: "bg-amber-100"  },
+  shipped:    { label: t("profilePanels.orders.status.shipped"),    color: "text-purple-600",  icon: <Truck className="h-4 w-4" />,       bgColor: "bg-purple-100" },
+  delivered:  { label: t("profilePanels.orders.status.delivered"),  color: "text-green-600",   icon: <CheckCircle className="h-4 w-4" />, bgColor: "bg-green-100"  },
+  cancelled:  { label: t("profilePanels.orders.status.cancelled"),  color: "text-red-600",     icon: <XCircle className="h-4 w-4" />,     bgColor: "bg-red-100"    },
+  in_transit: { label: t("profilePanels.orders.status.in_transit"), color: "text-indigo-600",  icon: <Truck className="h-4 w-4" />,       bgColor: "bg-indigo-100" },
+  preparing:  { label: t("profilePanels.orders.status.preparing"),  color: "text-orange-600",  icon: <Package className="h-4 w-4" />,     bgColor: "bg-orange-100" },
+});
 
-const refundStatusConfig: Record<RefundStatus, { label: string; color: string; bgColor: string }> = {
-  none:       { label: "Sin reembolso", color: "text-gray-600",  bgColor: "bg-gray-100"  },
-  requested:  { label: "Solicitado",    color: "text-amber-600", bgColor: "bg-amber-100" },
-  processing: { label: "En proceso",    color: "text-blue-600",  bgColor: "bg-blue-100"  },
-  completed:  { label: "Completado",    color: "text-green-600", bgColor: "bg-green-100" },
-  rejected:   { label: "Rechazado",     color: "text-red-600",   bgColor: "bg-red-100"   },
-};
+const getRefundStatusConfig = (t: (k: string, o?: Record<string, unknown>) => string): Record<RefundStatus, { label: string; color: string; bgColor: string }> => ({
+  none:       { label: t("profilePanels.orders.refundStatus.none"),       color: "text-gray-600",  bgColor: "bg-gray-100"  },
+  requested:  { label: t("profilePanels.orders.refundStatus.requested"),  color: "text-amber-600", bgColor: "bg-amber-100" },
+  processing: { label: t("profilePanels.orders.refundStatus.processing"), color: "text-blue-600",  bgColor: "bg-blue-100"  },
+  completed:  { label: t("profilePanels.orders.refundStatus.completed"),  color: "text-green-600", bgColor: "bg-green-100" },
+  rejected:   { label: t("profilePanels.orders.refundStatus.rejected"),   color: "text-red-600",   bgColor: "bg-red-100"   },
+});
 
 type LogisticsStage = 'payment_pending' | 'payment_validated' | 'in_china' | 'in_transit_usa' | 'in_haiti_hub' | 'ready_for_delivery' | 'delivered';
 
-const logisticsStages: { key: LogisticsStage; label: string; icon: React.ReactNode; description: string }[] = [
-  { key: 'payment_pending',    label: 'Pago Pendiente',      icon: <Clock className="h-4 w-4" />,        description: 'Esperando confirmación de pago' },
-  { key: 'payment_validated',  label: 'Pago Validado',       icon: <CheckCircle className="h-4 w-4" />,  description: 'Tu pago fue confirmado' },
-  { key: 'in_china',           label: 'En China',            icon: <Package className="h-4 w-4" />,      description: 'Producto en almacén de origen' },
-  { key: 'in_transit_usa',     label: 'Tránsito USA',        icon: <Plane className="h-4 w-4" />,        description: 'En camino a Estados Unidos' },
-  { key: 'in_haiti_hub',       label: 'Hub Haití',           icon: <Warehouse className="h-4 w-4" />,    description: 'Llegó al centro de distribución' },
-  { key: 'ready_for_delivery', label: 'Listo para Entrega',  icon: <PackageCheck className="h-4 w-4" />, description: 'Disponible para recoger/entregar' },
-  { key: 'delivered',          label: 'Entregado',           icon: <CheckCircle className="h-4 w-4" />,  description: 'Pedido completado' },
+const getLogisticsStages = (t: (k: string, o?: Record<string, unknown>) => string): { key: LogisticsStage; label: string; icon: React.ReactNode; description: string }[] => [
+  { key: 'payment_pending',    label: t("profilePanels.orders.logisticsB2B.payment_pending.label"),    icon: <Clock className="h-4 w-4" />,        description: t("profilePanels.orders.logisticsB2B.payment_pending.description") },
+  { key: 'payment_validated',  label: t("profilePanels.orders.logisticsB2B.payment_validated.label"),  icon: <CheckCircle className="h-4 w-4" />,  description: t("profilePanels.orders.logisticsB2B.payment_validated.description") },
+  { key: 'in_china',           label: t("profilePanels.orders.logisticsB2B.in_china.label"),           icon: <Package className="h-4 w-4" />,      description: t("profilePanels.orders.logisticsB2B.in_china.description") },
+  { key: 'in_transit_usa',     label: t("profilePanels.orders.logisticsB2B.in_transit_usa.label"),     icon: <Plane className="h-4 w-4" />,        description: t("profilePanels.orders.logisticsB2B.in_transit_usa.description") },
+  { key: 'in_haiti_hub',       label: t("profilePanels.orders.logisticsB2B.in_haiti_hub.label"),       icon: <Warehouse className="h-4 w-4" />,    description: t("profilePanels.orders.logisticsB2B.in_haiti_hub.description") },
+  { key: 'ready_for_delivery', label: t("profilePanels.orders.logisticsB2B.ready_for_delivery.label"), icon: <PackageCheck className="h-4 w-4" />, description: t("profilePanels.orders.logisticsB2B.ready_for_delivery.description") },
+  { key: 'delivered',          label: t("profilePanels.orders.logisticsB2B.delivered.label"),          icon: <CheckCircle className="h-4 w-4" />,  description: t("profilePanels.orders.logisticsB2B.delivered.description") },
 ];
 
 const carrierUrls: Record<string, string> = {
@@ -115,13 +116,13 @@ const getLogisticsStage = (order: BuyerOrder, poInfo?: OrderPOInfo): LogisticsSt
 };
 
 // ── STATUS TABS ───────────────────────────────────────────────────────────────
-const STATUS_TABS: { value: BuyerOrderStatus | 'all'; label: string }[] = [
-  { value: 'all',       label: 'Todos'       },
-  { value: 'placed',    label: 'Confirmados' },
-  { value: 'paid',      label: 'Pagados'     },
-  { value: 'shipped',   label: 'En camino'   },
-  { value: 'delivered', label: 'Entregados'  },
-  { value: 'cancelled', label: 'Cancelados'  },
+const getStatusTabs = (t: (k: string, o?: Record<string, unknown>) => string): { value: BuyerOrderStatus | 'all'; label: string }[] => [
+  { value: 'all',       label: t("profilePanels.orders.tabs.all") },
+  { value: 'placed',    label: t("profilePanels.orders.tabs.placed") },
+  { value: 'paid',      label: t("profilePanels.orders.tabs.paid") },
+  { value: 'shipped',   label: t("profilePanels.orders.tabs.shipped") },
+  { value: 'delivered', label: t("profilePanels.orders.tabs.delivered") },
+  { value: 'cancelled', label: t("profilePanels.orders.tabs.cancelled") },
 ];
 
 // ── ORDER CARD ────────────────────────────────────────────────────────────────
@@ -131,6 +132,8 @@ const OrderCard = ({
   poInfo,
   returnStatus,
 }: { order: BuyerOrder; onClick: () => void; poInfo?: OrderPOInfo; returnStatus?: string | null }) => {
+  const { t } = useTranslation();
+  const statusConfig = getStatusConfig(t);
   const status = statusConfig[order.status] || statusConfig.draft;
   const itemCount = order.order_items_b2b?.length || 0;
   const firstItem = order.order_items_b2b?.[0];
@@ -160,7 +163,7 @@ const OrderCard = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-semibold text-xs sm:text-sm text-foreground">
-                  Pedido #{order.id.slice(0, 8).toUpperCase()}
+                  {t("profilePanels.orders.card.orderNumber", { id: order.id.slice(0, 8).toUpperCase() })}
                 </span>
                 <Badge variant="outline" className={`${status.color} border-current text-[10px] sm:text-xs px-1.5`}>
                   {status.label}
@@ -185,11 +188,11 @@ const OrderCard = ({
                 {format(new Date(order.created_at), "d 'de' MMMM, yyyy", { locale: es })}
               </p>
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate mt-0.5 max-w-[200px] sm:max-w-none">
-                {firstItem?.nombre}{itemCount > 1 && ` y ${itemCount - 1} más`}
+                {firstItem?.nombre}{itemCount > 1 && ` ${t("profilePanels.orders.card.andMore", { count: itemCount - 1 })}`}
               </p>
               {poInfo && (
                 <p className="text-[11px] sm:text-xs text-blue-600 mt-1 flex items-center gap-1">
-                  <Package className="h-3 w-3" />PO: {poInfo.po_number}
+                  <Package className="h-3 w-3" />{t("profilePanels.orders.card.po", { number: poInfo.po_number })}
                 </p>
               )}
             </div>
@@ -201,7 +204,7 @@ const OrderCard = ({
                 {order.currency} ${order.total_amount.toLocaleString()}
               </p>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                {order.total_quantity} {order.total_quantity === 1 ? 'art.' : 'arts.'}
+                {t("profilePanels.orders.itemsCount", { count: order.total_quantity })}
               </p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
@@ -210,7 +213,7 @@ const OrderCard = ({
         {order.status === 'shipped' && order.metadata?.tracking_number && (
           <div className="mt-2.5 pt-2.5 border-t flex items-center gap-2 text-[11px] sm:text-xs">
             <Truck className="h-3.5 w-3.5 text-purple-600 shrink-0" />
-            <span className="text-muted-foreground">Rastreo:</span>
+            <span className="text-muted-foreground">{t("profilePanels.orders.card.tracking")}</span>
             <span className="font-medium text-purple-600 truncate">{order.metadata.tracking_number}</span>
           </div>
         )}
@@ -223,6 +226,7 @@ const OrderCard = ({
 const ReturnRequestDialog = ({
   order, open, onClose, existingReturnStatus,
 }: { order: BuyerOrder | null; open: boolean; onClose: () => void; existingReturnStatus?: string | null }) => {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   const [reasonType, setReasonType] = useState('');
   const [amountRequested, setAmountRequested] = useState('');
@@ -251,7 +255,7 @@ const ReturnRequestDialog = ({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <RotateCcw className="h-5 w-5" />Solicitud de Devolución
+              <RotateCcw className="h-5 w-5" />{t("profilePanels.orders.returnDialog.titleExisting")}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4 text-center space-y-3">
@@ -259,11 +263,11 @@ const ReturnRequestDialog = ({
               {cfg?.label || existingReturnStatus}
             </Badge>
             <p className="text-sm text-muted-foreground">
-              Ya existe una solicitud de devolución para este pedido.
+              {t("profilePanels.orders.returnDialog.existingMessage")}
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={onClose}>Cerrar</Button>
+            <Button variant="outline" onClick={onClose}>{t("profilePanels.orders.returnDialog.close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -275,40 +279,40 @@ const ReturnRequestDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <RotateCcw className="h-5 w-5 text-amber-600" />Solicitar Devolución
+            <RotateCcw className="h-5 w-5 text-amber-600" />{t("profilePanels.orders.returnDialog.titleNew")}
           </DialogTitle>
           <DialogDescription>
-            Pedido #{order.id.slice(0, 8).toUpperCase()} · ${order.total_amount.toLocaleString()}
+            {t("profilePanels.orders.returnDialog.orderSummary", { id: order.id.slice(0, 8).toUpperCase(), amount: order.total_amount.toLocaleString() })}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>Motivo *</Label>
+            <Label>{t("profilePanels.orders.returnDialog.reasonLabel")}</Label>
             <Select value={reasonType} onValueChange={setReasonType}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona el tipo de problema" />
+                <SelectValue placeholder={t("profilePanels.orders.returnDialog.reasonPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="producto_danado">Producto dañado / defectuoso</SelectItem>
-                <SelectItem value="producto_incorrecto">Producto incorrecto recibido</SelectItem>
-                <SelectItem value="no_llegó">Pedido no llegó</SelectItem>
-                <SelectItem value="descripcion_incorrecta">No corresponde a la descripción</SelectItem>
-                <SelectItem value="calidad">Problema de calidad</SelectItem>
-                <SelectItem value="otro">Otro motivo</SelectItem>
+                <SelectItem value="producto_danado">{t("profilePanels.orders.returnDialog.reasons.producto_danado")}</SelectItem>
+                <SelectItem value="producto_incorrecto">{t("profilePanels.orders.returnDialog.reasons.producto_incorrecto")}</SelectItem>
+                <SelectItem value="no_llegó">{t("profilePanels.orders.returnDialog.reasons.no_llego")}</SelectItem>
+                <SelectItem value="descripcion_incorrecta">{t("profilePanels.orders.returnDialog.reasons.descripcion_incorrecta")}</SelectItem>
+                <SelectItem value="calidad">{t("profilePanels.orders.returnDialog.reasons.calidad")}</SelectItem>
+                <SelectItem value="otro">{t("profilePanels.orders.returnDialog.reasons.otro")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Descripción detallada *</Label>
+            <Label>{t("profilePanels.orders.returnDialog.descriptionLabel")}</Label>
             <Textarea
-              placeholder="Describe el problema con detalle..."
+              placeholder={t("profilePanels.orders.returnDialog.descriptionPlaceholder")}
               value={reason}
               onChange={e => setReason(e.target.value)}
               rows={3}
             />
           </div>
           <div className="space-y-2">
-            <Label>Monto a solicitar (opcional)</Label>
+            <Label>{t("profilePanels.orders.returnDialog.amountLabel")}</Label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -321,19 +325,19 @@ const ReturnRequestDialog = ({
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Deja vacío para solicitar el monto total del pedido
+              {t("profilePanels.orders.returnDialog.amountHelper")}
             </p>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose}>{t("profilePanels.orders.returnDialog.cancel")}</Button>
           <Button
             onClick={handleSubmit}
             disabled={!reason.trim() || !reasonType || createReturn.isPending}
             className="bg-amber-600 hover:bg-amber-700"
           >
             {createReturn.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Enviar Solicitud
+            {t("profilePanels.orders.returnDialog.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>
