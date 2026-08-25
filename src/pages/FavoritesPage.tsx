@@ -9,8 +9,10 @@ import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 const FavoritesPage = () => {
+  const { t } = useTranslation();
   const { items, isLoading, removeFavorite, isRemoving } = useB2CFavorites();
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -48,12 +50,12 @@ const FavoritesPage = () => {
           <Card className="text-center py-12 max-w-md">
             <CardContent>
               <Heart className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Inicia sesión</h2>
+              <h2 className="text-xl font-semibold mb-2">{t('pagesExtra.favorites.loginTitle')}</h2>
               <p className="text-muted-foreground mb-6">
-                Debes iniciar sesión para ver tus favoritos.
+                {t('pagesExtra.favorites.loginDesc')}
               </p>
               <Button asChild>
-                <Link to="/login">Iniciar Sesión</Link>
+                <Link to="/login">{t('pagesExtra.favorites.loginButton')}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -83,12 +85,12 @@ const FavoritesPage = () => {
         <div className="flex items-center gap-3 mb-6">
           <Heart className="h-8 w-8 text-red-500 fill-current" />
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Mis Favoritos</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">{t('pagesExtra.favorites.title')}</h1>
             <p className="text-muted-foreground text-sm">
-              Productos que guardaste para más tarde
+              {t('pagesExtra.favorites.subtitle')}
               {items.length > 0 && (
                 <span className="ml-2 font-medium text-foreground">
-                  ({items.length} {items.length === 1 ? 'producto' : 'productos'})
+                  ({items.length} {items.length === 1 ? t('pagesExtra.favorites.productSingular') : t('pagesExtra.favorites.productPlural')})
                 </span>
               )}
             </p>
@@ -99,12 +101,12 @@ const FavoritesPage = () => {
           <Card className="text-center py-12">
             <CardContent>
               <Store className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">No tienes favoritos aún</h2>
+              <h2 className="text-xl font-semibold mb-2">{t('pagesExtra.favorites.emptyTitle')}</h2>
               <p className="text-muted-foreground mb-6">
-                Explora las tiendas y guarda los productos que te gustan.
+                {t('pagesExtra.favorites.emptyDesc')}
               </p>
               <Button asChild>
-                <Link to="/">Explorar tiendas</Link>
+                <Link to="/">{t('pagesExtra.favorites.exploreStores')}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -122,7 +124,7 @@ const FavoritesPage = () => {
                   }`}
                 >
                   <LayoutGrid className="h-3.5 w-3.5" />
-                  Todas
+                  {t('pagesExtra.favorites.all')}
                   <Badge
                     variant="secondary"
                     className={`ml-1 text-[10px] h-4 min-w-[18px] px-1 ${
@@ -163,7 +165,7 @@ const FavoritesPage = () => {
             {/* Items grid */}
             {filteredItems.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                No hay productos de esta tienda en favoritos.
+                {t('pagesExtra.favorites.noStoreProducts')}
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -181,7 +183,7 @@ const FavoritesPage = () => {
                         className="absolute top-2 right-2 bg-white/90 hover:bg-white text-red-500 hover:text-red-600 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
                         onClick={() => removeFavorite({ favoriteId: item.id })}
                         disabled={isRemoving}
-                        title="Eliminar de favoritos"
+                        title={t('pagesExtra.favorites.removeFromFavorites')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -203,7 +205,7 @@ const FavoritesPage = () => {
                           onClick={() => navigate(getProductUrl(item))}
                         >
                           <Store className="h-3.5 w-3.5" />
-                          Ver
+                          {t('pagesExtra.favorites.view')}
                         </Button>
                       </div>
                     </CardContent>

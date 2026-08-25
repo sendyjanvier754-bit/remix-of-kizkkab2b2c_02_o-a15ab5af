@@ -226,6 +226,7 @@ const OrderCard = ({
 const ReturnRequestDialog = ({
   order, open, onClose, existingReturnStatus,
 }: { order: BuyerOrder | null; open: boolean; onClose: () => void; existingReturnStatus?: string | null }) => {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   const [reasonType, setReasonType] = useState('');
   const [amountRequested, setAmountRequested] = useState('');
@@ -254,7 +255,7 @@ const ReturnRequestDialog = ({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <RotateCcw className="h-5 w-5" />Solicitud de Devolución
+              <RotateCcw className="h-5 w-5" />{t("profilePanels.orders.returnDialog.titleExisting")}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4 text-center space-y-3">
@@ -262,11 +263,11 @@ const ReturnRequestDialog = ({
               {cfg?.label || existingReturnStatus}
             </Badge>
             <p className="text-sm text-muted-foreground">
-              Ya existe una solicitud de devolución para este pedido.
+              {t("profilePanels.orders.returnDialog.existingMessage")}
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={onClose}>Cerrar</Button>
+            <Button variant="outline" onClick={onClose}>{t("profilePanels.orders.returnDialog.close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -278,40 +279,40 @@ const ReturnRequestDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <RotateCcw className="h-5 w-5 text-amber-600" />Solicitar Devolución
+            <RotateCcw className="h-5 w-5 text-amber-600" />{t("profilePanels.orders.returnDialog.titleNew")}
           </DialogTitle>
           <DialogDescription>
-            Pedido #{order.id.slice(0, 8).toUpperCase()} · ${order.total_amount.toLocaleString()}
+            {t("profilePanels.orders.returnDialog.orderSummary", { id: order.id.slice(0, 8).toUpperCase(), amount: order.total_amount.toLocaleString() })}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>Motivo *</Label>
+            <Label>{t("profilePanels.orders.returnDialog.reasonLabel")}</Label>
             <Select value={reasonType} onValueChange={setReasonType}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona el tipo de problema" />
+                <SelectValue placeholder={t("profilePanels.orders.returnDialog.reasonPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="producto_danado">Producto dañado / defectuoso</SelectItem>
-                <SelectItem value="producto_incorrecto">Producto incorrecto recibido</SelectItem>
-                <SelectItem value="no_llegó">Pedido no llegó</SelectItem>
-                <SelectItem value="descripcion_incorrecta">No corresponde a la descripción</SelectItem>
-                <SelectItem value="calidad">Problema de calidad</SelectItem>
-                <SelectItem value="otro">Otro motivo</SelectItem>
+                <SelectItem value="producto_danado">{t("profilePanels.orders.returnDialog.reasons.producto_danado")}</SelectItem>
+                <SelectItem value="producto_incorrecto">{t("profilePanels.orders.returnDialog.reasons.producto_incorrecto")}</SelectItem>
+                <SelectItem value="no_llegó">{t("profilePanels.orders.returnDialog.reasons.no_llego")}</SelectItem>
+                <SelectItem value="descripcion_incorrecta">{t("profilePanels.orders.returnDialog.reasons.descripcion_incorrecta")}</SelectItem>
+                <SelectItem value="calidad">{t("profilePanels.orders.returnDialog.reasons.calidad")}</SelectItem>
+                <SelectItem value="otro">{t("profilePanels.orders.returnDialog.reasons.otro")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Descripción detallada *</Label>
+            <Label>{t("profilePanels.orders.returnDialog.descriptionLabel")}</Label>
             <Textarea
-              placeholder="Describe el problema con detalle..."
+              placeholder={t("profilePanels.orders.returnDialog.descriptionPlaceholder")}
               value={reason}
               onChange={e => setReason(e.target.value)}
               rows={3}
             />
           </div>
           <div className="space-y-2">
-            <Label>Monto a solicitar (opcional)</Label>
+            <Label>{t("profilePanels.orders.returnDialog.amountLabel")}</Label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -324,19 +325,19 @@ const ReturnRequestDialog = ({
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Deja vacío para solicitar el monto total del pedido
+              {t("profilePanels.orders.returnDialog.amountHelper")}
             </p>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose}>{t("profilePanels.orders.returnDialog.cancel")}</Button>
           <Button
             onClick={handleSubmit}
             disabled={!reason.trim() || !reasonType || createReturn.isPending}
             className="bg-amber-600 hover:bg-amber-700"
           >
             {createReturn.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Enviar Solicitud
+            {t("profilePanels.orders.returnDialog.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>
