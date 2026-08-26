@@ -358,6 +358,11 @@ const OrderDetailDialog = ({
   poInfo?: OrderPOInfo;
   returnStatus?: string | null;
 }) => {
+  const { t } = useTranslation();
+  const statusConfig = getStatusConfig(t);
+  const refundStatusConfig = getRefundStatusConfig(t);
+  const logisticsStages = getLogisticsStages(t);
+
   if (!order) return null;
 
   const status = statusConfig[order.status] || statusConfig.draft;
@@ -854,7 +859,7 @@ export const InlineOrdersPanel = () => {
 
       {/* Status tabs */}
       <div className="flex overflow-x-auto border-b border-border no-scrollbar">
-        {STATUS_TABS.map(tab => (
+        {getStatusTabs(t).map(tab => (
           <button
             key={tab.value}
             onClick={() => setStatusFilter(tab.value)}
