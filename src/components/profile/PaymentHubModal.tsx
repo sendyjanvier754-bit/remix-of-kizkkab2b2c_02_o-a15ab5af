@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -59,26 +60,26 @@ function formatDate(iso: string) {
   }
 }
 
-function statusBadge(status: string | null) {
+function statusBadge(status: string | null, t: (k: string, o?: Record<string, unknown>) => string) {
   const s = (status ?? "").toLowerCase();
   if (PAID_STATUSES.has(s)) {
     return (
       <Badge className="bg-green-100 text-green-700 border-green-200 gap-1">
-        <CheckCircle2 className="w-3 h-3" /> Pagado
+        <CheckCircle2 className="w-3 h-3" /> {t("profilePanels.paymentHub.status.paid")}
       </Badge>
     );
   }
   if (s === "pending_validation") {
     return (
       <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-        En validación
+        {t("profilePanels.paymentHub.status.pendingValidation")}
       </Badge>
     );
   }
   if (PENDING_PAYMENT_STATUSES.has(s)) {
     return (
       <Badge className="bg-orange-100 text-orange-700 border-orange-200">
-        Pendiente
+        {t("profilePanels.paymentHub.status.pending")}
       </Badge>
     );
   }
@@ -93,9 +94,11 @@ function statusBadge(status: string | null) {
 function OrderRow({
   order,
   onClick,
+  t,
 }: {
   order: NormalizedOrder;
   onClick: () => void;
+  t: (k: string, o?: Record<string, unknown>) => string;
 }) {
   return (
     <button
@@ -113,7 +116,7 @@ function OrderRow({
           <Badge variant="outline" className="text-[10px] h-4 px-1.5">
             {order.type}
           </Badge>
-          {statusBadge(order.payment_status ?? order.status)}
+          {statusBadge(order.payment_status ?? order.status, t)}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
           {formatDate(order.created_at)}
@@ -131,6 +134,7 @@ function OrderRow({
 }
 
 export function PaymentHubModal({ open, onOpenChange }: PaymentHubModalProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: b2cOrders = [] } = useBuyerB2COrders();
   const { data: b2bOrders = [] } = useBuyerOrders();
@@ -177,10 +181,10 @@ export function PaymentHubModal({ open, onOpenChange }: PaymentHubModalProps) {
         <DialogHeader className="px-6 py-4 border-b border-border">
           <DialogTitle className="flex items-center gap-2 text-base">
             <CreditCard className="w-5 h-5 text-primary" />
-            Centro de Pagos
+            {t("profilePanels.paymentHub.title")}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Gestiona tus métodos, revisa pagos pendientes e historial de transacciones.
+            {t("profilePanels.paymentHub.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -188,11 +192,11 @@ export function PaymentHubModal({ open, onOpenChange }: PaymentHubModalProps) {
           <TabsList className="mx-6 mt-3 grid grid-cols-3 w-auto">
             <TabsTrigger value="methods" className="gap-1.5">
               <CreditCard className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Métodos</span>
+              <span className="hidden sm:inline">{t("profilePanels.paymentHub.tabs.methods")}</span>
             </TabsTrigger>
             <TabsTrigger value="pending" className="gap-1.5">
               <AlertCircle className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Pendientes</span>
+              <span className="hidden sm:inline">{t("profilePanels.paymentHub.tabs.pending")}</span>
               {pending.length > 0 && (
                 <Badge className="ml-1 h-4 px-1.5 text-[10px] bg-destructive text-destructive-foreground">
                   {pending.length}
@@ -201,7 +205,7 @@ export function PaymentHubModal({ open, onOpenChange }: PaymentHubModalProps) {
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Historial</span>
+              <span className="hidden sm:inline">{t("profilePanels.paymentHub.tabs.history")}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -214,11 +218,11 @@ export function PaymentHubModal({ open, onOpenChange }: PaymentHubModalProps) {
               {pending.length === 0 ? (
                 <div className="py-10 text-center text-sm text-muted-foreground">
                   <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-green-500/60" />
-                  No tienes pagos pendientes.
+                  {t("profilePanels.paymentHub.noPending")}
                 </div>
               ) : (
                 pending.map(o => (
-                  <OrderRow key={`${o.type}-${o.id}`} order={o} onClick={() => handleOpenOrder(o)} />
+                  <OrderRow key={`${o.type}-${o.id}`} order={o} onClick={() => handleOpenOrder(o)} t={t} />
                 ))
               )}
             </TabsContent>
@@ -227,11 +231,11 @@ export function PaymentHubModal({ open, onOpenChange }: PaymentHubModalProps) {
               {history.length === 0 ? (
                 <div className="py-10 text-center text-sm text-muted-foreground">
                   <Clock className="w-10 h-10 mx-auto mb-2 text-muted-foreground/40" />
-                  Aún no tienes historial de pagos.
+                  {t("profilePanels.paymentHub.noHistory")}
                 </div>
               ) : (
                 history.map(o => (
-                  <OrderRow key={`${o.type}-${o.id}`} order={o} onClick={() => handleOpenOrder(o)} />
+                  <OrderRow key={`${o.type}-${o.id}`} order={o} onClick={() => handleOpenOrder(o)} t={t} />
                 ))
               )}
             </TabsContent>
@@ -240,7 +244,7 @@ export function PaymentHubModal({ open, onOpenChange }: PaymentHubModalProps) {
 
         <div className="px-6 py-3 border-t border-border flex justify-end">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-            Cerrar
+            {t("profilePanels.paymentHub.close")}
           </Button>
         </div>
       </DialogContent>
