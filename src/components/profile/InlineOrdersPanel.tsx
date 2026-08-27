@@ -719,6 +719,7 @@ const CancelOrderDialog = ({
 
 // ── MAIN EXPORT ───────────────────────────────────────────────────────────────
 export const InlineOrdersPanel = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
