@@ -64,6 +64,8 @@
     },
     "product": {
       "searchPlaceholderDefault": "Buscar...",
+      "dynamicEngine": "Precio dinámico",
+      "marginLabel": "Margen: {{percent}}%",
       "addedToB2BOrder": "Agregado al pedido B2B",
       "unitsOf": "{{qty}} unidades de {{name}}",
       "productAdded": "Producto agregado",
