@@ -64,6 +64,8 @@
     },
     "product": {
       "searchPlaceholderDefault": "Chèche...",
+      "dynamicEngine": "Pri dinamik",
+      "marginLabel": "Maj: {{percent}}%",
       "addedToB2BOrder": "Ajoute nan kòmand B2B",
       "unitsOf": "{{qty}} inite {{name}}",
       "productAdded": "Pwodwi ajoute",
