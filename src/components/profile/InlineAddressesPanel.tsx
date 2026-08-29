@@ -201,22 +201,22 @@ export function InlineAddressesPanel() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Editar dirección" : "Nueva dirección"}</DialogTitle>
+            <DialogTitle>{editingId ? t('addresses.editTitle') : t('addresses.newTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 mt-2">
             {/* Label + Country row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Etiqueta *</Label>
+                <Label className="text-xs">{t('addresses.labelField')} *</Label>
                 <Input
                   value={form.label}
                   onChange={(e) => setForm(f => ({ ...f, label: e.target.value }))}
-                  placeholder="Casa, Trabajo…"
+                  placeholder={t('addresses.labelPlaceholder')}
                   className="h-9 mt-1"
                 />
               </div>
               <div>
-                <Label className="text-xs">País</Label>
+                <Label className="text-xs">{t('addresses.country')}</Label>
                 <Input
                   value={form.country}
                   onChange={(e) => setForm(f => ({ ...f, country: e.target.value }))}
@@ -228,18 +228,18 @@ export function InlineAddressesPanel() {
 
             {/* Full name */}
             <div>
-              <Label className="text-xs">Nombre completo *</Label>
+              <Label className="text-xs">{t('addresses.fullName')} *</Label>
               <Input
                 value={form.full_name}
                 onChange={(e) => setForm(f => ({ ...f, full_name: e.target.value }))}
-                placeholder="Juan Pérez"
+                placeholder={t('addresses.fullNamePlaceholder')}
                 className="h-9 mt-1"
               />
             </div>
 
             {/* Phone */}
             <div>
-              <Label className="text-xs">Teléfono</Label>
+              <Label className="text-xs">{t('addresses.phone')}</Label>
               <Input
                 value={form.phone ?? ""}
                 onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))}
@@ -250,10 +250,10 @@ export function InlineAddressesPanel() {
 
             {/* Department */}
             <div>
-              <Label className="text-xs">Departamento *</Label>
+              <Label className="text-xs">{t('addresses.department')} *</Label>
               <Select value={form.department_id || ""} onValueChange={handleDepartmentChange}>
                 <SelectTrigger className="h-9 mt-1">
-                  <SelectValue placeholder="Seleccionar departamento" />
+                  <SelectValue placeholder={t('addresses.departmentPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {departments.map(d => (
