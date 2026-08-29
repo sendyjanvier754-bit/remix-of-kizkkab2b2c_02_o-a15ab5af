@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +35,7 @@ interface AddressesDialogProps {
 }
 
 const emptyAddress: AddressInput = {
-  label: 'Casa',
+  label: '',
   full_name: '',
   phone: '',
   street_address: '',
@@ -49,6 +50,7 @@ const emptyAddress: AddressInput = {
 };
 
 export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) => {
+  const { t } = useTranslation();
   const { addresses, isLoading, createAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddresses();
   const [isEditing, setIsEditing] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
@@ -159,7 +161,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
 
   const handleNewAddress = () => {
     setEditingAddress(null);
-    setFormData(emptyAddress);
+    setFormData({ ...emptyAddress, label: t('addresses.defaultLabelValue') });
     resetLocation();
     setIsEditing(true);
   };
@@ -196,7 +198,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
     }
     setIsEditing(false);
     setEditingAddress(null);
-    setFormData(emptyAddress);
+    setFormData({ ...emptyAddress, label: t('addresses.defaultLabelValue') });
     resetLocation();
   };
 
@@ -218,7 +220,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto pb-8">
           <DialogHeader className="sticky top-0 bg-background z-10 pb-2">
             <DialogTitle>
-              {editingAddress ? 'Editar Dirección' : 'Nueva Dirección'}
+              {editingAddress ? t('addresses.editTitle') : t('addresses.newTitle')}
             </DialogTitle>
           </DialogHeader>
 
@@ -226,15 +228,15 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
             {/* Label + Phone */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Etiqueta</Label>
+                <Label>{t('addresses.labelField')}</Label>
                 <Input
                   value={formData.label}
                   onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                  placeholder="Casa, Trabajo, etc."
+                  placeholder={t('addresses.labelPlaceholder')}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Teléfono</Label>
+                <Label>{t('addresses.phone')}</Label>
                 <Input
                   value={formData.phone || ''}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -245,28 +247,28 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
 
             {/* Full name */}
             <div className="space-y-1.5">
-              <Label>Nombre completo <span className="text-destructive">*</span></Label>
+              <Label>{t('addresses.fullName')} <span className="text-destructive">*</span></Label>
               <Input
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                placeholder="Nombre de quien recibe"
+                placeholder={t('addresses.fullNamePlaceholder')}
               />
             </div>
 
             {/* Street */}
             <div className="space-y-1.5">
-              <Label>Dirección <span className="text-destructive">*</span></Label>
+              <Label>{t('addresses.street')} <span className="text-destructive">*</span></Label>
               <Textarea
                 value={formData.street_address}
                 onChange={(e) => setFormData({ ...formData, street_address: e.target.value })}
-                placeholder="Calle, número, referencias..."
+                placeholder={t('addresses.streetPlaceholder')}
                 rows={2}
               />
             </div>
 
             {/* País */}
             <div className="space-y-1.5">
-              <Label>País <span className="text-destructive">*</span></Label>
+              <Label>{t('addresses.country')} <span className="text-destructive">*</span></Label>
               <Select
                 value={selectedCountryId}
                 onValueChange={(val) => {
@@ -276,7 +278,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un país" />
+                  <SelectValue placeholder={t('addresses.countryPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {countries.map(c => (
@@ -288,7 +290,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
 
             {/* Departamento */}
             <div className="space-y-1.5">
-              <Label>Departamento <span className="text-destructive">*</span></Label>
+              <Label>{t('addresses.department')} <span className="text-destructive">*</span></Label>
               <Select
                 value={selectedDeptId}
                 onValueChange={(val) => {
@@ -299,8 +301,8 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
               >
                 <SelectTrigger>
                   {loadingDepts
-                    ? <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Cargando...</span>
-                    : <SelectValue placeholder={selectedCountryId ? 'Selecciona un departamento' : 'Primero selecciona un país'} />
+                    ? <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />{t("addresses.loading")}</span>
+                    : <SelectValue placeholder={selectedCountryId ? t('addresses.departmentPlaceholder') : t('addresses.departmentDisabled')} />
                   }
                 </SelectTrigger>
                 <SelectContent>
@@ -313,7 +315,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
 
             {/* Comuna */}
             <div className="space-y-1.5">
-              <Label>Comuna / Ciudad <span className="text-destructive">*</span></Label>
+              <Label>{t('addresses.commune')} <span className="text-destructive">*</span></Label>
               <Select
                 value={selectedCommuneId}
                 onValueChange={setSelectedCommuneId}
@@ -321,8 +323,8 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
               >
                 <SelectTrigger>
                   {loadingCommunes
-                    ? <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Cargando...</span>
-                    : <SelectValue placeholder={selectedDeptId ? 'Selecciona una comuna' : 'Primero selecciona un departamento'} />
+                    ? <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />{t("addresses.loading")}</span>
+                    : <SelectValue placeholder={selectedDeptId ? t('addresses.communePlaceholder') : t('addresses.communeDisabled')} />
                   }
                 </SelectTrigger>
                 <SelectContent className="max-h-[220px]">
@@ -335,21 +337,21 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
 
             {/* Código postal */}
             <div className="space-y-1.5">
-              <Label>Código Postal</Label>
+              <Label>{t('addresses.postalCode')}</Label>
               <Input
                 value={formData.postal_code || ''}
                 onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                placeholder="Opcional"
+                placeholder={t('addresses.optional')}
               />
             </div>
 
             {/* Notas */}
             <div className="space-y-1.5">
-              <Label>Notas adicionales</Label>
+              <Label>{t('addresses.notes')}</Label>
               <Textarea
                 value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Referencias adicionales para el repartidor..."
+                placeholder={t('addresses.notesPlaceholder')}
                 rows={2}
               />
             </div>
@@ -361,7 +363,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                   checked={formData.is_default}
                   onCheckedChange={(checked) => setFormData({ ...formData, is_default: checked })}
                 />
-                <Label className="cursor-pointer">Usar como predeterminada</Label>
+                <Label className="cursor-pointer">{t("addresses.useAsDefault")}</Label>
               </div>
             </div>
 
@@ -372,7 +374,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 onClick={() => { setIsEditing(false); resetLocation(); }}
                 className="flex-1"
               >
-                Cancelar
+                {t('addresses.cancel')}
               </Button>
               <Button
                 onClick={handleSave}
@@ -380,7 +382,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                 className="flex-1"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Guardar
+                {t('addresses.save')}
               </Button>
             </div>
           </div>
@@ -396,14 +398,14 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
-              Mis Direcciones
+              {t('addresses.title')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <Button onClick={handleNewAddress} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
-              Agregar Nueva Dirección
+              {t('addresses.add')}
             </Button>
 
             {isLoading ? (
@@ -413,8 +415,8 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
             ) : addresses.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <MapPin className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p>No tienes direcciones guardadas</p>
-                <p className="text-sm">Agrega tu primera dirección de envío</p>
+                <p>{t('addresses.emptyTitle')}</p>
+                <p className="text-sm">{t("addresses.emptySubtitle")}</p>
               </div>
             ) : (
               <ScrollArea className="max-h-[400px]">
@@ -429,7 +431,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                               {address.is_default && (
                                 <Badge variant="secondary" className="text-xs">
                                   <Star className="h-3 w-3 mr-1" />
-                                  Predeterminada
+                                  {t('addresses.default')}
                                 </Badge>
                               )}
                             </div>
@@ -440,7 +442,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                             </p>
                             <p className="text-sm text-muted-foreground">{address.country}</p>
                             {address.phone && (
-                              <p className="text-sm text-muted-foreground">Tel: {address.phone}</p>
+                              <p className="text-sm text-muted-foreground">{t("addresses.phoneShort")} {address.phone}</p>
                             )}
                           </div>
 
@@ -467,7 +469,7 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
                                 size="icon"
                                 onClick={() => handleSetDefault(address.id)}
                                 className="h-8 w-8"
-                                title="Establecer como predeterminada"
+                                title={t('addresses.setDefault')}
                               >
                                 <Star className="h-4 w-4" />
                               </Button>
@@ -487,18 +489,18 @@ export const AddressesDialog = ({ open, onOpenChange }: AddressesDialogProps) =>
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar dirección?</AlertDialogTitle>
+            <AlertDialogTitle>{t('addresses.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. La dirección será eliminada permanentemente.
+              {t('addresses.deleteDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('addresses.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Eliminar
+              {t('addresses.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
