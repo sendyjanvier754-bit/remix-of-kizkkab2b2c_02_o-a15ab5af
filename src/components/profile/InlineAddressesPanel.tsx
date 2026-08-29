@@ -136,9 +136,9 @@ export function InlineAddressesPanel() {
         {addresses.length === 0 ? (
           <div className="py-14 flex flex-col items-center gap-3 text-center">
             <MapPin className="w-12 h-12 text-muted-foreground/30" />
-            <p className="text-sm font-medium text-muted-foreground">No tienes direcciones guardadas</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('addresses.emptyTitle')}</p>
             <Button size="sm" onClick={openCreate} className="mt-1 gap-1">
-              <Plus className="w-3.5 h-3.5" /> Agregar dirección
+              <Plus className="w-3.5 h-3.5" /> {t('addresses.emptyAdd')}
             </Button>
           </div>
         ) : (
@@ -146,7 +146,7 @@ export function InlineAddressesPanel() {
             {addresses.map((addr) => (
               <div key={addr.id} className="px-5 py-4 flex gap-3 group hover:bg-muted/20 transition-colors">
                 <div className="shrink-0 mt-0.5">
-                  {addr.label?.toLowerCase().includes("casa") ? (
+                  {addr.label?.toLowerCase().includes(t('addresses.defaultLabelValue').toLowerCase()) ? (
                     <Home className="w-5 h-5 text-primary" />
                   ) : (
                     <Building2 className="w-5 h-5 text-primary" />
@@ -157,7 +157,7 @@ export function InlineAddressesPanel() {
                     <span className="text-sm font-semibold text-foreground">{addr.label}</span>
                     {addr.is_default && (
                       <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                        <Star className="w-2.5 h-2.5 mr-1" />Predeterminada
+                        <Star className="w-2.5 h-2.5 mr-1" />{t('addresses.default')}
                       </Badge>
                     )}
                   </div>
@@ -173,7 +173,7 @@ export function InlineAddressesPanel() {
                     <button
                       onClick={() => setDefaultAddress.mutate(addr.id)}
                       className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                      title="Establecer como predeterminada"
+                      title={t('addresses.setDefault')}
                     >
                       <Star className="w-3.5 h-3.5" />
                     </button>
