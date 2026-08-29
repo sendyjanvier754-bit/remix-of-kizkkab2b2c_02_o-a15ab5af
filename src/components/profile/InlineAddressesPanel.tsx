@@ -84,15 +84,15 @@ export function InlineAddressesPanel() {
 
   const handleSave = async () => {
     if (!form.full_name || !form.street_address) {
-      toast.error("Nombre y dirección son requeridos");
+      toast.error(t('addresses.errorNameRequired'));
       return;
     }
     if (!form.department_id) {
-      toast.error("Selecciona un departamento");
+      toast.error(t('addresses.errorDeptRequired'));
       return;
     }
     if (!form.commune_id) {
-      toast.error("Selecciona una comuna");
+      toast.error(t('addresses.errorCommuneRequired'));
       return;
     }
     if (editingId) {
@@ -125,11 +125,11 @@ export function InlineAddressesPanel() {
         <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Mis Direcciones</h2>
+            <h2 className="text-sm font-bold text-foreground">{t('addresses.title')}</h2>
             <Badge variant="secondary" className="text-xs">{addresses.length}</Badge>
           </div>
           <Button size="sm" onClick={openCreate} className="h-7 text-xs gap-1">
-            <Plus className="w-3.5 h-3.5" /> Nueva
+            <Plus className="w-3.5 h-3.5" /> {t('addresses.newShort')}
           </Button>
         </div>
 
