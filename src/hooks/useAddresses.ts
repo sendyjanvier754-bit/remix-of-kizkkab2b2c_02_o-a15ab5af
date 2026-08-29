@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import i18n from '@/i18n';
 
 export interface Address {
   id: string;
@@ -86,13 +87,13 @@ export const useAddresses = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       toast({
-        title: 'Dirección creada',
-        description: 'La dirección se ha guardado correctamente.',
+        title: i18n.t('addresses.toast.created'),
+        description: i18n.t('addresses.toast.createdDesc'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error',
+        title: i18n.t('addresses.toast.error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -126,13 +127,13 @@ export const useAddresses = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       toast({
-        title: 'Dirección actualizada',
-        description: 'Los cambios se han guardado correctamente.',
+        title: i18n.t('addresses.toast.updated'),
+        description: i18n.t('addresses.toast.updatedDesc'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error',
+        title: i18n.t('addresses.toast.error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -154,13 +155,13 @@ export const useAddresses = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       toast({
-        title: 'Dirección eliminada',
-        description: 'La dirección se ha eliminado correctamente.',
+        title: i18n.t('addresses.toast.deleted'),
+        description: i18n.t('addresses.toast.deletedDesc'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error',
+        title: i18n.t('addresses.toast.error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -189,13 +190,13 @@ export const useAddresses = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       toast({
-        title: 'Dirección predeterminada',
-        description: 'Se ha establecido como dirección predeterminada.',
+        title: i18n.t('addresses.toast.defaultSet'),
+        description: i18n.t('addresses.toast.defaultSetDesc'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error',
+        title: i18n.t('addresses.toast.error'),
         description: error.message,
         variant: 'destructive',
       });
