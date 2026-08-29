@@ -30,6 +30,7 @@ const EMPTY_FORM: AddressInput = {
 };
 
 export function InlineAddressesPanel() {
+  const { t } = useTranslation();
   const { addresses, isLoading, createAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddresses();
   const logistics = useLogisticsEngine();
   const { data: departments = [] } = logistics.useDepartments();
@@ -58,7 +59,7 @@ export function InlineAddressesPanel() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, label: t('addresses.defaultLabelValue') });
     setDialogOpen(true);
   };
 
