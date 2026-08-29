@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAddresses, AddressInput } from "@/hooks/useAddresses";
 import { useLogisticsEngine } from "@/hooks/useLogisticsEngine";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
 import { toast } from "sonner";
 
 const EMPTY_FORM: AddressInput = {
-  label: "Casa",
+  label: "",
   full_name: "",
   phone: "",
   street_address: "",
