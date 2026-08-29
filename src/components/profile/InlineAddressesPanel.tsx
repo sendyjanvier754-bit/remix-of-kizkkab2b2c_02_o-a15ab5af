@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAddresses, AddressInput } from "@/hooks/useAddresses";
 import { useLogisticsEngine } from "@/hooks/useLogisticsEngine";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
 import { toast } from "sonner";
 
 const EMPTY_FORM: AddressInput = {
-  label: "Casa",
+  label: "",
   full_name: "",
   phone: "",
   street_address: "",
@@ -29,6 +30,7 @@ const EMPTY_FORM: AddressInput = {
 };
 
 export function InlineAddressesPanel() {
+  const { t } = useTranslation();
   const { addresses, isLoading, createAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddresses();
   const logistics = useLogisticsEngine();
   const { data: departments = [] } = logistics.useDepartments();
@@ -57,7 +59,7 @@ export function InlineAddressesPanel() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, label: t('addresses.defaultLabelValue') });
     setDialogOpen(true);
   };
 
@@ -82,15 +84,15 @@ export function InlineAddressesPanel() {
 
   const handleSave = async () => {
     if (!form.full_name || !form.street_address) {
-      toast.error("Nombre y dirección son requeridos");
+      toast.error(t('addresses.errorNameRequired'));
       return;
     }
     if (!form.department_id) {
-      toast.error("Selecciona un departamento");
+      toast.error(t('addresses.errorDeptRequired'));
       return;
     }
     if (!form.commune_id) {
-      toast.error("Selecciona una comuna");
+      toast.error(t('addresses.errorCommuneRequired'));
       return;
     }
     if (editingId) {
@@ -123,20 +125,20 @@ export function InlineAddressesPanel() {
         <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Mis Direcciones</h2>
+            <h2 className="text-sm font-bold text-foreground">{t('addresses.title')}</h2>
             <Badge variant="secondary" className="text-xs">{addresses.length}</Badge>
           </div>
           <Button size="sm" onClick={openCreate} className="h-7 text-xs gap-1">
-            <Plus className="w-3.5 h-3.5" /> Nueva
+            <Plus className="w-3.5 h-3.5" /> {t('addresses.newShort')}
           </Button>
         </div>
 
         {addresses.length === 0 ? (
           <div className="py-14 flex flex-col items-center gap-3 text-center">
             <MapPin className="w-12 h-12 text-muted-foreground/30" />
-            <p className="text-sm font-medium text-muted-foreground">No tienes direcciones guardadas</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('addresses.emptyTitle')}</p>
             <Button size="sm" onClick={openCreate} className="mt-1 gap-1">
-              <Plus className="w-3.5 h-3.5" /> Agregar dirección
+              <Plus className="w-3.5 h-3.5" /> {t('addresses.emptyAdd')}
             </Button>
           </div>
         ) : (
@@ -144,7 +146,7 @@ export function InlineAddressesPanel() {
             {addresses.map((addr) => (
               <div key={addr.id} className="px-5 py-4 flex gap-3 group hover:bg-muted/20 transition-colors">
                 <div className="shrink-0 mt-0.5">
-                  {addr.label?.toLowerCase().includes("casa") ? (
+                  {addr.label?.toLowerCase().includes(t('addresses.defaultLabelValue').toLowerCase()) ? (
                     <Home className="w-5 h-5 text-primary" />
                   ) : (
                     <Building2 className="w-5 h-5 text-primary" />
@@ -155,7 +157,7 @@ export function InlineAddressesPanel() {
                     <span className="text-sm font-semibold text-foreground">{addr.label}</span>
                     {addr.is_default && (
                       <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                        <Star className="w-2.5 h-2.5 mr-1" />Predeterminada
+                        <Star className="w-2.5 h-2.5 mr-1" />{t('addresses.default')}
                       </Badge>
                     )}
                   </div>
@@ -171,7 +173,7 @@ export function InlineAddressesPanel() {
                     <button
                       onClick={() => setDefaultAddress.mutate(addr.id)}
                       className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                      title="Establecer como predeterminada"
+                      title={t('addresses.setDefault')}
                     >
                       <Star className="w-3.5 h-3.5" />
                     </button>
@@ -199,22 +201,22 @@ export function InlineAddressesPanel() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Editar dirección" : "Nueva dirección"}</DialogTitle>
+            <DialogTitle>{editingId ? t('addresses.editTitle') : t('addresses.newTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 mt-2">
             {/* Label + Country row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Etiqueta *</Label>
+                <Label className="text-xs">{t('addresses.labelField')} *</Label>
                 <Input
                   value={form.label}
                   onChange={(e) => setForm(f => ({ ...f, label: e.target.value }))}
-                  placeholder="Casa, Trabajo…"
+                  placeholder={t('addresses.labelPlaceholder')}
                   className="h-9 mt-1"
                 />
               </div>
               <div>
-                <Label className="text-xs">País</Label>
+                <Label className="text-xs">{t('addresses.country')}</Label>
                 <Input
                   value={form.country}
                   onChange={(e) => setForm(f => ({ ...f, country: e.target.value }))}
@@ -226,18 +228,18 @@ export function InlineAddressesPanel() {
 
             {/* Full name */}
             <div>
-              <Label className="text-xs">Nombre completo *</Label>
+              <Label className="text-xs">{t('addresses.fullName')} *</Label>
               <Input
                 value={form.full_name}
                 onChange={(e) => setForm(f => ({ ...f, full_name: e.target.value }))}
-                placeholder="Juan Pérez"
+                placeholder={t('addresses.fullNamePlaceholder')}
                 className="h-9 mt-1"
               />
             </div>
 
             {/* Phone */}
             <div>
-              <Label className="text-xs">Teléfono</Label>
+              <Label className="text-xs">{t('addresses.phone')}</Label>
               <Input
                 value={form.phone ?? ""}
                 onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))}
@@ -248,10 +250,10 @@ export function InlineAddressesPanel() {
 
             {/* Department */}
             <div>
-              <Label className="text-xs">Departamento *</Label>
+              <Label className="text-xs">{t('addresses.department')} *</Label>
               <Select value={form.department_id || ""} onValueChange={handleDepartmentChange}>
                 <SelectTrigger className="h-9 mt-1">
-                  <SelectValue placeholder="Seleccionar departamento" />
+                  <SelectValue placeholder={t('addresses.departmentPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {departments.map(d => (
