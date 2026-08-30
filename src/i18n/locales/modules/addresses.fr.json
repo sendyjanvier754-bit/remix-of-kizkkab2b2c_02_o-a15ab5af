@@ -46,6 +46,14 @@
       "defaultSet": "Adresse par défaut",
       "defaultSetDesc": "Elle a été définie comme adresse par défaut.",
       "error": "Erreur"
-    }
+    },
+    "newShort": "Nouvelle",
+    "emptyAdd": "Ajouter une adresse",
+    "notesLabel": "Notes de livraison",
+    "saveChanges": "Enregistrer les modifications",
+    "createAddress": "Créer l'adresse",
+    "errorNameRequired": "Le nom et l'adresse sont requis",
+    "errorDeptRequired": "Sélectionnez un département",
+    "errorCommuneRequired": "Sélectionnez une commune"
   }
 }

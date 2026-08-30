@@ -46,6 +46,14 @@
       "defaultSet": "Default address",
       "defaultSetDesc": "It has been set as the default address.",
       "error": "Error"
-    }
+    },
+    "newShort": "New",
+    "emptyAdd": "Add address",
+    "notesLabel": "Delivery notes",
+    "saveChanges": "Save changes",
+    "createAddress": "Create address",
+    "errorNameRequired": "Name and address are required",
+    "errorDeptRequired": "Select a department",
+    "errorCommuneRequired": "Select a commune"
   }
 }

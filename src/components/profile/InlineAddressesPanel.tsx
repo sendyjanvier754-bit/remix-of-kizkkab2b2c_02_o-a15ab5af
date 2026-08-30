@@ -265,14 +265,14 @@ export function InlineAddressesPanel() {
 
             {/* Commune */}
             <div>
-              <Label className="text-xs">Comuna *</Label>
+              <Label className="text-xs">{t('addresses.commune')} *</Label>
               <Select
                 value={form.commune_id || ""}
                 onValueChange={handleCommuneChange}
                 disabled={!form.department_id}
               >
                 <SelectTrigger className="h-9 mt-1">
-                  <SelectValue placeholder={form.department_id ? "Seleccionar comuna" : "Selecciona un departamento primero"} />
+                  <SelectValue placeholder={form.department_id ? t('addresses.communePlaceholder') : t('addresses.communeDisabled')} />
                 </SelectTrigger>
                 <SelectContent>
                   {communes.map(c => (
@@ -284,22 +284,22 @@ export function InlineAddressesPanel() {
 
             {/* Street address */}
             <div>
-              <Label className="text-xs">Dirección *</Label>
+              <Label className="text-xs">{t('addresses.street')} *</Label>
               <Input
                 value={form.street_address}
                 onChange={(e) => setForm(f => ({ ...f, street_address: e.target.value }))}
-                placeholder="Calle, número, sector…"
+                placeholder={t('addresses.streetPlaceholder')}
                 className="h-9 mt-1"
               />
             </div>
 
             {/* Notes */}
             <div>
-              <Label className="text-xs">Notas de entrega</Label>
+              <Label className="text-xs">{t('addresses.notesLabel')}</Label>
               <Textarea
                 value={form.notes ?? ""}
                 onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Instrucciones para el repartidor…"
+                placeholder={t('addresses.notesPlaceholder')}
                 className="mt-1 min-h-[70px] resize-none"
               />
             </div>
@@ -312,14 +312,14 @@ export function InlineAddressesPanel() {
                 onChange={(e) => setForm(f => ({ ...f, is_default: e.target.checked }))}
                 className="rounded"
               />
-              <span className="text-xs text-foreground">Establecer como predeterminada</span>
+              <span className="text-xs text-foreground">{t('addresses.setDefault')}</span>
             </label>
           </div>
           <DialogFooter className="gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>{t('addresses.cancel')}</Button>
             <Button size="sm" onClick={handleSave} disabled={isSaving}>
               {isSaving && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
-              {editingId ? "Guardar cambios" : "Crear dirección"}
+              {editingId ? t('addresses.saveChanges') : t('addresses.createAddress')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -329,18 +329,18 @@ export function InlineAddressesPanel() {
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>¿Eliminar dirección?</DialogTitle>
+            <DialogTitle>{t('addresses.deleteTitle')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">Esta acción no se puede deshacer.</p>
+          <p className="text-sm text-muted-foreground">{t('addresses.deleteDescription')}</p>
           <DialogFooter className="gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>Cancelar</Button>
+            <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>{t('addresses.cancel')}</Button>
             <Button
               variant="destructive" size="sm"
               onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
               disabled={deleteAddress.isPending}
             >
               {deleteAddress.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
-              Eliminar
+              {t('addresses.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

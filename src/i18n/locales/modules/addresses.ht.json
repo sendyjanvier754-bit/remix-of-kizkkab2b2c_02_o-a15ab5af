@@ -46,6 +46,14 @@
       "defaultSet": "Adrès prensipal",
       "defaultSetDesc": "Li mete kòm adrès prensipal.",
       "error": "Erè"
-    }
+    },
+    "newShort": "Nouvo",
+    "emptyAdd": "Ajoute adrès",
+    "notesLabel": "Nòt livrezon",
+    "saveChanges": "Sove chanjman",
+    "createAddress": "Kreye adrès",
+    "errorNameRequired": "Non ak adrès obligatwa",
+    "errorDeptRequired": "Chwazi yon depatman",
+    "errorCommuneRequired": "Chwazi yon komin"
   }
 }
