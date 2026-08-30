@@ -46,6 +46,14 @@
       "defaultSet": "Dirección predeterminada",
       "defaultSetDesc": "Se ha establecido como dirección predeterminada.",
       "error": "Error"
-    }
+    },
+    "newShort": "Nueva",
+    "emptyAdd": "Agregar dirección",
+    "notesLabel": "Notas de entrega",
+    "saveChanges": "Guardar cambios",
+    "createAddress": "Crear dirección",
+    "errorNameRequired": "Nombre y dirección son requeridos",
+    "errorDeptRequired": "Selecciona un departamento",
+    "errorCommuneRequired": "Selecciona una comuna"
   }
 }
