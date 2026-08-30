@@ -265,14 +265,14 @@ export function InlineAddressesPanel() {
 
             {/* Commune */}
             <div>
-              <Label className="text-xs">Comuna *</Label>
+              <Label className="text-xs">{t('addresses.commune')} *</Label>
               <Select
                 value={form.commune_id || ""}
                 onValueChange={handleCommuneChange}
                 disabled={!form.department_id}
               >
                 <SelectTrigger className="h-9 mt-1">
-                  <SelectValue placeholder={form.department_id ? "Seleccionar comuna" : "Selecciona un departamento primero"} />
+                  <SelectValue placeholder={form.department_id ? t('addresses.communePlaceholder') : t('addresses.communeDisabled')} />
                 </SelectTrigger>
                 <SelectContent>
                   {communes.map(c => (
@@ -284,22 +284,22 @@ export function InlineAddressesPanel() {
 
             {/* Street address */}
             <div>
-              <Label className="text-xs">Dirección *</Label>
+              <Label className="text-xs">{t('addresses.street')} *</Label>
               <Input
                 value={form.street_address}
                 onChange={(e) => setForm(f => ({ ...f, street_address: e.target.value }))}
-                placeholder="Calle, número, sector…"
+                placeholder={t('addresses.streetPlaceholder')}
                 className="h-9 mt-1"
               />
             </div>
 
             {/* Notes */}
             <div>
-              <Label className="text-xs">Notas de entrega</Label>
+              <Label className="text-xs">{t('addresses.notesLabel')}</Label>
               <Textarea
                 value={form.notes ?? ""}
                 onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Instrucciones para el repartidor…"
+                placeholder={t('addresses.notesPlaceholder')}
                 className="mt-1 min-h-[70px] resize-none"
               />
             </div>
@@ -312,7 +312,7 @@ export function InlineAddressesPanel() {
                 onChange={(e) => setForm(f => ({ ...f, is_default: e.target.checked }))}
                 className="rounded"
               />
-              <span className="text-xs text-foreground">Establecer como predeterminada</span>
+              <span className="text-xs text-foreground">{t('addresses.setDefault')}</span>
             </label>
           </div>
           <DialogFooter className="gap-2 mt-4">
