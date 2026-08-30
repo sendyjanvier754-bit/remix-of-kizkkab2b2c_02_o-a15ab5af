@@ -316,10 +316,10 @@ export function InlineAddressesPanel() {
             </label>
           </div>
           <DialogFooter className="gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>{t('addresses.cancel')}</Button>
             <Button size="sm" onClick={handleSave} disabled={isSaving}>
               {isSaving && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
-              {editingId ? "Guardar cambios" : "Crear dirección"}
+              {editingId ? t('addresses.saveChanges') : t('addresses.createAddress')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -329,18 +329,18 @@ export function InlineAddressesPanel() {
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>¿Eliminar dirección?</DialogTitle>
+            <DialogTitle>{t('addresses.deleteTitle')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">Esta acción no se puede deshacer.</p>
+          <p className="text-sm text-muted-foreground">{t('addresses.deleteDescription')}</p>
           <DialogFooter className="gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>Cancelar</Button>
+            <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>{t('addresses.cancel')}</Button>
             <Button
               variant="destructive" size="sm"
               onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
               disabled={deleteAddress.isPending}
             >
               {deleteAddress.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
-              Eliminar
+              {t('addresses.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
