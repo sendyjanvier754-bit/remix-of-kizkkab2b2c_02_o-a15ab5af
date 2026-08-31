@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   MapPin, Plus, Edit2, Trash2, Search, Loader2, AlertCircle, CheckCircle, Phone, MapIcon, Building
 } from "lucide-react";
@@ -32,21 +33,50 @@ interface PickupPointFormData {
   city: string;
   country: string;
   phone: string;
-  commune_id: string; // TICKET #26
+  email: string;
+  capacity: string;
+  department_id: string;
+  commune_id: string;
+  is_active: boolean;
 }
+
+const EMPTY_FORM: PickupPointFormData = {
+  name: "",
+  address: "",
+  city: "",
+  country: "Haiti",
+  phone: "",
+  email: "",
+  capacity: "",
+  department_id: "",
+  commune_id: "",
+  is_active: true,
+};
 
 const AdminPickupPointsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { pickupPoints, isLoading, createPickupPoint, updatePickupPoint, refetch } = usePickupPoints();
 
-  // TICKET #26: cargar communes para selector
+  // Departamentos y comunas (jerarquía Departamento -> Comuna)
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments-for-pickup'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('id, name')
+        .order('name');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const { data: communes = [] } = useQuery({
     queryKey: ['communes-for-pickup'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('communes')
-        .select('id, name, code')
+        .select('id, name, code, department_id')
         .eq('is_active', true)
         .order('name');
       if (error) throw error;
@@ -61,20 +91,19 @@ const AdminPickupPointsPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [form, setForm] = useState<PickupPointFormData>({
-    name: "",
-    address: "",
-    city: "",
-    country: "Haiti",
-    phone: "",
-    commune_id: "",
-  });
+  const [form, setForm] = useState<PickupPointFormData>(EMPTY_FORM);
+
+  const filteredCommunes = (communes as any[]).filter(
+    (c) => !form.department_id || c.department_id === form.department_id
+  );
 
   // Filtrar puntos de retiro
   const filteredPoints = pickupPoints.filter((point) => {
-    const matchesSearch = point.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         point.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         point.address.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      (point.name ?? '').toLowerCase().includes(q) ||
+      (point.city ?? '').toLowerCase().includes(q) ||
+      (point.address ?? '').toLowerCase().includes(q);
     return matchesSearch;
   });
 
@@ -82,24 +111,22 @@ const AdminPickupPointsPage = () => {
   const handleOpenDialog = (point?: any) => {
     if (point) {
       setSelectedPoint(point.id);
+      const commune = (communes as any[]).find((c) => c.id === point.commune_id);
       setForm({
-        name: point.name,
-        address: point.address,
-        city: point.city,
+        name: point.name ?? "",
+        address: point.address ?? "",
+        city: point.city ?? "",
         country: point.country || "Haiti",
         phone: point.phone || "",
+        email: (point as any).email || "",
+        capacity: (point as any).capacity != null ? String((point as any).capacity) : "",
+        department_id: commune?.department_id || "",
         commune_id: point.commune_id || "",
+        is_active: point.is_active !== false,
       });
     } else {
       setSelectedPoint(null);
-      setForm({
-        name: "",
-        address: "",
-        city: "",
-        country: "Haiti",
-        phone: "",
-        commune_id: "",
-      });
+      setForm(EMPTY_FORM);
     }
     setShowDialog(true);
   };
@@ -107,14 +134,7 @@ const AdminPickupPointsPage = () => {
   const handleCloseDialog = () => {
     setShowDialog(false);
     setSelectedPoint(null);
-    setForm({
-      name: "",
-      address: "",
-      city: "",
-      country: "Haiti",
-      phone: "",
-      commune_id: "",
-    });
+    setForm(EMPTY_FORM);
   };
 
   // Validar y enviar
@@ -148,9 +168,21 @@ const AdminPickupPointsPage = () => {
 
     setIsSubmitting(true);
     try {
+      const payload: any = {
+        name: form.name.trim(),
+        address: form.address.trim(),
+        city: form.city.trim(),
+        country: form.country.trim() || "Haiti",
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        capacity: form.capacity ? Number(form.capacity) : null,
+        commune_id: form.commune_id || null,
+        is_active: form.is_active,
+      };
+
       const success = selectedPoint
-        ? await updatePickupPoint(selectedPoint, form)
-        : await createPickupPoint(form);
+        ? await updatePickupPoint(selectedPoint, payload)
+        : await createPickupPoint(payload);
 
       if (success) {
         handleCloseDialog();
@@ -167,14 +199,7 @@ const AdminPickupPointsPage = () => {
 
     setIsSubmitting(true);
     try {
-      const { error } = await fetch('/api/pickup-points/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: selectedPoint })
-      }).then(r => r.json());
-
-      // Por ahora usar updatePickupPoint para desactivar
-      const success = await updatePickupPoint(selectedPoint, { is_active: false });
+      const success = await updatePickupPoint(selectedPoint, { is_active: false } as any);
       
       if (success) {
         setShowDeleteAlert(false);
@@ -211,15 +236,21 @@ const AdminPickupPointsPage = () => {
 
           {/* TAB: LISTA DE PUNTOS */}
           <TabsContent value="lista" className="space-y-6 mt-0">
-            {/* Buscador */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Buscar por nombre, dirección o ciudad..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+            {/* Buscador + Nuevo */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nombre, dirección o ciudad..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo punto
+              </Button>
             </div>
 
             {/* Grid de Puntos */}
@@ -228,6 +259,10 @@ const AdminPickupPointsPage = () => {
                 <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-500 text-lg">No hay puntos de retiro creados aún</p>
                 <p className="text-gray-400 text-sm mt-2">Crea uno nuevo para comenzar</p>
+                <Button className="mt-4" onClick={() => handleOpenDialog()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear punto de retiro
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -307,7 +342,7 @@ const AdminPickupPointsPage = () => {
 
       {/* Dialog para crear/editar */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedPoint ? "Editar Punto de Retiro" : "Nuevo Punto de Retiro"}
@@ -373,25 +408,85 @@ const AdminPickupPointsPage = () => {
               />
             </div>
 
-            {/* TICKET #26: Commune */}
+            {/* Email */}
             <div className="space-y-2">
-              <Label>Commune (opcional)</Label>
+              <Label htmlFor="email">Correo (opcional)</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="punto@ejemplo.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+
+            {/* Capacidad */}
+            <div className="space-y-2">
+              <Label htmlFor="capacity">Capacidad (paquetes/día, opcional)</Label>
+              <Input
+                id="capacity"
+                type="number"
+                min={0}
+                placeholder="Ej: 50"
+                value={form.capacity}
+                onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+              />
+            </div>
+
+            {/* Departamento */}
+            <div className="space-y-2">
+              <Label>Departamento</Label>
+              <Select
+                value={form.department_id}
+                onValueChange={(v) => setForm({ ...form, department_id: v === '__none__' ? '' : v, commune_id: '' })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar departamento..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Sin departamento —</SelectItem>
+                  {(departments as any[]).map((d) => (
+                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Comuna */}
+            <div className="space-y-2">
+              <Label>Comuna</Label>
               <Select
                 value={form.commune_id}
                 onValueChange={(v) => setForm({ ...form, commune_id: v === '__none__' ? '' : v })}
+                disabled={!form.department_id}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar commune..." />
+                  <SelectValue placeholder={form.department_id ? "Seleccionar comuna..." : "Selecciona un departamento primero"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">— Sin commune —</SelectItem>
-                  {communes.map(c => (
+                  <SelectItem value="__none__">— Sin comuna —</SelectItem>
+                  {filteredCommunes.map((c: any) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.code} — {c.name}
+                      {c.code ? `${c.code} — ` : ''}{c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                La comuna define la logística local y los puntos disponibles en el checkout.
+              </p>
+            </div>
+
+            {/* Estado */}
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <Label>Punto activo</Label>
+                <p className="text-xs text-muted-foreground">Visible para los clientes en el checkout</p>
+              </div>
+              <Switch
+                checked={form.is_active}
+                onCheckedChange={(v) => setForm({ ...form, is_active: v })}
+              />
             </div>
           </div>
 
