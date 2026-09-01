@@ -2329,6 +2329,7 @@ export type Database = {
           is_active: boolean
           last_location_at: string | null
           license_number: string | null
+          logo_url: string | null
           phone: string
           rating: number | null
           total_completed_routes: number | null
@@ -2351,6 +2352,7 @@ export type Database = {
           is_active?: boolean
           last_location_at?: string | null
           license_number?: string | null
+          logo_url?: string | null
           phone: string
           rating?: number | null
           total_completed_routes?: number | null
@@ -2373,6 +2375,7 @@ export type Database = {
           is_active?: boolean
           last_location_at?: string | null
           license_number?: string | null
+          logo_url?: string | null
           phone?: string
           rating?: number | null
           total_completed_routes?: number | null
@@ -4798,6 +4801,7 @@ export type Database = {
           lat: number | null
           latitude: number | null
           lng: number | null
+          logo_url: string | null
           longitude: number | null
           metadata: Json | null
           name: string
@@ -4823,6 +4827,7 @@ export type Database = {
           lat?: number | null
           latitude?: number | null
           lng?: number | null
+          logo_url?: string | null
           longitude?: number | null
           metadata?: Json | null
           name: string
@@ -4848,6 +4853,7 @@ export type Database = {
           lat?: number | null
           latitude?: number | null
           lng?: number | null
+          logo_url?: string | null
           longitude?: number | null
           metadata?: Json | null
           name?: string
