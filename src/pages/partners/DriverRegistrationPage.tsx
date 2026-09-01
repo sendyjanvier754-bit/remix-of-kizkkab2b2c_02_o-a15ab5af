@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, CheckCircle2, Truck, Loader2 } from "lucide-react";
 import { useSubmitPartnerApplication, useDepartmentsAndCommunes } from "@/hooks/usePartnerApplication";
+import { PartnerLogoUpload } from "@/components/partners/PartnerLogoUpload";
 
 const VEHICLE_TYPES = [
   { value: "moto", label: "Motocicleta" },
@@ -35,6 +36,7 @@ const DriverRegistrationPage = () => {
     license_number: "",
     coverage_department_ids: [] as string[],
     notes: "",
+    logo_url: "",
   });
 
   const update = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));

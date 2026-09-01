@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, CheckCircle2, Store, Loader2 } from "lucide-react";
 import { useSubmitPartnerApplication, useDepartmentsAndCommunes } from "@/hooks/usePartnerApplication";
+import { PartnerLogoUpload } from "@/components/partners/PartnerLogoUpload";
 
 const PickupPointRegistrationPage = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const PickupPointRegistrationPage = () => {
     estimated_capacity: "",
     has_storage_space: true,
     notes: "",
+    logo_url: "",
   });
 
   const filteredCommunes = useMemo(

@@ -18,6 +18,7 @@ import {
   MapPin, Plus, Edit2, Trash2, Search, Loader2, AlertCircle, CheckCircle, Phone, MapIcon, Building
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PartnerLogoUpload } from "@/components/partners/PartnerLogoUpload";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +39,7 @@ interface PickupPointFormData {
   department_id: string;
   commune_id: string;
   is_active: boolean;
+  logo_url: string;
 }
 
 const EMPTY_FORM: PickupPointFormData = {
@@ -51,6 +53,7 @@ const EMPTY_FORM: PickupPointFormData = {
   department_id: "",
   commune_id: "",
   is_active: true,
+  logo_url: "",
 };
 
 const AdminPickupPointsPage = () => {
