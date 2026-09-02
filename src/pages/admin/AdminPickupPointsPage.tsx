@@ -126,6 +126,7 @@ const AdminPickupPointsPage = () => {
         department_id: commune?.department_id || "",
         commune_id: point.commune_id || "",
         is_active: point.is_active !== false,
+        logo_url: (point as any).logo_url ?? "",
       });
     } else {
       setSelectedPoint(null);
@@ -181,6 +182,7 @@ const AdminPickupPointsPage = () => {
         capacity: form.capacity ? Number(form.capacity) : null,
         commune_id: form.commune_id || null,
         is_active: form.is_active,
+        logo_url: form.logo_url || null,
       };
 
       const success = selectedPoint
@@ -272,10 +274,19 @@ const AdminPickupPointsPage = () => {
                 {filteredPoints.map((point) => (
                   <Card key={point.id} className="border border-gray-200 hover:shadow-md transition">
                     <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-900">{point.name}</h3>
-                          <p className="text-sm text-gray-500 mt-1">{point.city}</p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {(point as any).logo_url && (
+                            <img
+                              src={(point as any).logo_url}
+                              alt={`Logo ${point.name}`}
+                              className="h-10 w-10 rounded-full border object-cover shrink-0"
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-gray-900 truncate">{point.name}</h3>
+                            <p className="text-sm text-gray-500 mt-1">{point.city}</p>
+                          </div>
                         </div>
                         <Badge variant={point.is_active ? "default" : "secondary"}>
                           {point.is_active ? "Activo" : "Inactivo"}
@@ -366,6 +377,14 @@ const AdminPickupPointsPage = () => {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </div>
+
+            {/* Logo */}
+            <PartnerLogoUpload
+              label="Logo del punto de retiro"
+              value={form.logo_url}
+              onChange={(logo_url) => setForm({ ...form, logo_url })}
+              slug={selectedPoint ? `pickup-${selectedPoint}` : "pickup"}
+            />
 
             {/* Dirección */}
             <div className="space-y-2">
