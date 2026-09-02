@@ -81,6 +81,9 @@
       "viewMore": "Voir plus",
       "viewLess": "Voir moins"
     },
+    "pickupPortal": {
+      "title": "Portail du point de retrait", "pickupPoint": "Point de retrait", "inbox": "Commandes", "history": "Historique", "subtitle": "Vérifiez le paiement, préparez les colis et confirmez chaque retrait.", "searchPlaceholder": "Rechercher par commande, client ou code", "visibleOrders": "Commandes visibles", "paidOrders": "Entièrement payées", "paymentReview": "Paiement à vérifier", "inTransit": "En cours d'acheminement", "ready": "Prêtes au retrait", "deliveredToday": "Livrées aujourd'hui", "delivered": "Livrées", "cancelled": "Annulées", "noAssignment": "Vous n'êtes affecté à aucun point de retrait.", "noOrders": "Aucune commande dans cet état.", "order": "Commande", "customer": "Client", "itemCount": "articles", "noCode": "Sans code", "viewDetails": "Voir les détails", "markReady": "Marquer prête", "confirmPickup": "Confirmer le retrait", "paymentRequired": "Cette commande n'est pas entièrement payée. Elle ne peut pas être marquée prête au retrait.", "paid": "Paiement complet", "pendingValidation": "Paiement à valider", "pendingPayment": "Paiement en attente", "orderDetails": "Détails de la commande", "payment": "État du paiement", "total": "Total", "method": "Méthode", "date": "Date", "notAvailable": "Non disponible", "recipient": "Informations du destinataire", "packageContents": "Contenu du colis", "pickupSecurity": "Informations de retrait", "deliveryCode": "Code de retrait", "customerPin": "PIN du client", "close": "Fermer", "openChat": "Ouvrir le chat", "orderChat": "Chat de la commande"
+    },
     "favorites": {
       "loginRequired": "Connectez-vous",
       "loginRequiredDesc": "Vous devez vous connecter pour voir vos favoris.",

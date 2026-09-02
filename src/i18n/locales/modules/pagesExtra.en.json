@@ -81,6 +81,9 @@
       "viewMore": "View more",
       "viewLess": "View less"
     },
+    "pickupPortal": {
+      "title": "Pickup point portal", "pickupPoint": "Pickup point", "inbox": "Orders", "history": "History", "subtitle": "Review payment, prepare packages, and confirm every pickup.", "searchPlaceholder": "Search by order, customer, or code", "visibleOrders": "Visible orders", "paidOrders": "Fully paid", "paymentReview": "Payment review", "inTransit": "In transit", "ready": "Ready for pickup", "deliveredToday": "Delivered today", "delivered": "Delivered", "cancelled": "Cancelled", "noAssignment": "You are not assigned to a pickup point.", "noOrders": "No orders in this status.", "order": "Order", "customer": "Customer", "itemCount": "items", "noCode": "No code", "viewDetails": "View details", "markReady": "Mark ready", "confirmPickup": "Confirm pickup", "paymentRequired": "This order is not fully paid. It cannot be marked ready for pickup.", "paid": "Fully paid", "pendingValidation": "Payment to validate", "pendingPayment": "Payment pending", "orderDetails": "Order details", "payment": "Payment status", "total": "Total", "method": "Method", "date": "Date", "notAvailable": "Not available", "recipient": "Recipient details", "packageContents": "Package contents", "pickupSecurity": "Pickup details", "deliveryCode": "Pickup code", "customerPin": "Customer PIN", "close": "Close", "openChat": "Open chat", "orderChat": "Order chat"
+    },
     "favorites": {
       "loginRequired": "Sign in",
       "loginRequiredDesc": "You must sign in to see your favorites.",

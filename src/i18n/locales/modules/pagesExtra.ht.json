@@ -81,6 +81,9 @@
       "viewMore": "Wè plis",
       "viewLess": "Wè mwens"
     },
+    "pickupPortal": {
+      "title": "Pòtal pwen retrè a", "pickupPoint": "Pwen retrè", "inbox": "Kòmand", "history": "Istwa", "subtitle": "Verifye peman an, prepare pakè yo, epi konfime chak retrè.", "searchPlaceholder": "Chèche pa kòmand, kliyan oswa kòd", "visibleOrders": "Kòmand vizib", "paidOrders": "Peye nèt", "paymentReview": "Peman pou verifye", "inTransit": "Sou wout", "ready": "Pare pou retrè", "deliveredToday": "Livre jodi a", "delivered": "Livre", "cancelled": "Anile", "noAssignment": "Yo pa bay ou okenn pwen retrè.", "noOrders": "Pa gen kòmand nan estati sa a.", "order": "Kòmand", "customer": "Kliyan", "itemCount": "atik", "noCode": "Pa gen kòd", "viewDetails": "Gade detay", "markReady": "Make pare", "confirmPickup": "Konfime retrè", "paymentRequired": "Kòmand sa a poko peye nèt. Li pa ka make pare pou retrè.", "paid": "Peman konplè", "pendingValidation": "Peman pou valide", "pendingPayment": "Peman an atant", "orderDetails": "Detay kòmand", "payment": "Estati peman", "total": "Total", "method": "Metòd", "date": "Dat", "notAvailable": "Pa disponib", "recipient": "Enfòmasyon moun k ap resevwa a", "packageContents": "Sa ki nan pakè a", "pickupSecurity": "Enfòmasyon retrè", "deliveryCode": "Kòd retrè", "customerPin": "PIN kliyan an", "close": "Fèmen", "openChat": "Louvri chat", "orderChat": "Chat kòmand"
+    },
     "favorites": {
       "loginRequired": "Konekte",
       "loginRequiredDesc": "Ou dwe konekte pou wè favori ou yo.",
