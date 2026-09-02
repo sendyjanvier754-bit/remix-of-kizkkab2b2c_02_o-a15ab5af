@@ -112,9 +112,17 @@ const AdminPartnerApplicationsPage = () => {
                     <Card key={app.id} className="hover:shadow-md transition cursor-pointer" onClick={() => setSelected(app)}>
                       <CardContent className="p-5">
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                            <meta.Icon className="w-6 h-6 text-primary" />
-                          </div>
+                          {app.photo_url ? (
+                            <img
+                              src={app.photo_url}
+                              alt={`Logo ${app.full_name}`}
+                              className="w-12 h-12 rounded-xl object-cover border shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                              <meta.Icon className="w-6 h-6 text-primary" />
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-1">
                               <h3 className="font-semibold truncate">{app.full_name}</h3>
