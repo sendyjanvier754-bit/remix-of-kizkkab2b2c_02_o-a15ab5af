@@ -69,6 +69,7 @@ const DriverRegistrationPage = () => {
         license_number: form.license_number,
         coverage_department_ids: form.coverage_department_ids,
         notes: form.notes,
+        photo_url: form.logo_url,
       },
     });
     setSubmitted({ token: result.tracking_token });
@@ -156,6 +157,13 @@ const DriverRegistrationPage = () => {
                   <Input value={form.license_number} onChange={(e) => update("license_number", e.target.value)} />
                 </div>
               </div>
+
+              <PartnerLogoUpload
+                label="Logo del transportista"
+                value={form.logo_url}
+                onChange={(logo_url) => update("logo_url", logo_url)}
+                slug="driver-registration"
+              />
 
               <div>
                 <Label>Departamentos donde puedes operar *</Label>

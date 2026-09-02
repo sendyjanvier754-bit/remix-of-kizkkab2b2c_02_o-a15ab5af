@@ -55,6 +55,7 @@ const PickupPointRegistrationPage = () => {
         estimated_capacity: form.estimated_capacity,
         has_storage_space: form.has_storage_space,
         notes: form.notes,
+        photo_url: form.logo_url,
       },
     });
     setSubmitted({ token: result.tracking_token });
@@ -124,6 +125,13 @@ const PickupPointRegistrationPage = () => {
                 <Label>Nombre del negocio / local *</Label>
                 <Input value={form.business_name} onChange={(e) => update("business_name", e.target.value)} required />
               </div>
+
+              <PartnerLogoUpload
+                label="Logo del punto de retiro"
+                value={form.logo_url}
+                onChange={(logo_url) => update("logo_url", logo_url)}
+                slug="pickup-registration"
+              />
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>

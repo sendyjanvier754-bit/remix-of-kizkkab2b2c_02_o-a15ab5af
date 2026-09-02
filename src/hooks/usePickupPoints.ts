@@ -16,6 +16,7 @@ export interface PickupPoint {
   longitude: number | null;
   manager_user_id: string | null;
   is_active: boolean | null;
+  logo_url: string | null;
   operating_hours: Json;
   metadata: Json;
   created_at: string | null;
