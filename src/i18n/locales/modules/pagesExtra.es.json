@@ -81,6 +81,9 @@
       "viewMore": "Ver más",
       "viewLess": "Ver menos"
     },
+    "pickupPortal": {
+      "title": "Portal del punto de retiro", "pickupPoint": "Punto de retiro", "inbox": "Pedidos", "history": "Historial", "subtitle": "Revisa el pago, prepara los paquetes y confirma cada retiro.", "searchPlaceholder": "Buscar por pedido, cliente o código", "visibleOrders": "Pedidos visibles", "paidOrders": "Pagados completamente", "paymentReview": "Requieren revisión de pago", "inTransit": "En camino", "ready": "Listos para retiro", "deliveredToday": "Entregados hoy", "delivered": "Entregados", "cancelled": "Cancelados", "noAssignment": "No estás asignado a ningún punto de retiro.", "noOrders": "No hay pedidos en este estado.", "order": "Pedido", "customer": "Cliente", "itemCount": "artículos", "noCode": "Sin código", "viewDetails": "Ver detalles", "markReady": "Marcar listo", "confirmPickup": "Confirmar retiro", "paymentRequired": "El pedido no está completamente pagado. No puede marcarse como listo para retiro.", "paid": "Pago completo", "pendingValidation": "Pago por validar", "pendingPayment": "Pago pendiente", "orderDetails": "Detalle del pedido", "payment": "Estado del pago", "total": "Total", "method": "Método", "date": "Fecha", "notAvailable": "No disponible", "recipient": "Datos del destinatario", "packageContents": "Contenido del paquete", "pickupSecurity": "Datos para la entrega", "deliveryCode": "Código de retiro", "customerPin": "PIN del cliente", "close": "Cerrar", "openChat": "Abrir chat", "orderChat": "Chat del pedido"
+    },
     "favorites": {
       "loginRequired": "Inicia sesión",
       "loginRequiredDesc": "Debes iniciar sesión para ver tus favoritos.",
