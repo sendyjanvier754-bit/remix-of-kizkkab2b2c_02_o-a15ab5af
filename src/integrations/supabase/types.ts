@@ -2785,6 +2785,169 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_box_items: {
+        Row: {
+          box_id: string
+          buyer_name: string | null
+          buyer_phone: string | null
+          buyer_user_id: string | null
+          created_at: string
+          id: string
+          order_id: string | null
+          order_number: string | null
+          order_type: string
+          pickup_point_id: string | null
+          product_name: string | null
+          quantity: number
+          seller_name: string | null
+          shipping_address: Json | null
+          sku: string | null
+          store_id: string | null
+          tracking_id: string | null
+          unit_weight_grams: number
+        }
+        Insert: {
+          box_id: string
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          buyer_user_id?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          order_number?: string | null
+          order_type?: string
+          pickup_point_id?: string | null
+          product_name?: string | null
+          quantity?: number
+          seller_name?: string | null
+          shipping_address?: Json | null
+          sku?: string | null
+          store_id?: string | null
+          tracking_id?: string | null
+          unit_weight_grams?: number
+        }
+        Update: {
+          box_id?: string
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          buyer_user_id?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          order_number?: string | null
+          order_type?: string
+          pickup_point_id?: string | null
+          product_name?: string | null
+          quantity?: number
+          seller_name?: string | null
+          shipping_address?: Json | null
+          sku?: string | null
+          store_id?: string | null
+          tracking_id?: string | null
+          unit_weight_grams?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_box_items_box_id_fkey"
+            columns: ["box_id"]
+            isOneToOne: false
+            referencedRelation: "hub_boxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_box_items_pickup_point_id_fkey"
+            columns: ["pickup_point_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_points"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_boxes: {
+        Row: {
+          china_tracking_id: string | null
+          created_at: string
+          hub_code: string | null
+          id: string
+          internal_tracking_id: string
+          items_count: number
+          metadata: Json
+          notes: string | null
+          origin_country: string | null
+          po_id: string | null
+          processed_at: string | null
+          received_at: string | null
+          received_by: string | null
+          route_id: string | null
+          shipment_id: string | null
+          status: string
+          total_weight_kg: number
+          updated_at: string
+        }
+        Insert: {
+          china_tracking_id?: string | null
+          created_at?: string
+          hub_code?: string | null
+          id?: string
+          internal_tracking_id: string
+          items_count?: number
+          metadata?: Json
+          notes?: string | null
+          origin_country?: string | null
+          po_id?: string | null
+          processed_at?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          route_id?: string | null
+          shipment_id?: string | null
+          status?: string
+          total_weight_kg?: number
+          updated_at?: string
+        }
+        Update: {
+          china_tracking_id?: string | null
+          created_at?: string
+          hub_code?: string | null
+          id?: string
+          internal_tracking_id?: string
+          items_count?: number
+          metadata?: Json
+          notes?: string | null
+          origin_country?: string | null
+          po_id?: string | null
+          processed_at?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          route_id?: string | null
+          shipment_id?: string | null
+          status?: string
+          total_weight_kg?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_boxes_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "master_purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_boxes_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_boxes_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "po_shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_batch_products: {
         Row: {
           batch_id: string
@@ -4319,6 +4482,45 @@ export type Database = {
           },
         ]
       }
+      package_tracking_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          eta: string | null
+          id: string
+          location: string | null
+          note: string | null
+          order_id: string | null
+          order_type: string
+          status: string
+          tracking_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          eta?: string | null
+          id?: string
+          location?: string | null
+          note?: string | null
+          order_id?: string | null
+          order_type?: string
+          status: string
+          tracking_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          eta?: string | null
+          id?: string
+          location?: string | null
+          note?: string | null
+          order_id?: string | null
+          order_type?: string
+          status?: string
+          tracking_id?: string
+        }
+        Relationships: []
+      }
       partner_applications: {
         Row: {
           address: string | null
@@ -4700,6 +4902,75 @@ export type Database = {
         }
         Relationships: []
       }
+      pickup_point_earnings: {
+        Row: {
+          base_rate: number
+          breakdown: Json
+          commission_amount: number
+          created_at: string
+          currency: string
+          extra_amount: number
+          extra_blocks: number
+          id: string
+          order_id: string
+          order_type: string
+          pickup_point_id: string
+          status: string
+          template_id: string | null
+          total_weight_kg: number
+          updated_at: string
+        }
+        Insert: {
+          base_rate?: number
+          breakdown?: Json
+          commission_amount?: number
+          created_at?: string
+          currency?: string
+          extra_amount?: number
+          extra_blocks?: number
+          id?: string
+          order_id: string
+          order_type?: string
+          pickup_point_id: string
+          status?: string
+          template_id?: string | null
+          total_weight_kg?: number
+          updated_at?: string
+        }
+        Update: {
+          base_rate?: number
+          breakdown?: Json
+          commission_amount?: number
+          created_at?: string
+          currency?: string
+          extra_amount?: number
+          extra_blocks?: number
+          id?: string
+          order_id?: string
+          order_type?: string
+          pickup_point_id?: string
+          status?: string
+          template_id?: string | null
+          total_weight_kg?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_point_earnings_pickup_point_id_fkey"
+            columns: ["pickup_point_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_point_earnings_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_rate_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pickup_point_managers: {
         Row: {
           application_id: string | null
@@ -4808,6 +5079,7 @@ export type Database = {
           opening_hours: Json | null
           phone: string | null
           point_code: string | null
+          segment_key: string | null
           updated_at: string | null
         }
         Insert: {
@@ -4834,6 +5106,7 @@ export type Database = {
           opening_hours?: Json | null
           phone?: string | null
           point_code?: string | null
+          segment_key?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -4860,6 +5133,7 @@ export type Database = {
           opening_hours?: Json | null
           phone?: string | null
           point_code?: string | null
+          segment_key?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -4875,6 +5149,100 @@ export type Database = {
             columns: ["commune_id"]
             isOneToOne: false
             referencedRelation: "communes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pickup_rate_templates: {
+        Row: {
+          created_at: string
+          currency: string
+          extra_block_kg: number
+          extra_block_rate: number
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          pickup_point_id: string | null
+          scope: string
+          segment_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          extra_block_kg?: number
+          extra_block_rate?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          pickup_point_id?: string | null
+          scope?: string
+          segment_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          extra_block_kg?: number
+          extra_block_rate?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          pickup_point_id?: string | null
+          scope?: string
+          segment_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_rate_templates_pickup_point_id_fkey"
+            columns: ["pickup_point_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_points"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pickup_rate_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          max_kg: number
+          min_kg: number
+          rate: number
+          sort_order: number
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_kg: number
+          min_kg?: number
+          rate?: number
+          sort_order?: number
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_kg?: number
+          min_kg?: number
+          rate?: number
+          sort_order?: number
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_rate_tiers_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_rate_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -10096,6 +10464,14 @@ export type Database = {
           costo_local_usd: number
         }[]
       }
+      calculate_order_weight_kg: {
+        Args: { p_order_id: string }
+        Returns: number
+      }
+      calculate_pickup_commission: {
+        Args: { p_pickup_point_id: string; p_weight_kg: number }
+        Returns: Json
+      }
       calculate_route_cost: {
         Args: { p_route_id: string; p_weight_cbm?: number; p_weight_kg: number }
         Returns: Json
@@ -10367,9 +10743,14 @@ export type Database = {
         Returns: undefined
       }
       refresh_suggested_pvp_cache: { Args: never; Returns: undefined }
+      register_pickup_earning: { Args: { p_order_id: string }; Returns: Json }
       reject_partner_application: {
         Args: { p_application_id: string; p_reason: string }
         Returns: undefined
+      }
+      resolve_pickup_rate_template: {
+        Args: { p_pickup_point_id: string }
+        Returns: string
       }
       submit_partner_application: {
         Args: {
