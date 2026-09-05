@@ -325,6 +325,44 @@ export const useTrackingLookup = (trackingId?: string) => {
   });
 };
 
+/** Notifies the final customer (in-app + WhatsApp when configured) that the order is ready for pickup. */
+const notifyCustomerReady = async (orderId: string, trackingId: string) => {
+  const { data: order } = await supabase
+    .from("orders_b2c")
+    .select("buyer_user_id, order_number, pickup_point_id, shipping_address")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order) return;
+
+  let pickupName: string | null = null;
+  if (order.pickup_point_id) {
+    const { data: pp } = await supabase.from("pickup_points").select("name").eq("id", order.pickup_point_id).maybeSingle();
+    pickupName = pp?.name ?? null;
+  }
+
+  const message = pickupName
+    ? `Tu pedido ${order.order_number} está listo para retirar en ${pickupName}. Rastreo: ${trackingId}`
+    : `Tu pedido ${order.order_number} está listo para entrega. Rastreo: ${trackingId}`;
+
+  if (order.buyer_user_id) {
+    await supabase.from("notifications").insert({
+      user_id: order.buyer_user_id,
+      type: "order_ready_for_pickup",
+      title: "Pedido listo para retirar",
+      message,
+      data: { order_id: orderId, tracking_id: trackingId },
+    });
+  }
+
+  const address = (order.shipping_address ?? {}) as Record<string, string>;
+  const phone = address.phone || address.telefono;
+  if (phone) {
+    await supabase.functions
+      .invoke("send-whatsapp-notification", { body: { phone, message } })
+      .catch(() => undefined);
+  }
+};
+
 export const useUpdatePackageStatus = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -353,9 +391,7 @@ export const useUpdatePackageStatus = () => {
           .from("order_deliveries")
           .update({ status: "ready", ready_at: new Date().toISOString() })
           .eq("order_id", orderId);
-        await supabase.functions.invoke("send-notification-email", {
-          body: { type: "order_ready_for_pickup", order_id: orderId },
-        }).catch(() => undefined);
+        await notifyCustomerReady(orderId, trackingId);
       } else {
         await supabase.from("orders_b2c").update({ status }).eq("id", orderId);
       }
