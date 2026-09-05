@@ -353,9 +353,7 @@ export const useUpdatePackageStatus = () => {
           .from("order_deliveries")
           .update({ status: "ready", ready_at: new Date().toISOString() })
           .eq("order_id", orderId);
-        await supabase.functions.invoke("send-notification-email", {
-          body: { type: "order_ready_for_pickup", order_id: orderId },
-        }).catch(() => undefined);
+        await notifyCustomerReady(orderId, trackingId);
       } else {
         await supabase.from("orders_b2c").update({ status }).eq("id", orderId);
       }
