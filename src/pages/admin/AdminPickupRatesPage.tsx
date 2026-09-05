@@ -192,7 +192,7 @@ const AdminPickupRatesPage = () => {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout title="Tarifas por peso">
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
