@@ -73,6 +73,8 @@ export function AdminSidebar() {
     { title: t('adminSidebar.marketplaceSections'), url: "/admin/marketplace-sections", icon: LayoutGrid },
     { title: t('adminSidebar.localLogistics'), url: "/admin/logistics", icon: Truck },
     { title: t('adminSidebar.pickupPoints'), url: "/admin/pickup-points", icon: MapPin },
+    { title: "Hub Central", url: "/admin/hub-central", icon: Boxes },
+    { title: "Tarifas por peso", url: "/admin/pickup-rates", icon: Scale },
     { title: "Solicitudes de socios", url: "/admin/partner-applications", icon: UserCheck },
     { title: t('adminSidebar.commissions'), url: "/admin/commissions", icon: Settings },
     { title: t('adminSidebar.paymentMethods'), url: "/admin/payment-methods", icon: CreditCard },

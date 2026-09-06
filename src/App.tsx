@@ -94,6 +94,9 @@ const AdminCotizaciones = lazyWithRetry(() => import("./pages/admin/AdminCotizac
 const AdminReembolsos = lazyWithRetry(() => import("./pages/admin/AdminReembolsos"));
 const AdminCommissionPage = lazyWithRetry(() => import("./pages/admin/AdminCommissionPage"));
 const AdminPickupPointsPage = lazyWithRetry(() => import("./pages/admin/AdminPickupPointsPage"));
+const AdminHubCentralPage = lazyWithRetry(() => import("./pages/admin/AdminHubCentralPage"));
+const AdminPickupRatesPage = lazyWithRetry(() => import("./pages/admin/AdminPickupRatesPage"));
+const TrackingScanPage = lazyWithRetry(() => import("./pages/TrackingScanPage"));
 const AdminPartnerApplicationsPage = lazyWithRetry(() => import("./pages/admin/AdminPartnerApplicationsPage"));
 const BecomePartnerPage = lazyWithRetry(() => import("./pages/partners/BecomePartnerPage"));
 const PickupPointRegistrationPage = lazyWithRetry(() => import("./pages/partners/PickupPointRegistrationPage"));
@@ -405,6 +408,24 @@ const AppContent = () => {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/hub-central" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminHubCentralPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/pickup-rates" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminPickupRatesPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/rastreo" element={<LazyRoute><TrackingScanPage /></LazyRoute>} />
+            <Route path="/rastreo/:trackingId" element={<LazyRoute><TrackingScanPage /></LazyRoute>} />
             <Route 
               path="/admin/partner-applications" 
               element={
