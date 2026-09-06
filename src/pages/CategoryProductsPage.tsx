@@ -184,7 +184,7 @@ const CategoryProductsPage = () => {
   const getSku = (p: AnyProduct) => p.sku_interno ?? p.sku ?? p.id;
   const getName = (p: AnyProduct) => p.nombre ?? p.name ?? t('pagesExtra.categoryProducts.defaultProductName');
   const getPrice = (p: AnyProduct) => p.precio ?? 0;  // B2C price (default Supabase field)
-  const getImage = (p: AnyProduct) => p.imagen ?? (p.galeria_imagenes && p.galeria_imagenes[0]) ?? p.image ?? "https://via.placeholder.com/400x500?text=Sin+imagen";
+  const getImage = (p: AnyProduct) => p.imagen ?? p.imagen_principal ?? (p.galeria_imagenes && p.galeria_imagenes[0]) ?? p.image ?? "https://via.placeholder.com/400x500?text=Sin+imagen";
   const getSeller = (p: AnyProduct) => p.vendedor ?? p.seller ?? { id: "", nombre: t('pagesExtra.categoryProducts.defaultStoreName') };
 
   if (isLoading) {
