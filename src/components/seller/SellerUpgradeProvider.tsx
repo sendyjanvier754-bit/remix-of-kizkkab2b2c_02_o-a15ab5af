@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { SellerRegistrationModal } from "@/components/profile/SellerRegistrationModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 interface SellerUpgradeContextType {
   openUpgradeModal: () => void;
@@ -16,6 +17,7 @@ const REMINDER_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 
 export function SellerUpgradeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const reminderTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -61,55 +63,50 @@ export function SellerUpgradeProvider({ children }: { children: ReactNode }) {
     };
   }, [user?.id, user?.role]);
 
-  // ── Email reminder for incomplete onboarding (once per 24h) ──
+  // ── Persistent reminder for incomplete onboarding (after 5 days, every 3 days) ──
   useEffect(() => {
     if (!user?.id || user.role !== UserRole.SELLER) return;
 
     const checkAndNotify = async () => {
-      const { data: progress } = await supabase
-        .from('seller_onboarding_progress')
-        .select('is_complete')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      try {
+        const { data, error } = await (supabase as any)
+          .rpc('maybe_create_seller_onboarding_reminder');
+        if (error) throw error;
+        if (!data?.created) return;
 
-      if (progress && !progress.is_complete) {
-        const lastReminder = localStorage.getItem(`seller_onboarding_reminder_${user.id}`);
-        const now = Date.now();
-        if (lastReminder && now - parseInt(lastReminder) < 24 * 60 * 60 * 1000) return;
-
-        try {
-          await supabase.functions.invoke('send-email', {
-            body: {
-              to: user.email,
-              subject: '¡Completa la configuración de tu tienda!',
-              htmlContent: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                  <h2 style="color: #333;">¡Hola ${user.name || ''}!</h2>
-                  <p style="color: #555; line-height: 1.6;">
-                    Notamos que aún no has completado la configuración de tu tienda. 
-                    ¡Solo faltan unos pasos para empezar a vender!
-                  </p>
-                  <a href="${window.location.origin}/seller/cuenta" 
-                     style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px; margin-top: 16px;">
-                    Continuar configuración
-                  </a>
-                  <p style="color: #999; font-size: 12px; margin-top: 24px;">
-                    Si ya completaste tu tienda, puedes ignorar este correo.
-                  </p>
-                </div>
-              `,
-              type: 'notifications',
-            },
-          });
-          localStorage.setItem(`seller_onboarding_reminder_${user.id}`, String(now));
-        } catch (e) {
-          console.error('Failed to send onboarding reminder email:', e);
-        }
+        // The in-app notification is already persisted by the RPC. Email is a
+        // secondary channel and is sent only for that newly-created reminder.
+        if (!user.email) return;
+        await supabase.functions.invoke('send-email', {
+          body: {
+            to: user.email,
+            subject: t('sellerRegistration.continueLater'),
+            htmlContent: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #333;">${t('sellerRegistration.continueLater')}</h2>
+                <p style="color: #555; line-height: 1.6;">
+                  ${t('sellerRegistration.draftSaved')}
+                </p>
+                <a href="${window.location.origin}/seller/cuenta"
+                   style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px; margin-top: 16px;">
+                  ${t('sellerRegistration.continue')}
+                </a>
+              </div>
+            `,
+            type: 'notifications',
+          },
+        });
+      } catch (e) {
+        console.error('Failed to create onboarding reminder:', e);
       }
     };
 
     const timer = setTimeout(checkAndNotify, 5000);
-    return () => clearTimeout(timer);
+    const interval = setInterval(checkAndNotify, REMINDER_INTERVAL_MS);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [user?.id, user?.role, user?.email, user?.name]);
 
   const handleClose = (open: boolean) => {

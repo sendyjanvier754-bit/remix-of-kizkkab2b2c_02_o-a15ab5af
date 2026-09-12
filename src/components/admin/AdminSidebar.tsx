@@ -1,8 +1,9 @@
+import { useEffect, useRef } from "react";
 import { 
   LayoutDashboard, CreditCard, Package, Users, MapPin, Settings, LogOut, ShoppingBag,
   ChevronLeft, FolderTree, ShoppingCart, Image as ImageIcon, Truck, ClipboardList,
   Calculator, MessageSquare, RefreshCw, Ticket, UserCheck, BarChart3, LayoutGrid,
-  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck, Mail, UsersRound
+  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck, Mail, UsersRound, TrendingUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -24,8 +25,30 @@ export function AdminSidebar() {
   const { signOut, user } = useAuth();
   const { getValue } = useBranding();
   const isCollapsed = state === "collapsed";
+  const sidebarContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = sidebarContentRef.current;
+    if (!element) return;
+
+    const storageKey = "admin-sidebar-scroll-top";
+    const savedScrollTop = Number(sessionStorage.getItem(storageKey) || 0);
+    const restoreFrame = requestAnimationFrame(() => {
+      element.scrollTop = savedScrollTop;
+    });
+    const handleScroll = () => {
+      sessionStorage.setItem(storageKey, String(element.scrollTop));
+    };
+
+    element.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(restoreFrame);
+      element.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const isAdmin = user?.role === UserRole.ADMIN;
+  const isMarketing = user?.role === UserRole.MARKETING;
   const isSalesAgent = user?.role === UserRole.SALES_AGENT;
 
   // Items visible to all roles that can enter /admin routes
@@ -53,6 +76,7 @@ export function AdminSidebar() {
     { title: t('adminSidebar.priceConfig'), url: "/admin/precios", icon: Calculator },
     { title: t('adminSidebar.sellers'), url: "/admin/vendedores", icon: Users },
     { title: "Sync B2B → B2C", url: "/admin/b2b-sync", icon: RefreshCw },
+    { title: "Tienda destacada", url: "/admin/tendencias", icon: TrendingUp },
     { title: t('adminSidebar.banners'), url: "/admin/banners", icon: ImageIcon },
     { title: t('adminSidebar.agentOrders'), url: "/admin/agente-pedidos", icon: Headset },
     { title: t('adminSidebar.liveChat'), url: "/admin/soporte-chat", icon: MessageCircle },
@@ -139,7 +163,7 @@ export function AdminSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent ref={sidebarContentRef}>
         {/* Admins see the full sidebar */}
         {isAdmin && (
           <>
@@ -165,6 +189,10 @@ export function AdminSidebar() {
             </SidebarGroup>
           </>
         )}
+
+        {isMarketing && renderGroup("Marketing", [
+          { title: "Tienda destacada", url: "/admin/tendencias", icon: TrendingUp },
+        ])}
 
         {/* Sales agents see agente-pedidos + shared items */}
         {!isAdmin && isSalesAgent && renderGroup(t('adminSidebar.main'), [...agentNavItems, ...sharedNavItems])}

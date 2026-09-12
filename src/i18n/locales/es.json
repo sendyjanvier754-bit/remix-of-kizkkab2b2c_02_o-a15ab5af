@@ -513,12 +513,13 @@
     "paymentDate": "Fecha"
   },
   "adminCatalog": {
-    "title": "Catálogo Maestro B2B",
+    "title": "Catálogo B2B",
     "subtitle": "Logística Central - Gestión de Inventario",
     "products": "Productos",
     "aiEmbeddings": "IA / Embeddings",
     "normalizeEAV": "Normalizar EAV",
     "importProducts": "Importar Productos",
+    "importProduct": "Importar producto",
     "updatePrices": "Actualizar Precios",
     "newEntry": "Nueva Entrada",
     "exportCSV": "Exportar CSV",

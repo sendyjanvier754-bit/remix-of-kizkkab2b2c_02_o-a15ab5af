@@ -7796,6 +7796,8 @@ export type Database = {
           current_step: string | null
           id: string
           is_complete: boolean | null
+          last_reminder_at: string | null
+          postponed_at: string | null
           steps_completed: Json | null
           updated_at: string | null
           user_id: string
@@ -7805,6 +7807,8 @@ export type Database = {
           current_step?: string | null
           id?: string
           is_complete?: boolean | null
+          last_reminder_at?: string | null
+          postponed_at?: string | null
           steps_completed?: Json | null
           updated_at?: string | null
           user_id: string
@@ -7814,6 +7818,8 @@ export type Database = {
           current_step?: string | null
           id?: string
           is_complete?: boolean | null
+          last_reminder_at?: string | null
+          postponed_at?: string | null
           steps_completed?: Json | null
           updated_at?: string | null
           user_id?: string

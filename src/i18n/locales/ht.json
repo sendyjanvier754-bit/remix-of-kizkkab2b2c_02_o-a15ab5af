@@ -513,12 +513,13 @@
     "paymentDate": "Dat"
   },
   "adminCatalog": {
-    "title": "Katalòg Mèt B2B",
+    "title": "Katalòg B2B",
     "subtitle": "Lojistik Santral - Jesyon Envantè",
     "products": "Pwodwi",
     "aiEmbeddings": "IA / Embeddings",
     "normalizeEAV": "Nòmalize EAV",
     "importProducts": "Enpòte Pwodwi",
+    "importProduct": "Enpòte yon pwodwi",
     "updatePrices": "Mete Pri Ajou",
     "newEntry": "Nouvo Antre",
     "exportCSV": "Ekspòte CSV",

@@ -65,11 +65,23 @@ export const useTrendingStores = (limit = 5) => {
   return useQuery({
     queryKey: ["trending-stores", limit],
     queryFn: async () => {
-      // Fetch active stores with their products
+      const { data: selections, error: selectionError } = await (supabase as any)
+        .from("trending_store_selection")
+        .select("store_id, is_enabled, expires_at")
+        .eq("is_enabled", true);
+
+      if (selectionError) throw new Error(selectionError.message);
+      const activeStoreIds = (selections || [])
+        .filter((selection: any) => !selection.expires_at || new Date(selection.expires_at) > new Date())
+        .map((selection: any) => selection.store_id)
+        .filter(Boolean);
+
+      // Public trends shows only the currently selected store.
       const { data: stores, error: storesError } = await supabase
         .from("stores")
         .select("id, name, slug, logo, owner_user_id")
         .eq("is_active", true)
+        .in("id", activeStoreIds.length > 0 ? activeStoreIds : ["00000000-0000-0000-0000-000000000000"])
         .limit(limit);
 
       if (storesError) throw new Error(storesError.message);

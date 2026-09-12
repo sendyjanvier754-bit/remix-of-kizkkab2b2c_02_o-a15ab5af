@@ -10,6 +10,11 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
+    // Dashboard layouts manage their own scroll positions. Resetting the
+    // window here makes every sidebar navigation jump back to the top.
+    const isPanelRoute = /^\/(admin|seller|grossiste|purchasing-agent)(\/|$)/.test(pathname);
+    if (isPanelRoute) return;
+
     // Disable browser auto scroll restoration so it doesn't fight us on mobile
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';

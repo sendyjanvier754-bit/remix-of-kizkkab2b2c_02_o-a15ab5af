@@ -8,6 +8,7 @@
 
 export enum UserRole {
   ADMIN = "admin", // Administrador - Acceso total
+  MARKETING = "marketing", // Marketing - Gestiona la tienda destacada en tendencias
   SELLER = "seller", // Vendedor Siver509 - Acceso a módulo B2B
   USER = "user", // Usuario/Cliente Final - Acceso solo a experiencia B2C
   MODERATOR = "moderator", // Moderador

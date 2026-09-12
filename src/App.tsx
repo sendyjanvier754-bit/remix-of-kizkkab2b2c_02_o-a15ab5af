@@ -85,6 +85,7 @@ const Import1688ReviewPage = lazyWithRetry(() => import("./pages/admin/Import168
 const AdminCategorias = lazyWithRetry(() => import("./pages/admin/AdminCategorias"));
 const AdminVendedores = lazyWithRetry(() => import("./pages/admin/AdminVendedores"));
 const AdminB2BSyncPage = lazyWithRetry(() => import("./pages/admin/AdminB2BSyncPage"));
+const AdminTrendingStorePage = lazyWithRetry(() => import("./pages/admin/AdminTrendingStorePage"));
 const AdminBanners = lazyWithRetry(() => import("./pages/admin/AdminBanners"));
 const AdminProveedores = lazyWithRetry(() => import("./pages/admin/AdminProveedores"));
 const AdminPedidos = lazyWithRetry(() => import("./pages/admin/AdminPedidos"));
@@ -335,6 +336,14 @@ const AppContent = () => {
                   <LazyRoute><AdminB2BSyncPage /></LazyRoute>
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/admin/tendencias"
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.MARKETING]}>
+                  <LazyRoute><AdminTrendingStorePage /></LazyRoute>
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/admin/banners" 

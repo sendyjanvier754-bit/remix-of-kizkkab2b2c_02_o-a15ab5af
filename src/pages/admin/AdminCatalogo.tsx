@@ -11,11 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCatalog, Product, ProductFilters } from '@/hooks/useCatalog';
 import type { GroupedProduct } from '@/hooks/useSmartProductGrouper';
-import { Package, AlertTriangle, TrendingDown, Search, Upload, Plus, Download, Settings, Loader2, Cpu, ExternalLink, DollarSign, RefreshCw, FileSpreadsheet } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, Search, Upload, Download, Settings, Loader2, Cpu, ExternalLink, DollarSign, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import SmartBulkImportDialog from '@/components/catalog/SmartBulkImportDialog';
 import Import1688Dialog from '@/components/catalog/Import1688Dialog';
 
-import ProductFormDialog from '@/components/catalog/ProductFormDialog';
 import ProductEditDialog from '@/components/catalog/ProductEditDialog';
 import ProductEmbeddingsManager from '@/components/admin/ProductEmbeddingsManager';
 import BulkPriceUpdateDialog from '@/components/catalog/BulkPriceUpdateDialog';
@@ -34,7 +33,6 @@ const AdminCatalogo = () => {
   const [preloaded1688File, setPreloaded1688File] = useState<File | undefined>(undefined);
   const [import1688Open, setImport1688Open] = useState(false);
   
-  const [newProductOpen, setNewProductOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
   const [dynamicPrices, setDynamicPrices] = useState<Record<string, number>>({});
@@ -145,15 +143,11 @@ const AdminCatalogo = () => {
           <div className="flex flex-wrap gap-2">
             <Button variant="default" onClick={() => setImport1688Open(true)}>
               <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Importar 1688
+              {t('adminCatalog.importProduct')}
             </Button>
             <Button variant="outline" onClick={() => setBulkPriceOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
               {t('adminCatalog.updatePrices')}
-            </Button>
-            <Button variant="outline" onClick={() => setNewProductOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t('adminCatalog.newEntry')}
             </Button>
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="h-4 w-4 mr-2" />
@@ -417,7 +411,6 @@ const AdminCatalogo = () => {
           setSmartImportOpen(true);
         }}
       />
-      <ProductFormDialog open={newProductOpen} onOpenChange={setNewProductOpen} />
       <BulkPriceUpdateDialog open={bulkPriceOpen} onOpenChange={setBulkPriceOpen} />
       {editProductId && (
         <ProductEditDialog

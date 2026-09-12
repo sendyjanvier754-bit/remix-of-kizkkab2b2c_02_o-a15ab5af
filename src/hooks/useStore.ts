@@ -74,14 +74,15 @@ export const useStoreByOwner = (userId: string | undefined) => {
   });
 };
 
-export const useStoreProducts = (storeId: string | undefined, page = 0, limit = 12) => {
+export const useStoreProducts = (storeId: string | undefined, page = 0, limit = 1000) => {
   return useQuery({
     queryKey: ["store", storeId, "products", page],
     queryFn: async () => {
       if (!storeId) return { products: [], total: 0 };
 
-      // Fetch seller_catalog rows directly — use catalog fields (nombre, precio_venta, images, stock)
-      // as the source of truth. Also include items with stock=0 so we can show "Agotado" badge.
+      // Fetch all seller_catalog rows for the public store — use catalog fields
+      // (nombre, precio_venta, images, stock) as the source of truth. Include
+      // items with stock=0 so we can show the "Agotado" badge.
       const { data, error, count } = await supabase
         .from("seller_catalog")
         .select(
@@ -91,7 +92,6 @@ export const useStoreProducts = (storeId: string | undefined, page = 0, limit = 
         )
         .eq("seller_store_id", storeId)
         .eq("is_active", true)
-        .gt("stock", 0)
         .range(page * limit, (page + 1) * limit - 1)
         .order("imported_at", { ascending: false });
 

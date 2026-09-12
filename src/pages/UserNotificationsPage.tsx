@@ -118,9 +118,16 @@ function NotificationItem({
     title: notification.title,
     message: notification.message,
   });
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  const translatedTitle = translated.title || notification.title;
-  const translatedMessage = translated.message || notification.message;
+  const isSellerOnboardingReminder = notification.data?.kind === 'seller_onboarding_reminder';
+  const translatedTitle = isSellerOnboardingReminder && notification.data?.title_key
+    ? t(notification.data.title_key)
+    : translated.title || notification.title;
+  const translatedMessage = isSellerOnboardingReminder && notification.data?.message_key
+    ? t(notification.data.message_key)
+    : translated.message || notification.message;
 
   const icon = typeIcons[notification.type] || typeIcons.general;
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
@@ -130,7 +137,11 @@ function NotificationItem({
 
   return (
     <button
-      onClick={() => !notification.is_read && onRead(notification.id)}
+      onClick={() => {
+        if (!notification.is_read) onRead(notification.id);
+        const actionUrl = notification.data?.action_url;
+        if (typeof actionUrl === 'string') navigate(actionUrl);
+      }}
       className={`w-full text-left px-5 py-4 transition-colors hover:bg-muted/40 ${
         !notification.is_read ? 'bg-primary/5' : ''
       }`}

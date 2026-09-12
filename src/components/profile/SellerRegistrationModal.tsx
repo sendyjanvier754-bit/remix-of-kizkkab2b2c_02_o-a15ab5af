@@ -16,6 +16,7 @@ import {
   Globe, X, AlertTriangle
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 // ── Step definitions ──
 const STEPS = [
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { readyMarkets, isLoading: loadingMarkets } = useMarkets();
@@ -149,12 +151,12 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
           sessionStorage.removeItem("pending_seller_store_description");
           if (user?.id) localStorage.removeItem(`pending_seller_upgrade_${user.id}`);
           await saveProgress("location", { store_info: true });
-          toast.success("¡Cuenta de vendedor creada!");
+          toast.success(t("sellerRegistration.accountCreated"));
           // Reload page so useAuth picks up the new seller role
           window.location.href = "/seller/cuenta";
         } catch (err: any) {
           console.error("Auto step 1 error:", err);
-          toast.error(err.message || "Error al crear cuenta");
+          toast.error(err.message || t("sellerRegistration.accountCreateError"));
         } finally {
           setLoading(false);
         }
@@ -239,12 +241,12 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
       if (user?.id) localStorage.removeItem(`pending_seller_upgrade_${user.id}`);
 
       await saveProgress("location", { store_info: true });
-      toast.success("¡Cuenta de vendedor creada!");
+      toast.success(t("sellerRegistration.accountCreated"));
       // Reload page so useAuth picks up the new seller role
       window.location.href = "/seller/cuenta";
     } catch (err: any) {
       console.error("Step 1 error:", err);
-      toast.error(err.message || "Error al crear cuenta");
+      toast.error(err.message || t("sellerRegistration.accountCreateError"));
     } finally {
       setLoading(false);
     }
@@ -255,7 +257,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
     setLoading(true);
     try {
       const id = storeId || (await supabase.from("stores").select("id").eq("owner_user_id", user!.id).single()).data?.id;
-      if (!id) throw new Error("Tienda no encontrada");
+      if (!id) throw new Error(t("sellerRegistration.storeNotFound"));
 
       const updates: any = { updated_at: new Date().toISOString() };
       if (departmentId) updates.department_id = departmentId;
@@ -269,10 +271,10 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
       setStoreId(id);
       await saveProgress("profile", { store_info: true, location: true });
       setCurrentStep(2);
-      toast.success("Ubicación guardada");
+      toast.success(t("sellerRegistration.locationSaved"));
     } catch (err: any) {
       console.error("Step 2 error:", err);
-      toast.error(err.message || "Error al guardar ubicación");
+      toast.error(err.message || t("sellerRegistration.locationError"));
     } finally {
       setLoading(false);
     }
@@ -282,7 +284,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
     setLoading(true);
     try {
       const id = storeId || (await supabase.from("stores").select("id").eq("owner_user_id", user!.id).single()).data?.id;
-      if (!id) throw new Error("Tienda no encontrada");
+      if (!id) throw new Error(t("sellerRegistration.storeNotFound"));
 
       // Upload logo if changed
       let logoUrl = logoPreview;
@@ -309,10 +311,10 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
 
       await saveProgress("payment", { store_info: true, location: true, profile: true });
       setCurrentStep(3);
-      toast.success("Perfil actualizado");
+      toast.success(t("sellerRegistration.profileUpdated"));
     } catch (err: any) {
       console.error("Step 3 error:", err);
-      toast.error(err.message || "Error al actualizar perfil");
+      toast.error(err.message || t("sellerRegistration.profileError"));
     } finally {
       setLoading(false);
     }
@@ -377,10 +379,10 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
 
       await saveProgress("verification", { store_info: true, location: true, profile: true, payment: true });
       setCurrentStep(4);
-      toast.success("Información de pago guardada");
+      toast.success(t("sellerRegistration.paymentSaved"));
     } catch (err: any) {
       console.error("Step 4 error:", err);
-      toast.error(err.message || "Error al guardar pagos");
+      toast.error(err.message || t("sellerRegistration.paymentError"));
     } finally {
       setLoading(false);
     }
@@ -388,7 +390,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
 
   const handleStep5 = async () => {
     if (!idFront || !idBack) {
-      toast.error("Debes subir ambos lados de tu identificación");
+      toast.error(t("sellerRegistration.bothDocumentsRequired"));
       return;
     }
     setLoading(true);
@@ -411,17 +413,94 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
       setShowSuccess(true);
     } catch (err: any) {
       console.error("Step 5 error:", err);
-      toast.error(err.message || "Error al enviar verificación");
+      toast.error(err.message || t("sellerRegistration.verificationError"));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSkipToEnd = () => {
-    // Mark as incomplete but let them access seller dashboard
-    toast.info("Puedes completar tu registro más tarde desde tu cuenta de vendedor.");
-    onOpenChange(false);
-    window.location.href = "/seller/cuenta";
+  const saveDraftBeforeLeaving = async () => {
+    if (!user?.id) return;
+
+    const id = storeId || (await supabase.from("stores").select("id").eq("owner_user_id", user.id).single()).data?.id;
+    if (!id) throw new Error(t("sellerRegistration.storeNotFound"));
+
+    let logoUrl = logoPreview;
+    if (logoFile) {
+      const ext = logoFile.name.split(".").pop();
+      const path = `stores/${id}/logo-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, logoFile, { upsert: true });
+      if (error) throw error;
+      logoUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+    }
+
+    const { error: storeError } = await supabase.from("stores").update({
+      name: storeName.trim() || null,
+      description: storeDescription.trim() || null,
+      department_id: departmentId || null,
+      commune_id: communeId || null,
+      market_id: selectedMarketId || null,
+      destination_country_id: selectedCountryId || null,
+      logo: logoUrl,
+      whatsapp: whatsapp || null,
+      instagram: instagram || null,
+      facebook: facebook || null,
+      tiktok: tiktok || null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", id);
+    if (storeError) throw storeError;
+
+    const paymentMethods = [
+      { type: "moncash", phone: moncashPhone, name: moncashName, display: "Moncash" },
+      { type: "natcash", phone: natcashPhone, name: natcashName, display: "Natcash" },
+    ];
+    for (const method of paymentMethods) {
+      if (!method.phone.trim()) continue;
+      const { data: existing } = await supabase.from("payment_methods")
+        .select("id").eq("owner_type", "seller").eq("owner_id", user.id)
+        .eq("method_type", method.type).maybeSingle();
+      const payload = {
+        owner_type: "seller" as const,
+        owner_id: user.id,
+        method_type: method.type as "moncash" | "natcash",
+        phone_number: method.phone.trim(),
+        holder_name: method.name.trim() || null,
+        is_active: true,
+        display_name: method.display,
+      };
+      const result = existing
+        ? await supabase.from("payment_methods").update(payload as any).eq("id", existing.id)
+        : await supabase.from("payment_methods").insert(payload as any);
+      if (result.error) throw result.error;
+    }
+
+    const { data: progress } = await supabase.from("seller_onboarding_progress")
+      .select("steps_completed").eq("user_id", user.id).maybeSingle();
+    const stepIds = ["store_info", "location", "profile", "payment", "verification"];
+    const { error: progressError } = await supabase.from("seller_onboarding_progress").upsert({
+      user_id: user.id,
+      current_step: stepIds[currentStep] || "verification",
+      steps_completed: progress?.steps_completed || { store_info: true },
+      is_complete: false,
+      postponed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+    if (progressError) throw progressError;
+  };
+
+  const handleSkipToEnd = async () => {
+    setLoading(true);
+    try {
+      await saveDraftBeforeLeaving();
+      toast.info(t("sellerRegistration.draftSaved"));
+      onOpenChange(false);
+      window.location.href = "/seller/cuenta";
+    } catch (err: any) {
+      console.error("Save draft error:", err);
+      toast.error(err.message || t("sellerRegistration.draftSaveError"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelRegistration = async () => {
@@ -436,12 +515,12 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
       sessionStorage.removeItem("pending_seller_upgrade");
       if (user?.id) localStorage.removeItem(`pending_seller_upgrade_${user.id}`);
 
-      toast.success("Registro de vendedor cancelado. Volviste a ser usuario normal.");
+      toast.success(t("sellerRegistration.cancelSuccess"));
       onOpenChange(false);
       window.location.href = "/perfil";
     } catch (err: any) {
       console.error("Cancel error:", err);
-      toast.error(err.message || "Error al cancelar registro");
+      toast.error(err.message || t("sellerRegistration.cancelError"));
     } finally {
       setLoading(false);
     }
@@ -453,7 +532,10 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
   // ── RENDER ──
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!loading) onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+        overlayClassName="bg-black/25"
+      >
         {showSuccess ? (
           <div className="py-2">
             <DialogHeader>
@@ -463,18 +545,18 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
                 </div>
               </DialogTitle>
               <DialogDescription className="text-center pt-2">
-                <span className="block text-lg font-semibold text-foreground">¡Cuenta creada con éxito!</span>
-                <span className="block mt-1 text-sm">Tu registro fue completado. La verificación de tu cuenta está pendiente — mientras tanto ya puedes comprar y usar tu cuenta con normalidad.</span>
+                <span className="block text-lg font-semibold text-foreground">{t("sellerRegistration.successTitle")}</span>
+                <span className="block mt-1 text-sm">{t("sellerRegistration.successDescription")}</span>
               </DialogDescription>
             </DialogHeader>
 
             <ol className="mt-6 space-y-3">
               {[
-                { label: "Cuenta creada", done: true },
-                { label: "Tienda configurada", done: true },
-                { label: "Métodos de pago añadidos", done: true },
-                { label: "Documentos enviados", done: true },
-                { label: "Verificación de la cuenta", done: false, pending: true },
+                { label: t("sellerRegistration.successSteps.account"), done: true },
+                { label: t("sellerRegistration.successSteps.store"), done: true },
+                { label: t("sellerRegistration.successSteps.payments"), done: true },
+                { label: t("sellerRegistration.successSteps.documents"), done: true },
+                { label: t("sellerRegistration.successSteps.verification"), done: false, pending: true },
               ].map((s, i) => (
                 <li key={i} className="flex items-center gap-3">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
@@ -498,7 +580,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
                 window.location.href = "/seller/cuenta";
               }}
             >
-              Ir a mi cuenta
+              {t("sellerRegistration.goToAccount")}
             </Button>
           </div>
         ) : (
@@ -506,10 +588,10 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Store className="w-5 h-5 text-primary" />
-            Registro de vendedor
+            {t("sellerRegistration.title")}
           </DialogTitle>
           <DialogDescription>
-            Completa los pasos para activar tu tienda.
+            {t("sellerRegistration.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -534,17 +616,21 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
           })}
         </div>
         <p className="text-xs text-muted-foreground text-center mb-4">
-          Paso {currentStep + 1} de {STEPS.length}: <strong>{step.label}</strong>
+          {t("sellerRegistration.stepOf", {
+            current: currentStep + 1,
+            total: STEPS.length,
+            step: t(`sellerRegistration.steps.${step.id}`),
+          })}
         </p>
 
         {/* ══════════ STEP 1: Account ══════════ */}
         {currentStep === 0 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="reg-store-name">Nombre de tu tienda *</Label>
+              <Label htmlFor="reg-store-name">{t("sellerRegistration.storeName")}</Label>
               <Input
                 id="reg-store-name"
-                placeholder="Ej: Mi Boutique"
+                placeholder={t("sellerRegistration.storeNamePlaceholder")}
                 value={storeName}
                 onChange={e => setStoreName(e.target.value)}
                 maxLength={80}
@@ -552,10 +638,10 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reg-store-desc">Descripción (opcional)</Label>
+              <Label htmlFor="reg-store-desc">{t("sellerRegistration.storeDescription")}</Label>
               <Textarea
                 id="reg-store-desc"
-                placeholder="Describe brevemente tu tienda..."
+                placeholder={t("sellerRegistration.storeDescriptionPlaceholder")}
                 value={storeDescription}
                 onChange={e => setStoreDescription(e.target.value)}
                 rows={3}
@@ -565,12 +651,12 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
             </div>
             {isAccountCreated ? (
               <Button className="w-full gap-2" onClick={() => setCurrentStep(1)}>
-                Continuar <ArrowRight className="w-4 h-4" />
+                {t("sellerRegistration.continue")} <ArrowRight className="w-4 h-4" />
               </Button>
             ) : (
               <Button className="w-full gap-2" onClick={handleStep1} disabled={loading || !storeName.trim()}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Store className="w-4 h-4" />}
-                {loading ? "Creando cuenta..." : "Crear cuenta y tienda"}
+                {loading ? t("sellerRegistration.creatingStore") : t("sellerRegistration.createStore")}
               </Button>
             )}
           </div>
@@ -580,9 +666,9 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
         {currentStep === 1 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Departamento</Label>
+              <Label>{t("sellerRegistration.department")}</Label>
               <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setCommuneId(""); }}>
-                <SelectTrigger><SelectValue placeholder="Selecciona departamento" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("sellerRegistration.departmentPlaceholder")} /></SelectTrigger>
                 <SelectContent>
                   {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
                 </SelectContent>
@@ -590,9 +676,9 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
             </div>
             {departmentId && communes.length > 0 && (
               <div className="space-y-2">
-                <Label>Comuna</Label>
+                <Label>{t("sellerRegistration.commune")}</Label>
                 <Select value={communeId} onValueChange={setCommuneId}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona comuna" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("sellerRegistration.communePlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {communes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
@@ -600,10 +686,10 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
               </div>
             )}
             <div className="space-y-2">
-              <Label>Mercado de destino</Label>
-              <p className="text-xs text-muted-foreground">Zona donde tus clientes recibirán los pedidos</p>
+              <Label>{t("sellerRegistration.destinationMarket")}</Label>
+              <p className="text-xs text-muted-foreground">{t("sellerRegistration.destinationMarketHelp")}</p>
               <Select value={selectedMarketId} onValueChange={(v) => { setSelectedMarketId(v); setSelectedCountryId(""); }}>
-                <SelectTrigger><SelectValue placeholder="— Elige un mercado —" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("sellerRegistration.marketPlaceholder")} /></SelectTrigger>
                 <SelectContent>
                   {readyMarkets.map((m: MarketDashboard) => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
@@ -615,9 +701,9 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
               const mkt = readyMarkets.find((m: MarketDashboard) => m.id === selectedMarketId);
               return mkt?.countries && mkt.countries.length > 1 ? (
                 <div className="space-y-2">
-                  <Label>País de destino</Label>
+                  <Label>{t("sellerRegistration.destinationCountry")}</Label>
                   <Select value={selectedCountryId} onValueChange={setSelectedCountryId}>
-                    <SelectTrigger><SelectValue placeholder="Selecciona país" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("sellerRegistration.countryPlaceholder")} /></SelectTrigger>
                     <SelectContent>
                       {mkt.countries.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
@@ -631,7 +717,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
               </Button>
               <Button className="flex-1 gap-2" onClick={handleStep2} disabled={loading}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {loading ? "Guardando..." : "Siguiente"}
+                {loading ? t("sellerRegistration.saving") : t("sellerRegistration.next")}
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </Button>
             </div>
@@ -643,7 +729,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
           <div className="space-y-4">
             {/* Logo */}
             <div className="space-y-2">
-              <Label>Logo de tu tienda</Label>
+              <Label>{t("sellerRegistration.storeLogo")}</Label>
               <div className="flex items-center gap-4">
                 {logoPreview ? (
                   <img src={logoPreview} alt="Logo" className="w-16 h-16 rounded-full object-cover border" />
@@ -654,7 +740,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
                 )}
                 <label className="cursor-pointer text-sm text-primary hover:underline flex items-center gap-1">
                   <Upload className="w-4 h-4" />
-                  {logoPreview ? "Cambiar" : "Subir logo"}
+                  {logoPreview ? t("sellerRegistration.change") : t("sellerRegistration.uploadLogo")}
                   <input
                     type="file"
                     accept="image/*"
@@ -703,7 +789,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
               </Button>
               <Button className="flex-1 gap-2" onClick={handleStep3} disabled={loading}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {loading ? "Guardando..." : "Siguiente"}
+                {loading ? t("sellerRegistration.saving") : t("sellerRegistration.next")}
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </Button>
             </div>
@@ -714,7 +800,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
         {currentStep === 3 && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Configura tus métodos de pago para recibir cobros de tus clientes.
+              {t("sellerRegistration.paymentSetup")}
             </p>
 
             {/* Moncash */}
@@ -723,12 +809,12 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
                 <CreditCard className="w-4 h-4 text-red-600" /> Moncash
               </p>
               <div className="space-y-2">
-                <Label htmlFor="reg-moncash-phone">Número Moncash</Label>
+                <Label htmlFor="reg-moncash-phone">{t("sellerRegistration.phoneNumber")} Moncash</Label>
                 <Input id="reg-moncash-phone" placeholder="+509 XXXX XXXX" value={moncashPhone} onChange={e => setMoncashPhone(e.target.value)} maxLength={20} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reg-moncash-name">Nombre en Moncash</Label>
-                <Input id="reg-moncash-name" placeholder="Nombre asociado a tu cuenta" value={moncashName} onChange={e => setMoncashName(e.target.value)} maxLength={100} />
+                <Label htmlFor="reg-moncash-name">{t("sellerRegistration.holderName")} Moncash</Label>
+                <Input id="reg-moncash-name" placeholder={t("sellerRegistration.holderName")} value={moncashName} onChange={e => setMoncashName(e.target.value)} maxLength={100} />
               </div>
             </div>
 
@@ -738,12 +824,12 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
                 <CreditCard className="w-4 h-4 text-blue-600" /> Natcash
               </p>
               <div className="space-y-2">
-                <Label htmlFor="reg-natcash-phone">Número Natcash</Label>
+                <Label htmlFor="reg-natcash-phone">{t("sellerRegistration.phoneNumber")} Natcash</Label>
                 <Input id="reg-natcash-phone" placeholder="+509 XXXX XXXX" value={natcashPhone} onChange={e => setNatcashPhone(e.target.value)} maxLength={20} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reg-natcash-name">Nombre en Natcash</Label>
-                <Input id="reg-natcash-name" placeholder="Nombre asociado a tu cuenta" value={natcashName} onChange={e => setNatcashName(e.target.value)} maxLength={100} />
+                <Label htmlFor="reg-natcash-name">{t("sellerRegistration.holderName")} Natcash</Label>
+                <Input id="reg-natcash-name" placeholder={t("sellerRegistration.holderName")} value={natcashName} onChange={e => setNatcashName(e.target.value)} maxLength={100} />
               </div>
             </div>
 
@@ -753,7 +839,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
               </Button>
               <Button className="flex-1 gap-2" onClick={handleStep4} disabled={loading}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {loading ? "Guardando..." : "Siguiente"}
+                {loading ? t("sellerRegistration.saving") : t("sellerRegistration.next")}
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </Button>
             </div>
@@ -765,30 +851,30 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
           <div className="space-y-4">
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
               <p className="font-medium flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4" /> Verificación de identidad
+                <ShieldCheck className="w-4 h-4" /> {t("sellerRegistration.identityTitle")}
               </p>
-              <p className="mt-1 text-xs">Sube fotos claras de tu documento de identidad (frente y reverso). Esto nos ayuda a proteger a compradores y vendedores.</p>
+              <p className="mt-1 text-xs">{t("sellerRegistration.identityDescription")}</p>
             </div>
 
             <div className="space-y-2">
-              <Label>Documento de identidad — Frente *</Label>
+              <Label>{t("sellerRegistration.documentFront")}</Label>
               <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition text-sm text-muted-foreground">
                 {idFront ? (
                   <span className="text-foreground flex items-center gap-1"><Check className="w-4 h-4 text-green-500" /> {idFront.name}</span>
                 ) : (
-                  <><Upload className="w-4 h-4" /> Subir frente del documento</>
+                  <><Upload className="w-4 h-4" /> {t("sellerRegistration.uploadFront")}</>
                 )}
                 <input type="file" accept="image/*" className="hidden" onChange={e => setIdFront(e.target.files?.[0] || null)} />
               </label>
             </div>
 
             <div className="space-y-2">
-              <Label>Documento de identidad — Reverso *</Label>
+              <Label>{t("sellerRegistration.documentBack")}</Label>
               <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition text-sm text-muted-foreground">
                 {idBack ? (
                   <span className="text-foreground flex items-center gap-1"><Check className="w-4 h-4 text-green-500" /> {idBack.name}</span>
                 ) : (
-                  <><Upload className="w-4 h-4" /> Subir reverso del documento</>
+                  <><Upload className="w-4 h-4" /> {t("sellerRegistration.uploadBack")}</>
                 )}
                 <input type="file" accept="image/*" className="hidden" onChange={e => setIdBack(e.target.files?.[0] || null)} />
               </label>
@@ -800,7 +886,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
               </Button>
               <Button className="flex-1 gap-2" onClick={handleStep5} disabled={loading || !idFront || !idBack}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                {loading ? "Enviando..." : "Completar registro"}
+                {loading ? t("sellerRegistration.sending") : t("sellerRegistration.complete")}
               </Button>
             </div>
           </div>
@@ -810,12 +896,12 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
         <div className="flex items-center justify-between pt-2 border-t mt-2">
           {currentStep > 0 && (
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1" onClick={handleSkipToEnd}>
-              Completar después
+              {t("sellerRegistration.continueLater")}
             </Button>
           )}
           {isAccountCreated && (
             <Button variant="ghost" size="sm" className="text-xs text-destructive gap-1 ml-auto" onClick={handleCancelRegistration} disabled={loading}>
-              <X className="w-3 h-3" /> Cancelar registro
+              <X className="w-3 h-3" /> {t("sellerRegistration.cancelRegistration")}
             </Button>
           )}
         </div>

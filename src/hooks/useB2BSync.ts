@@ -23,6 +23,20 @@ export interface SyncLog {
   created_at: string;
 }
 
+export interface SyncResult {
+  success: boolean;
+  error?: string;
+  source_count?: number;
+  added: number;
+  updated: number;
+  removed: number;
+  products_added?: number;
+  variants_added?: number;
+  products_updated?: number;
+  variants_updated?: number;
+  gallery_and_variant_images_synced?: boolean;
+}
+
 export const useStoresWithSync = () => {
   return useQuery({
     queryKey: ["stores-with-sync"],
@@ -86,14 +100,21 @@ export const useManualSync = () => {
         { p_store_id: storeId } as never
       );
       if (error) throw error;
-      return data as unknown as { success: boolean; added: number; updated: number; removed: number };
+      return data as unknown as SyncResult;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["stores-with-sync"] });
       queryClient.invalidateQueries({ queryKey: ["b2b-sync-logs"] });
       if (data && typeof data === 'object' && 'success' in data) {
+        if (!data.success) {
+          toast.error(data.error ?? "La sincronización fue detenida por seguridad");
+          return;
+        }
         toast.success(
-          `Sincronización completada: ${data.added} agregados, ${data.updated} actualizados, ${data.removed} removidos`
+          `Sincronización completada: ${data.added} agregados, ${data.updated} actualizados, ${data.removed} removidos` +
+          (data.gallery_and_variant_images_synced
+            ? ` · ${data.variants_updated ?? 0} variantes e imágenes sincronizadas`
+            : "")
         );
       }
     },

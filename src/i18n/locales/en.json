@@ -513,12 +513,13 @@
     "paymentDate": "Date"
   },
   "adminCatalog": {
-    "title": "B2B Master Catalog",
+    "title": "B2B Catalog",
     "subtitle": "Central Logistics - Inventory Management",
     "products": "Products",
     "aiEmbeddings": "AI / Embeddings",
     "normalizeEAV": "Normalize EAV",
     "importProducts": "Import Products",
+    "importProduct": "Import product",
     "updatePrices": "Update Prices",
     "newEntry": "New Entry",
     "exportCSV": "Export CSV",

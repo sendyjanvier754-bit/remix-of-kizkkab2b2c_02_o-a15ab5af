@@ -43,16 +43,27 @@ const NotificationItem = ({
     title: notification.title,
     message: notification.message,
   });
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  const translatedTitle = translated.title || notification.title;
-  const translatedMessage = translated.message || notification.message;
+  const isSellerOnboardingReminder = notification.data?.kind === 'seller_onboarding_reminder';
+  const translatedTitle = isSellerOnboardingReminder && notification.data?.title_key
+    ? t(notification.data.title_key)
+    : translated.title || notification.title;
+  const translatedMessage = isSellerOnboardingReminder && notification.data?.message_key
+    ? t(notification.data.message_key)
+    : translated.message || notification.message;
 
   return (
     <div
       className={`p-3 hover:bg-muted/50 transition-colors cursor-pointer ${
         !notification.is_read ? 'bg-primary/5' : ''
       }`}
-      onClick={() => !notification.is_read && onMarkRead(notification.id)}
+      onClick={() => {
+        if (!notification.is_read) onMarkRead(notification.id);
+        const actionUrl = notification.data?.action_url;
+        if (typeof actionUrl === 'string') navigate(actionUrl);
+      }}
     >
       <div className="flex items-start gap-3">
         <span className="text-lg">{getNotificationIcon(notification.type)}</span>

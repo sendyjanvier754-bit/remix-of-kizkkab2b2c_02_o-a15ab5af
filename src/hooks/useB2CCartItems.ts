@@ -47,6 +47,7 @@ export const useB2CCartItems = () => {
   const [error, setError] = useState<string | null>(null);
   const hasInitialLoadedRef = useRef(false);
   const subscriptionRef = useRef<any>(null);
+  const channelInstanceId = useRef(Math.random().toString(36).slice(2)).current;
 
   const loadCartItems = useCallback(async (showLoading = false) => {
     if (!user?.id) {
@@ -207,7 +208,7 @@ export const useB2CCartItems = () => {
 
     // Subscribe to changes in b2c_cart_items
     const itemsSubscription = supabase
-      .channel(`b2c_cart_items:user_${user.id}`)
+      .channel(`b2c_cart_items:user_${user.id}:${channelInstanceId}`)
       .on(
         'postgres_changes',
         {
@@ -226,7 +227,7 @@ export const useB2CCartItems = () => {
 
     // Also subscribe to changes in b2c_carts (for status changes like completed)
     const cartsSubscription = supabase
-      .channel(`b2c_carts:user_${user.id}`)
+      .channel(`b2c_carts:user_${user.id}:${channelInstanceId}`)
       .on(
         'postgres_changes',
         {
@@ -253,7 +254,7 @@ export const useB2CCartItems = () => {
         supabase.removeChannel(cartsSubscription);
       }
     };
-  }, [user?.id, loadCartItems, broadcastCartUpdate]);
+  }, [user?.id, loadCartItems, broadcastCartUpdate, channelInstanceId]);
 
   return { items, isLoading, error, refetch: loadCartItems };
 };

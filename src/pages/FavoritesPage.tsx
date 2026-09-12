@@ -50,9 +50,9 @@ const FavoritesPage = () => {
           <Card className="text-center py-12 max-w-md">
             <CardContent>
               <Heart className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">{t('pagesExtra.favorites.loginTitle')}</h2>
+              <h2 className="text-xl font-semibold mb-2">{t('pagesExtra.favorites.loginRequired')}</h2>
               <p className="text-muted-foreground mb-6">
-                {t('pagesExtra.favorites.loginDesc')}
+                {t('pagesExtra.favorites.loginRequiredDesc')}
               </p>
               <Button asChild>
                 <Link to="/login">{t('pagesExtra.favorites.loginButton')}</Link>
@@ -90,7 +90,7 @@ const FavoritesPage = () => {
               {t('pagesExtra.favorites.subtitle')}
               {items.length > 0 && (
                 <span className="ml-2 font-medium text-foreground">
-                  ({items.length} {items.length === 1 ? t('pagesExtra.favorites.productSingular') : t('pagesExtra.favorites.productPlural')})
+                  {t('pagesExtra.favorites.productCount', { count: items.length })}
                 </span>
               )}
             </p>
@@ -165,7 +165,7 @@ const FavoritesPage = () => {
             {/* Items grid */}
             {filteredItems.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                {t('pagesExtra.favorites.noStoreProducts')}
+                {t('pagesExtra.favorites.noStoreItems')}
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -183,7 +183,7 @@ const FavoritesPage = () => {
                         className="absolute top-2 right-2 bg-white/90 hover:bg-white text-red-500 hover:text-red-600 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
                         onClick={() => removeFavorite({ favoriteId: item.id })}
                         disabled={isRemoving}
-                        title={t('pagesExtra.favorites.removeFromFavorites')}
+                        title={t('pagesExtra.favorites.removeFavoriteTitle')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
