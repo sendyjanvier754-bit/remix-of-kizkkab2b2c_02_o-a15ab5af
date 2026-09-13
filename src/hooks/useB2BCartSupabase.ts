@@ -84,6 +84,8 @@ export const useB2BCartSupabase = () => {
             let moq = 1;
             let stockDisponible = 0;
             let imagen: string | undefined = undefined;
+            let sourceUrl: string | null = null;
+            
             
             if (item.product_id) {
               const [productResult, variantResult] = await Promise.all([
@@ -110,6 +112,7 @@ export const useB2BCartSupabase = () => {
                 stockDisponible = product.stock_fisico || 0;
                 // Variant image first; product image is the fallback.
                 imagen = variantImage || product.imagen_principal || undefined;
+                sourceUrl = product.url_origen || null;
               } else if (variantImage) {
                 imagen = variantImage;
               }
@@ -129,7 +132,7 @@ export const useB2BCartSupabase = () => {
               moq,
               stockDisponible,
               imagen,
-              sourceUrl: product?.url_origen || null,
+              sourceUrl,
             };
           })
         );
