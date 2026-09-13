@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
+import html2pdf from 'html2pdf.js';
 
 // Module-level branding name — set via setBrandingName() from BrandingApplier
 let _platformBrandName = 'SIVER MARKET 509';
@@ -88,16 +89,136 @@ interface PickingManifestData {
 }
 
 // Utility to open print window
-const openPrintWindow = (content: string, title: string) => {
+const openPrintWindow = (content: string, title: string, autoPrint = true) => {
   const printWindow = window.open('', '_blank');
   if (printWindow) {
     printWindow.document.write(content);
     printWindow.document.close();
     printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
+    if (autoPrint) {
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
   }
+};
+
+const downloadPdfFromHtml = async (html: string, filename: string) => {
+  // Match the original print preview: A4 landscape at CSS 96 DPI.
+  const pageWidth = 1122;
+  const pageHeight = 794;
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.left = '-10000px';
+  iframe.style.top = '0';
+  iframe.style.width = `${pageWidth}px`;
+  iframe.style.height = `${pageHeight}px`;
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
+
+  try {
+    const frameDocument = iframe.contentDocument;
+    if (!frameDocument) throw new Error('No se pudo preparar el documento PDF');
+    frameDocument.open();
+    frameDocument.write(html);
+    frameDocument.close();
+
+    frameDocument.documentElement.style.width = `${pageWidth}px`;
+    frameDocument.body.style.width = `${pageWidth}px`;
+    frameDocument.body.style.minHeight = '0';
+    frameDocument.body.style.boxSizing = 'border-box';
+    frameDocument.body.style.height = 'auto';
+    frameDocument.documentElement.style.height = 'auto';
+    frameDocument.querySelector('.document-actions')?.remove();
+
+    const pdfPrintStyle = frameDocument.createElement('style');
+    pdfPrintStyle.textContent = `
+      @page { size: A4 landscape; margin: 0; }
+      html, body { width: ${pageWidth}px !important; height: auto !important; min-height: 0 !important; margin: 0 !important; }
+      body.pdf-download { font-family: Arial, sans-serif !important; color: #333 !important; padding: 20px !important; box-sizing: border-box !important; }
+      body.pdf-download.purchase-list { width: ${pageWidth}px !important; padding: 24px 28px !important; color: #1f2937 !important; }
+      body.pdf-download.purchase-list .purchase-page { width: 100% !important; height: auto !important; min-height: 0 !important; page-break-after: avoid !important; }
+      body.pdf-download.purchase-list .purchase-header { display: block !important; width: 100% !important; text-align: center !important; border-bottom: 2px solid #111827 !important; padding-bottom: 14px !important; margin-bottom: 18px !important; }
+      body.pdf-download.purchase-list .logo { display: block !important; font-size: 24px !important; line-height: 1.1 !important; }
+      body.pdf-download.purchase-list .subtitle { display: block !important; color: #64748b !important; font-size: 12px !important; line-height: 1.3 !important; }
+      body.pdf-download.purchase-list .po-badge { display: inline-block !important; background: #071d7f !important; color: #fff !important; padding: 5px 14px !important; border-radius: 5px !important; font-size: 14px !important; line-height: 1.2 !important; font-weight: 700 !important; }
+      body.pdf-download.purchase-list .purchase-meta { display: block !important; width: 100% !important; margin: 0 0 16px !important; }
+      body.pdf-download.purchase-list .purchase-meta p { margin: 4px 0 !important; line-height: 1.35 !important; }
+      body.pdf-download.purchase-list .purchase-section { display: block !important; width: 100% !important; margin: 0 !important; }
+      body.pdf-download.purchase-list table { display: table !important; width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; margin: 0 0 12px !important; }
+      body.pdf-download.purchase-list th, body.pdf-download.purchase-list td { border: 1px solid #d9dee5 !important; padding: 8px !important; text-align: left !important; font-size: 12px !important; line-height: 1.25 !important; vertical-align: middle !important; overflow-wrap: anywhere !important; }
+      body.pdf-download.purchase-list th { background: #f3f4f6 !important; color: #1f2937 !important; font-weight: 700 !important; }
+      body.pdf-download.purchase-list .total-row td { background: #f0fdf4 !important; font-weight: 700 !important; }
+      body.pdf-download.purchase-list .purchase-total { display: block !important; width: 100% !important; box-sizing: border-box !important; margin-top: 12px !important; padding: 10px 12px !important; }
+      body.pdf-download.purchase-list .footer { display: block !important; width: 100% !important; margin-top: 24px !important; text-align: center !important; font-size: 10px !important; color: #64748b !important; }
+      tr { break-inside: avoid; page-break-inside: avoid; }
+    `;
+    frameDocument.head.appendChild(pdfPrintStyle);
+
+    // Do not capture before remote product images have finished loading.
+    await Promise.all(
+      Array.from(frameDocument.images).map((image) => {
+        if (image.complete) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          image.addEventListener('load', () => resolve(), { once: true });
+          image.addEventListener('error', () => resolve(), { once: true });
+        });
+      }),
+    );
+    if (frameDocument.fonts?.ready) await frameDocument.fonts.ready;
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+    const pdfSource = frameDocument.querySelector('.purchase-page') || frameDocument.body;
+    const pdfWorker = html2pdf()
+      .set({
+        margin: 0.25,
+        filename,
+        image: { type: 'jpeg', quality: 0.96 },
+        html2canvas: {
+          scale: 2,
+          width: pageWidth,
+          windowWidth: pageWidth,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: [] },
+        enableLinks: true,
+      })
+      .from(pdfSource)
+      .toPdf();
+
+    const pdf = await pdfWorker.get('pdf');
+    const contentHeight = Math.max(
+      (pdfSource as HTMLElement).scrollHeight,
+      (pdfSource as HTMLElement).getBoundingClientRect().height,
+    );
+    const expectedPages = Math.max(1, Math.ceil(contentHeight / pageHeight));
+    while (pdf.getNumberOfPages() > expectedPages) {
+      pdf.deletePage(pdf.getNumberOfPages());
+    }
+    await pdf.save(filename);
+  } finally {
+    iframe.remove();
+  }
+};
+
+const escapeHtml = (value: unknown) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+
+const safeExternalUrl = (value: unknown) => {
+  const url = String(value ?? '').trim();
+  return /^https?:\/\//i.test(url) ? url : '';
+};
+
+const safeImageUrl = (value: unknown) => {
+  const url = String(value ?? '').trim();
+  return /^(https?:\/\/|data:image\/)/i.test(url) ? url : '';
 };
 
 // Common styles
@@ -1215,7 +1336,7 @@ export const generatePOBuyingListPDF = (data: {
     url_origen: string | null;
     unit_cost?: number;
   }[];
-}) => {
+}, options: { download?: boolean } = {}) => {
   const totalUnits = data.items.reduce((s, i) => s + i.cantidad, 0);
   const totalPurchaseCost = data.items.reduce(
     (sum, item) => sum + Number(item.unit_cost || 0) * item.cantidad,
@@ -1247,68 +1368,112 @@ export const generatePOBuyingListPDF = (data: {
       <title>Lista de Compra - ${data.po_number}</title>
       <style>
         ${baseStyles}
-        .po-badge { display:inline-block; background:#071d7f; color:#fff; padding:4px 12px; border-radius:4px; font-size:14px; font-weight:bold; margin-top:6px; }
+        .purchase-header { text-align:center; border-bottom:2px solid #111827; padding-bottom:14px; margin-bottom:18px; }
+        .po-badge { display:inline-block; background:#071d7f; color:#fff; padding:5px 14px; border-radius:5px; font-size:14px; font-weight:bold; line-height:1.2; margin-top:6px; }
+        .purchase-meta { margin:0 0 16px; }
+        .purchase-meta p { margin:4px 0; line-height:1.35; }
+        .purchase-section { margin:0; }
+        .purchase-table { table-layout:fixed; }
+        .purchase-table th { background:#f3f4f6; color:#1f2937; }
+        .purchase-table td { border-color:#d9dee5; }
         .variant-name { color:#1d4ed8; font-weight:bold; font-size:12px; }
-        .sku-text { color:#888; font-size:10px; font-family:monospace; }
-        .item-img { width:64px; height:64px; object-fit:cover; border-radius:4px; border:1px solid #eee; }
-        .img-placeholder { width:64px; height:64px; background:#f5f5f5; border:1px solid #eee; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:10px; text-align:center; }
+        .sku-text { color:#888; font-size:10px; font-family:monospace; margin-top:3px; }
+        .item-img { display:block; width:64px; height:64px; object-fit:cover; border-radius:4px; border:1px solid #eee; margin:auto; }
+        .img-placeholder { width:64px; height:64px; background:#f5f5f5; border:1px solid #eee; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:10px; text-align:center; margin:auto; }
         td.center { text-align:center; }
         .qty-badge { display:inline-block; background:#0f766e; color:#fff; border-radius:50%; width:32px; height:32px; line-height:32px; text-align:center; font-weight:bold; font-size:14px; }
         .total-row td { background:#f0fdf4; font-weight:bold; font-size:13px; }
-        .purchase-total { margin-top:14px; padding:10px 12px; background:#f0fdf4; border:1px solid #86efac; font-size:14px; font-weight:bold; text-align:right; }
+        .purchase-total { margin-top:12px; padding:10px 12px; background:#f0fdf4; border:1px solid #86efac; font-size:14px; font-weight:bold; text-align:right; }
         .excel-cost { white-space:nowrap; font-size:10px; }
         .source-url {
+          display:block;
           color:#1d4ed8;
           font-size:10px;
-          word-break:break-all;
-          user-select:all;
+          line-height:1.25;
+          word-break:break-word;
+          overflow-wrap:anywhere;
+          cursor:pointer;
+          text-decoration:underline;
+          text-underline-offset:2px;
+          user-select:text;
+          -webkit-user-select:text;
+          pointer-events:auto;
         }
+        .document-actions {
+          display:flex;
+          justify-content:flex-end;
+          gap:8px;
+          margin-bottom:16px;
+        }
+        .document-action {
+          border:1px solid #cbd5e1;
+          border-radius:6px;
+          background:#fff;
+          color:#071d7f;
+          padding:8px 12px;
+          font-weight:600;
+          cursor:pointer;
+        }
+        .document-action.primary {
+          background:#071d7f;
+          color:#fff;
+          border-color:#071d7f;
+        }
+        @media print {
+          .document-actions { display:none; }
+        }
+        .pdf-download .document-actions { display:none; }
       </style>
     </head>
-    <body>
-      <div class="header">
+    <body class="${options.download ? 'pdf-download ' : ''}purchase-list">
+      <div class="document-actions">
+        <button class="document-action primary" onclick="window.print()">Imprimir / Guardar PDF</button>
+        <button class="document-action" onclick="window.close()">Cerrar</button>
+      </div>
+      <main class="purchase-page">
+      <div class="header purchase-header">
         <div class="logo">${documentBrand}</div>
         <div class="subtitle">${documentSubtitle}</div>
         <div class="po-badge">${data.po_number} — ${data.market_name}</div>
       </div>
 
-      <div class="section">
+      <div class="section purchase-meta">
         <p><strong>Date:</strong> ${format(new Date(data.generated_at), 'PPP p', { locale: enUS })}</p>
         <p><strong>Total variants:</strong> ${data.items.length} &nbsp;|&nbsp; <strong>Total units:</strong> ${totalUnits}</p>
       </div>
 
-      <div class="section">
-        <table>
+      <div class="section purchase-section">
+        <table class="purchase-table">
           <thead>
             <tr>
-              <th style="width:70px">Image</th>
-              <th>Product</th>
-              <th>Variant</th>
-              <th style="width:80px" class="center">Unit price</th>
-              <th style="width:55px" class="center">Qty.</th>
-              <th style="width:90px" class="center">Total cost</th>
-              <th>Source URL</th>
+              <th style="width:8%">Image</th>
+              <th style="width:23%">Product</th>
+              <th style="width:19%">Variant</th>
+              <th style="width:8%" class="center">Unit price</th>
+              <th style="width:7%" class="center">Qty.</th>
+              <th style="width:10%" class="center">Total cost</th>
+              <th style="width:25%">Source URL</th>
             </tr>
           </thead>
           <tbody>
             ${data.items.map((item, idx) => `
               <tr>
                 <td class="center">
-                  ${item.image
-                    ? `<img src="${item.image}" alt="${item.nombre}" class="item-img" />`
+                  ${safeImageUrl(item.image)
+                    ? `<img src="${escapeHtml(safeImageUrl(item.image))}" alt="${escapeHtml(item.nombre)}" class="item-img" />`
                     : `<div class="img-placeholder">No<br>image</div>`}
                 </td>
                 <td>
-                  <div style="font-weight:600;font-size:12px">${displayProductName(item.nombre)}</div>
-                  <div class="sku-text">${displaySku(item.sku)}</div>
+                  <div style="font-weight:600;font-size:12px">${escapeHtml(displayProductName(item.nombre))}</div>
+                  <div class="sku-text">${escapeHtml(displaySku(item.sku))}</div>
                 </td>
-                <td class="variant-name">${displayVariantName(item.variantName)}</td>
+                <td class="variant-name">${escapeHtml(displayVariantName(item.variantName))}</td>
                 <td class="center excel-cost">$${Number(item.unit_cost || 0).toFixed(2)}</td>
                 <td class="center"><span class="qty-badge">${item.cantidad}</span></td>
                 <td class="center">$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}</td>
                 <td>
-                  ${item.url_origen
-                    ? `<a href="${item.url_origen}" target="_blank" class="source-url">${item.url_origen}</a>`
+                  ${safeExternalUrl(item.url_origen)
+                    ? `<a href="${escapeHtml(safeExternalUrl(item.url_origen))}" target="_blank" rel="noopener noreferrer" class="source-url" title="Enlace del proveedor">${escapeHtml(safeExternalUrl(item.url_origen))}</a>`
                     : '<span style="color:#bbb">—</span>'}
                 </td>
               </tr>
@@ -1329,11 +1494,20 @@ export const generatePOBuyingListPDF = (data: {
         <p>${documentFooter}</p>
         <p>Document generated on ${format(new Date(), 'PPP p', { locale: enUS })}</p>
       </div>
+      </main>
     </body>
     </html>
   `;
 
-  openPrintWindow(html, `Purchase List - ${data.po_number}`);
+  // Keep the document interactive so source URLs can be selected/copied or
+  // opened in a new tab before the user prints/saves the PDF.
+  if (options.download) {
+    const filename = `Purchase_List_${data.po_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+    return downloadPdfFromHtml(html, filename);
+  }
+
+  // Legacy/manual mode: keep the interactive HTML preview available for other callers.
+  openPrintWindow(html, `Purchase List - ${data.po_number}`, false);
 };
 
 // Excel: Buying list for a PO (Artículos a Comprar)

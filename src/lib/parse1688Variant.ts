@@ -31,19 +31,27 @@ export function find1688VariantColumns(headers: string[]) {
   };
 }
 
-const SIZE_AT_END = /(?:^|[\s/|，,;:])((?:\d{1,3}(?:[.\-]\d{1,3})?|XS|S|M|L|XL|XXL|XXXL|[2-9]XL|\d+[-/]\d+[-/]\d+mm?))\s*$/i;
+const SIZE_TOKEN = /(?:\d{1,3}(?:[.]\d{1,2})?|XS|S|M|L|XL|XXL|XXXL|[2-9]XL|\d+[-/]\d+[-/]\d+\s*mm?)/i;
+const SIZE_AT_END = new RegExp(`(?:^|[\\s/|，,;:])(${SIZE_TOKEN.source})\\s*$`, 'i');
+
+const cleanVariantText = (value: unknown) => String(value ?? '')
+  .replace(/[\u200B-\u200D\uFEFF]/g, '')
+  .replace(/[：]/g, ':')
+  .trim();
 
 /**
  * Parses 1688 values such as "Q05 white beige，39" into product/color/size.
  * The original raw value is always retained for traceability.
  */
 export function parse1688VariantText(value: unknown): Parsed1688Variant {
-  const raw = String(value ?? '').trim();
+  const raw = cleanVariantText(value);
   if (!raw) return { productName: '', color: '', size: '', raw: '' };
 
-  const parts = raw.split(/[，,|;]/).map(part => part.trim()).filter(Boolean);
+  const parts = raw.split(/[，,|;]+/).map(part => part.trim()).filter(Boolean);
   let left = parts[0] || raw;
-  let size = parts.length > 1 ? parts[parts.length - 1] : '';
+  let size = parts.length > 1 && SIZE_TOKEN.test(parts[parts.length - 1])
+    ? parts[parts.length - 1]
+    : '';
 
   if (!size) {
     const match = left.match(SIZE_AT_END);
@@ -54,12 +62,15 @@ export function parse1688VariantText(value: unknown): Parsed1688Variant {
   }
 
   if (!size && parts.length === 1) {
-    return { productName: raw, color: '', size: '', raw };
+    const tokens = raw.split(/\s+/).filter(Boolean);
+    const productName = tokens.shift() || raw;
+    return { productName, color: tokens.join(' ').trim(), size: '', raw };
   }
 
   const tokens = left.split(/\s+/).filter(Boolean);
-  const productName = tokens.shift() || left;
-  const color = tokens.join(' ').trim();
+  const looksLikeModelCode = tokens.length > 1 && /^[A-Z]{1,8}\d+[A-Z\d-]*$/i.test(tokens[0]);
+  const productName = looksLikeModelCode ? tokens.shift() || '' : '';
+  const color = (looksLikeModelCode ? tokens : [left]).join(' ').trim();
 
   return { productName, color, size, raw };
 }
@@ -69,8 +80,8 @@ export function parse1688RowVariant(
   title: string,
   columns: { color?: string; size?: string },
 ): Parsed1688Variant {
-  const explicitColor = columns.color ? String(row[columns.color] ?? '').trim() : '';
-  const explicitSize = columns.size ? String(row[columns.size] ?? '').trim() : '';
+  const explicitColor = columns.color ? cleanVariantText(row[columns.color]) : '';
+  const explicitSize = columns.size ? cleanVariantText(row[columns.size]) : '';
   if (explicitColor || explicitSize) {
     return {
       productName: title,

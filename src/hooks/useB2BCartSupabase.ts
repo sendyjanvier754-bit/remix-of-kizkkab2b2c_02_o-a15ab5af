@@ -31,6 +31,21 @@ export interface B2BCart {
   status: 'open' | 'completed' | 'cancelled';
 }
 
+export const ZLETI_MANUAL_CART_EVENT = 'zleti-manual-cart-add-item';
+
+export interface ZletiManualCartItem {
+  productId: string;
+  variantId?: string | null;
+  sku: string;
+  nombre: string;
+  unitPrice: number;
+  quantity: number;
+  color?: string | null;
+  size?: string | null;
+  imagen?: string;
+  sourceUrl?: string | null;
+}
+
 const initialCart: B2BCart = {
   id: null,
   items: [],
@@ -48,8 +63,24 @@ export const useB2BCartSupabase = () => {
   const [cart, setCart] = useState<B2BCart>(initialCart);
   const [isLoading, setIsLoading] = useState(true);
 
+  const setLocalZletiCart = useCallback((items: B2BCartItem[]) => {
+    setCart({
+      id: 'zleti-manual-local',
+      items,
+      totalItems: items.length,
+      totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+      subtotal: items.reduce((sum, item) => sum + item.totalPrice, 0),
+      status: 'open',
+    });
+  }, []);
+
   // Fetch or create cart for user
   const fetchOrCreateCart = useCallback(async () => {
+    if (isZletiManualPO) {
+      if (cart.id !== 'zleti-manual-local') setLocalZletiCart(cart.items);
+      setIsLoading(false);
+      return;
+    }
     if (!user?.id) {
       setIsLoading(false);
       return;
@@ -163,16 +194,65 @@ export const useB2BCartSupabase = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [cart.items, isZletiManualPO, setLocalZletiCart, user?.id]);
 
   useEffect(() => {
     fetchOrCreateCart();
   }, [fetchOrCreateCart]);
 
+  // ZleTI manual POs use an isolated in-memory cart. This avoids coupling the
+  // admin purchasing flow to the seller B2B cart/RLS rules.
+  useEffect(() => {
+    if (!isZletiManualPO) return;
+
+    const handleManualItem = (event: Event) => {
+      const detail = (event as CustomEvent<ZletiManualCartItem>).detail;
+      if (!detail?.productId) return;
+      setCart((current) => {
+        const existingIndex = current.items.findIndex((item) =>
+          item.productId === detail.productId && (item.variantId || null) === (detail.variantId || null),
+        );
+        const items = [...current.items];
+        if (existingIndex >= 0) {
+          const existing = items[existingIndex];
+          const quantity = existing.quantity + detail.quantity;
+          items[existingIndex] = { ...existing, quantity, totalPrice: quantity * existing.unitPrice };
+        } else {
+          items.push({
+            id: `zleti-${detail.productId}-${detail.variantId || 'product'}`,
+            productId: detail.productId,
+            variantId: detail.variantId || null,
+            sku: detail.sku,
+            nombre: detail.nombre,
+            unitPrice: detail.unitPrice,
+            quantity: detail.quantity,
+            totalPrice: detail.quantity * detail.unitPrice,
+            color: detail.color || undefined,
+            size: detail.size || undefined,
+            moq: 1,
+            stockDisponible: Number.MAX_SAFE_INTEGER,
+            imagen: detail.imagen,
+            sourceUrl: detail.sourceUrl,
+          });
+        }
+        return {
+          ...current,
+          items,
+          totalItems: items.length,
+          totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+          subtotal: items.reduce((sum, item) => sum + item.totalPrice, 0),
+        };
+      });
+    };
+
+    window.addEventListener(ZLETI_MANUAL_CART_EVENT, handleManualItem);
+    return () => window.removeEventListener(ZLETI_MANUAL_CART_EVENT, handleManualItem);
+  }, [isZletiManualPO]);
+
   // Keep every mounted catalog/cart view synchronized immediately when the
   // database cart changes (including changes made by the variant drawer).
   useEffect(() => {
-    if (!cart.id) return;
+    if (!cart.id || isZletiManualPO) return;
 
     const channel = supabase.channel(`b2b-cart-items-${cart.id}-${Date.now()}`);
     channel
@@ -193,7 +273,7 @@ export const useB2BCartSupabase = () => {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [cart.id, fetchOrCreateCart]);
+  }, [cart.id, fetchOrCreateCart, isZletiManualPO]);
 
   // Add item to cart
   const addItem = useCallback(async (item: {
@@ -312,6 +392,13 @@ export const useB2BCartSupabase = () => {
     const item = cart.items.find(i => i.id === itemId);
     if (!item) return;
 
+    if (isZletiManualPO) {
+      setLocalZletiCart(cart.items.map(current => current.id === itemId
+        ? { ...current, quantity, totalPrice: quantity * current.unitPrice }
+        : current));
+      return;
+    }
+
     if (!isZletiManualPO && quantity < item.moq) {
       toast.error(`La cantidad mínima de pedido es ${item.moq} unidades`);
       return;
@@ -338,10 +425,14 @@ export const useB2BCartSupabase = () => {
       console.error('Error updating quantity:', error);
       toast.error(t('toasts.errorUpdatingQuantity'));
     }
-  }, [cart.items, fetchOrCreateCart, isZletiManualPO]);
+  }, [cart.items, fetchOrCreateCart, isZletiManualPO, setLocalZletiCart]);
 
   // Remove item from cart
   const removeItem = useCallback(async (itemId: string) => {
+    if (isZletiManualPO) {
+      setLocalZletiCart(cart.items.filter(item => item.id !== itemId));
+      return;
+    }
     try {
       const { error } = await supabase
         .from('b2b_cart_items')
@@ -356,10 +447,14 @@ export const useB2BCartSupabase = () => {
       console.error('Error removing item:', error);
       toast.error(t('toasts.errorRemovingProduct'));
     }
-  }, [fetchOrCreateCart]);
+  }, [cart.items, fetchOrCreateCart, isZletiManualPO, setLocalZletiCart]);
 
   // Clear cart
   const clearCart = useCallback(async () => {
+    if (isZletiManualPO) {
+      setLocalZletiCart([]);
+      return;
+    }
     if (!cart.id) return;
 
     try {
@@ -375,7 +470,7 @@ export const useB2BCartSupabase = () => {
       console.error('Error clearing cart:', error);
       toast.error(t('toasts.errorClearingCart'));
     }
-  }, [cart.id, fetchOrCreateCart]);
+  }, [cart.id, fetchOrCreateCart, isZletiManualPO, setLocalZletiCart]);
 
   // Create order from cart
   const createOrder = useCallback(async (

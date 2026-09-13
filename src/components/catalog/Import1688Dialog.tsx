@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2, Globe, ShieldCheck, Sparkles, Wand2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Download, Check, Loader2, ArrowRight, AlertCircle, AlertTriangle, Trash2, X, ImageOff, ZoomIn, Pencil, Package, Settings2, Globe, ShieldCheck, Sparkles, Wand2, RefreshCw } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -78,6 +78,7 @@ interface Grouped1688Product {
 interface ColumnMapping {
   sku_interno: string;
   nombre: string;
+  variante_agrupada: string;
   costo: string;
   stock: string;
   url_imagen: string;
@@ -87,7 +88,7 @@ interface ColumnMapping {
   variante_2_talla: string;
 }
 
-type Step = "upload" | "mapping" | "preview" | "translation" | "export";
+type Step = "upload" | "mapping" | "variant-review" | "preview" | "translation" | "export";
 
 const BATCH_SIZE = 25;
 const MAX_PARALLEL_BATCHES = 5;
@@ -138,6 +139,7 @@ interface ApprovalEntry {
 const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: string[] }[] = [
   { key: "sku_interno", label: "SKU Interno", keywords: ["SKU ID", "ID", "商品ID", "id"] },
   { key: "nombre", label: "Título Original", keywords: ["Nombre del SKU", "标题", "Title", "título", "商品标题"] },
+  { key: "variante_agrupada", label: "Columna agrupada de variantes", keywords: ["Nombre del SKU", "variant", "variante", "规格", "sku name"] },
   { key: "costo", label: "Costo", keywords: ["PrecioCalculado2", "Precio calculado2", "Precio_calculado2", "Precio calculado", "价格", "Price", "precio"] },
   { key: "stock", label: "Stock", keywords: ["Inventario", "库存", "Stock", "stock", "存量"] },
   { key: "url_imagen", label: "URL Imagen Variante", keywords: ["Imagen SKU", "SKU图", "图片", "Image", "imagen", "Img"] },
@@ -166,7 +168,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [rawData, setRawData] = useState<RawRow[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
-    sku_interno: "", nombre: "", costo: "", stock: "", url_imagen: "", imagen_principal: "", url_producto: "", variante_1_color: "", variante_2_talla: "",
+    sku_interno: "", nombre: "", variante_agrupada: "", costo: "", stock: "", url_imagen: "", imagen_principal: "", url_producto: "", variante_1_color: "", variante_2_talla: "",
   });
   const [productMainImage, setProductMainImage] = useState("");
   const [confirmNoMainImage, setConfirmNoMainImage] = useState(false);
@@ -174,6 +176,9 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [isDownloading, setIsDownloading] = useState(false);
   const [isTranslationDone, setIsTranslationDone] = useState(false);
   const [processedData, setProcessedData] = useState<ProcessedRow[]>([]);
+  const [variantReviewData, setVariantReviewData] = useState<ProcessedRow[]>([]);
+  const [variantSourceColumn, setVariantSourceColumn] = useState("");
+  const [isReextractingVariants, setIsReextractingVariants] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasDownloaded, setHasDownloaded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -224,8 +229,11 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setStep("upload");
     setRawData([]);
     setHeaders([]);
-    setColumnMapping({ sku_interno: "", nombre: "", costo: "", stock: "", url_imagen: "", imagen_principal: "", url_producto: "", variante_1_color: "", variante_2_talla: "" });
+    setColumnMapping({ sku_interno: "", nombre: "", variante_agrupada: "", costo: "", stock: "", url_imagen: "", imagen_principal: "", url_producto: "", variante_1_color: "", variante_2_talla: "" });
     setProcessedData([]);
+    setVariantReviewData([]);
+    setVariantSourceColumn("");
+    setIsReextractingVariants(false);
     setProductMainImage("");
     setConfirmNoMainImage(false);
     setHeroImageFailed(false);
@@ -292,7 +300,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       // Auto-detect mapping suggestions
       const autoMap = Object.fromEntries(
         MAPPING_FIELDS.map(field => [field.key, autoDetect(detectedHeaders, field.keywords)]),
-      ) as unknown as ColumnMapping;
+      ) as ColumnMapping;
       setColumnMapping(autoMap);
       setStep("mapping");
       toast.success(`${rows.length} filas detectadas. Configura el mapeo de columnas.`);
@@ -304,17 +312,22 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     }
   };
 
-  // Step 2 → Step 3: Process rows with user mapping and translate
-  const processAndTranslate = async () => {
-    setIsProcessing(true);
-    try {
-      const cols = columnMapping;
+  const extractVariantFromSource = (row: RawRow, sourceColumn: string) => {
+    const sourceText = String(row[sourceColumn] ?? "").replace(/_/g, " ").trim();
+    return parse1688RowVariant(row, sourceText, {});
+  };
+
+  const buildProcessedRows = (sourceColumnOverride?: string) => {
+    const cols = columnMapping;
+    const variantSourceColumn = sourceColumnOverride || cols.variante_agrupada || cols.nombre;
+    const isAlternativeSource = !!sourceColumnOverride;
 
       const detectedVariantColumns = find1688VariantColumns(headers);
       const explicitColorCol = cols.variante_1_color || detectedVariantColumns.color;
       const explicitSizeCol = cols.variante_2_talla || detectedVariantColumns.size;
 
-      // Legacy fallback for files whose variant columns have non-standard names.
+      // Only use explicitly mapped/detected variant columns. The grouped source
+      // column is the deterministic fallback for 1688 SKU-list files.
       const mappedCols = new Set(Object.values(cols).filter(Boolean));
       const variantHeaders = headers.filter(h => !mappedCols.has(h) && h !== explicitColorCol && h !== explicitSizeCol);
 
@@ -329,15 +342,12 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
           sizeCol = vh;
         }
       }
-      // Fallback: first two unmapped non-standard columns
-      const remainingVariants = variantHeaders.filter(v => v !== colorCol && v !== sizeCol);
-      if (!colorCol && remainingVariants.length > 0) colorCol = remainingVariants.shift() || "";
-      if (!sizeCol && remainingVariants.length > 0) sizeCol = remainingVariants.shift() || "";
-
-      const processed: ProcessedRow[] = rawData.map((row) => {
+    const processed: ProcessedRow[] = rawData.map((row) => {
         const id = row[cols.sku_interno] || "";
         const rawTitle = (row[cols.nombre] || "").toString().replace(/_/g, " ").trim();
-        const parsedVariant = parse1688RowVariant(row, rawTitle, { color: colorCol, size: sizeCol });
+        const parsedVariant = isAlternativeSource || (!colorCol && !sizeCol)
+          ? extractVariantFromSource(row, variantSourceColumn)
+          : parse1688RowVariant(row, rawTitle, { color: colorCol, size: sizeCol });
         const v1 = parsedVariant.color;
         const v2 = parsedVariant.size;
 
@@ -364,9 +374,60 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         };
       });
 
+    return { processed, sourceColumn: variantSourceColumn || "—" };
+  };
+
+  // Step 2 → variant review: parse locally and require human confirmation before AI.
+  const prepareVariantReview = () => {
+    const { processed, sourceColumn } = buildProcessedRows();
+    setVariantReviewData(processed);
+    setVariantSourceColumn(sourceColumn);
+    setStep("variant-review");
+  };
+
+  const reextractVariantsInBulk = () => {
+    if (!variantSourceColumn) return;
+    setIsReextractingVariants(true);
+    try {
+      const { processed } = buildProcessedRows(variantSourceColumn);
+      setVariantReviewData(processed);
+      toast.success(`Extracción actualizada para ${processed.length} filas`);
+    } finally {
+      setIsReextractingVariants(false);
+    }
+  };
+
+  const reextractVariantRow = (index: number) => {
+    const sourceColumn = variantSourceColumn;
+    if (!sourceColumn) return;
+    const row = rawData[index];
+    if (!row) return;
+    const parsed = extractVariantFromSource(row, sourceColumn);
+    setVariantReviewData((prev) => prev.map((current, rowIndex) => {
+      if (rowIndex !== index) return current;
+      const skuParts = [current.product_id, parsed.color, parsed.size].filter(Boolean);
+      return {
+        ...current,
+        nombre: parsed.productName || current.nombre,
+        nombre_original: parsed.productName || current.nombre_original,
+        variante_1_color: parsed.color,
+        variante_2_talla: parsed.size,
+        variante_1_color_original: parsed.color,
+        variante_2_talla_original: parsed.size,
+        variante_raw: parsed.raw || sourceText,
+        sku_interno: skuParts.join("-").replace(/\s+/g, "").slice(0, 50),
+      };
+    }));
+  };
+
+  const confirmVariantReview = async () => {
+    setIsProcessing(true);
+    try {
+      const processed = variantReviewData;
       // Product-level main image: read from the mapped column of the FIRST row.
       // If the column yields a value it takes precedence; otherwise keep any PC-uploaded
       // image the user already set in the mapping step (don't overwrite with empty string).
+      const cols = columnMapping;
       const mainImgFromCol = cols.imagen_principal ? (rawData[0]?.[cols.imagen_principal] || "") : "";
       if (mainImgFromCol) setProductMainImage(mainImgFromCol);
 
@@ -386,7 +447,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         console.warn("File title translation failed:", err);
       }
 
-      // Translate in batches (Spanish — main flow that also normalizes variant color/size)
+      // Translate in batches. Parsing and talla protection happen locally.
       const total = processed.length;
       setTranslationProgress({ current: 0, total });
 
@@ -463,7 +524,8 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
               ...updated[idx],
               nombre: t.nombre || updated[idx].nombre,
               variante_1_color: t.variante_color || updated[idx].variante_1_color,
-              variante_2_talla: t.variante_talla || updated[idx].variante_2_talla,
+              // Never trust the model with structured size data.
+              variante_2_talla: updated[idx].variante_2_talla_original,
               descripcion_corta: t.descripcion || "",
             };
           }
@@ -1157,7 +1219,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     }
   };
 
-  const isMappingValid = columnMapping.sku_interno && columnMapping.nombre && columnMapping.costo && (columnMapping.url_producto || manualUrlProducto) && (columnMapping.imagen_principal || productMainImage || confirmNoMainImage);
+  const isMappingValid = columnMapping.sku_interno && columnMapping.nombre && columnMapping.variante_agrupada && columnMapping.costo && (columnMapping.url_producto || manualUrlProducto) && (columnMapping.imagen_principal || productMainImage || confirmNoMainImage);
 
   // Validation check for the preview step
   const previewValidation = useMemo(() => {
@@ -1219,12 +1281,23 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     closeVariantEditor();
   };
 
+  const updateVariantReview = (index: number, field: "variante_1_color" | "variante_2_talla", value: string) => {
+    setVariantReviewData((prev) => prev.map((row, rowIndex) => {
+      if (rowIndex !== index) return row;
+      const next = { ...row, [field]: value };
+      const skuParts = [next.product_id, next.variante_1_color, next.variante_2_talla].filter(Boolean);
+      next.sku_interno = skuParts.join("-").replace(/\s+/g, "").slice(0, 50);
+      return next;
+    }));
+  };
+
   const stepLabel =
-    step === "upload" ? "Paso 1/5"
-    : step === "mapping" ? "Paso 2/5"
-    : step === "preview" ? "Paso 3/5"
-    : step === "translation" ? "Paso 4/5"
-    : "Paso 5/5";
+    step === "upload" ? "Paso 1/6"
+    : step === "mapping" ? "Paso 2/6"
+    : step === "variant-review" ? "Paso 3/6"
+    : step === "preview" ? "Paso 4/6"
+    : step === "translation" ? "Paso 5/6"
+    : "Paso 6/6";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -1351,7 +1424,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                 <div key={field.key} className="space-y-1.5">
                   <label className="text-sm font-medium text-foreground">
                     {field.label}
-                    {(field.key === "sku_interno" || field.key === "nombre" || field.key === "costo" || field.key === "url_producto" || field.key === "imagen_principal") && (
+                    {(field.key === "sku_interno" || field.key === "nombre" || field.key === "variante_agrupada" || field.key === "costo" || field.key === "url_producto" || field.key === "imagen_principal") && (
                       <span className="text-destructive ml-1">*</span>
                     )}
                   </label>
@@ -1470,13 +1543,13 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                 Volver
               </Button>
               <Button
-                onClick={processAndTranslate}
+                onClick={prepareVariantReview}
                 disabled={!isMappingValid || isProcessing}
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Procesando...
+                    Preparando revisión...
                   </>
                 ) : (
                   <>
@@ -1489,7 +1562,120 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
           </div>
         )}
 
-        {/* Step 3: Preview — ecommerce product cards */}
+        {/* Step 3: Human review of local variant extraction */}
+        {step === "variant-review" && (
+          <div className="flex flex-col gap-4 min-h-0">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
+              <div className="flex items-center gap-2 font-medium">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                Confirma la separación de variantes antes de traducir
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Selecciona la columna que contiene las variantes agrupadas. La IA todavía no se ha llamado:
+                revisa el original y los valores extraídos. La talla original se conservará sin traducción.
+              </p>
+              <div className="flex flex-col md:flex-row md:items-end gap-3 pt-2">
+                <div className="space-y-1.5 flex-1 max-w-xl">
+                  <Label className="text-xs">Columna fuente de variantes</Label>
+                  <Select value={variantSourceColumn || "__none__"} onValueChange={setVariantSourceColumn}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona la columna agrupada" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {headers.map((header) => (
+                        <SelectItem key={header} value={header}>{header}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={reextractVariantsInBulk}
+                  disabled={!variantSourceColumn || isReextractingVariants || isProcessing}
+                >
+                  {isReextractingVariants ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                  Reintentar extracción en lote
+                </Button>
+              </div>
+            </div>
+
+            <div className="border rounded-md overflow-auto max-h-[55vh]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>#</TableHead>
+                    <TableHead>Original recibido</TableHead>
+                    <TableHead>Variante_1_Color extraído</TableHead>
+                    <TableHead>Variante_2_Talla extraída</TableHead>
+                    <TableHead>Acción</TableHead>
+                    <TableHead>Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {variantReviewData.map((row, index) => {
+                    const needsReview = !row.variante_1_color || !row.variante_2_talla;
+                    return (
+                      <TableRow key={`${row.product_id}-${index}`}>
+                        <TableCell className="text-xs text-muted-foreground">{index + 1}</TableCell>
+                        <TableCell className="min-w-[260px] max-w-[360px]">
+                          <div className="font-mono text-xs break-words">{row.variante_raw || "—"}</div>
+                        </TableCell>
+                        <TableCell className="min-w-[190px]">
+                          <Input
+                            value={row.variante_1_color}
+                            onChange={(e) => updateVariantReview(index, "variante_1_color", e.target.value)}
+                            aria-label={`Color extraído fila ${index + 1}`}
+                          />
+                          <div className="text-[10px] text-muted-foreground mt-1">Original: {row.variante_1_color_original || "—"}</div>
+                        </TableCell>
+                        <TableCell className="min-w-[140px]">
+                          <Input
+                            value={row.variante_2_talla}
+                            onChange={(e) => updateVariantReview(index, "variante_2_talla", e.target.value)}
+                            aria-label={`Talla extraída fila ${index + 1}`}
+                          />
+                          <div className="text-[10px] text-muted-foreground mt-1">Original: {row.variante_2_talla_original || "—"}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="whitespace-nowrap"
+                            onClick={() => reextractVariantRow(index)}
+                            disabled={isReextractingVariants || isProcessing}
+                            title="Volver a extraer esta fila desde la columna seleccionada"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Reintentar fila
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={needsReview ? "destructive" : "secondary"} className="whitespace-nowrap">
+                            {needsReview ? <><AlertTriangle className="h-3 w-3 mr-1" /> Revisar</> : "Correcto"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <Button variant="ghost" onClick={() => setStep("mapping")}>
+                Volver al mapeo
+              </Button>
+              <Button onClick={confirmVariantReview} disabled={isProcessing || variantReviewData.length === 0}>
+                {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                Confirmar separación y traducir
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Preview — ecommerce product cards */}
         {step === "preview" && (
           <div className="flex flex-col flex-1 min-h-0 gap-4">
             {/* Toolbar */}

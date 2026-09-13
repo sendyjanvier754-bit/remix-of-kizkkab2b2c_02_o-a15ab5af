@@ -19,9 +19,10 @@ interface ProductCardB2BProps {
   onAddToCart?: (item: CartItemB2B) => void;
   cartItem?: CartItemB2B;
   whatsappNumber?: string;
+  showExcelCost?: boolean;
 }
 
-const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "50312345678" }: ProductCardB2BProps) => {
+const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "50312345678", showExcelCost = false }: ProductCardB2BProps) => {
   const { role } = useAuth();
   const isAdmin = role === UserRole.ADMIN;
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -201,6 +202,15 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
               <span className="text-[8px] font-medium text-destructive">USD</span>
             </span>
           </div>
+
+          {showExcelCost && (
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+              <span>Costo proveedor</span>
+              <span className="font-semibold text-foreground">
+                ${(product.costo_base_excel ?? product.factory_cost ?? 0).toFixed(2)} USD
+              </span>
+            </div>
+          )}
           
           {/* Rating & PVP - Same Line */}
           <div className="flex items-center gap-2 justify-between">
@@ -345,6 +355,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
                         moq: product.moq,
                         stock: product.stock_fisico,
                         source_product_id: product.id,
+                        source_url: product.source_url,
                       });
                     }}
                     disabled={isOutOfStock || missingWeight}

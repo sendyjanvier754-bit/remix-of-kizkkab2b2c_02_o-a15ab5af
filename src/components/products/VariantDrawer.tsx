@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { X, TrendingUp, ImageIcon, Info, LogIn, UserPlus } from 'lucide-react';
 import { useB2BCartProductTotals } from '@/hooks/useB2BCartProductTotals';
+import { ZLETI_MANUAL_CART_EVENT } from '@/hooks/useB2BCartSupabase';
 import { BusinessPanel } from '@/components/business/BusinessPanel';
 import { useProductVariants } from '@/hooks/useProductVariants';
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
@@ -38,6 +39,7 @@ const VariantDrawer: React.FC = () => {
   const [variantPrices, setVariantPrices] = useState<Record<string, number>>({});
   const [b2cVariantPrices, setB2cVariantPrices] = useState<Record<string, number>>({});
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [variantSelectorResetKey, setVariantSelectorResetKey] = useState(0);
 
   const { user, role } = useAuth();
   const { toast } = useToast();
@@ -274,7 +276,7 @@ const VariantDrawer: React.FC = () => {
         const itemName = variantLabel ? `${displayName} - ${variantLabel}` : displayName;
 
         if (isB2BUser) {
-          await addItemB2B({
+          const itemData = {
             userId: user.id,
             productId: product.source_product_id || product.id,
             sku: matchedVariant?.sku || product.sku || product.id,
@@ -282,13 +284,26 @@ const VariantDrawer: React.FC = () => {
             priceB2B: matchedVariant?.price ?? product.costB2B ?? product.price ?? 0,
             quantity: qty,
             image: variantImage || matchedVariant?.images?.[0] || product.images?.[0] || undefined,
-            variant: {
-              variantId: sel.variantId,
-              color,
-              size,
-              variantAttributes: attrs,
-            },
-          });
+            variant: { variantId: sel.variantId, color, size, variantAttributes: attrs },
+          };
+          if (isZletiManualPO) {
+            window.dispatchEvent(new CustomEvent(ZLETI_MANUAL_CART_EVENT, {
+              detail: {
+                productId: itemData.productId,
+                variantId: itemData.variant.variantId,
+                sku: itemData.sku,
+                nombre: itemData.name,
+                unitPrice: itemData.priceB2B,
+                quantity: itemData.quantity,
+                color: itemData.variant.color,
+                size: itemData.variant.size,
+                imagen: itemData.image,
+                sourceUrl: product.source_url,
+              },
+            }));
+          } else {
+            await addItemB2B(itemData);
+          }
         } else {
           await addItemB2C({
             userId: user.id,
@@ -312,7 +327,7 @@ const VariantDrawer: React.FC = () => {
     } else if (totalQty > 0) {
       // No variants exist for this product — add directly
       if (isB2BUser) {
-        await addItemB2B({
+        const itemData = {
           userId: user.id,
           productId: product.source_product_id || product.id,
           sku: product.sku || product.id,
@@ -320,7 +335,22 @@ const VariantDrawer: React.FC = () => {
           priceB2B: product.costB2B ?? product.price ?? 0,
           quantity: totalQty,
           image: product.images?.[0] || undefined,
-        });
+        };
+        if (isZletiManualPO) {
+          window.dispatchEvent(new CustomEvent(ZLETI_MANUAL_CART_EVENT, {
+            detail: {
+              productId: itemData.productId,
+              sku: itemData.sku,
+              nombre: itemData.name,
+              unitPrice: itemData.priceB2B,
+              quantity: itemData.quantity,
+              imagen: itemData.image,
+              sourceUrl: product.source_url,
+            },
+          }));
+        } else {
+          await addItemB2B(itemData);
+        }
         toast({ title: t('catalogExtra.variantDrawer.addedToB2BOrder'), description: `${displayName} ${t('catalogExtra.variantDrawer.unitsSuffix', { count: totalQty })}` });
       } else {
         await addItemB2C({
@@ -337,7 +367,17 @@ const VariantDrawer: React.FC = () => {
       }
     }
 
-    close();
+    // Keep the drawer open so the user can add another variant of the same
+    // product without reopening it. Remount the selector to clear its
+    // internal quantities and attribute selections for the next addition.
+    setSelections([]);
+    setTotalQty(0);
+    setTotalPrice(0);
+    setVariantImage(null);
+    setSelectedVariantId(null);
+    setIsVariantValid(false);
+    setValidationErrors([]);
+    setVariantSelectorResetKey((current) => current + 1);
     if (onComplete) onComplete();
   };
 
@@ -480,6 +520,7 @@ const VariantDrawer: React.FC = () => {
 
           {/* Variant Selector with Image Change Callback */}
           <VariantSelector 
+            key={variantSelectorResetKey}
             productId={product.source_product_id || product.id} 
             basePrice={displayPrice}
             baseImage={product.images?.[0]}
