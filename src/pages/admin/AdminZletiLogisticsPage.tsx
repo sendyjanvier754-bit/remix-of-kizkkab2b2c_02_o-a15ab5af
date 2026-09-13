@@ -27,6 +27,9 @@ export default function AdminZletiLogisticsPage() {
   const [selectedPoId, setSelectedPoId] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
+  const [pdfHtml, setPdfHtml] = useState<string | null>(null);
+  const [pdfTitle, setPdfTitle] = useState('Documento PO');
   const [editingItems, setEditingItems] = useState<any[]>([]);
   const [editingNotes, setEditingNotes] = useState('');
   const queryClient = useQueryClient();
