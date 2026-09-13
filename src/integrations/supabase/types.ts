@@ -3695,7 +3695,6 @@ export type Database = {
           assignment_status: string | null
           brand_identity: string
           auto_close_at: string | null
-          brand_identity: string
           china_tracking: string | null
           close_reason: string | null
           close_trigger: string | null
@@ -3703,7 +3702,6 @@ export type Database = {
           cost_variance_usd: number | null
           country_code: string | null
           created_at: string
-          created_by: string | null
           cycle_end_at: string | null
           cycle_start_at: string | null
           department_code: string | null
@@ -3735,7 +3733,6 @@ export type Database = {
           assignment_status?: string | null
           brand_identity?: string
           auto_close_at?: string | null
-          brand_identity?: string
           china_tracking?: string | null
           close_reason?: string | null
           close_trigger?: string | null
@@ -3743,7 +3740,6 @@ export type Database = {
           cost_variance_usd?: number | null
           country_code?: string | null
           created_at?: string
-          created_by?: string | null
           cycle_end_at?: string | null
           cycle_start_at?: string | null
           department_code?: string | null
@@ -3775,7 +3771,6 @@ export type Database = {
           assignment_status?: string | null
           brand_identity?: string
           auto_close_at?: string | null
-          brand_identity?: string
           china_tracking?: string | null
           close_reason?: string | null
           close_trigger?: string | null
@@ -3783,7 +3778,6 @@ export type Database = {
           cost_variance_usd?: number | null
           country_code?: string | null
           created_at?: string
-          created_by?: string | null
           cycle_end_at?: string | null
           cycle_start_at?: string | null
           department_code?: string | null
@@ -9240,41 +9234,6 @@ export type Database = {
           },
         ]
       }
-      trending_store_selection: {
-        Row: {
-          expires_at: string | null
-          id: string
-          is_enabled: boolean
-          store_id: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          expires_at?: string | null
-          id?: string
-          is_enabled?: boolean
-          store_id: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          expires_at?: string | null
-          id?: string
-          is_enabled?: boolean
-          store_id?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trending_store_selection_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: false
-            referencedRelation: "stores"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_favorites: {
         Row: {
           created_at: string
@@ -9815,68 +9774,6 @@ export type Database = {
             columns: ["wallet_id"]
             isOneToOne: false
             referencedRelation: "seller_wallets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      zleti_manual_po_items: {
-        Row: {
-          color: string | null
-          created_at: string
-          id: string
-          image_url: string | null
-          po_id: string
-          product_id: string
-          product_name: string
-          quantity: number
-          size: string | null
-          sku: string
-          source_url: string | null
-          total_cost: number
-          unit_cost: number
-          variant_id: string | null
-          variant_name: string | null
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          po_id: string
-          product_id: string
-          product_name: string
-          quantity: number
-          size?: string | null
-          sku: string
-          source_url?: string | null
-          total_cost?: number
-          unit_cost?: number
-          variant_id?: string | null
-          variant_name?: string | null
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          po_id?: string
-          product_id?: string
-          product_name?: string
-          quantity?: number
-          size?: string | null
-          sku?: string
-          source_url?: string | null
-          total_cost?: number
-          unit_cost?: number
-          variant_id?: string | null
-          variant_name?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "zleti_manual_po_items_po_id_fkey"
-            columns: ["po_id"]
-            isOneToOne: false
-            referencedRelation: "master_purchase_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -10687,10 +10584,6 @@ export type Database = {
         Args: { p_notes?: string; p_proof_url?: string; p_stop_id: string }
         Returns: Json
       }
-      create_zleti_manual_po: {
-        Args: { p_items: Json; p_notes?: string }
-        Returns: Json
-      }
       delete_product_cascade: {
         Args: {
           p_action?: string
@@ -10857,7 +10750,6 @@ export type Database = {
         Args: { _route_id: string; _user_id: string }
         Returns: boolean
       }
-      maybe_create_seller_onboarding_reminder: { Args: never; Returns: Json }
       refresh_market_is_ready: {
         Args: { p_market_id: string }
         Returns: undefined
@@ -10903,10 +10795,6 @@ export type Database = {
         Args: { p_po_id: string }
         Returns: undefined
       }
-      update_zleti_manual_po: {
-        Args: { p_items: Json; p_notes?: string; p_po_id: string }
-        Returns: Json
-      }
       upgrade_to_grossiste: {
         Args: { p_business_name: string; p_description?: string }
         Returns: Json
@@ -10933,7 +10821,6 @@ export type Database = {
         | "grossiste"
         | "pickup_partner"
         | "driver_partner"
-        | "marketing"
       approval_request_type:
         | "withdrawal"
         | "refund"
@@ -11159,7 +11046,6 @@ export const Constants = {
         "grossiste",
         "pickup_partner",
         "driver_partner",
-        "marketing",
       ],
       approval_request_type: [
         "withdrawal",

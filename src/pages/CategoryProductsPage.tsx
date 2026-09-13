@@ -61,7 +61,14 @@ const CategoryProductsPage = () => {
 
   // Unify product list based on user type
   const products: AnyProduct[] = isB2BUser 
-    ? (productsData?.products || [])
+    ? (productsData?.products || []).map((p: any) => ({
+        ...p,
+        // Map B2B wholesale price to the fields ProductCard expects
+        precio: p.precio_mayorista_base ?? p.precio ?? 0,
+        precio_mayorista: p.precio_mayorista_base ?? 0,
+        precio_b2c: p.precio_sugerido_venta ?? p.precio_mayorista_base ?? 0,
+        vendedor: { id: "", nombre: t('pagesExtra.categoryProducts.defaultStoreName') },
+      }))
     : sellerProducts.map((sp: any) => ({
         id: sp.id,
         sku_interno: sp.sku,
@@ -177,7 +184,7 @@ const CategoryProductsPage = () => {
   const getSku = (p: AnyProduct) => p.sku_interno ?? p.sku ?? p.id;
   const getName = (p: AnyProduct) => p.nombre ?? p.name ?? t('pagesExtra.categoryProducts.defaultProductName');
   const getPrice = (p: AnyProduct) => p.precio ?? 0;  // B2C price (default Supabase field)
-  const getImage = (p: AnyProduct) => p.imagen ?? (p.galeria_imagenes && p.galeria_imagenes[0]) ?? p.image ?? "https://via.placeholder.com/400x500?text=Sin+imagen";
+  const getImage = (p: AnyProduct) => p.imagen ?? p.imagen_principal ?? (p.galeria_imagenes && p.galeria_imagenes[0]) ?? p.image ?? "https://via.placeholder.com/400x500?text=Sin+imagen";
   const getSeller = (p: AnyProduct) => p.vendedor ?? p.seller ?? { id: "", nombre: t('pagesExtra.categoryProducts.defaultStoreName') };
 
   if (isLoading) {
