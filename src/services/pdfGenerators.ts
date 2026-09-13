@@ -1201,7 +1201,7 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
 };
 
 // PDF: Buying list for a PO (Artículos a Comprar)
-export const generatePOBuyingListPDF = (data: {
+export const buildPOBuyingListHtml = (data: {
   po_number: string;
   market_name: string;
   brand_identity?: 'kizkka' | 'zleti';
@@ -1333,7 +1333,12 @@ export const generatePOBuyingListPDF = (data: {
     </html>
   `;
 
-  openPrintWindow(html, `Purchase List - ${data.po_number}`);
+  return html;
+};
+
+/** Legacy helper: builds the same document and opens the browser print view. */
+export const generatePOBuyingListPDF = (data: Parameters<typeof buildPOBuyingListHtml>[0]) => {
+  openPrintWindow(buildPOBuyingListHtml(data), `Purchase List - ${data.po_number}`);
 };
 
 // Excel: Buying list for a PO (Artículos a Comprar)
