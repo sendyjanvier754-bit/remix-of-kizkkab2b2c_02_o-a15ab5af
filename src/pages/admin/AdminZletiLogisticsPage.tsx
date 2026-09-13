@@ -97,16 +97,18 @@ export default function AdminZletiLogisticsPage() {
       return { result, payload };
     },
     onSuccess: ({ result, payload }) => {
-      generatePOBuyingListPDF({
+      setPdfTitle(`Lista de compra · ${result.po_number}`);
+      setPdfHtml(buildPOBuyingListHtml({
         po_number: result.po_number,
         market_name: 'ZleTI México',
         brand_identity: 'zleti',
         generated_at: new Date().toISOString(),
         items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })),
-      });
+      }));
+      setPdfOpen(true);
       clearCart();
       setNotes('');
-      toast.success(`PO ${result.po_number} creada`, { description: 'Se abrió la vista imprimible para el agente de compra en China.' });
+      toast.success(`PO ${result.po_number} creada`, { description: 'Vista previa del documento lista para imprimir o guardar.' });
     },
     onError: (error: any) => toast.error(error?.message || 'No se pudo crear la PO ZleTI'),
   });
