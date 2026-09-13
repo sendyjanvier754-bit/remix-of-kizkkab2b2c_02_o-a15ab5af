@@ -463,7 +463,7 @@ const VariantDrawer: React.FC = () => {
         style={isMobile ? { 
           animation: 'slideInUp 0.3s ease-out'
         } : { 
-          width: '332px', 
+          width: '420px',
           height: 'calc(100vh - 160px)',
           maxHeight: 'calc(100vh - 160px)',
           animation: 'slideInRight 0.3s ease-out'
@@ -532,6 +532,7 @@ const VariantDrawer: React.FC = () => {
             availabilityOverrides={sellerVariantAvailabilityMap}
             initialAttributes={preSelectedAttributes}
             initialSelections={preSelectedQuantities}
+            allowIndependentAttributeSelection={isZletiManualPO}
             onSelectionChange={(list, qty, price, _variant, isValid, errors) => {
               setSelections(list);
               setTotalQty(qty);

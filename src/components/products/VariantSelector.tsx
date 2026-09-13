@@ -34,6 +34,8 @@ interface VariantSelectorProps {
   hideVariantImage?: boolean;
   /** Minimal style (no backgrounds on attribute boxes) */
   minimal?: boolean;
+  /** Show all attribute selectors together so color and size can be chosen in any order. */
+  allowIndependentAttributeSelection?: boolean;
   /** Callback when attribute selection changes (for persisting to parent) */
   onAttributeChange?: (attributes: Record<string, string>) => void;
   onSelectionChange?: (selections: VariantSelection[], totalQty: number, totalPrice: number, selectedVariant?: ProductVariant | null, isValid?: boolean, validationErrors?: string[]) => void;
@@ -53,6 +55,14 @@ const getAttributeConfig = (t: (k: string) => string): Record<string, { displayN
   watts: { displayName: t('catalogExtra.variantSelector.attributeNames.watts'), order: 6 },
   material: { displayName: t('catalogExtra.variantSelector.attributeNames.material'), order: 7 },
 });
+
+const normalizeAttributeType = (attributeType: string): string => {
+  const normalized = attributeType.toLowerCase().trim();
+  if (normalized.includes('color')) return 'color';
+  if (normalized.includes('size') || normalized.includes('talla')) return 'size';
+  if (normalized.includes('age') || normalized.includes('edad')) return 'age';
+  return normalized;
+};
 
 // Color hex mapping (fallback when no image available)
 const COLOR_HEX_MAP: Record<string, string> = {
@@ -96,6 +106,7 @@ const VariantSelector = ({
   initialSelections,
   hideVariantImage = false,
   minimal = false,
+  allowIndependentAttributeSelection = false,
   onAttributeChange,
   onSelectionChange,
   onVariantImageChange,
@@ -392,6 +403,25 @@ const VariantSelector = ({
     return sum + price * qty;
   }, 0) || 0;
 
+  const selectedVariants = useMemo(() => {
+    if (!allowIndependentAttributeSelection) return [];
+    return (variants ?? []).filter(variant => (selections[variant.id] || 0) > 0);
+  }, [allowIndependentAttributeSelection, selections, variants]);
+
+  const colorAttributeType = useMemo(
+    () => orderedAttributeTypes.find(type => normalizeAttributeType(type) === 'color'),
+    [orderedAttributeTypes],
+  );
+  const activeColorValue = colorAttributeType ? selectedAttributes[colorAttributeType] : undefined;
+  const activeSelectedVariants = useMemo(() => {
+    if (!allowIndependentAttributeSelection || !activeColorValue || !colorAttributeType) {
+      return [];
+    }
+    return selectedVariants.filter(
+      variant => variant.attribute_combination?.[colorAttributeType] === activeColorValue,
+    );
+  }, [activeColorValue, allowIndependentAttributeSelection, colorAttributeType, selectedVariants]);
+
   // Get the display name for an attribute type directly from database
   const getAttributeDisplayName = useCallback((attrType: string): string => {
     // Try exact match from database first
@@ -412,6 +442,23 @@ const VariantSelector = ({
       return { isValid: totalQty > 0, errors: totalQty === 0 ? [t('catalogExtra.variantSelector.selectQuantity')] : [] };
     }
 
+    // ZleTI can keep combinations from several colors in the same drawer.
+    // The add button must reflect only the currently active color: returning
+    // to a color with saved sizes enables it, while a color with no sizes
+    // remains invalid until the user selects one.
+    if (allowIndependentAttributeSelection) {
+      if (!activeColorValue) {
+        return {
+          isValid: false,
+          errors: [t('catalogExtra.variantSelector.selectAttribute', { attribute: 'Color' })],
+        };
+      }
+      if (activeSelectedVariants.length === 0) {
+        return { isValid: false, errors: [t('catalogExtra.variantSelector.selectQuantity')] };
+      }
+      return { isValid: true, errors: [] };
+    }
+
     const errors: string[] = [];
     
     // Only check required attribute types (those that exist for current selection path)
@@ -428,7 +475,7 @@ const VariantSelector = ({
     }
 
     return { isValid: errors.length === 0, errors };
-  }, [hasEAVAttributes, orderedAttributeTypes, requiredAttributeTypes, selectedAttributes, getAttributeDisplayName, totalQty]);
+  }, [activeColorValue, activeSelectedVariants.length, allowIndependentAttributeSelection, getAttributeDisplayName, hasEAVAttributes, orderedAttributeTypes, requiredAttributeTypes, selectedAttributes, t, totalQty]);
 
   // Notify parent of changes including validation state
   useEffect(() => {
@@ -456,18 +503,51 @@ const VariantSelector = ({
   };
 
   const handleAttributeSelect = (attrType: string, value: string) => {
-    // A new attribute path invalidates quantities selected for the previous path.
-    setSelections({});
     setSelectedAttributes(prev => {
       const newAttrs = { ...prev, [attrType]: value };
-      
-      // Clear downstream selections when a parent attribute changes
-      const typeIndex = orderedAttributeTypes.indexOf(attrType);
-      orderedAttributeTypes.forEach((type, idx) => {
-        if (idx > typeIndex) {
-          delete newAttrs[type];
+
+      if (allowIndependentAttributeSelection) {
+        // Changing color starts a fresh size selection for that color. Keep
+        // quantities already prepared for other colors, but do not carry the
+        // previous color's size into the new combination.
+        if (normalizeAttributeType(attrType) === 'color') {
+          const colorIndex = orderedAttributeTypes.indexOf(attrType);
+          orderedAttributeTypes.forEach((type, index) => {
+            if (index > colorIndex) delete newAttrs[type];
+          });
         }
-      });
+
+        const hasCompleteCombination = requiredAttributeTypes.every(type => Boolean(newAttrs[type]));
+        const matchingVariantForSelection = hasCompleteCombination
+          ? variants.find(variant => {
+              const combo = variant.attribute_combination;
+              return combo && requiredAttributeTypes.every(key => combo[key] === newAttrs[key]);
+            })
+          : null;
+
+        if (matchingVariantForSelection) {
+          // Keep previous combinations so ZleTI can add red/S, red/M and red/L
+          // in the same cart operation.
+          setSelections(current => ({
+            ...current,
+            [matchingVariantForSelection.id]: current[matchingVariantForSelection.id] || 1,
+          }));
+        }
+      } else {
+        // A new attribute path invalidates quantities selected for the previous path.
+        setSelections({});
+      }
+
+      // The regular selector is hierarchical. ZleTI allows color and size to
+      // remain selected together, regardless of which one was chosen first.
+      if (!allowIndependentAttributeSelection) {
+        const typeIndex = orderedAttributeTypes.indexOf(attrType);
+        orderedAttributeTypes.forEach((type, idx) => {
+          if (idx > typeIndex) {
+            delete newAttrs[type];
+          }
+        });
+      }
       
       // Notify parent of attribute changes
       if (onAttributeChangeRef.current) {
@@ -500,6 +580,20 @@ const VariantSelector = ({
   if (hasEAVAttributes && orderedAttributeTypes.length > 0) {
     return (
       <div className="space-y-4">
+        {allowIndependentAttributeSelection && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900">
+            <p className="font-semibold">Selecciona las combinaciones que necesitas</p>
+            <p className="mt-1 text-blue-700">
+              Elige un color, marca una o varias tallas y luego ajusta la cantidad de cada combinación.
+            </p>
+            {allowIndependentAttributeSelection && activeSelectedVariants.length > 0 && (
+              <p className="mt-1 font-medium text-blue-800">
+                {activeSelectedVariants.length} combinación{activeSelectedVariants.length === 1 ? '' : 'es'} seleccionada{activeSelectedVariants.length === 1 ? '' : 's'} para {activeColorValue}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Attribute Selectors */}
         {orderedAttributeTypes.map((attrType, idx) => {
           const availableOptions = getAvailableOptions(attrType);
@@ -535,9 +629,10 @@ const VariantSelector = ({
             displayName.toLowerCase() === 'color' ||
             availableOptions.some(opt => Object.keys(COLOR_HEX_MAP).includes(opt.toLowerCase()));
           
-          // Only show if previous attributes are selected (except first)
+          // In the ZleTI flow, color and size are intentionally visible together
+          // so the user can choose both before setting the quantity.
           const prevAttr = orderedAttributeTypes[idx - 1];
-          if (idx > 0 && prevAttr && !selectedAttributes[prevAttr]) {
+          if (!allowIndependentAttributeSelection && idx > 0 && prevAttr && !selectedAttributes[prevAttr]) {
             return null;
           }
 
@@ -559,6 +654,14 @@ const VariantSelector = ({
 
           // Check if only one option (auto-selected scenario)
           const isAutoSelected = availableOptions.length === 1 && selectedValue === availableOptions[0];
+          const normalizedAttributeType = normalizeAttributeType(attrType);
+          const addedOptionCount = normalizedAttributeType === 'size'
+            ? availableOptions.filter(option => variants.some(variant => (
+                (selections[variant.id] || 0) > 0 &&
+                variant.attribute_combination?.[attrType] === option &&
+                (!activeColorValue || variant.attribute_combination?.[colorAttributeType!] === activeColorValue)
+              ))).length
+            : 0;
 
           return (
             <div key={attrType} className={cn(
@@ -575,6 +678,16 @@ const VariantSelector = ({
                   {isMissing && <span className="ml-1 text-destructive">*</span>}
                 </h4>
                 <div className="flex items-center gap-1">
+                  {allowIndependentAttributeSelection && normalizedAttributeType === 'color' && selectedValue && (
+                    <Badge className="bg-blue-600 text-[10px] font-normal text-white hover:bg-blue-600">
+                      Color activo: {selectedValue}
+                    </Badge>
+                  )}
+                  {allowIndependentAttributeSelection && normalizedAttributeType === 'size' && addedOptionCount > 0 && (
+                    <Badge className="bg-emerald-600 text-[10px] font-normal text-white hover:bg-emerald-600">
+                      {addedOptionCount} agregada{addedOptionCount === 1 ? '' : 's'}
+                    </Badge>
+                  )}
                   {isAutoSelected && (
                     <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
                       {t('catalogExtra.variantSelector.onlyOption')}
@@ -592,7 +705,15 @@ const VariantSelector = ({
                 isColor && "gap-2"
               )}>
                 {availableOptions.map(option => {
-                  const isSelected = selectedValue === option;
+                  const isAddedCombination = allowIndependentAttributeSelection && normalizedAttributeType === 'size' && variants.some(variant => (
+                    (selections[variant.id] || 0) > 0 &&
+                    variant.attribute_combination?.[attrType] === option &&
+                    (!activeColorValue || variant.attribute_combination?.[colorAttributeType!] === activeColorValue)
+                  ));
+                  const isCurrentOption = selectedValue === option;
+                  const isSelected = allowIndependentAttributeSelection && normalizedAttributeType === 'size'
+                    ? isCurrentOption || isAddedCombination
+                    : isCurrentOption;
                   const colorHex = isColor ? getColorHex(option) : null;
                   // Get image for this option from the attribute image map
                   const optionImage = attributeImageMap[attrType]?.[option] || null;
@@ -718,10 +839,12 @@ const VariantSelector = ({
                       disabled={isOutOfStock}
                       className={cn(
                         "h-9 px-4 text-sm font-medium",
-                        isSelected && "ring-2 ring-primary/30",
+                        isCurrentOption && "ring-2 ring-primary/30",
+                        isAddedCombination && !isCurrentOption && "border-emerald-500 bg-emerald-50 text-emerald-700",
                         isOutOfStock && "opacity-50 line-through"
                       )}
                     >
+                      {isAddedCombination && <Check className="mr-1 h-3.5 w-3.5" />}
                       {option}
                     </Button>
                   );
@@ -732,7 +855,7 @@ const VariantSelector = ({
         })}
 
         {/* Show matching variant with quantity control and consolidated info */}
-        {matchingVariant && (
+        {!allowIndependentAttributeSelection && matchingVariant && (
           <div className={cn("p-3 rounded-lg border border-primary/20", minimal ? "bg-transparent" : "bg-primary/5")}>
             {/* Top row: name/badges + quantity selector */}
             <div className="flex items-center gap-3">
@@ -799,6 +922,29 @@ const VariantSelector = ({
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {t('catalogExtra.variantSelector.available', { count: getEffectiveStock(matchingVariant) })}
               </span>
+            </div>
+          </div>
+        )}
+
+        {allowIndependentAttributeSelection && activeSelectedVariants.length > 0 && (
+          <div className={cn("p-3 rounded-lg border border-primary/20", minimal ? "bg-transparent" : "bg-primary/5")}>
+            <div className="mb-2 text-xs font-semibold text-foreground">Combinaciones seleccionadas</div>
+            <div className="space-y-2">
+              {activeSelectedVariants.map(variant => (
+                <div key={variant.id} className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-foreground">
+                    {Object.values(variant.attribute_combination || {}).join(' / ')}
+                  </span>
+                  <QuantitySelector
+                    value={selections[variant.id] || 0}
+                    onChange={newQty => updateQuantity(variant.id, newQty, variant)}
+                    min={0}
+                    max={getEffectiveStock(variant)}
+                    disabled={getEffectiveStock(variant) === 0}
+                    size="sm"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         )}
