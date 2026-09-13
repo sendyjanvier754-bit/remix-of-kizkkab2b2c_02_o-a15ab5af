@@ -292,7 +292,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       // Auto-detect mapping suggestions
       const autoMap = Object.fromEntries(
         MAPPING_FIELDS.map(field => [field.key, autoDetect(detectedHeaders, field.keywords)]),
-      ) as ColumnMapping;
+      ) as unknown as ColumnMapping;
       setColumnMapping(autoMap);
       setStep("mapping");
       toast.success(`${rows.length} filas detectadas. Configura el mapeo de columnas.`);
