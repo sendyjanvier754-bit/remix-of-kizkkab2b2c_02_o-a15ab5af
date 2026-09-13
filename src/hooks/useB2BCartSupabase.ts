@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ export interface B2BCartItem {
   moq: number;
   stockDisponible: number;
   imagen?: string;
+  sourceUrl?: string | null;
 }
 
 export interface B2BCart {
@@ -41,6 +43,8 @@ const initialCart: B2BCart = {
 export const useB2BCartSupabase = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { pathname } = useLocation();
+  const isZletiManualPO = pathname === '/admin/logistica-zleti';
   const [cart, setCart] = useState<B2BCart>(initialCart);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -82,16 +86,32 @@ export const useB2BCartSupabase = () => {
             let imagen: string | undefined = undefined;
             
             if (item.product_id) {
-              const { data: product } = await supabase
-                .from('v_productos_con_precio_b2b')
-                .select('moq, stock_fisico, imagen_principal, precio_b2b')
-                .eq('id', item.product_id)
-                .maybeSingle();
-              
+              const [productResult, variantResult] = await Promise.all([
+                supabase
+                  .from('v_productos_con_precio_b2b')
+                  .select('moq, stock_fisico, imagen_principal, url_origen, precio_b2b')
+                  .eq('id', item.product_id)
+                  .maybeSingle(),
+                item.variant_id
+                  ? supabase
+                      .from('product_variants')
+                      .select('images')
+                      .eq('id', item.variant_id)
+                      .maybeSingle()
+                  : Promise.resolve({ data: null }),
+              ]);
+
+              const product = productResult.data;
+              const variantImages = (variantResult.data as { images?: string[] | null } | null)?.images;
+              const variantImage = Array.isArray(variantImages) ? variantImages[0] : null;
+
               if (product) {
                 moq = product.moq || 1;
                 stockDisponible = product.stock_fisico || 0;
-                imagen = product.imagen_principal || undefined;
+                // Variant image first; product image is the fallback.
+                imagen = variantImage || product.imagen_principal || undefined;
+              } else if (variantImage) {
+                imagen = variantImage;
               }
             }
 
@@ -109,6 +129,7 @@ export const useB2BCartSupabase = () => {
               moq,
               stockDisponible,
               imagen,
+              sourceUrl: product?.url_origen || null,
             };
           })
         );
@@ -148,6 +169,32 @@ export const useB2BCartSupabase = () => {
     fetchOrCreateCart();
   }, [fetchOrCreateCart]);
 
+  // Keep every mounted catalog/cart view synchronized immediately when the
+  // database cart changes (including changes made by the variant drawer).
+  useEffect(() => {
+    if (!cart.id) return;
+
+    const channel = supabase.channel(`b2b-cart-items-${cart.id}-${Date.now()}`);
+    channel
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'b2b_cart_items',
+          filter: `cart_id=eq.${cart.id}`,
+        },
+        () => {
+          fetchOrCreateCart();
+        },
+      );
+    channel.subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [cart.id, fetchOrCreateCart]);
+
   // Add item to cart
   const addItem = useCallback(async (item: {
     productId: string;
@@ -167,7 +214,7 @@ export const useB2BCartSupabase = () => {
     }
 
     // Check if seller has completed store onboarding before allowing cart operations
-    if (user?.id) {
+    if (user?.id && !isZletiManualPO) {
       const { data: progress } = await supabase
         .from('seller_onboarding_progress')
         .select('is_complete')
@@ -185,13 +232,13 @@ export const useB2BCartSupabase = () => {
     }
 
     // Validate MOQ
-    if (item.quantity < item.moq) {
+    if (!isZletiManualPO && item.quantity < item.moq) {
       toast.error(`La cantidad mínima de pedido es ${item.moq} unidades`);
       return;
     }
 
     // Validate stock
-    if (item.quantity > item.stockDisponible) {
+    if (!isZletiManualPO && item.quantity > item.stockDisponible) {
       toast.error(`Stock disponible: ${item.stockDisponible} unidades`);
       return;
     }
@@ -258,19 +305,19 @@ export const useB2BCartSupabase = () => {
       console.error('Error adding item:', error);
       toast.error(t('toasts.errorAddingToCart'));
     }
-  }, [cart.id, cart.items, fetchOrCreateCart]);
+  }, [cart.id, cart.items, fetchOrCreateCart, isZletiManualPO]);
 
   // Update item quantity
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
     const item = cart.items.find(i => i.id === itemId);
     if (!item) return;
 
-    if (quantity < item.moq) {
+    if (!isZletiManualPO && quantity < item.moq) {
       toast.error(`La cantidad mínima de pedido es ${item.moq} unidades`);
       return;
     }
 
-    if (quantity > item.stockDisponible) {
+    if (!isZletiManualPO && quantity > item.stockDisponible) {
       toast.error(`Stock disponible: ${item.stockDisponible} unidades`);
       return;
     }
@@ -291,7 +338,7 @@ export const useB2BCartSupabase = () => {
       console.error('Error updating quantity:', error);
       toast.error(t('toasts.errorUpdatingQuantity'));
     }
-  }, [cart.items, fetchOrCreateCart]);
+  }, [cart.items, fetchOrCreateCart, isZletiManualPO]);
 
   // Remove item from cart
   const removeItem = useCallback(async (itemId: string) => {

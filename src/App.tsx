@@ -115,6 +115,7 @@ const AdminCartAnalytics = lazyWithRetry(() => import("./pages/admin/AdminCartAn
 const AdminLogisticsPage = lazyWithRetry(() => import("./pages/admin/AdminLogisticsPage"));
 const AdminInventoryPage = lazyWithRetry(() => import("./pages/admin/AdminInventoryPage"));
 const AdminPOMasterPage = lazyWithRetry(() => import("./pages/admin/AdminPOMasterPage"));
+const AdminZletiLogisticsPage = lazyWithRetry(() => import("./pages/admin/AdminZletiLogisticsPage"));
 const AdminPaymentMethodsPage = lazyWithRetry(() => import("./pages/admin/AdminPaymentMethodsPage"));
 const AdminPaymentKeys = lazyWithRetry(() => import("./pages/admin/AdminPaymentKeys"));
 const AdminMarketplaceSections = lazyWithRetry(() => import("./pages/admin/AdminMarketplaceSections"));
@@ -506,6 +507,14 @@ const AppContent = () => {
                   <LazyRoute><AdminPOMasterPage /></LazyRoute>
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/admin/logistica-zleti"
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminZletiLogisticsPage /></LazyRoute>
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/admin/payment-methods" 

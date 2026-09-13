@@ -11,6 +11,7 @@ export interface VariantDrawerProduct {
   moq?: number;
   stock?: number;
   source_product_id?: string;
+  source_url?: string | null;
   description?: string;
   /** ID de la tienda vendedora (para atribución de venta) */
   storeId?: string;

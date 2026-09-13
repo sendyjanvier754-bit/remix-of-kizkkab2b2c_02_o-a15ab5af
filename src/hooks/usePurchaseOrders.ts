@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export interface MasterPurchaseOrder {
   id: string;
   po_number: string;
+  brand_identity: 'kizkka' | 'zleti';
   status: string;
   cycle_start_at: string;
   cycle_end_at: string | null;

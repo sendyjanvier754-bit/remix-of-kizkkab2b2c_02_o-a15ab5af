@@ -97,62 +97,18 @@ const CartPage = () => {
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
 
-  // Fallback: when sellerCatalogId is missing (old cart items), resolve it from seller_catalog
-  // by SKU + store, then by variant SKU, then by the variant's source product.
+  // Fallback: when sellerCatalogId is missing (old cart items), resolve it from seller_catalog by SKU + storeId
   const { data: resolvedCatalogId } = useQuery({
-    queryKey: ['resolve-catalog-id', selectedItemForVariants?.sku, selectedItemForVariants?.storeId, selectedItemForVariants?.variantId],
+    queryKey: ['resolve-catalog-id', selectedItemForVariants?.sku, selectedItemForVariants?.storeId],
     queryFn: async () => {
-      const item = selectedItemForVariants!;
-
-      // 1) Direct catalog SKU match
-      const { data: direct } = await supabase
+      const { data } = await supabase
         .from('seller_catalog')
         .select('id')
-        .eq('seller_store_id', item.storeId!)
-        .eq('sku', item.sku)
+        .eq('seller_store_id', selectedItemForVariants!.storeId!)
+        .eq('sku', selectedItemForVariants!.sku)
         .eq('is_active', true)
         .maybeSingle();
-      if ((direct as any)?.id) return (direct as any).id as string;
-
-      // 2) Match through the seller's variant rows (cart sku may be a variant sku)
-      const { data: scv } = await supabase
-        .from('seller_catalog_variants')
-        .select('seller_catalog_id, seller_catalog:seller_catalog_id(seller_store_id)')
-        .eq('sku', item.sku)
-        .limit(5);
-      const scvMatch = (scv || []).find((r: any) => r.seller_catalog?.seller_store_id === item.storeId);
-      if (scvMatch) return (scvMatch as any).seller_catalog_id as string;
-
-      // 3) Resolve the source product from the product variant, then find the catalog entry
-      let sourceProductId: string | null = null;
-      if (item.variantId) {
-        const { data: pv } = await supabase
-          .from('product_variants')
-          .select('product_id')
-          .eq('id', item.variantId)
-          .maybeSingle();
-        sourceProductId = (pv as any)?.product_id ?? null;
-      }
-      if (!sourceProductId) {
-        const { data: pvBySku } = await supabase
-          .from('product_variants')
-          .select('product_id')
-          .eq('sku', item.sku)
-          .limit(1)
-          .maybeSingle();
-        sourceProductId = (pvBySku as any)?.product_id ?? null;
-      }
-      if (!sourceProductId) return null;
-
-      const { data: byProduct } = await supabase
-        .from('seller_catalog')
-        .select('id')
-        .eq('seller_store_id', item.storeId!)
-        .eq('source_product_id', sourceProductId)
-        .eq('is_active', true)
-        .limit(1)
-        .maybeSingle();
-      return (byProduct as any)?.id ?? null;
+      return (data as any)?.id ?? null;
     },
     enabled:
       !!selectedItemForVariants &&
@@ -161,7 +117,6 @@ const CartPage = () => {
       !!selectedItemForVariants.sku,
     staleTime: 60_000,
   });
-
 
   const effectiveCatalogId =
     selectedItemForVariants?.sellerCatalogId ?? resolvedCatalogId ?? null;
@@ -256,6 +211,36 @@ const CartPage = () => {
   // Prevent background scroll while variant panel is open
   useScrollLock(!!selectedItemForVariants);
 
+  // If auth is resolved and user is not logged in, show login prompt (moved after hooks)
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {!isMobile && <GlobalHeader />}
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center py-12 px-6">
+            <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Inicia sesión para ver tu carrito</h2>
+            <p className="text-sm text-gray-500 mb-6">Necesitas una cuenta para guardar y gestionar tus productos.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => navigate('/cuenta')}
+                className="py-2.5 px-6 bg-[#071d7f] text-white rounded-lg font-medium hover:bg-[#0a2a9f] transition"
+              >
+                Iniciar sesión
+              </button>
+              <button
+                onClick={() => navigate('/cuenta?tab=register')}
+                className="py-2.5 px-6 border border-[#071d7f] text-[#071d7f] rounded-lg font-medium hover:bg-[#071d7f]/5 transition"
+              >
+                Crear cuenta
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // Pre-fill qty for the matching variant from existing cart
   useEffect(() => {
     if (!matchingVariant) return;
@@ -307,35 +292,7 @@ const CartPage = () => {
   // Show tabs for sellers to switch between B2C and B2B carts
   const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
 
-  // If auth is resolved and user is not logged in, show login prompt
-  if (!authLoading && !user) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        {!isMobile && <GlobalHeader />}
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center py-12 px-6">
-            <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">{t('cartExtra.loginToViewCart')}</h2>
-            <p className="text-sm text-gray-500 mb-6">{t('cartExtra.needAccountMessage')}</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => navigate('/cuenta')}
-                className="py-2.5 px-6 bg-[#071d7f] text-white rounded-lg font-medium hover:bg-[#0a2a9f] transition"
-              >
-                {t('cartExtra.login')}
-              </button>
-              <button
-                onClick={() => navigate('/cuenta?tab=register')}
-                className="py-2.5 px-6 border border-[#071d7f] text-[#071d7f] rounded-lg font-medium hover:bg-[#071d7f]/5 transition"
-              >
-                {t('cartExtra.createAccount')}
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  // (Login prompt moved later to ensure hooks are called in same order on every render)
 
   // Show confirmation dialog for removing item
   const handleRemoveItem = (itemId: string, itemName: string) => {
@@ -559,7 +516,7 @@ const CartPage = () => {
         }
       }
 
-      toast.success(t('cartExtra.cartUpdated'));
+      toast.success('Carrito actualizado');
       setSelectedItemForVariants(null);
       setVariantQtys({});
       setSelectedAttrs({});
@@ -567,38 +524,38 @@ const CartPage = () => {
       await refetch(false);
     } catch (err) {
       console.error('Error updating variants:', err);
-      toast.error(t('cartExtra.variantsUpdateError'));
+      toast.error('Error al actualizar variantes');
     } finally {
       setIsAddingVariant(false);
     }
   }, [user?.id, selectedItemForVariants, catalogVariants, variantQtys, items, refetch]);
 
-  const handleNegotiate = (storeItems: typeof items) => {    const storeName = storeItems[0]?.storeName || t('cartExtra.seller');
+  const handleNegotiate = (storeItems: typeof items) => {    const storeName = storeItems[0]?.storeName || 'Vendedor';
     const storeWhatsapp = storeItems[0]?.storeWhatsapp;
     const storeTotal = storeItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const storeQty = storeItems.reduce((sum, item) => sum + item.quantity, 0);
-    const customerName = user?.name || t('cartExtra.customer');
+    const customerName = user?.name || 'Cliente';
     
     const itemsList = storeItems
       .map((item, idx) => `${idx + 1}. ${item.name} x${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`)
       .join('\n');
     
-    const message = `📱 *${t('cartExtra.orderInquiry', { store: storeName })}*\n\n` +
-      `${t('cartExtra.customerLabel')}: ${customerName}\n\n` +
-      `*${t('cartExtra.orderDetail')}:*\n${itemsList}\n\n` +
-      `*${t('common.total')}:* $${storeTotal.toFixed(2)}\n` +
-      `*${t('common.units')}:* ${storeQty}\n\n` +
-      `${t('cartExtra.inquireAvailability')}`;
+    const message = `📱 *Consulta de Pedido - ${storeName}*\n\n` +
+      `Cliente: ${customerName}\n\n` +
+      `*Detalle del pedido:*\n${itemsList}\n\n` +
+      `*Total:* $${storeTotal.toFixed(2)}\n` +
+      `*Unidades:* ${storeQty}\n\n` +
+      `Me gustaría consultar sobre este pedido. ¿Está disponible?`;
     
     const whatsappUrl = `https://wa.me/${storeWhatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleWhatsAppSupport = () => {
-    const customerName = user?.name || t('cartExtra.customer');
+    const customerName = user?.name || 'Cliente';
     const cartSummary = Array.from(itemsByStore.entries())
       .map(([_, storeItems]) => {
-        const storeName = storeItems[0]?.storeName || t('cartExtra.store');
+        const storeName = storeItems[0]?.storeName || 'Tienda';
         const items_text = storeItems
           .map((item, idx) => `• ${item.name} x${item.quantity}`)
           .join('\n');
@@ -606,12 +563,12 @@ const CartPage = () => {
       })
       .join('\n\n');
     
-    const message = `${t('cartExtra.helloIAm', { name: customerName })}\n\n` +
-      `${t('cartExtra.cartInquiry')}:\n\n` +
+    const message = `¡Hola! Soy ${customerName}\n\n` +
+      `Tengo una consulta sobre mi carrito de compra:\n\n` +
       `${cartSummary}\n\n` +
-      `*${t('common.total')}:* $${totalPrice.toFixed(2)}\n` +
-      `*${t('common.units')}:* ${totalQuantity}\n\n` +
-      `${t('cartExtra.canYouHelp')}`;
+      `*Total:* $${totalPrice.toFixed(2)}\n` +
+      `*Unidades:* ${totalQuantity}\n\n` +
+      `¿Podrían ayudarme?`;
     
     // Número de soporte (reemplazar con número real de soporte)
     const supportPhone = '5712345678'; // Cambiar al número real de soporte
@@ -653,7 +610,7 @@ const CartPage = () => {
       setShowShareDialog(true);
     } catch (err) {
       console.error('Error sharing cart:', err);
-      toast.error(t('cartExtra.shareCartError'));
+      toast.error('Error al compartir carrito');
     } finally {
       setIsSharing(false);
     }
@@ -663,10 +620,10 @@ const CartPage = () => {
     try {
       await navigator.clipboard.writeText(shareLink);
       setShareCopied(true);
-      toast.success(t('cartExtra.linkCopied'));
+      toast.success('Enlace copiado');
       setTimeout(() => setShareCopied(false), 2000);
     } catch {
-      toast.error(t('cartExtra.copyError'));
+      toast.error('No se pudo copiar');
     }
   };
 
@@ -707,7 +664,7 @@ const CartPage = () => {
                 </div>
               </div>
               <div>
-                <span className="text-gray-900">{t('common.total')}:</span>
+                <span className="text-gray-900">Total:</span>
                 <span className="font-bold ml-1 text-gray-900">
                   ${totalPrice.toFixed(2)}
                 </span>
@@ -751,7 +708,7 @@ const CartPage = () => {
           <>
             {/* Items Grouped by Store */}
             {Array.from(itemsByStore.entries()).map(([storeId, storeItems]) => {
-              const storeName = storeItems[0]?.storeName || t('cartExtra.store');
+              const storeName = storeItems[0]?.storeName || 'Tienda';
               const storeWhatsapp = storeItems[0]?.storeWhatsapp;
               const storeTotal = storeItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -798,7 +755,7 @@ const CartPage = () => {
                             onClick={() => setSelectedItemForVariants(item)}
                             className="flex-shrink-0 rounded-md bg-muted overflow-hidden border-none p-0 hover:opacity-80 transition"
                             style={{ width: '70px', height: '70px' }}
-                            title={t('cartExtra.changeVariant')}
+                            title="Cambiar variante"
                           >
                             {item.image ? (
                               <img 
@@ -827,7 +784,7 @@ const CartPage = () => {
                                   handleRemoveItem(item.id, item.name);
                                 }}
                                 className="text-gray-400 hover:text-red-600 transition ml-2 flex-shrink-0"
-                                title={t('cartExtra.removeFromCartTitle')}
+                                title="Eliminar del carrito"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -871,7 +828,7 @@ const CartPage = () => {
                         size="sm"
                       >
                         <MessageCircle className="h-4 w-4" />
-                        {t('cartExtra.consultStore', { store: storeName })}
+                        Consultar a {storeName}
                       </Button>
                     )}
                   </div>
@@ -926,7 +883,7 @@ const CartPage = () => {
                 {/* Store Items Container */}
                 <div className="divide-y divide-gray-200">
                   {Array.from(itemsByStore.entries()).map(([storeId, storeItems]) => {
-                    const storeName = storeItems[0]?.storeName || t('cartExtra.store');
+                    const storeName = storeItems[0]?.storeName || 'Tienda';
                     const storeWhatsapp = storeItems[0]?.storeWhatsapp;
 
                     return (
@@ -969,7 +926,7 @@ const CartPage = () => {
                               <button
                                 onClick={() => setSelectedItemForVariants(item)}
                                 className="flex-shrink-0 rounded-lg bg-gray-100 overflow-hidden cursor-pointer hover:shadow-md transition w-24 h-24 border-none p-0"
-                                title={t('cartExtra.changeVariant')}
+                                title="Cambiar variante"
                               >
                                 {item.image ? (
                                   <img 
@@ -1118,10 +1075,10 @@ const CartPage = () => {
                     onClick={handleShareCart}
                     disabled={isSharing}
                     className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-border hover:bg-muted"
-                    title={t('cartExtra.shareCart')}
+                    title="Compartir carrito"
                   >
                     {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                    {t('cartExtra.share')}
+                    Compartir
                   </button>
                   {someSelected ? (
                     <Link
@@ -1285,7 +1242,7 @@ const CartPage = () => {
                 onClick={handleShareCart}
                 disabled={isSharing}
                 className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center border border-border bg-muted hover:bg-muted/80"
-                title={t('cartExtra.shareCart')}
+                title="Compartir carrito"
               >
                 {isSharing ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : <Share2 className="w-5 h-5 text-foreground" />}
               </button>
@@ -1306,7 +1263,7 @@ const CartPage = () => {
               <button
                 onClick={handleClearCart}
                 className="p-2 rounded-lg transition hover:bg-red-100 border border-gray-300 text-red-600"
-                title={t('cartExtra.clearCartTitle')}
+                title="Vaciar carrito"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -1319,7 +1276,7 @@ const CartPage = () => {
                   style={{ backgroundColor: '#071d7f' }}
                 >
                   <ShoppingCart className="w-4 h-4" />
-                  {t('cartExtra.buyCount', { count: totalQuantity })}
+                  Comprar ({totalQuantity})
                 </Link>
               ) : (
                 <button
@@ -1328,7 +1285,7 @@ const CartPage = () => {
                   style={{ backgroundColor: '#071d7f' }}
                 >
                   <ShoppingCart className="w-4 h-4" />
-                  {t('cartExtra.selectItems')}
+                  Selecciona
                 </button>
               )}
             </div>
@@ -1342,18 +1299,18 @@ const CartPage = () => {
       <AlertDialog open={showClearCartDialog} onOpenChange={setShowClearCartDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('cartExtra.clearCartTitle')}</AlertDialogTitle>
+            <AlertDialogTitle>Vaciar carrito</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('cartExtra.clearCartConfirm')}
+              ¿Estás seguro de que deseas eliminar todos los productos de tu carrito? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => clearCart()}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              {t('cartExtra.clearCartTitle')}
+              Vaciar carrito
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
@@ -1363,15 +1320,15 @@ const CartPage = () => {
       <AlertDialog open={showRemoveItemDialog} onOpenChange={setShowRemoveItemDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('cartExtra.deleteProductTitle')}</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar producto</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => itemToRemove && removeItem(itemToRemove.id)}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              {t('common.delete')}
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1383,12 +1340,12 @@ const CartPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Share2 className="w-5 h-5" />
-              {t('cartExtra.shareCart')}
+              Compartir carrito
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {t('cartExtra.shareCartDesc')}
+              Comparte este enlace para que otra persona pueda ver y agregar estos productos a su carrito.
             </p>
             
             {/* Link */}
@@ -1407,15 +1364,15 @@ const CartPage = () => {
             <div className="flex flex-col gap-2">
               <Button onClick={handleShareWhatsApp} className="w-full gap-2" style={{ backgroundColor: '#29892a' }}>
                 <MessageCircle className="w-4 h-4" />
-                {t('cartExtra.sendViaWhatsapp')}
+                Enviar por WhatsApp
               </Button>
               <Button variant="outline" onClick={handleCopyShareLink} className="w-full gap-2">
                 <Copy className="w-4 h-4" />
-                {shareCopied ? t('cartExtra.copied') : t('cartExtra.copyLink')}
+                {shareCopied ? 'Copiado!' : 'Copiar enlace'}
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground text-center">{t('cartExtra.linkExpiresIn7Days')}</p>
+            <p className="text-xs text-muted-foreground text-center">El enlace expira en 7 días</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -1466,7 +1423,7 @@ const CartPage = () => {
                 </div>
               ) : catalogVariants.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">
-                  {t('cartExtra.noVariantsAvailable')}
+                  No hay variantes disponibles
                 </p>
               ) : (
                 <>
@@ -1483,7 +1440,7 @@ const CartPage = () => {
                           <Icon className="w-4 h-4 text-primary" />
                           {config.displayName}
                           <Badge variant="secondary" className="text-[10px]">
-                            {t('cartExtra.optionsCount', { count: options.length })}
+                            {options.length} opción{options.length === 1 ? '' : 'es'}
                           </Badge>
                         </h4>
 
@@ -1511,7 +1468,7 @@ const CartPage = () => {
                                       : "border-border hover:border-primary/60 hover:scale-102",
                                     outOfStock && "opacity-30 cursor-not-allowed"
                                   )}
-                                  title={`${value}${outOfStock ? ` - ${t('cartExtra.outOfStock')}` : ''}`}
+                                  title={`${value}${outOfStock ? ' - Sin stock' : ''}`}
                                 >
                                   {img && (
                                     <img src={img} alt={value} className="w-full h-full object-cover" loading="lazy" />
@@ -1555,7 +1512,7 @@ const CartPage = () => {
                                       : "border-border bg-background hover:border-primary/60",
                                     outOfStock && "opacity-30 cursor-not-allowed line-through"
                                   )}
-                                  title={`${value}${outOfStock ? ` - ${t('cartExtra.outOfStock')}` : ''}`}
+                                  title={`${value}${outOfStock ? ' - Sin stock' : ''}`}
                                 >
                                   {value}
                                 </button>
@@ -1588,7 +1545,7 @@ const CartPage = () => {
                               variant={matchingVariant.stock > 0 ? "secondary" : "destructive"}
                               className="text-[10px]"
                             >
-                              {matchingVariant.stock > 0 ? t('cartExtra.stockAvailable', { count: matchingVariant.stock }) : t('cartExtra.outOfStock')}
+                              {matchingVariant.stock > 0 ? `${matchingVariant.stock} disp.` : 'Sin stock'}
                             </Badge>
                           </div>
                         </div>
@@ -1623,7 +1580,7 @@ const CartPage = () => {
 
                   {!matchingVariant && drawerAttrTypes.length > 0 && (
                     <p className="text-xs text-muted-foreground text-center py-2">
-                      {t('cartExtra.selectAllOptions')}
+                      Selecciona todas las opciones para ver disponibilidad
                     </p>
                   )}
                 </>
@@ -1634,7 +1591,7 @@ const CartPage = () => {
             <div className="p-4 border-t flex-shrink-0 space-y-2">
               {matchingVariant && (variantQtys[matchingVariant.id] ?? 0) > 0 && (
                 <div className="flex items-center justify-between text-sm font-medium text-muted-foreground bg-muted/40 px-3 py-2 rounded-lg">
-                  <span>{t('cartExtra.totalSelected')}</span>
+                  <span>Total seleccionado</span>
                   <span className="text-primary font-bold">
                     ${(matchingVariant.price * (variantQtys[matchingVariant.id] ?? 0)).toFixed(2)}
                   </span>
@@ -1650,7 +1607,7 @@ const CartPage = () => {
                 ) : (
                   <ShoppingCart className="h-4 w-4" />
                 )}
-                {t('cartExtra.addToCart')}
+                Agregar al carrito
               </button>
             </div>
           </>

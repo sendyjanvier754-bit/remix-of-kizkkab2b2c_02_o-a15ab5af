@@ -16,7 +16,7 @@ import ProductImage from '@/components/shared/ProductImage';
 
 interface ProductCardB2BProps {
   product: ProductB2BCard;
-  onAddToCart: (item: CartItemB2B) => void;
+  onAddToCart?: (item: CartItemB2B) => void;
   cartItem?: CartItemB2B;
   whatsappNumber?: string;
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { generatePOBuyingListPDF, generatePOBuyingListExcel } from '@/services/pdfGenerators';
+import { supabase } from '@/integrations/supabase/client';
 
 const stageConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   open: { label: 'Abierta', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: <PlayCircle className="h-4 w-4" /> },
@@ -68,6 +70,20 @@ export default function AdminPOMasterPage() {
   const { data: poOrders, isLoading: poOrdersLoading } = usePOOrders(effectivePOId);
   const { data: closedPOs } = useClosedPOs(selectedMarket?.market_id || null);
   const { data: marketSettings } = useMarketSettings(selectedMarket?.market_id || null);
+  const { data: viewingPO } = useQuery({
+    queryKey: ['master-po-brand', effectivePOId],
+    queryFn: async () => {
+      if (!effectivePOId) return null;
+      const { data, error } = await (supabase as any)
+        .from('master_purchase_orders')
+        .select('brand_identity')
+        .eq('id', effectivePOId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { brand_identity?: 'kizkka' | 'zleti' } | null;
+    },
+    enabled: !!effectivePOId,
+  });
 
   const handleEnsurePO = (marketId: string) => {
     ensureMarketPO.mutate(marketId);
@@ -462,6 +478,7 @@ export default function AdminPOMasterPage() {
                   url_origen: string | null;
                   cantidad: number;
                   sku: string;
+                  unit_cost: number;
                 }>();
 
                 (poOrders || []).forEach((order: any) => {
@@ -504,6 +521,7 @@ export default function AdminPOMasterPage() {
                         url_origen,
                         cantidad: item.cantidad,
                         sku: item.sku,
+                        unit_cost: Number(item.product?.costo_base_excel || 0),
                       });
                     }
                   });
@@ -542,6 +560,7 @@ export default function AdminPOMasterPage() {
                             image: r.image,
                             cantidad: r.cantidad,
                             url_origen: r.url_origen,
+                            unit_cost: r.unit_cost,
                           })),
                         })}
                         className="gap-2"
@@ -555,6 +574,7 @@ export default function AdminPOMasterPage() {
                         onClick={() => generatePOBuyingListPDF({
                           po_number: viewingPONumber || selectedMarket?.active_po_number || '',
                           market_name: selectedMarket?.market_name || '',
+                          brand_identity: viewingPO?.brand_identity || 'kizkka',
                           generated_at: new Date().toISOString(),
                           items: rows.map(r => ({
                             sku: r.sku,
@@ -617,10 +637,10 @@ export default function AdminPOMasterPage() {
                                 href={row.url_origen}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline max-w-[160px] truncate"
+                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline max-w-[160px] whitespace-normal break-all select-all"
                               >
                                 <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{row.url_origen}</span>
+                                <span className="break-all select-all">{row.url_origen}</span>
                               </a>
                             ) : (
                               <span className="text-xs text-muted-foreground">—</span>

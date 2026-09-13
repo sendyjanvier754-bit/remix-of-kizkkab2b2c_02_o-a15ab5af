@@ -17,6 +17,7 @@ interface VariantSelectorProps {
   basePrice: number;
   baseImage?: string;
   isB2B?: boolean;
+  ignoreB2BLimits?: boolean;
   variantPrices?: Record<string, number>;
   b2cVariantPrices?: Record<string, number>;
   /** When provided (B2C seller page), only show product_variants whose id is in this set */
@@ -85,6 +86,7 @@ const VariantSelector = ({
   basePrice,
   baseImage,
   isB2B = false,
+  ignoreB2BLimits = false,
   variantPrices = {},
   b2cVariantPrices = {},
   allowedVariantIds,
@@ -125,11 +127,12 @@ const VariantSelector = ({
   const onVariantImageChangeRef = useRef(onVariantImageChange);
 
   const getEffectiveStock = useCallback((variant: ProductVariant): number => {
+    if (ignoreB2BLimits) return Number.MAX_SAFE_INTEGER;
     if (!isB2B && stockOverrides && typeof stockOverrides[variant.id] === 'number') {
       return stockOverrides[variant.id];
     }
     return variant.stock;
-  }, [isB2B, stockOverrides]);
+  }, [ignoreB2BLimits, isB2B, stockOverrides]);
 
   const getAvailabilityStatus = useCallback((variant: ProductVariant): string => {
     if (!isB2B && availabilityOverrides && availabilityOverrides[variant.id]) {
@@ -342,20 +345,28 @@ const VariantSelector = ({
     });
   }, [variants, orderedAttributeTypes, selectedAttributes]);
 
+  // Find a variant only after every required attribute has been selected.
+  // A partial match (for example, color without size) must not expose quantity controls.
+  const hasCompleteAttributeSelection = useMemo(() => {
+    if (!hasEAVAttributes || requiredAttributeTypes.length === 0) return true;
+    return requiredAttributeTypes.every(attrType => Boolean(selectedAttributes[attrType]));
+  }, [hasEAVAttributes, requiredAttributeTypes, selectedAttributes]);
+
   // Find matching variant for current selections
   const matchingVariant = useMemo(() => {
-    if (!variants || Object.keys(selectedAttributes).length === 0) return null;
+    if (!variants || !hasCompleteAttributeSelection) return null;
     
     return variants.find(v => {
       const combo = v.attribute_combination;
       if (!combo) return false;
       
-      for (const [key, value] of Object.entries(selectedAttributes)) {
+      for (const key of requiredAttributeTypes) {
+        const value = selectedAttributes[key];
         if (combo[key] !== value) return false;
       }
       return true;
     });
-  }, [variants, selectedAttributes]);
+  }, [variants, hasCompleteAttributeSelection, requiredAttributeTypes, selectedAttributes]);
 
   // Update image when matching variant changes OR when color is selected
   useEffect(() => {
@@ -445,6 +456,8 @@ const VariantSelector = ({
   };
 
   const handleAttributeSelect = (attrType: string, value: string) => {
+    // A new attribute path invalidates quantities selected for the previous path.
+    setSelections({});
     setSelectedAttributes(prev => {
       const newAttrs = { ...prev, [attrType]: value };
       
@@ -752,7 +765,7 @@ const VariantSelector = ({
                         {t('catalogExtra.variantSelector.lastUnits', { count: getEffectiveStock(matchingVariant) })}
                       </Badge>
                     )}
-                    {isB2B && matchingVariant.moq > 1 && (
+                    {isB2B && !ignoreB2BLimits && matchingVariant.moq > 1 && (
                       <Badge variant="outline" className="text-xs">{t('catalogExtra.variantSelector.min', { count: matchingVariant.moq })}</Badge>
                     )}
                   </div>
@@ -859,7 +872,7 @@ const VariantSelector = ({
                           {t('catalogExtra.variantSelector.soonAvailable')}
                         </Badge>
                       )}
-                      {isB2B && variant.moq > 1 && (
+                      {isB2B && !ignoreB2BLimits && variant.moq > 1 && (
                         <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
                           {t('catalogExtra.variantSelector.min', { count: variant.moq })}
                         </Badge>

@@ -66,7 +66,7 @@ const findMarginForCost = (baseCost: number, ranges: B2BMarginRange[]): { percen
   return { percent: range?.margin_percent ?? 30, range: range || null };
 };
 
-export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destinationCountryCode?: string) => {
+export const useProductsB2B = (filters: B2BFilters, page = 0, limit: number | null = 24, destinationCountryCode?: string) => {
   const { useActiveMarginRanges } = useB2BMarginRanges();
   const { data: marginRanges = [] } = useActiveMarginRanges();
 
@@ -163,7 +163,9 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
       );
 
       // Apply pagination early so we can fetch view data for only this page
-      const paginatedProducts = parentProducts.slice(page * limit, (page + 1) * limit);
+      const paginatedProducts = limit === null
+        ? parentProducts
+        : parentProducts.slice(page * limit, (page + 1) * limit);
       const paginatedIds = paginatedProducts.map(p => p.id);
 
       // Fetch shipping costs from v_business_panel_data — same function as Mi Catálogo
@@ -283,7 +285,10 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
         }
         
         // Use precio_b2b from vista (already includes market margins and fees)
-        const factoryCost = (p as any).costo_base_excel || (p as any).precio_mayorista_base || 0; // Base cost from Excel
+        // The pricing view exposes products.costo_base_excel as costo_fabrica.
+        // Keep the original field in the card so ZleTI can display the Excel cost.
+        const costoBaseExcel = Number((p as any).costo_base_excel ?? (p as any).costo_fabrica ?? 0);
+        const factoryCost = costoBaseExcel || (p as any).precio_mayorista_base || 0; // Base cost from Excel
         const finalB2BPrice = (p as any).precio_b2b || minVariantPrice || 0; // Final calculated price from vista
         const imagen = p.imagen_principal || "/placeholder.svg";
         
@@ -359,6 +364,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           nombre: p.nombre,
           
           // B2B Price Engine fields
+          costo_base_excel: costoBaseExcel,
           factory_cost: factoryCost,
           margin_percent: marginPercent,
           margin_value: marginValue,
@@ -379,6 +385,7 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit = 24, destin
           variant_ids: variants.map(v => v.id),
           variants: variantInfos,
           source_product_id: p.id,
+          source_url: (p as any).url_origen ?? null,
           
           // EAV-specific fields
           variant_type: attributeTypes[0] || 'unknown',

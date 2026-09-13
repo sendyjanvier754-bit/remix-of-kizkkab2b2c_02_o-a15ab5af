@@ -3693,6 +3693,7 @@ export type Database = {
         Row: {
           assigned_agent_id: string | null
           assignment_status: string | null
+          brand_identity: string
           auto_close_at: string | null
           china_tracking: string | null
           close_reason: string | null
@@ -3720,6 +3721,7 @@ export type Database = {
           total_actual_cost_usd: number | null
           total_amount: number | null
           total_expected_cost_usd: number | null
+          total_items: number
           total_orders: number | null
           total_quantity: number | null
           transit_tracking: string | null
@@ -3729,6 +3731,7 @@ export type Database = {
         Insert: {
           assigned_agent_id?: string | null
           assignment_status?: string | null
+          brand_identity?: string
           auto_close_at?: string | null
           china_tracking?: string | null
           close_reason?: string | null
@@ -3756,6 +3759,7 @@ export type Database = {
           total_actual_cost_usd?: number | null
           total_amount?: number | null
           total_expected_cost_usd?: number | null
+          total_items?: number
           total_orders?: number | null
           total_quantity?: number | null
           transit_tracking?: string | null
@@ -3765,6 +3769,7 @@ export type Database = {
         Update: {
           assigned_agent_id?: string | null
           assignment_status?: string | null
+          brand_identity?: string
           auto_close_at?: string | null
           china_tracking?: string | null
           close_reason?: string | null
@@ -3792,6 +3797,7 @@ export type Database = {
           total_actual_cost_usd?: number | null
           total_amount?: number | null
           total_expected_cost_usd?: number | null
+          total_items?: number
           total_orders?: number | null
           total_quantity?: number | null
           transit_tracking?: string | null

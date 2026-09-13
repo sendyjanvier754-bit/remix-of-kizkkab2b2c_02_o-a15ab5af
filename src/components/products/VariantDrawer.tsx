@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 
 const VariantDrawer: React.FC = () => {
   const location = useLocation();
+  const isZletiManualPO = location.pathname === '/admin/logistica-zleti';
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { isOpen, product, close, onComplete, preSelectedAttributes, preSelectedQuantities } = useVariantDrawerStore();
@@ -219,7 +220,7 @@ const VariantDrawer: React.FC = () => {
 
   // Calculate product-level MOQ validation (cart + new selection)
   const productId = product?.source_product_id || product?.id || '';
-  const productMoq = product?.moq || 1;
+  const productMoq = isZletiManualPO ? 1 : (product?.moq || 1);
   const cartProductTotal = getProductTotal(productId);
   const currentCartQty = cartProductTotal?.totalQuantity || 0;
   const combinedTotal = currentCartQty + totalQty;
@@ -231,7 +232,7 @@ const VariantDrawer: React.FC = () => {
 
     // Validate MOQ at product level (cart total + new selection)
     // Allow adding if combined total meets MOQ
-    if (isB2BUser && !meetsMOQWithSelection && totalQty > 0) {
+    if (isB2BUser && !isZletiManualPO && !meetsMOQWithSelection && totalQty > 0) {
       toast({ 
         title: t('catalogExtra.variantDrawer.minQtyTitle'), 
         description: t('catalogExtra.variantDrawer.minQtyDescription', { count: quantityStillNeeded, moq: productMoq }), 
@@ -500,6 +501,7 @@ const VariantDrawer: React.FC = () => {
               setSelectedVariantId(firstSelected ? firstSelected.variantId : null);
             }}
             onVariantImageChange={(img) => setVariantImage(img)}
+            ignoreB2BLimits={isZletiManualPO}
           />
 
           {/* B2B Business Panel */}

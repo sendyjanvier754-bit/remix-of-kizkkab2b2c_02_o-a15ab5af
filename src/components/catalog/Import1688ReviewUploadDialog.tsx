@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { find1688VariantColumns, parse1688RowVariant } from "@/lib/parse1688Variant";
 
 interface Props {
   open: boolean;
@@ -34,6 +35,8 @@ interface ParsedProduct {
   source_title_zh?: string;
   source_description_zh?: string;
   raw_payload: Record<string, unknown>;
+  variante_1_color?: string;
+  variante_2_talla?: string;
 }
 
 function pickHeader(headers: string[], keywords: string[]) {
@@ -93,10 +96,13 @@ export default function Import1688ReviewUploadDialog({ open, onOpenChange }: Pro
     const imgCol = pickHeader(headers, ["主图", "image", "imagen", "img"]);
     const skuCol = pickHeader(headers, ["sku", "编码"]);
 
-    // Group by source product id (or by title if no id)
+    const variantColumns = find1688VariantColumns(headers);
+
+    // Group by source product id. If the source has no product id (as in the
+    // standard 1688 SKU-list CSV), the whole file represents one parent.
     const groups = new Map<string, RawRow[]>();
     for (const r of rows) {
-      const key = String((idCol && r[idCol]) || (titleCol && r[titleCol]) || Math.random());
+      const key = String((idCol && r[idCol]) || "__single_1688_product__");
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(r);
     }
@@ -104,14 +110,25 @@ export default function Import1688ReviewUploadDialog({ open, onOpenChange }: Pro
     const out: ParsedProduct[] = [];
     for (const [key, group] of groups) {
       const first = group[0];
+      const firstTitle = titleCol ? String(first[titleCol] ?? "") : "";
+      const firstVariant = parse1688RowVariant(first, firstTitle, variantColumns);
       out.push({
         row_index: idx++,
         source_product_id_1688: String((idCol && first[idCol]) || key),
         sku: skuCol ? String(first[skuCol] ?? "") : undefined,
         image_url: imgCol ? String(first[imgCol] ?? "") : undefined,
-        source_title_zh: titleCol ? String(first[titleCol] ?? "") : "",
+        source_title_zh: firstVariant.productName || firstTitle,
         source_description_zh: descCol ? String(first[descCol] ?? "") : "",
-        raw_payload: { rows: group },
+        variante_1_color: firstVariant.color,
+        variante_2_talla: firstVariant.size,
+        raw_payload: {
+          rows: group,
+          variant_columns: variantColumns,
+          parsed_variants: group.map(row => {
+            const parsed = parse1688RowVariant(row, titleCol ? String(row[titleCol] ?? "") : "", variantColumns);
+            return { color: parsed.color, size: parsed.size, raw: parsed.raw };
+          }),
+        },
       });
     }
     return out;

@@ -67,7 +67,7 @@ serve(async (req) => {
               content: `You are a product translator for a B2B wholesale platform. Translate Chinese product titles and variants into ${langName}. Rules:
 - nombre: Faithful commercial translation of the original title into ${langName}. Do not invent new or creative names. Keep the essence of the original product.
 - variante_color: Translate ONLY into ${langName} (e.g. pink -> Rosa/Pink/Rose/Woz depending on target). NEVER include the original text in parentheses or another language. If variant1 contains color + number/size at the end (e.g. "钻石银 36") and variant2 exists with that size; return ONLY the descriptive part without the number. If variant1 is a full description of variant/model/finish; keep it complete but without trailing size numbers. If it is a model code; keep it exactly as-is.
-- variante_talla: Keep sizes and numeric/alphanumeric codes exactly as they are. Do not translate or modify.
+- variant2 is already separated by the application. Do not infer, translate or modify it; the application remains the source of truth for the size.
 - descripcion: Generate a detailed commercial description in ${langName} based on the product title. No character limit. FORBIDDEN to use commas (,) under any circumstance. Use periods; semicolons or line breaks instead.`,
             },
             {
@@ -93,14 +93,12 @@ serve(async (req) => {
                           index: { type: "number" },
                           nombre: { type: "string" },
                           variante_color: { type: "string" },
-                          variante_talla: { type: "string" },
                           descripcion: { type: "string" },
                         },
                         required: [
                           "index",
                           "nombre",
                           "variante_color",
-                          "variante_talla",
                           "descripcion",
                         ],
                         additionalProperties: false,

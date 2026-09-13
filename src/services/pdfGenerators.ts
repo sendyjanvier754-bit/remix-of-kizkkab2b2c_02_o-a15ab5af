@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 
 // Module-level branding name — set via setBrandingName() from BrandingApplier
@@ -107,7 +108,7 @@ const baseStyles = `
   .subtitle { color: #666; font-size: 12px; }
   .section { margin-bottom: 20px; }
   .section-title { font-weight: bold; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 15px; }
   th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
   th { background-color: #f5f5f5; font-weight: bold; }
   .total-row { font-weight: bold; background-color: #f0f0f0; }
@@ -1203,6 +1204,7 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
 export const generatePOBuyingListPDF = (data: {
   po_number: string;
   market_name: string;
+  brand_identity?: 'kizkka' | 'zleti';
   generated_at: string;
   items: {
     sku: string;
@@ -1211,9 +1213,33 @@ export const generatePOBuyingListPDF = (data: {
     image: string | null;
     cantidad: number;
     url_origen: string | null;
+    unit_cost?: number;
   }[];
 }) => {
   const totalUnits = data.items.reduce((s, i) => s + i.cantidad, 0);
+  const totalPurchaseCost = data.items.reduce(
+    (sum, item) => sum + Number(item.unit_cost || 0) * item.cantidad,
+    0,
+  );
+  const displaySku = (sku: string) => sku.replace(/-¥[\d.,]+-US\$[\d.,]+$/i, '');
+  const displayProductName = (name: string) => name.length > 58 ? `${name.slice(0, 55)}...` : name;
+  const displayVariantName = (name: string | null) => {
+    if (!name) return '—';
+    const translations: Record<string, string> = {
+      'negro': 'Black', 'noir': 'Black', 'blanco': 'White', 'blanc': 'White',
+      'rojo': 'Red', 'rouge': 'Red', 'azul': 'Blue', 'bleu': 'Blue',
+      'verde': 'Green', 'vert': 'Green', 'amarillo': 'Yellow', 'jaune': 'Yellow',
+      'gris': 'Gray', 'gris oscuro': 'Dark Gray', 'marrón': 'Brown', 'marron': 'Brown',
+      'café': 'Brown', 'cafe': 'Brown', 'beige': 'Beige', 'rosa': 'Pink',
+      'morado': 'Purple', 'naranja': 'Orange', 'talla': 'Size', 'color': 'Color',
+      'único': 'One Size', 'unico': 'One Size', 'marrón oscuro': 'Dark Brown',
+    };
+    return name.split(/(\s+|\/|:|-)/).map(token => translations[token.toLowerCase()] || token).join('');
+  };
+  const isZleti = data.brand_identity === 'zleti';
+  const documentBrand = isZleti ? 'ZleTI' : _platformBrandName;
+  const documentSubtitle = isZleti ? 'Purchase List · ZleTI Mexico' : 'Purchase List';
+  const documentFooter = isZleti ? 'ZleTI Mexico - Purchasing and international logistics' : `${_platformBrandName} - Port-au-Prince, Haiti`;
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1229,29 +1255,39 @@ export const generatePOBuyingListPDF = (data: {
         td.center { text-align:center; }
         .qty-badge { display:inline-block; background:#0f766e; color:#fff; border-radius:50%; width:32px; height:32px; line-height:32px; text-align:center; font-weight:bold; font-size:14px; }
         .total-row td { background:#f0fdf4; font-weight:bold; font-size:13px; }
-        a { color:#1d4ed8; font-size:10px; word-break:break-all; }
+        .purchase-total { margin-top:14px; padding:10px 12px; background:#f0fdf4; border:1px solid #86efac; font-size:14px; font-weight:bold; text-align:right; }
+        .excel-cost { white-space:nowrap; font-size:10px; }
+        .source-url {
+          color:#1d4ed8;
+          font-size:10px;
+          word-break:break-all;
+          user-select:all;
+        }
       </style>
     </head>
     <body>
       <div class="header">
-        <div class="logo">${_platformBrandName}</div>
-        <div class="subtitle">Lista de Artículos a Comprar</div>
+        <div class="logo">${documentBrand}</div>
+        <div class="subtitle">${documentSubtitle}</div>
         <div class="po-badge">${data.po_number} — ${data.market_name}</div>
       </div>
 
       <div class="section">
-        <p><strong>Fecha:</strong> ${format(new Date(data.generated_at), 'PPP p', { locale: es })}</p>
-        <p><strong>Total de variantes:</strong> ${data.items.length} &nbsp;|&nbsp; <strong>Total de unidades:</strong> ${totalUnits}</p>
+        <p><strong>Date:</strong> ${format(new Date(data.generated_at), 'PPP p', { locale: enUS })}</p>
+        <p><strong>Total variants:</strong> ${data.items.length} &nbsp;|&nbsp; <strong>Total units:</strong> ${totalUnits}</p>
       </div>
 
       <div class="section">
         <table>
           <thead>
             <tr>
-              <th style="width:70px">Imagen</th>
-              <th>Producto / Variante</th>
-              <th style="width:55px" class="center">Cant.</th>
-              <th>URL Origen</th>
+              <th style="width:70px">Image</th>
+              <th>Product</th>
+              <th>Variant</th>
+              <th style="width:80px" class="center">Unit price</th>
+              <th style="width:55px" class="center">Qty.</th>
+              <th style="width:90px" class="center">Total cost</th>
+              <th>Source URL</th>
             </tr>
           </thead>
           <tbody>
@@ -1260,41 +1296,44 @@ export const generatePOBuyingListPDF = (data: {
                 <td class="center">
                   ${item.image
                     ? `<img src="${item.image}" alt="${item.nombre}" class="item-img" />`
-                    : `<div class="img-placeholder">Sin<br>imagen</div>`}
+                    : `<div class="img-placeholder">No<br>image</div>`}
                 </td>
                 <td>
-                  <div style="font-weight:600;font-size:12px">${item.nombre}</div>
-                  ${item.variantName ? `<div class="variant-name">${item.variantName}</div>` : ''}
-                  <div class="sku-text">${item.sku}</div>
+                  <div style="font-weight:600;font-size:12px">${displayProductName(item.nombre)}</div>
+                  <div class="sku-text">${displaySku(item.sku)}</div>
                 </td>
-                <td class="center">
-                  <span class="qty-badge">${item.cantidad}</span>
-                </td>
+                <td class="variant-name">${displayVariantName(item.variantName)}</td>
+                <td class="center excel-cost">$${Number(item.unit_cost || 0).toFixed(2)}</td>
+                <td class="center"><span class="qty-badge">${item.cantidad}</span></td>
+                <td class="center">$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}</td>
                 <td>
                   ${item.url_origen
-                    ? `<a href="${item.url_origen}" target="_blank">${item.url_origen}</a>`
+                    ? `<a href="${item.url_origen}" target="_blank" class="source-url">${item.url_origen}</a>`
                     : '<span style="color:#bbb">—</span>'}
                 </td>
               </tr>
             `).join('')}
             <tr class="total-row">
-              <td colspan="2">TOTAL</td>
+              <td colspan="3">TOTAL</td>
+              <td></td>
               <td class="center">${totalUnits}</td>
+              <td class="center">$${totalPurchaseCost.toFixed(2)}</td>
               <td></td>
             </tr>
           </tbody>
         </table>
+        <div class="purchase-total">Approx. total purchase cost: $${totalPurchaseCost.toFixed(2)}</div>
       </div>
 
       <div class="footer">
-        <p>${_platformBrandName} - Puerto Príncipe, Haití</p>
-        <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
+        <p>${documentFooter}</p>
+        <p>Document generated on ${format(new Date(), 'PPP p', { locale: enUS })}</p>
       </div>
     </body>
     </html>
   `;
 
-  openPrintWindow(html, `Lista de Compra - ${data.po_number}`);
+  openPrintWindow(html, `Purchase List - ${data.po_number}`);
 };
 
 // Excel: Buying list for a PO (Artículos a Comprar)

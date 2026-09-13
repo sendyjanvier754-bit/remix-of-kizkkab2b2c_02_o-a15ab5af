@@ -107,6 +107,7 @@ export interface ProductB2BCard {
   rating?: number; // Average rating
   review_count?: number; // Number of reviews
   source_product_id?: string; // Reference to products table for variants
+  source_url?: string | null; // Original supplier/product URL
   variant_count?: number; // Number of variants
   variant_ids?: string[]; // IDs of all variants
   variants?: ProductVariantInfo[]; // Size/other variants from product_variants table
@@ -127,6 +128,8 @@ export interface ProductB2BCard {
   roi_percent?: number; // ROI percentage
   
   // B2B Price Engine fields
+  /** Factory cost imported from the product Excel. */
+  costo_base_excel?: number;
   factory_cost?: number; // Costo de fábrica (base)
   margin_percent?: number; // Porcentaje de margen aplicado
   margin_value?: number; // Valor del margen en USD

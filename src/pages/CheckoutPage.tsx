@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import Footer from '@/components/layout/Footer';
-import { StripeCardForm } from '@/components/payments/StripeCardForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2CCartItems } from '@/hooks/useB2CCartItems';
 import { useCartSelectionStore } from '@/stores/useCartSelectionStore';
@@ -84,9 +83,9 @@ const CheckoutPage = () => {
     setAppliedDiscount 
   } = useApplyDiscount();
 
-  // Redirect sellers/admins to B2B checkout
+  // Determine if user is B2B (role check) — keep as a plain value but do not return yet to avoid conditional hooks
   const isB2BUser = role === UserRole.SELLER || role === UserRole.ADMIN;
-  
+
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('address');
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [selectedPickupPoint, setSelectedPickupPoint] = useState<string | null>(null);
@@ -95,18 +94,13 @@ const CheckoutPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [realOrderId, setRealOrderId] = useState<string | null>(null);
-  const [stripeOrderAmount, setStripeOrderAmount] = useState<number>(0);
   const [paymentReference, setPaymentReference] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [showAddressDialog, setShowAddressDialog] = useState(false);
   const [validationErrors, setValidationErrors] = useState<CheckoutValidationError[]>([]);
   const [discountCode, setDiscountCode] = useState('');
 
-  // Redirect after hooks are called
-  if (isB2BUser && !authLoading) {
-    return <Navigate to="/seller/checkout" replace />;
-  }
+  // (redirect moved later to ensure hooks are always called in the same order)
 
   // Auto-select default address
   useEffect(() => {
@@ -256,7 +250,12 @@ const CheckoutPage = () => {
       }
     };
     checkDiscount();
-  }, [user, subtotal]);
+  }, [user, subtotal, appliedDiscount, checkCustomerDiscount, setAppliedDiscount]);
+
+  // Redirect sellers/admins to B2B checkout (placed after all hooks to comply with rules-of-hooks)
+  if (isB2BUser && !authLoading) {
+    return <Navigate to="/seller/checkout" replace />;
+  }
 
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) return;
@@ -383,23 +382,6 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {paymentMethod === 'stripe' && realOrderId && (
-                <div className="text-left mb-6">
-                  <p className="font-semibold mb-3 flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" /> Completa el pago con tarjeta
-                  </p>
-                  <StripeCardForm
-                    orderId={realOrderId}
-                    orderType="b2c"
-                    amount={Math.max(0.5, stripeOrderAmount)}
-                    currency="usd"
-                    onSuccess={() => {
-                      toast.success(t('cartExtra.paymentSentEmailConfirmation'));
-                    }}
-                  />
-                </div>
-              )}
-
               {paymentMethod !== 'stripe' && (
                 <div className="text-left bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
                   <p className="font-semibold text-yellow-800">{t('checkout.pendingVerification')}</p>
@@ -408,7 +390,6 @@ const CheckoutPage = () => {
                   </p>
                 </div>
               )}
-
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild variant="outline">
@@ -499,9 +480,6 @@ const CheckoutPage = () => {
 
       if (order) {
         setOrderId(order.id.slice(0, 8).toUpperCase());
-        setRealOrderId(order.id);
-        setStripeOrderAmount(totalWithShipping);
-
         
         // Complete the cart by marking it as completed
         try {
@@ -538,38 +516,25 @@ const CheckoutPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {!isMobile && <GlobalHeader />}
-
-      {/* Checkout Header Bar (SellerCheckout style) */}
-      <div className="bg-white border-b border-border">
-        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/carrito" className="text-[#071d7f] hover:opacity-70">
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <div className="px-3 py-1.5 rounded-lg bg-[#071d7f]">
-              <span className="text-sm font-semibold text-white">{t('cartExtra.checkoutB2C')}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg">
-            <ShoppingBag className="h-4 w-4 text-[#071d7f]" />
-            <span className="text-sm font-semibold text-[#071d7f]">
-              {t('cartExtra.productsCount', { count: totalItems })}
-            </span>
-          </div>
+      
+      <main className={`flex-1 container mx-auto px-4 py-6 ${isMobile ? 'pb-24' : 'pb-8'}`}>
+        <div className="mb-6">
+          <Link to="/carrito" className="flex items-center gap-2 text-[#071d7f] hover:underline mb-4">
+            <ArrowLeft className="w-4 h-4" />
+            {t('checkout.backToCart')}
+          </Link>
+          <h1 className="text-2xl md:text-3xl font-bold">{t('checkout.title')}</h1>
         </div>
-      </div>
 
-      <main className={`flex-1 container mx-auto px-4 pt-4 ${isMobile ? 'pb-24' : 'pb-8'}`}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-6">
             {/* Delivery Method Selection */}
-            <Card className={`p-0 overflow-hidden ${hasFieldError(validationErrors, 'deliveryMethod') ? 'border-red-500 border-2' : ''}`}>
-              <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
-                <Truck className="h-4 w-4 text-[#071d7f]" />
-                <h2 className="text-lg font-bold">{t('checkout.deliveryOption')}</h2>
-              </div>
-              <div className="p-4">
+            <Card className={`p-6 ${hasFieldError(validationErrors, 'deliveryMethod') ? 'border-red-500 border-2' : ''}`}>
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Truck className="h-5 w-5 text-[#071d7f]" />
+                {t('checkout.deliveryOption')}
+              </h2>
               {hasFieldError(validationErrors, 'deliveryMethod') && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -630,23 +595,26 @@ const CheckoutPage = () => {
                   </div>
                 </div>
               </RadioGroup>
-              </div>
             </Card>
 
             {/* Shipping Address */}
             {deliveryMethod === 'address' && (
-              <Card className={`p-0 overflow-hidden ${hasFieldError(validationErrors, 'selectedAddress') ? 'border-red-500 border-2' : ''}`}>
-                <div className="bg-gray-200 px-4 py-3 flex items-center justify-between">
+              <Card className={`p-6 ${hasFieldError(validationErrors, 'selectedAddress') ? 'border-red-500 border-2' : ''}`}>
+                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-[#071d7f]" />
+                    <MapPin className="h-5 w-5 text-[#071d7f]" />
                     {t('checkout.shippingAddress')}
                   </h2>
-                  <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowAddressDialog(true)}
+                  >
                     <Pencil className="h-4 w-4 mr-1" />
                     {t('checkout.manage')}
                   </Button>
                 </div>
-                <div className="p-4">
+
                 {hasFieldError(validationErrors, 'selectedAddress') && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -658,19 +626,26 @@ const CheckoutPage = () => {
                   <div className="text-center py-6 bg-muted/50 rounded-lg">
                     <MapPin className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground mb-3">{t('checkout.noAddresses')}</p>
-                    <Button onClick={() => setShowAddressDialog(true)} className="bg-[#071d7f] hover:bg-[#0a2a9f]">
+                    <Button 
+                      onClick={() => setShowAddressDialog(true)}
+                      className="bg-[#071d7f] hover:bg-[#0a2a9f]"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       {t('checkout.addAddress')}
                     </Button>
                   </div>
                 ) : (
-                  <RadioGroup value={selectedAddress || ''} onValueChange={setSelectedAddress} className="space-y-2">
+                  <RadioGroup 
+                    value={selectedAddress || ''} 
+                    onValueChange={setSelectedAddress}
+                    className="space-y-3"
+                  >
                     {addresses.map((address) => (
                       <div
                         key={address.id}
-                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                           selectedAddress === address.id
-                            ? 'border-[#071d7f] bg-[#071d7f]/5'
+                            ? 'border-[#071d7f] bg-blue-50/50'
                             : 'border-border hover:border-muted-foreground'
                         }`}
                         onClick={() => setSelectedAddress(address.id)}
@@ -678,127 +653,135 @@ const CheckoutPage = () => {
                         <RadioGroupItem value={address.id} id={address.id} className="mt-1" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm">{address.label}</span>
+                            <span className="font-medium">{address.label}</span>
                             {address.is_default && (
                               <Badge variant="secondary" className="text-xs">
-                                <Star className="h-3 w-3 mr-1" />
+                                 <Star className="h-3 w-3 mr-1" />
                                 {t('checkout.default')}
                               </Badge>
                             )}
                           </div>
                           <p className="text-sm font-medium">{address.full_name}</p>
-                          <p className="text-xs text-muted-foreground">{address.street_address}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm text-muted-foreground">{address.street_address}</p>
+                          <p className="text-sm text-muted-foreground">
                             {address.city}{address.state ? `, ${address.state}` : ''} - {address.country}
                           </p>
-                          {address.phone && <p className="text-xs text-muted-foreground">{t('cartExtra.phoneLabel')}: {address.phone}</p>}
+                          {address.phone && (
+                            <p className="text-sm text-muted-foreground">Tel: {address.phone}</p>
+                          )}
                         </div>
                       </div>
                     ))}
                   </RadioGroup>
                 )}
-                </div>
               </Card>
             )}
 
             {/* Pickup Points */}
             {deliveryMethod === 'pickup' && (
-              <Card className="p-0 overflow-hidden">
-                <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
-                  <Store className="h-4 w-4 text-[#071d7f]" />
-                  <h2 className="text-lg font-bold">{t('checkout.pickupPointTitle')}</h2>
-                </div>
-                <div className="p-4">
+              <Card className="p-6">
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <Store className="h-5 w-5 text-[#071d7f]" />
+                  {t('checkout.pickupPointTitle')}
+                </h2>
+
                 {pickupPoints.length === 0 ? (
                   <div className="text-center py-6 bg-muted/50 rounded-lg">
                     <Store className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground">{t('checkout.noPickupPoints')}</p>
                   </div>
                 ) : (
-                  <RadioGroup value={selectedPickupPoint || ''} onValueChange={setSelectedPickupPoint} className="space-y-2">
+                  <RadioGroup 
+                    value={selectedPickupPoint || ''} 
+                    onValueChange={setSelectedPickupPoint}
+                    className="space-y-3"
+                  >
                     {pickupPoints.map((point) => (
                       <div
                         key={point.id}
-                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                           selectedPickupPoint === point.id
-                            ? 'border-[#071d7f] bg-[#071d7f]/5'
+                            ? 'border-[#071d7f] bg-blue-50/50'
                             : 'border-border hover:border-muted-foreground'
                         }`}
                         onClick={() => setSelectedPickupPoint(point.id)}
                       >
                         <RadioGroupItem value={point.id} id={`pickup-${point.id}`} className="mt-1" />
                         <div className="flex-1">
-                          <p className="font-semibold text-sm">{point.name}</p>
-                          <p className="text-xs text-muted-foreground">{point.address}</p>
-                          <p className="text-xs text-muted-foreground">{point.city}, {point.country}</p>
-                          {point.phone && <p className="text-xs text-muted-foreground">{t('cartExtra.phoneLabel')}: {point.phone}</p>}
+                          <p className="font-semibold">{point.name}</p>
+                          <p className="text-sm text-muted-foreground">{point.address}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {point.city}, {point.country}
+                          </p>
+                          {point.phone && (
+                            <p className="text-sm text-muted-foreground">Tel: {point.phone}</p>
+                          )}
                         </div>
                         {point.is_active && (
-                          <Badge variant="outline" className="text-green-600">{t('cartExtra.active')}</Badge>
+                          <Badge variant="outline" className="text-green-600">
+                            Activo
+                          </Badge>
                         )}
                       </div>
                     ))}
                   </RadioGroup>
                 )}
-                </div>
               </Card>
             )}
 
             {/* Order Items */}
-            <Card className="p-0 overflow-hidden">
-              <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
-                <Package className="h-4 w-4 text-[#071d7f]" />
-                <h2 className="text-lg font-bold">{t('cartExtra.productsWithCount', { count: totalItems })}</h2>
-              </div>
-              <div className="p-4">
-                <div className={`space-y-3 ${items.length > 4 ? 'max-h-[340px] overflow-y-auto pr-2' : ''}`}>
-                  {items.map((item) => (
-                    <div key={item.id} className="flex gap-3 pb-3 border-b last:border-b-0">
-                      <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Package className="h-5 w-5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm line-clamp-1">{item.name}</p>
-                        <div className="flex items-center gap-1 flex-wrap mt-0.5">
-                          {item.color && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
-                              {item.color}
-                            </span>
-                          )}
-                          {item.size && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
-                              {item.size}
-                            </span>
-                          )}
-                          <span className="text-xs text-muted-foreground">{item.quantity} x ${item.price.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <p className="font-semibold text-sm text-[#071d7f]">${(item.price * item.quantity).toFixed(2)}</p>
+            <Card className="p-6">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Package className="h-5 w-5 text-[#071d7f]" />
+                {t('common.orderSummary')} ({totalItems} {t('common.products')})
+              </h2>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {items.map((item) => (
+                  <div key={item.id} className="flex gap-3 pb-3 border-b last:border-b-0">
+                    <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Package className="h-5 w-5 text-muted-foreground" />
+                      )}
                     </div>
-                  ))}
-                </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm line-clamp-1">{item.name}</p>
+                      <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                        {item.color && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
+                            {item.color}
+                          </span>
+                        )}
+                        {item.size && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
+                            {item.size}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground">{item.quantity} x ${item.price.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <p className="font-semibold text-sm">${(item.price * item.quantity).toFixed(2)}</p>
+                  </div>
+                ))}
               </div>
             </Card>
 
             {/* Payment Method */}
-            <Card className={`p-0 overflow-hidden ${hasFieldError(validationErrors, 'paymentMethod') ? 'border-red-500 border-2' : ''}`}>
-              <div className="bg-gray-200 px-4 py-3 flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-[#071d7f]" />
-                <h2 className="text-lg font-bold">{t('checkout.paymentMethod')}</h2>
-              </div>
-              <div className="p-4">
+            <Card className={`p-6 ${hasFieldError(validationErrors, 'paymentMethod') ? 'border-red-500 border-2' : ''}`}>
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-[#071d7f]" />
+                {t('checkout.paymentMethod')}
+              </h2>
+              
               {hasFieldError(validationErrors, 'paymentMethod') && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-red-700">{getFieldError(validationErrors, 'paymentMethod')}</p>
                 </div>
               )}
-
-              <div className="space-y-2">
+              
+              <div className="space-y-3">
                 {paymentMethods.map((method) => {
                   const Icon = method.icon;
                   const isSelected = paymentMethod === method.id;
@@ -835,19 +818,19 @@ const CheckoutPage = () => {
               {/* Payment Details */}
               {paymentMethod === 'transfer' && platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-2">{t('cartExtra.bankDetailsFor', { platform: platformPaymentInfo.platformName })}</h4>
+                  <h4 className="font-semibold text-green-800 mb-2">Datos Bancarios - {platformPaymentInfo.platformName}</h4>
                   <div className="space-y-1 text-sm text-green-700">
-                    <p><span className="font-medium">{t('cartExtra.bankLabel')}:</span> {platformPaymentInfo.bank.bank_name || t('cartExtra.notConfigured')}</p>
-                    <p><span className="font-medium">{t('cartExtra.typeLabel')}:</span> {platformPaymentInfo.bank.account_type || t('cartExtra.notConfigured')}</p>
-                    <p><span className="font-medium">{t('cartExtra.accountLabel')}:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
-                    <p><span className="font-medium">{t('cartExtra.beneficiaryLabel')}:</span> {platformPaymentInfo.bank.account_holder || t('cartExtra.notConfigured')}</p>
+                    <p><span className="font-medium">Banco:</span> {platformPaymentInfo.bank.bank_name || 'No configurado'}</p>
+                    <p><span className="font-medium">Tipo:</span> {platformPaymentInfo.bank.account_type || 'No configurado'}</p>
+                    <p><span className="font-medium">Cuenta:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
+                    <p><span className="font-medium">Beneficiario:</span> {platformPaymentInfo.bank.account_holder || 'No configurado'}</p>
                   </div>
                    <div className="mt-3">
-                    <Label>{t('cartExtra.transferReference')} <span className="text-xs text-muted-foreground font-normal">{t('cartExtra.optionalUploadHint')}</span></Label>
+                    <Label>Referencia de Transferencia <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarla al subir el comprobante)</span></Label>
                     <Input
                       value={paymentReference}
                       onChange={(e) => setPaymentReference(e.target.value)}
-                      placeholder={t('cartExtra.referenceNumberPlaceholder')}
+                      placeholder="Número de referencia (opcional)"
                       className="mt-1"
                     />
                   </div>
@@ -856,7 +839,7 @@ const CheckoutPage = () => {
 
               {paymentMethod === 'transfer' && !platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-700">{t('cartExtra.noBankDataConfigured')}</p>
+                  <p className="text-sm text-yellow-700">No se han configurado datos bancarios en la plataforma.</p>
                 </div>
               )}
 
@@ -866,7 +849,7 @@ const CheckoutPage = () => {
                   {/* Mode selector when both available */}
                   {moncashAutoAvailable && moncashManualAvailable && (
                     <div className="p-4 bg-muted/30 rounded-lg space-y-3">
-                      <Label className="font-medium">{t('cartExtra.howToPay')}</Label>
+                      <Label className="font-medium">¿Cómo desea pagar?</Label>
                       <div className="grid gap-2">
                         <div 
                           className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${
@@ -882,10 +865,10 @@ const CheckoutPage = () => {
                           <div className="flex-1">
                             <span className="font-medium flex items-center gap-2">
                               <Smartphone className="h-4 w-4 text-yellow-500" />
-                              {t('cartExtra.automaticPayment')}
+                              Pago Automático
                             </span>
                             <p className="text-xs text-muted-foreground">
-                              {t('cartExtra.automaticPaymentDesc')}
+                              Pago instantáneo vía API, confirmación automática
                             </p>
                           </div>
                         </div>
@@ -901,9 +884,9 @@ const CheckoutPage = () => {
                             {paymentMode === 'manual' && <Check className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">{t('cartExtra.manualPayment')}</span>
+                            <span className="font-medium">Pago Manual</span>
                             <p className="text-xs text-muted-foreground">
-                              {t('cartExtra.manualPaymentDesc')}
+                              Pague y proporcione el código de transacción
                             </p>
                           </div>
                         </div>
@@ -916,10 +899,11 @@ const CheckoutPage = () => {
                     <div className="p-4 rounded-lg border-2 border-yellow-300 bg-yellow-50/50">
                       <div className="flex items-center gap-2 mb-2">
                         <Smartphone className="h-5 w-5 text-[#94111f]" />
-                        <h4 className="font-semibold text-[#94111f]">{t('cartExtra.automaticPaymentMoncash')}</h4>
+                        <h4 className="font-semibold text-[#94111f]">Pago Automático MonCash</h4>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        {t('cartExtra.moncashRedirectMessage')}
+                        Al confirmar, será redirigido a MonCash para completar el pago de forma segura.
+                        La confirmación será automática una vez procesado.
                       </p>
                     </div>
                   )}
@@ -928,18 +912,18 @@ const CheckoutPage = () => {
                   {paymentMode === 'manual' && moncashManualAvailable && platformPaymentInfo?.moncash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#94111f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#94111f' }}>
-                        {t('cartExtra.moncashDetailsFor', { platform: platformPaymentInfo.platformName })}
+                        Datos MonCash - {platformPaymentInfo.platformName}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#94111f' }}>
-                        <p><span className="font-medium">{t('cartExtra.numberLabel')}:</span> {platformPaymentInfo.moncash.phone_number || t('cartExtra.notConfigured')}</p>
-                        <p><span className="font-medium">{t('cartExtra.nameLabel')}:</span> {platformPaymentInfo.moncash.name || t('cartExtra.notConfigured')}</p>
+                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.moncash.phone_number || 'No configurado'}</p>
+                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.moncash.name || 'No configurado'}</p>
                       </div>
                       <div className="mt-3">
-                        <Label>{t('cartExtra.transactionCode')} <span className="text-xs text-muted-foreground font-normal">{t('cartExtra.optionalUploadHint')}</span></Label>
+                        <Label>Código de Transacción <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarlo al subir el comprobante)</span></Label>
                         <Input
                           value={paymentReference}
                           onChange={(e) => setPaymentReference(e.target.value)}
-                          placeholder={t('cartExtra.moncashTransactionPlaceholder')}
+                          placeholder="Código de transacción MonCash (opcional)"
                           className="mt-1"
                         />
                       </div>
@@ -950,7 +934,7 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!moncashAutoAvailable && !moncashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">{t('cartExtra.moncashUnavailable')}</p>
+                      <p className="text-sm text-yellow-700">MonCash no está disponible actualmente.</p>
                     </div>
                   )}
                 </div>
@@ -962,7 +946,7 @@ const CheckoutPage = () => {
                   {/* Mode selector when both available */}
                   {natcashAutoAvailable && natcashManualAvailable && (
                     <div className="p-4 bg-muted/30 rounded-lg space-y-3">
-                      <Label className="font-medium">{t('cartExtra.howToPay')}</Label>
+                      <Label className="font-medium">¿Cómo desea pagar?</Label>
                       <div className="grid gap-2">
                         <div 
                           className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${
@@ -978,10 +962,10 @@ const CheckoutPage = () => {
                           <div className="flex-1">
                             <span className="font-medium flex items-center gap-2">
                               <Smartphone className="h-4 w-4 text-yellow-500" />
-                              {t('cartExtra.automaticPayment')}
+                              Pago Automático
                             </span>
                             <p className="text-xs text-muted-foreground">
-                              {t('cartExtra.automaticPaymentDesc')}
+                              Pago instantáneo vía API, confirmación automática
                             </p>
                           </div>
                         </div>
@@ -997,9 +981,9 @@ const CheckoutPage = () => {
                             {paymentMode === 'manual' && <Check className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">{t('cartExtra.manualPayment')}</span>
+                            <span className="font-medium">Pago Manual</span>
                             <p className="text-xs text-muted-foreground">
-                              {t('cartExtra.manualPaymentDesc')}
+                              Pague y proporcione el código de transacción
                             </p>
                           </div>
                         </div>
@@ -1012,10 +996,11 @@ const CheckoutPage = () => {
                     <div className="p-4 rounded-lg border-2 border-yellow-300 bg-yellow-50/50">
                       <div className="flex items-center gap-2 mb-2">
                         <Smartphone className="h-5 w-5 text-[#071d7f]" />
-                        <h4 className="font-semibold text-[#071d7f]">{t('cartExtra.automaticPaymentNatcash')}</h4>
+                        <h4 className="font-semibold text-[#071d7f]">Pago Automático NatCash</h4>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        {t('cartExtra.natcashRedirectMessage')}
+                        Al confirmar, será redirigido a NatCash para completar el pago de forma segura.
+                        La confirmación será automática una vez procesado.
                       </p>
                     </div>
                   )}
@@ -1024,18 +1009,18 @@ const CheckoutPage = () => {
                   {paymentMode === 'manual' && natcashManualAvailable && platformPaymentInfo?.natcash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#071d7f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#071d7f' }}>
-                        {t('cartExtra.natcashDetailsFor', { platform: platformPaymentInfo.platformName })}
+                        Datos NatCash - {platformPaymentInfo.platformName}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#071d7f' }}>
-                        <p><span className="font-medium">{t('cartExtra.numberLabel')}:</span> {platformPaymentInfo.natcash.phone_number || t('cartExtra.notConfigured')}</p>
-                        <p><span className="font-medium">{t('cartExtra.nameLabel')}:</span> {platformPaymentInfo.natcash.name || t('cartExtra.notConfigured')}</p>
+                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.natcash.phone_number || 'No configurado'}</p>
+                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.natcash.name || 'No configurado'}</p>
                       </div>
                       <div className="mt-3">
-                        <Label>{t('cartExtra.transactionCode')} <span className="text-xs text-muted-foreground font-normal">{t('cartExtra.optionalUploadHint')}</span></Label>
+                        <Label>Código de Transacción <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarlo al subir el comprobante)</span></Label>
                         <Input
                           value={paymentReference}
                           onChange={(e) => setPaymentReference(e.target.value)}
-                          placeholder={t('cartExtra.natcashTransactionPlaceholder')}
+                          placeholder="Código de transacción NatCash (opcional)"
                           className="mt-1"
                         />
                       </div>
@@ -1046,27 +1031,23 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!natcashAutoAvailable && !natcashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">{t('cartExtra.natcashUnavailable')}</p>
+                      <p className="text-sm text-yellow-700">NatCash no está disponible actualmente.</p>
                     </div>
                   )}
                 </div>
               )}
-              </div>
+
             </Card>
 
             {/* Order Notes */}
-            <Card className="p-0 overflow-hidden">
-              <div className="bg-gray-200 px-4 py-3">
-                <h2 className="text-lg font-bold">{t('checkout.orderNotes')}</h2>
-              </div>
-              <div className="p-4">
-                <Textarea
-                  value={orderNotes}
-                  onChange={(e) => setOrderNotes(e.target.value)}
-                  placeholder={t('checkout.orderNotesPlaceholder')}
-                  rows={3}
-                />
-              </div>
+            <Card className="p-6">
+              <h2 className="text-lg font-bold mb-4">{t('checkout.orderNotes')}</h2>
+              <Textarea
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                placeholder={t('checkout.orderNotesPlaceholder')}
+                rows={3}
+              />
             </Card>
           </div>
 
@@ -1084,7 +1065,7 @@ const CheckoutPage = () => {
                 {/* Shipping cost breakdown */}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    {t('shipping.cost')}{storeIds.length > 1 ? ` (${t('cartExtra.storesCount', { count: storeIds.length })})` : ''}
+                    {t('shipping.cost')}{storeIds.length > 1 ? ` (${storeIds.length} tiendas)` : ''}
                   </span>
                   <span>
                     {deliveryMethod === 'pickup'
@@ -1101,12 +1082,12 @@ const CheckoutPage = () => {
                         <Tag className="h-4 w-4 text-green-600" />
                         <div>
                           <p className="text-sm font-medium text-green-800">
-                            {appliedDiscount.code || t('cartExtra.customerDiscount')}
+                            {appliedDiscount.code || 'Descuento Cliente'}
                           </p>
                           <p className="text-xs text-green-600">
                             {appliedDiscount.discountType === 'percentage' 
-                              ? t('cartExtra.percentDiscount', { value: appliedDiscount.discountValue })
-                              : t('cartExtra.amountDiscount', { value: appliedDiscount.discountValue.toFixed(2) })
+                              ? `${appliedDiscount.discountValue}% de descuento`
+                              : `$${appliedDiscount.discountValue.toFixed(2)} de descuento`
                             }
                           </p>
                         </div>
@@ -1127,7 +1108,7 @@ const CheckoutPage = () => {
                         <Input
                           value={discountCode}
                           onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                          placeholder={t('cartExtra.enterCodePlaceholder')}
+                          placeholder="Ingresa código"
                           className="text-sm"
                         />
                         <Button
@@ -1173,7 +1154,7 @@ const CheckoutPage = () => {
 
               {deliveryMethod === 'pickup' && pickupPoints.find(p => p.id === selectedPickupPoint) && (
                 <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">{t('cartExtra.pickupAt')}:</p>
+                  <p className="text-xs text-muted-foreground mb-1">Retiro en:</p>
                   <p className="text-sm font-medium">{pickupPoints.find(p => p.id === selectedPickupPoint)?.name}</p>
                   <p className="text-xs text-muted-foreground">{pickupPoints.find(p => p.id === selectedPickupPoint)?.city}</p>
                 </div>
@@ -1203,7 +1184,7 @@ const CheckoutPage = () => {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground mt-3">
-                {t('cartExtra.confirmTermsAgreement')}
+                Al confirmar, aceptas nuestros términos y condiciones
               </p>
             </Card>
           </div>

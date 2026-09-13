@@ -8,9 +8,10 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
+  headerActions?: React.ReactNode;
 }
 
-export function AdminLayout({ children, title, subtitle }: AdminLayoutProps) {
+export function AdminLayout({ children, title, subtitle, headerActions }: AdminLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-muted/30">
@@ -32,6 +33,7 @@ export function AdminLayout({ children, title, subtitle }: AdminLayoutProps) {
               </div>
 
               <div className="flex items-center gap-2">
+                {headerActions}
                 <Link to="/admin/soporte-chat" className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
                   <MessageCircle className="h-5 w-5" />
                 </Link>

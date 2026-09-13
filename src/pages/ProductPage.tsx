@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useMemo, useRef } from "react";
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +19,6 @@ import { useRecommendedProducts } from "@/hooks/useMarketplaceData";
 import { useStoreFollow } from "@/hooks/useTrendingStores";
 import { useSEO } from "@/hooks/useSEO";
 import { useBranding } from "@/hooks/useBranding";
-import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
@@ -435,19 +435,6 @@ const ProductPage = () => {
   // realStore: joined store object OR full storeData fetched via ?seller= param
   const realStore = ((product as any)?.store || storeData) as {id: string;name: string;logo: string | null;slug: string | null;} | null;
 
-  // Translate product name and description into current UI language
-  const translationEntityId = (product as any)?.source_product?.id || (product as any)?.id || null;
-  const { translated: translatedProduct } = useTranslatedContent(
-    'product',
-    translationEntityId,
-    {
-      name: (product as any)?.nombre,
-      description: (product as any)?.descripcion,
-    }
-  );
-  const displayName: string = (translatedProduct as any)?.name || (product as any)?.nombre || '';
-  const displayDescription: string = (translatedProduct as any)?.description || (product as any)?.descripcion || '';
-
   const { followStore, unfollowStore, checkIfFollowing } = useStoreFollow();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
@@ -481,7 +468,7 @@ const ProductPage = () => {
   useEffect(() => {
     if (!user || !realStore?.id) return;
     checkIfFollowing(realStore.id, user.id).then(setIsFollowing);
-  }, [user, realStore?.id]);
+  }, [user, realStore?.id, checkIfFollowing]);
 
   const handleStoreFollowToggle = async () => {
     if (!user) {
@@ -639,8 +626,8 @@ const ProductPage = () => {
     // If B2B enforce MOQ sum
     if (isB2BUser && totalSelectedQty > 0 && totalSelectedQty < currentMoq) {
       toast({
-        title: t('pagesExtra.product.minQuantityTitle'),
-        description: t('pagesExtra.product.minQuantityDesc', { moq: currentMoq }),
+        title: 'Cantidad mÃ­nima',
+        description: `El pedido total debe ser al menos ${currentMoq} unidades.`,
         className: 'bg-yellow-100'
       });
       return;
@@ -850,8 +837,8 @@ const ProductPage = () => {
         stockDisponible: stockB2B
       });
       toast({
-        title: t('pagesExtra.product.addedToB2BOrder'),
-        description: t('pagesExtra.product.unitsOf', { qty: quantity, name: product.nombre }),
+        title: "Agregado al pedido B2B",
+        description: `${quantity} unidades de ${product.nombre}`,
         className: "bg-blue-600 text-white border-none"
       });
     } else {
@@ -868,8 +855,8 @@ const ProductPage = () => {
         });
       }
       toast({
-        title: t('pagesExtra.product.productAdded'),
-        description: t('pagesExtra.product.addedToCart', { name: product.nombre, qty: quantity })
+        title: "Producto agregado",
+        description: `${product.nombre} (x${quantity}) se agregÃ³ al carrito`
       });
     }
   };
@@ -883,8 +870,8 @@ const ProductPage = () => {
       // Enforce MOQ for B2B
       if (isB2BUser && totalSelectedQty < currentMoq) {
         toast({
-          title: t('pagesExtra.product.minQuantityTitle'),
-          description: t('pagesExtra.product.minQuantityDesc', { moq: currentMoq }),
+          title: 'Cantidad mÃ­nima',
+          description: `El pedido total debe ser al menos ${currentMoq} unidades.`,
           className: 'bg-yellow-100'
         });
         return;
@@ -920,7 +907,7 @@ const ProductPage = () => {
         }
       });
       toast({
-        title: isB2BUser ? t('pagesExtra.product.addedToB2BOrder') : t('pagesExtra.product.productAdded'),
+        title: isB2BUser ? 'Agregado al pedido B2B' : 'Producto agregado',
         description: `${product.nombre} (x${totalSelectedQty})`
       });
       return;
@@ -988,7 +975,7 @@ const ProductPage = () => {
               <Search className="w-4 h-4 text-white/70 flex-shrink-0" />
               <input
               type="text"
-              placeholder={product?.nombre || t('pagesExtra.product.searchPlaceholderDefault')}
+              placeholder={product?.nombre || "Buscar..."}
               defaultValue={product?.nombre || ""}
               className="flex-1 bg-transparent text-sm text-white placeholder-white/60 outline-none"
               readOnly />
@@ -1214,16 +1201,16 @@ const ProductPage = () => {
               <div className="flex flex-col gap-2">
                 <h1 className={`text-lg md:text-xl font-semibold text-gray-900 leading-tight mb-0`}>
                   {titleExpanded ? <div className="flex items-start gap-2">
-                      <div className="whitespace-normal">{displayName}</div>
+                      <div className="whitespace-normal">{product.nombre}</div>
                       {showTitleToggle && <button onClick={() => setTitleExpanded(false)} className="ml-2 text-xs font-semibold px-2 py-1 rounded border border-[#071d7f] text-[#071d7f] pulse-btn bg-white z-10" aria-expanded={true} aria-label="Collapse product title">
-                          {t('pagesExtra.product.viewLess')}
+                          View less
                         </button>}
                     </div> : <div className="flex items-baseline gap-1">
                       <div className="flex-1 line-clamp-2 break-words">
-                        {displayName}
+                        {product.nombre}
                       </div>
                       {showTitleToggle && <button onClick={() => setTitleExpanded(true)} className="inline-block align-baseline ml-1 text-xs font-semibold px-2 py-1 rounded border border-[#071d7f] text-[#071d7f] pulse-btn bg-white z-10" aria-expanded={false} aria-label="Expand product title">
-                          {t('pagesExtra.product.viewMore')}
+                          View more
                         </button>}
                     </div>}
                 </h1>
@@ -1268,7 +1255,7 @@ const ProductPage = () => {
                     B2B
                   </span>}
                 {isB2BUser && dynamicPrice !== null && <span className="text-xs font-medium text-white bg-blue-600 px-2 py-0.5 rounded">
-                    {t('pagesExtra.product.dynamicEngine')} ⚡
+                    Motor DinÃ¡mico âš¡
                   </span>}
               </div>
 
@@ -1279,7 +1266,7 @@ const ProductPage = () => {
                   </div>
                   <div className="h-4 w-px bg-gray-300"></div>
                   <div className="text-green-600 font-medium">
-                    {t('pagesExtra.product.marginLabel', { percent: businessSummary?.profitPercentage })}
+                    Margen: {businessSummary?.profitPercentage}%
                   </div>
                 </div>}
             </div>
@@ -1369,7 +1356,7 @@ const ProductPage = () => {
               {/* Sección del Vendedor - Desktop (visible siempre, encima de los accordions) */}
               {realStore &&
               <div className="bg-white rounded-xl p-5 mt-6 mb-4 border border-gray-200 shadow-sm">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('pagesExtra.product.soldBy')}</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Vendido por</p>
                   <div className="flex items-center gap-4">
                     <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center hover:opacity-90 transition">
                       {realStore.logo ?
@@ -1387,15 +1374,15 @@ const ProductPage = () => {
                                 {[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-3.5 h-3.5 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}
                               </div>
                               <span className="text-sm font-semibold text-gray-800">{storeRatingData.avg}</span>
-                              <span className="text-sm text-gray-400">{t('pagesExtra.product.reviewsCount', { count: storeRatingData.count })}</span>
+                              <span className="text-sm text-gray-400">({storeRatingData.count} reseñas)</span>
                             </> :
-                      <span className="text-sm text-gray-400">{t('pagesExtra.product.noReviewsYet')}</span>}
+                      <span className="text-sm text-gray-400">Sin reseñas aún</span>}
                       </div>
                     </div>
                     <button type="button" onClick={handleStoreFollowToggle} disabled={followLoading} className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition disabled:opacity-50 ${isFollowing ? 'bg-red-50 border-red-300 text-red-600' : 'bg-[#071d7f] border-[#071d7f] text-white'}`}>
                       <Heart className={`w-4 h-4 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
                       {storeFollowersCount > 0 && <span>{storeFollowersCount}</span>}
-                      <span>{isFollowing ? t('pagesExtra.product.following') : t('pagesExtra.product.follow')}</span>
+                      <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
                     </button>
                   </div>
                 </div>
@@ -1413,7 +1400,7 @@ const ProductPage = () => {
                       style={{ borderColor: '#071d7f' }}>
                       
                       <p className="text-sm text-gray-700 whitespace-pre-line prose prose-sm max-w-none text-gray-600">
-                        {displayDescription}
+                        {product?.descripcion}
                       </p>
                     </div>
                   </AccordionContent>
@@ -1453,7 +1440,7 @@ const ProductPage = () => {
                       style={{ borderColor: '#071d7f' }}>
                       
                       <p className="text-sm text-gray-700 whitespace-pre-line">
-                        {displayDescription}
+                        {product?.descripcion}
                       </p>
                     </div>
                   </div>
@@ -1468,7 +1455,7 @@ const ProductPage = () => {
                 {/* Sección del Vendedor - Mobile */}
                 {realStore &&
               <div className="bg-white rounded-xl p-4 mt-6 mb-2 border border-gray-100 shadow-sm">
-                    <h2 className="text-sm font-bold text-gray-700 mb-3">{t('pagesExtra.product.soldBy')}</h2>
+                    <h2 className="text-sm font-bold text-gray-700 mb-3">Vendido por</h2>
                     <div className="flex items-center gap-3">
                       <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
                         {realStore.logo ? <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" /> : <span className="text-base font-bold text-[#071d7f]">{realStore.name.substring(0, 2).toUpperCase()}</span>}
@@ -1478,13 +1465,13 @@ const ProductPage = () => {
                           {realStore.name}<ExternalLink className="w-3 h-3 opacity-40" />
                         </button>
                         <div className="flex items-center gap-1 mt-0.5">
-                          {storeRatingData ? <><div className="flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-3 h-3 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}</div><span className="text-xs font-semibold text-gray-700">{storeRatingData.avg}</span><span className="text-xs text-gray-400">({storeRatingData.count})</span></> : <span className="text-xs text-gray-400">{t('pagesExtra.product.noReviews')}</span>}
+                          {storeRatingData ? <><div className="flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-3 h-3 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}</div><span className="text-xs font-semibold text-gray-700">{storeRatingData.avg}</span><span className="text-xs text-gray-400">({storeRatingData.count})</span></> : <span className="text-xs text-gray-400">Sin reseñas</span>}
                         </div>
                       </div>
                       <button type="button" onClick={handleStoreFollowToggle} disabled={followLoading} className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border disabled:opacity-50 ${isFollowing ? 'bg-red-50 border-red-300 text-red-600' : 'bg-[#071d7f] border-[#071d7f] text-white'}`}>
                         <Heart className={`w-3.5 h-3.5 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
                         {storeFollowersCount > 0 && <span>{storeFollowersCount}</span>}
-                        <span>{isFollowing ? t('pagesExtra.product.following') : t('pagesExtra.product.follow')}</span>
+                        <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
                       </button>
                     </div>
                   </div>

@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { GroupedProduct, VariantRow, DetectedAttribute } from "@/hooks/useSmartProductGrouper";
 import { groupProductsByParent } from "@/hooks/useSmartProductGrouper";
 import { detectAttributeType, parseColorToHex } from "@/hooks/useEAVAttributes";
+import { find1688VariantColumns, parse1688RowVariant } from "@/lib/parse1688Variant";
 
 interface Import1688DialogProps {
   open: boolean;
@@ -55,6 +56,9 @@ interface ProcessedRow {
   proveedor: string;
   variante_1_color: string;
   variante_2_talla: string;
+  variante_1_color_original: string;
+  variante_2_talla_original: string;
+  variante_raw: string;
   descripcion_corta: string;
   costo: string;
   moq: number;
@@ -79,6 +83,8 @@ interface ColumnMapping {
   url_imagen: string;
   url_producto: string;
   imagen_principal: string;
+  variante_1_color: string;
+  variante_2_talla: string;
 }
 
 type Step = "upload" | "mapping" | "preview" | "translation" | "export";
@@ -137,6 +143,8 @@ const MAPPING_FIELDS: { key: keyof ColumnMapping; label: string; keywords: strin
   { key: "url_imagen", label: "URL Imagen Variante", keywords: ["Imagen SKU", "SKU图", "图片", "Image", "imagen", "Img"] },
   { key: "imagen_principal", label: "Imagen Principal Producto", keywords: ["Imagen_Principal", "imagen_principal", "main_image", "main image", "foto_principal", "product_image"] },
   { key: "url_producto", label: "URL Producto", keywords: ["Product_Url", "Product_URL", "URL", "url", "链接", "link"] },
+  { key: "variante_1_color", label: "Variante 1 · Color", keywords: ["Variante_1_color", "Variante_1_Color", "variant1_color", "variant1color", "color", "颜色"] },
+  { key: "variante_2_talla", label: "Variante 2 · Talla", keywords: ["Variante_2_Talla", "Variante_2_talla", "variant2_size", "variant2size", "talla", "size", "尺码", "尺寸"] },
 ];
 
 const autoDetect = (headers: string[], keywords: string[]): string => {
@@ -158,7 +166,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
   const [rawData, setRawData] = useState<RawRow[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
-    sku_interno: "", nombre: "", costo: "", stock: "", url_imagen: "", imagen_principal: "", url_producto: "",
+    sku_interno: "", nombre: "", costo: "", stock: "", url_imagen: "", imagen_principal: "", url_producto: "", variante_1_color: "", variante_2_talla: "",
   });
   const [productMainImage, setProductMainImage] = useState("");
   const [confirmNoMainImage, setConfirmNoMainImage] = useState(false);
@@ -216,7 +224,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     setStep("upload");
     setRawData([]);
     setHeaders([]);
-    setColumnMapping({ sku_interno: "", nombre: "", costo: "", stock: "", url_imagen: "", imagen_principal: "", url_producto: "" });
+    setColumnMapping({ sku_interno: "", nombre: "", costo: "", stock: "", url_imagen: "", imagen_principal: "", url_producto: "", variante_1_color: "", variante_2_talla: "" });
     setProcessedData([]);
     setProductMainImage("");
     setConfirmNoMainImage(false);
@@ -282,15 +290,9 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       setHeaders(detectedHeaders);
 
       // Auto-detect mapping suggestions
-      const autoMap: ColumnMapping = {
-        sku_interno: autoDetect(detectedHeaders, MAPPING_FIELDS[0].keywords),
-        nombre: autoDetect(detectedHeaders, MAPPING_FIELDS[1].keywords),
-        costo: autoDetect(detectedHeaders, MAPPING_FIELDS[2].keywords),
-        stock: autoDetect(detectedHeaders, MAPPING_FIELDS[3].keywords),
-        url_imagen: autoDetect(detectedHeaders, MAPPING_FIELDS[4].keywords),
-        imagen_principal: autoDetect(detectedHeaders, MAPPING_FIELDS[5].keywords),
-        url_producto: autoDetect(detectedHeaders, MAPPING_FIELDS[6].keywords),
-      };
+      const autoMap = Object.fromEntries(
+        MAPPING_FIELDS.map(field => [field.key, autoDetect(detectedHeaders, field.keywords)]),
+      ) as ColumnMapping;
       setColumnMapping(autoMap);
       setStep("mapping");
       toast.success(`${rows.length} filas detectadas. Configura el mapeo de columnas.`);
@@ -308,13 +310,17 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     try {
       const cols = columnMapping;
 
-      // Detect variant columns: columns NOT mapped to any standard field
+      const detectedVariantColumns = find1688VariantColumns(headers);
+      const explicitColorCol = cols.variante_1_color || detectedVariantColumns.color;
+      const explicitSizeCol = cols.variante_2_talla || detectedVariantColumns.size;
+
+      // Legacy fallback for files whose variant columns have non-standard names.
       const mappedCols = new Set(Object.values(cols).filter(Boolean));
-      const variantHeaders = headers.filter(h => !mappedCols.has(h));
+      const variantHeaders = headers.filter(h => !mappedCols.has(h) && h !== explicitColorCol && h !== explicitSizeCol);
 
       // Detect which variant columns look like color vs size
-      let colorCol = "";
-      let sizeCol = "";
+      let colorCol = explicitColorCol;
+      let sizeCol = explicitSizeCol;
       for (const vh of variantHeaders) {
         const lower = vh.toLowerCase();
         if (!colorCol && (lower.includes("color") || lower.includes("颜色") || lower.includes("规格1") || lower.includes("variant1"))) {
@@ -330,8 +336,10 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
 
       const processed: ProcessedRow[] = rawData.map((row) => {
         const id = row[cols.sku_interno] || "";
-        const v1 = colorCol ? (row[colorCol] || "") : "";
-        const v2 = sizeCol ? (row[sizeCol] || "") : "";
+        const rawTitle = (row[cols.nombre] || "").toString().replace(/_/g, " ").trim();
+        const parsedVariant = parse1688RowVariant(row, rawTitle, { color: colorCol, size: sizeCol });
+        const v1 = parsedVariant.color;
+        const v2 = parsedVariant.size;
 
         const skuParts = [id, v1, v2].filter(Boolean);
         const sku = skuParts.join("-").replace(/\s+/g, "").slice(0, 50);
@@ -339,12 +347,15 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         return {
           product_id: id,
           sku_interno: sku,
-          nombre: (row[cols.nombre] || "").replace(/_/g, " ").trim(),
-          nombre_original: (row[cols.nombre] || "").replace(/_/g, " ").trim(),
+          nombre: parsedVariant.productName || rawTitle,
+          nombre_original: parsedVariant.productName || rawTitle,
           url_producto: row[cols.url_producto] || manualUrlProducto,
           proveedor: "1688",
           variante_1_color: v1,
           variante_2_talla: v2,
+          variante_1_color_original: v1,
+          variante_2_talla_original: v2,
+          variante_raw: parsedVariant.raw,
           descripcion_corta: "",
           costo: (row[cols.costo] || "0").toString().replace(/[^0-9.]/g, "") || "0",
           moq: 3,
@@ -945,6 +956,9 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         Proveedor: row.proveedor,
         Variante_1_Color: row.variante_1_color,
         Variante_2_Talla: row.variante_2_talla,
+        Variante_1_Color_Original: row.variante_1_color_original,
+        Variante_2_Talla_Original: row.variante_2_talla_original,
+        Variante_Raw: row.variante_raw,
         Descripcion_Corta: row.descripcion_corta,
         Costo: row.costo,
         MOQ: row.moq,
