@@ -136,8 +136,10 @@ export default function AdminZletiLogisticsPage() {
     onSuccess: ({ result, payload }) => {
       queryClient.invalidateQueries({ queryKey: ['zleti-po-history'] });
       queryClient.invalidateQueries({ queryKey: ['zleti-po-history-detail', selectedPoId] });
-      generatePOBuyingListPDF({ po_number: result.po_number, market_name: 'ZleTI Mexico', brand_identity: 'zleti', generated_at: new Date().toISOString(), items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })) });
-      toast.success(`${result.po_number} updated and reprinted`);
+      setPdfTitle(`Lista de compra · ${result.po_number}`);
+      setPdfHtml(buildPOBuyingListHtml({ po_number: result.po_number, market_name: 'ZleTI Mexico', brand_identity: 'zleti', generated_at: new Date().toISOString(), items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })) }));
+      setPdfOpen(true);
+      toast.success(`${result.po_number} actualizada`);
     },
     onError: (error: any) => toast.error(error?.message || 'Could not update the PO'),
   });
