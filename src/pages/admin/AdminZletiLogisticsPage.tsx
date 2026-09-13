@@ -217,6 +217,14 @@ export default function AdminZletiLogisticsPage() {
           </div>}
         </DialogContent>
       </Dialog>
+
+      <PdfPreviewModal
+        open={pdfOpen}
+        onOpenChange={setPdfOpen}
+        html={pdfHtml}
+        title={pdfTitle}
+        generating={createPO.isPending || updatePO.isPending}
+      />
     </AdminLayout>
   );
 }
