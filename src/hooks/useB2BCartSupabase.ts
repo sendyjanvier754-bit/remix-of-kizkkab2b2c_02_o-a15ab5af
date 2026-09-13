@@ -84,6 +84,8 @@ export const useB2BCartSupabase = () => {
             let moq = 1;
             let stockDisponible = 0;
             let imagen: string | undefined = undefined;
+            let sourceUrl: string | null = null;
+            
             
             if (item.product_id) {
               const [productResult, variantResult] = await Promise.all([
