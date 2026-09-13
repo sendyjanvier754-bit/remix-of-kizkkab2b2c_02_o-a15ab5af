@@ -1201,7 +1201,7 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
 };
 
 // PDF: Buying list for a PO (Artículos a Comprar)
-export const generatePOBuyingListPDF = (data: {
+export const buildPOBuyingListHtml = (data: {
   po_number: string;
   market_name: string;
   brand_identity?: 'kizkka' | 'zleti';
