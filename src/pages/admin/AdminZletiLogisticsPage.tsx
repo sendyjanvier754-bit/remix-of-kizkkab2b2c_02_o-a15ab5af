@@ -7,8 +7,7 @@ import { useProductsB2B } from '@/hooks/useProductsB2B';
 import { useB2BCartSupabase } from '@/hooks/useB2BCartSupabase';
 import { B2BFilters } from '@/types/b2b';
 import { supabase } from '@/integrations/supabase/client';
-import { buildPOBuyingListHtml } from '@/services/pdfGenerators';
-import { PdfPreviewModal } from '@/components/pdf/PdfPreviewModal';
+import { generatePOBuyingListPDF } from '@/services/pdfGenerators';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,9 +26,6 @@ export default function AdminZletiLogisticsPage() {
   const [selectedPoId, setSelectedPoId] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [pdfOpen, setPdfOpen] = useState(false);
-  const [pdfHtml, setPdfHtml] = useState<string | null>(null);
-  const [pdfTitle, setPdfTitle] = useState('Documento PO');
   const [editingItems, setEditingItems] = useState<any[]>([]);
   const [editingNotes, setEditingNotes] = useState('');
   const queryClient = useQueryClient();
@@ -100,18 +96,16 @@ export default function AdminZletiLogisticsPage() {
       return { result, payload };
     },
     onSuccess: ({ result, payload }) => {
-      setPdfTitle(`Lista de compra · ${result.po_number}`);
-      setPdfHtml(buildPOBuyingListHtml({
+      generatePOBuyingListPDF({
         po_number: result.po_number,
         market_name: 'ZleTI México',
         brand_identity: 'zleti',
         generated_at: new Date().toISOString(),
         items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })),
-      }));
-      setPdfOpen(true);
+      });
       clearCart();
       setNotes('');
-      toast.success(`PO ${result.po_number} creada`, { description: 'Vista previa del documento lista para imprimir o guardar.' });
+      toast.success(`PO ${result.po_number} creada`, { description: 'Se abrió la vista imprimible para el agente de compra en China.' });
     },
     onError: (error: any) => toast.error(error?.message || 'No se pudo crear la PO ZleTI'),
   });
@@ -139,10 +133,8 @@ export default function AdminZletiLogisticsPage() {
     onSuccess: ({ result, payload }) => {
       queryClient.invalidateQueries({ queryKey: ['zleti-po-history'] });
       queryClient.invalidateQueries({ queryKey: ['zleti-po-history-detail', selectedPoId] });
-      setPdfTitle(`Lista de compra · ${result.po_number}`);
-      setPdfHtml(buildPOBuyingListHtml({ po_number: result.po_number, market_name: 'ZleTI Mexico', brand_identity: 'zleti', generated_at: new Date().toISOString(), items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })) }));
-      setPdfOpen(true);
-      toast.success(`${result.po_number} actualizada`);
+      generatePOBuyingListPDF({ po_number: result.po_number, market_name: 'ZleTI Mexico', brand_identity: 'zleti', generated_at: new Date().toISOString(), items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })) });
+      toast.success(`${result.po_number} updated and reprinted`);
     },
     onError: (error: any) => toast.error(error?.message || 'Could not update the PO'),
   });
@@ -181,17 +173,17 @@ export default function AdminZletiLogisticsPage() {
         </> : <Card><CardContent className="py-16 text-center text-muted-foreground">No se encontraron productos en el Catalogue Maître B2B.</CardContent></Card>}
 
         <Card>
-          <CardHeader><CardTitle>Generar Manifest / PO</CardTitle><CardDescription>El contenido del carrito se guardará como PO-ZLT y se mostrará en una vista previa dentro de la página.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Generar Manifest / PO</CardTitle><CardDescription>El contenido del carrito se guardará como PO-ZLT y abrirá su vista imprimible.</CardDescription></CardHeader>
           <CardContent className="space-y-4">
             <div><Label htmlFor="zleti-notes">Notas para el agente (opcional)</Label><Textarea id="zleti-notes" value={notes} onChange={event => setNotes(event.target.value)} placeholder="Instrucciones de compra, empaque o consolidación..." className="mt-1" /></div>
-            <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-sm text-muted-foreground">{cart.totalItems} productos · {cart.totalQuantity} unidades · ${Number(cart.subtotal || 0).toFixed(2)}</span><Button onClick={() => { setPdfHtml(null); setPdfOpen(true); createPO.mutate(); }} disabled={cart.items.length === 0 || createPO.isPending} className="gap-2">{createPO.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}{createPO.isPending ? 'Creando PO...' : 'Generar Manifest / PO'}</Button></div>
+            <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-sm text-muted-foreground">{cart.totalItems} productos · {cart.totalQuantity} unidades · ${Number(cart.subtotal || 0).toFixed(2)}</span><Button onClick={() => createPO.mutate()} disabled={cart.items.length === 0 || createPO.isPending} className="gap-2">{createPO.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}{createPO.isPending ? 'Creando PO...' : 'Generar Manifest / PO'}</Button></div>
           </CardContent>
         </Card>
       </div>
 
       <Dialog open={cartOpen} onOpenChange={setCartOpen}>
         <DialogContent className="h-[92vh] max-h-[92vh] w-[96vw] max-w-[96vw] overflow-y-auto">
-          <DialogHeader><div className="flex flex-wrap items-center gap-3"><Button onClick={() => { setCartOpen(false); setPdfHtml(null); setPdfOpen(true); createPO.mutate(); }} disabled={cart.items.length === 0 || createPO.isPending} size="sm" className="gap-2"><FileDown className="h-4 w-4" />{createPO.isPending ? 'Generating...' : 'Generate Manifest / PO'}</Button><DialogTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> ZleTI Shopping Cart <Badge>{cart.totalItems}</Badge></DialogTitle></div></DialogHeader>
+          <DialogHeader><div className="flex flex-wrap items-center gap-3"><Button onClick={() => { setCartOpen(false); createPO.mutate(); }} disabled={cart.items.length === 0 || createPO.isPending} size="sm" className="gap-2"><FileDown className="h-4 w-4" />{createPO.isPending ? 'Generating...' : 'Generate Manifest / PO'}</Button><DialogTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> ZleTI Shopping Cart <Badge>{cart.totalItems}</Badge></DialogTitle></div></DialogHeader>
           <div className="space-y-3">
             {cart.items.length === 0 ? <p className="py-8 text-center text-muted-foreground">Your cart is empty.</p> : cart.items.map(item => <div key={item.id} className="flex items-center gap-4 rounded-lg border p-3"><div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted"><img src={item.imagen || '/placeholder.svg'} alt={item.nombre} className="h-full w-full object-cover" /></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{item.nombre}</p><p className="break-all text-xs text-muted-foreground">{item.sku} {item.color || item.size ? `· ${[item.color, item.size].filter(Boolean).join(' / ')}` : ''}</p>{item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()} className="mt-1 block break-all text-xs text-primary underline hover:text-primary/80 select-all">{item.sourceUrl}</a>}</div><Input type="number" min={item.moq} value={item.quantity} onChange={event => updateQuantity(item.id, Math.max(item.moq, Number(event.target.value) || item.moq))} className="w-20" /><span className="w-24 text-right text-sm font-semibold">${Number(item.totalPrice || 0).toFixed(2)}</span><Button variant="ghost" size="icon" onClick={() => removeItem(item.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>)}
             <div className="flex justify-end border-t pt-3 text-sm font-semibold">Subtotal: ${Number(cart.subtotal || 0).toFixed(2)}</div>
@@ -217,14 +209,6 @@ export default function AdminZletiLogisticsPage() {
           </div>}
         </DialogContent>
       </Dialog>
-
-      <PdfPreviewModal
-        open={pdfOpen}
-        onOpenChange={setPdfOpen}
-        html={pdfHtml}
-        title={pdfTitle}
-        generating={createPO.isPending || updatePO.isPending}
-      />
     </AdminLayout>
   );
 }
