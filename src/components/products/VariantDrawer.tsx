@@ -446,7 +446,7 @@ const VariantDrawer: React.FC = () => {
     >
       {/* Overlay */}
       <div 
-        className="absolute inset-0 bg-black/50 transition-opacity duration-300"
+        className={`absolute inset-0 transition-opacity duration-300 ${isMobile ? 'bg-black/50' : 'bg-transparent'}`}
         onClick={() => close()} 
         style={{ animation: 'fadeIn 0.3s ease-out' }}
       />
