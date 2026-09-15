@@ -232,6 +232,8 @@ const VariantDrawer: React.FC = () => {
   const handleConfirm = async () => {
     if (!product) return;
 
+    const addedItems: Array<any> = [];
+
     // Validate MOQ at product level (cart total + new selection)
     // Allow adding if combined total meets MOQ
     if (isB2BUser && !isZletiManualPO && !meetsMOQWithSelection && totalQty > 0) {
@@ -274,6 +276,21 @@ const VariantDrawer: React.FC = () => {
         const size = (attrs.size ?? attrs.talla ?? null) as string | null;
         const variantLabel = matchedVariant ? `${color || ''}${color && size ? ' / ' : ''}${size || ''}`.trim() : '';
         const itemName = variantLabel ? `${displayName} - ${variantLabel}` : displayName;
+        const normalizedItem = {
+          product_id: product.source_product_id || product.id,
+          variant_id: sel.variantId || null,
+          sku: matchedVariant?.sku || product.sku || product.id,
+          product_name: itemName,
+          variant_name: variantLabel || null,
+          quantity: qty,
+          unit_cost: matchedVariant?.price ?? product.costB2B ?? product.price ?? 0,
+          image_url: variantImage || matchedVariant?.images?.[0] || product.images?.[0] || null,
+          source_url: product.source_url,
+          color,
+          size,
+        };
+
+        addedItems.push(normalizedItem);
 
         if (isB2BUser) {
           const itemData = {
@@ -326,6 +343,22 @@ const VariantDrawer: React.FC = () => {
       toast({ title: isB2BUser ? t('catalogExtra.variantDrawer.addedToB2BOrder') : t('catalogExtra.variantDrawer.addedToCart'), description: `${displayName} ${t('catalogExtra.variantDrawer.unitsSuffix', { count: totalQty })}` });
     } else if (totalQty > 0) {
       // No variants exist for this product — add directly
+      const normalizedItem = {
+        product_id: product.source_product_id || product.id,
+        variant_id: null,
+        sku: product.sku || product.id,
+        product_name: displayName,
+        variant_name: null,
+        quantity: totalQty,
+        unit_cost: product.costB2B ?? product.price ?? 0,
+        image_url: product.images?.[0] || null,
+        source_url: product.source_url,
+        color: null,
+        size: null,
+      };
+
+      addedItems.push(normalizedItem);
+
       if (isB2BUser) {
         const itemData = {
           userId: user.id,
@@ -378,7 +411,12 @@ const VariantDrawer: React.FC = () => {
     setIsVariantValid(false);
     setValidationErrors([]);
     setVariantSelectorResetKey((current) => current + 1);
-    if (onComplete) onComplete();
+
+    if (isZletiManualPO) {
+      close();
+    }
+
+    if (onComplete) onComplete(addedItems);
   };
 
   // No renderizar en SellerCartPage (moved after all hooks to avoid hooks count mismatch)

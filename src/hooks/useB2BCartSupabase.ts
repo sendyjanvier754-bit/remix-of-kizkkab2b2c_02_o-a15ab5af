@@ -115,6 +115,7 @@ export const useB2BCartSupabase = () => {
             let moq = 1;
             let stockDisponible = 0;
             let imagen: string | undefined = undefined;
+            let product: any = null;
             
             if (item.product_id) {
               const [productResult, variantResult] = await Promise.all([
@@ -132,7 +133,7 @@ export const useB2BCartSupabase = () => {
                   : Promise.resolve({ data: null }),
               ]);
 
-              const product = productResult.data;
+              product = productResult.data;
               const variantImages = (variantResult.data as { images?: string[] | null } | null)?.images;
               const variantImage = Array.isArray(variantImages) ? variantImages[0] : null;
 

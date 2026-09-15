@@ -116,6 +116,7 @@ const AdminLogisticsPage = lazyWithRetry(() => import("./pages/admin/AdminLogist
 const AdminInventoryPage = lazyWithRetry(() => import("./pages/admin/AdminInventoryPage"));
 const AdminPOMasterPage = lazyWithRetry(() => import("./pages/admin/AdminPOMasterPage"));
 const AdminZletiLogisticsPage = lazyWithRetry(() => import("./pages/admin/AdminZletiLogisticsPage"));
+const AdminZletiShippingEstimatePage = lazyWithRetry(() => import("./pages/admin/AdminZletiShippingEstimatePage"));
 const AdminPaymentMethodsPage = lazyWithRetry(() => import("./pages/admin/AdminPaymentMethodsPage"));
 const AdminPaymentKeys = lazyWithRetry(() => import("./pages/admin/AdminPaymentKeys"));
 const AdminMarketplaceSections = lazyWithRetry(() => import("./pages/admin/AdminMarketplaceSections"));
@@ -513,6 +514,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminZletiLogisticsPage /></LazyRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/logistica-zleti/:poId/estimacion-envio"
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminZletiShippingEstimatePage /></LazyRoute>
                 </ProtectedRoute>
               }
             />

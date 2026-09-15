@@ -27,7 +27,7 @@ type State = {
   preSelectedAttributes?: Record<string, string> | null;
   /** Pre-selected variant quantities from ProductPage VariantSelector */
   preSelectedQuantities?: Record<string, number> | null;
-  open: (product: VariantDrawerProduct, onComplete?: () => void, preSelectedAttributes?: Record<string, string>, preSelectedQuantities?: Record<string, number>) => void;
+  open: (product: VariantDrawerProduct, onComplete?: (addedItems?: any[]) => void, preSelectedAttributes?: Record<string, string>, preSelectedQuantities?: Record<string, number>) => void;
   close: () => void;
 };
 

@@ -20,9 +20,10 @@ interface ProductCardB2BProps {
   cartItem?: CartItemB2B;
   whatsappNumber?: string;
   showExcelCost?: boolean;
+  onOpenZletiPriceCalculator?: (product: ProductB2BCard) => void;
 }
 
-const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "50312345678", showExcelCost = false }: ProductCardB2BProps) => {
+const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "50312345678", showExcelCost = false, onOpenZletiPriceCalculator }: ProductCardB2BProps) => {
   const { role } = useAuth();
   const isAdmin = role === UserRole.ADMIN;
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -166,9 +167,13 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (onOpenZletiPriceCalculator) {
+                onOpenZletiPriceCalculator(product);
+                return;
+              }
               setShowPricingModal(true);
             }}
-            title="Ver desglose de precios"
+            title={onOpenZletiPriceCalculator ? "Abrir calculadora de precio sugerido" : "Ver desglose de precios"}
           >
             <TrendingUp className="w-4 h-4" />
           </Button>

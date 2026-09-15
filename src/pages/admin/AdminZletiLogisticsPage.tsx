@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import ProductCardB2B from '@/components/b2b/ProductCardB2B';
 import { useProductsB2B } from '@/hooks/useProductsB2B';
-import { useB2BCartSupabase } from '@/hooks/useB2BCartSupabase';
-import { B2BFilters } from '@/types/b2b';
+import { useB2BCartSupabase, ZLETI_MANUAL_CART_EVENT } from '@/hooks/useB2BCartSupabase';
+import { B2BFilters, ProductB2BCard } from '@/types/b2b';
 import { supabase } from '@/integrations/supabase/client';
 import { generatePOBuyingListPDF } from '@/services/pdfGenerators';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,14 +21,30 @@ import { FileDown, History, Loader2, Plus, Printer, RefreshCw, Search, ShoppingC
 import { toast } from 'sonner';
 
 export default function AdminZletiLogisticsPage() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<B2BFilters>({ searchQuery: '', category: null, stockStatus: 'all', sortBy: 'newest' });
   const [notes, setNotes] = useState('');
   const { cart, updateQuantity, removeItem, clearCart, refetch } = useB2BCartSupabase();
   const [selectedPoId, setSelectedPoId] = useState<string | null>(null);
+  const [poDetailOpen, setPoDetailOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [editingItems, setEditingItems] = useState<any[]>([]);
   const [editingNotes, setEditingNotes] = useState('');
+  const [poAddProductModalOpen, setPoAddProductModalOpen] = useState(false);
+  const [selectedEstimateProductId, setSelectedEstimateProductId] = useState<string>('');
+  const [zletiPricingModalOpen, setZletiPricingModalOpen] = useState(false);
+  const [priceMarket, setPriceMarket] = useState<'mercado_libre' | 'amazon' | 'tienda_propia'>('mercado_libre');
+  const [priceShippingCostInput, setPriceShippingCostInput] = useState<string>('0');
+  const [targetBenefitInput, setTargetBenefitInput] = useState<string>('30');
+  const [targetBenefitMode, setTargetBenefitMode] = useState<'percent' | 'amount'>('percent');
+  const [estimateQuantityInput, setEstimateQuantityInput] = useState<string>('1');
+  const [priceExpenseRows, setPriceExpenseRows] = useState<Array<{ id: string; label: string; amount: string; type: 'fixed' | 'percent' }>>([
+    { id: 'default-expense-row', label: 'Gasto adicional', amount: '0', type: 'fixed' },
+  ]);
+  const [shippingEstimateRateInput, setShippingEstimateRateInput] = useState<string>('0.50');
+  const [shippingEstimateRateMode, setShippingEstimateRateMode] = useState<'kg' | 'g'>('kg');
+  const [shippingEstimateExtraExpensesInput, setShippingEstimateExtraExpensesInput] = useState<string>('0');
   const queryClient = useQueryClient();
   const { data, isLoading } = useProductsB2B(filters, 0, null);
   const { data: poHistory = [], isLoading: historyLoading } = useQuery({
@@ -51,7 +69,28 @@ export default function AdminZletiLogisticsPage() {
       const { data: items, error: itemsError } = await (supabase as any)
         .from('zleti_manual_po_items').select('*').eq('po_id', selectedPoId).order('created_at');
       if (itemsError) throw itemsError;
-      return { po, items: items || [] };
+
+      const productIds: string[] = Array.from(
+        new Set((items || []).flatMap((item: any) => (item.product_id ? [String(item.product_id)] : [])))
+      );
+      let productsById = new Map<string, any>();
+
+      if (productIds.length > 0) {
+        const { data: products, error: productsError } = await supabase
+          .from('products')
+          .select('id, peso_kg, weight_kg')
+          .in('id', productIds);
+
+        if (productsError) throw productsError;
+        productsById = new Map((products || []).map((product: any) => [product.id, product]));
+      }
+
+      const normalizedItems = (items || []).map((item: any) => ({
+        ...item,
+        weight_kg: Number(productsById.get(item.product_id)?.weight_kg ?? productsById.get(item.product_id)?.peso_kg ?? 0),
+      }));
+
+      return { po, items: normalizedItems };
     },
   });
 
@@ -61,6 +100,243 @@ export default function AdminZletiLogisticsPage() {
       setEditingNotes(selectedPo.po.notes || '');
     }
   }, [selectedPo]);
+
+  useEffect(() => {
+    if (!data?.products?.length) return;
+    if (!selectedEstimateProductId || !data.products.some(product => product.id === selectedEstimateProductId)) {
+      setSelectedEstimateProductId(data.products[0].id);
+    }
+  }, [data?.products, selectedEstimateProductId]);
+
+  const selectedEstimateProduct = data?.products?.find(product => product.id === selectedEstimateProductId) ?? data?.products?.[0] ?? null;
+
+  const createPriceExpenseRow = (label = '', amount = '0', type: 'fixed' | 'percent' = 'fixed') => ({
+    id: `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    label,
+    amount,
+    type,
+  });
+
+  const updateExpenseRow = (id: string, field: 'label' | 'amount' | 'type', value: string) => {
+    setPriceExpenseRows(current => current.map(row => row.id === id ? { ...row, [field]: value } : row));
+  };
+
+  const addPriceExpenseRow = () => {
+    setPriceExpenseRows(current => [...current, createPriceExpenseRow('Gasto adicional', '0', 'fixed')]);
+  };
+
+  const removePriceExpenseRow = (rowId: string) => {
+    setPriceExpenseRows(current => {
+      if (current.length === 1) {
+        return [createPriceExpenseRow('Gasto adicional', '0', 'fixed')];
+      }
+      return current.filter(row => row.id !== rowId);
+    });
+  };
+
+  const loadSavedPriceEstimate = async (productId: string) => {
+    if (!productId) return;
+
+    try {
+      const { data: productData, error } = await supabase
+        .from('products')
+        .select('last_fee_calculation')
+        .eq('id', productId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      const savedEstimate = (productData?.last_fee_calculation ?? null) as Record<string, any> | null;
+
+      if (!savedEstimate) {
+        setPriceMarket('mercado_libre');
+        setPriceShippingCostInput('0');
+        setTargetBenefitInput('30');
+        setTargetBenefitMode('percent');
+        setEstimateQuantityInput('1');
+        setPriceExpenseRows([createPriceExpenseRow('Gasto adicional', '0', 'fixed')]);
+        return;
+      }
+
+      const rows: Array<{ id: string; label: string; amount: string; type: 'fixed' | 'percent' }> = Array.isArray(savedEstimate.extra_expenses) && savedEstimate.extra_expenses.length > 0
+        ? savedEstimate.extra_expenses.map((expense: any, index: number) => ({
+            id: `saved-expense-${productId}-${index}`,
+            label: expense?.label || `Gasto adicional ${index + 1}`,
+            amount: String(expense?.amount ?? 0),
+            type: expense?.type === 'percent' ? 'percent' : 'fixed',
+          }))
+        : [createPriceExpenseRow('Gasto adicional', '0', 'fixed')];
+
+      setPriceMarket(savedEstimate.market || 'mercado_libre');
+      setPriceShippingCostInput(String(savedEstimate.shipping_cost ?? 0));
+      setTargetBenefitInput(String(savedEstimate.target_benefit_value ?? 30));
+      setTargetBenefitMode(savedEstimate.target_benefit_mode === 'amount' ? 'amount' : 'percent');
+      setEstimateQuantityInput(String(savedEstimate.quantity ?? 1));
+      setPriceExpenseRows(rows);
+    } catch (error) {
+      console.error('No se pudo cargar la estimación guardada:', error);
+      setPriceExpenseRows([createPriceExpenseRow('Gasto adicional', '0', 'fixed')]);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedEstimateProductId) {
+      void loadSavedPriceEstimate(selectedEstimateProductId);
+    }
+  }, [selectedEstimateProductId]);
+
+  const baseCost = Number(
+    selectedEstimateProduct?.costo_base_excel ??
+    selectedEstimateProduct?.factory_cost ??
+    selectedEstimateProduct?.precio_b2b ??
+    0
+  );
+  const productWeightKg = Number(selectedEstimateProduct?.weight_kg ?? 0);
+  const extraExpenses = priceExpenseRows.reduce((sum, expense) => {
+    const amount = Number(expense.amount) || 0;
+    if (expense.type === 'percent') {
+      return sum + ((baseCost * amount) / 100);
+    }
+
+    return sum + amount;
+  }, 0);
+  const shippingCostForPrice = Number(priceShippingCostInput) || 0;
+  const targetBenefitPercent = Number(targetBenefitInput) || 0;
+  const quantity = Math.max(1, Number(estimateQuantityInput) || 1);
+
+  const totalCostForPrice = baseCost + shippingCostForPrice + extraExpenses;
+  const targetBenefitAmount = targetBenefitMode === 'amount' ? targetBenefitPercent : totalCostForPrice * (targetBenefitPercent / 100);
+  const suggestedPvp = totalCostForPrice + targetBenefitAmount;
+  const profitAmount = suggestedPvp - totalCostForPrice;
+
+  const weightKgForShippingEstimate = selectedPoId && selectedPo ?
+    (selectedPo.items || []).reduce((sum, item) => sum + Number(item.weight_kg || 0) * Number(item.quantity || 0), 0) :
+    productWeightKg * quantity;
+  const transportRateForShippingEstimate = Number(shippingEstimateRateInput) || 0;
+  const shippingCost = shippingEstimateRateMode === 'kg'
+    ? weightKgForShippingEstimate * transportRateForShippingEstimate
+    : weightKgForShippingEstimate * 1000 * transportRateForShippingEstimate;
+  const shippingEstimateExtraExpenses = Number(shippingEstimateExtraExpensesInput) || 0;
+  const shippingEstimateTotal = shippingCost + shippingEstimateExtraExpenses;
+
+  const openPriceCalculatorModal = (product: ProductB2BCard) => {
+    setSelectedEstimateProductId(product.id);
+    setZletiPricingModalOpen(true);
+  };
+
+  const addEstimatedProductToFlow = () => {
+    if (!selectedEstimateProduct) return;
+
+    const detail = {
+      productId: selectedEstimateProduct.id,
+      variantId: selectedEstimateProduct.variants?.[0]?.id ?? null,
+      sku: selectedEstimateProduct.sku,
+      nombre: selectedEstimateProduct.nombre,
+      unitPrice: baseCost || selectedEstimateProduct.precio_b2b || 0,
+      quantity,
+      color: undefined,
+      size: undefined,
+      imagen: selectedEstimateProduct.imagen_principal,
+      sourceUrl: selectedEstimateProduct.source_url,
+    };
+
+    window.dispatchEvent(new CustomEvent(ZLETI_MANUAL_CART_EVENT, { detail }));
+
+    if (selectedPoId) {
+      const currentVariantId = detail.variantId || null;
+      const alreadyExists = editingItems.some(item =>
+        item.product_id === detail.productId && (item.variant_id || null) === currentVariantId
+      );
+
+      if (alreadyExists) {
+        toast.info('El producto ya está en el PO', {
+          description: `${detail.nombre} ya estaba incluido en este PO. Puedes editar la cantidad o retirarlo desde la lista.`,
+        });
+        return;
+      }
+
+      setEditingItems(current => [
+        ...current,
+        {
+          product_id: detail.productId,
+          variant_id: currentVariantId,
+          sku: detail.sku,
+          product_name: detail.nombre,
+          variant_name: null,
+          quantity,
+          unit_cost: baseCost || detail.unitPrice || 0,
+          image_url: detail.imagen || null,
+          source_url: detail.sourceUrl || null,
+          color: null,
+          size: null,
+        },
+      ]);
+
+      toast.success('Producto agregado al PO', { description: `Se añadió ${detail.nombre} como un producto nuevo en el PO seleccionado.` });
+      return;
+    }
+
+    toast.success('Producto agregado al carrito ZleTI', { description: `Se añadió ${detail.nombre} con cálculo estimado listo para generar el PO.` });
+  };
+
+  const savePriceEstimateToProduct = useMutation({
+    mutationFn: async () => {
+      if (!selectedEstimateProductId) throw new Error('Selecciona primero un producto para guardar la estimación.');
+
+      const payload = {
+        source: 'zleti_suggested_price_estimate',
+        generated_at: new Date().toISOString(),
+        product_id: selectedEstimateProductId,
+        product_name: selectedEstimateProduct?.nombre || null,
+        sku: selectedEstimateProduct?.sku || null,
+        market: priceMarket,
+        quantity: Number(estimateQuantityInput) || 1,
+        shipping_cost: Number(priceShippingCostInput) || 0,
+        extra_expenses: priceExpenseRows
+          .filter(expense => expense.label.trim() || Number(expense.amount) > 0)
+          .map(expense => ({
+            label: expense.label.trim() || 'Gasto adicional',
+            amount: Number(expense.amount) || 0,
+            type: expense.type === 'percent' ? 'percent' : 'fixed',
+          })),
+        target_benefit_mode: targetBenefitMode,
+        target_benefit_value: Number(targetBenefitInput) || 0,
+        total_cost: Number(totalCostForPrice) || 0,
+        target_benefit_amount: Number(targetBenefitAmount) || 0,
+        suggested_pvp: Number(suggestedPvp) || 0,
+        profit_amount: Number(profitAmount) || 0,
+      };
+
+      const { error } = await supabase
+        .from('products')
+        .update({
+          last_fee_calculation: payload,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedEstimateProductId);
+
+      if (error) throw error;
+
+      return payload;
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['products-b2b-eav'] });
+      toast.success('Estimación guardada por producto', { description: 'Se guardó el cálculo en la base de datos y quedó listo para consultar o editar.' });
+    },
+    onError: (error: any) => toast.error(error?.message || 'No se pudo guardar la estimación del producto'),
+  });
+
+  const openPoAddProductModal = () => {
+    if (!data?.products?.length) {
+      toast.error('No hay productos disponibles para agregar al PO');
+      return;
+    }
+
+    setPoDetailOpen(true);
+    setPoAddProductModalOpen(true);
+  };
 
   const createPO = useMutation({
     mutationFn: async () => {
@@ -76,10 +352,10 @@ export default function AdminZletiLogisticsPage() {
           variant_id: item.variantId || null,
           sku: item.sku,
           product_name: item.nombre,
-          variant_name: item.variantLabel || [item.color, item.size].filter(Boolean).join(' / ') || null,
+          variant_name: [item.color, item.size].filter(Boolean).join(' / ') || null,
           color: item.color || null,
           size: item.size || null,
-          image_url: item.imagen_principal || product?.imagen_principal || null,
+          image_url: item.imagen || product?.imagen_principal || null,
           source_url: product?.url_origen || item.sourceUrl || null,
           quantity: item.quantity,
           // Purchase orders use the factory cost imported from Excel,
@@ -136,6 +412,58 @@ export default function AdminZletiLogisticsPage() {
     onError: (error: any) => toast.error(error?.message || 'Could not update the PO'),
   });
 
+  const saveShippingEstimateToPo = useMutation({
+    mutationFn: async () => {
+      if (!selectedPoId) throw new Error('Selecciona primero un PO para guardar la estimación.');
+
+      const { data: currentPo, error: fetchError } = await (supabase as any)
+        .from('master_purchase_orders')
+        .select('metadata')
+        .eq('id', selectedPoId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const existingMetadata = currentPo?.metadata && typeof currentPo.metadata === 'object' && !Array.isArray(currentPo.metadata)
+        ? currentPo.metadata as Record<string, any>
+        : {};
+
+      const estimatePayload = {
+        source: 'zleti_logistics_estimate',
+        generated_at: new Date().toISOString(),
+        po_number: selectedPo?.po?.po_number || null,
+        total_weight_kg: Number(weightKgForShippingEstimate || 0),
+        rate_value: Number(transportRateForShippingEstimate || 0),
+        rate_mode: shippingEstimateRateMode,
+        shipping_cost: Number(shippingCost || 0),
+        extra_expenses: Number(shippingEstimateExtraExpenses || 0),
+        total_estimate: Number(shippingEstimateTotal || 0),
+        item_count: selectedPo?.items?.length || 0,
+      };
+
+      const { error: updateError } = await (supabase as any)
+        .from('master_purchase_orders')
+        .update({
+          metadata: {
+            ...existingMetadata,
+            zleti_shipping_estimate: estimatePayload,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedPoId);
+
+      if (updateError) throw updateError;
+
+      return estimatePayload;
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['zleti-po-history'] });
+      queryClient.invalidateQueries({ queryKey: ['zleti-po-history-detail', selectedPoId] });
+      toast.success('Estimación guardada en el PO', { description: 'Se almacenó la estimación de envío en el PO seleccionado y no se imprimió PDF.' });
+    },
+    onError: (error: any) => toast.error(error?.message || 'No se pudo guardar la estimación en el PO'),
+  });
+
   return (
     <AdminLayout
       title="Logística ZleTI"
@@ -169,12 +497,508 @@ export default function AdminZletiLogisticsPage() {
       )}
     >
       <div className="space-y-6">
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-background to-blue-50">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-primary">Submódulo 1: precio de venta sugerido</p>
+                  <p className="text-sm text-muted-foreground">
+                    Selecciona el producto, agrega gastos por mercado y define el beneficio esperado para obtener el precio sugerido.
+                  </p>
+                </div>
+                <Badge variant="secondary" className="w-fit">Precio sugerido</Badge>
+              </div>
+
+              {selectedEstimateProduct ? (
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Producto</Label>
+                        <Select value={selectedEstimateProductId} onValueChange={setSelectedEstimateProductId}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Selecciona un producto" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {data?.products?.map(product => (
+                              <SelectItem key={product.id} value={product.id}>{product.nombre}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Cantidad</Label>
+                        <Input type="number" min={1} value={estimateQuantityInput} onChange={event => setEstimateQuantityInput(event.target.value)} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Mercado</Label>
+                        <Select value={priceMarket} onValueChange={(value) => setPriceMarket(value as 'mercado_libre' | 'amazon' | 'tienda_propia')}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Mercado" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="mercado_libre">Mercado Libre</SelectItem>
+                            <SelectItem value="amazon">Amazon</SelectItem>
+                            <SelectItem value="tienda_propia">Tienda propia</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Costos de envío ({priceMarket === 'mercado_libre' ? 'ML' : priceMarket === 'amazon' ? 'Amazon' : 'Tienda propia'})</Label>
+                        <Input type="number" min={0} step="0.01" value={priceShippingCostInput} onChange={event => setPriceShippingCostInput(event.target.value)} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Costo base</Label>
+                        <Input type="number" value={baseCost.toFixed(2)} readOnly />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{targetBenefitMode === 'percent' ? 'Beneficio esperado (%)' : 'Beneficio esperado (USD)'}</Label>
+                        <Input type="number" min={0} step="0.01" value={targetBenefitInput} onChange={event => setTargetBenefitInput(event.target.value)} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Tipo de beneficio esperado</Label>
+                        <Select value={targetBenefitMode} onValueChange={(value) => setTargetBenefitMode(value as 'percent' | 'amount')}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Modo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percent">Porcentaje</SelectItem>
+                            <SelectItem value="amount">Monto fijo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <Label>Gastos adicionales por mercado (comisiones / empaques / otros)</Label>
+                          <Button type="button" variant="outline" size="sm" onClick={addPriceExpenseRow} className="h-8">
+                            <Plus className="mr-1 h-3.5 w-3.5" />
+                            Agregar gasto
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {priceExpenseRows.map((expense, index) => (
+                            <div key={expense.id} className="flex items-center gap-2">
+                              <Input
+                                type="text"
+                                value={expense.label}
+                                onChange={event => updateExpenseRow(expense.id, 'label', event.target.value)}
+                                placeholder={`Gasto ${index + 1}`}
+                                className="flex-1"
+                              />
+                              <div className="flex w-[220px] items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  value={expense.amount}
+                                  onChange={event => updateExpenseRow(expense.id, 'amount', event.target.value)}
+                                  placeholder="0"
+                                  className="w-full"
+                                />
+                                <Select value={expense.type} onValueChange={(value) => updateExpenseRow(expense.id, 'type', value as 'fixed' | 'percent')}>
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="fixed">Monto fijo</SelectItem>
+                                    <SelectItem value="percent">Porcentaje</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              {priceExpenseRows.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                                  onClick={() => removePriceExpenseRow(expense.id)}
+                                  aria-label="Eliminar gasto adicional"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border bg-white p-4 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-800">Resultado estimado</p>
+                    <div className="mt-4 space-y-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">Costo del producto</span>
+                        <span className="font-semibold">${baseCost.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">Envío por mercado</span>
+                        <span className="font-semibold">${shippingCostForPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">Gastos adicionales</span>
+                        <span className="font-semibold">${extraExpenses.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 border-t pt-3">
+                        <span className="text-muted-foreground">Costo total</span>
+                        <span className="font-bold">${totalCostForPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">
+                          {targetBenefitMode === 'percent' ? 'Beneficio objetivo' : 'Monto fijo objetivo'}
+                        </span>
+                        <span className="font-bold text-primary">${targetBenefitAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">Precio sugerido</span>
+                        <span className="font-bold text-green-700">${suggestedPvp.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      <Button onClick={addEstimatedProductToFlow} className="w-full gap-2">
+                        <Plus className="h-4 w-4" />
+                        {selectedPoId ? 'Agregar al PO actual' : 'Agregar al carrito ZleTI'}
+                      </Button>
+                      <Button onClick={() => savePriceEstimateToProduct.mutate()} className="w-full gap-2" disabled={savePriceEstimateToProduct.isPending}>
+                        {savePriceEstimateToProduct.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+                        {savePriceEstimateToProduct.isPending ? 'Guardando...' : 'Guardar estimación'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="py-8 text-center text-muted-foreground">No hay productos disponibles para calcular.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card id="zleti-shipping-estimate-card" className="border-primary/20 bg-gradient-to-r from-primary/5 via-background to-blue-50">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-primary">Submódulo 2: estimación de envío China → México por PO</p>
+                  <p className="text-sm text-muted-foreground">
+                    Selecciona un PO para calcular el costo estimado usando el peso total de los artículos del PO. El resultado se guarda en el PO como una estimación y no se imprime en PDF.
+                  </p>
+                </div>
+                <Badge variant="secondary" className="w-fit">Estimación solo en PO</Badge>
+              </div>
+
+              {selectedPo ? (
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>PO seleccionado</Label>
+                        <Input value={selectedPo.po.po_number || 'PO sin número'} readOnly />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Peso total estimado ({shippingEstimateRateMode === 'kg' ? 'kg' : 'g'})</Label>
+                        <Input type="number" value={weightKgForShippingEstimate.toFixed(2)} readOnly />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Tipo de tarifa</Label>
+                        <Select value={shippingEstimateRateMode} onValueChange={(value) => setShippingEstimateRateMode(value as 'kg' | 'g')}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="kg / g" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="kg">Por kg</SelectItem>
+                            <SelectItem value="g">Por g</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Costo transportista ({shippingEstimateRateMode === 'kg' ? 'USD/kg' : 'USD/g'})</Label>
+                        <Input type="number" min={0} step="0.01" value={shippingEstimateRateInput} onChange={event => setShippingEstimateRateInput(event.target.value)} />
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Gastos adicionales estimados</Label>
+                        <Input type="number" min={0} step="0.01" value={shippingEstimateExtraExpensesInput} onChange={event => setShippingEstimateExtraExpensesInput(event.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border bg-white p-4 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-800">Estimación guardada en el PO</p>
+                    <div className="mt-4 space-y-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">Peso total</span>
+                        <span className="font-semibold">{weightKgForShippingEstimate.toFixed(2)} kg</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">Envío estimado</span>
+                        <span className="font-semibold">${shippingCost.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">Gastos adicionales</span>
+                        <span className="font-semibold">${shippingEstimateExtraExpenses.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 border-t pt-3">
+                        <span className="text-muted-foreground">Total estimado</span>
+                        <span className="font-bold">${shippingEstimateTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <Button onClick={() => saveShippingEstimateToPo.mutate()} className="mt-4 w-full gap-2" disabled={!selectedPoId || saveShippingEstimateToPo.isPending}>
+                      {saveShippingEstimateToPo.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+                      {saveShippingEstimateToPo.isPending ? 'Guardando...' : 'Guardar estimación en el PO'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="py-8 text-center text-muted-foreground">Selecciona un PO desde el historial para calcular la estimación de envío por peso.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {isLoading ? <div className="py-16 text-center text-muted-foreground">Cargando Catalogue Maître B2B...</div> : data?.products?.length ? <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {data.products.map(product => <ProductCardB2B key={product.id} product={product} showExcelCost />)}
+            {data.products.map(product => (
+              <ProductCardB2B
+                key={product.id}
+                product={product}
+                showExcelCost
+                onOpenZletiPriceCalculator={openPriceCalculatorModal}
+              />
+            ))}
           </div>
         </> : <Card><CardContent className="py-16 text-center text-muted-foreground">No se encontraron productos en el Catalogue Maître B2B.</CardContent></Card>}
       </div>
+
+      <Dialog open={zletiPricingModalOpen} onOpenChange={setZletiPricingModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Calculadora de precio sugerido — {selectedEstimateProduct?.nombre || 'Producto'}
+            </DialogTitle>
+            <DialogDescription>
+              Ajusta los gastos, beneficio y datos del mercado para guardar o consultar la estimación por producto.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedEstimateProduct ? (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Mercado</Label>
+                  <Select value={priceMarket} onValueChange={(value) => setPriceMarket(value as 'mercado_libre' | 'amazon' | 'tienda_propia')}>
+                    <SelectTrigger className="w-full"><SelectValue placeholder="Mercado" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mercado_libre">Mercado Libre</SelectItem>
+                      <SelectItem value="amazon">Amazon</SelectItem>
+                      <SelectItem value="tienda_propia">Tienda propia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Cantidad</Label>
+                  <Input type="number" min={1} value={estimateQuantityInput} onChange={event => setEstimateQuantityInput(event.target.value)} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Costos de envío</Label>
+                  <Input type="number" min={0} step="0.01" value={priceShippingCostInput} onChange={event => setPriceShippingCostInput(event.target.value)} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Costo base</Label>
+                  <Input type="number" value={baseCost.toFixed(2)} readOnly />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{targetBenefitMode === 'percent' ? 'Beneficio esperado (%)' : 'Beneficio esperado (USD)'}</Label>
+                  <Input type="number" min={0} step="0.01" value={targetBenefitInput} onChange={event => setTargetBenefitInput(event.target.value)} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Tipo de beneficio esperado</Label>
+                  <Select value={targetBenefitMode} onValueChange={(value) => setTargetBenefitMode(value as 'percent' | 'amount')}>
+                    <SelectTrigger className="w-full"><SelectValue placeholder="Modo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percent">Porcentaje</SelectItem>
+                      <SelectItem value="amount">Monto fijo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <Label>Gastos adicionales</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addPriceExpenseRow} className="h-8">
+                    <Plus className="mr-1 h-3.5 w-3.5" />
+                    Agregar gasto
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {priceExpenseRows.map((expense, index) => (
+                    <div key={expense.id} className="flex items-center gap-2">
+                      <Input
+                        type="text"
+                        value={expense.label}
+                        onChange={event => updateExpenseRow(expense.id, 'label', event.target.value)}
+                        placeholder={`Gasto ${index + 1}`}
+                        className="flex-1"
+                      />
+                      <div className="flex w-[220px] items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={expense.amount}
+                          onChange={event => updateExpenseRow(expense.id, 'amount', event.target.value)}
+                          placeholder="0"
+                          className="w-full"
+                        />
+                        <Select value={expense.type} onValueChange={(value) => updateExpenseRow(expense.id, 'type', value as 'fixed' | 'percent')}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fixed">Monto fijo</SelectItem>
+                            <SelectItem value="percent">Porcentaje</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {priceExpenseRows.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                          onClick={() => removePriceExpenseRow(expense.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border bg-slate-50 p-4">
+                <div className="grid gap-3 text-sm sm:grid-cols-2">
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Costo total</span><span className="font-semibold">${totalCostForPrice.toFixed(2)}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Beneficio objetivo</span><span className="font-semibold text-primary">${targetBenefitAmount.toFixed(2)}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Gastos adicionales</span><span className="font-semibold">${extraExpenses.toFixed(2)}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Precio sugerido</span><span className="font-bold text-green-700">${suggestedPvp.toFixed(2)}</span></div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setZletiPricingModalOpen(false)}>Cerrar</Button>
+                <Button onClick={() => savePriceEstimateToProduct.mutate()} disabled={savePriceEstimateToProduct.isPending}>
+                  {savePriceEstimateToProduct.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+                  {savePriceEstimateToProduct.isPending ? 'Guardando...' : 'Guardar estimación'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="py-8 text-center text-muted-foreground">Cargando producto...</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={poAddProductModalOpen} onOpenChange={setPoAddProductModalOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Agregar producto nuevo al PO
+            </DialogTitle>
+            <DialogDescription>
+              Selecciona un producto del catálogo, elige su variante y define la cantidad para integrarlo al PO.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {data?.products?.map(product => (
+                <button
+                  key={product.id}
+                  type="button"
+                  onClick={() => {
+                    setPoDetailOpen(true);
+                    setPoAddProductModalOpen(false);
+                    useVariantDrawerStore.getState().open({
+                      id: product.id,
+                      sku: product.sku,
+                      nombre: product.nombre,
+                      images: product.imagen_principal ? [product.imagen_principal] : [],
+                      price: product.precio_b2b,
+                      costB2B: product.precio_b2b,
+                      moq: product.moq,
+                      stock: product.stock_fisico,
+                      source_product_id: product.source_product_id || product.id,
+                      source_url: product.source_url,
+                    }, (addedItems?: any[]) => {
+                      setPoDetailOpen(true);
+                      setEditingItems(current => {
+                        const existingKeys = new Set(current.map(item => `${item.product_id}:${item.variant_id || 'no-variant'}`));
+                        const newItems = (addedItems || []).filter(item => !existingKeys.has(`${item.product_id}:${item.variant_id || 'no-variant'}`));
+                        return [...current, ...newItems];
+                      });
+                    });
+                  }}
+                  className="overflow-hidden rounded-xl border border-border bg-white text-left transition-all hover:border-primary/50 hover:shadow-md"
+                >
+                  <div className="aspect-square overflow-hidden border-b bg-muted">
+                    <img src={product.imagen_principal || '/placeholder.svg'} alt={product.nombre} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="space-y-2 p-3">
+                    <p className="line-clamp-2 text-sm font-semibold text-slate-800">{product.nombre}</p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>SKU: {product.sku}</span>
+                      <span>{product.variant_count || 0} variantes</span>
+                    </div>
+
+                    {product.variants && product.variants.length > 0 && (
+                      <div className="flex items-center gap-1.5 pt-1">
+                        {product.variants.slice(0, 4).map((variant, index) => {
+                          const variantImage = variant.image_url || variant.images?.[0] || product.imagen_principal || '/placeholder.svg';
+                          return (
+                            <img
+                              key={`${product.id}-variant-${variant.id || index}`}
+                              src={variantImage}
+                              alt={variant.label || product.nombre}
+                              className="h-8 w-8 rounded-md border border-slate-200 bg-muted object-cover shadow-sm"
+                              title={variant.label || variant.sku}
+                            />
+                          );
+                        })}
+                        {product.variants.length > 4 && (
+                          <div className="flex h-8 min-w-8 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-100 px-1 text-[10px] font-semibold text-slate-500">
+                            +{product.variants.length - 4}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={cartOpen} onOpenChange={setCartOpen}>
         <DialogContent className="w-[calc(100%-1.5rem)] max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl border-0 p-0 shadow-2xl">
@@ -267,18 +1091,51 @@ export default function AdminZletiLogisticsPage() {
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
         <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
           <DialogHeader><DialogTitle className="flex items-center gap-2"><History className="h-5 w-5" /> PO History — ZleTI</DialogTitle></DialogHeader>
-          {historyLoading ? <p className="py-8 text-center text-muted-foreground">Loading PO history...</p> : poHistory.length === 0 ? <p className="py-8 text-center text-muted-foreground">No ZleTI POs generated yet.</p> : <div className="space-y-2">{poHistory.map((po: any) => <div key={po.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3"><div className="min-w-0 flex-1"><p className="font-semibold">{po.po_number}</p><p className="text-xs text-muted-foreground">{po.total_items || 0} products · {po.total_quantity || 0} units · ${Number(po.total_amount || 0).toFixed(2)}</p></div><Badge variant="outline">{po.status}</Badge><Button size="sm" variant="outline" onClick={() => { setHistoryOpen(false); setSelectedPoId(po.id); }}><Printer className="mr-1 h-4 w-4" /> View / Edit</Button></div>)}</div>}
+          {historyLoading ? <p className="py-8 text-center text-muted-foreground">Loading PO history...</p> : poHistory.length === 0 ? <p className="py-8 text-center text-muted-foreground">No ZleTI POs generated yet.</p> : <div className="space-y-2">{poHistory.map((po: any) => <div key={po.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3"><div className="min-w-0 flex-1"><p className="font-semibold">{po.po_number}</p><p className="text-xs text-muted-foreground">{po.total_items || 0} products · {po.total_quantity || 0} units · ${Number(po.total_amount || 0).toFixed(2)}</p></div><Badge variant="outline">{po.status}</Badge><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => { setHistoryOpen(false); setSelectedPoId(po.id); setPoDetailOpen(true); }}><Printer className="mr-1 h-4 w-4" /> View / Edit</Button><Button size="sm" variant="secondary" onClick={() => { setHistoryOpen(false); navigate(`/admin/logistica-zleti/${po.id}/estimacion-envio`); }}><FileDown className="mr-1 h-4 w-4" /> Calcular envío CHINA → México</Button></div></div>)}</div>}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!selectedPoId} onOpenChange={open => { if (!open) setSelectedPoId(null); }}>
-        <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
+      <Dialog open={poDetailOpen} onOpenChange={open => { setPoDetailOpen(open); if (!open) { /* keep selectedPoId so the shipping estimate card remains visible */ } }}>
+        <DialogContent className="max-h-[85vh] max-w-[85vw] overflow-y-auto">
           <DialogHeader><DialogTitle>{selectedPo?.po?.po_number || 'ZleTI PO'} — Products</DialogTitle></DialogHeader>
           {!selectedPo ? <p className="py-8 text-center text-muted-foreground">Loading PO...</p> : <div className="space-y-4">
-            <div className="space-y-2">{editingItems.map((item, index) => <div key={item.id || `${item.sku}-${index}`} className="flex flex-wrap items-center gap-3 rounded-lg border p-3"><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{item.product_name}</p><p className="font-mono text-xs text-muted-foreground">{item.sku} {item.variant_name ? `· ${item.variant_name}` : ''}</p></div><Input className="w-24" type="number" min={1} value={item.quantity} onChange={event => setEditingItems(current => current.map((line, lineIndex) => lineIndex === index ? { ...line, quantity: Math.max(1, Number(event.target.value) || 1) } : line))} /><span className="w-24 text-right text-sm">${(Number(item.unit_cost || 0) * Number(item.quantity || 0)).toFixed(2)}</span><Button variant="ghost" size="icon" onClick={() => setEditingItems(current => current.filter((_, lineIndex) => lineIndex !== index))}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>)}</div>
-            {cart.items.length > 0 && <Button variant="outline" onClick={() => setEditingItems(current => [...current, ...cart.items.map(item => ({ product_id: item.productId, variant_id: item.variantId, sku: item.sku, product_name: item.nombre, variant_name: [item.color, item.size].filter(Boolean).join(' / '), quantity: item.quantity, unit_cost: item.unitPrice, image_url: item.imagen, color: item.color, size: item.size }))])} className="gap-2"><Plus className="h-4 w-4" /> Add current cart items</Button>}
+            <div className="space-y-2">{editingItems.map((item, index) => <div key={item.id || `${item.sku}-${index}`} className="flex flex-wrap items-center gap-3 rounded-lg border p-3"><div className="h-14 w-14 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200"><img src={item.image_url || item.imagen || '/placeholder.svg'} alt={item.product_name} className="h-full w-full object-cover" /></div><div className="min-w-0 flex-1"><p className="line-clamp-2 text-sm font-medium">{item.product_name}</p><p className="line-clamp-1 font-mono text-xs text-muted-foreground">{item.sku} {item.variant_name ? `· ${item.variant_name}` : ''}</p></div><Input className="w-24" type="number" min={1} value={item.quantity} onChange={event => setEditingItems(current => current.map((line, lineIndex) => lineIndex === index ? { ...line, quantity: Math.max(1, Number(event.target.value) || 1) } : line))} /><span className="w-24 text-right text-sm">${(Number(item.unit_cost || 0) * Number(item.quantity || 0)).toFixed(2)}</span><Button variant="ghost" size="sm" onClick={() => setEditingItems(current => current.filter((_, lineIndex) => lineIndex !== index))} className="gap-1 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /> Retirar</Button></div>)}</div>
+            {cart.items.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => setEditingItems(current => {
+                  const existingProductIds = new Set(current.map(item => `${item.product_id}:${item.variant_id || 'no-variant'}`));
+                  const newItems = cart.items
+                    .filter(item => !existingProductIds.has(`${item.productId}:${item.variantId || 'no-variant'}`))
+                    .map(item => ({
+                      product_id: item.productId,
+                      variant_id: item.variantId,
+                      sku: item.sku,
+                      product_name: item.nombre,
+                      variant_name: [item.color, item.size].filter(Boolean).join(' / ') || null,
+                      quantity: item.quantity,
+                      unit_cost: item.unitPrice,
+                      image_url: item.imagen,
+                      color: item.color,
+                      size: item.size,
+                    }));
+
+                  return [...current, ...newItems];
+                })}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Agregar productos del carrito no existentes
+              </Button>
+            )}
+            {selectedPoId && (
+              <Button variant="outline" onClick={openPoAddProductModal} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Agregar producto nuevo al PO
+              </Button>
+            )}
             <Textarea value={editingNotes} onChange={event => setEditingNotes(event.target.value)} placeholder="Notes for purchasing agent" />
-            <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setSelectedPoId(null)}>Close</Button><Button onClick={() => updatePO.mutate()} disabled={editingItems.length === 0 || updatePO.isPending}>{updatePO.isPending ? 'Saving...' : 'Save and reprint PO'}</Button></div>
+            <div className="flex flex-wrap justify-end gap-2"><Button variant="outline" onClick={() => setPoDetailOpen(false)} className="gap-2"><Printer className="h-4 w-4" /> Close</Button><Button variant="secondary" onClick={() => { setPoDetailOpen(false); navigate(`/admin/logistica-zleti/${selectedPoId}/estimacion-envio`); }} className="gap-2"><FileDown className="h-4 w-4" /> Calcular envío CHINA → México</Button><Button onClick={() => updatePO.mutate()} disabled={editingItems.length === 0 || updatePO.isPending}>{updatePO.isPending ? 'Saving...' : 'Save and reprint PO'}</Button></div>
           </div>}
         </DialogContent>
       </Dialog>

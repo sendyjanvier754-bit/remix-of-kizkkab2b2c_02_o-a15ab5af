@@ -284,10 +284,17 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit: number | nu
           });
         }
         
-        // Use precio_b2b from vista (already includes market margins and fees)
-        // The pricing view exposes products.costo_base_excel as costo_fabrica.
-        // Keep the original field in the card so ZleTI can display the Excel cost.
-        const costoBaseExcel = Number((p as any).costo_base_excel ?? (p as any).costo_fabrica ?? 0);
+        // Use precio_b2b from vista (already includes market margins and fees).
+        // The pricing view exposes the Excel base cost in `costo_base` and may also return
+        // legacy aliases depending on the migrated SQL. Keep the original field in the card
+        // so ZleTI can display the real Excel cost instead of falling back to 0.
+        const costoBaseExcel = Number(
+          (p as any).costo_base_excel ??
+          (p as any).costo_base ??
+          (p as any).costo_fabrica ??
+          (p as any).precio_mayorista_base ??
+          0
+        );
         const factoryCost = costoBaseExcel || (p as any).precio_mayorista_base || 0; // Base cost from Excel
         const finalB2BPrice = (p as any).precio_b2b || minVariantPrice || 0; // Final calculated price from vista
         const imagen = p.imagen_principal || "/placeholder.svg";
