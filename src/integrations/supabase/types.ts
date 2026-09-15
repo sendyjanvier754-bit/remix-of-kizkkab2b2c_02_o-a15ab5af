@@ -214,6 +214,106 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_clicks: {
+        Row: {
+          affiliate_id: string
+          created_at: string
+          id: string
+          landing_path: string | null
+          referrer: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          created_at?: string
+          id?: string
+          landing_path?: string | null
+          referrer?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          created_at?: string
+          id?: string
+          landing_path?: string | null
+          referrer?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_clicks_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_conversions: {
+        Row: {
+          affiliate_id: string
+          commission_earned: number
+          commission_rate: number
+          created_at: string
+          customer_id: string | null
+          customer_purchase_number: number
+          discount_applied: number
+          id: string
+          order_id: string
+          order_type: string
+          paid_amount: number
+          paid_at: string | null
+          payout_status: string
+          sale_amount: number
+          tier: number
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id: string
+          commission_earned?: number
+          commission_rate?: number
+          created_at?: string
+          customer_id?: string | null
+          customer_purchase_number?: number
+          discount_applied?: number
+          id?: string
+          order_id: string
+          order_type?: string
+          paid_amount?: number
+          paid_at?: string | null
+          payout_status?: string
+          sale_amount?: number
+          tier?: number
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string
+          commission_earned?: number
+          commission_rate?: number
+          created_at?: string
+          customer_id?: string | null
+          customer_purchase_number?: number
+          discount_applied?: number
+          id?: string
+          order_id?: string
+          order_type?: string
+          paid_amount?: number
+          paid_at?: string | null
+          payout_status?: string
+          sale_amount?: number
+          tier?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_conversions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_earnings: {
         Row: {
           amount: number
@@ -250,39 +350,279 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_payout_allocations: {
+        Row: {
+          amount: number
+          conversion_id: string
+          created_at: string
+          id: string
+          payout_id: string
+        }
+        Insert: {
+          amount: number
+          conversion_id: string
+          created_at?: string
+          id?: string
+          payout_id: string
+        }
+        Update: {
+          amount?: number
+          conversion_id?: string
+          created_at?: string
+          id?: string
+          payout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payout_allocations_conversion_id_fkey"
+            columns: ["conversion_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_conversions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_payout_allocations_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_payout_methods: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          processing_mode: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          processing_mode?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          processing_mode?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      affiliate_payouts: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          notes: string | null
+          paid_at: string
+          payment_method_id: string | null
+          payment_method_name: string
+          provider_reference: string | null
+          provider_response: Json | null
+          reference: string | null
+          status: string
+          updated_at: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          created_at?: string
+          created_by: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          paid_at: string
+          payment_method_id?: string | null
+          payment_method_name: string
+          provider_reference?: string | null
+          provider_response?: Json | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          created_at?: string
+          created_by?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_method_id?: string | null
+          payment_method_name?: string
+          provider_reference?: string | null
+          provider_response?: Json | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payouts_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_payouts_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_payout_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_programs: {
         Row: {
+          after_threshold_action: string
+          after_threshold_commission_value: number
+          after_threshold_duration_days: number
+          commission_beneficiary: string
           commission_type: string
           commission_value: number
           created_at: string
+          customer_promo_description: string | null
+          customer_promo_type: string
+          customer_promo_value: number
           description: string | null
           id: string
           is_active: boolean
           name: string
+          requires_referral_code: boolean
           role_target: string
+          sample_conditions: string | null
+          sample_product_ids: string[]
+          seller_commission_share: number
+          threshold_type: string
+          threshold_value: number
           updated_at: string
         }
         Insert: {
+          after_threshold_action?: string
+          after_threshold_commission_value?: number
+          after_threshold_duration_days?: number
+          commission_beneficiary?: string
           commission_type?: string
           commission_value?: number
           created_at?: string
+          customer_promo_description?: string | null
+          customer_promo_type?: string
+          customer_promo_value?: number
           description?: string | null
           id?: string
           is_active?: boolean
           name: string
+          requires_referral_code?: boolean
           role_target?: string
+          sample_conditions?: string | null
+          sample_product_ids?: string[]
+          seller_commission_share?: number
+          threshold_type?: string
+          threshold_value?: number
           updated_at?: string
         }
         Update: {
+          after_threshold_action?: string
+          after_threshold_commission_value?: number
+          after_threshold_duration_days?: number
+          commission_beneficiary?: string
           commission_type?: string
           commission_value?: number
           created_at?: string
+          customer_promo_description?: string | null
+          customer_promo_type?: string
+          customer_promo_value?: number
           description?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          requires_referral_code?: boolean
           role_target?: string
+          sample_conditions?: string | null
+          sample_product_ids?: string[]
+          seller_commission_share?: number
+          threshold_type?: string
+          threshold_value?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      affiliates: {
+        Row: {
+          affiliate_code: string
+          commission_rate_tier1: number
+          commission_rate_tier2: number
+          created_at: string
+          customer_discount_tier1: number
+          customer_discount_tier2: number
+          display_name: string | null
+          id: string
+          notes: string | null
+          status: string
+          tier1_purchases_limit: number
+          total_clicks: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          affiliate_code: string
+          commission_rate_tier1?: number
+          commission_rate_tier2?: number
+          created_at?: string
+          customer_discount_tier1?: number
+          customer_discount_tier2?: number
+          display_name?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          tier1_purchases_limit?: number
+          total_clicks?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          affiliate_code?: string
+          commission_rate_tier1?: number
+          commission_rate_tier2?: number
+          created_at?: string
+          customer_discount_tier1?: number
+          customer_discount_tier2?: number
+          display_name?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          tier1_purchases_limit?: number
+          total_clicks?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -4179,6 +4519,9 @@ export type Database = {
       orders_b2b: {
         Row: {
           admin_notes: string | null
+          affiliate_code: string | null
+          affiliate_discount_amount: number
+          affiliate_id: string | null
           billable_weight_kg: number | null
           billable_weight_lb: number | null
           billing_address: Json | null
@@ -4230,6 +4573,9 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          affiliate_code?: string | null
+          affiliate_discount_amount?: number
+          affiliate_id?: string | null
           billable_weight_kg?: number | null
           billable_weight_lb?: number | null
           billing_address?: Json | null
@@ -4281,6 +4627,9 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          affiliate_code?: string | null
+          affiliate_discount_amount?: number
+          affiliate_id?: string | null
           billable_weight_kg?: number | null
           billable_weight_lb?: number | null
           billing_address?: Json | null
@@ -4331,6 +4680,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_b2b_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_b2b_buyer_id_fkey"
             columns: ["buyer_id"]
@@ -4384,7 +4740,11 @@ export type Database = {
       }
       orders_b2c: {
         Row: {
+          affiliate_code: string | null
+          affiliate_discount_amount: number
+          affiliate_id: string | null
           buyer_user_id: string
+          carrier_id: string | null
           commission_amount: number | null
           created_at: string
           currency: string | null
@@ -4412,7 +4772,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          affiliate_code?: string | null
+          affiliate_discount_amount?: number
+          affiliate_id?: string | null
           buyer_user_id: string
+          carrier_id?: string | null
           commission_amount?: number | null
           created_at?: string
           currency?: string | null
@@ -4440,7 +4804,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          affiliate_code?: string | null
+          affiliate_discount_amount?: number
+          affiliate_id?: string | null
           buyer_user_id?: string
+          carrier_id?: string | null
           commission_amount?: number | null
           created_at?: string
           currency?: string | null
@@ -4915,6 +5283,7 @@ export type Database = {
         Row: {
           base_rate: number
           breakdown: Json
+          calculated_fee: number | null
           commission_amount: number
           created_at: string
           currency: string
@@ -4926,12 +5295,16 @@ export type Database = {
           pickup_point_id: string
           status: string
           template_id: string | null
+          tier_label: string | null
+          tier_max_kg: number | null
+          tier_min_kg: number | null
           total_weight_kg: number
           updated_at: string
         }
         Insert: {
           base_rate?: number
           breakdown?: Json
+          calculated_fee?: number | null
           commission_amount?: number
           created_at?: string
           currency?: string
@@ -4943,12 +5316,16 @@ export type Database = {
           pickup_point_id: string
           status?: string
           template_id?: string | null
+          tier_label?: string | null
+          tier_max_kg?: number | null
+          tier_min_kg?: number | null
           total_weight_kg?: number
           updated_at?: string
         }
         Update: {
           base_rate?: number
           breakdown?: Json
+          calculated_fee?: number | null
           commission_amount?: number
           created_at?: string
           currency?: string
@@ -4960,6 +5337,9 @@ export type Database = {
           pickup_point_id?: string
           status?: string
           template_id?: string | null
+          tier_label?: string | null
+          tier_max_kg?: number | null
+          tier_min_kg?: number | null
           total_weight_kg?: number
           updated_at?: string
         }
@@ -6783,12 +7163,16 @@ export type Database = {
       profiles: {
         Row: {
           affiliate_program_id: string | null
+          assigned_pickup_point_id: string | null
           avatar_url: string | null
           banner_url: string | null
+          carrier_company_id: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          is_carrier: boolean
+          is_pickup_agent: boolean
           phone: string | null
           referral_code: string | null
           terms_accepted_at: string | null
@@ -6797,12 +7181,16 @@ export type Database = {
         }
         Insert: {
           affiliate_program_id?: string | null
+          assigned_pickup_point_id?: string | null
           avatar_url?: string | null
           banner_url?: string | null
+          carrier_company_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          is_carrier?: boolean
+          is_pickup_agent?: boolean
           phone?: string | null
           referral_code?: string | null
           terms_accepted_at?: string | null
@@ -6811,12 +7199,16 @@ export type Database = {
         }
         Update: {
           affiliate_program_id?: string | null
+          assigned_pickup_point_id?: string | null
           avatar_url?: string | null
           banner_url?: string | null
+          carrier_company_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          is_carrier?: boolean
+          is_pickup_agent?: boolean
           phone?: string | null
           referral_code?: string | null
           terms_accepted_at?: string | null
@@ -6829,6 +7221,13 @@ export type Database = {
             columns: ["affiliate_program_id"]
             isOneToOne: false
             referencedRelation: "affiliate_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_assigned_pickup_point_id_fkey"
+            columns: ["assigned_pickup_point_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_points"
             referencedColumns: ["id"]
           },
         ]
@@ -9070,10 +9469,17 @@ export type Database = {
           contact_phone: string | null
           country: string | null
           created_at: string
+          currency: string
+          handling_fee_percent: number
           id: string
           is_active: boolean | null
+          lead_time_days: number
+          min_order_amount: number
           name: string
           notes: string | null
+          platform: string | null
+          shipping_cost_per_cbm: number
+          shipping_cost_per_kg: number
           updated_at: string
           website: string | null
         }
@@ -9084,10 +9490,17 @@ export type Database = {
           contact_phone?: string | null
           country?: string | null
           created_at?: string
+          currency?: string
+          handling_fee_percent?: number
           id?: string
           is_active?: boolean | null
+          lead_time_days?: number
+          min_order_amount?: number
           name: string
           notes?: string | null
+          platform?: string | null
+          shipping_cost_per_cbm?: number
+          shipping_cost_per_kg?: number
           updated_at?: string
           website?: string | null
         }
@@ -9098,10 +9511,17 @@ export type Database = {
           contact_phone?: string | null
           country?: string | null
           created_at?: string
+          currency?: string
+          handling_fee_percent?: number
           id?: string
           is_active?: boolean | null
+          lead_time_days?: number
+          min_order_amount?: number
           name?: string
           notes?: string | null
+          platform?: string | null
+          shipping_cost_per_cbm?: number
+          shipping_cost_per_kg?: number
           updated_at?: string
           website?: string | null
         }
@@ -9815,6 +10235,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      zleti_manual_cart_items: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          imagen: string | null
+          nombre: string
+          product_id: string
+          quantity: number
+          size: string | null
+          sku: string
+          source_url: string | null
+          unit_price: number
+          updated_at: string
+          user_id: string
+          variant_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          imagen?: string | null
+          nombre: string
+          product_id: string
+          quantity?: number
+          size?: string | null
+          sku: string
+          source_url?: string | null
+          unit_price?: number
+          updated_at?: string
+          user_id: string
+          variant_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          imagen?: string | null
+          nombre?: string
+          product_id?: string
+          quantity?: number
+          size?: string | null
+          sku?: string
+          source_url?: string | null
+          unit_price?: number
+          updated_at?: string
+          user_id?: string
+          variant_id?: string | null
+        }
+        Relationships: []
       }
       zleti_manual_po_items: {
         Row: {
@@ -10708,6 +11179,18 @@ export type Database = {
           publishable_key: string
         }[]
       }
+      get_affiliate_offer: {
+        Args: { _code: string; _customer_id: string }
+        Returns: {
+          affiliate_code: string
+          affiliate_id: string
+          commission_rate: number
+          discount_percent: number
+          display_name: string
+          previous_purchases: number
+          tier: number
+        }[]
+      }
       get_agent_dashboard: { Args: { p_agent_id: string }; Returns: Json }
       get_cart_shipping_cost: {
         Args: { cart_items: Json; p_shipping_type_id?: string }
@@ -10855,11 +11338,32 @@ export type Database = {
         Returns: boolean
       }
       maybe_create_seller_onboarding_reminder: { Args: never; Returns: Json }
+      record_affiliate_payout: {
+        Args: {
+          _affiliate_id: string
+          _allocations: Json
+          _currency?: string
+          _notes?: string
+          _paid_at: string
+          _payment_method_id: string
+          _reference?: string
+        }
+        Returns: string
+      }
       refresh_market_is_ready: {
         Args: { p_market_id: string }
         Returns: undefined
       }
       refresh_suggested_pvp_cache: { Args: never; Returns: undefined }
+      register_affiliate_click: {
+        Args: {
+          _code: string
+          _landing_path?: string
+          _referrer?: string
+          _visitor_id?: string
+        }
+        Returns: string
+      }
       register_pickup_earning: { Args: { p_order_id: string }; Returns: Json }
       reject_partner_application: {
         Args: { p_application_id: string; p_reason: string }
@@ -10917,6 +11421,10 @@ export type Database = {
         Returns: Json
       }
       validate_product_weight: { Args: { p_product_id: string }; Returns: Json }
+      void_affiliate_payout: {
+        Args: { _payout_id: string; _reason: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
@@ -10931,6 +11439,7 @@ export type Database = {
         | "pickup_partner"
         | "driver_partner"
         | "marketing"
+        | "zletiadmin"
       approval_request_type:
         | "withdrawal"
         | "refund"
@@ -11157,6 +11666,7 @@ export const Constants = {
         "pickup_partner",
         "driver_partner",
         "marketing",
+        "zletiadmin",
       ],
       approval_request_type: [
         "withdrawal",
