@@ -672,6 +672,14 @@ const AppContent = () => {
               } 
             />
             <Route 
+              path="/admin/afiliados-estadisticas" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminAffiliateStatsPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/cuentas" 
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>

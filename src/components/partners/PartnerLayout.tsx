@@ -37,6 +37,7 @@ export default function PartnerLayout({ children, variant, title }: PartnerLayou
   const influencerNav: NavItem[] = [
     { to: "/socio/afiliado", label: role === UserRole.ADMIN ? "Gestionar afiliados" : "Mi panel", icon: Megaphone, end: true },
     { to: "/socio/afiliado?tab=comisiones", label: "Comisiones", icon: ReceiptText },
+    { to: "/socio/afiliado/estadisticas", label: "Mis estadísticas", icon: BarChart3 },
     { to: "/programa-afiliados", label: "El programa", icon: DollarSign },
   ];
   const nav = variant === "driver"
