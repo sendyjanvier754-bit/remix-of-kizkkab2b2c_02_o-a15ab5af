@@ -351,6 +351,42 @@ const uploadDataUrlToStorage = async (dataUrl: string, fileName: string): Promis
   return urlData.publicUrl;
 };
 
+/** Column names + fallbacks used to read weight and dimensions from each Excel row. */
+export interface LogisticsImportConfig {
+  pesoColumn?: string;
+  lengthColumn?: string;
+  widthColumn?: string;
+  heightColumn?: string;
+  defaultPesoG?: number;
+  defaultLengthCm?: number;
+  defaultWidthCm?: number;
+  defaultHeightCm?: number;
+}
+
+const readNumericCell = (row: RawImportRow | undefined, column?: string): number | null => {
+  if (!row || !column || column === '__none__') return null;
+  const raw = row[column];
+  if (raw === undefined || raw === null || String(raw).trim() === '') return null;
+  const parsed = Number(String(raw).replace(',', '.').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const resolveLogistics = (row: RawImportRow | undefined, config?: LogisticsImportConfig) => ({
+  peso_g: readNumericCell(row, config?.pesoColumn) ?? config?.defaultPesoG ?? null,
+  length_cm: readNumericCell(row, config?.lengthColumn) ?? config?.defaultLengthCm ?? null,
+  width_cm: readNumericCell(row, config?.widthColumn) ?? config?.defaultWidthCm ?? null,
+  height_cm: readNumericCell(row, config?.heightColumn) ?? config?.defaultHeightCm ?? null,
+});
+
+const logisticsPayload = (values: ReturnType<typeof resolveLogistics>) => {
+  const payload: Record<string, number> = {};
+  if (values.peso_g) payload.peso_g = values.peso_g;
+  if (values.length_cm) payload.length_cm = values.length_cm;
+  if (values.width_cm) payload.width_cm = values.width_cm;
+  if (values.height_cm) payload.height_cm = values.height_cm;
+  return payload;
+};
+
 export const importGroupedProducts = async (
   groups: GroupedProduct[],
   categoryId: string | undefined,
@@ -359,8 +395,15 @@ export const importGroupedProducts = async (
   onProgress?: (current: number, total: number, message: string) => void,
   originCountryId?: string,
   marketIds?: string[],
-  defaultPesoG?: number
+  defaultPesoG?: number,
+  logisticsConfig?: LogisticsImportConfig
 ): Promise<{ success: number; failed: number; errors: string[] }> => {
+
+  const logistics: LogisticsImportConfig = {
+    ...logisticsConfig,
+    defaultPesoG: logisticsConfig?.defaultPesoG ?? defaultPesoG,
+  };
+  
   
   let success = 0;
   let failed = 0;
