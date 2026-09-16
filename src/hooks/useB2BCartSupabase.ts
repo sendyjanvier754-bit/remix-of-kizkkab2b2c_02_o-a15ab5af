@@ -494,6 +494,11 @@ export const useB2BCartSupabase = () => {
   const removeItem = useCallback(async (itemId: string) => {
     if (isZletiManualPO) {
       setLocalZletiCart(cart.items.filter(item => item.id !== itemId));
+      try {
+        await (supabase as any).from('zleti_manual_cart_items').delete().eq('id', itemId);
+      } catch (error) {
+        console.error('Error removing ZleTI cart item:', error);
+      }
       return;
     }
     try {
