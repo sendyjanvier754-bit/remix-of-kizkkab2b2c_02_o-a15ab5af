@@ -781,7 +781,7 @@ export default function AdminZletiLogisticsPage() {
                           </div>
                         )}
                         {(() => {
-                          const info = cartSupplierInfo?.get(item.productId);
+                          const info = cartSupplierInfo?.info.get(item.productId);
                           const url = item.sourceUrl || info?.url || null;
                           if (!url) return null;
                           return (
