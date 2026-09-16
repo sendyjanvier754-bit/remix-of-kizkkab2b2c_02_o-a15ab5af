@@ -521,6 +521,13 @@ export const useB2BCartSupabase = () => {
   const clearCart = useCallback(async () => {
     if (isZletiManualPO) {
       setLocalZletiCart([]);
+      try {
+        if (user?.id) {
+          await (supabase as any).from('zleti_manual_cart_items').delete().eq('user_id', user.id);
+        }
+      } catch (error) {
+        console.error('Error clearing ZleTI cart:', error);
+      }
       return;
     }
     if (!cart.id) return;
