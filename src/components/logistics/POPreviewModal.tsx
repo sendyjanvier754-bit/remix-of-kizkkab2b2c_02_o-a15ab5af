@@ -48,20 +48,6 @@ export function POPreviewModal({ open, onOpenChange, data, onSave }: POPreviewMo
     }
   };
 
-  const handleCopyLinks = async () => {
-    const links = Array.from(new Set(data.items.map(item => item.url_origen).filter((url): url is string => Boolean(url))));
-    if (links.length === 0) {
-      toast.info('Este PO no contiene enlaces de proveedor');
-      return;
-    }
-
-    const copied = await copyToClipboard(links.join('\n'));
-    if (copied) {
-      toast.success('Enlaces copiados', { description: `${links.length} ${links.length === 1 ? 'enlace copiado' : 'enlaces copiados'}.` });
-    } else {
-      toast.error('No se pudieron copiar los enlaces');
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
