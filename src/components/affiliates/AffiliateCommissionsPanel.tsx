@@ -247,6 +247,39 @@ export default function AffiliateCommissionsPanel({ affiliate, canManage = false
         )}</CardContent>
       </Card>
 
+      <Dialog open={claimOpen} onOpenChange={setClaimOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle>Reclamar mi pago</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-md border border-border p-3 text-sm">
+              <span className="text-muted-foreground">Saldo disponible</span>
+              <p className="text-xl font-semibold">{money(totals.pending)}</p>
+            </div>
+            <div className="space-y-1.5"><Label>Monto a reclamar (USD)</Label>
+              <Input type="number" min="0.01" step="0.01" max={totals.pending} value={claimAmount} onChange={(event) => setClaimAmount(event.target.value)} />
+            </div>
+            <div className="space-y-1.5"><Label>¿Cómo quieres cobrar?</Label>
+              <Select value={claimMethodId} onValueChange={setClaimMethodId}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
+                <SelectContent>{methods.map((method) => <SelectItem key={method.id} value={method.id}>{method.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5"><Label>Datos para el pago</Label>
+              <Input value={claimDetails} onChange={(event) => setClaimDetails(event.target.value)} placeholder="Número de cuenta, teléfono o billetera" />
+            </div>
+            <div className="space-y-1.5"><Label>Nota (opcional)</Label>
+              <Textarea value={claimNote} onChange={(event) => setClaimNote(event.target.value)} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setClaimOpen(false)}>Cancelar</Button>
+              <Button disabled={requestPayout.isPending || !(Number(claimAmount) > 0) || Number(claimAmount) > totals.pending} onClick={submitClaim}>
+                {requestPayout.isPending ? "Enviando..." : "Enviar solicitud"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Registrar pago de comisión</DialogTitle></DialogHeader>
