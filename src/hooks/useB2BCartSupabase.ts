@@ -249,60 +249,77 @@ export const useB2BCartSupabase = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [cart.items, isZletiManualPO, setLocalZletiCart, user?.id]);
+  }, [fetchZletiCart, isZletiManualPO, user?.id]);
 
   useEffect(() => {
     fetchOrCreateCart();
   }, [fetchOrCreateCart]);
 
-  // ZleTI manual POs use an isolated in-memory cart. This avoids coupling the
-  // admin purchasing flow to the seller B2B cart/RLS rules.
+  // ZleTI manual POs use a dedicated table so the cart survives refreshes.
   useEffect(() => {
     if (!isZletiManualPO) return;
 
-    const handleManualItem = (event: Event) => {
+    const handleManualItem = async (event: Event) => {
       const detail = (event as CustomEvent<ZletiManualCartItem>).detail;
-      if (!detail?.productId) return;
-      setCart((current) => {
-        const existingIndex = current.items.findIndex((item) =>
-          item.productId === detail.productId && (item.variantId || null) === (detail.variantId || null),
-        );
-        const items = [...current.items];
-        if (existingIndex >= 0) {
-          const existing = items[existingIndex];
-          const quantity = existing.quantity + detail.quantity;
-          items[existingIndex] = { ...existing, quantity, totalPrice: quantity * existing.unitPrice };
-        } else {
-          items.push({
-            id: `zleti-${detail.productId}-${detail.variantId || 'product'}`,
-            productId: detail.productId,
-            variantId: detail.variantId || null,
-            sku: detail.sku,
-            nombre: detail.nombre,
-            unitPrice: detail.unitPrice,
-            quantity: detail.quantity,
-            totalPrice: detail.quantity * detail.unitPrice,
-            color: detail.color || undefined,
-            size: detail.size || undefined,
-            moq: 1,
-            stockDisponible: Number.MAX_SAFE_INTEGER,
-            imagen: detail.imagen,
-            sourceUrl: detail.sourceUrl,
-          });
+      if (!detail?.productId || !user?.id) return;
+
+      try {
+        const { data: existing } = await (supabase as any)
+          .from('zleti_manual_cart_items')
+          .select('id, quantity')
+          .eq('user_id', user.id)
+          .eq('product_id', detail.productId)
+          .is('variant_id', detail.variantId ? undefined : null)
+          .maybeSingle()
+          .then((res: any) => res, () => ({ data: null }));
+
+        let current = existing;
+        if (detail.variantId) {
+          const { data } = await (supabase as any)
+            .from('zleti_manual_cart_items')
+            .select('id, quantity')
+            .eq('user_id', user.id)
+            .eq('product_id', detail.productId)
+            .eq('variant_id', detail.variantId)
+            .maybeSingle();
+          current = data;
         }
-        return {
-          ...current,
-          items,
-          totalItems: items.length,
-          totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
-          subtotal: items.reduce((sum, item) => sum + item.totalPrice, 0),
-        };
-      });
+
+        if (current?.id) {
+          const { error } = await (supabase as any)
+            .from('zleti_manual_cart_items')
+            .update({ quantity: Number(current.quantity || 0) + detail.quantity, unit_price: detail.unitPrice })
+            .eq('id', current.id);
+          if (error) throw error;
+        } else {
+          const { error } = await (supabase as any)
+            .from('zleti_manual_cart_items')
+            .insert({
+              user_id: user.id,
+              product_id: detail.productId,
+              variant_id: detail.variantId || null,
+              sku: detail.sku,
+              nombre: detail.nombre,
+              unit_price: detail.unitPrice,
+              quantity: detail.quantity,
+              color: detail.color || null,
+              size: detail.size || null,
+              imagen: detail.imagen || null,
+              source_url: detail.sourceUrl || null,
+            });
+          if (error) throw error;
+        }
+
+        await fetchZletiCart();
+      } catch (error) {
+        console.error('Error saving ZleTI cart item:', error);
+        toast.error('No se pudo guardar el producto en el carrito');
+      }
     };
 
     window.addEventListener(ZLETI_MANUAL_CART_EVENT, handleManualItem);
     return () => window.removeEventListener(ZLETI_MANUAL_CART_EVENT, handleManualItem);
-  }, [isZletiManualPO]);
+  }, [fetchZletiCart, isZletiManualPO, user?.id]);
 
   // Keep every mounted catalog/cart view synchronized immediately when the
   // database cart changes (including changes made by the variant drawer).
