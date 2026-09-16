@@ -40,6 +40,10 @@ export interface CreateB2COrderParams {
   };
   delivery_method?: 'address' | 'pickup';
   pickup_point_id?: string;
+  /** Influencer/affiliate attribution (drives commission registration) */
+  affiliate_id?: string | null;
+  affiliate_code?: string | null;
+  affiliate_discount_amount?: number;
 }
 
 export const useCreateB2COrder = () => {
@@ -84,6 +88,11 @@ export const useCreateB2COrder = () => {
 
           // Each store charges its own shipping (passed from checkout)
           const storeShipping = params.store_shipping_costs?.[storeId] ?? 0;
+
+          // Affiliate discount split proportionally between stores
+          const storeAffiliateDiscount = params.affiliate_id && totalSubtotal > 0
+            ? (params.affiliate_discount_amount || 0) * (storeSubtotal / totalSubtotal)
+            : 0;
           const storeTotalAmount = storeSubtotal + storeShipping - storeDiscount;
 
           const { data: order, error: orderError } = await supabase
@@ -102,6 +111,9 @@ export const useCreateB2COrder = () => {
               shipping_address: params.shipping_address as any || null,
               pickup_point_id: params.pickup_point_id || null,
               notes: params.notes || null,
+              affiliate_id: params.affiliate_id || null,
+              affiliate_code: params.affiliate_code || null,
+              affiliate_discount_amount: Number(storeAffiliateDiscount.toFixed(2)),
               status: 'placed',
               currency: 'USD',
               metadata: {
