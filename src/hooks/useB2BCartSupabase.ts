@@ -65,7 +65,7 @@ export const useB2BCartSupabase = () => {
 
   const setLocalZletiCart = useCallback((items: B2BCartItem[]) => {
     setCart({
-      id: 'zleti-manual-local',
+      id: 'zleti-manual-db',
       items,
       totalItems: items.length,
       totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
@@ -74,11 +74,65 @@ export const useB2BCartSupabase = () => {
     });
   }, []);
 
+  // ZleTI manual cart is persisted in the database so it survives refreshes
+  // and is available from any device for the same user.
+  const fetchZletiCart = useCallback(async () => {
+    if (!user?.id) {
+      setLocalZletiCart([]);
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const { data: rows, error } = await (supabase as any)
+        .from('zleti_manual_cart_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+
+      const variantIds = Array.from(
+        new Set(((rows || []) as any[]).map((row) => row.variant_id).filter(Boolean)),
+      );
+      const variantImageMap = new Map<string, string>();
+      if (variantIds.length > 0) {
+        const { data: variants } = await supabase
+          .from('product_variants')
+          .select('id, images')
+          .in('id', variantIds as string[]);
+        (variants || []).forEach((variant: any) => {
+          const image = Array.isArray(variant.images) ? variant.images[0] : null;
+          if (image) variantImageMap.set(variant.id, image);
+        });
+      }
+
+      const items: B2BCartItem[] = ((rows || []) as any[]).map((row) => ({
+        id: row.id,
+        productId: row.product_id,
+        variantId: row.variant_id || null,
+        sku: row.sku,
+        nombre: row.nombre,
+        unitPrice: Number(row.unit_price || 0),
+        quantity: Number(row.quantity || 0),
+        totalPrice: Number(row.unit_price || 0) * Number(row.quantity || 0),
+        color: row.color || undefined,
+        size: row.size || undefined,
+        moq: 1,
+        stockDisponible: Number.MAX_SAFE_INTEGER,
+        imagen: (row.variant_id ? variantImageMap.get(row.variant_id) : undefined) || row.imagen || undefined,
+        sourceUrl: row.source_url || null,
+      }));
+      setLocalZletiCart(items);
+    } catch (error) {
+      console.error('Error loading ZleTI cart:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setLocalZletiCart, user?.id]);
+
   // Fetch or create cart for user
   const fetchOrCreateCart = useCallback(async () => {
     if (isZletiManualPO) {
-      if (cart.id !== 'zleti-manual-local') setLocalZletiCart(cart.items);
-      setIsLoading(false);
+      await fetchZletiCart();
       return;
     }
     if (!user?.id) {
