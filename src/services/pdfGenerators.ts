@@ -1491,7 +1491,10 @@ export const buildPOBuyingListHtml = (
                 <td class="center">$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}</td>
                 <td>
                   ${safeExternalUrl(item.url_origen)
-                    ? `<a href="${escapeHtml(safeExternalUrl(item.url_origen))}" target="_blank" rel="noopener noreferrer" class="source-url" title="Enlace del proveedor">${escapeHtml(safeExternalUrl(item.url_origen))}</a>`
+                    ? `<div class="url-cell">
+                        <a href="${escapeHtml(safeExternalUrl(item.url_origen))}" target="_blank" rel="noopener noreferrer" class="source-url" title="Abrir enlace del proveedor en una pestaña nueva">${escapeHtml(safeExternalUrl(item.url_origen))}</a>
+                        <button type="button" class="copy-url" data-url="${escapeHtml(safeExternalUrl(item.url_origen))}">Copiar enlace</button>
+                      </div>`
                     : '<span style="color:#bbb">—</span>'}
                 </td>
               </tr>
