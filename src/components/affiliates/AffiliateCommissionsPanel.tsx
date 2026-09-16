@@ -313,3 +313,7 @@ function Summary({ icon: Icon, label, value }: { icon: typeof Banknote; label: s
 }
 
 function Empty({ text }: { text: string }) { return <p className="py-8 text-center text-sm text-muted-foreground">{text}</p>; }
+function RequestBadge({ status }: { status: string }) {
+  const label = status === "paid" ? "Pagada" : status === "approved" ? "Aprobada" : status === "rejected" ? "Rechazada" : "En revisión";
+  return <Badge variant={status === "paid" ? "default" : status === "rejected" ? "destructive" : "secondary"}>{label}</Badge>;
+}
