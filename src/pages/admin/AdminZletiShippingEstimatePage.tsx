@@ -304,6 +304,25 @@ export default function AdminZletiShippingEstimatePage() {
     });
   }, [marketplaceDraft, marketplaceTotals, selectedPo, shippingEstimateTotal, suggestedProfitInput]);
 
+  const poTotals = useMemo(() => {
+    const exchangeRate = Number(marketplaceDraft?.exchange_rate || 1);
+    const currency = (marketplaceDraft?.currency || 'USD') as MarketplaceCurrency;
+
+    const supplierCostUsd = itemShippingBreakdown.reduce(
+      (sum: number, item: any) => sum + Number(item.productCostUsd || 0) * Number(item.quantity || 0),
+      0
+    );
+    const suggestedSaleTotal = itemShippingBreakdown.reduce(
+      (sum: number, item: any) => sum + Number(item.suggestedSalePrice || 0) * Number(item.quantity || 0),
+      0
+    );
+    const supplierCostInCurrency = supplierCostUsd * exchangeRate;
+    const expectedProfit = suggestedSaleTotal - supplierCostInCurrency;
+    const marginPercent = suggestedSaleTotal > 0 ? (expectedProfit / suggestedSaleTotal) * 100 : 0;
+
+    return { currency, exchangeRate, supplierCostUsd, supplierCostInCurrency, suggestedSaleTotal, expectedProfit, marginPercent };
+  }, [itemShippingBreakdown, marketplaceDraft]);
+
   const formattedCurrency = (amount: number, currency = marketplaceDraft?.currency || 'USD') =>
     new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0);
 
@@ -680,6 +699,24 @@ export default function AdminZletiShippingEstimatePage() {
                       <div><span className="text-muted-foreground">Gastos adicionales</span><p className="font-semibold">${shippingEstimateExtraExpenses.toFixed(2)} USD</p></div>
                       <div><span className="text-muted-foreground">Total estimado</span><p className="text-lg font-bold">${shippingEstimateTotal.toFixed(2)} USD</p></div>
                       <div><span className="text-muted-foreground">Canal activo</span><p className="font-semibold">{marketplaceDraft ? `${marketplaceDraft.name} · ${marketplaceDraft.currency}` : 'Sin configurar'}</p></div>
+                      <div>
+                        <span className="text-muted-foreground">Costo proveedor total (PO)</span>
+                        <p className="text-lg font-bold text-slate-800">${poTotals.supplierCostUsd.toFixed(2)} USD</p>
+                        {poTotals.currency !== 'USD' && (
+                          <p className="text-xs text-muted-foreground">{formattedCurrencyWithCode(poTotals.supplierCostInCurrency, poTotals.currency)}</p>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Venta total sugerida</span>
+                        <p className="text-lg font-bold text-emerald-700">{formattedCurrencyWithCode(poTotals.suggestedSaleTotal, poTotals.currency)}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Beneficio total esperado</span>
+                        <p className={`text-lg font-bold ${poTotals.expectedProfit >= 0 ? 'text-emerald-700' : 'text-destructive'}`}>
+                          {formattedCurrencyWithCode(poTotals.expectedProfit, poTotals.currency)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{poTotals.marginPercent.toFixed(1)}% sobre la venta</p>
+                      </div>
                     </div>
                     <div className="mt-4 flex justify-end border-t pt-4">
                       <Button type="button" className="gap-2" onClick={() => saveShippingEstimateToPo.mutate()} disabled={!poId || !marketplaceTotals.viable || saveShippingEstimateToPo.isPending}>
