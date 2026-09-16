@@ -388,9 +388,18 @@ export default function AdminZletiLogisticsPage() {
     setPoAddProductModalOpen(true);
   };
 
-  const createPO = useMutation({
-    mutationFn: async () => {
-      if (cart.items.length === 0) throw new Error('Agrega productos al carrito antes de generar la PO');
+  const [pendingPoItems, setPendingPoItems] = useState<any[] | null>(null);
+  const [previewGenerating, setPreviewGenerating] = useState(false);
+
+  // Opens the preview modal WITHOUT saving: the PO is persisted only when the
+  // user clicks "Guardar" inside the preview, which also downloads the PDF.
+  const openCreatePreview = async () => {
+    if (cart.items.length === 0) {
+      toast.error('Agrega productos al carrito antes de generar la PO');
+      return;
+    }
+    setPreviewGenerating(true);
+    try {
       const productIds = [...new Set(cart.items.map(item => item.productId))];
       const { data: products, error: productsError } = await supabase.from('products').select('id, url_origen, imagen_principal, costo_base_excel').in('id', productIds);
       if (productsError) throw productsError;
@@ -414,26 +423,45 @@ export default function AdminZletiLogisticsPage() {
         };
       });
 
-      const { data: result, error } = await (supabase as any).rpc('create_zleti_manual_po', { p_items: payload, p_notes: notes.trim() || null });
-      if (error) throw error;
-      return { result, payload };
-    },
-    onSuccess: ({ result, payload }) => {
+      setPendingPoItems(payload);
       setPoPreviewData({
-        po_number: result.po_number,
+        po_number: 'BORRADOR',
         market_name: 'ZleTI México',
         brand_identity: 'zleti',
         generated_at: new Date().toISOString(),
         items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })),
       });
-      setPoPreviewOpen(true);
-      clearCart();
-      setNotes('');
       setCartOpen(false);
-      toast.success(`PO ${result.po_number} creada`, { description: 'La vista previa está lista para imprimir o guardar.' });
-    },
-    onError: (error: any) => toast.error(error?.message || 'No se pudo crear la PO ZleTI'),
-  });
+      setPoPreviewOpen(true);
+    } catch (error: any) {
+      toast.error(error?.message || 'No se pudo preparar la vista previa del PO');
+    } finally {
+      setPreviewGenerating(false);
+    }
+  };
+
+  const savePendingPo = async (): Promise<POBuyingListData> => {
+    if (!pendingPoItems || pendingPoItems.length === 0) throw new Error('No hay productos pendientes por guardar');
+    const { data: result, error } = await (supabase as any).rpc('create_zleti_manual_po', { p_items: pendingPoItems, p_notes: notes.trim() || null });
+    if (error) throw error;
+
+    queryClient.invalidateQueries({ queryKey: ['zleti-po-history'] });
+    setPendingPoItems(null);
+    clearCart();
+    setNotes('');
+    setCartOpen(false);
+
+    const savedData: POBuyingListData = {
+      po_number: result.po_number,
+      market_name: 'ZleTI México',
+      brand_identity: 'zleti',
+      generated_at: new Date().toISOString(),
+      items: pendingPoItems.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })),
+    };
+    setPoPreviewData(savedData);
+    toast.success(`PO ${result.po_number} creada`, { description: 'El PDF se está descargando.' });
+    return savedData;
+  };
 
   const updatePO = useMutation({
     mutationFn: async () => {
