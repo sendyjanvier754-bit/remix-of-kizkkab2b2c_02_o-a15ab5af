@@ -304,6 +304,25 @@ export default function AdminZletiShippingEstimatePage() {
     });
   }, [marketplaceDraft, marketplaceTotals, selectedPo, shippingEstimateTotal, suggestedProfitInput]);
 
+  const poTotals = useMemo(() => {
+    const exchangeRate = Number(marketplaceDraft?.exchange_rate || 1);
+    const currency = (marketplaceDraft?.currency || 'USD') as MarketplaceCurrency;
+
+    const supplierCostUsd = itemShippingBreakdown.reduce(
+      (sum: number, item: any) => sum + Number(item.productCostUsd || 0) * Number(item.quantity || 0),
+      0
+    );
+    const suggestedSaleTotal = itemShippingBreakdown.reduce(
+      (sum: number, item: any) => sum + Number(item.suggestedSalePrice || 0) * Number(item.quantity || 0),
+      0
+    );
+    const supplierCostInCurrency = supplierCostUsd * exchangeRate;
+    const expectedProfit = suggestedSaleTotal - supplierCostInCurrency;
+    const marginPercent = suggestedSaleTotal > 0 ? (expectedProfit / suggestedSaleTotal) * 100 : 0;
+
+    return { currency, exchangeRate, supplierCostUsd, supplierCostInCurrency, suggestedSaleTotal, expectedProfit, marginPercent };
+  }, [itemShippingBreakdown, marketplaceDraft]);
+
   const formattedCurrency = (amount: number, currency = marketplaceDraft?.currency || 'USD') =>
     new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0);
 
