@@ -84,6 +84,35 @@ export function POPreviewModal({ open, onOpenChange, data }: POPreviewModalProps
     }
   };
 
+  const preparePreviewLinks = () => {
+    const frameDocument = iframeRef.current?.contentDocument;
+    if (!frameDocument) return;
+
+    frameDocument.querySelectorAll<HTMLAnchorElement>('a.source-url').forEach(link => {
+      link.onclick = event => {
+        event.preventDefault();
+        const url = link.href;
+        if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      };
+    });
+
+    frameDocument.querySelectorAll<HTMLButtonElement>('button.copy-url').forEach(button => {
+      button.onclick = async event => {
+        event.preventDefault();
+        const url = button.dataset.url;
+        if (!url) return;
+        const copied = await copyToClipboard(url);
+        if (copied) {
+          toast.success('Enlace copiado');
+          button.textContent = 'Copiado';
+          window.setTimeout(() => { button.textContent = 'Copiar enlace'; }, 1500);
+        } else {
+          toast.error('No se pudo copiar el enlace');
+        }
+      };
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[92vh] w-[calc(100%-1rem)] max-w-[96vw] flex-col gap-0 overflow-hidden p-0">
@@ -99,6 +128,7 @@ export function POPreviewModal({ open, onOpenChange, data }: POPreviewModalProps
             ref={iframeRef}
             title={`Vista previa ${data.po_number}`}
             srcDoc={buildPOBuyingListHtml(data)}
+            onLoad={preparePreviewLinks}
             className="h-full w-full rounded border bg-background"
           />
         </div>

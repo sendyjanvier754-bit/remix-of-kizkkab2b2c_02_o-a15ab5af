@@ -4,6 +4,7 @@ import { es } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
 
 // Module-level branding name — set via setBrandingName() from BrandingApplier
 let _platformBrandName = 'SIVER MARKET 509';
@@ -1566,10 +1567,144 @@ export const buildPOBuyingListHtml = (
   return html;
 };
 
-export const downloadPOBuyingListPDF = (data: POBuyingListData) => {
-  const html = buildPOBuyingListHtml(data, { download: true });
+const imageToDataUrl = async (url: string | null) => {
+  const safeUrl = safeImageUrl(url);
+  if (!safeUrl) return null;
+  try {
+    const response = await fetch(safeUrl, { mode: 'cors' });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return await new Promise<string | null>(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
   const filename = `Purchase_List_${data.po_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-  return downloadPdfFromHtml(html, filename);
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 10;
+  const columns = [10, 32, 91, 137, 158, 174, 197, 287];
+  const totalUnits = data.items.reduce((sum, item) => sum + item.cantidad, 0);
+  const totalCost = data.items.reduce((sum, item) => sum + Number(item.unit_cost || 0) * item.cantidad, 0);
+  const brand = data.brand_identity === 'zleti' ? 'ZleTI' : _platformBrandName;
+
+  const drawHeader = () => {
+    pdf.setTextColor(7, 29, 127);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(20);
+    pdf.text(brand, pageWidth / 2, 13, { align: 'center' });
+    pdf.setTextColor(71, 85, 105);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.text('PURCHASE LIST · ZleTI MEXICO', pageWidth / 2, 18, { align: 'center' });
+    pdf.setFillColor(7, 29, 127);
+    pdf.roundedRect(pageWidth / 2 - 38, 21, 76, 8, 1.5, 1.5, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(`${data.po_number} — ${data.market_name}`, pageWidth / 2, 26.3, { align: 'center' });
+    pdf.setDrawColor(17, 24, 39);
+    pdf.line(margin, 32, pageWidth - margin, 32);
+    pdf.setTextColor(31, 41, 55);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text(`Date: ${format(new Date(data.generated_at), 'PPP p', { locale: enUS })}`, margin, 37);
+    pdf.text(`Total variants: ${data.items.length}   |   Total units: ${totalUnits}`, margin, 41);
+
+    pdf.setFillColor(243, 244, 246);
+    pdf.rect(margin, 45, pageWidth - margin * 2, 9, 'F');
+    pdf.setDrawColor(217, 222, 229);
+    pdf.rect(margin, 45, pageWidth - margin * 2, 9);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.5);
+    const headings = ['Image', 'Product', 'Variant', 'Unit price', 'Qty.', 'Total cost', 'Source URL'];
+    headings.forEach((heading, index) => pdf.text(heading, columns[index] + 2, 50.7));
+  };
+
+  drawHeader();
+  let y = 54;
+  for (const item of data.items) {
+    const rowHeight = 27;
+    if (y + rowHeight > pageHeight - 18) {
+      pdf.addPage();
+      drawHeader();
+      y = 54;
+    }
+
+    pdf.setDrawColor(217, 222, 229);
+    pdf.rect(margin, y, pageWidth - margin * 2, rowHeight);
+    columns.slice(1, -1).forEach(x => pdf.line(x, y, x, y + rowHeight));
+
+    const image = await imageToDataUrl(item.image);
+    if (image) {
+      try { pdf.addImage(image, columns[0] + 2, y + 3, 16, 16); } catch { /* leave image cell empty */ }
+    }
+
+    pdf.setTextColor(31, 41, 55);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.5);
+    const productLines = pdf.splitTextToSize(item.nombre, columns[2] - columns[1] - 4).slice(0, 3);
+    pdf.text(productLines, columns[1] + 2, y + 5);
+    pdf.setFont('courier', 'normal');
+    pdf.setTextColor(100, 116, 139);
+    pdf.setFontSize(6.5);
+    pdf.text(item.sku.replace(/-¥[\d.,]+-US\$[\d.,]+$/i, ''), columns[1] + 2, y + 22, { maxWidth: columns[2] - columns[1] - 4 });
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(29, 78, 216);
+    pdf.setFontSize(7.5);
+    pdf.text(pdf.splitTextToSize(item.variantName || '—', columns[3] - columns[2] - 4).slice(0, 3), columns[2] + 2, y + 5);
+    pdf.setTextColor(31, 41, 55);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`$${Number(item.unit_cost || 0).toFixed(2)}`, columns[3] + 2, y + 14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(String(item.cantidad), columns[4] + 5, y + 14);
+    pdf.text(`$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}`, columns[5] + 2, y + 14);
+
+    const url = safeExternalUrl(item.url_origen);
+    if (url) {
+      pdf.setTextColor(29, 78, 216);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(6.5);
+      const urlLines = pdf.splitTextToSize(url, columns[7] - columns[6] - 4).slice(0, 4);
+      pdf.textWithLink(urlLines.join('\n'), columns[6] + 2, y + 5, { url });
+      pdf.link(columns[6], y, columns[7] - columns[6], rowHeight, { url });
+    }
+    y += rowHeight;
+  }
+
+  if (y + 18 > pageHeight - 10) {
+    pdf.addPage();
+    drawHeader();
+    y = 54;
+  }
+  pdf.setFillColor(240, 253, 244);
+  pdf.setDrawColor(134, 239, 172);
+  pdf.rect(margin, y, pageWidth - margin * 2, 12, 'FD');
+  pdf.setTextColor(22, 101, 52);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(9);
+  pdf.text(`TOTAL UNITS: ${totalUnits}`, columns[4], y + 7.5);
+  pdf.text(`APPROX. TOTAL PURCHASE COST: $${totalCost.toFixed(2)}`, pageWidth - margin - 2, y + 7.5, { align: 'right' });
+
+  const pages = pdf.getNumberOfPages();
+  for (let page = 1; page <= pages; page += 1) {
+    pdf.setPage(page);
+    pdf.setTextColor(100, 116, 139);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7);
+    pdf.text('ZleTI Mexico - Purchasing and international logistics', margin, pageHeight - 5);
+    pdf.text(`Page ${page} / ${pages}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
+  }
+  pdf.save(filename);
 };
 
 export const generatePOBuyingListPDF = (
