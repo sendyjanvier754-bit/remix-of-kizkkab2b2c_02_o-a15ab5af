@@ -1607,12 +1607,22 @@ const SellerCheckout = () => {
                 </div>
 
                 {/* Applied discounts */}
-                {appliedDiscount && (
+                {(appliedDiscount || affiliateDiscount > 0) && (
                   <div className="space-y-2 mb-4 pb-4 border-b">
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>{t('checkoutExtra.discount')}</span>
-                      <span className="font-medium">-${discountAmount.toFixed(2)}</span>
-                    </div>
+                    {appliedDiscount && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>{t('checkoutExtra.discount')}</span>
+                        <span className="font-medium">-${couponDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {affiliateDiscount > 0 && affiliateOffer && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>
+                          Código {affiliateOffer.affiliate_code} ({affiliateOffer.discount_percent}%)
+                        </span>
+                        <span className="font-medium">-${affiliateDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
