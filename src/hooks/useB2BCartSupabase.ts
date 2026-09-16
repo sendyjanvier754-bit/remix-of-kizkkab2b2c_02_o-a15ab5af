@@ -264,26 +264,15 @@ export const useB2BCartSupabase = () => {
       if (!detail?.productId || !user?.id) return;
 
       try {
-        const { data: existing } = await (supabase as any)
+        let lookup = (supabase as any)
           .from('zleti_manual_cart_items')
           .select('id, quantity')
           .eq('user_id', user.id)
-          .eq('product_id', detail.productId)
-          .is('variant_id', detail.variantId ? undefined : null)
-          .maybeSingle()
-          .then((res: any) => res, () => ({ data: null }));
-
-        let current = existing;
-        if (detail.variantId) {
-          const { data } = await (supabase as any)
-            .from('zleti_manual_cart_items')
-            .select('id, quantity')
-            .eq('user_id', user.id)
-            .eq('product_id', detail.productId)
-            .eq('variant_id', detail.variantId)
-            .maybeSingle();
-          current = data;
-        }
+          .eq('product_id', detail.productId);
+        lookup = detail.variantId
+          ? lookup.eq('variant_id', detail.variantId)
+          : lookup.is('variant_id', null);
+        const { data: current } = await lookup.maybeSingle();
 
         if (current?.id) {
           const { error } = await (supabase as any)
