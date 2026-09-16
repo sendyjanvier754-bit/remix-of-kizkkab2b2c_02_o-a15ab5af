@@ -43,6 +43,15 @@ export default function AffiliateCommissionsPanel({ affiliate, canManage = false
   const [paidAt, setPaidAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  const { data: payoutRequests = [] } = useAffiliatePayoutRequests(affiliate.id);
+  const requestPayout = useRequestAffiliatePayout();
+  const resolveRequest = useResolveAffiliatePayoutRequest();
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [claimAmount, setClaimAmount] = useState("");
+  const [claimMethodId, setClaimMethodId] = useState("");
+  const [claimDetails, setClaimDetails] = useState("");
+  const [claimNote, setClaimNote] = useState("");
+
 
   const totals = useMemo(() => conversions.reduce((sum, conversion) => {
     const earned = Number(conversion.commission_earned || 0);
