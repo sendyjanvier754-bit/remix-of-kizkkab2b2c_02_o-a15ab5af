@@ -1704,7 +1704,31 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
     pdf.text('ZleTI Mexico - Purchasing and international logistics', margin, pageHeight - 5);
     pdf.text(`Page ${page} / ${pages}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
   }
-  pdf.save(filename);
+  // jsPDF writes URI annotations without /NewWindow, so most PDF viewers open
+  // links in the same window. Patch every external link to force a new tab.
+  const bytes = new Uint8Array(pdf.output('arraybuffer'));
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
+  }
+  const patched = binary.replace(
+    /\/A <<\/S \/URI \/URI \((.*?)\) >>/g,
+    '/A <</S /URI /URI ($1) /NewWindow true >>',
+  );
+  const patchedBytes = new Uint8Array(patched.length);
+  for (let i = 0; i < patched.length; i += 1) {
+    patchedBytes[i] = patched.charCodeAt(i) & 0xff;
+  }
+  const blob = new Blob([patchedBytes], { type: 'application/pdf' });
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 4000);
 };
 
 export const generatePOBuyingListPDF = (
