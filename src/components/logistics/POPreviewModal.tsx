@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Copy, Download, Loader2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -48,20 +48,6 @@ export function POPreviewModal({ open, onOpenChange, data, onSave }: POPreviewMo
     }
   };
 
-  const handleCopyLinks = async () => {
-    const links = Array.from(new Set(data.items.map(item => item.url_origen).filter((url): url is string => Boolean(url))));
-    if (links.length === 0) {
-      toast.info('Este PO no contiene enlaces de proveedor');
-      return;
-    }
-
-    const copied = await copyToClipboard(links.join('\n'));
-    if (copied) {
-      toast.success('Enlaces copiados', { description: `${links.length} ${links.length === 1 ? 'enlace copiado' : 'enlaces copiados'}.` });
-    } else {
-      toast.error('No se pudieron copiar los enlaces');
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -132,13 +118,6 @@ export function POPreviewModal({ open, onOpenChange, data, onSave }: POPreviewMo
         </div>
 
         <div className="flex flex-wrap justify-end gap-2 border-t bg-background px-4 py-3">
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cerrar
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCopyLinks}>
-            <Copy className="h-4 w-4" />
-            Copiar enlaces
-          </Button>
           <Button type="button" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {saving ? 'Guardando...' : onSave ? 'Guardar' : 'Guardar PDF'}

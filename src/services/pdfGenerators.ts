@@ -1713,7 +1713,7 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
     binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
   }
   const patched = binary.replace(
-    /\/A <<\/S \/URI \/URI \((.*?)\) >>/g,
+    /\/A\s*<<\s*\/S\s*\/URI\s*\/URI\s*\(((?:\\.|[^\\)])*)\)\s*>>/g,
     '/A <</S /URI /URI ($1) /NewWindow true >>',
   );
   const patchedBytes = new Uint8Array(patched.length);
