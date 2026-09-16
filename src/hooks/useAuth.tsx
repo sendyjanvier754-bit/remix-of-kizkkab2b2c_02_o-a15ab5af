@@ -10,6 +10,7 @@ interface AppUser {
   email: string;
   name: string;
   role: UserRole;
+  roles: UserRole[];
   phone: string | null;
   avatar_url: string | null;
   banner_url: string | null;
@@ -22,6 +23,8 @@ interface AuthContextType {
   user: AppUser | null;
   session: Session | null;
   role: UserRole | null;
+  roles: UserRole[];
+  hasRole: (role: UserRole) => boolean;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string, termsAcceptedAt?: string) => Promise<{ error: Error | null }>;
@@ -35,11 +38,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
+  const [roles, setRoles] = useState<UserRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
   const navigate = useNavigate();
 
-  const getUserRole = async (userId: string): Promise<UserRole> => {
+  const getUserRoles = async (userId: string): Promise<{ primary: UserRole; all: UserRole[] }> => {
     try {
       // Get all roles for user (handles duplicates and multiple roles)
       const { data, error } = await supabase
@@ -49,27 +53,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error checking user role:', error);
-        return UserRole.USER;
+        return { primary: UserRole.USER, all: [UserRole.USER] };
       }
 
       if (!data || data.length === 0) {
-        return UserRole.USER;
+        return { primary: UserRole.USER, all: [UserRole.USER] };
       }
 
-      // Priority: admin > purchasing_agent > grossiste > seller > sales_agent > pickup_partner > driver_partner > staff_pickup > user
-      const roles = data.map(r => r.role as string);
-      if (roles.includes('admin')) return UserRole.ADMIN;
-      if (roles.includes('purchasing_agent')) return UserRole.PURCHASING_AGENT;
-      if (roles.includes('grossiste')) return UserRole.GROSSISTE;
-      if (roles.includes('seller')) return UserRole.SELLER;
-      if (roles.includes('sales_agent')) return UserRole.SALES_AGENT;
-      if (roles.includes('pickup_partner')) return UserRole.PICKUP_PARTNER;
-      if (roles.includes('driver_partner')) return UserRole.DRIVER_PARTNER;
-      if (roles.includes('staff_pickup')) return UserRole.STAFF_PICKUP;
-      return UserRole.USER;
+      // Priority: admin > zletiadmin > purchasing_agent > grossiste > seller > sales_agent > pickup_partner > driver_partner > staff_pickup > user
+      const all = Array.from(new Set(data.map(r => r.role as UserRole)));
+      const priority = [UserRole.ADMIN, UserRole.ZLETI_ADMIN, UserRole.PURCHASING_AGENT, UserRole.GROSSISTE, UserRole.SELLER, UserRole.SALES_AGENT, UserRole.PICKUP_PARTNER, UserRole.DRIVER_PARTNER, UserRole.STAFF_PICKUP, UserRole.USER];
+      return { primary: priority.find(candidate => all.includes(candidate)) ?? UserRole.USER, all };
     } catch (error) {
       console.error('Error checking user role:', error);
-      return UserRole.USER;
+      return { primary: UserRole.USER, all: [UserRole.USER] };
     }
   };
 
@@ -94,6 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: data.email || '',
         name: data.full_name || 'Usuario',
         role: UserRole.USER, // Se obtiene de la tabla user_roles
+        roles: [UserRole.USER],
         phone: (data as any).phone || null,
         avatar_url: data.avatar_url || null,
         banner_url: data.banner_url || null,
@@ -123,9 +121,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user && mounted) {
           setSession(session);
           
-          const [profile, userRole] = await Promise.all([
+          const [profile, userRoles] = await Promise.all([
             fetchUserProfile(session.user.id),
-            getUserRole(session.user.id),
+            getUserRoles(session.user.id),
           ]);
           
           if (!profile) {
@@ -136,9 +134,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
           }
           
-          const appUser: AppUser = { ...profile, role: userRole };
+          const appUser: AppUser = { ...profile, role: userRoles.primary, roles: userRoles.all };
           setUser(appUser);
-          setRole(userRole);
+          setRole(userRoles.primary);
+          setRoles(userRoles.all);
           setIsLoading(false);
           clearTimeout(safetyTimeout);
           setHasInitialized(true);
@@ -179,6 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Session expired (refresh token invalid) — notify user
           setUser(null);
           setRole(null);
+          setRoles([]);
           toast.error('Tu sesión expiró. Por favor inicia sesión nuevamente.', {
             duration: 6000,
           });
@@ -192,22 +192,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user) {
           // Usar promesas en paralelo para reducir latencia
           (async () => {
-            const [profile, userRole] = await Promise.all([
+            const [profile, userRoles] = await Promise.all([
               fetchUserProfile(session.user.id),
-              getUserRole(session.user.id),
+              getUserRoles(session.user.id),
             ]);
             
             if (!profile) {
               console.error('No profile found for user:', session.user.id);
               setUser(null);
               setRole(null);
+              setRoles([]);
               return;
             }
             
-            const appUser: AppUser = { ...profile, role: userRole };
+            const userRole = userRoles.primary;
+            const appUser: AppUser = { ...profile, role: userRole, roles: userRoles.all };
 
             setUser(appUser);
             setRole(userRole);
+            setRoles(userRoles.all);
 
             // SOLO redirigir si es un login GENUINO desde /login
             // Usamos sessionStorage para detectar login genuino
@@ -223,6 +226,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               const isInCorrectArea = 
                 (userRole === UserRole.SELLER && currentPath.startsWith('/seller')) ||
                 (userRole === UserRole.ADMIN && currentPath.startsWith('/admin')) ||
+                (userRole === UserRole.ZLETI_ADMIN && currentPath === '/admin/logistica-zleti') ||
                 (userRole === UserRole.USER && !currentPath.startsWith('/seller') && !currentPath.startsWith('/admin'));
 
               // Solo redirigir si está en páginas de autenticación, raíz, o área incorrecta
@@ -242,6 +246,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   navigate('/seller/adquisicion-lotes', { replace: true });
                 } else if (userRole === UserRole.ADMIN) {
                   navigate('/admin/dashboard', { replace: true });
+                } else if (userRole === UserRole.ZLETI_ADMIN) {
+                  navigate('/admin/logistica-zleti', { replace: true });
                 } else if (userRole === UserRole.GROSSISTE) {
                   navigate('/grossiste/dashboard', { replace: true });
                 } else {
@@ -253,6 +259,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setUser(null);
           setRole(null);
+          setRoles([]);
         }
       }
     );
@@ -316,6 +323,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setSession(null);
     setRole(null);
+    setRoles([]);
     try {
       await supabase.auth.signOut();
     } catch (error) {
@@ -328,13 +336,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshProfile = async () => {
     if (!user?.id) return;
     const profile = await fetchUserProfile(user.id);
-    if (profile) setUser({ ...profile, role: role ?? UserRole.USER });
+    if (profile) setUser({ ...profile, role: role ?? UserRole.USER, roles });
   };
 
   const value: AuthContextType = {
     user,
     session,
     role,
+    roles,
+    hasRole: (candidate) => roles.includes(candidate),
     isLoading,
     signIn,
     signUp,

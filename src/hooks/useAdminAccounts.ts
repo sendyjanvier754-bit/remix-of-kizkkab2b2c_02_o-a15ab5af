@@ -11,6 +11,7 @@ export interface AccountProfile {
   avatar_url: string | null;
   created_at: string;
   role: string;
+  roles: string[];
 }
 
 export const useAdminAccounts = () => {
@@ -38,38 +39,39 @@ export const useAdminAccounts = () => {
         .select('user_id, role')
         .in('user_id', userIds);
 
-      const roleMap = new Map<string, string>();
-      roles?.forEach(r => roleMap.set(r.user_id, r.role));
+      const roleMap = new Map<string, string[]>();
+      roles?.forEach(r => roleMap.set(r.user_id, [...(roleMap.get(r.user_id) ?? []), r.role]));
 
       return profiles?.map(p => ({
         ...p,
-        role: roleMap.get(p.id) || 'user',
+        roles: roleMap.get(p.id) || ['user'],
+        role: roleMap.get(p.id)?.[0] || 'user',
       })) as AccountProfile[];
     },
   });
 
-  const changeRole = useMutation({
-    mutationFn: async ({ userId, newRole, userEmail, userName }: {
+  const changeRoles = useMutation({
+    mutationFn: async ({ userId, newRoles, previousRoles, userEmail, userName }: {
       userId: string;
-      newRole: string;
+      newRoles: string[];
+      previousRoles: string[];
       userEmail?: string | null;
       userName?: string | null;
     }) => {
-      // 1. Delete existing roles
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-
-      // 2. Insert new role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role: newRole as any });
-
-      if (roleError) throw roleError;
+      if (newRoles.length === 0) throw new Error('Selecciona al menos un rol');
+      const added = newRoles.filter(role => !previousRoles.includes(role));
+      const removed = previousRoles.filter(role => !newRoles.includes(role));
+      if (removed.length > 0) {
+        const { error } = await supabase.from('user_roles').delete().eq('user_id', userId).in('role', removed as any[]);
+        if (error) throw error;
+      }
+      if (added.length > 0) {
+        const { error } = await supabase.from('user_roles').insert(added.map(role => ({ user_id: userId, role: role as any })));
+        if (error) throw error;
+      }
 
       // 3. If upgrading to seller, create store + seller record
-      if (newRole === 'seller') {
+      if (added.includes('seller')) {
         // Check if store exists
         const { data: existingStore } = await supabase
           .from('stores')
@@ -132,7 +134,7 @@ export const useAdminAccounts = () => {
       }
 
       // 4. If downgrading from seller, deactivate store
-      if (newRole !== 'seller') {
+      if (removed.includes('seller')) {
         const { data: store } = await supabase.from('stores').select('id').eq('owner_user_id', userId).maybeSingle();
         if (store) {
           await supabase.from('stores').update({ is_active: false }).eq('id', store.id);
@@ -148,5 +150,5 @@ export const useAdminAccounts = () => {
     },
   });
 
-  return { accounts, isLoading, changeRole };
+  return { accounts, isLoading, changeRoles };
 };

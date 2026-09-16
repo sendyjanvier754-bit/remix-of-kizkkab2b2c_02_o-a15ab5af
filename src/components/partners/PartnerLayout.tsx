@@ -1,33 +1,51 @@
 import { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Truck, MapPin, DollarSign, MessagesSquare, LogOut, Package, Clock } from "lucide-react";
+import { Truck, MapPin, DollarSign, LogOut, Package, Clock, Megaphone, ReceiptText, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PartnerLayoutProps {
   children: ReactNode;
-  variant: "driver" | "pickup";
+  variant: "driver" | "pickup" | "influencer";
   title: string;
 }
 
-const driverNav = [
+type NavItem = { to: string; label: string; icon: any; end?: boolean };
+
+const driverNav: NavItem[] = [
   { to: "/socio/conductor", label: "Disponibles", icon: Clock, end: true },
   { to: "/socio/conductor/mis-rutas", label: "Mis rutas", icon: MapPin },
   { to: "/socio/conductor/ganancias", label: "Ganancias", icon: DollarSign },
 ];
 
-const pickupNav = [
-  { to: "/socio/punto", label: "Pedidos", icon: Package, end: true },
+const pickupNav: NavItem[] = [
+  { to: "/socio/punto", label: "Punto de Entrega", icon: Package, end: true },
   { to: "/socio/punto/historial", label: "Historial", icon: Clock },
   { to: "/socio/punto/ganancias", label: "Ganancias", icon: DollarSign },
 ];
 
 export default function PartnerLayout({ children, variant, title }: PartnerLayoutProps) {
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
-  const nav = variant === "driver" ? driverNav : pickupNav;
-  const Icon = variant === "driver" ? Truck : Package;
+  const affiliateNav: NavItem = {
+    to: "/socio/afiliado",
+    label: role === UserRole.ADMIN ? "Gestionar afiliados" : "Afiliados",
+    icon: Megaphone,
+  };
+  const influencerNav: NavItem[] = [
+    { to: "/socio/afiliado", label: role === UserRole.ADMIN ? "Gestionar afiliados" : "Mi panel", icon: Megaphone, end: true },
+    { to: "/socio/afiliado?tab=comisiones", label: "Comisiones", icon: ReceiptText },
+    { to: "/socio/afiliado/estadisticas", label: "Mis estadísticas", icon: BarChart3 },
+    { to: "/programa-afiliados", label: "El programa", icon: DollarSign },
+  ];
+  const nav = variant === "driver"
+    ? [...driverNav, affiliateNav]
+    : variant === "pickup"
+      ? [...pickupNav, affiliateNav]
+      : influencerNav;
+  const Icon = variant === "driver" ? Truck : variant === "pickup" ? Package : Megaphone;
 
   const handleLogout = async () => {
     await signOut();

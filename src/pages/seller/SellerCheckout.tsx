@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { resolveAffiliateOffer, AffiliateOffer } from '@/hooks/useAffiliates';
+import { getStoredAffiliateCode } from '@/components/affiliates/AffiliateRefCapture';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2BCartItems } from '@/hooks/useB2BCartItems';
@@ -128,6 +130,7 @@ const SellerCheckout = () => {
   const [selectedPickupPoint, setSelectedPickupPoint] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<CheckoutValidationError[]>([]);
   const [discountCode, setDiscountCode] = useState('');
+  const [affiliateOffer, setAffiliateOffer] = useState<AffiliateOffer | null>(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
@@ -181,7 +184,24 @@ const SellerCheckout = () => {
   // Calcular totales desde items de BD
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
   const totalQuantity = items.reduce((sum, item) => sum + item.cantidad, 0);
-  const discountAmount = appliedDiscount?.discountAmount || 0;
+  const couponDiscount = appliedDiscount?.discountAmount || 0;
+  const affiliateDiscount = affiliateOffer
+    ? Number(((subtotal * Number(affiliateOffer.discount_percent || 0)) / 100).toFixed(2))
+    : 0;
+  const discountAmount = couponDiscount + affiliateDiscount;
+
+  // Auto-apply the influencer code captured from the ?ref= link
+  useEffect(() => {
+    const loadAffiliate = async () => {
+      if (!user?.id || affiliateOffer) return;
+      const storedCode = getStoredAffiliateCode();
+      if (!storedCode) return;
+      const offer = await resolveAffiliateOffer(storedCode, user.id);
+      if (offer) setAffiliateOffer(offer);
+    };
+    loadAffiliate();
+  }, [user?.id, affiliateOffer]);
+  
   
   // Check for customer-specific discounts on mount
   useEffect(() => {
@@ -197,8 +217,21 @@ const SellerCheckout = () => {
   }, [user, subtotal]);
 
   const handleApplyDiscountCode = async () => {
-    if (!discountCode.trim()) return;
-    await applyDiscount(discountCode.trim(), subtotal);
+    const code = discountCode.trim();
+    if (!code) return;
+
+    // Influencer/affiliate code takes precedence
+    if (user?.id) {
+      const offer = await resolveAffiliateOffer(code, user.id);
+      if (offer) {
+        setAffiliateOffer(offer);
+        setDiscountCode('');
+        toast.success(`Código de ${offer.display_name} aplicado: ${offer.discount_percent}% de descuento`);
+        return;
+      }
+    }
+
+    await applyDiscount(code, subtotal);
     setDiscountCode('');
   };
   
@@ -288,6 +321,9 @@ const SellerCheckout = () => {
           shipping_cost_total_usd: shippingData?.shippingCostTotalUsd ?? null,
           local_commune_id: shippingData?.localCommuneId ?? null,
           local_pickup_point_id: shippingData?.localPickupPointId ?? null,
+          affiliate_id: affiliateOffer?.affiliate_id ?? null,
+          affiliate_code: affiliateOffer?.affiliate_code ?? null,
+          affiliate_discount_amount: affiliateDiscount,
         })
         .select()
         .single();
@@ -1571,12 +1607,22 @@ const SellerCheckout = () => {
                 </div>
 
                 {/* Applied discounts */}
-                {appliedDiscount && (
+                {(appliedDiscount || affiliateDiscount > 0) && (
                   <div className="space-y-2 mb-4 pb-4 border-b">
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>{t('checkoutExtra.discount')}</span>
-                      <span className="font-medium">-${discountAmount.toFixed(2)}</span>
-                    </div>
+                    {appliedDiscount && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>{t('checkoutExtra.discount')}</span>
+                        <span className="font-medium">-${couponDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {affiliateDiscount > 0 && affiliateOffer && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>
+                          Código {affiliateOffer.affiliate_code} ({affiliateOffer.discount_percent}%)
+                        </span>
+                        <span className="font-medium">-${affiliateDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
