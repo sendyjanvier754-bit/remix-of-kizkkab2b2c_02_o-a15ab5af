@@ -17,8 +17,11 @@ import {
   AffiliateConversion,
   useAffiliateConversions,
   useAffiliatePayoutMethods,
+  useAffiliatePayoutRequests,
   useAffiliatePayouts,
   useRecordAffiliatePayout,
+  useRequestAffiliatePayout,
+  useResolveAffiliatePayoutRequest,
   useVoidAffiliatePayout,
 } from "@/hooks/useAffiliates";
 
