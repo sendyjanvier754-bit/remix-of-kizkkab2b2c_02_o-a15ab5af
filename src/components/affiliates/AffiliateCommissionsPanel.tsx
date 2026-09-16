@@ -102,7 +102,30 @@ export default function AffiliateCommissionsPanel({ affiliate, canManage = false
     setNotes("");
   };
 
+  const openRequest = payoutRequests.find((request) => request.status === "pending" || request.status === "approved");
+
+  const openClaim = () => {
+    setClaimAmount(totals.pending.toFixed(2));
+    setClaimOpen(true);
+  };
+
+  const submitClaim = async () => {
+    const requested = Number(claimAmount);
+    if (!(requested > 0) || requested > totals.pending) return;
+    await requestPayout.mutateAsync({
+      affiliateId: affiliate.id,
+      amount: requested,
+      paymentMethodId: claimMethodId || null,
+      paymentDetails: claimDetails,
+      note: claimNote,
+    });
+    setClaimOpen(false);
+    setClaimDetails("");
+    setClaimNote("");
+  };
+
   if (isLoading || loadingPayouts) return <Skeleton className="h-80 w-full" />;
+
 
   return (
     <div className="space-y-5">
