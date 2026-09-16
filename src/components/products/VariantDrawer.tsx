@@ -113,6 +113,25 @@ const VariantDrawer: React.FC = () => {
     fetchPricesFromDb();
   }, [isB2BUser, product?.source_product_id]);
 
+  // 1b. ZleTI logistics only: supplier cost from the imported Excel base cost
+  useEffect(() => {
+    const fetchSupplierCost = async () => {
+      const targetId = product?.source_product_id || product?.id;
+      if (!isZletiManualPO || !targetId) {
+        setSupplierUnitCost(null);
+        return;
+      }
+      const { data } = await (supabase as any)
+        .from('products')
+        .select('costo_base_excel')
+        .eq('id', targetId)
+        .maybeSingle();
+      setSupplierUnitCost(data ? Number(data.costo_base_excel || 0) : null);
+    };
+    fetchSupplierCost();
+  }, [isZletiManualPO, product?.id, product?.source_product_id]);
+
+
   // 2. Extract variant prices from productVariants
   useEffect(() => {
     if (!isB2BUser || !productVariants || productVariants.length === 0) {
