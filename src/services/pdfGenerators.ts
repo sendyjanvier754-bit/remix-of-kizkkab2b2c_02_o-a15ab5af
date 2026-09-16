@@ -1403,6 +1403,20 @@ export const buildPOBuyingListHtml = (
           -webkit-user-select:text;
           pointer-events:auto;
         }
+        .url-cell { display:flex; flex-direction:column; gap:4px; align-items:flex-start; }
+        .copy-url {
+          border:1px solid #cbd5e1;
+          background:#f8fafc;
+          color:#071d7f;
+          border-radius:4px;
+          font-size:9px;
+          font-weight:600;
+          padding:3px 6px;
+          cursor:pointer;
+        }
+        .copy-url.copied { background:#dcfce7; border-color:#86efac; color:#166534; }
+        @media print { .copy-url { display:none; } }
+        .pdf-download .copy-url { display:none; }
         .document-actions {
           display:flex;
           justify-content:flex-end;
