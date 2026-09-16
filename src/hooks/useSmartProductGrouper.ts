@@ -672,7 +672,8 @@ export const importGroupedProducts = async (
             attribute_combination: attributeCombination,
             cost_price: variant.costBase,
             price_adjustment: priceAdjustment,
-          })
+            ...logisticsPayload(resolveLogistics(variant.originalRow, logistics)),
+          } as any)
           .select()
           .single();
 
