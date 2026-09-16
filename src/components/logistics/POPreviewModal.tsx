@@ -31,6 +31,31 @@ export function POPreviewModal({ open, onOpenChange, data }: POPreviewModalProps
     previewWindow.print();
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      // fall through to legacy copy
+    }
+
+    try {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(area);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
   const handleCopyLinks = async () => {
     const links = Array.from(new Set(data.items.map(item => item.url_origen).filter((url): url is string => Boolean(url))));
     if (links.length === 0) {
@@ -38,10 +63,10 @@ export function POPreviewModal({ open, onOpenChange, data }: POPreviewModalProps
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(links.join('\n'));
+    const copied = await copyToClipboard(links.join('\n'));
+    if (copied) {
       toast.success('Enlaces copiados', { description: `${links.length} ${links.length === 1 ? 'enlace copiado' : 'enlaces copiados'}.` });
-    } catch {
+    } else {
       toast.error('No se pudieron copiar los enlaces');
     }
   };

@@ -300,7 +300,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       // Auto-detect mapping suggestions
       const autoMap = Object.fromEntries(
         MAPPING_FIELDS.map(field => [field.key, autoDetect(detectedHeaders, field.keywords)]),
-      ) as ColumnMapping;
+      ) as unknown as ColumnMapping;
       setColumnMapping(autoMap);
       setStep("mapping");
       toast.success(`${rows.length} filas detectadas. Configura el mapeo de columnas.`);
@@ -414,7 +414,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         variante_2_talla: parsed.size,
         variante_1_color_original: parsed.color,
         variante_2_talla_original: parsed.size,
-        variante_raw: parsed.raw || sourceText,
+        variante_raw: parsed.raw || String(row[sourceColumn] ?? ""),
         sku_interno: skuParts.join("-").replace(/\s+/g, "").slice(0, 50),
       };
     }));

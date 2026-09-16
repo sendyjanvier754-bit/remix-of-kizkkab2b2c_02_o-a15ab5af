@@ -47,6 +47,43 @@ export default function AdminZletiLogisticsPage() {
   ]);
   const queryClient = useQueryClient();
   const { data, isLoading } = useProductsB2B(filters, 0, null);
+  const cartProductIds = Array.from(new Set(cart.items.map(item => item.productId).filter(Boolean)));
+  const { data: cartSupplierInfo } = useQuery({
+    queryKey: ['zleti-cart-supplier-info', cartProductIds],
+    enabled: cartProductIds.length > 0,
+    queryFn: async () => {
+      const { data: products, error } = await (supabase as any)
+        .from('products')
+        .select('id, url_origen, costo_base_excel, proveedor_id')
+        .in('id', cartProductIds);
+      if (error) throw error;
+
+      const supplierIds = Array.from(new Set((products || []).map((p: any) => p.proveedor_id).filter(Boolean)));
+      let suppliersById = new Map<string, any>();
+      if (supplierIds.length > 0) {
+        const { data: suppliers } = await (supabase as any)
+          .from('suppliers')
+          .select('id, name, website')
+          .in('id', supplierIds);
+        suppliersById = new Map((suppliers || []).map((s: any) => [s.id, s]));
+      }
+
+      const map = new Map<string, { url: string | null; supplierName: string | null; excelCost: number }>();
+      (products || []).forEach((product: any) => {
+        const supplier = product.proveedor_id ? suppliersById.get(product.proveedor_id) : null;
+        map.set(product.id, {
+          url: product.url_origen || supplier?.website || null,
+          supplierName: supplier?.name || null,
+          excelCost: Number(product.costo_base_excel || 0),
+        });
+      });
+      return map;
+    },
+  });
+  const cartSupplierSubtotal = cart.items.reduce(
+    (sum, item) => sum + (cartSupplierInfo?.get(item.productId)?.excelCost || 0) * item.quantity,
+    0,
+  );
   const { data: poHistory = [], isLoading: historyLoading } = useQuery({
     queryKey: ['zleti-po-history'],
     queryFn: async () => {
@@ -719,7 +756,36 @@ export default function AdminZletiLogisticsPage() {
                             {item.size && <Badge variant="secondary" className="text-[10px]">Talla: {item.size}</Badge>}
                           </div>
                         )}
-                        {item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()} className="mt-2 block max-w-full truncate text-[11px] text-primary underline underline-offset-2 hover:text-primary/80">Ver producto de origen</a>}
+                        {(() => {
+                          const info = cartSupplierInfo?.get(item.productId);
+                          const url = item.sourceUrl || info?.url || null;
+                          if (!url) return null;
+                          return (
+                            <div className="mt-2 space-y-1">
+                              {info?.supplierName && <p className="text-[11px] text-muted-foreground">Proveedor: {info.supplierName}</p>}
+                              <div className="flex flex-wrap items-center gap-2">
+                                <a href={url} target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()} className="block max-w-full truncate text-[11px] text-primary underline underline-offset-2 hover:text-primary/80">Ver producto de origen</a>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-[10px]"
+                                  onClick={async event => {
+                                    event.stopPropagation();
+                                    try {
+                                      await navigator.clipboard.writeText(url);
+                                      toast.success('Enlace copiado');
+                                    } catch {
+                                      toast.error('No se pudo copiar el enlace');
+                                    }
+                                  }}
+                                >
+                                  Copiar enlace
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:block">
                         <span className="text-xs font-medium text-muted-foreground sm:block sm:pb-1">Cantidad</span>
@@ -728,6 +794,9 @@ export default function AdminZletiLogisticsPage() {
                       <div className="flex items-center justify-between sm:block sm:text-right">
                         <span className="text-xs font-medium text-muted-foreground sm:block sm:pb-1">Total</span>
                         <span className="text-sm font-bold text-slate-900">${Number(item.totalPrice || 0).toFixed(2)}</span>
+                        <span className="block text-[11px] text-muted-foreground">
+                          Costo proveedor: ${((cartSupplierInfo?.get(item.productId)?.excelCost || 0) * item.quantity).toFixed(2)}
+                        </span>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)} className="text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Eliminar producto">
                         <Trash2 className="h-4 w-4" />
@@ -747,6 +816,7 @@ export default function AdminZletiLogisticsPage() {
                 <div>
                   <p className="text-xs text-muted-foreground">{cart.totalQuantity} unidades seleccionadas</p>
                   <p className="text-lg font-bold text-slate-900">Subtotal: ${Number(cart.subtotal || 0).toFixed(2)} <span className="text-xs font-medium text-muted-foreground">USD</span></p>
+                  <p className="text-sm font-semibold text-emerald-700">Subtotal proveedor: ${cartSupplierSubtotal.toFixed(2)} <span className="text-xs font-medium text-muted-foreground">USD</span></p>
                 </div>
                 <Button onClick={() => { setCartOpen(false); createPO.mutate(); }} disabled={cart.items.length === 0 || createPO.isPending} className="h-11 gap-2 rounded-lg bg-[#071d7f] px-5 hover:bg-[#1239a6]">
                   {createPO.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}

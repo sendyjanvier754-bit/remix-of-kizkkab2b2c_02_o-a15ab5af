@@ -1403,6 +1403,20 @@ export const buildPOBuyingListHtml = (
           -webkit-user-select:text;
           pointer-events:auto;
         }
+        .url-cell { display:flex; flex-direction:column; gap:4px; align-items:flex-start; }
+        .copy-url {
+          border:1px solid #cbd5e1;
+          background:#f8fafc;
+          color:#071d7f;
+          border-radius:4px;
+          font-size:9px;
+          font-weight:600;
+          padding:3px 6px;
+          cursor:pointer;
+        }
+        .copy-url.copied { background:#dcfce7; border-color:#86efac; color:#166534; }
+        @media print { .copy-url { display:none; } }
+        .pdf-download .copy-url { display:none; }
         .document-actions {
           display:flex;
           justify-content:flex-end;
@@ -1477,7 +1491,10 @@ export const buildPOBuyingListHtml = (
                 <td class="center">$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}</td>
                 <td>
                   ${safeExternalUrl(item.url_origen)
-                    ? `<a href="${escapeHtml(safeExternalUrl(item.url_origen))}" target="_blank" rel="noopener noreferrer" class="source-url" title="Enlace del proveedor">${escapeHtml(safeExternalUrl(item.url_origen))}</a>`
+                    ? `<div class="url-cell">
+                        <a href="${escapeHtml(safeExternalUrl(item.url_origen))}" target="_blank" rel="noopener noreferrer" class="source-url" title="Abrir enlace del proveedor en una pestaña nueva">${escapeHtml(safeExternalUrl(item.url_origen))}</a>
+                        <button type="button" class="copy-url" data-url="${escapeHtml(safeExternalUrl(item.url_origen))}">Copiar enlace</button>
+                      </div>`
                     : '<span style="color:#bbb">—</span>'}
                 </td>
               </tr>
@@ -1499,9 +1516,52 @@ export const buildPOBuyingListHtml = (
         <p>Document generated on ${format(new Date(), 'PPP p', { locale: enUS })}</p>
       </div>
       </main>
+      <script>
+        (function () {
+          function copyText(text) {
+            try {
+              if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+              }
+            } catch (e) {}
+            var area = document.createElement('textarea');
+            area.value = text;
+            area.style.position = 'fixed';
+            area.style.opacity = '0';
+            document.body.appendChild(area);
+            area.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(area);
+            return Promise.resolve();
+          }
+          document.addEventListener('click', function (event) {
+            var button = event.target && event.target.closest ? event.target.closest('.copy-url') : null;
+            if (button) {
+              event.preventDefault();
+              var url = button.getAttribute('data-url') || '';
+              copyText(url);
+              var original = button.textContent;
+              button.textContent = 'Copiado';
+              button.classList.add('copied');
+              setTimeout(function () {
+                button.textContent = original;
+                button.classList.remove('copied');
+              }, 1500);
+              return;
+            }
+            var link = event.target && event.target.closest ? event.target.closest('a.source-url') : null;
+            if (link) {
+              event.preventDefault();
+              var href = link.getAttribute('href');
+              if (href) window.open(href, '_blank', 'noopener,noreferrer');
+            }
+          });
+        })();
+      </script>
     </body>
     </html>
   `;
+
 
   return html;
 };
