@@ -451,6 +451,14 @@ export const useB2BCartSupabase = () => {
       setLocalZletiCart(cart.items.map(current => current.id === itemId
         ? { ...current, quantity, totalPrice: quantity * current.unitPrice }
         : current));
+      try {
+        await (supabase as any)
+          .from('zleti_manual_cart_items')
+          .update({ quantity })
+          .eq('id', itemId);
+      } catch (error) {
+        console.error('Error updating ZleTI cart quantity:', error);
+      }
       return;
     }
 
