@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Copy, Download, Loader2, Printer } from 'lucide-react';
+import { Copy, Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,23 +13,15 @@ interface POPreviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   data: POBuyingListData | null;
+  /** When provided, Guardar persists the PO first and then downloads the PDF. */
+  onSave?: () => Promise<POBuyingListData | void>;
 }
 
-export function POPreviewModal({ open, onOpenChange, data }: POPreviewModalProps) {
+export function POPreviewModal({ open, onOpenChange, data, onSave }: POPreviewModalProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [downloading, setDownloading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   if (!data) return null;
-
-  const handlePrint = () => {
-    const previewWindow = iframeRef.current?.contentWindow;
-    if (!previewWindow) {
-      toast.error('No se pudo preparar la impresión');
-      return;
-    }
-    previewWindow.focus();
-    previewWindow.print();
-  };
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -71,16 +63,22 @@ export function POPreviewModal({ open, onOpenChange, data }: POPreviewModalProps
     }
   };
 
-  const handleDownload = async () => {
-    setDownloading(true);
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      await downloadPOBuyingListPDF(data);
-      toast.success('PDF guardado', { description: `${data.po_number} se descargó correctamente.` });
-    } catch (error) {
-      console.error('Error downloading ZleTI PO PDF:', error);
-      toast.error('No se pudo guardar el PDF');
+      let pdfData = data;
+      if (onSave) {
+        const updated = await onSave();
+        if (updated) pdfData = updated;
+      }
+      await downloadPOBuyingListPDF(pdfData);
+      toast.success('PO guardado', { description: `${pdfData.po_number} se guardó y el PDF se descargó correctamente.` });
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error saving ZleTI PO:', error);
+      toast.error(error?.message || 'No se pudo guardar el PO');
     } finally {
-      setDownloading(false);
+      setSaving(false);
     }
   };
 
@@ -119,7 +117,7 @@ export function POPreviewModal({ open, onOpenChange, data }: POPreviewModalProps
         <div className="border-b bg-background px-5 py-4 pr-12">
           <DialogHeader>
             <DialogTitle>Vista previa — {data.po_number}</DialogTitle>
-            <DialogDescription>Revisa el documento, abre los enlaces del proveedor o guárdalo como PDF.</DialogDescription>
+            <DialogDescription>Revisa el documento, abre los enlaces del proveedor o guarda el PO con su PDF.</DialogDescription>
           </DialogHeader>
         </div>
 
@@ -141,13 +139,9 @@ export function POPreviewModal({ open, onOpenChange, data }: POPreviewModalProps
             <Copy className="h-4 w-4" />
             Copiar enlaces
           </Button>
-          <Button type="button" variant="outline" onClick={handlePrint}>
-            <Printer className="h-4 w-4" />
-            Imprimir
-          </Button>
-          <Button type="button" onClick={handleDownload} disabled={downloading}>
-            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            {downloading ? 'Guardando...' : 'Guardar PDF'}
+          <Button type="button" onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {saving ? 'Guardando...' : onSave ? 'Guardar' : 'Guardar PDF'}
           </Button>
         </div>
       </DialogContent>
