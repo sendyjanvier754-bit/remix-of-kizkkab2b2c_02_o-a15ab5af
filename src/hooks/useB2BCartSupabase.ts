@@ -545,7 +545,7 @@ export const useB2BCartSupabase = () => {
       console.error('Error clearing cart:', error);
       toast.error(t('toasts.errorClearingCart'));
     }
-  }, [cart.id, fetchOrCreateCart, isZletiManualPO, setLocalZletiCart]);
+  }, [cart.id, fetchOrCreateCart, isZletiManualPO, setLocalZletiCart, user?.id]);
 
   // Create order from cart
   const createOrder = useCallback(async (

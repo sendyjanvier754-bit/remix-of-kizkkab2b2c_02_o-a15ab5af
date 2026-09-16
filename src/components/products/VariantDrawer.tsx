@@ -40,6 +40,7 @@ const VariantDrawer: React.FC = () => {
   const [b2cVariantPrices, setB2cVariantPrices] = useState<Record<string, number>>({});
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [variantSelectorResetKey, setVariantSelectorResetKey] = useState(0);
+  const [supplierUnitCost, setSupplierUnitCost] = useState<number | null>(null);
 
   const { user, role } = useAuth();
   const { toast } = useToast();
