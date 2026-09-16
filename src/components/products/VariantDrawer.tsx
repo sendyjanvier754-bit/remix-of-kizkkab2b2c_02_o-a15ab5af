@@ -40,6 +40,7 @@ const VariantDrawer: React.FC = () => {
   const [b2cVariantPrices, setB2cVariantPrices] = useState<Record<string, number>>({});
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [variantSelectorResetKey, setVariantSelectorResetKey] = useState(0);
+  const [supplierUnitCost, setSupplierUnitCost] = useState<number | null>(null);
 
   const { user, role } = useAuth();
   const { toast } = useToast();
@@ -111,6 +112,25 @@ const VariantDrawer: React.FC = () => {
     
     fetchPricesFromDb();
   }, [isB2BUser, product?.source_product_id]);
+
+  // 1b. ZleTI logistics only: supplier cost from the imported Excel base cost
+  useEffect(() => {
+    const fetchSupplierCost = async () => {
+      const targetId = product?.source_product_id || product?.id;
+      if (!isZletiManualPO || !targetId) {
+        setSupplierUnitCost(null);
+        return;
+      }
+      const { data } = await (supabase as any)
+        .from('products')
+        .select('costo_base_excel')
+        .eq('id', targetId)
+        .maybeSingle();
+      setSupplierUnitCost(data ? Number(data.costo_base_excel || 0) : null);
+    };
+    fetchSupplierCost();
+  }, [isZletiManualPO, product?.id, product?.source_product_id]);
+
 
   // 2. Extract variant prices from productVariants
   useEffect(() => {
@@ -599,6 +619,12 @@ const VariantDrawer: React.FC = () => {
 
         {/* Footer - sticky */}
         <div className="p-4 border-t bg-background">
+          {isZletiManualPO && supplierUnitCost !== null && (
+            <div className="mb-3 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs">
+              <span className="font-medium text-emerald-800">Costo proveedor: ${supplierUnitCost.toFixed(2)} / unidad</span>
+              <span className="font-bold text-emerald-900">Total proveedor: ${(supplierUnitCost * totalQty).toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between mb-3 gap-2">
             <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold text-sm">
               {totalQty} {t('catalogExtra.variantDrawer.units')}
