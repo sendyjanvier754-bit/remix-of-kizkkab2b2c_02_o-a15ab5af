@@ -1516,9 +1516,52 @@ export const buildPOBuyingListHtml = (
         <p>Document generated on ${format(new Date(), 'PPP p', { locale: enUS })}</p>
       </div>
       </main>
+      <script>
+        (function () {
+          function copyText(text) {
+            try {
+              if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+              }
+            } catch (e) {}
+            var area = document.createElement('textarea');
+            area.value = text;
+            area.style.position = 'fixed';
+            area.style.opacity = '0';
+            document.body.appendChild(area);
+            area.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(area);
+            return Promise.resolve();
+          }
+          document.addEventListener('click', function (event) {
+            var button = event.target && event.target.closest ? event.target.closest('.copy-url') : null;
+            if (button) {
+              event.preventDefault();
+              var url = button.getAttribute('data-url') || '';
+              copyText(url);
+              var original = button.textContent;
+              button.textContent = 'Copiado';
+              button.classList.add('copied');
+              setTimeout(function () {
+                button.textContent = original;
+                button.classList.remove('copied');
+              }, 1500);
+              return;
+            }
+            var link = event.target && event.target.closest ? event.target.closest('a.source-url') : null;
+            if (link) {
+              event.preventDefault();
+              var href = link.getAttribute('href');
+              if (href) window.open(href, '_blank', 'noopener,noreferrer');
+            }
+          });
+        })();
+      </script>
     </body>
     </html>
   `;
+
 
   return html;
 };
