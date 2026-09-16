@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Truck, MapPin, DollarSign, LogOut, Package, Clock, Megaphone, ReceiptText, BarChart3 } from "lucide-react";
+import { Truck, MapPin, DollarSign, LogOut, Package, Clock, Megaphone, ReceiptText, BarChart3, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { Button } from "@/components/ui/button";
