@@ -416,7 +416,7 @@ const VariantDrawer: React.FC = () => {
       close();
     }
 
-    if (onComplete) onComplete(addedItems);
+    if (onComplete) (onComplete as (items?: unknown) => void)(addedItems);
   };
 
   // No renderizar en SellerCartPage (moved after all hooks to avoid hooks count mismatch)
