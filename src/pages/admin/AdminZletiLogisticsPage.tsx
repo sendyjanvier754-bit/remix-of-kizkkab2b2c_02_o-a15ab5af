@@ -47,6 +47,43 @@ export default function AdminZletiLogisticsPage() {
   ]);
   const queryClient = useQueryClient();
   const { data, isLoading } = useProductsB2B(filters, 0, null);
+  const cartProductIds = Array.from(new Set(cart.items.map(item => item.productId).filter(Boolean)));
+  const { data: cartSupplierInfo } = useQuery({
+    queryKey: ['zleti-cart-supplier-info', cartProductIds],
+    enabled: cartProductIds.length > 0,
+    queryFn: async () => {
+      const { data: products, error } = await (supabase as any)
+        .from('products')
+        .select('id, url_origen, costo_base_excel, proveedor_id')
+        .in('id', cartProductIds);
+      if (error) throw error;
+
+      const supplierIds = Array.from(new Set((products || []).map((p: any) => p.proveedor_id).filter(Boolean)));
+      let suppliersById = new Map<string, any>();
+      if (supplierIds.length > 0) {
+        const { data: suppliers } = await (supabase as any)
+          .from('suppliers')
+          .select('id, name, website')
+          .in('id', supplierIds);
+        suppliersById = new Map((suppliers || []).map((s: any) => [s.id, s]));
+      }
+
+      const map = new Map<string, { url: string | null; supplierName: string | null; excelCost: number }>();
+      (products || []).forEach((product: any) => {
+        const supplier = product.proveedor_id ? suppliersById.get(product.proveedor_id) : null;
+        map.set(product.id, {
+          url: product.url_origen || supplier?.website || null,
+          supplierName: supplier?.name || null,
+          excelCost: Number(product.costo_base_excel || 0),
+        });
+      });
+      return map;
+    },
+  });
+  const cartSupplierSubtotal = cart.items.reduce(
+    (sum, item) => sum + (cartSupplierInfo?.get(item.productId)?.excelCost || 0) * item.quantity,
+    0,
+  );
   const { data: poHistory = [], isLoading: historyLoading } = useQuery({
     queryKey: ['zleti-po-history'],
     queryFn: async () => {
