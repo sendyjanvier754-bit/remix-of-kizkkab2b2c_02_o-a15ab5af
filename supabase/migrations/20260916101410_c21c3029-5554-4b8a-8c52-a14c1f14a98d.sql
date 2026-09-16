@@ -1,4 +1,0 @@
-ALTER TABLE public.product_variants
-  ADD COLUMN IF NOT EXISTS length_cm NUMERIC,
-  ADD COLUMN IF NOT EXISTS width_cm NUMERIC,
-  ADD COLUMN IF NOT EXISTS height_cm NUMERIC;

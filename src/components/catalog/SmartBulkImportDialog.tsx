@@ -56,10 +56,6 @@ interface ColumnMapping {
   proveedor: string;
   url_origen: string;
   imagen_principal: string;
-  peso_g: string;
-  length_cm: string;
-  width_cm: string;
-  height_cm: string;
 }
 
 const DEFAULT_MAPPING: ColumnMapping = {
@@ -73,11 +69,7 @@ const DEFAULT_MAPPING: ColumnMapping = {
   categoria: 'Categoria',
   proveedor: 'Proveedor',
   url_origen: 'URL_Producto',
-  imagen_principal: '',
-  peso_g: 'Peso_g',
-  length_cm: 'Largo_cm',
-  width_cm: 'Ancho_cm',
-  height_cm: 'Alto_cm'
+  imagen_principal: ''
 };
 
 const STEPS = [
@@ -411,10 +403,6 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
         lower.includes('product_url') ||
         lower.includes('link')
       ) autoMapping.url_origen = header;
-      else if (lower.includes('peso') || lower.includes('weight')) autoMapping.peso_g = header;
-      else if (lower.includes('largo') || lower.includes('length') || lower.includes('longitud')) autoMapping.length_cm = header;
-      else if (lower.includes('ancho') || lower.includes('width')) autoMapping.width_cm = header;
-      else if (lower.includes('alto') || lower.includes('altura') || lower.includes('height')) autoMapping.height_cm = header;
     });
     setMapping(autoMapping);
   };
