@@ -135,6 +135,9 @@
     "edit": "Edit",
     "accountNumber": "Account number",
     "holderLabel": "Holder",
+    "reviewBeforeCheckout": "Review the total before proceeding to checkout. You can modify quantities.","totalLogistics": "Total Logistics","shippingIncludedFor": "Shipping cost included for {{count}} units","deliveryTime": "Delivery Time","totalInvestment": "Total Investment","salesValue": "Sales Value (RRP)","potentialProfit": "Potential Profit","averageRoi": "Average ROI","productsWithMarketPrice": "{{count}}/{{total}} products with B2C market price","negotiateWhatsapp": "Negotiate via WhatsApp","updatingLogistics": "Updating logistics costs...","includedLogisticsCost": "Included logistics cost:",
+    "includeShippingCost":"Include Shipping Cost","deliveryTime":"Delivery Time","days":"days","estimatedTotal":"Estimated Total","calculating":"Calculating...","updatingLogistics":"Updating logistics costs...","productsAndLogistics":"Products + Logistics ({{count}} items)","productsOnly":"Products only ({{count}} items)","suggestedSalesPrices":"View Suggested Sales Prices","includedLogisticsCost":"Included logistics cost:","netProfit":"Your net profit:","acceptPayments":"We accept:","shareCartButton":"Share","whatsappButton":"WhatsApp","buyB2B":"Buy B2B ({{count}})","selectProducts":"Select products",
+    "redirectingToCheckout": "Redirecting to checkout...",
     "digitalWallet": "Digital wallet"
   }
 }

@@ -160,7 +160,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
         <div className="sticky top-0 text-white p-4 flex items-center justify-between shadow-lg" style={{ backgroundColor: '#071d7f' }}>
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-6 h-6" />
-            <h2 className="font-bold text-lg">Carrito B2B</h2>
+            <h2 className="font-bold text-lg">{t('cartExtra.b2bCart')}</h2>
             {cart.totalItems > 0 && (
               <span className="ml-2 px-2 py-1 bg-[#071d7f] text-white text-xs rounded-full font-bold">
                 {cart.totalItems}
@@ -180,8 +180,8 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
           {cart.items.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 font-medium mb-2">Tu carrito está vacío</p>
-              <p className="text-xs text-gray-500">Comienza a añadir productos para verlos aquí</p>
+              <p className="text-gray-600 font-medium mb-2">{t('cart.empty')}</p>
+              <p className="text-xs text-gray-500">{t('cart.emptyMessage')}</p>
             </div>
           ) : (
             <>
@@ -189,7 +189,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex gap-2">
                 <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-blue-700">
-                  Revisa el total antes de proceder al checkout. Puedes modificar cantidades.
+                  {t('cartExtra.reviewBeforeCheckout')}
                 </p>
               </div>
 
@@ -241,7 +241,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                           <button
                             onClick={() => onRemoveItem(item.productId, item.color, item.size)}
                             className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition ml-2"
-                            title="Eliminar del carrito"
+                            title={t('cart.removeFromCart')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -282,7 +282,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                             onClick={() =>
                               onUpdateQuantity(
                                 item.productId,
-                                Math.max(item.moq, item.cantidad - 1),
+                                Math.max(1, item.cantidad - 1),
                                 item.color,
                                 item.size
                               )
@@ -293,13 +293,13 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                           </button>
                           <input
                             type="number"
-                            min={item.moq}
+                            min={1}
                             max={item.stock_fisico}
                             value={item.cantidad}
                             onChange={(e) =>
                               onUpdateQuantity(
                                 item.productId,
-                                parseInt(e.target.value) || item.moq,
+                                Math.max(1, parseInt(e.target.value) || 1),
                                 item.color,
                                 item.size
                               )
@@ -329,11 +329,11 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
               {/* Resumen */}
               <div className="border-t border-gray-200 pt-4 mt-4 space-y-3 bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-700">Total de Unidades:</span>
+                  <span className="text-gray-700">{t('cart.totalItems')}:</span>
                   <span className="font-bold text-gray-900">{cart.totalQuantity}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-700">Subtotal Productos:</span>
+                  <span className="text-gray-700">{t('cart.subtotal')}:</span>
                   <span className="font-bold text-gray-900">${cart.subtotal.toFixed(2)}</span>
                 </div>
                 
@@ -350,7 +350,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                               ) : (
                                 <Truck className="w-4 h-4" />
                               )}
-                              Logística Total:
+                              {t('cartExtra.totalLogistics')}:
                             </span>
                             <span className="font-semibold text-blue-600">
                               {cartLogistics.isCalculating ? (
@@ -362,7 +362,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="left" className="text-xs">
-                          <p>Costo de envío incluido para {cart.totalQuantity} unidades</p>
+                          <p>{t('cartExtra.shippingIncludedFor', { count: cart.totalQuantity })}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -370,7 +370,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                     <div className="flex justify-between text-sm">
                       <span className="text-amber-600 flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        Tiempo Entrega:
+                        {t('cartExtra.deliveryTime')}:
                       </span>
                       <span className="font-semibold text-amber-600">
                         {cartLogistics.estimatedDeliveryDays.min}-{cartLogistics.estimatedDeliveryDays.max} días
@@ -380,7 +380,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                 )}
                 
                 <div className="border-t border-gray-300 pt-3 flex justify-between text-lg font-bold">
-                  <span className="text-gray-900">Total Inversión:</span>
+                  <span className="text-gray-900">{t('cartExtra.totalInvestment')}:</span>
                   <span className="font-bold" style={{ color: '#071d7f' }}>
                     ${(cart.subtotal + cartLogistics.totalLogisticsCost + cartLogistics.totalCategoryFees).toFixed(2)}
                   </span>
@@ -392,7 +392,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-green-700 flex items-center gap-1">
                         <TrendingUp className="w-4 h-4" />
-                        Valor de Venta (PVP):
+                        {t('cartExtra.salesValue')}:
                       </span>
                       <span className="font-semibold text-green-800">
                         ${profitProjection.total_pvp_value.toFixed(2)}
@@ -400,7 +400,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                       <span className="text-green-700 flex items-center gap-1">
-                        📈 Beneficio Potencial:
+                        📈 {t('cartExtra.potentialProfit')}:
                         {profitProjection.items_with_market_price > 0 && (
                           <ArrowUpRight className="w-4 h-4 text-green-500" />
                         )}
@@ -410,13 +410,13 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                       </span>
                     </div>
                     <div className="flex justify-between text-xs text-green-600 mt-1">
-                      <span>ROI Promedio:</span>
+                      <span>{t('cartExtra.averageRoi')}:</span>
                       <span className="font-semibold">{profitProjection.avg_roi_percent.toFixed(0)}%</span>
                     </div>
                     {profitProjection.items_with_market_price > 0 && (
                       <p className="text-[10px] text-green-600 mt-2 flex items-center gap-1">
                         <ArrowUpRight className="w-3 h-3" />
-                        {profitProjection.items_with_market_price}/{profitProjection.items_total} productos con precio de mercado B2C
+                        {t('cartExtra.productsWithMarketPrice', { count: profitProjection.items_with_market_price, total: profitProjection.items_total })}
                       </p>
                     )}
                   </div>
@@ -429,7 +429,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                 className="w-full text-white py-3 rounded-lg font-bold text-center transition block mt-4 shadow-lg hover:opacity-90"
                 style={{ backgroundColor: '#071d7f' }}
               >
-                Proceder al Checkout
+                {t('cart.checkout')}
               </Link>
 
               {/* Botón Negociar por WhatsApp */}
@@ -442,12 +442,12 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                 {isNegotiating ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Procesando...
+                    {t('checkout.processing')}
                   </>
                 ) : (
                   <>
                     <MessageCircle className="w-5 h-5" />
-                    Negociar por WhatsApp
+                    {t('cartExtra.negotiateWhatsapp')}
                   </>
                 )}
               </button>
@@ -457,7 +457,7 @@ Me gustaría negociar condiciones para este pedido. Quedo atento.`;
                 onClick={onToggle}
                 className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 py-2 rounded-lg font-medium text-center transition"
               >
-                Continuar Comprando
+                {t('cartExtra.continueShopping')}
               </button>
             </>
           )}

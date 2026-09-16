@@ -570,7 +570,9 @@ const VariantDrawer: React.FC = () => {
             availabilityOverrides={sellerVariantAvailabilityMap}
             initialAttributes={preSelectedAttributes}
             initialSelections={preSelectedQuantities}
-            allowIndependentAttributeSelection={isZletiManualPO}
+            // B2B MOQ is applied to the product total, so each color/size
+            // combination must be selectable without resetting the others.
+            allowIndependentAttributeSelection={isB2BUser || isZletiManualPO}
             onSelectionChange={(list, qty, price, _variant, isValid, errors) => {
               setSelections(list);
               setTotalQty(qty);

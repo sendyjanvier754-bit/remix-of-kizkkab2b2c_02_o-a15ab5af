@@ -135,6 +135,9 @@
     "edit": "Modifier",
     "accountNumber": "Numéro de compte",
     "holderLabel": "Titulaire",
+    "reviewBeforeCheckout": "Vérifiez le total avant de passer à la caisse. Vous pouvez modifier les quantités.","totalLogistics": "Logistique totale","shippingIncludedFor": "Frais de livraison inclus pour {{count}} unités","deliveryTime": "Délai de livraison","totalInvestment": "Investissement total","salesValue": "Valeur de vente (PVP)","potentialProfit": "Bénéfice potentiel","averageRoi": "ROI moyen","productsWithMarketPrice": "{{count}}/{{total}} produits avec prix du marché B2C","negotiateWhatsapp": "Négocier via WhatsApp","updatingLogistics": "Mise à jour des coûts logistiques...","includedLogisticsCost": "Coût logistique inclus :",
+    "includeShippingCost":"Inclure les frais de livraison","deliveryTime":"Délai de livraison","days":"jours","estimatedTotal":"Total estimé","calculating":"Calcul en cours...","updatingLogistics":"Mise à jour des coûts logistiques...","productsAndLogistics":"Produits + logistique ({{count}} articles)","productsOnly":"Produits uniquement ({{count}} articles)","suggestedSalesPrices":"Voir les prix de vente suggérés","includedLogisticsCost":"Coût logistique inclus :","netProfit":"Votre bénéfice net :","acceptPayments":"Nous acceptons :","shareCartButton":"Partager","whatsappButton":"WhatsApp","buyB2B":"Acheter B2B ({{count}})","selectProducts":"Sélectionner les produits",
+    "redirectingToCheckout": "Redirection vers le paiement...",
     "digitalWallet": "Portefeuille numérique"
   }
 }

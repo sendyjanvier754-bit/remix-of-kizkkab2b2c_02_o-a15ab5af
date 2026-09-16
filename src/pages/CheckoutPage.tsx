@@ -54,6 +54,16 @@ type DeliveryMethod = 'address' | 'pickup';
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const validationMessage = (field: string, fallback: string) => {
+    const keys: Record<string, string> = {
+      items: 'checkout.validationEmptyCart',
+      deliveryMethod: 'checkout.validationDelivery',
+      selectedAddress: 'checkout.validationAddress',
+      selectedPickupPoint: 'checkout.validationPickup',
+      paymentMethod: 'checkout.validationPayment',
+    };
+    return keys[field] ? t(keys[field]) : fallback;
+  };
   const { user, role, isLoading: authLoading } = useAuth();
   const { items: allItems, isLoading: cartLoading } = useB2CCartItems();
   const { b2cSelectedIds } = useCartSelectionStore();
@@ -183,7 +193,6 @@ const CheckoutPage = () => {
         setPaymentMode('manual');
       }
     } else {
-      // For other methods, default to manual
       setPaymentMode('manual');
     }
   }, [paymentMethod, moncashAutoAvailable, moncashManualAvailable, natcashAutoAvailable, natcashManualAvailable]);
@@ -422,7 +431,7 @@ const CheckoutPage = () => {
       setValidationErrors(errors);
       // Show first error as toast
       const firstError = errors[0];
-      toast.error(firstError.message);
+      toast.error(validationMessage(firstError.field, firstError.message));
       return;
     }
 
@@ -538,7 +547,7 @@ const CheckoutPage = () => {
               {hasFieldError(validationErrors, 'deliveryMethod') && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700">{getFieldError(validationErrors, 'deliveryMethod')}</p>
+                  <p className="text-sm text-red-700">{validationMessage('deliveryMethod', getFieldError(validationErrors, 'deliveryMethod') || '')}</p>
                 </div>
               )}
               
@@ -618,7 +627,7 @@ const CheckoutPage = () => {
                 {hasFieldError(validationErrors, 'selectedAddress') && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-700">{getFieldError(validationErrors, 'selectedAddress')}</p>
+                    <p className="text-sm text-red-700">{validationMessage('selectedAddress', getFieldError(validationErrors, 'selectedAddress') || '')}</p>
                   </div>
                 )}
 
@@ -667,7 +676,7 @@ const CheckoutPage = () => {
                             {address.city}{address.state ? `, ${address.state}` : ''} - {address.country}
                           </p>
                           {address.phone && (
-                            <p className="text-sm text-muted-foreground">Tel: {address.phone}</p>
+                            <p className="text-sm text-muted-foreground">{t('cartExtra.phoneLabel')}: {address.phone}</p>
                           )}
                         </div>
                       </div>
@@ -714,12 +723,12 @@ const CheckoutPage = () => {
                             {point.city}, {point.country}
                           </p>
                           {point.phone && (
-                            <p className="text-sm text-muted-foreground">Tel: {point.phone}</p>
+                            <p className="text-sm text-muted-foreground">{t('cartExtra.phoneLabel')}: {point.phone}</p>
                           )}
                         </div>
                         {point.is_active && (
                           <Badge variant="outline" className="text-green-600">
-                            Activo
+                            {t('cartExtra.active')}
                           </Badge>
                         )}
                       </div>
@@ -777,7 +786,7 @@ const CheckoutPage = () => {
               {hasFieldError(validationErrors, 'paymentMethod') && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700">{getFieldError(validationErrors, 'paymentMethod')}</p>
+                  <p className="text-sm text-red-700">{validationMessage('paymentMethod', getFieldError(validationErrors, 'paymentMethod') || '')}</p>
                 </div>
               )}
               
@@ -818,19 +827,19 @@ const CheckoutPage = () => {
               {/* Payment Details */}
               {paymentMethod === 'transfer' && platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-2">Datos Bancarios - {platformPaymentInfo.platformName}</h4>
+                  <h4 className="font-semibold text-green-800 mb-2">{t('cartExtra.bankDetailsFor', { platform: platformPaymentInfo.platformName })}</h4>
                   <div className="space-y-1 text-sm text-green-700">
-                    <p><span className="font-medium">Banco:</span> {platformPaymentInfo.bank.bank_name || 'No configurado'}</p>
-                    <p><span className="font-medium">Tipo:</span> {platformPaymentInfo.bank.account_type || 'No configurado'}</p>
-                    <p><span className="font-medium">Cuenta:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
-                    <p><span className="font-medium">Beneficiario:</span> {platformPaymentInfo.bank.account_holder || 'No configurado'}</p>
+                    <p><span className="font-medium">{t('cartExtra.bankLabel')}:</span> {platformPaymentInfo.bank.bank_name || t('checkout.notConfigured')}</p>
+                    <p><span className="font-medium">{t('cartExtra.typeLabel')}:</span> {platformPaymentInfo.bank.account_type || t('checkout.notConfigured')}</p>
+                    <p><span className="font-medium">{t('cartExtra.accountLabel')}:</span> {maskNumber(platformPaymentInfo.bank.account_number)}</p>
+                    <p><span className="font-medium">{t('cartExtra.beneficiaryLabel')}:</span> {platformPaymentInfo.bank.account_holder || t('common.notConfigured')}</p>
                   </div>
                    <div className="mt-3">
-                    <Label>Referencia de Transferencia <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarla al subir el comprobante)</span></Label>
+                    <Label>{t('cartExtra.transferReference')} <span className="text-xs text-muted-foreground font-normal">{t('cartExtra.optionalUploadHint')}</span></Label>
                     <Input
                       value={paymentReference}
                       onChange={(e) => setPaymentReference(e.target.value)}
-                      placeholder="Número de referencia (opcional)"
+                      placeholder={t('cartExtra.referenceNumberPlaceholder')}
                       className="mt-1"
                     />
                   </div>
@@ -839,7 +848,7 @@ const CheckoutPage = () => {
 
               {paymentMethod === 'transfer' && !platformPaymentInfo?.bank && (
                 <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-700">No se han configurado datos bancarios en la plataforma.</p>
+                  <p className="text-sm text-yellow-700">{t('cartExtra.noBankDataConfigured')}</p>
                 </div>
               )}
 
@@ -849,7 +858,7 @@ const CheckoutPage = () => {
                   {/* Mode selector when both available */}
                   {moncashAutoAvailable && moncashManualAvailable && (
                     <div className="p-4 bg-muted/30 rounded-lg space-y-3">
-                      <Label className="font-medium">¿Cómo desea pagar?</Label>
+                      <Label className="font-medium">{t('cartExtra.howToPay')}</Label>
                       <div className="grid gap-2">
                         <div 
                           className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${
@@ -865,10 +874,10 @@ const CheckoutPage = () => {
                           <div className="flex-1">
                             <span className="font-medium flex items-center gap-2">
                               <Smartphone className="h-4 w-4 text-yellow-500" />
-                              Pago Automático
+                              {t('cartExtra.automaticPayment')}
                             </span>
                             <p className="text-xs text-muted-foreground">
-                              Pago instantáneo vía API, confirmación automática
+                              {t('cartExtra.automaticPaymentDesc')}
                             </p>
                           </div>
                         </div>
@@ -884,9 +893,9 @@ const CheckoutPage = () => {
                             {paymentMode === 'manual' && <Check className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">Pago Manual</span>
+                            <span className="font-medium">{t('cartExtra.manualPayment')}</span>
                             <p className="text-xs text-muted-foreground">
-                              Pague y proporcione el código de transacción
+                              {t('cartExtra.manualPaymentDesc')}
                             </p>
                           </div>
                         </div>
@@ -899,11 +908,10 @@ const CheckoutPage = () => {
                     <div className="p-4 rounded-lg border-2 border-yellow-300 bg-yellow-50/50">
                       <div className="flex items-center gap-2 mb-2">
                         <Smartphone className="h-5 w-5 text-[#94111f]" />
-                        <h4 className="font-semibold text-[#94111f]">Pago Automático MonCash</h4>
+                        <h4 className="font-semibold text-[#94111f]">{t('cartExtra.automaticPaymentMoncash')}</h4>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        Al confirmar, será redirigido a MonCash para completar el pago de forma segura.
-                        La confirmación será automática una vez procesado.
+                        {t('cartExtra.moncashRedirectMessage')}
                       </p>
                     </div>
                   )}
@@ -912,18 +920,18 @@ const CheckoutPage = () => {
                   {paymentMode === 'manual' && moncashManualAvailable && platformPaymentInfo?.moncash && (
                     <div className="p-4 rounded-lg" style={{ backgroundColor: '#94111f20' }}>
                       <h4 className="font-semibold mb-2" style={{ color: '#94111f' }}>
-                        Datos MonCash - {platformPaymentInfo.platformName}
+                        {t('cartExtra.moncashDetailsFor', { platform: platformPaymentInfo.platformName })}
                       </h4>
                       <div className="space-y-1 text-sm" style={{ color: '#94111f' }}>
-                        <p><span className="font-medium">Número:</span> {platformPaymentInfo.moncash.phone_number || 'No configurado'}</p>
-                        <p><span className="font-medium">Nombre:</span> {platformPaymentInfo.moncash.name || 'No configurado'}</p>
+                        <p><span className="font-medium">{t('cartExtra.numberLabel')}:</span> {platformPaymentInfo.moncash.phone_number || t('checkout.notConfigured')}</p>
+                        <p><span className="font-medium">{t('cartExtra.nameLabel')}:</span> {platformPaymentInfo.moncash.name || t('checkout.notConfigured')}</p>
                       </div>
                       <div className="mt-3">
-                        <Label>Código de Transacción <span className="text-xs text-muted-foreground font-normal">(opcional — puedes ingresarlo al subir el comprobante)</span></Label>
+                        <Label>{t('cartExtra.transactionCode')} <span className="text-xs text-muted-foreground font-normal">{t('cartExtra.optionalUploadHint')}</span></Label>
                         <Input
                           value={paymentReference}
                           onChange={(e) => setPaymentReference(e.target.value)}
-                          placeholder="Código de transacción MonCash (opcional)"
+                          placeholder={t('cartExtra.moncashTransactionPlaceholder')}
                           className="mt-1"
                         />
                       </div>
@@ -934,7 +942,7 @@ const CheckoutPage = () => {
                   {/* Neither available */}
                   {!moncashAutoAvailable && !moncashManualAvailable && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-700">MonCash no está disponible actualmente.</p>
+                      <p className="text-sm text-yellow-700">{t('cartExtra.moncashUnavailable')}</p>
                     </div>
                   )}
                 </div>

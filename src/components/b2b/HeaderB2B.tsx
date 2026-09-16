@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, Package, Clock, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -82,6 +82,7 @@ const HeaderB2B = ({
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [isImageSearching, setIsImageSearching] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [isRedirectingToCart, setIsRedirectingToCart] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const isMobile = useIsMobile();
   const { getValue } = useBranding();
@@ -92,6 +93,12 @@ const HeaderB2B = ({
     items: cartItems
   } = useB2BCartItems();
   const cartCount = cartItems.reduce((sum, item) => sum + item.cantidad, 0);
+  const handleGoToCart = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    if (isRedirectingToCart) return;
+    setIsRedirectingToCart(true);
+    window.location.assign('/seller/carrito');
+  };
   const {
     data: categories = [],
     isLoading: categoriesLoading
@@ -345,8 +352,8 @@ const HeaderB2B = ({
             </Link>
 
             {/* Cart */}
-            <Link to="/seller/carrito" className="relative flex-shrink-0">
-              <ShoppingBag className="w-6 h-6 text-gray-700" strokeWidth={1.5} />
+            <Link to="/seller/carrito" onClick={handleGoToCart} aria-disabled={isRedirectingToCart} className="relative flex-shrink-0">
+              {isRedirectingToCart ? <Loader2 className="w-6 h-6 text-gray-700 animate-spin" /> : <ShoppingBag className="w-6 h-6 text-gray-700" strokeWidth={1.5} />}
               {cartCount > 0 && <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>}
@@ -464,8 +471,8 @@ const HeaderB2B = ({
                 <User className="w-6 h-6" />
                 <span className="text-xs">Cuenta</span>
               </Link>
-              <Link to="/seller/carrito" className="flex flex-col items-center gap-1 text-gray-700 hover:text-blue-600 transition relative">
-                <ShoppingBag className="w-6 h-6" />
+              <Link to="/seller/carrito" onClick={handleGoToCart} aria-disabled={isRedirectingToCart} className="flex flex-col items-center gap-1 text-gray-700 hover:text-blue-600 transition relative">
+                {isRedirectingToCart ? <Loader2 className="w-6 h-6 animate-spin" /> : <ShoppingBag className="w-6 h-6" />}
                 {cartCount > 0 && <span className="absolute -top-1 right-2 min-w-[18px] h-[18px] bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
                     {cartCount > 99 ? '99+' : cartCount}
                   </span>}

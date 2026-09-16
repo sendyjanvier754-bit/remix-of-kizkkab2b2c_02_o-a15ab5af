@@ -888,7 +888,7 @@ const VariantSelector = ({
                         {t('catalogExtra.variantSelector.lastUnits', { count: getEffectiveStock(matchingVariant) })}
                       </Badge>
                     )}
-                    {isB2B && !ignoreB2BLimits && matchingVariant.moq > 1 && (
+                    {isB2B && !allowIndependentAttributeSelection && !ignoreB2BLimits && matchingVariant.moq > 1 && (
                       <Badge variant="outline" className="text-xs">{t('catalogExtra.variantSelector.min', { count: matchingVariant.moq })}</Badge>
                     )}
                   </div>
@@ -1018,7 +1018,7 @@ const VariantSelector = ({
                           {t('catalogExtra.variantSelector.soonAvailable')}
                         </Badge>
                       )}
-                      {isB2B && !ignoreB2BLimits && variant.moq > 1 && (
+                      {isB2B && !allowIndependentAttributeSelection && !ignoreB2BLimits && variant.moq > 1 && (
                         <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
                           {t('catalogExtra.variantSelector.min', { count: variant.moq })}
                         </Badge>

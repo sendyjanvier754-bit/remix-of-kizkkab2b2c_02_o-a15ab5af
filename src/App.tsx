@@ -58,6 +58,7 @@ const TrendsPage = lazyWithRetry(() => import("./pages/TrendsPage"));
 const MarketplacePage = lazyWithRetry(() => import("./pages/MarketplacePage"));
 const MyPurchasesPage = lazyWithRetry(() => import("./pages/MyPurchasesPage"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/CheckoutPage"));
+const AffiliateProgramPage = lazyWithRetry(() => import("./pages/AffiliateProgramPage"));
 const UserProfilePage = lazyWithRetry(() => import("./pages/UserProfilePage"));
 const EditProfilePage = lazyWithRetry(() => import("./pages/EditProfilePage"));
 const UserSupportPage = lazyWithRetry(() => import("./pages/UserSupportPage"));
@@ -202,6 +203,7 @@ const AppContent = () => {
             <Route path="/carrito" element={<LazyRoute><CartPage /></LazyRoute>} />
             <Route path="/carrito/compartido/:shareCode" element={<LazyRoute><SharedCartPage /></LazyRoute>} />
             <Route path="/checkout" element={<LazyRoute><CheckoutPage /></LazyRoute>} />
+            <Route path="/programa-afiliados" element={<LazyRoute><AffiliateProgramPage /></LazyRoute>} />
             <Route path="/favoritos" element={<LazyRoute><FavoritesPage /></LazyRoute>} />
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />
             <Route path="/busqueda" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />

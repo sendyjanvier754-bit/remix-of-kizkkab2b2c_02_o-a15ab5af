@@ -68,6 +68,16 @@ type DeliveryMethod = 'address' | 'pickup';
 
 const SellerCheckout = () => {
   const { t } = useTranslation();
+  const validationMessage = (field: string, fallback: string) => {
+    const keys: Record<string, string> = {
+      items: 'checkout.validationEmptyOrder',
+      deliveryMethod: 'checkout.validationDelivery',
+      selectedAddress: 'checkout.validationAddress',
+      selectedPickupPoint: 'checkout.validationPickup',
+      paymentMethod: 'checkout.validationPayment',
+    };
+    return keys[field] ? t(keys[field]) : fallback;
+  };
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { items: allItems, isLoading: cartLoading } = useB2BCartItems();
@@ -532,8 +542,8 @@ const SellerCheckout = () => {
   const paymentMethods = [
     {
       id: 'stripe' as PaymentMethod,
-      name: 'Tarjeta de Débito/Crédito',
-      description: 'Visa, Mastercard, American Express',
+      name: t('checkout.debitCreditCard'),
+      description: t('checkout.creditCardDesc'),
       icon: CreditCard,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -541,15 +551,15 @@ const SellerCheckout = () => {
     {
       id: 'moncash' as PaymentMethod,
       name: 'MonCash',
-      description: 'Billetera digital haitiana',
+      description: t('checkout.digitalWalletHaitian'),
       icon: Smartphone,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
     },
     {
       id: 'transfer' as PaymentMethod,
-      name: 'Transferencia Bancaria',
-      description: 'Transferencia directa a nuestra cuenta',
+      name: t('payments.bankTransfer'),
+      description: t('checkout.directBankTransfer'),
       icon: Building2,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -578,7 +588,7 @@ const SellerCheckout = () => {
   // Handle saving new address
   const handleSaveNewAddress = async () => {
     if (!newAddress.full_name || !newAddress.street_address || !newAddress.city) {
-      toast.error('Completa los campos obligatorios');
+      toast.error(t('checkoutExtra.fullNameRequired'));
       return;
     }
     
@@ -636,7 +646,7 @@ const SellerCheckout = () => {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Cargando...</p>
+          <p className="text-muted-foreground">{t('checkoutExtra.loading')}</p>
         </div>
       </div>
     );
@@ -650,14 +660,14 @@ const SellerCheckout = () => {
             <div className="max-w-2xl mx-auto">
               <Card className="p-8 text-center">
                 <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h1 className="text-2xl font-bold mb-4">Carrito Vacío</h1>
+                <h1 className="text-2xl font-bold mb-4">{t('checkoutExtra.emptyTitle')}</h1>
                 <p className="text-muted-foreground mb-8">
-                  No tienes productos en tu carrito. Vuelve al catálogo para continuar comprando.
+                  {t('checkoutExtra.emptyMessage')}
                 </p>
                 <Button asChild>
                   <Link to="/seller/adquisicion-lotes">
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Volver al Catálogo
+                    {t('checkoutExtra.backToCatalog')}
                   </Link>
                 </Button>
               </Card>
@@ -684,16 +694,16 @@ const SellerCheckout = () => {
                   </div>
                 </div>
                 <h1 className="text-2xl font-bold mb-2">
-                  {needsCardPayment ? 'Pedido Creado · Falta el Pago' : '¡Pedido Confirmado!'}
+                  {needsCardPayment ? t('checkoutExtra.orderCreatedMissingPayment') : t('checkoutExtra.orderCreatedCard')}
                 </h1>
                 <p className="text-muted-foreground mb-4">
                   {needsCardPayment
-                    ? 'Completa el pago con tarjeta para confirmar tu pedido.'
-                    : 'Tu pedido ha sido creado exitosamente.'}
+                    ? t('checkoutExtra.completeCardPayment')
+                    : t('checkoutExtra.orderCreatedMessage')}
                 </p>
                 {orderId && (
                   <div className="bg-muted p-4 rounded-lg mb-4">
-                    <p className="text-sm text-muted-foreground">ID del Pedido</p>
+                    <p className="text-sm text-muted-foreground">{t('checkoutExtra.orderId')}</p>
                     <p className="font-mono font-bold">{orderId.slice(0, 8).toUpperCase()}</p>
                   </div>
                 )}
@@ -706,7 +716,7 @@ const SellerCheckout = () => {
                       amount={Math.max(0.5, orderTotal)}
                       currency="usd"
                       onSuccess={() => {
-                        toast.success('Pago enviado. Recibirás la confirmación por correo.');
+                        toast.success(t('checkoutExtra.paymentSent'));
                       }}
                     />
                   </div>
@@ -717,10 +727,9 @@ const SellerCheckout = () => {
                     <div className="flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
                       <div>
-                        <p className="font-semibold text-yellow-800">Pendiente de Verificación</p>
+                        <p className="font-semibold text-yellow-800">{t('checkoutExtra.pendingVerification')}</p>
                         <p className="text-sm text-yellow-700 mt-1">
-                          Tu pedido está pendiente de verificación de pago.
-                          Los productos serán agregados a tu catálogo una vez confirmado el pago.
+                          {t('checkoutExtra.pendingMessage')}
                         </p>
                       </div>
                     </div>
@@ -729,10 +738,10 @@ const SellerCheckout = () => {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild variant="outline">
-                    <Link to="/seller/catalogo">Ver Mi Catálogo</Link>
+                    <Link to="/seller/catalogo">{t('checkoutExtra.viewCatalog')}</Link>
                   </Button>
                   <Button asChild>
-                    <Link to="/seller/adquisicion-lotes">Continuar Comprando</Link>
+                    <Link to="/seller/adquisicion-lotes">{t('checkoutExtra.continueShopping')}</Link>
                   </Button>
                 </div>
               </Card>
@@ -769,7 +778,7 @@ const SellerCheckout = () => {
     // Validate local delivery commune (required when delivery is to address)
     if (deliveryMethod === 'address' && !selectedComm) {
       console.error('❌ [CHECKOUT DEBUG] Validación falló: falta selectedComm');
-      toast.error('⚠️ Falta información de entrega: Haz scroll hacia arriba, selecciona una dirección y elige el departamento y comuna de entrega');
+      toast.error(t('checkoutExtra.deliveryRequired'));
       // Scroll to top to show delivery section
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -778,7 +787,7 @@ const SellerCheckout = () => {
     if (errors.length > 0) {
       console.error('❌ [CHECKOUT DEBUG] Errores de validación:', errors);
       setValidationErrors(errors);
-      toast.error(errors[0].message);
+      toast.error(validationMessage(errors[0].field, errors[0].message));
       return;
     }
 
@@ -793,7 +802,7 @@ const SellerCheckout = () => {
 
     // Validate that remaining amount is positive (credit can't cover 100%)
     if (useSiverCredit && creditAmount > 0 && remainingToPay <= 0) {
-      toast.error('El crédito no puede cubrir el 100% del pedido');
+      toast.error(t('checkoutExtra.creditCannotCoverAll'));
       return;
     }
 
@@ -888,12 +897,12 @@ const SellerCheckout = () => {
       if (paymentMethod === 'stripe') {
         // For Stripe, the order STAYS pending until the webhook confirms the payment.
         // The card form is rendered on the order-confirmed screen below.
-        toast.success('Pedido creado. Completa el pago con tarjeta para confirmarlo.');
+        toast.success(t('checkoutExtra.completeCardPayment'));
       } else {
         // For MonCash/Transfer, order stays pending_validation until admin verifies and updates payment_status
         toast.success(useSiverCredit && creditAmount > 0
-          ? 'Pedido creado con crédito aplicado. Pago restante pendiente de verificación.'
-          : 'Pedido creado. Pendiente de verificación de pago.');
+          ? t('checkoutExtra.pendingMessage')
+          : t('checkoutExtra.pendingVerification'));
       }
 
 
@@ -938,8 +947,8 @@ const SellerCheckout = () => {
         error: error
       });
       
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      toast.error(`Error al procesar el pedido: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : t('checkoutExtra.unknownError');
+      toast.error(t('checkoutExtra.processingOrderError', { error: errorMessage }));
     } finally {
       setIsProcessing(false);
     }
@@ -959,7 +968,7 @@ const SellerCheckout = () => {
           <div className="container mx-auto px-4 py-0 flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
               <div className="px-3 py-1.5 rounded-lg bg-[#071d7f]">
-                <span className="text-sm font-semibold text-white">Checkout B2B</span>
+                <span className="text-sm font-semibold text-white">{t('checkoutExtra.b2bTitle')}</span>
               </div>
             </div>
             
@@ -967,7 +976,7 @@ const SellerCheckout = () => {
             <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg">
               <ShoppingBag className="h-4 w-4 text-[#071d7f]" />
               <span className="text-sm font-semibold text-[#071d7f]">
-                {items.length} {items.length === 1 ? 'producto' : 'productos'}
+                {items.length} {items.length === 1 ? t('checkoutExtra.product') : t('checkoutExtra.products')}
               </span>
             </div>
           </div>
@@ -1002,7 +1011,7 @@ const SellerCheckout = () => {
               }`}>
                 <div className="bg-gray-200 px-4 py-3">
                   <h2 className="text-lg font-bold">
-                    Opción de Entrega
+                    {t('checkoutExtra.deliveryOption')}
                   </h2>
                 </div>
                 <div className="p-4">
@@ -1013,9 +1022,10 @@ const SellerCheckout = () => {
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-700">
-                      {getFieldError(validationErrors, 'deliveryMethod') || 
-                       getFieldError(validationErrors, 'selectedAddress') || 
-                       getFieldError(validationErrors, 'selectedPickupPoint')}
+                      {validationMessage(
+                        validationErrors.find(error => ['deliveryMethod', 'selectedAddress', 'selectedPickupPoint'].includes(error.field))?.field || 'deliveryMethod',
+                        getFieldError(validationErrors, 'deliveryMethod') || getFieldError(validationErrors, 'selectedAddress') || getFieldError(validationErrors, 'selectedPickupPoint') || ''
+                      )}
                     </p>
                   </div>
                 )}
@@ -1047,12 +1057,12 @@ const SellerCheckout = () => {
                     <RadioGroupItem value="address" id="delivery-address" />
                     <div className="flex items-center gap-2 flex-1">
                       <Truck className="h-4 w-4 text-muted-foreground" />
-                      <p className="font-semibold text-sm">Envío a Domicilio</p>
+                      <p className="font-semibold text-sm">{t('checkoutExtra.deliveryHome')}</p>
                     </div>
                     {deliveryMethod === 'address' && selectedAddress ? (
                       <p className="text-xs text-muted-foreground">{selectedAddress.full_name}</p>
                     ) : deliveryMethod === 'address' && !selectedAddressId ? (
-                      <span className="text-xs text-orange-600 font-medium">Seleccionar</span>
+                      <span className="text-xs text-orange-600 font-medium">{t('checkoutExtra.select')}</span>
                     ) : null}
                   </div>
 
@@ -1074,12 +1084,12 @@ const SellerCheckout = () => {
                     <RadioGroupItem value="pickup" id="delivery-pickup" />
                     <div className="flex items-center gap-2 flex-1">
                       <Store className="h-4 w-4 text-muted-foreground" />
-                      <p className="font-semibold text-sm">Retiro en Punto</p>
+                      <p className="font-semibold text-sm">{t('checkoutExtra.pickupPoint')}</p>
                     </div>
                     {deliveryMethod === 'pickup' && selectedPickupPoint && pickupPoints.find(p => p.id === selectedPickupPoint) ? (
                       <p className="text-xs text-muted-foreground">{pickupPoints.find(p => p.id === selectedPickupPoint)?.name}</p>
                     ) : deliveryMethod === 'pickup' && !selectedPickupPoint ? (
-                      <span className="text-xs text-orange-600 font-medium">Seleccionar</span>
+                      <span className="text-xs text-orange-600 font-medium">{t('checkoutExtra.select')}</span>
                     ) : null}
                   </div>
                 </RadioGroup>
@@ -1092,11 +1102,10 @@ const SellerCheckout = () => {
                       <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="font-semibold text-amber-900 text-sm mb-1">
-                          ⚠️ Información de entrega incompleta
+                          ⚠️ {t('checkoutExtra.incompleteDeliveryTitle')}
                         </p>
                         <p className="text-sm text-amber-800 mb-3">
-                          La dirección seleccionada no tiene departamento y comuna guardados. 
-                          Por favor, selecciona la dirección de nuevo para completar esta información.
+                          {t('checkoutExtra.incompleteDeliveryMessage')}
                         </p>
                         <Button
                           size="sm"
@@ -1105,7 +1114,7 @@ const SellerCheckout = () => {
                           onClick={() => setShowAddressModal(true)}
                         >
                           <MapPin className="h-3 w-3 mr-1" />
-                          Seleccionar departamento y comuna
+                          {t('checkoutExtra.selectDepartmentCommune')}
                         </Button>
                       </div>
                     </div>
@@ -1118,7 +1127,7 @@ const SellerCheckout = () => {
                 <Card className="p-4">
                   <h2 className="text-base font-bold mb-3 flex items-center gap-2">
                     <Truck className="h-4 w-4" />
-                    Tipo de Envío
+                    {t('checkoutExtra.shippingType')}
                   </h2>
                   <ShippingTypeSelector
                     countryId={checkoutCountryId ?? undefined}
@@ -1136,7 +1145,7 @@ const SellerCheckout = () => {
                     <div className="flex justify-between items-center text-sm mt-3 pt-3 border-t">
                       <span className="flex items-center gap-1.5 text-muted-foreground">
                         <MapPin className="h-3 w-3" />
-                        Entrega local
+                        {t('checkoutExtra.localDelivery')}
                       </span>
                       {(isRestoringCommune || isLoadingLocalCost) ? (
                         <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
@@ -1153,7 +1162,7 @@ const SellerCheckout = () => {
                 <Card className="p-4 bg-amber-50 border-amber-200">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-amber-800">Selecciona un mercado de destino para ver las opciones de logística.</p>
+                    <p className="text-sm text-amber-800">{t('checkoutExtra.selectMarketLogistics')}</p>
                   </div>
                 </Card>
               )}
@@ -1161,7 +1170,7 @@ const SellerCheckout = () => {
               {/* Products Section - Max 4 visible with scroll */}
               <Card className="p-6">
                 <h2 className="text-xl font-bold mb-3">
-                  Productos ({items.length})
+                  {t('checkout.productsTitle', { count: items.length })}
                 </h2>
                 <div className={`space-y-3 ${items.length > 4 ? 'max-h-[340px] overflow-y-auto pr-2' : ''}`}>
                   {items.map((item) => (
@@ -1196,7 +1205,7 @@ const SellerCheckout = () => {
                           )}
                         </div>
                         <div className="flex items-center justify-between text-sm mt-1">
-                          <span className="text-muted-foreground">Cant: {item.cantidad}</span>
+                          <span className="text-muted-foreground">{t('checkoutExtra.quantity')} {item.cantidad}</span>
                           <span className="font-semibold text-primary">
                             ${item.subtotal.toFixed(2)}
                           </span>
@@ -1209,12 +1218,12 @@ const SellerCheckout = () => {
 
               {/* Payment Method */}
               <Card className={`p-6 ${hasFieldError(validationErrors, 'paymentMethod') ? 'border-red-500' : ''}`}>
-                <h2 className="text-xl font-bold mb-3">Forma de pago</h2>
+                <h2 className="text-xl font-bold mb-3">{t('checkoutExtra.paymentMethod')}</h2>
 
                 {hasFieldError(validationErrors, 'paymentMethod') && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-700">{getFieldError(validationErrors, 'paymentMethod')}</p>
+                    <p className="text-sm text-red-700">{validationMessage('paymentMethod', getFieldError(validationErrors, 'paymentMethod') || '')}</p>
                   </div>
                 )}
                 
@@ -1222,8 +1231,8 @@ const SellerCheckout = () => {
                   <Alert className="mb-3 border-purple-300 bg-purple-50 dark:bg-purple-950/30">
                     <Info className="h-4 w-4 text-purple-600" />
                     <AlertDescription className="text-purple-700 dark:text-purple-300">
-                      <span className="font-semibold">¿Quieres pagar con crédito?</span>{' '}
-                      <Link to="/seller/cuenta" className="underline">Verifica tu identidad</Link> para acceder al Crédito Siver.
+                      <span className="font-semibold">{t('checkoutExtra.creditPrompt')}</span>{' '}
+                      <Link to="/seller/cuenta" className="underline">{t('checkoutExtra.verifyIdentity')}</Link> {t('checkoutExtra.creditAccess')}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -1271,9 +1280,9 @@ const SellerCheckout = () => {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold flex items-center gap-2">
                         <Wallet className="h-4 w-4 text-purple-600" />
-                        Complementar con Crédito Siver
+                        {t('checkoutExtra.complementCredit')}
                         <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">
-                          Opcional
+                          {t('checkoutExtra.optional')}
                         </Badge>
                       </h3>
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -1286,7 +1295,7 @@ const SellerCheckout = () => {
                           }}
                           className="w-4 h-4 rounded border-purple-300 text-purple-600 focus:ring-purple-500"
                         />
-                        <span className="text-sm">Usar crédito</span>
+                        <span className="text-sm">{t('checkoutExtra.useCredit')}</span>
                       </label>
                     </div>
                     
@@ -1294,17 +1303,17 @@ const SellerCheckout = () => {
                       <div className="space-y-3">
                         <div>
                           <div className="flex justify-between text-sm mb-2">
-                            <span className="text-muted-foreground">Crédito disponible:</span>
+                            <span className="text-muted-foreground">{t('checkoutExtra.availableCredit')}</span>
                             <span className="font-medium">${availableCredit.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-sm mb-4">
-                            <span className="text-muted-foreground">Máximo para este pedido ({credit?.max_cart_percentage}%):</span>
+                            <span className="text-muted-foreground">{t('checkoutExtra.maxForOrder', { percentage: credit?.max_cart_percentage })}</span>
                             <span className="font-medium">${maxCreditAmount.toFixed(2)}</span>
                           </div>
                         </div>
 
                         <div>
-                          <Label className="text-sm">Monto de crédito a usar: ${creditAmount.toFixed(2)}</Label>
+                          <Label className="text-sm">{t('checkoutExtra.creditAmount', { amount: creditAmount.toFixed(2) })}</Label>
                           <Slider
                             value={[creditAmount]}
                             onValueChange={(values) => setCreditAmount(values[0])}
@@ -1317,19 +1326,19 @@ const SellerCheckout = () => {
                         {creditAmount > 0 && (
                           <div className="pt-3 border-t border-purple-200">
                             <div className="flex justify-between text-sm">
-                              <span>Total del pedido:</span>
+                              <span>{t('checkoutExtra.orderTotal')}</span>
                               <span>${subtotal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-sm text-purple-600">
-                              <span>Crédito Siver aplicado:</span>
+                              <span>{t('checkoutExtra.creditApplied')}</span>
                               <span>-${creditAmount.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between font-bold mt-2 pt-2 border-t text-primary">
-                              <span>A pagar con {paymentMethods.find(m => m.id === paymentMethod)?.name}:</span>
+                              <span>{t('checkoutExtra.payWith', { method: paymentMethods.find(m => m.id === paymentMethod)?.name })}</span>
                               <span>${remainingToPay.toFixed(2)}</span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-2">
-                              El crédito usado se agregará a tu deuda. El resto debe pagarse con el método seleccionado.
+                              {t('checkout.creditDebtMessage')}
                             </p>
                           </div>
                         )}
@@ -1338,7 +1347,7 @@ const SellerCheckout = () => {
                     
                     {!useSiverCredit && (
                       <p className="text-sm text-muted-foreground">
-                        Activa esta opción para usar parte de tu crédito disponible (${availableCredit.toFixed(2)}) y reducir el monto a pagar.
+                        {t('checkout.activateCreditMessage', { amount: availableCredit.toFixed(2) })}
                       </p>
                     )}
                   </div>
@@ -1347,14 +1356,14 @@ const SellerCheckout = () => {
                 {/* Payment Instructions */}
                 {paymentMethod === 'transfer' && adminBankMethod && (
                   <div className="mt-4 p-4 bg-muted rounded-lg">
-                    <h3 className="font-semibold mb-3">Datos para Transferencia</h3>
+                    <h3 className="font-semibold mb-3">{t('checkoutExtra.bankTransferDetails')}</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Banco:</span>
+                        <span className="text-muted-foreground">{t('checkoutExtra.bank')}</span>
                         <span className="font-medium">{adminBankMethod.bank_name}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Cuenta:</span>
+                        <span className="text-muted-foreground">{t('checkoutExtra.account')}</span>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-medium">{adminBankMethod.account_number}</span>
                           <Button
@@ -1368,12 +1377,12 @@ const SellerCheckout = () => {
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Beneficiario:</span>
+                        <span className="text-muted-foreground">{t('checkoutExtra.beneficiary')}</span>
                         <span className="font-medium">{adminBankMethod.account_holder}</span>
                       </div>
                       {adminBankMethod.bank_swift && (
                         <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">SWIFT:</span>
+                          <span className="text-muted-foreground">{t('checkoutExtra.swift')}</span>
                           <span className="font-mono font-medium">{adminBankMethod.bank_swift}</span>
                         </div>
                       )}
@@ -1386,7 +1395,7 @@ const SellerCheckout = () => {
                     <h3 className="font-semibold mb-3" style={{ color: '#94111f' }}>Datos MonCash</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Número:</span>
+                        <span className="text-muted-foreground">{t('cartExtra.numberLabel')}:</span>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-medium">{adminMoncashMethod.phone_number}</span>
                           <Button
@@ -1400,7 +1409,7 @@ const SellerCheckout = () => {
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Nombre:</span>
+                        <span className="text-muted-foreground">{t('cartExtra.nameLabel')}:</span>
                         <span className="font-medium">{adminMoncashMethod.holder_name}</span>
                       </div>
                     </div>
@@ -1413,15 +1422,14 @@ const SellerCheckout = () => {
                     <Alert className="border-amber-200 bg-amber-50">
                       <Info className="h-4 w-4 text-amber-600" />
                       <AlertDescription className="text-amber-800 text-sm">
-                        Realiza el pago y luego <strong>sube el comprobante desde "Mis Compras"</strong>. 
-                        Tu pedido quedará en estado <em>Pendiente de Pago</em> hasta que el admin lo confirme.
+                        {t('checkout.proofInstruction')}
                       </AlertDescription>
                     </Alert>
                     <div>
-                      <Label htmlFor="payment-notes">Notas (opcional)</Label>
+                      <Label htmlFor="payment-notes">{t('checkoutExtra.paymentNotes')}</Label>
                       <Textarea
                         id="payment-notes"
-                        placeholder="Información adicional sobre el pago"
+                        placeholder={t('checkoutExtra.paymentNotesPlaceholder')}
                         value={paymentNotes}
                         onChange={(e) => setPaymentNotes(e.target.value)}
                         className="mt-1"
@@ -1436,7 +1444,7 @@ const SellerCheckout = () => {
             {/* Order Summary */}
             <div className="lg:col-span-1">
               <Card className="p-6 sticky top-8">
-                <h3 className="text-lg font-bold mb-3">Resumen del Pedido</h3>
+                <h3 className="text-lg font-bold mb-3">{t('checkoutExtra.summary')}</h3>
 
                 {/* Items List with Images - Max 2 visible with scroll */}
                 <div className="space-y-2 max-h-[140px] overflow-y-auto mb-3 pb-3 border-b pr-1">
@@ -1465,7 +1473,7 @@ const SellerCheckout = () => {
                           )}
                         </div>
                         <div className="flex justify-between items-center mt-1">
-                          <span className="text-xs text-muted-foreground">Cant: {item.cantidad}</span>
+                          <span className="text-xs text-muted-foreground">{t('checkoutExtra.quantity')} {item.cantidad}</span>
                           <span className="text-sm font-semibold">${item.subtotal.toFixed(2)}</span>
                         </div>
                       </div>
@@ -1475,13 +1483,13 @@ const SellerCheckout = () => {
 
                 <div className="space-y-2 mb-4 pb-4 border-b">
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal:</span>
+                    <span>{t('checkoutExtra.subtotal')}</span>
                     <span className="font-semibold text-foreground">
                       ${subtotal.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Total Unidades:</span>
+                    <span>{t('checkoutExtra.totalUnits')}</span>
                     <span className="font-semibold text-foreground">
                       {totalQuantity}
                     </span>
@@ -1491,17 +1499,17 @@ const SellerCheckout = () => {
                   <div className="flex justify-between text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Truck className="h-3 w-3" />
-                      Logística:
+                      {t('checkoutExtra.logistics')}
                     </span>
                     <span className="font-semibold text-foreground">
-                      {shippingCostAmount > 0 ? `$${shippingCostAmount.toFixed(2)}` : <span className="text-xs text-orange-500">Selecciona tipo</span>}
+                      {shippingCostAmount > 0 ? `$${shippingCostAmount.toFixed(2)}` : <span className="text-xs text-orange-500">{t('checkoutExtra.selectType')}</span>}
                     </span>
                   </div>
                   {shippingETA && (
                     <div className="flex justify-between text-xs text-amber-600">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        ETA:
+                        {t('checkoutExtra.eta')}
                       </span>
                       <span className="font-medium">{shippingETA}</span>
                     </div>
@@ -1536,12 +1544,12 @@ const SellerCheckout = () => {
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Código de descuento</Label>
+                        <Label className="text-xs text-muted-foreground">{t('checkout.discountCode')}</Label>
                         <div className="flex gap-2">
                           <Input
                             value={discountCode}
                             onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                            placeholder="Ingresa código"
+                            placeholder={t('cartExtra.enterCodePlaceholder')}
                             className="text-sm"
                           />
                           <Button
@@ -1553,7 +1561,7 @@ const SellerCheckout = () => {
                             {isValidatingDiscount ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              'Aplicar'
+                              t('checkout.applyDiscount')
                             )}
                           </Button>
                         </div>
@@ -1566,7 +1574,7 @@ const SellerCheckout = () => {
                 {appliedDiscount && (
                   <div className="space-y-2 mb-4 pb-4 border-b">
                     <div className="flex justify-between text-sm text-green-600">
-                      <span>Descuento:</span>
+                      <span>{t('checkoutExtra.discount')}</span>
                       <span className="font-medium">-${discountAmount.toFixed(2)}</span>
                     </div>
                   </div>
@@ -1575,7 +1583,7 @@ const SellerCheckout = () => {
                 {useSiverCredit && creditAmount > 0 && (
                   <div className="space-y-2 mb-4 pb-4 border-b">
                     <div className="flex justify-between text-sm text-purple-600">
-                      <span>Crédito Siver:</span>
+                      <span>{t('checkoutExtra.credit')}</span>
                       <span className="font-medium">-${creditAmount.toFixed(2)}</span>
                     </div>
                   </div>
@@ -1583,19 +1591,19 @@ const SellerCheckout = () => {
 
                 {shippingCostAmount > 0 && (
                   <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                    <span>Productos:</span>
+                    <span>{t('checkoutExtra.productsTotal')}</span>
                     <span>${(subtotal - discountAmount).toFixed(2)}</span>
                   </div>
                 )}
                 {shippingCostAmount > 0 && (
                   <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                    <span className="flex items-center gap-1"><Truck className="h-3 w-3" />Logística:</span>
+                    <span className="flex items-center gap-1"><Truck className="h-3 w-3" />{t('checkoutExtra.logistics')}</span>
                     <span>${shippingCostAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {localCost !== null && (
                   <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />Entrega local:</span>
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{t('checkoutExtra.localDeliveryCost')}</span>
                     <span>${localCost.toFixed(2)}</span>
                   </div>
                 )}
@@ -1605,13 +1613,13 @@ const SellerCheckout = () => {
                   <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
                     <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-orange-700 font-medium">
-                      Completa tu dirección: selecciona el departamento y la commune de entrega para continuar.
+                      {t('checkout.completeAddress')}
                     </p>
                   </div>
                 )}
 
                 <div className="flex justify-between text-xl font-bold mb-4">
-                  <span>Total a Pagar:</span>
+                  <span>{t('checkoutExtra.totalToPay')}</span>
                   <span className="text-primary">
                     ${remainingToPay.toFixed(2)}
                   </span>
@@ -1636,23 +1644,23 @@ const SellerCheckout = () => {
                       Procesando...
                     </>
                   ) : (
-                    'Confirmar Pedido'
+                    t('checkoutExtra.confirmOrder')
                   )}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  Al confirmar, aceptas los términos de servicio
+                  {t('checkoutExtra.terms')}
                 </p>
 
                 {useSiverCredit && creditAmount > 0 && (
                   <Badge variant="outline" className="w-full justify-center mt-4 border-purple-300 text-purple-600">
-                    Pago combinado con crédito
+                    {t('checkout.creditPaymentBadge')}
                   </Badge>
                 )}
 
                 {paymentMethod !== 'stripe' && (
                   <Badge variant="outline" className="w-full justify-center mt-4">
-                    Verificación manual requerida
+                    {t('checkout.manualVerificationBadge')}
                   </Badge>
                 )}
               </Card>
@@ -1668,8 +1676,8 @@ const SellerCheckout = () => {
             <DialogHeader className="border-b-2 pb-3 -mx-6 px-6 border-gray-300 sticky top-0 bg-background z-10">
               <DialogTitle className="text-lg font-bold">
                 {showNewAddressForm
-                  ? editingAddressId ? 'Editar Dirección' : 'Agregar Nueva Dirección'
-                  : 'Seleccionar Dirección'}
+                  ? editingAddressId ? t('checkoutExtra.editAddress') : t('checkoutExtra.addAddress')
+                  : t('checkoutExtra.selectAddress')}
               </DialogTitle>
             </DialogHeader>
             
@@ -1679,17 +1687,17 @@ const SellerCheckout = () => {
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
                   <Label className="text-xs font-semibold text-blue-800 flex items-center gap-1">
                     <Globe className="h-3 w-3" />
-                    País de destino
+                    {t('checkoutExtra.destinationCountry')}
                   </Label>
                   {marketsLoading ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      <span className="text-xs text-muted-foreground">Cargando...</span>
+                      <span className="text-xs text-muted-foreground">{t('checkoutExtra.loading')}</span>
                     </div>
                   ) : (
                     <Select value={checkoutMarketId ?? ''} onValueChange={() => {}} disabled>
                       <SelectTrigger className="h-8 text-sm bg-white opacity-90 cursor-not-allowed">
-                        <SelectValue placeholder="Selecciona un mercado / país" />
+                        <SelectValue placeholder={t('checkoutExtra.selectMarketCountry')} />
                       </SelectTrigger>
                       <SelectContent>
                         {readyMarkets.map((m) => (
@@ -1700,7 +1708,7 @@ const SellerCheckout = () => {
                       </SelectContent>
                     </Select>
                   )}
-                  <p className="text-[10px] text-blue-600/80">Mercado y país de destino fijos durante el checkout.</p>
+                  <p className="text-[10px] text-blue-600/80">{t('checkoutExtra.fixedMarket')}</p>
                   {checkoutCountryName && (
                     <p className="text-xs text-blue-700 flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
@@ -1739,7 +1747,7 @@ const SellerCheckout = () => {
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-semibold">{address.full_name}</p>
                               {address.is_default && (
-                                <Badge variant="secondary" className="text-xs">Predeterminada</Badge>
+                                <Badge variant="secondary" className="text-xs">{t('checkoutExtra.defaultAddress')}</Badge>
                               )}
                               <Badge variant="outline" className="text-xs">{address.label}</Badge>
                             </div>
@@ -1762,12 +1770,12 @@ const SellerCheckout = () => {
                         {expandedAddressId === address.id && (
                           <div className="border-t p-4 bg-muted/50 text-sm space-y-3">
                             <div className="space-y-1">
-                              <p><span className="font-semibold">Calle:</span> {address.street_address}</p>
-                              <p><span className="font-semibold">Ciudad:</span> {address.city}</p>
-                              {address.state && <p><span className="font-semibold">Estado:</span> {address.state}</p>}
-                              {address.postal_code && <p><span className="font-semibold">Código Postal:</span> {address.postal_code}</p>}
-                              <p><span className="font-semibold">País:</span> {address.country}</p>
-                              {address.phone && <p><span className="font-semibold">Teléfono:</span> {address.phone}</p>}
+                              <p><span className="font-semibold">{t('checkoutExtra.street')}</span> {address.street_address}</p>
+                              <p><span className="font-semibold">{t('checkoutExtra.city')}</span> {address.city}</p>
+                              {address.state && <p><span className="font-semibold">{t('checkoutExtra.state')}</span> {address.state}</p>}
+                              {address.postal_code && <p><span className="font-semibold">{t('checkoutExtra.postalCode')}</span> {address.postal_code}</p>}
+                              <p><span className="font-semibold">{t('checkoutExtra.country')}</span> {address.country}</p>
+                              {address.phone && <p><span className="font-semibold">{t('checkoutExtra.phone')}</span> {address.phone}</p>}
                             </div>
                             <Button
                               variant="outline"
@@ -1792,14 +1800,14 @@ const SellerCheckout = () => {
                               }}
                             >
                               <Edit2 className="h-4 w-4 mr-2" />
-                              Editar
+                              {t('checkoutExtra.editAddress')}
                             </Button>
                           </div>
                         )}
                       </div>
                     ))
                   ) : (
-                    <p className="text-center text-muted-foreground py-4">No hay direcciones guardadas</p>
+                    <p className="text-center text-muted-foreground py-4">{t('checkoutExtra.noSavedAddresses')}</p>
                   )}
                 </RadioGroup>
                 <Button 
@@ -1808,7 +1816,7 @@ const SellerCheckout = () => {
                   variant="outline"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Agregar Nueva Dirección
+                  {t('checkoutExtra.addAddress')}
                 </Button>
               </div>
             ) : (
@@ -1823,23 +1831,23 @@ const SellerCheckout = () => {
                   className="mb-2"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Volver a direcciones
+                  {t('checkoutExtra.backToAddresses')}
                 </Button>
                 
                 {/* Form with extra bottom padding for mobile keyboard */}
                 <div className="space-y-3 pb-16">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="modal_address_name">Nombre completo *</Label>
+                      <Label htmlFor="modal_address_name">{t('checkoutExtra.fullNameRequired')}</Label>
                       <Input
                         id="modal_address_name"
-                        placeholder="Nombre del destinatario"
+                        placeholder={t('checkoutExtra.recipientName')}
                         value={newAddress.full_name}
                         onChange={(e) => setNewAddress({ ...newAddress, full_name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="modal_address_phone">Teléfono</Label>
+                      <Label htmlFor="modal_address_phone">{t('checkoutExtra.phone')}</Label>
                       <Input
                         id="modal_address_phone"
                         placeholder="+509 XXXX XXXX"
@@ -1853,11 +1861,11 @@ const SellerCheckout = () => {
                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
                     <Label className="text-xs font-semibold text-blue-800 flex items-center gap-1">
                       <Globe className="h-3 w-3" />
-                      País de destino
+                      {t('checkoutExtra.destinationCountry')}
                     </Label>
                     <Select value={checkoutMarketId ?? ''} onValueChange={() => {}} disabled>
                       <SelectTrigger className="h-8 text-sm bg-white opacity-90 cursor-not-allowed">
-                        <SelectValue placeholder="Selecciona mercado / país" />
+                        <SelectValue placeholder={t('checkoutExtra.selectMarketCountry')} />
                       </SelectTrigger>
                       <SelectContent>
                         {readyMarkets.map((m) => (
@@ -1879,7 +1887,7 @@ const SellerCheckout = () => {
                   {/* Departamento */}
                   {departments.length > 0 && (
                     <div className="space-y-2">
-                      <Label>Departamento</Label>
+                      <Label>{t('checkoutExtra.department')}</Label>
                       <Select
                         value={selectedDept}
                         onValueChange={(val) => {
@@ -1889,7 +1897,7 @@ const SellerCheckout = () => {
                         }}
                       >
                         <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Selecciona departamento" />
+                          <SelectValue placeholder={t('checkoutExtra.selectDepartment')} />
                         </SelectTrigger>
                         <SelectContent>
                           {departments.map((d) => (
@@ -1903,7 +1911,7 @@ const SellerCheckout = () => {
                   {/* Comuna */}
                   {selectedDept && communes.length > 0 && (
                     <div className="space-y-2">
-                      <Label>Comuna</Label>
+                      <Label>{t('checkoutExtra.commune')}</Label>
                       <Select
                         value={selectedComm}
                         onValueChange={(val) => {
@@ -1913,7 +1921,7 @@ const SellerCheckout = () => {
                         }}
                       >
                         <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Selecciona comuna" />
+                          <SelectValue placeholder={t('checkoutExtra.selectCommune')} />
                         </SelectTrigger>
                         <SelectContent>
                           {communes.map((c) => (
@@ -1925,10 +1933,10 @@ const SellerCheckout = () => {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="modal_address_street">Dirección *</Label>
+                    <Label htmlFor="modal_address_street">{t('checkoutExtra.addressRequired')}</Label>
                     <Input
                       id="modal_address_street"
-                      placeholder="Calle, número, local..."
+                      placeholder={t('checkoutExtra.streetPlaceholder')}
                       value={newAddress.street_address}
                       onChange={(e) => setNewAddress({ ...newAddress, street_address: e.target.value })}
                     />
@@ -1936,19 +1944,19 @@ const SellerCheckout = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="modal_address_city">Ciudad *</Label>
+                      <Label htmlFor="modal_address_city">{t('checkoutExtra.cityRequired')}</Label>
                       <Input
                         id="modal_address_city"
-                        placeholder="Ciudad"
+                        placeholder={t('checkoutExtra.city')}
                         value={newAddress.city}
                         onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="modal_address_postal">Código Postal</Label>
+                      <Label htmlFor="modal_address_postal">{t('checkoutExtra.postalCode')}</Label>
                       <Input
                         id="modal_address_postal"
-                        placeholder="Código postal"
+                        placeholder={t('checkoutExtra.postalPlaceholder')}
                         value={newAddress.postal_code}
                         onChange={(e) => setNewAddress({ ...newAddress, postal_code: e.target.value })}
                       />
@@ -2017,13 +2025,13 @@ const SellerCheckout = () => {
                         }
                       } catch (error) {
                         console.error('❌ [ADDRESS DEBUG] Error saving address:', error);
-                        toast.error('Error al guardar dirección');
+                        toast.error(t('checkout.saveAddressError'));
                       }
                     }}
                     className="w-full"
                   >
                     <Check className="h-4 w-4 mr-2" />
-                    {editingAddressId ? 'Actualizar Dirección' : 'Guardar Dirección'}
+                    {editingAddressId ? t('checkoutExtra.updateAddress') : t('checkoutExtra.saveAddress')}
                   </Button>
                 </div>
               </div>
@@ -2040,7 +2048,7 @@ const SellerCheckout = () => {
             <DialogHeader className="border-b-2 pb-3 -mx-6 px-6 border-gray-300 sticky top-0 bg-background z-10">
               <DialogTitle className="flex items-center gap-2 text-lg font-bold">
                 <Store className="h-5 w-5" />
-                Puntos de Retiro
+                {t('checkoutExtra.pickupTitle')}
               </DialogTitle>
             </DialogHeader>
 
@@ -2050,7 +2058,7 @@ const SellerCheckout = () => {
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold flex items-center gap-1">
                     <Store className="h-4 w-4 text-purple-600" />
-                    Mis Puntos Guardados
+                    {t('checkoutExtra.savedPickupPoints')}
                   </Label>
                   <div className="space-y-2">
                     {savedPoints.map((saved) => (
@@ -2081,7 +2089,7 @@ const SellerCheckout = () => {
                           </div>
                           {saved.is_default && (
                             <Badge variant="secondary" className="text-xs flex-shrink-0">
-                              Predeterminado
+                              {t('checkoutExtra.defaultPickup')}
                             </Badge>
                           )}
                         </div>
@@ -2089,7 +2097,7 @@ const SellerCheckout = () => {
                     ))}
                   </div>
                   <div className="border-t pt-2">
-                    <p className="text-xs text-center text-muted-foreground">O busca otro punto abajo</p>
+                    <p className="text-xs text-center text-muted-foreground">{t('checkoutExtra.searchAnotherPoint')}</p>
                   </div>
                 </div>
               )}
@@ -2098,17 +2106,17 @@ const SellerCheckout = () => {
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
                 <Label className="text-xs font-semibold text-blue-800 flex items-center gap-1">
                   <Globe className="h-3 w-3" />
-                  País de destino
+                  {t('checkoutExtra.destinationCountry')}
                 </Label>
                 {marketsLoading ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    <span className="text-xs text-muted-foreground">Cargando...</span>
+                    <span className="text-xs text-muted-foreground">{t('checkoutExtra.loading')}</span>
                   </div>
                 ) : (
                   <Select value={checkoutMarketId ?? ''} onValueChange={() => {}} disabled>
                     <SelectTrigger className="h-8 text-sm bg-white opacity-90 cursor-not-allowed">
-                      <SelectValue placeholder="Selecciona mercado / país" />
+                      <SelectValue placeholder={t('checkoutExtra.selectMarketCountry')} />
                     </SelectTrigger>
                     <SelectContent>
                       {readyMarkets.map((m) => (
@@ -2130,13 +2138,13 @@ const SellerCheckout = () => {
               {/* Department selector */}
               {checkoutMarketId && departments.length > 0 && (
                 <div className="space-y-1">
-                  <Label className="text-sm">Departamento</Label>
+                  <Label className="text-sm">{t('checkoutExtra.department')}</Label>
                   <Select
                     value={pickupDept}
                     onValueChange={(val) => { setPickupDept(val); setPickupComm(''); }}
                   >
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Selecciona departamento" />
+                      <SelectValue placeholder={t('checkoutExtra.selectDepartment')} />
                     </SelectTrigger>
                     <SelectContent>
                       {departments.map((d) => (
@@ -2150,13 +2158,13 @@ const SellerCheckout = () => {
               {/* Commune selector */}
               {pickupDept && pickupCommunes.length > 0 && (
                 <div className="space-y-1">
-                  <Label className="text-sm">Comuna</Label>
+                  <Label className="text-sm">{t('checkoutExtra.commune')}</Label>
                   <Select
                     value={pickupComm}
                     onValueChange={(val) => setPickupComm(val)}
                   >
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Selecciona comuna" />
+                      <SelectValue placeholder={t('checkoutExtra.selectCommune')} />
                     </SelectTrigger>
                     <SelectContent>
                       {pickupCommunes.map((c) => (
@@ -2172,12 +2180,12 @@ const SellerCheckout = () => {
                 communePickupPointsQuery.isLoading ? (
                   <div className="flex items-center justify-center py-6 gap-2">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Buscando puntos...</span>
+                    <span className="text-sm text-muted-foreground">{t('checkoutExtra.searchingPoints')}</span>
                   </div>
                 ) : communePickupPoints.length === 0 ? (
                   <div className="text-center py-6">
                     <Store className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No hay puntos configurados en esta comuna</p>
+                    <p className="text-sm text-muted-foreground">{t('checkoutExtra.noPointsInCommune')}</p>
                   </div>
                 ) : (
                   <>
@@ -2191,7 +2199,7 @@ const SellerCheckout = () => {
                         className="rounded"
                       />
                       <Label htmlFor="save-pickup" className="text-sm font-medium cursor-pointer">
-                        Guardar este punto para futuros pedidos
+                        {t('checkoutExtra.savePickupFuture')}
                       </Label>
                     </div>
 
@@ -2242,11 +2250,11 @@ const SellerCheckout = () => {
                               <p className="text-xs text-muted-foreground">{point.city}</p>
                             )}
                             {point.phone && (
-                              <p className="text-xs text-muted-foreground">Tel: {point.phone}</p>
+                              <p className="text-xs text-muted-foreground">{t('checkoutExtra.phone')} {point.phone}</p>
                             )}
                           </div>
                           <Badge variant="outline" className="text-green-600 text-xs flex-shrink-0">
-                            Activo
+                            {t('cartExtra.active')}
                           </Badge>
                         </div>
                       ))}
@@ -2258,17 +2266,17 @@ const SellerCheckout = () => {
               {/* Guide when nothing selected yet */}
               {!checkoutMarketId && (
                 <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">Selecciona el país de destino para ver los puntos disponibles.</p>
+                  <p className="text-sm text-muted-foreground">{t('checkoutExtra.selectCountryForPoints')}</p>
                 </div>
               )}
               {checkoutMarketId && !pickupDept && (
                 <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">Selecciona un departamento para continuar.</p>
+                  <p className="text-sm text-muted-foreground">{t('checkoutExtra.selectDepartmentToContinue')}</p>
                 </div>
               )}
               {pickupDept && !pickupComm && (
                 <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">Selecciona una comuna para ver los puntos.</p>
+                  <p className="text-sm text-muted-foreground">{t('checkoutExtra.selectCommuneForPoints')}</p>
                 </div>
               )}
             </div>

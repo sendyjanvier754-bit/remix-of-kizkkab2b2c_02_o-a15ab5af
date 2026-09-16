@@ -312,12 +312,6 @@ export const useB2BCartSupabase = () => {
       }
     }
 
-    // Validate MOQ
-    if (!isZletiManualPO && item.quantity < item.moq) {
-      toast.error(`La cantidad mínima de pedido es ${item.moq} unidades`);
-      return;
-    }
-
     // Validate stock
     if (!isZletiManualPO && item.quantity > item.stockDisponible) {
       toast.error(`Stock disponible: ${item.stockDisponible} unidades`);
@@ -400,8 +394,8 @@ export const useB2BCartSupabase = () => {
       return;
     }
 
-    if (!isZletiManualPO && quantity < item.moq) {
-      toast.error(`La cantidad mínima de pedido es ${item.moq} unidades`);
+    if (!isZletiManualPO && quantity < 1) {
+      toast.error('La cantidad debe ser al menos 1 unidad');
       return;
     }
 

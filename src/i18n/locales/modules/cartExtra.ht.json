@@ -135,6 +135,9 @@
     "edit": "Modifye",
     "accountNumber": "Nimewo kont",
     "holderLabel": "Titilè",
+    "reviewBeforeCheckout": "Verifye total la anvan ou ale nan peman. Ou ka modifye kantite yo.","totalLogistics": "Total lojistik","shippingIncludedFor": "Frè livrezon enkli pou {{count}} inite","deliveryTime": "Tan livrezon","totalInvestment": "Total envestisman","salesValue": "Valè vant (PVP)","potentialProfit": "Benefis potansyèl","averageRoi": "ROI mwayèn","productsWithMarketPrice": "{{count}}/{{total}} pwodwi ak pri mache B2C","negotiateWhatsapp": "Negosye pa WhatsApp","updatingLogistics": "N ap mete frè lojistik yo ajou...","includedLogisticsCost": "Frè lojistik enkli:",
+    "includeShippingCost":"Mete frè livrezon an","deliveryTime":"Tan livrezon","days":"jou","estimatedTotal":"Total estime","calculating":"Ap kalkile...","updatingLogistics":"N ap mete frè lojistik yo ajou...","productsAndLogistics":"Pwodwi + Lojistik ({{count}} atik)","productsOnly":"Pwodwi sèlman ({{count}} atik)","suggestedSalesPrices":"Wè pri vant yo sijere","includedLogisticsCost":"Frè lojistik enkli:","netProfit":"Benefis nèt ou:","acceptPayments":"Nou aksepte:","shareCartButton":"Pataje","whatsappButton":"WhatsApp","buyB2B":"Achte B2B ({{count}})","selectProducts":"Chwazi pwodwi yo",
+    "redirectingToCheckout": "N ap redireksyonnen nan peman...",
     "digitalWallet": "Bous dijital"
   }
 }

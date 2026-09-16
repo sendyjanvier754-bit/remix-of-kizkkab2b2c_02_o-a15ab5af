@@ -219,20 +219,20 @@ const CartPage = () => {
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center py-12 px-6">
             <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">Inicia sesión para ver tu carrito</h2>
-            <p className="text-sm text-gray-500 mb-6">Necesitas una cuenta para guardar y gestionar tus productos.</p>
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">{t('cartExtra.loginToViewCart')}</h2>
+            <p className="text-sm text-gray-500 mb-6">{t('cartExtra.needAccountMessage')}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => navigate('/cuenta')}
                 className="py-2.5 px-6 bg-[#071d7f] text-white rounded-lg font-medium hover:bg-[#0a2a9f] transition"
               >
-                Iniciar sesión
+                {t('cartExtra.login')}
               </button>
               <button
                 onClick={() => navigate('/cuenta?tab=register')}
                 className="py-2.5 px-6 border border-[#071d7f] text-[#071d7f] rounded-lg font-medium hover:bg-[#071d7f]/5 transition"
               >
-                Crear cuenta
+                {t('cartExtra.createAccount')}
               </button>
             </div>
           </div>
@@ -516,7 +516,7 @@ const CartPage = () => {
         }
       }
 
-      toast.success('Carrito actualizado');
+      toast.success(t('cartExtra.cartUpdated'));
       setSelectedItemForVariants(null);
       setVariantQtys({});
       setSelectedAttrs({});
@@ -524,7 +524,7 @@ const CartPage = () => {
       await refetch(false);
     } catch (err) {
       console.error('Error updating variants:', err);
-      toast.error('Error al actualizar variantes');
+      toast.error(t('cartExtra.variantsUpdateError'));
     } finally {
       setIsAddingVariant(false);
     }
@@ -610,7 +610,7 @@ const CartPage = () => {
       setShowShareDialog(true);
     } catch (err) {
       console.error('Error sharing cart:', err);
-      toast.error('Error al compartir carrito');
+      toast.error(t('cartExtra.shareCartError'));
     } finally {
       setIsSharing(false);
     }
@@ -620,10 +620,10 @@ const CartPage = () => {
     try {
       await navigator.clipboard.writeText(shareLink);
       setShareCopied(true);
-      toast.success('Enlace copiado');
+      toast.success(t('cartExtra.linkCopied'));
       setTimeout(() => setShareCopied(false), 2000);
     } catch {
-      toast.error('No se pudo copiar');
+      toast.error(t('cartExtra.copyError'));
     }
   };
 
@@ -1299,18 +1299,18 @@ const CartPage = () => {
       <AlertDialog open={showClearCartDialog} onOpenChange={setShowClearCartDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Vaciar carrito</AlertDialogTitle>
+            <AlertDialogTitle>{t('cartExtra.clearCartTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar todos los productos de tu carrito? Esta acción no se puede deshacer.
+              {t('cartExtra.clearCartConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => clearCart()}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Vaciar carrito
+              {t('cartExtra.clearCartTitle')}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
@@ -1320,15 +1320,15 @@ const CartPage = () => {
       <AlertDialog open={showRemoveItemDialog} onOpenChange={setShowRemoveItemDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar producto</AlertDialogTitle>
+            <AlertDialogTitle>{t('cartExtra.deleteProductTitle')}</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => itemToRemove && removeItem(itemToRemove.id)}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Eliminar
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1340,12 +1340,12 @@ const CartPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Share2 className="w-5 h-5" />
-              Compartir carrito
+              {t('cartExtra.shareCart')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Comparte este enlace para que otra persona pueda ver y agregar estos productos a su carrito.
+              {t('cartExtra.shareCartDesc')}
             </p>
             
             {/* Link */}
@@ -1364,15 +1364,15 @@ const CartPage = () => {
             <div className="flex flex-col gap-2">
               <Button onClick={handleShareWhatsApp} className="w-full gap-2" style={{ backgroundColor: '#29892a' }}>
                 <MessageCircle className="w-4 h-4" />
-                Enviar por WhatsApp
+                {t('cartExtra.sendViaWhatsapp')}
               </Button>
               <Button variant="outline" onClick={handleCopyShareLink} className="w-full gap-2">
                 <Copy className="w-4 h-4" />
-                {shareCopied ? 'Copiado!' : 'Copiar enlace'}
+                {shareCopied ? t('cartExtra.copied') : t('cartExtra.copyLink')}
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground text-center">El enlace expira en 7 días</p>
+            <p className="text-xs text-muted-foreground text-center">{t('cartExtra.linkExpiresIn7Days')}</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -1423,7 +1423,7 @@ const CartPage = () => {
                 </div>
               ) : catalogVariants.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">
-                  No hay variantes disponibles
+                  {t('cartExtra.noVariantsAvailable')}
                 </p>
               ) : (
                 <>
@@ -1580,7 +1580,7 @@ const CartPage = () => {
 
                   {!matchingVariant && drawerAttrTypes.length > 0 && (
                     <p className="text-xs text-muted-foreground text-center py-2">
-                      Selecciona todas las opciones para ver disponibilidad
+                      {t('cartExtra.selectAllOptions')}
                     </p>
                   )}
                 </>
@@ -1591,7 +1591,7 @@ const CartPage = () => {
             <div className="p-4 border-t flex-shrink-0 space-y-2">
               {matchingVariant && (variantQtys[matchingVariant.id] ?? 0) > 0 && (
                 <div className="flex items-center justify-between text-sm font-medium text-muted-foreground bg-muted/40 px-3 py-2 rounded-lg">
-                  <span>Total seleccionado</span>
+                  <span>{t('cartExtra.totalSelected')}</span>
                   <span className="text-primary font-bold">
                     ${(matchingVariant.price * (variantQtys[matchingVariant.id] ?? 0)).toFixed(2)}
                   </span>
@@ -1607,7 +1607,7 @@ const CartPage = () => {
                 ) : (
                   <ShoppingCart className="h-4 w-4" />
                 )}
-                Agregar al carrito
+                {t('cartExtra.addToCart')}
               </button>
             </div>
           </>

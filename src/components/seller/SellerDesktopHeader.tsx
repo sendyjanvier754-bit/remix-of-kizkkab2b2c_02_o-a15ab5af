@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, X, Flame, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -83,8 +83,15 @@ const SellerDesktopHeader = ({
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [isImageSearching, setIsImageSearching] = useState(false);
+  const [isRedirectingToCart, setIsRedirectingToCart] = useState(false);
   const { items: b2bItems } = useB2BCartItems();
   const cartCount = b2bItems.reduce((sum, item) => sum + item.cantidad, 0);
+  const handleGoToCart = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    if (isRedirectingToCart) return;
+    setIsRedirectingToCart(true);
+    window.location.assign('/seller/carrito');
+  };
   
   const searchRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -475,8 +482,8 @@ const SellerDesktopHeader = ({
                 <Heart className="w-6 h-6" />
                 <span className="text-xs">{t('header.favorites')}</span>
               </Link>
-              <Link to="/seller/carrito" className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
-                <ShoppingBag className="w-6 h-6" />
+              <Link to="/seller/carrito" onClick={handleGoToCart} aria-disabled={isRedirectingToCart} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
+                {isRedirectingToCart ? <Loader2 className="w-6 h-6 animate-spin" /> : <ShoppingBag className="w-6 h-6" />}
                 <span className="text-xs">{t('header.cart')}</span>
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">

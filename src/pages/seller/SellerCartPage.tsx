@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, type MouseEvent } from "react";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import { BusinessPanel } from "@/components/business/BusinessPanel";
 import { ShippingTypeSelector } from "@/components/seller/ShippingTypeSelector";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { ShoppingCart, Trash2, Package, AlertCircle, MessageCircle, X, Banknote, Wallet, DollarSign, AlertTriangle, Info, CheckSquare, Square, TrendingUp, Loader2, ShoppingBag, Truck, Clock, Share2, Copy, Check } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useB2BCartProductTotals } from "@/hooks/useB2BCartProductTotals";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -56,7 +56,6 @@ import { useTranslation } from 'react-i18next';
 
 const SellerCartPage = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { items: itemsFromDB, isLoading, refetch } = useB2BCartItems();
@@ -125,6 +124,14 @@ const SellerCartPage = () => {
   const [shareLink, setShareLink] = useState('');
   const [isSharing, setIsSharing] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [isRedirectingToCheckout, setIsRedirectingToCheckout] = useState(false);
+
+  const handleGoToCheckout = (event?: MouseEvent<HTMLAnchorElement>) => {
+    event?.preventDefault();
+    if (isRedirectingToCheckout) return;
+    setIsRedirectingToCheckout(true);
+    window.location.assign('/seller/checkout');
+  };
 
   const [selectedProductForVariants, setSelectedProductForVariants] = useState<any>(null);
   const [variantSelections, setVariantSelections] = useState<any[]>([]);
@@ -384,7 +391,7 @@ const SellerCartPage = () => {
       refetch();
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('No se pudo eliminar el producto');
+      toast.error(t('cart.removeError'));
     }
   };
 
@@ -411,11 +418,11 @@ const SellerCartPage = () => {
         .eq('id', itemId);
 
       if (error) throw error;
-      toast.success('Cantidad actualizada');
+      toast.success(t('cart.quantityUpdated'));
       refetch();
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('No se pudo actualizar la cantidad');
+      toast.error(t('cart.quantityError'));
     }
   };
 
@@ -476,7 +483,7 @@ const SellerCartPage = () => {
       
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('Error al actualizar la cantidad');
+      toast.error(t('cart.quantityError'));
       // Revertir cambio local en caso de error
       pendingUpdatesRef.current.delete(itemId);
       lastUpdateTimeRef.current = 0;
@@ -499,7 +506,7 @@ const SellerCartPage = () => {
   const clearCart = async () => {
     try {
       if (!user?.id) {
-        toast.error('Usuario no identificado');
+        toast.error(t('cart.userNotIdentified'));
         return;
       }
 
@@ -519,7 +526,7 @@ const SellerCartPage = () => {
         }
       }
 
-      toast.success('Carrito vaciado');
+      toast.success(t('cart.cartCleared'));
       setShowClearCartDialog(false);
       refetch();
     } catch (error) {
@@ -557,7 +564,7 @@ const SellerCartPage = () => {
       setShowShareDialog(true);
     } catch (err) {
       console.error('Error sharing cart:', err);
-      toast.error('Error al compartir carrito');
+      toast.error(t('cartExtra.shareCartError'));
     } finally {
       setIsSharing(false);
     }
@@ -567,10 +574,10 @@ const SellerCartPage = () => {
     try {
       await navigator.clipboard.writeText(shareLink);
       setShareCopied(true);
-      toast.success('Enlace copiado');
+      toast.success(t('cartExtra.linkCopied'));
       setTimeout(() => setShareCopied(false), 2000);
     } catch {
-      toast.error('No se pudo copiar');
+      toast.error(t('cartExtra.copyError'));
     }
   };
 
@@ -593,7 +600,7 @@ const SellerCartPage = () => {
       window.open(whatsappUrl, '_blank');
     } catch (error) {
       console.error('Error opening WhatsApp:', error);
-      toast.error('Error al abrir WhatsApp');
+      toast.error(t('toasts.errorProcessingRequest'));
     }
   };
 
@@ -659,7 +666,7 @@ const SellerCartPage = () => {
 
       if (!productId) {
         console.error('Could not find productId for item:', item);
-        toast.error('No se pudo encontrar el producto. Intenta recargar la página.');
+        toast.error(t('cartExtra.cartNotFound'));
         return;
       }
 
@@ -676,14 +683,14 @@ const SellerCartPage = () => {
 
       if (productResult?.error) {
         console.error('Error fetching product:', productResult.error);
-        toast.error('No se pudo cargar el producto');
+        toast.error(t('cartExtra.addProductsError'));
         return;
       }
 
       const productData = productResult?.data;
       if (!productData || typeof productData !== 'object') {
         console.error('Product not found:', productId);
-        toast.error('Producto no encontrado');
+        toast.error(t('cartExtra.cartNotFound'));
         return;
       }
 
@@ -708,7 +715,7 @@ const SellerCartPage = () => {
       console.log('Variant drawer opened successfully');
     } catch (err) {
       console.error('Error opening variant drawer:', err);
-      toast.error('Error al abrir variantes');
+      toast.error(t('cartExtra.variantsUpdateError'));
     }
   };
 
@@ -831,14 +838,14 @@ const SellerCartPage = () => {
       }
 
       if (addedCount > 0) {
-        toast.success(`${addedCount} variante(s) agregada(s) al carrito`);
+        toast.success(t('cartExtra.productsAddedToCart', { count: addedCount }));
         setSelectedProductForVariants(null);
         setVariantSelections([]);
         setVariantImage(null);
         refetch();
       } else {
         // Even if no new variants were added, we may have updated or removed quantities
-        toast.success('Carrito actualizado');
+        toast.success(t('cartExtra.cartUpdated'));
         setSelectedProductForVariants(null);
         setVariantSelections([]);
         setVariantImage(null);
@@ -846,7 +853,7 @@ const SellerCartPage = () => {
       }
     } catch (error) {
       console.error('Error adding variants to cart:', error);
-      toast.error('Error al agregar variantes');
+      toast.error(t('cartExtra.variantsUpdateError'));
     } finally {
       setIsAddingVariant(false);
     }
@@ -917,10 +924,10 @@ const SellerCartPage = () => {
           ) : items.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 font-medium mb-2">Tu carrito está vacío</p>
-              <p className="text-xs text-gray-500 mb-4">Visita el catálogo de lotes para abastecer tu inventario</p>
+              <p className="text-gray-600 font-medium mb-2">{t('cart.empty')}</p>
+              <p className="text-xs text-gray-500 mb-4">{t('cart.emptyMessage')}</p>
               <Button asChild style={{ backgroundColor: '#071d7f' }} className="text-white hover:opacity-90">
-                <Link to="/seller/adquisicion-lotes">Ir al Catálogo</Link>
+                <Link to="/seller/adquisicion-lotes">{t('cart.goToCatalog')}</Link>
               </Button>
             </div>
           ) : !isMobile ? (
@@ -935,7 +942,7 @@ const SellerCartPage = () => {
                   <Alert variant="destructive" className="bg-amber-50 border-amber-200">
                     <AlertTriangle className="h-4 w-4 text-amber-600" />
                     <AlertDescription className="text-amber-800">
-                      <p className="font-semibold mb-2">Algunos productos no alcanzan el mínimo de pedido:</p>
+                      <p className="font-semibold mb-2">{t('cartExtra.selectAllOptions')}</p>
                       <ul className="space-y-1 text-sm">
                         {productsNotMeetingMOQ.map(product => (
                           <li key={product.productId} className="flex items-center gap-2">
@@ -972,7 +979,7 @@ const SellerCartPage = () => {
                           }}
                           className="data-[state=checked]:bg-[#071d7f] data-[state=checked]:border-[#071d7f]"
                         />
-                        <h2 className="font-bold text-lg text-gray-900">Productos ({items.length})</h2>
+                        <h2 className="font-bold text-lg text-gray-900">{t('checkout.productsTitle', { count: items.length })}</h2>
                         {/* ✅ Auto-save indicator - discreto */}
                         {isAutoSaving && (
                           <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -1117,14 +1124,14 @@ const SellerCartPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden sticky top-20">
                   {/* Summary Header */}
                   <div className="bg-gray-50 border-b border-gray-200 p-3">
-                    <h2 className="font-bold text-base text-gray-900">Resumen del Pedido</h2>
-                    <p className="text-xs text-gray-600 mt-1">Procesa descuentos y asientos luego confirmar precio final</p>
+                    <h2 className="font-bold text-base text-gray-900">{t('common.orderSummary')}</h2>
+                    <p className="text-xs text-gray-600 mt-1">{t('cart.priceConfirmNote')}</p>
                   </div>
 
                   {/* Pricing Details */}
                   <div className="p-2 space-y-2 border-b border-gray-200">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-600">Subtotal Productos:</span>
+                      <span className="text-gray-600">{t('cart.subtotal')}:</span>
                       <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
                     </div>
 
@@ -1149,7 +1156,7 @@ const SellerCartPage = () => {
                               ) : (
                                 <Truck className="w-3 h-3" />
                               )}
-                              Incluir Costo de Envío
+                              {t('cartExtra.includeShippingCost')}
                             </label>
                             
                             {/* Mostrar costo si ya fue calculado */}
@@ -1182,19 +1189,19 @@ const SellerCartPage = () => {
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-amber-600 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        Tiempo de Entrega:
+                        {t('cartExtra.deliveryTime')}:
                       </span>
                       <span className="font-semibold text-amber-600">
-                        {cartLogistics.estimatedDeliveryDays.min}-{cartLogistics.estimatedDeliveryDays.max} días
+                        {cartLogistics.estimatedDeliveryDays.min}-{cartLogistics.estimatedDeliveryDays.max} {t('cartExtra.days')}
                       </span>
                     </div>
                     
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-600">Promociones:</span>
+                      <span className="text-gray-600">{t('common.promotions')}:</span>
                       <span className="font-semibold text-red-600">—</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-600">Cupón:</span>
+                      <span className="text-gray-600">{t('cart.coupon')}:</span>
                       <span className="font-semibold text-blue-600">—</span>
                     </div>
                   </div>
@@ -1206,13 +1213,13 @@ const SellerCartPage = () => {
                         {isCostCalculating && (
                           <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
                         )}
-                        Total Estimado:
+                        {t('cartExtra.estimatedTotal')}:
                       </span>
                       <span className="text-lg font-bold flex items-center gap-1" style={{ color: '#071d7f' }}>
                         {isCostCalculating ? (
                           <>
                             <Loader2 className="w-5 h-5 animate-spin" />
-                            <span className="text-blue-600">Calculando...</span>
+                            <span className="text-blue-600">{t('cartExtra.calculating')}</span>
                           </>
                         ) : (
                           `$${totalEstimado.toFixed(2)}`
@@ -1221,10 +1228,10 @@ const SellerCartPage = () => {
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
                       {isCostCalculating
-                        ? 'Actualizando costos de logística...' 
+                        ? t('cartExtra.updatingLogistics')
                         : includeShippingInTotal
-                          ? `Productos + Logística (${selectedItems.length} items)`
-                          : `Solo productos (${selectedItems.length} items)`
+                          ? t('cartExtra.productsAndLogistics', { count: selectedItems.length })
+                          : t('cartExtra.productsOnly', { count: selectedItems.length })
                       }
                     </p>
                   </div>
@@ -1246,16 +1253,16 @@ const SellerCartPage = () => {
                         className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded font-medium text-sm transition"
                       >
                         <TrendingUp className="w-4 h-4" />
-                        Ver Precios de Venta Sugeridos
+                        {t('cartExtra.suggestedSalesPrices')}
                       </button>
                       
                       {consolidatedBusinessPanelData && consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity > 0 && (
                         <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
                           <p className="text-blue-900">
-                            <span className="font-semibold">Costo de logística incluido:</span> ${(consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity).toFixed(2)}
+                            <span className="font-semibold">{t('cartExtra.includedLogisticsCost')}</span> ${(consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity).toFixed(2)}
                           </p>
                           <p className="text-blue-700 mt-1">
-                            Tu ganancia neta: <span className="font-bold text-green-700">${(consolidatedBusinessPanelData.profit_1unit * totalQuantity).toFixed(2)}</span>
+                            {t('cartExtra.netProfit')} <span className="font-bold text-green-700">${(consolidatedBusinessPanelData.profit_1unit * totalQuantity).toFixed(2)}</span>
                           </p>
                         </div>
                       )}
@@ -1264,7 +1271,7 @@ const SellerCartPage = () => {
 
                   {/* Payment Methods */}
                   <div className="p-2 bg-gray-50 border-t border-gray-200">
-                    <p className="text-xs font-semibold text-gray-700 mb-1.5">Aceptamos:</p>
+                    <p className="text-xs font-semibold text-gray-700 mb-1.5">{t('cartExtra.acceptPayments')}</p>
                     <div className="grid grid-cols-5 gap-1">
                       {/* Credit Cards Section - Show individual card types */}
                       {paymentMethods.includes('Tarjetas') && (
@@ -1359,7 +1366,7 @@ const SellerCartPage = () => {
                         title="Compartir carrito"
                       >
                         {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                        Compartir
+                        {t('cartExtra.shareCartButton')}
                       </button>
                       <button
                         onClick={handleWhatsAppContact}
@@ -1368,16 +1375,23 @@ const SellerCartPage = () => {
                         title="Contactar por WhatsApp"
                       >
                         <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
-                        WhatsApp
+                        {t('cartExtra.whatsappButton')}
                       </button>
                       {isCartValid && someSelected ? (
                         <Link
                           to="/seller/checkout"
+                          onClick={handleGoToCheckout}
+                          aria-disabled={isRedirectingToCheckout}
+                          tabIndex={isRedirectingToCheckout ? -1 : undefined}
                           className="px-4 py-2 rounded-lg font-semibold text-xs text-white transition hover:opacity-90 flex items-center justify-center gap-2 shadow-lg"
                           style={{ backgroundColor: '#071d7f' }}
                         >
-                          <ShoppingCart className="w-4 h-4" />
-                          Comprar ({totalQuantity})
+                          {isRedirectingToCheckout ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <ShoppingCart className="w-4 h-4" />
+                          )}
+                          {isRedirectingToCheckout ? t('cartExtra.redirectingToCheckout') : t('cartExtra.buyB2B', { count: totalQuantity })}
                         </Link>
                       ) : (
                         <button
@@ -1386,7 +1400,7 @@ const SellerCartPage = () => {
                           style={{ backgroundColor: '#071d7f' }}
                         >
                           <ShoppingCart className="w-4 h-4" />
-                          {!someSelected ? 'Selecciona productos' : `Comprar (${totalQuantity})`}
+                          {!someSelected ? t('cartExtra.selectProducts') : t('cartExtra.buyB2B', { count: totalQuantity })}
                         </button>
                       )}
                     </div>
@@ -1565,11 +1579,18 @@ const SellerCartPage = () => {
                 {isCartValid && someSelected ? (
                   <Link
                     to="/seller/checkout"
+                    onClick={handleGoToCheckout}
+                    aria-disabled={isRedirectingToCheckout}
+                    tabIndex={isRedirectingToCheckout ? -1 : undefined}
                     className="px-4 py-2 rounded-lg font-semibold text-sm transition shadow-lg hover:opacity-90 flex items-center justify-center gap-1.5 text-white"
                     style={{ backgroundColor: '#071d7f' }}
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    Comprar B2B ({totalQuantity})
+                    {isRedirectingToCheckout ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ShoppingCart className="w-4 h-4" />
+                    )}
+                    {isRedirectingToCheckout ? t('cartExtra.redirectingToCheckout') : t('cartExtra.buyB2B', { count: totalQuantity })}
                   </Link>
                 ) : (
                   <button
@@ -1578,7 +1599,7 @@ const SellerCartPage = () => {
                     style={{ backgroundColor: '#071d7f' }}
                   >
                     <ShoppingCart className="w-4 h-4" />
-                    {!someSelected ? 'Selecciona' : `Comprar (${totalQuantity})`}
+                    {!someSelected ? t('cartExtra.selectItems') : t('cartExtra.buyB2B', { count: totalQuantity })}
                   </button>
                 )}
               </div>
@@ -1591,18 +1612,18 @@ const SellerCartPage = () => {
       <AlertDialog open={showClearCartDialog} onOpenChange={setShowClearCartDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Vaciar carrito</AlertDialogTitle>
+            <AlertDialogTitle>{t('cartExtra.clearCartTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar todos los productos de tu carrito B2B? Esta acción no se puede deshacer.
+              {t('cartExtra.clearCartConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => clearCart()}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Vaciar carrito
+              {t('cartExtra.clearCartTitle')}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
@@ -1612,15 +1633,15 @@ const SellerCartPage = () => {
       <AlertDialog open={showRemoveItemDialog} onOpenChange={setShowRemoveItemDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar producto</AlertDialogTitle>
+            <AlertDialogTitle>{t('cartExtra.deleteProductTitle')}</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => itemToRemove && removeItem(itemToRemove.id)}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Eliminar
+              {t('cart.remove')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1640,7 +1661,7 @@ const SellerCartPage = () => {
           <>
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-              <h3 className="text-lg font-bold text-foreground">Seleccionar variantes</h3>
+              <h3 className="text-lg font-bold text-foreground">{t('cartExtra.changeVariant')}</h3>
               <button
                 onClick={() => {
                   setSelectedProductForVariants(null);
@@ -1665,7 +1686,7 @@ const SellerCartPage = () => {
               <div className="flex-1 min-w-0">
                 <h2 className="text-sm md:text-base font-semibold line-clamp-2">{selectedProductForVariants.nombre}</h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Selecciona variantes para agregar al carrito
+                  {t('cartExtra.selectAllOptions')}
                 </p>
               </div>
             </div>
@@ -1675,14 +1696,14 @@ const SellerCartPage = () => {
               {/* Price Info */}
               <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg text-sm">
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Precio B2B</p>
+                  <p className="text-[10px] text-muted-foreground">{t('cartExtra.b2bCart')}</p>
                   <p className="font-bold" style={{ color: '#29892a' }}>
                     ${selectedProductForVariants.costB2B?.toFixed(2) || '0.00'}
                   </p>
                 </div>
                 {variantSelections.length > 0 && (
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">Seleccionado</p>
+                    <p className="text-[10px] text-muted-foreground">{t('cartExtra.totalSelected')}</p>
                     <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-sm inline-block">
                       {variantSelections.reduce((sum, s) => sum + s.quantity, 0)} uds
                     </span>
@@ -1694,7 +1715,7 @@ const SellerCartPage = () => {
               {isLoadingVariants ? (
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <span className="ml-2 text-xs text-muted-foreground">Cargando variantes...</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{t('checkoutExtra.loading')}</span>
                 </div>
               ) : productVariants && productVariants.length > 0 ? (
                 <VariantSelectorB2B
@@ -1727,7 +1748,7 @@ const SellerCartPage = () => {
               ) : (
                 <div className="text-center py-3 text-muted-foreground">
                   <Package className="h-6 w-6 mx-auto mb-1 opacity-50" />
-                  <p className="text-xs">No hay variantes disponibles</p>
+                  <p className="text-xs">{t('cartExtra.noVariantsAvailable')}</p>
                 </div>
               )}
             </div>
@@ -1743,7 +1764,7 @@ const SellerCartPage = () => {
                 variant="outline"
                 className="flex-1 h-9 md:h-10 text-sm"
               >
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleAddVariantsToCart}
@@ -1754,12 +1775,12 @@ const SellerCartPage = () => {
                 {isAddingVariant ? (
                   <>
                     <Loader2 className="h-3 md:h-4 w-3 md:w-4 mr-1 md:mr-2 animate-spin" />
-                    Agregando...
+                    {t('checkout.processing')}
                   </>
                 ) : (
                   <>
                     <ShoppingBag className="h-3 md:h-4 w-3 md:w-4 mr-1 md:mr-2" />
-                    Agregar ({variantSelections.reduce((sum, s) => sum + s.quantity, 0)})
+                    {t('cartExtra.buyCount', { count: variantSelections.reduce((sum, s) => sum + s.quantity, 0) })}
                   </>
                 )}
               </Button>
@@ -1827,7 +1848,7 @@ const SellerCartPage = () => {
                           ) : (
                             <Truck className="w-3 h-3" />
                           )}
-                          Incluir Costo de Envío
+                          {t('cartExtra.includeShippingCost')}
                         </label>
                         
                         {/* Mostrar costo si ya fue calculado */}
@@ -1860,10 +1881,10 @@ const SellerCartPage = () => {
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-amber-600 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Tiempo de Entrega:
+                    {t('cartExtra.deliveryTime')}:
                   </span>
                   <span className="font-semibold text-amber-600">
-                    {cartLogistics.estimatedDeliveryDays.min}-{cartLogistics.estimatedDeliveryDays.max} días
+                    {cartLogistics.estimatedDeliveryDays.min}-{cartLogistics.estimatedDeliveryDays.max} {t('cartExtra.days')}
                   </span>
                 </div>
                 
@@ -1884,13 +1905,13 @@ const SellerCartPage = () => {
                     {isCostCalculating && (
                       <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
                     )}
-                    Total Estimado:
+                    {t('cartExtra.estimatedTotal')}:
                   </span>
                   <span className="text-lg font-bold flex items-center gap-1" style={{ color: '#071d7f' }}>
                     {isCostCalculating ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span className="text-blue-600 text-sm">Calculando...</span>
+                        <span className="text-blue-600 text-sm">{t('cartExtra.calculating')}</span>
                       </>
                     ) : (
                       `$${totalEstimado.toFixed(2)}`
@@ -1899,10 +1920,10 @@ const SellerCartPage = () => {
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   {isCostCalculating
-                    ? 'Actualizando costos de logística...' 
+                    ? t('cartExtra.updatingLogistics')
                     : includeShippingInTotal
-                      ? `Productos + Logística (${selectedItems.length} items)`
-                      : `Solo productos (${selectedItems.length} items)`
+                      ? t('cartExtra.productsAndLogistics', { count: selectedItems.length })
+                      : t('cartExtra.productsOnly', { count: selectedItems.length })
                   }
                 </p>
               </div>
@@ -1927,16 +1948,16 @@ const SellerCartPage = () => {
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded font-medium text-sm transition"
                   >
                     <TrendingUp className="w-4 h-4" />
-                    Ver Precios de Venta Sugeridos
+                    {t('cartExtra.suggestedSalesPrices')}
                   </button>
                   
                   {consolidatedBusinessPanelData && consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity > 0 && (
                     <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
                       <p className="text-blue-900">
-                        <span className="font-semibold">Costo de logística incluido:</span> ${(consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity).toFixed(2)}
+                        <span className="font-semibold">{t('cartExtra.includedLogisticsCost')}</span> ${(consolidatedBusinessPanelData.shipping_cost_per_unit * totalQuantity).toFixed(2)}
                       </p>
                       <p className="text-blue-700 mt-1">
-                        Tu ganancia neta: <span className="font-bold text-green-700">${(consolidatedBusinessPanelData.profit_1unit * totalQuantity).toFixed(2)}</span>
+                        {t('cartExtra.netProfit')} <span className="font-bold text-green-700">${(consolidatedBusinessPanelData.profit_1unit * totalQuantity).toFixed(2)}</span>
                       </p>
                     </div>
                   )}
@@ -1945,7 +1966,7 @@ const SellerCartPage = () => {
 
               {/* Payment Methods */}
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-xs font-semibold text-gray-700 mb-2">Aceptamos:</p>
+                <p className="text-xs font-semibold text-gray-700 mb-2">{t('cartExtra.acceptPayments')}</p>
                 <div className="grid grid-cols-5 gap-1">
                   {/* Credit Cards Section */}
                   {paymentMethods.includes('Tarjetas') && (
@@ -2010,17 +2031,26 @@ const SellerCartPage = () => {
                     title="Contactar por WhatsApp"
                   >
                     <MessageCircle className="w-4 h-4" style={{ color: '#29892a' }} />
-                    WhatsApp
+                    {t('cartExtra.whatsappButton')}
                   </button>
                   {isCartValid && someSelected ? (
                     <Link
                       to="/seller/checkout"
+                      onClick={(event) => {
+                        setShowOrderSummaryDrawer(false);
+                        handleGoToCheckout(event);
+                      }}
+                      aria-disabled={isRedirectingToCheckout}
+                      tabIndex={isRedirectingToCheckout ? -1 : undefined}
                       className="px-4 py-2 rounded-lg font-semibold text-xs text-white transition hover:opacity-90 flex items-center justify-center gap-2 shadow-lg"
                       style={{ backgroundColor: '#071d7f' }}
-                      onClick={() => setShowOrderSummaryDrawer(false)}
                     >
-                      <ShoppingCart className="w-4 h-4" />
-                      Comprar ({totalQuantity})
+                      {isRedirectingToCheckout ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ShoppingCart className="w-4 h-4" />
+                      )}
+                      {isRedirectingToCheckout ? t('cartExtra.redirectingToCheckout') : t('cartExtra.buyB2B', { count: totalQuantity })}
                     </Link>
                   ) : (
                     <button
@@ -2029,7 +2059,7 @@ const SellerCartPage = () => {
                       style={{ backgroundColor: '#071d7f' }}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {!someSelected ? 'Selecciona' : `Comprar (${totalQuantity})`}
+                      {!someSelected ? t('cartExtra.selectItems') : t('cartExtra.buyB2B', { count: totalQuantity })}
                     </button>
                   )}
                 </div>
@@ -2046,7 +2076,7 @@ const SellerCartPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Share2 className="w-5 h-5" />
-              Compartir carrito B2B
+              {t('cartExtra.shareCart')} B2B
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -2066,14 +2096,14 @@ const SellerCartPage = () => {
             <div className="flex flex-col gap-2">
               <Button onClick={handleShareWhatsApp} className="w-full gap-2" style={{ backgroundColor: '#29892a' }}>
                 <MessageCircle className="w-4 h-4" />
-                Enviar por WhatsApp
+                {t('cartExtra.sendViaWhatsapp')}
               </Button>
               <Button variant="outline" onClick={handleCopyShareLink} className="w-full gap-2">
                 <Copy className="w-4 h-4" />
                 {shareCopied ? 'Copiado!' : 'Copiar enlace'}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground text-center">El enlace expira en 7 días</p>
+            <p className="text-xs text-muted-foreground text-center">{t('cartExtra.linkExpiresIn7Days')}</p>
           </div>
         </DialogContent>
       </Dialog>
