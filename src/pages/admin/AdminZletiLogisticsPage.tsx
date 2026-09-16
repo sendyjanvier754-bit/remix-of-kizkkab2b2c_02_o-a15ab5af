@@ -935,7 +935,7 @@ export default function AdminZletiLogisticsPage() {
           </div>}
         </DialogContent>
       </Dialog>
-      <POPreviewModal open={poPreviewOpen} onOpenChange={setPoPreviewOpen} data={poPreviewData} />
+      <POPreviewModal open={poPreviewOpen} onOpenChange={setPoPreviewOpen} data={poPreviewData} onSave={pendingPoItems ? savePendingPo : undefined} />
     </AdminLayout>
   );
 }
