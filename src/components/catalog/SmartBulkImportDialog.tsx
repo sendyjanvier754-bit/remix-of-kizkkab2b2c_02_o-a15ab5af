@@ -269,29 +269,18 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
     resetState();
   }, [open, preloadedProducts]);
   
-  // Save state to sessionStorage whenever it changes
+  // NOTE: no guardamos el contenido del Excel en sessionStorage.
+  // Archivos grandes superaban la cuota del navegador (QuotaExceededError)
+  // y el estado nunca se restauraba, así que la copia era innecesaria.
   useEffect(() => {
-    if (open && step !== 'upload' && step !== 'importing') {
-      const stateToSave = {
-        step,
-        headers,
-        rawData,
-        mapping,
-        defaultCategoryId,
-        defaultSupplierId,
-        attributeConfigs,
-        groupedProducts: groupedProducts.map(g => ({
-          ...g,
-          detectedAttributes: g.detectedAttributes.map(a => ({
-            ...a,
-            uniqueValues: Array.from(a.uniqueValues),
-          }))
-        })),
-        detectedAttributeColumns,
-      };
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignorar errores de almacenamiento
     }
-  }, [open, step, headers, rawData, mapping, defaultCategoryId, defaultSupplierId, attributeConfigs, groupedProducts, detectedAttributeColumns]);
+  }, [open]);
+
+
   
   // Clear persisted state when closing dialog
   const handleDialogClose = (isOpen: boolean) => {
