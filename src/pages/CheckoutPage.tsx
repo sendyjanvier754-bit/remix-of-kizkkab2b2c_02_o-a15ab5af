@@ -517,6 +517,9 @@ const CheckoutPage = () => {
         shipping_address: shippingAddress,
         delivery_method: deliveryMethod,
         pickup_point_id: deliveryMethod === 'pickup' ? selectedPickupPoint : undefined,
+        affiliate_id: affiliateOffer?.affiliate_id ?? null,
+        affiliate_code: affiliateOffer?.affiliate_code ?? null,
+        affiliate_discount_amount: affiliateDiscount,
       });
 
       if (order) {
