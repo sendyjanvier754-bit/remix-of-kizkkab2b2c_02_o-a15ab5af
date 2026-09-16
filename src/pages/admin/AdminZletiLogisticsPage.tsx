@@ -48,13 +48,14 @@ export default function AdminZletiLogisticsPage() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useProductsB2B(filters, 0, null);
   const cartProductIds = Array.from(new Set(cart.items.map(item => item.productId).filter(Boolean)));
+  const cartVariantIds = Array.from(new Set(cart.items.map(item => item.variantId).filter(Boolean))) as string[];
   const { data: cartSupplierInfo } = useQuery({
-    queryKey: ['zleti-cart-supplier-info', cartProductIds],
+    queryKey: ['zleti-cart-supplier-info', cartProductIds, cartVariantIds],
     enabled: cartProductIds.length > 0,
     queryFn: async () => {
       const { data: products, error } = await (supabase as any)
         .from('products')
-        .select('id, url_origen, costo_base_excel, proveedor_id')
+        .select('id, url_origen, costo_base_excel, proveedor_id, peso_kg, weight_kg')
         .in('id', cartProductIds);
       if (error) throw error;
 
@@ -68,20 +69,43 @@ export default function AdminZletiLogisticsPage() {
         suppliersById = new Map((suppliers || []).map((s: any) => [s.id, s]));
       }
 
-      const map = new Map<string, { url: string | null; supplierName: string | null; excelCost: number }>();
+      const variantWeights = new Map<string, number>();
+      if (cartVariantIds.length > 0) {
+        const { data: variants } = await (supabase as any)
+          .from('product_variants')
+          .select('id, peso_kg, weight_kg, peso_g, weight_g')
+          .in('id', cartVariantIds);
+        (variants || []).forEach((variant: any) => {
+          const kg = Number(variant.peso_kg ?? variant.weight_kg ?? 0)
+            || Number(variant.peso_g ?? variant.weight_g ?? 0) / 1000;
+          variantWeights.set(variant.id, kg || 0);
+        });
+      }
+
+      const map = new Map<string, { url: string | null; supplierName: string | null; excelCost: number; weightKg: number }>();
       (products || []).forEach((product: any) => {
         const supplier = product.proveedor_id ? suppliersById.get(product.proveedor_id) : null;
         map.set(product.id, {
           url: product.url_origen || supplier?.website || null,
           supplierName: supplier?.name || null,
           excelCost: Number(product.costo_base_excel || 0),
+          weightKg: Number(product.peso_kg ?? product.weight_kg ?? 0),
         });
       });
-      return map;
+      return { info: map, variantWeights };
     },
   });
+  const getItemUnitWeight = (item: { productId: string; variantId?: string | null }) => {
+    const variantWeight = item.variantId ? cartSupplierInfo?.variantWeights.get(item.variantId) : undefined;
+    if (variantWeight && variantWeight > 0) return variantWeight;
+    return cartSupplierInfo?.info.get(item.productId)?.weightKg || 0;
+  };
   const cartSupplierSubtotal = cart.items.reduce(
-    (sum, item) => sum + (cartSupplierInfo?.get(item.productId)?.excelCost || 0) * item.quantity,
+    (sum, item) => sum + (cartSupplierInfo?.info.get(item.productId)?.excelCost || 0) * item.quantity,
+    0,
+  );
+  const cartTotalWeight = cart.items.reduce(
+    (sum, item) => sum + getItemUnitWeight(item) * item.quantity,
     0,
   );
   const { data: poHistory = [], isLoading: historyLoading } = useQuery({
