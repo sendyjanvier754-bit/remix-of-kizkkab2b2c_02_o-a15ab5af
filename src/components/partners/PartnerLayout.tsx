@@ -27,7 +27,9 @@ const pickupNav: NavItem[] = [
 ];
 
 export default function PartnerLayout({ children, variant, title }: PartnerLayoutProps) {
-  const { user, role, signOut } = useAuth();
+  const { user, role, roles, signOut } = useAuth();
+  const canSeePOs = roles?.some((item) => item === UserRole.ADMIN || item === UserRole.ZLETI_ADMIN);
+  const posNav: NavItem = { to: "/socio/pos", label: "Mis PO", icon: FileText };
   const navigate = useNavigate();
   const affiliateNav: NavItem = {
     to: "/socio/afiliado",
