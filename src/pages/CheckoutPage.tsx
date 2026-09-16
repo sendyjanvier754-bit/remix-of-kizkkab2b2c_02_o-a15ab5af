@@ -286,8 +286,21 @@ const CheckoutPage = () => {
   }
 
   const handleApplyDiscount = async () => {
-    if (!discountCode.trim()) return;
-    await applyDiscount(discountCode.trim(), subtotal);
+    const code = discountCode.trim();
+    if (!code) return;
+
+    // Influencer/affiliate code takes precedence
+    if (user?.id) {
+      const offer = await resolveAffiliateOffer(code, user.id);
+      if (offer) {
+        setAffiliateOffer(offer);
+        setDiscountCode('');
+        toast.success(`Código de ${offer.display_name} aplicado: ${offer.discount_percent}% de descuento`);
+        return;
+      }
+    }
+
+    await applyDiscount(code, subtotal);
     setDiscountCode('');
   };
 
@@ -1161,7 +1174,13 @@ const CheckoutPage = () => {
                 {appliedDiscount && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span>{t('cart.discount')}</span>
-                    <span>-${discountAmount.toFixed(2)}</span>
+                    <span>-${couponDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {affiliateOffer && affiliateDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Código {affiliateOffer.affiliate_code} ({affiliateOffer.discount_percent}%)</span>
+                    <span>-${affiliateDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 
