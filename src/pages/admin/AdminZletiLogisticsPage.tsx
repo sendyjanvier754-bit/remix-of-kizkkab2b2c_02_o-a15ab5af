@@ -8,7 +8,8 @@ import { useProductsB2B } from '@/hooks/useProductsB2B';
 import { useB2BCartSupabase, ZLETI_MANUAL_CART_EVENT } from '@/hooks/useB2BCartSupabase';
 import { B2BFilters, ProductB2BCard } from '@/types/b2b';
 import { supabase } from '@/integrations/supabase/client';
-import { generatePOBuyingListPDF } from '@/services/pdfGenerators';
+import type { POBuyingListData } from '@/services/pdfGenerators';
+import { POPreviewModal } from '@/components/logistics/POPreviewModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,8 @@ export default function AdminZletiLogisticsPage() {
   const [poDetailOpen, setPoDetailOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [poPreviewOpen, setPoPreviewOpen] = useState(false);
+  const [poPreviewData, setPoPreviewData] = useState<POBuyingListData | null>(null);
   const [editingItems, setEditingItems] = useState<any[]>([]);
   const [editingNotes, setEditingNotes] = useState('');
   const [poAddProductModalOpen, setPoAddProductModalOpen] = useState(false);
@@ -354,17 +357,19 @@ export default function AdminZletiLogisticsPage() {
       if (error) throw error;
       return { result, payload };
     },
-    onSuccess: async ({ result, payload }) => {
-      await generatePOBuyingListPDF({
+    onSuccess: ({ result, payload }) => {
+      setPoPreviewData({
         po_number: result.po_number,
         market_name: 'ZleTI México',
         brand_identity: 'zleti',
         generated_at: new Date().toISOString(),
         items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })),
-      }, { download: true });
+      });
+      setPoPreviewOpen(true);
       clearCart();
       setNotes('');
-      toast.success(`PO ${result.po_number} creada`, { description: 'El PDF se descargó correctamente.' });
+      setCartOpen(false);
+      toast.success(`PO ${result.po_number} creada`, { description: 'La vista previa está lista para imprimir o guardar.' });
     },
     onError: (error: any) => toast.error(error?.message || 'No se pudo crear la PO ZleTI'),
   });
@@ -389,11 +394,13 @@ export default function AdminZletiLogisticsPage() {
       if (rpcError) throw rpcError;
       return { result, payload };
     },
-    onSuccess: async ({ result, payload }) => {
+    onSuccess: ({ result, payload }) => {
       queryClient.invalidateQueries({ queryKey: ['zleti-po-history'] });
       queryClient.invalidateQueries({ queryKey: ['zleti-po-history-detail', selectedPoId] });
-      await generatePOBuyingListPDF({ po_number: result.po_number, market_name: 'ZleTI Mexico', brand_identity: 'zleti', generated_at: new Date().toISOString(), items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })) }, { download: true });
-      toast.success(`${result.po_number} updated`, { description: 'El PDF se descargó correctamente.' });
+      setPoPreviewData({ po_number: result.po_number, market_name: 'ZleTI México', brand_identity: 'zleti', generated_at: new Date().toISOString(), items: payload.map(item => ({ sku: item.sku, nombre: item.product_name, variantName: item.variant_name, image: item.image_url, cantidad: item.quantity, url_origen: item.source_url, unit_cost: item.unit_cost })) });
+      setPoDetailOpen(false);
+      setPoPreviewOpen(true);
+      toast.success(`${result.po_number} actualizado`, { description: 'La vista previa está lista para imprimir o guardar.' });
     },
     onError: (error: any) => toast.error(error?.message || 'Could not update the PO'),
   });
@@ -802,6 +809,7 @@ export default function AdminZletiLogisticsPage() {
           </div>}
         </DialogContent>
       </Dialog>
+      <POPreviewModal open={poPreviewOpen} onOpenChange={setPoPreviewOpen} data={poPreviewData} />
     </AdminLayout>
   );
 }

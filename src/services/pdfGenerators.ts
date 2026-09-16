@@ -168,7 +168,7 @@ const downloadPdfFromHtml = async (html: string, filename: string) => {
     if (frameDocument.fonts?.ready) await frameDocument.fonts.ready;
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 
-    const pdfSource = frameDocument.querySelector('.purchase-page') || frameDocument.body;
+    const pdfSource = (frameDocument.querySelector('.purchase-page') as HTMLElement | null) || frameDocument.body;
     const pdfWorker = html2pdf()
       .set({
         margin: 0.25,
@@ -183,7 +183,6 @@ const downloadPdfFromHtml = async (html: string, filename: string) => {
           logging: false,
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: [] },
         enableLinks: true,
       })
       .from(pdfSource)
