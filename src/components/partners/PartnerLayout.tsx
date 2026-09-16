@@ -42,11 +42,12 @@ export default function PartnerLayout({ children, variant, title }: PartnerLayou
     { to: "/socio/afiliado/estadisticas", label: "Mis estadísticas", icon: BarChart3 },
     { to: "/programa-afiliados", label: "El programa", icon: DollarSign },
   ];
-  const nav = variant === "driver"
+  const baseNav = variant === "driver"
     ? [...driverNav, affiliateNav]
     : variant === "pickup"
       ? [...pickupNav, affiliateNav]
       : influencerNav;
+  const nav = canSeePOs ? [...baseNav, posNav] : baseNav;
   const Icon = variant === "driver" ? Truck : variant === "pickup" ? Package : Megaphone;
 
   const handleLogout = async () => {
