@@ -168,7 +168,7 @@ const downloadPdfFromHtml = async (html: string, filename: string) => {
     if (frameDocument.fonts?.ready) await frameDocument.fonts.ready;
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 
-    const pdfSource = frameDocument.querySelector('.purchase-page') || frameDocument.body;
+    const pdfSource = (frameDocument.querySelector('.purchase-page') as HTMLElement | null) || frameDocument.body;
     const pdfWorker = html2pdf()
       .set({
         margin: 0.25,
@@ -183,7 +183,6 @@ const downloadPdfFromHtml = async (html: string, filename: string) => {
           logging: false,
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: [] },
         enableLinks: true,
       })
       .from(pdfSource)
@@ -1322,7 +1321,7 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
 };
 
 // PDF: Buying list for a PO (Artículos a Comprar)
-export const generatePOBuyingListPDF = (data: {
+export interface POBuyingListData {
   po_number: string;
   market_name: string;
   brand_identity?: 'kizkka' | 'zleti';
@@ -1336,7 +1335,12 @@ export const generatePOBuyingListPDF = (data: {
     url_origen: string | null;
     unit_cost?: number;
   }[];
-}, options: { download?: boolean } = {}) => {
+}
+
+export const buildPOBuyingListHtml = (
+  data: POBuyingListData,
+  options: { download?: boolean; showActions?: boolean } = {},
+) => {
   const totalUnits = data.items.reduce((s, i) => s + i.cantidad, 0);
   const totalPurchaseCost = data.items.reduce(
     (sum, item) => sum + Number(item.unit_cost || 0) * item.cantidad,
@@ -1426,10 +1430,10 @@ export const generatePOBuyingListPDF = (data: {
       </style>
     </head>
     <body class="${options.download ? 'pdf-download ' : ''}purchase-list">
-      <div class="document-actions">
+      ${options.showActions ? `<div class="document-actions">
         <button class="document-action primary" onclick="window.print()">Imprimir / Guardar PDF</button>
         <button class="document-action" onclick="window.close()">Cerrar</button>
-      </div>
+      </div>` : ''}
       <main class="purchase-page">
       <div class="header purchase-header">
         <div class="logo">${documentBrand}</div>
@@ -1499,11 +1503,25 @@ export const generatePOBuyingListPDF = (data: {
     </html>
   `;
 
+  return html;
+};
+
+export const downloadPOBuyingListPDF = (data: POBuyingListData) => {
+  const html = buildPOBuyingListHtml(data, { download: true });
+  const filename = `Purchase_List_${data.po_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+  return downloadPdfFromHtml(html, filename);
+};
+
+export const generatePOBuyingListPDF = (
+  data: POBuyingListData,
+  options: { download?: boolean } = {},
+) => {
+  const html = buildPOBuyingListHtml(data, { download: options.download, showActions: !options.download });
+
   // Keep the document interactive so source URLs can be selected/copied or
   // opened in a new tab before the user prints/saves the PDF.
   if (options.download) {
-    const filename = `Purchase_List_${data.po_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-    return downloadPdfFromHtml(html, filename);
+    return downloadPOBuyingListPDF(data);
   }
 
   // Legacy/manual mode: keep the interactive HTML preview available for other callers.
