@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
+import AffiliateRefCapture from "@/components/affiliates/AffiliateRefCapture";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -58,7 +59,10 @@ const TrendsPage = lazyWithRetry(() => import("./pages/TrendsPage"));
 const MarketplacePage = lazyWithRetry(() => import("./pages/MarketplacePage"));
 const MyPurchasesPage = lazyWithRetry(() => import("./pages/MyPurchasesPage"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/CheckoutPage"));
-const AffiliateProgramPage = lazyWithRetry(() => import("./pages/AffiliateProgramPage"));
+const InfluencerProgramPage = lazyWithRetry(() => import("./pages/partners/InfluencerProgramPage"));
+const InfluencerDashboardPage = lazyWithRetry(() => import("./pages/partners/influencer/InfluencerDashboardPage"));
+const InfluencerStatsPage = lazyWithRetry(() => import("./pages/partners/influencer/InfluencerStatsPage"));
+const AdminAffiliateStatsPage = lazyWithRetry(() => import("./pages/admin/AdminAffiliateStatsPage"));
 const UserProfilePage = lazyWithRetry(() => import("./pages/UserProfilePage"));
 const EditProfilePage = lazyWithRetry(() => import("./pages/EditProfilePage"));
 const UserSupportPage = lazyWithRetry(() => import("./pages/UserSupportPage"));
@@ -203,7 +207,7 @@ const AppContent = () => {
             <Route path="/carrito" element={<LazyRoute><CartPage /></LazyRoute>} />
             <Route path="/carrito/compartido/:shareCode" element={<LazyRoute><SharedCartPage /></LazyRoute>} />
             <Route path="/checkout" element={<LazyRoute><CheckoutPage /></LazyRoute>} />
-            <Route path="/programa-afiliados" element={<LazyRoute><AffiliateProgramPage /></LazyRoute>} />
+            <Route path="/programa-afiliados" element={<LazyRoute><InfluencerProgramPage /></LazyRoute>} />
             <Route path="/favoritos" element={<LazyRoute><FavoritesPage /></LazyRoute>} />
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />
             <Route path="/busqueda" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />
@@ -243,6 +247,18 @@ const AppContent = () => {
             <Route path="/socios" element={<LazyRoute><BecomePartnerPage /></LazyRoute>} />
             <Route path="/socios/punto-retiro/registro" element={<LazyRoute><PickupPointRegistrationPage /></LazyRoute>} />
             <Route path="/socios/conductor/registro" element={<LazyRoute><DriverRegistrationPage /></LazyRoute>} />
+
+            {/* Influencer / affiliate portal */}
+            <Route path="/socio/afiliado" element={
+              <ProtectedRoute>
+                <LazyRoute><InfluencerDashboardPage /></LazyRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/socio/afiliado/estadisticas" element={
+              <ProtectedRoute>
+                <LazyRoute><InfluencerStatsPage /></LazyRoute>
+              </ProtectedRoute>
+            } />
 
             {/* Driver portal */}
             <Route path="/socio/conductor" element={
