@@ -756,7 +756,36 @@ export default function AdminZletiLogisticsPage() {
                             {item.size && <Badge variant="secondary" className="text-[10px]">Talla: {item.size}</Badge>}
                           </div>
                         )}
-                        {item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()} className="mt-2 block max-w-full truncate text-[11px] text-primary underline underline-offset-2 hover:text-primary/80">Ver producto de origen</a>}
+                        {(() => {
+                          const info = cartSupplierInfo?.get(item.productId);
+                          const url = item.sourceUrl || info?.url || null;
+                          if (!url) return null;
+                          return (
+                            <div className="mt-2 space-y-1">
+                              {info?.supplierName && <p className="text-[11px] text-muted-foreground">Proveedor: {info.supplierName}</p>}
+                              <div className="flex flex-wrap items-center gap-2">
+                                <a href={url} target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()} className="block max-w-full truncate text-[11px] text-primary underline underline-offset-2 hover:text-primary/80">Ver producto de origen</a>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-[10px]"
+                                  onClick={async event => {
+                                    event.stopPropagation();
+                                    try {
+                                      await navigator.clipboard.writeText(url);
+                                      toast.success('Enlace copiado');
+                                    } catch {
+                                      toast.error('No se pudo copiar el enlace');
+                                    }
+                                  }}
+                                >
+                                  Copiar enlace
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:block">
                         <span className="text-xs font-medium text-muted-foreground sm:block sm:pb-1">Cantidad</span>
@@ -765,6 +794,9 @@ export default function AdminZletiLogisticsPage() {
                       <div className="flex items-center justify-between sm:block sm:text-right">
                         <span className="text-xs font-medium text-muted-foreground sm:block sm:pb-1">Total</span>
                         <span className="text-sm font-bold text-slate-900">${Number(item.totalPrice || 0).toFixed(2)}</span>
+                        <span className="block text-[11px] text-muted-foreground">
+                          Costo proveedor: ${((cartSupplierInfo?.get(item.productId)?.excelCost || 0) * item.quantity).toFixed(2)}
+                        </span>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)} className="text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Eliminar producto">
                         <Trash2 className="h-4 w-4" />
