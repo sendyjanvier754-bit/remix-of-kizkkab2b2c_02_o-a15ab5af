@@ -17,8 +17,11 @@ import {
   AffiliateConversion,
   useAffiliateConversions,
   useAffiliatePayoutMethods,
+  useAffiliatePayoutRequests,
   useAffiliatePayouts,
   useRecordAffiliatePayout,
+  useRequestAffiliatePayout,
+  useResolveAffiliatePayoutRequest,
   useVoidAffiliatePayout,
 } from "@/hooks/useAffiliates";
 
@@ -40,6 +43,15 @@ export default function AffiliateCommissionsPanel({ affiliate, canManage = false
   const [paidAt, setPaidAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  const { data: payoutRequests = [] } = useAffiliatePayoutRequests(affiliate.id);
+  const requestPayout = useRequestAffiliatePayout();
+  const resolveRequest = useResolveAffiliatePayoutRequest();
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [claimAmount, setClaimAmount] = useState("");
+  const [claimMethodId, setClaimMethodId] = useState("");
+  const [claimDetails, setClaimDetails] = useState("");
+  const [claimNote, setClaimNote] = useState("");
+
 
   const totals = useMemo(() => conversions.reduce((sum, conversion) => {
     const earned = Number(conversion.commission_earned || 0);
@@ -90,7 +102,30 @@ export default function AffiliateCommissionsPanel({ affiliate, canManage = false
     setNotes("");
   };
 
+  const openRequest = payoutRequests.find((request) => request.status === "pending" || request.status === "approved");
+
+  const openClaim = () => {
+    setClaimAmount(totals.pending.toFixed(2));
+    setClaimOpen(true);
+  };
+
+  const submitClaim = async () => {
+    const requested = Number(claimAmount);
+    if (!(requested > 0) || requested > totals.pending) return;
+    await requestPayout.mutateAsync({
+      affiliateId: affiliate.id,
+      amount: requested,
+      paymentMethodId: claimMethodId || null,
+      paymentDetails: claimDetails,
+      note: claimNote,
+    });
+    setClaimOpen(false);
+    setClaimDetails("");
+    setClaimNote("");
+  };
+
   if (isLoading || loadingPayouts) return <Skeleton className="h-80 w-full" />;
+
 
   return (
     <div className="space-y-5">
@@ -100,6 +135,62 @@ export default function AffiliateCommissionsPanel({ affiliate, canManage = false
         <Summary icon={Banknote} label="Por cobrar" value={money(totals.pending)} />
         <Summary icon={Banknote} label="Cobrado" value={money(totals.paid)} />
       </div>
+
+      {!canManage && (
+        <Card>
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Saldo disponible para reclamar</p>
+              <p className="text-2xl font-semibold">{money(totals.pending)}</p>
+              {openRequest && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Tienes una solicitud de {money(openRequest.amount)} en revisión desde el {new Date(openRequest.created_at).toLocaleDateString()}.
+                </p>
+              )}
+            </div>
+            <Button onClick={openClaim} disabled={totals.pending <= 0 || !!openRequest}>
+              Reclamar mi pago
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {payoutRequests.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Solicitudes de pago</CardTitle></CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto"><Table>
+              <TableHeader><TableRow>
+                <TableHead>Fecha</TableHead><TableHead className="text-right">Monto</TableHead><TableHead>Método</TableHead>
+                <TableHead>Nota</TableHead><TableHead>Estado</TableHead>{canManage && <TableHead />}
+              </TableRow></TableHeader>
+              <TableBody>{payoutRequests.map((request) => (
+                <TableRow key={request.id}>
+                  <TableCell>{new Date(request.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right font-medium">{money(request.amount)}</TableCell>
+                  <TableCell>{methods.find((method) => method.id === request.payment_method_id)?.name || "—"}</TableCell>
+                  <TableCell className="max-w-[220px] truncate">{request.payment_details || request.note || "—"}</TableCell>
+                  <TableCell><RequestBadge status={request.status} /></TableCell>
+                  {canManage && (
+                    <TableCell className="text-right">
+                      {request.status === "pending" && (
+                        <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="outline" onClick={() => resolveRequest.mutate({ id: request.id, status: "approved" })}>Aprobar</Button>
+                          <Button size="sm" variant="ghost" onClick={() => { const reason = window.prompt("Motivo del rechazo"); if (reason?.trim()) resolveRequest.mutate({ id: request.id, status: "rejected", adminNote: reason }); }}>Rechazar</Button>
+                        </div>
+                      )}
+                      {request.status === "approved" && (
+                        <Button size="sm" onClick={() => resolveRequest.mutate({ id: request.id, status: "paid" })}>Marcar pagada</Button>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}</TableBody>
+            </Table></div>
+          </CardContent>
+        </Card>
+      )}
+
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
@@ -156,6 +247,39 @@ export default function AffiliateCommissionsPanel({ affiliate, canManage = false
         )}</CardContent>
       </Card>
 
+      <Dialog open={claimOpen} onOpenChange={setClaimOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle>Reclamar mi pago</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-md border border-border p-3 text-sm">
+              <span className="text-muted-foreground">Saldo disponible</span>
+              <p className="text-xl font-semibold">{money(totals.pending)}</p>
+            </div>
+            <div className="space-y-1.5"><Label>Monto a reclamar (USD)</Label>
+              <Input type="number" min="0.01" step="0.01" max={totals.pending} value={claimAmount} onChange={(event) => setClaimAmount(event.target.value)} />
+            </div>
+            <div className="space-y-1.5"><Label>¿Cómo quieres cobrar?</Label>
+              <Select value={claimMethodId} onValueChange={setClaimMethodId}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
+                <SelectContent>{methods.map((method) => <SelectItem key={method.id} value={method.id}>{method.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5"><Label>Datos para el pago</Label>
+              <Input value={claimDetails} onChange={(event) => setClaimDetails(event.target.value)} placeholder="Número de cuenta, teléfono o billetera" />
+            </div>
+            <div className="space-y-1.5"><Label>Nota (opcional)</Label>
+              <Textarea value={claimNote} onChange={(event) => setClaimNote(event.target.value)} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setClaimOpen(false)}>Cancelar</Button>
+              <Button disabled={requestPayout.isPending || !(Number(claimAmount) > 0) || Number(claimAmount) > totals.pending} onClick={submitClaim}>
+                {requestPayout.isPending ? "Enviando..." : "Enviar solicitud"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Registrar pago de comisión</DialogTitle></DialogHeader>
@@ -189,3 +313,7 @@ function Summary({ icon: Icon, label, value }: { icon: typeof Banknote; label: s
 }
 
 function Empty({ text }: { text: string }) { return <p className="py-8 text-center text-sm text-muted-foreground">{text}</p>; }
+function RequestBadge({ status }: { status: string }) {
+  const label = status === "paid" ? "Pagada" : status === "approved" ? "Aprobada" : status === "rejected" ? "Rechazada" : "En revisión";
+  return <Badge variant={status === "paid" ? "default" : status === "rejected" ? "destructive" : "secondary"}>{label}</Badge>;
+}

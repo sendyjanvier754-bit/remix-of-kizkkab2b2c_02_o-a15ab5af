@@ -270,6 +270,89 @@ export const useVoidAffiliatePayout = () => {
   });
 };
 
+export interface AffiliatePayoutRequest {
+  id: string;
+  affiliate_id: string;
+  amount: number;
+  currency: string;
+  payment_method_id: string | null;
+  payment_details: string | null;
+  status: "pending" | "approved" | "paid" | "rejected";
+  note: string | null;
+  admin_note: string | null;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+/** Payout claims made by an affiliate. */
+export const useAffiliatePayoutRequests = (affiliateId?: string) =>
+  useQuery({
+    queryKey: ["affiliate-payout-requests", affiliateId],
+    enabled: !!affiliateId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("affiliate_payout_requests")
+        .select("*")
+        .eq("affiliate_id", affiliateId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as AffiliatePayoutRequest[];
+    },
+  });
+
+/** Affiliate: claim the pending commission balance. */
+export const useRequestAffiliatePayout = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      affiliateId: string;
+      amount: number;
+      paymentMethodId?: string | null;
+      paymentDetails?: string;
+      note?: string;
+    }) => {
+      const { error } = await (supabase as any).from("affiliate_payout_requests").insert({
+        affiliate_id: input.affiliateId,
+        amount: input.amount,
+        payment_method_id: input.paymentMethodId || null,
+        payment_details: input.paymentDetails?.trim() || null,
+        note: input.note?.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["affiliate-payout-requests"] });
+      toast.success("Solicitud de pago enviada", {
+        description: "El equipo la revisará y te avisará cuando se pague.",
+      });
+    },
+    onError: (e: any) => toast.error(e.message || "No se pudo enviar la solicitud"),
+  });
+};
+
+/** Admin: change the status of a payout claim. */
+export const useResolveAffiliatePayoutRequest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status, adminNote }: { id: string; status: AffiliatePayoutRequest["status"]; adminNote?: string }) => {
+      const { error } = await (supabase as any)
+        .from("affiliate_payout_requests")
+        .update({
+          status,
+          admin_note: adminNote?.trim() || null,
+          resolved_at: status === "pending" ? null : new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["affiliate-payout-requests"] });
+      toast.success("Solicitud actualizada");
+    },
+    onError: (e: any) => toast.error(e.message || "No se pudo actualizar la solicitud"),
+  });
+};
+
 export interface AffiliateApplication {
   display_name: string;
   affiliate_code: string;

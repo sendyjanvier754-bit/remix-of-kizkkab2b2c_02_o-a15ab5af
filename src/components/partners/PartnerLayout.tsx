@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Truck, MapPin, DollarSign, LogOut, Package, Clock, Megaphone, ReceiptText, BarChart3 } from "lucide-react";
+import { Truck, MapPin, DollarSign, LogOut, Package, Clock, Megaphone, ReceiptText, BarChart3, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,9 @@ const pickupNav: NavItem[] = [
 ];
 
 export default function PartnerLayout({ children, variant, title }: PartnerLayoutProps) {
-  const { user, role, signOut } = useAuth();
+  const { user, role, roles, signOut } = useAuth();
+  const canSeePOs = roles?.some((item) => item === UserRole.ADMIN || item === UserRole.ZLETI_ADMIN);
+  const posNav: NavItem = { to: "/socio/pos", label: "Mis PO", icon: FileText };
   const navigate = useNavigate();
   const affiliateNav: NavItem = {
     to: "/socio/afiliado",
@@ -40,11 +42,12 @@ export default function PartnerLayout({ children, variant, title }: PartnerLayou
     { to: "/socio/afiliado/estadisticas", label: "Mis estadísticas", icon: BarChart3 },
     { to: "/programa-afiliados", label: "El programa", icon: DollarSign },
   ];
-  const nav = variant === "driver"
+  const baseNav = variant === "driver"
     ? [...driverNav, affiliateNav]
     : variant === "pickup"
       ? [...pickupNav, affiliateNav]
       : influencerNav;
+  const nav = canSeePOs ? [...baseNav, posNav] : baseNav;
   const Icon = variant === "driver" ? Truck : variant === "pickup" ? Package : Megaphone;
 
   const handleLogout = async () => {

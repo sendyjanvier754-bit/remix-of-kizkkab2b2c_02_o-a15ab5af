@@ -62,6 +62,7 @@ const CheckoutPage = lazyWithRetry(() => import("./pages/CheckoutPage"));
 const InfluencerProgramPage = lazyWithRetry(() => import("./pages/partners/InfluencerProgramPage"));
 const InfluencerDashboardPage = lazyWithRetry(() => import("./pages/partners/influencer/InfluencerDashboardPage"));
 const InfluencerStatsPage = lazyWithRetry(() => import("./pages/partners/influencer/InfluencerStatsPage"));
+const PartnerPOsPage = lazyWithRetry(() => import("./pages/partners/PartnerPOsPage"));
 const AdminAffiliateStatsPage = lazyWithRetry(() => import("./pages/admin/AdminAffiliateStatsPage"));
 const UserProfilePage = lazyWithRetry(() => import("./pages/UserProfilePage"));
 const EditProfilePage = lazyWithRetry(() => import("./pages/EditProfilePage"));
@@ -257,6 +258,11 @@ const AppContent = () => {
             <Route path="/socio/afiliado/estadisticas" element={
               <ProtectedRoute>
                 <LazyRoute><InfluencerStatsPage /></LazyRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/socio/pos" element={
+              <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.ZLETI_ADMIN]}>
+                <LazyRoute><PartnerPOsPage /></LazyRoute>
               </ProtectedRoute>
             } />
 
