@@ -73,7 +73,11 @@ const DEFAULT_MAPPING: ColumnMapping = {
   categoria: 'Categoria',
   proveedor: 'Proveedor',
   url_origen: 'URL_Producto',
-  imagen_principal: ''
+  imagen_principal: '',
+  peso_g: 'Peso_g',
+  length_cm: 'Largo_cm',
+  width_cm: 'Ancho_cm',
+  height_cm: 'Alto_cm'
 };
 
 const STEPS = [
