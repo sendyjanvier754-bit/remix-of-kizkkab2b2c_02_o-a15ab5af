@@ -56,6 +56,10 @@ interface ColumnMapping {
   proveedor: string;
   url_origen: string;
   imagen_principal: string;
+  peso_g: string;
+  length_cm: string;
+  width_cm: string;
+  height_cm: string;
 }
 
 const DEFAULT_MAPPING: ColumnMapping = {
