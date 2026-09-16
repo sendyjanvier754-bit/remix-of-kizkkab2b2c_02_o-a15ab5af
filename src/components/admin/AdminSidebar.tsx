@@ -1,11 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { 
   LayoutDashboard, CreditCard, Package, Users, MapPin, Settings, LogOut, ShoppingBag,
   ChevronLeft, FolderTree, ShoppingCart, Image as ImageIcon, Truck, ClipboardList,
   Calculator, MessageSquare, RefreshCw, Ticket, UserCheck, BarChart3, LayoutGrid,
-  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck, Mail, UsersRound, TrendingUp, Warehouse
+  Globe, Store, Headset, Bell, MessageCircle, ShieldCheck, Mail, UsersRound, TrendingUp, Warehouse,
+  ChevronDown
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
@@ -24,8 +25,17 @@ export function AdminSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const { signOut, user } = useAuth();
   const { getValue } = useBranding();
+  const { pathname } = useLocation();
   const isCollapsed = state === "collapsed";
   const sidebarContentRef = useRef<HTMLDivElement>(null);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = sessionStorage.getItem("admin-sidebar-open-groups");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
   useEffect(() => {
     const element = sidebarContentRef.current;
@@ -48,6 +58,7 @@ export function AdminSidebar() {
   }, []);
 
   const isAdmin = user?.role === UserRole.ADMIN;
+  const isZletiAdmin = user?.role === UserRole.ZLETI_ADMIN;
   const isMarketing = user?.role === UserRole.MARKETING;
   const isSalesAgent = user?.role === UserRole.SALES_AGENT;
 
@@ -114,12 +125,40 @@ export function AdminSidebar() {
     { title: "Email Configuration", url: "/admin/email-config", icon: Mail },
     { title: "Plantillas Email", url: "/admin/email-templates", icon: Mail },
     { title: "Programas Afiliados", url: "/admin/affiliates", icon: Award },
+    { title: "Estadísticas Afiliados", url: "/admin/afiliados-estadisticas", icon: TrendingUp },
   ];
 
-  const renderGroup = (label: string, items: typeof mainNavItems) => (
+  const isItemActive = (url: string) => url === "/admin" ? pathname === url : pathname.startsWith(url);
+
+  const setGroupOpen = (groupKey: string, open: boolean) => {
+    setOpenGroups((current) => {
+      const next = { ...current, [groupKey]: open };
+      sessionStorage.setItem("admin-sidebar-open-groups", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const renderGroup = (groupKey: string, label: string, items: typeof mainNavItems) => {
+    const containsActiveRoute = items.some((item) => isItemActive(item.url));
+    const isOpen = isCollapsed || (openGroups[groupKey] ?? containsActiveRoute);
+
+    return (
     <SidebarGroup>
-      <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>{label}</SidebarGroupLabel>
-      <SidebarGroupContent>
+      {isCollapsed ? (
+        <SidebarGroupLabel className="sr-only">{label}</SidebarGroupLabel>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setGroupOpen(groupKey, !isOpen)}
+          aria-expanded={isOpen}
+          className="h-8 w-full justify-between px-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <span>{label}</span>
+          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+        </Button>
+      )}
+      <SidebarGroupContent className={isOpen ? "block" : "hidden"}>
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.url}>
@@ -139,7 +178,8 @@ export function AdminSidebar() {
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-  );
+    );
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border bg-card">
@@ -153,7 +193,7 @@ export function AdminSidebar() {
               <div className="flex flex-col">
                 <span className="font-bold text-sm text-foreground">{getValue('platform_name')}</span>
                 <span className="text-xs text-accent font-semibold">
-                  {isAdmin ? "Admin 509" : isSalesAgent ? "Agente" : "Panel"}
+                  {isAdmin ? "Admin 509" : isZletiAdmin ? "Admin ZleTI" : isSalesAgent ? "Agente" : "Panel"}
                 </span>
               </div>
             )}
@@ -168,38 +208,29 @@ export function AdminSidebar() {
         {/* Admins see the full sidebar */}
         {isAdmin && (
           <>
-            {renderGroup(t('adminSidebar.main'), mainNavItems)}
-            {renderGroup(t('adminSidebar.analytics'), analyticsItems)}
-            {renderGroup(t('adminSidebar.discounts'), discountItems)}
-            {renderGroup(t('adminSidebar.system'), settingsItems)}
-
-            <SidebarGroup>
-              <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>{t('adminSidebar.b2bWholesale')}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip={t('adminSidebar.b2bPortal')}>
-                      <Link to="/seller/adquisicion-lotes" className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-                        <ShoppingCart className="h-5 w-5 flex-shrink-0" />
-                        {!isCollapsed && <span>{t('adminSidebar.b2bPortal')}</span>}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            {renderGroup("main", t('adminSidebar.main'), mainNavItems)}
+            {renderGroup("analytics", t('adminSidebar.analytics'), analyticsItems)}
+            {renderGroup("discounts", t('adminSidebar.discounts'), discountItems)}
+            {renderGroup("system", t('adminSidebar.system'), settingsItems)}
+            {renderGroup("b2b", t('adminSidebar.b2bWholesale'), [
+              { title: t('adminSidebar.b2bPortal'), url: "/seller/adquisicion-lotes", icon: ShoppingCart },
+            ])}
           </>
         )}
 
-        {isMarketing && renderGroup("Marketing", [
+        {isMarketing && renderGroup("marketing", "Marketing", [
           { title: "Tienda destacada", url: "/admin/tendencias", icon: TrendingUp },
         ])}
 
+        {isZletiAdmin && renderGroup("zleti", "ZleTI", [
+          { title: "Logística ZleTI", url: "/admin/logistica-zleti", icon: Warehouse },
+        ])}
+
         {/* Sales agents see agente-pedidos + shared items */}
-        {!isAdmin && isSalesAgent && renderGroup(t('adminSidebar.main'), [...agentNavItems, ...sharedNavItems])}
+        {!isAdmin && isSalesAgent && renderGroup("agent-main", t('adminSidebar.main'), [...agentNavItems, ...sharedNavItems])}
 
         {/* Sellers and other roles only see shared items (chat + notifications) */}
-        {!isAdmin && !isSalesAgent && renderGroup(t('adminSidebar.main'), sharedNavItems)}
+        {!isAdmin && !isZletiAdmin && !isSalesAgent && renderGroup("shared-main", t('adminSidebar.main'), sharedNavItems)}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-border">

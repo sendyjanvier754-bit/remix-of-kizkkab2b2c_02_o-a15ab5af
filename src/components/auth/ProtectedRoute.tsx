@@ -29,7 +29,7 @@ const ProtectedRoute = ({
   }
 
   // Si se especificaron roles requeridos y el usuario no tiene el rol requerido
-  if (requiredRoles && requiredRoles.length > 0 && !requiredRoles.includes(user.role as UserRole)) {
+  if (requiredRoles && requiredRoles.length > 0 && !requiredRoles.some((requiredRole) => user.roles.includes(requiredRole))) {
     // Redirigir según su rol
     const redirectPath = getRoleRedirectPath(user.role as UserRole);
     return <Navigate to={redirectPath} replace />;
@@ -45,6 +45,8 @@ export const getRoleRedirectPath = (role: UserRole): string => {
   switch (role) {
     case UserRole.ADMIN:
       return "/admin/dashboard";
+    case UserRole.ZLETI_ADMIN:
+      return "/admin/logistica-zleti";
     case UserRole.PURCHASING_AGENT:
       return "/agente-compra";
     case UserRole.GROSSISTE:

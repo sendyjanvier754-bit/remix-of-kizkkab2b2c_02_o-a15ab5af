@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Search, AlertTriangle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -16,9 +17,13 @@ const ROLES = [
   { value: 'seller', label: 'Vendedor', color: 'bg-primary/10 text-primary' },
   { value: 'grossiste', label: 'Mayorista', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
   { value: 'admin', label: 'Admin', color: 'bg-destructive/10 text-destructive' },
+  { value: 'zletiadmin', label: 'Admin ZleTI', color: 'bg-primary/10 text-primary' },
   { value: 'sales_agent', label: 'Agente Ventas', color: 'bg-accent/80 text-accent-foreground' },
   { value: 'purchasing_agent', label: 'Agente Compras', color: 'bg-secondary text-secondary-foreground' },
   { value: 'staff_pickup', label: 'Staff Pickup', color: 'bg-muted text-muted-foreground' },
+  { value: 'pickup_partner', label: 'Punto de Entrega', color: 'bg-primary/10 text-primary' },
+  { value: 'driver_partner', label: 'Transportista', color: 'bg-secondary text-secondary-foreground' },
+  { value: 'marketing', label: 'Marketing', color: 'bg-accent text-accent-foreground' },
   { value: 'moderator', label: 'Moderador', color: 'bg-muted text-muted-foreground' },
 ];
 
@@ -30,7 +35,7 @@ const getRoleBadge = (role: string) => {
 const getRoleLabel = (role: string) => ROLES.find(x => x.value === role)?.label || role;
 
 export default function AdminAccountsPage() {
-  const { accounts, isLoading, changeRole } = useAdminAccounts();
+  const { accounts, isLoading, changeRoles } = useAdminAccounts();
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
   
@@ -38,30 +43,31 @@ export default function AdminAccountsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
-    newRole: string;
+    selectedRoles: string[];
     userName: string | null;
     userEmail: string | null;
-    currentRole: string;
+    currentRoles: string[];
   } | null>(null);
 
   const filtered = accounts.filter(a => {
     const matchesSearch = !search ||
       (a.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
       (a.email || '').toLowerCase().includes(search.toLowerCase());
-    const matchesRole = filterRole === 'all' || a.role === filterRole;
+    const matchesRole = filterRole === 'all' || a.roles.includes(filterRole);
     return matchesSearch && matchesRole;
   });
 
-  const openRoleDialog = (userId: string, currentRole: string, userName: string | null, userEmail: string | null) => {
-    setPendingChange({ userId, newRole: currentRole, userName, userEmail, currentRole });
+  const openRoleDialog = (userId: string, currentRoles: string[], userName: string | null, userEmail: string | null) => {
+    setPendingChange({ userId, selectedRoles: currentRoles, userName, userEmail, currentRoles });
     setDialogOpen(true);
   };
 
   const confirmRoleChange = () => {
-    if (!pendingChange || pendingChange.newRole === pendingChange.currentRole) return;
-    changeRole.mutate({
+    if (!pendingChange) return;
+    changeRoles.mutate({
       userId: pendingChange.userId,
-      newRole: pendingChange.newRole,
+      newRoles: pendingChange.selectedRoles,
+      previousRoles: pendingChange.currentRoles,
       userEmail: pendingChange.userEmail,
       userName: pendingChange.userName,
     }, {
@@ -103,9 +109,9 @@ export default function AdminAccountsPage() {
         <div className="flex gap-4 text-sm text-muted-foreground">
           <span>{filtered.length} cuenta{filtered.length !== 1 ? 's' : ''}</span>
           <span>•</span>
-          <span>{accounts.filter(a => a.role === 'seller').length} vendedores</span>
+           <span>{accounts.filter(a => a.roles.includes('seller')).length} vendedores</span>
           <span>•</span>
-          <span>{accounts.filter(a => a.role === 'admin').length} admins</span>
+           <span>{accounts.filter(a => a.roles.includes('admin')).length} admins</span>
         </div>
 
         {/* Table */}
@@ -143,7 +149,7 @@ export default function AdminAccountsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{account.email}</TableCell>
-                  <TableCell>{getRoleBadge(account.role)}</TableCell>
+                   <TableCell><div className="flex flex-wrap gap-1">{account.roles.map(getRoleBadge)}</div></TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {format(new Date(account.created_at), 'dd/MM/yyyy')}
                   </TableCell>
@@ -152,9 +158,9 @@ export default function AdminAccountsPage() {
                       variant="outline"
                       size="sm"
                       className="text-xs"
-                      onClick={() => openRoleDialog(account.id, account.role, account.full_name, account.email)}
+                       onClick={() => openRoleDialog(account.id, account.roles, account.full_name, account.email)}
                     >
-                      Cambiar Rol
+                       Gestionar roles
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -165,14 +171,14 @@ export default function AdminAccountsPage() {
       </div>
 
       {/* Role Change Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!changeRole.isPending) { setDialogOpen(open); if (!open) setPendingChange(null); } }}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!changeRoles.isPending) { setDialogOpen(open); if (!open) setPendingChange(null); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Cambiar Rol de Usuario</DialogTitle>
+            <DialogTitle>Roles del usuario</DialogTitle>
             <DialogDescription>
               {pendingChange && (
                 <>
-                  Cambiando rol de <strong>{pendingChange.userName || 'Usuario'}</strong> ({pendingChange.userEmail})
+                  Asigna uno o varios roles a <strong>{pendingChange.userName || 'Usuario'}</strong> ({pendingChange.userEmail})
                 </>
               )}
             </DialogDescription>
@@ -180,43 +186,25 @@ export default function AdminAccountsPage() {
 
           {pendingChange && (
             <div className="space-y-4 py-2">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground w-20">Actual:</span>
-                {getRoleBadge(pendingChange.currentRole)}
+              <div className="grid grid-cols-2 gap-2">
+                {ROLES.map(role => <label key={role.value} className="flex items-center gap-2 rounded-md border border-border p-3 text-sm"><Checkbox checked={pendingChange.selectedRoles.includes(role.value)} onCheckedChange={(checked) => setPendingChange(previous => previous ? { ...previous, selectedRoles: checked ? [...previous.selectedRoles, role.value] : previous.selectedRoles.filter(value => value !== role.value) } : null)} />{role.label}</label>)}
               </div>
 
-              <div className="space-y-2">
-                <span className="text-sm font-medium">Nuevo rol:</span>
-                <Select
-                  value={pendingChange.newRole}
-                  onValueChange={(val) => setPendingChange(prev => prev ? { ...prev, newRole: val } : null)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map(r => (
-                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {pendingChange.newRole === 'seller' && pendingChange.currentRole !== 'seller' && (
+              {pendingChange.selectedRoles.includes('seller') && !pendingChange.currentRoles.includes('seller') && (
                 <div className="flex items-start gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
                   <AlertTriangle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                   <span>Se creará automáticamente una tienda y registro de vendedor para este usuario.</span>
                 </div>
               )}
 
-              {pendingChange.currentRole === 'seller' && pendingChange.newRole !== 'seller' && (
+              {pendingChange.currentRoles.includes('seller') && !pendingChange.selectedRoles.includes('seller') && (
                 <div className="flex items-start gap-2 p-3 bg-destructive/5 border border-destructive/20 rounded-lg text-sm">
                   <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
                   <span>La tienda del usuario será desactivada al quitar el rol de vendedor.</span>
                 </div>
               )}
 
-              {pendingChange.newRole === 'grossiste' && pendingChange.currentRole !== 'grossiste' && (
+              {pendingChange.selectedRoles.includes('grossiste') && !pendingChange.currentRoles.includes('grossiste') && (
                 <div className="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm">
                   <AlertTriangle className="w-4 h-4 text-emerald-700 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
                   <span>Se creará automáticamente un perfil de mayorista. El usuario tendrá acceso al panel /grossiste para gestionar productos B2B.</span>
@@ -226,14 +214,14 @@ export default function AdminAccountsPage() {
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setDialogOpen(false); setPendingChange(null); }} disabled={changeRole.isPending}>
+             <Button variant="outline" onClick={() => { setDialogOpen(false); setPendingChange(null); }} disabled={changeRoles.isPending}>
               Cancelar
             </Button>
             <Button
               onClick={confirmRoleChange}
-              disabled={changeRole.isPending || !pendingChange || pendingChange.newRole === pendingChange.currentRole}
+               disabled={changeRoles.isPending || !pendingChange || pendingChange.selectedRoles.length === 0}
             >
-              {changeRole.isPending ? (
+               {changeRoles.isPending ? (
                 <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Cambiando...</>
               ) : (
                 'Confirmar cambio'
