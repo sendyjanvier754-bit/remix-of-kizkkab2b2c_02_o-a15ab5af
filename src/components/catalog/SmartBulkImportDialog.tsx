@@ -411,6 +411,10 @@ const SmartBulkImportDialog = ({ open, onOpenChange, preloadedProducts, preloade
         lower.includes('product_url') ||
         lower.includes('link')
       ) autoMapping.url_origen = header;
+      else if (lower.includes('peso') || lower.includes('weight')) autoMapping.peso_g = header;
+      else if (lower.includes('largo') || lower.includes('length') || lower.includes('longitud')) autoMapping.length_cm = header;
+      else if (lower.includes('ancho') || lower.includes('width')) autoMapping.width_cm = header;
+      else if (lower.includes('alto') || lower.includes('altura') || lower.includes('height')) autoMapping.height_cm = header;
     });
     setMapping(autoMapping);
   };
