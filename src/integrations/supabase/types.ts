@@ -6800,9 +6800,11 @@ export type Database = {
           batch_id: string | null
           cost_price: number | null
           created_at: string
+          height_cm: number | null
           id: string
           images: string[] | null
           is_active: boolean | null
+          length_cm: number | null
           metadata: Json | null
           moq: number | null
           name: string | null
@@ -6821,15 +6823,18 @@ export type Database = {
           updated_at: string
           weight_g: number | null
           weight_kg: number | null
+          width_cm: number | null
         }
         Insert: {
           attribute_combination?: Json | null
           batch_id?: string | null
           cost_price?: number | null
           created_at?: string
+          height_cm?: number | null
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          length_cm?: number | null
           metadata?: Json | null
           moq?: number | null
           name?: string | null
@@ -6848,15 +6853,18 @@ export type Database = {
           updated_at?: string
           weight_g?: number | null
           weight_kg?: number | null
+          width_cm?: number | null
         }
         Update: {
           attribute_combination?: Json | null
           batch_id?: string | null
           cost_price?: number | null
           created_at?: string
+          height_cm?: number | null
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          length_cm?: number | null
           metadata?: Json | null
           moq?: number | null
           name?: string | null
@@ -6875,6 +6883,7 @@ export type Database = {
           updated_at?: string
           weight_g?: number | null
           weight_kg?: number | null
+          width_cm?: number | null
         }
         Relationships: [
           {
