@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { resolveAffiliateOffer, AffiliateOffer } from '@/hooks/useAffiliates';
+import { getStoredAffiliateCode } from '@/components/affiliates/AffiliateRefCapture';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2BCartItems } from '@/hooks/useB2BCartItems';
@@ -128,6 +130,7 @@ const SellerCheckout = () => {
   const [selectedPickupPoint, setSelectedPickupPoint] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<CheckoutValidationError[]>([]);
   const [discountCode, setDiscountCode] = useState('');
+  const [affiliateOffer, setAffiliateOffer] = useState<AffiliateOffer | null>(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
@@ -181,7 +184,24 @@ const SellerCheckout = () => {
   // Calcular totales desde items de BD
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
   const totalQuantity = items.reduce((sum, item) => sum + item.cantidad, 0);
-  const discountAmount = appliedDiscount?.discountAmount || 0;
+  const couponDiscount = appliedDiscount?.discountAmount || 0;
+  const affiliateDiscount = affiliateOffer
+    ? Number(((subtotal * Number(affiliateOffer.discount_percent || 0)) / 100).toFixed(2))
+    : 0;
+  const discountAmount = couponDiscount + affiliateDiscount;
+
+  // Auto-apply the influencer code captured from the ?ref= link
+  useEffect(() => {
+    const loadAffiliate = async () => {
+      if (!user?.id || affiliateOffer) return;
+      const storedCode = getStoredAffiliateCode();
+      if (!storedCode) return;
+      const offer = await resolveAffiliateOffer(storedCode, user.id);
+      if (offer) setAffiliateOffer(offer);
+    };
+    loadAffiliate();
+  }, [user?.id, affiliateOffer]);
+  
   
   // Check for customer-specific discounts on mount
   useEffect(() => {
