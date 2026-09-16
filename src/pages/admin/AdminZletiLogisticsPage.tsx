@@ -842,8 +842,9 @@ export default function AdminZletiLogisticsPage() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">{cart.totalQuantity} unidades seleccionadas</p>
-                  <p className="text-lg font-bold text-slate-900">Subtotal: ${Number(cart.subtotal || 0).toFixed(2)} <span className="text-xs font-medium text-muted-foreground">USD</span></p>
-                  <p className="text-sm font-semibold text-emerald-700">Subtotal proveedor: ${cartSupplierSubtotal.toFixed(2)} <span className="text-xs font-medium text-muted-foreground">USD</span></p>
+                  <p className="text-lg font-bold text-emerald-700">Subtotal (costo proveedor): ${cartSupplierSubtotal.toFixed(2)} <span className="text-xs font-medium text-muted-foreground">USD</span></p>
+                  <p className="text-xs text-muted-foreground">Precio B2B: ${Number(cart.subtotal || 0).toFixed(2)} USD</p>
+                  <p className="text-sm font-semibold text-slate-700">Peso total: {cartTotalWeight.toFixed(3)} kg</p>
                 </div>
                 <Button onClick={() => { setCartOpen(false); createPO.mutate(); }} disabled={cart.items.length === 0 || createPO.isPending} className="h-11 gap-2 rounded-lg bg-[#071d7f] px-5 hover:bg-[#1239a6]">
                   {createPO.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
