@@ -619,6 +619,12 @@ const VariantDrawer: React.FC = () => {
 
         {/* Footer - sticky */}
         <div className="p-4 border-t bg-background">
+          {isZletiManualPO && supplierUnitCost !== null && (
+            <div className="mb-3 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs">
+              <span className="font-medium text-emerald-800">Costo proveedor: ${supplierUnitCost.toFixed(2)} / unidad</span>
+              <span className="font-bold text-emerald-900">Total proveedor: ${(supplierUnitCost * totalQty).toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between mb-3 gap-2">
             <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold text-sm">
               {totalQty} {t('catalogExtra.variantDrawer.units')}
