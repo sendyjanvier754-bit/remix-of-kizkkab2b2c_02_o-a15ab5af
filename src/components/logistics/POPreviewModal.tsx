@@ -132,13 +132,6 @@ export function POPreviewModal({ open, onOpenChange, data, onSave }: POPreviewMo
         </div>
 
         <div className="flex flex-wrap justify-end gap-2 border-t bg-background px-4 py-3">
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cerrar
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCopyLinks}>
-            <Copy className="h-4 w-4" />
-            Copiar enlaces
-          </Button>
           <Button type="button" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {saving ? 'Guardando...' : onSave ? 'Guardar' : 'Guardar PDF'}
