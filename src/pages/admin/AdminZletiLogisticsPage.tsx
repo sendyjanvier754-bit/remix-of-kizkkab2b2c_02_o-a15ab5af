@@ -818,7 +818,7 @@ export default function AdminZletiLogisticsPage() {
                       <div className="flex items-center justify-between sm:block sm:text-right">
                         <span className="text-xs font-medium text-muted-foreground sm:block sm:pb-1">Total</span>
                         <span className="text-sm font-bold text-slate-900">${Number(item.totalPrice || 0).toFixed(2)}</span>
-                        <span className="block text-[11px] text-emerald-700">
+                        <span className="block text-sm font-semibold text-emerald-700">
                           Costo proveedor: ${((cartSupplierInfo?.info.get(item.productId)?.excelCost || 0) * item.quantity).toFixed(2)}
                         </span>
                         <span className="block text-[11px] text-muted-foreground">
