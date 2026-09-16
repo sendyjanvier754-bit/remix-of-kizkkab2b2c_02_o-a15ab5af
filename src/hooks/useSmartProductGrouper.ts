@@ -469,7 +469,7 @@ export const importGroupedProducts = async (
           galeria_imagenes: allImages.length > 0 ? allImages : null,
           url_origen: representativeVariant.sourceUrl || null,
           is_parent: true,
-          ...(defaultPesoG ? { peso_g: defaultPesoG } : {}),
+          ...logisticsPayload(resolveLogistics(representativeVariant.originalRow, logistics)),
         }, { onConflict: 'sku_interno', ignoreDuplicates: false })
         .select()
         .single();
