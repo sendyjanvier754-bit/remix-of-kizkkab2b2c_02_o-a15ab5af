@@ -8,6 +8,7 @@
 
 export enum UserRole {
   ADMIN = "admin", // Administrador - Acceso total
+  ZLETI_ADMIN = "zletiadmin", // Administrador limitado a Logística ZleTI
   MARKETING = "marketing", // Marketing - Gestiona la tienda destacada en tendencias
   SELLER = "seller", // Vendedor Siver509 - Acceso a módulo B2B
   USER = "user", // Usuario/Cliente Final - Acceso solo a experiencia B2C
@@ -28,6 +29,7 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  roles: UserRole[];
   created_at: string;
   updated_at: string;
 }
