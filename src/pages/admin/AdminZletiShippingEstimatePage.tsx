@@ -251,16 +251,24 @@ export default function AdminZletiShippingEstimatePage() {
   const marketplaceTotals = useMemo(() => {
     const marketplace = marketplaceDraft;
     const fees = marketplace?.fees || [];
-    const percentageSalePrice = fees
+    const onSale = fees.filter(fee => fee.apply_to !== 'landed_cost');
+    const onLanded = fees.filter(fee => fee.apply_to === 'landed_cost');
+    const percentageSalePrice = onSale
       .filter(fee => fee.fee_type === 'percentage')
       .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
-    const fixedFees = fees
+    const fixedFees = onSale
+      .filter(fee => fee.fee_type === 'fixed')
+      .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const percentageLandedCost = onLanded
+      .filter(fee => fee.fee_type === 'percentage')
+      .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const fixedLandedCost = onLanded
       .filter(fee => fee.fee_type === 'fixed')
       .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
     const denominator = 1 - percentageSalePrice / 100;
     const viable = percentageSalePrice < 100;
 
-    return { percentageSalePrice, fixedFees, denominator, viable };
+    return { percentageSalePrice, fixedFees, percentageLandedCost, fixedLandedCost, denominator, viable };
   }, [marketplaceDraft]);
 
   const itemShippingBreakdown = useMemo(() => {
