@@ -61,6 +61,18 @@ const createLocalFee = (): MarketplaceFee => ({
   sort_order: 0,
 });
 
+interface ExtraExpense {
+  id: string;
+  name: string;
+  amount: number;
+}
+
+const createExtraExpense = (name = '', amount = 0): ExtraExpense => ({
+  id: `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  name,
+  amount,
+});
+
 const createMercadoLibreFees = (): MarketplaceFee[] => [
   { id: `local-fee-ml-premium-${Date.now()}`, name: 'Comisión Publicación Premium', fee_type: 'percentage', value: 19.5, apply_to: 'sale_price', sort_order: 0 },
   { id: `local-fee-ml-isr-${Date.now()}`, name: 'Retención ISR', fee_type: 'percentage', value: 2.5, apply_to: 'sale_price', sort_order: 1 },
