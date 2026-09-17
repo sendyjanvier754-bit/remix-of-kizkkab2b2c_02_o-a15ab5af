@@ -86,7 +86,7 @@ export default function AdminZletiShippingEstimatePage() {
 
   const [shippingEstimateRateInput, setShippingEstimateRateInput] = useState<string>(DEFAULT_RATE);
   const [shippingEstimateRateMode, setShippingEstimateRateMode] = useState<'kg' | 'g'>('kg');
-  const [shippingEstimateExtraExpensesInput, setShippingEstimateExtraExpensesInput] = useState<string>('0');
+  const [extraExpenses, setExtraExpenses] = useState<ExtraExpense[]>([]);
   const [selectedMarketplaceId, setSelectedMarketplaceId] = useState<string>('');
   const [marketplaceDraft, setMarketplaceDraft] = useState<Marketplace | null>(null);
   const [suggestedProfitInput, setSuggestedProfitInput] = useState<string>('50');
