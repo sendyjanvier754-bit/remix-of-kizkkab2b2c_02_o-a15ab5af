@@ -719,22 +719,28 @@ export default function AdminZletiShippingEstimatePage() {
                       <div><span className="text-muted-foreground">Total estimado</span><p className="text-lg font-bold">${shippingEstimateTotal.toFixed(2)} USD</p></div>
                       <div><span className="text-muted-foreground">Canal activo</span><p className="font-semibold">{marketplaceDraft ? `${marketplaceDraft.name} · ${marketplaceDraft.currency}` : 'Sin configurar'}</p></div>
                       <div>
-                        <span className="text-muted-foreground">Costo proveedor total (PO)</span>
-                        <p className="text-lg font-bold text-slate-800">${poTotals.supplierCostUsd.toFixed(2)} USD</p>
+                        <span className="text-muted-foreground">Costo landed total (PO)</span>
+                        <p className="text-lg font-bold text-slate-800">${poTotals.landedCostUsd.toFixed(2)} USD</p>
                         {poTotals.currency !== 'USD' && (
-                          <p className="text-xs text-muted-foreground">{formattedCurrencyWithCode(poTotals.supplierCostInCurrency, poTotals.currency)}</p>
+                          <p className="text-xs text-muted-foreground">{formattedCurrencyWithCode(poTotals.landedCostInCurrency, poTotals.currency)}</p>
                         )}
+                        <p className="text-xs text-muted-foreground">
+                          Proveedor ${poTotals.supplierCostUsd.toFixed(2)} + envío/gastos ${poTotals.shippingCostUsd.toFixed(2)}
+                        </p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Venta total sugerida</span>
                         <p className="text-lg font-bold text-emerald-700">{formattedCurrencyWithCode(poTotals.suggestedSaleTotal, poTotals.currency)}</p>
+                        <p className="text-xs text-muted-foreground">Costo landed + margen deseado</p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Beneficio total esperado</span>
                         <p className={`text-lg font-bold ${poTotals.expectedProfit >= 0 ? 'text-emerald-700' : 'text-destructive'}`}>
                           {formattedCurrencyWithCode(poTotals.expectedProfit, poTotals.currency)}
                         </p>
-                        <p className="text-xs text-muted-foreground">{poTotals.marginPercent.toFixed(1)}% sobre la venta</p>
+                        <p className="text-xs text-muted-foreground">
+                          {poTotals.marginPercent.toFixed(1)}% sobre la venta · comisiones {formattedCurrencyWithCode(poTotals.marketplaceDeductions, poTotals.currency)}
+                        </p>
                       </div>
                     </div>
                     <div className="mt-4 flex justify-end border-t pt-4">
