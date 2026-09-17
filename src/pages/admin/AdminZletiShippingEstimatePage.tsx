@@ -308,19 +308,38 @@ export default function AdminZletiShippingEstimatePage() {
     const exchangeRate = Number(marketplaceDraft?.exchange_rate || 1);
     const currency = (marketplaceDraft?.currency || 'USD') as MarketplaceCurrency;
 
-    const supplierCostUsd = itemShippingBreakdown.reduce(
-      (sum: number, item: any) => sum + Number(item.productCostUsd || 0) * Number(item.quantity || 0),
-      0
-    );
-    const suggestedSaleTotal = itemShippingBreakdown.reduce(
-      (sum: number, item: any) => sum + Number(item.suggestedSalePrice || 0) * Number(item.quantity || 0),
-      0
-    );
+    const sumBy = (getter: (item: any) => number) =>
+      itemShippingBreakdown.reduce(
+        (sum: number, item: any) => sum + getter(item) * Number(item.quantity || 0),
+        0
+      );
+
+    const supplierCostUsd = sumBy((item) => Number(item.productCostUsd || 0));
+    const shippingCostUsd = sumBy((item) => Number(item.shippingCostUsd || 0));
+    const landedCostUsd = sumBy((item) => Number(item.landedUnitCost || 0));
+    const suggestedSaleTotal = sumBy((item) => Number(item.suggestedSalePrice || 0));
+    const marketplaceDeductions = sumBy((item) => Number(item.totalDeductions || 0));
+
     const supplierCostInCurrency = supplierCostUsd * exchangeRate;
-    const expectedProfit = suggestedSaleTotal - supplierCostInCurrency;
+    const shippingCostInCurrency = shippingCostUsd * exchangeRate;
+    const landedCostInCurrency = landedCostUsd * exchangeRate;
+    const expectedProfit = suggestedSaleTotal - landedCostInCurrency - marketplaceDeductions;
     const marginPercent = suggestedSaleTotal > 0 ? (expectedProfit / suggestedSaleTotal) * 100 : 0;
 
-    return { currency, exchangeRate, supplierCostUsd, supplierCostInCurrency, suggestedSaleTotal, expectedProfit, marginPercent };
+    return {
+      currency,
+      exchangeRate,
+      supplierCostUsd,
+      supplierCostInCurrency,
+      shippingCostUsd,
+      shippingCostInCurrency,
+      landedCostUsd,
+      landedCostInCurrency,
+      marketplaceDeductions,
+      suggestedSaleTotal,
+      expectedProfit,
+      marginPercent,
+    };
   }, [itemShippingBreakdown, marketplaceDraft]);
 
   const formattedCurrency = (amount: number, currency = marketplaceDraft?.currency || 'USD') =>
@@ -700,22 +719,28 @@ export default function AdminZletiShippingEstimatePage() {
                       <div><span className="text-muted-foreground">Total estimado</span><p className="text-lg font-bold">${shippingEstimateTotal.toFixed(2)} USD</p></div>
                       <div><span className="text-muted-foreground">Canal activo</span><p className="font-semibold">{marketplaceDraft ? `${marketplaceDraft.name} · ${marketplaceDraft.currency}` : 'Sin configurar'}</p></div>
                       <div>
-                        <span className="text-muted-foreground">Costo proveedor total (PO)</span>
-                        <p className="text-lg font-bold text-slate-800">${poTotals.supplierCostUsd.toFixed(2)} USD</p>
+                        <span className="text-muted-foreground">Costo landed total (PO)</span>
+                        <p className="text-lg font-bold text-slate-800">${poTotals.landedCostUsd.toFixed(2)} USD</p>
                         {poTotals.currency !== 'USD' && (
-                          <p className="text-xs text-muted-foreground">{formattedCurrencyWithCode(poTotals.supplierCostInCurrency, poTotals.currency)}</p>
+                          <p className="text-xs text-muted-foreground">{formattedCurrencyWithCode(poTotals.landedCostInCurrency, poTotals.currency)}</p>
                         )}
+                        <p className="text-xs text-muted-foreground">
+                          Proveedor ${poTotals.supplierCostUsd.toFixed(2)} + envío/gastos ${poTotals.shippingCostUsd.toFixed(2)}
+                        </p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Venta total sugerida</span>
                         <p className="text-lg font-bold text-emerald-700">{formattedCurrencyWithCode(poTotals.suggestedSaleTotal, poTotals.currency)}</p>
+                        <p className="text-xs text-muted-foreground">Costo landed + margen deseado</p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Beneficio total esperado</span>
                         <p className={`text-lg font-bold ${poTotals.expectedProfit >= 0 ? 'text-emerald-700' : 'text-destructive'}`}>
                           {formattedCurrencyWithCode(poTotals.expectedProfit, poTotals.currency)}
                         </p>
-                        <p className="text-xs text-muted-foreground">{poTotals.marginPercent.toFixed(1)}% sobre la venta</p>
+                        <p className="text-xs text-muted-foreground">
+                          {poTotals.marginPercent.toFixed(1)}% sobre la venta · comisiones {formattedCurrencyWithCode(poTotals.marketplaceDeductions, poTotals.currency)}
+                        </p>
                       </div>
                     </div>
                     <div className="mt-4 flex justify-end border-t pt-4">
