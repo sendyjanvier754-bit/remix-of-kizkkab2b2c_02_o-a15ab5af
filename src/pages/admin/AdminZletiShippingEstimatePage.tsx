@@ -61,6 +61,18 @@ const createLocalFee = (): MarketplaceFee => ({
   sort_order: 0,
 });
 
+interface ExtraExpense {
+  id: string;
+  name: string;
+  amount: number;
+}
+
+const createExtraExpense = (name = '', amount = 0): ExtraExpense => ({
+  id: `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  name,
+  amount,
+});
+
 const createMercadoLibreFees = (): MarketplaceFee[] => [
   { id: `local-fee-ml-premium-${Date.now()}`, name: 'Comisión Publicación Premium', fee_type: 'percentage', value: 19.5, apply_to: 'sale_price', sort_order: 0 },
   { id: `local-fee-ml-isr-${Date.now()}`, name: 'Retención ISR', fee_type: 'percentage', value: 2.5, apply_to: 'sale_price', sort_order: 1 },
@@ -74,7 +86,7 @@ export default function AdminZletiShippingEstimatePage() {
 
   const [shippingEstimateRateInput, setShippingEstimateRateInput] = useState<string>(DEFAULT_RATE);
   const [shippingEstimateRateMode, setShippingEstimateRateMode] = useState<'kg' | 'g'>('kg');
-  const [shippingEstimateExtraExpensesInput, setShippingEstimateExtraExpensesInput] = useState<string>('0');
+  const [extraExpenses, setExtraExpenses] = useState<ExtraExpense[]>([]);
   const [selectedMarketplaceId, setSelectedMarketplaceId] = useState<string>('');
   const [marketplaceDraft, setMarketplaceDraft] = useState<Marketplace | null>(null);
   const [suggestedProfitInput, setSuggestedProfitInput] = useState<string>('50');
@@ -211,7 +223,12 @@ export default function AdminZletiShippingEstimatePage() {
 
     setShippingEstimateRateInput(String(savedEstimate.rate_value ?? DEFAULT_RATE));
     setShippingEstimateRateMode(savedEstimate.rate_mode === 'g' ? 'g' : 'kg');
-    setShippingEstimateExtraExpensesInput(String(savedEstimate.extra_expenses ?? 0));
+    const savedItems = Array.isArray(savedEstimate.extra_expense_items) ? savedEstimate.extra_expense_items : null;
+    if (savedItems) {
+      setExtraExpenses(savedItems.map((expense: any) => createExtraExpense(String(expense?.name || ''), Number(expense?.amount || 0))));
+    } else if (Number(savedEstimate.extra_expenses || 0) > 0) {
+      setExtraExpenses([createExtraExpense('Gastos adicionales', Number(savedEstimate.extra_expenses || 0))]);
+    }
     setSuggestedProfitInput(String(savedEstimate.marketplace?.suggested_profit_per_unit ?? 50));
     if (savedEstimate.marketplace?.id && marketplaces.some(marketplace => marketplace.id === savedEstimate.marketplace.id)) {
       setSelectedMarketplaceId(savedEstimate.marketplace.id);
@@ -228,22 +245,30 @@ export default function AdminZletiShippingEstimatePage() {
     ? totalWeightKg * transportRateForShippingEstimate
     : totalWeightKg * 1000 * transportRateForShippingEstimate;
 
-  const shippingEstimateExtraExpenses = Number(shippingEstimateExtraExpensesInput || 0);
+  const shippingEstimateExtraExpenses = extraExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   const shippingEstimateTotal = shippingCost + shippingEstimateExtraExpenses;
 
   const marketplaceTotals = useMemo(() => {
     const marketplace = marketplaceDraft;
     const fees = marketplace?.fees || [];
-    const percentageSalePrice = fees
+    const onSale = fees.filter(fee => fee.apply_to !== 'landed_cost');
+    const onLanded = fees.filter(fee => fee.apply_to === 'landed_cost');
+    const percentageSalePrice = onSale
       .filter(fee => fee.fee_type === 'percentage')
       .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
-    const fixedFees = fees
+    const fixedFees = onSale
+      .filter(fee => fee.fee_type === 'fixed')
+      .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const percentageLandedCost = onLanded
+      .filter(fee => fee.fee_type === 'percentage')
+      .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const fixedLandedCost = onLanded
       .filter(fee => fee.fee_type === 'fixed')
       .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
     const denominator = 1 - percentageSalePrice / 100;
     const viable = percentageSalePrice < 100;
 
-    return { percentageSalePrice, fixedFees, denominator, viable };
+    return { percentageSalePrice, fixedFees, percentageLandedCost, fixedLandedCost, denominator, viable };
   }, [marketplaceDraft]);
 
   const itemShippingBreakdown = useMemo(() => {
@@ -269,20 +294,25 @@ export default function AdminZletiShippingEstimatePage() {
       const currency = marketplaceDraft?.currency || 'USD';
       const exchangeRate = Number(marketplaceDraft?.exchange_rate || 1);
       const landedUnitCostInCurrency = landedUnitCost * exchangeRate;
+      const landedExtraCost = landedUnitCostInCurrency * marketplaceTotals.percentageLandedCost / 100 + marketplaceTotals.fixedLandedCost;
+      const totalLandedCostInCurrency = landedUnitCostInCurrency + landedExtraCost;
       const desiredProfit = Number((marketplaceDraft?.target_profit_per_unit ?? suggestedProfitInput) || 0);
       const suggestedSalePrice = marketplaceTotals.viable
-        ? (landedUnitCostInCurrency + desiredProfit + marketplaceTotals.fixedFees) / marketplaceTotals.denominator
+        ? (totalLandedCostInCurrency + desiredProfit + marketplaceTotals.fixedFees) / marketplaceTotals.denominator
         : 0;
       const feeBreakdown = (marketplaceDraft?.fees || []).map(fee => {
+        const base = fee.apply_to === 'landed_cost' ? landedUnitCostInCurrency : suggestedSalePrice;
         const amount = fee.fee_type === 'fixed'
           ? Number(fee.value || 0)
-          : suggestedSalePrice * Number(fee.value || 0) / 100;
+          : base * Number(fee.value || 0) / 100;
 
         return { ...fee, amount };
       });
-      const totalDeductions = feeBreakdown.reduce((sum, fee) => sum + fee.amount, 0);
+      const totalDeductions = feeBreakdown
+        .filter(fee => fee.apply_to !== 'landed_cost')
+        .reduce((sum, fee) => sum + fee.amount, 0);
       const netReceived = suggestedSalePrice - totalDeductions;
-      const netProfit = netReceived - landedUnitCostInCurrency;
+      const netProfit = netReceived - totalLandedCostInCurrency;
 
       return {
         ...item,
@@ -295,6 +325,8 @@ export default function AdminZletiShippingEstimatePage() {
         shippingCostUsd,
         landedUnitCost,
         landedUnitCostInCurrency,
+        landedExtraCost,
+        totalLandedCostInCurrency,
         suggestedSalePrice,
         feeBreakdown,
         totalDeductions,
@@ -319,10 +351,11 @@ export default function AdminZletiShippingEstimatePage() {
     const landedCostUsd = sumBy((item) => Number(item.landedUnitCost || 0));
     const suggestedSaleTotal = sumBy((item) => Number(item.suggestedSalePrice || 0));
     const marketplaceDeductions = sumBy((item) => Number(item.totalDeductions || 0));
+    const landedExtraCosts = sumBy((item) => Number(item.landedExtraCost || 0));
 
     const supplierCostInCurrency = supplierCostUsd * exchangeRate;
     const shippingCostInCurrency = shippingCostUsd * exchangeRate;
-    const landedCostInCurrency = landedCostUsd * exchangeRate;
+    const landedCostInCurrency = landedCostUsd * exchangeRate + landedExtraCosts;
     const expectedProfit = suggestedSaleTotal - landedCostInCurrency - marketplaceDeductions;
     const marginPercent = suggestedSaleTotal > 0 ? (expectedProfit / suggestedSaleTotal) * 100 : 0;
 
@@ -335,6 +368,7 @@ export default function AdminZletiShippingEstimatePage() {
       shippingCostInCurrency,
       landedCostUsd,
       landedCostInCurrency,
+      landedExtraCosts,
       marketplaceDeductions,
       suggestedSaleTotal,
       expectedProfit,
@@ -559,6 +593,10 @@ export default function AdminZletiShippingEstimatePage() {
         rate_mode: shippingEstimateRateMode,
         shipping_cost: Number(shippingCost || 0),
         extra_expenses: Number(shippingEstimateExtraExpenses || 0),
+        extra_expense_items: extraExpenses.map((expense, index) => ({
+          name: expense.name.trim() || `Gasto ${index + 1}`,
+          amount: Number(expense.amount || 0),
+        })),
         total_estimate: Number(shippingEstimateTotal || 0),
         item_count: selectedPo.items?.length || 0,
         marketplace: marketplaceDraft ? {
@@ -700,8 +738,53 @@ export default function AdminZletiShippingEstimatePage() {
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                      <Label>Gastos adicionales estimados (USD)</Label>
-                      <Input type="number" min={0} step="0.01" value={shippingEstimateExtraExpensesInput} onChange={event => setShippingEstimateExtraExpensesInput(event.target.value)} />
+                      <div className="flex items-center justify-between gap-2">
+                        <Label>Gastos adicionales estimados (USD)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                          onClick={() => setExtraExpenses(current => [...current, createExtraExpense()])}
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Agregar gasto
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        {extraExpenses.map(expense => (
+                          <div key={expense.id} className="grid gap-2 rounded-md bg-muted/30 p-2 md:grid-cols-[1fr_160px_auto] md:items-center">
+                            <Input
+                              value={expense.name}
+                              placeholder="Concepto (aduana, empaque, inspección...)"
+                              onChange={event => setExtraExpenses(current => current.map(item => item.id === expense.id ? { ...item, name: event.target.value } : item))}
+                            />
+                            <Input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={expense.amount}
+                              onChange={event => setExtraExpenses(current => current.map(item => item.id === expense.id ? { ...item, amount: Number(event.target.value) || 0 } : item))}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              title="Eliminar gasto"
+                              onClick={() => setExtraExpenses(current => current.filter(item => item.id !== expense.id))}
+                            >
+                              <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        ))}
+                        {!extraExpenses.length && (
+                          <p className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">
+                            Sin gastos adicionales registrados.
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Total de gastos adicionales: ${shippingEstimateExtraExpenses.toFixed(2)} USD (se prorratean en el costo landed).
+                      </p>
                     </div>
                   </div>
                 )}
