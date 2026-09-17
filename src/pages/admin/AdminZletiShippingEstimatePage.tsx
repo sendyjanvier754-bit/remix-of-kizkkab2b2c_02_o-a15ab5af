@@ -245,7 +245,7 @@ export default function AdminZletiShippingEstimatePage() {
     ? totalWeightKg * transportRateForShippingEstimate
     : totalWeightKg * 1000 * transportRateForShippingEstimate;
 
-  const shippingEstimateExtraExpenses = Number(shippingEstimateExtraExpensesInput || 0);
+  const shippingEstimateExtraExpenses = extraExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   const shippingEstimateTotal = shippingCost + shippingEstimateExtraExpenses;
 
   const marketplaceTotals = useMemo(() => {
