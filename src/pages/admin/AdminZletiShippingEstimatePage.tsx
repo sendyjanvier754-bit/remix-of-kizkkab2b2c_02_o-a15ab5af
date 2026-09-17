@@ -576,6 +576,10 @@ export default function AdminZletiShippingEstimatePage() {
         rate_mode: shippingEstimateRateMode,
         shipping_cost: Number(shippingCost || 0),
         extra_expenses: Number(shippingEstimateExtraExpenses || 0),
+        extra_expense_items: extraExpenses.map((expense, index) => ({
+          name: expense.name.trim() || `Gasto ${index + 1}`,
+          amount: Number(expense.amount || 0),
+        })),
         total_estimate: Number(shippingEstimateTotal || 0),
         item_count: selectedPo.items?.length || 0,
         marketplace: marketplaceDraft ? {
