@@ -294,20 +294,25 @@ export default function AdminZletiShippingEstimatePage() {
       const currency = marketplaceDraft?.currency || 'USD';
       const exchangeRate = Number(marketplaceDraft?.exchange_rate || 1);
       const landedUnitCostInCurrency = landedUnitCost * exchangeRate;
+      const landedExtraCost = landedUnitCostInCurrency * marketplaceTotals.percentageLandedCost / 100 + marketplaceTotals.fixedLandedCost;
+      const totalLandedCostInCurrency = landedUnitCostInCurrency + landedExtraCost;
       const desiredProfit = Number((marketplaceDraft?.target_profit_per_unit ?? suggestedProfitInput) || 0);
       const suggestedSalePrice = marketplaceTotals.viable
-        ? (landedUnitCostInCurrency + desiredProfit + marketplaceTotals.fixedFees) / marketplaceTotals.denominator
+        ? (totalLandedCostInCurrency + desiredProfit + marketplaceTotals.fixedFees) / marketplaceTotals.denominator
         : 0;
       const feeBreakdown = (marketplaceDraft?.fees || []).map(fee => {
+        const base = fee.apply_to === 'landed_cost' ? landedUnitCostInCurrency : suggestedSalePrice;
         const amount = fee.fee_type === 'fixed'
           ? Number(fee.value || 0)
-          : suggestedSalePrice * Number(fee.value || 0) / 100;
+          : base * Number(fee.value || 0) / 100;
 
         return { ...fee, amount };
       });
-      const totalDeductions = feeBreakdown.reduce((sum, fee) => sum + fee.amount, 0);
+      const totalDeductions = feeBreakdown
+        .filter(fee => fee.apply_to !== 'landed_cost')
+        .reduce((sum, fee) => sum + fee.amount, 0);
       const netReceived = suggestedSalePrice - totalDeductions;
-      const netProfit = netReceived - landedUnitCostInCurrency;
+      const netProfit = netReceived - totalLandedCostInCurrency;
 
       return {
         ...item,
@@ -320,6 +325,8 @@ export default function AdminZletiShippingEstimatePage() {
         shippingCostUsd,
         landedUnitCost,
         landedUnitCostInCurrency,
+        landedExtraCost,
+        totalLandedCostInCurrency,
         suggestedSalePrice,
         feeBreakdown,
         totalDeductions,
