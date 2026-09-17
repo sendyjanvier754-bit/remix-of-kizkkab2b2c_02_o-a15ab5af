@@ -717,8 +717,53 @@ export default function AdminZletiShippingEstimatePage() {
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                      <Label>Gastos adicionales estimados (USD)</Label>
-                      <Input type="number" min={0} step="0.01" value={shippingEstimateExtraExpensesInput} onChange={event => setShippingEstimateExtraExpensesInput(event.target.value)} />
+                      <div className="flex items-center justify-between gap-2">
+                        <Label>Gastos adicionales estimados (USD)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                          onClick={() => setExtraExpenses(current => [...current, createExtraExpense()])}
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Agregar gasto
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        {extraExpenses.map(expense => (
+                          <div key={expense.id} className="grid gap-2 rounded-md bg-muted/30 p-2 md:grid-cols-[1fr_160px_auto] md:items-center">
+                            <Input
+                              value={expense.name}
+                              placeholder="Concepto (aduana, empaque, inspección...)"
+                              onChange={event => setExtraExpenses(current => current.map(item => item.id === expense.id ? { ...item, name: event.target.value } : item))}
+                            />
+                            <Input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={expense.amount}
+                              onChange={event => setExtraExpenses(current => current.map(item => item.id === expense.id ? { ...item, amount: Number(event.target.value) || 0 } : item))}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              title="Eliminar gasto"
+                              onClick={() => setExtraExpenses(current => current.filter(item => item.id !== expense.id))}
+                            >
+                              <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        ))}
+                        {!extraExpenses.length && (
+                          <p className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">
+                            Sin gastos adicionales registrados.
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Total de gastos adicionales: ${shippingEstimateExtraExpenses.toFixed(2)} USD (se prorratean en el costo landed).
+                      </p>
                     </div>
                   </div>
                 )}
