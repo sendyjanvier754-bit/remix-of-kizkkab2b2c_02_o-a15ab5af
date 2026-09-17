@@ -308,19 +308,38 @@ export default function AdminZletiShippingEstimatePage() {
     const exchangeRate = Number(marketplaceDraft?.exchange_rate || 1);
     const currency = (marketplaceDraft?.currency || 'USD') as MarketplaceCurrency;
 
-    const supplierCostUsd = itemShippingBreakdown.reduce(
-      (sum: number, item: any) => sum + Number(item.productCostUsd || 0) * Number(item.quantity || 0),
-      0
-    );
-    const suggestedSaleTotal = itemShippingBreakdown.reduce(
-      (sum: number, item: any) => sum + Number(item.suggestedSalePrice || 0) * Number(item.quantity || 0),
-      0
-    );
+    const sumBy = (getter: (item: any) => number) =>
+      itemShippingBreakdown.reduce(
+        (sum: number, item: any) => sum + getter(item) * Number(item.quantity || 0),
+        0
+      );
+
+    const supplierCostUsd = sumBy((item) => Number(item.productCostUsd || 0));
+    const shippingCostUsd = sumBy((item) => Number(item.shippingCostUsd || 0));
+    const landedCostUsd = sumBy((item) => Number(item.landedUnitCost || 0));
+    const suggestedSaleTotal = sumBy((item) => Number(item.suggestedSalePrice || 0));
+    const marketplaceDeductions = sumBy((item) => Number(item.totalDeductions || 0));
+
     const supplierCostInCurrency = supplierCostUsd * exchangeRate;
-    const expectedProfit = suggestedSaleTotal - supplierCostInCurrency;
+    const shippingCostInCurrency = shippingCostUsd * exchangeRate;
+    const landedCostInCurrency = landedCostUsd * exchangeRate;
+    const expectedProfit = suggestedSaleTotal - landedCostInCurrency - marketplaceDeductions;
     const marginPercent = suggestedSaleTotal > 0 ? (expectedProfit / suggestedSaleTotal) * 100 : 0;
 
-    return { currency, exchangeRate, supplierCostUsd, supplierCostInCurrency, suggestedSaleTotal, expectedProfit, marginPercent };
+    return {
+      currency,
+      exchangeRate,
+      supplierCostUsd,
+      supplierCostInCurrency,
+      shippingCostUsd,
+      shippingCostInCurrency,
+      landedCostUsd,
+      landedCostInCurrency,
+      marketplaceDeductions,
+      suggestedSaleTotal,
+      expectedProfit,
+      marginPercent,
+    };
   }, [itemShippingBreakdown, marketplaceDraft]);
 
   const formattedCurrency = (amount: number, currency = marketplaceDraft?.currency || 'USD') =>
