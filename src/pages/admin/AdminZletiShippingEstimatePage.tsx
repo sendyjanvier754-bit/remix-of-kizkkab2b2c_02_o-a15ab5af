@@ -223,7 +223,12 @@ export default function AdminZletiShippingEstimatePage() {
 
     setShippingEstimateRateInput(String(savedEstimate.rate_value ?? DEFAULT_RATE));
     setShippingEstimateRateMode(savedEstimate.rate_mode === 'g' ? 'g' : 'kg');
-    setShippingEstimateExtraExpensesInput(String(savedEstimate.extra_expenses ?? 0));
+    const savedItems = Array.isArray(savedEstimate.extra_expense_items) ? savedEstimate.extra_expense_items : null;
+    if (savedItems) {
+      setExtraExpenses(savedItems.map((expense: any) => createExtraExpense(String(expense?.name || ''), Number(expense?.amount || 0))));
+    } else if (Number(savedEstimate.extra_expenses || 0) > 0) {
+      setExtraExpenses([createExtraExpense('Gastos adicionales', Number(savedEstimate.extra_expenses || 0))]);
+    }
     setSuggestedProfitInput(String(savedEstimate.marketplace?.suggested_profit_per_unit ?? 50));
     if (savedEstimate.marketplace?.id && marketplaces.some(marketplace => marketplace.id === savedEstimate.marketplace.id)) {
       setSelectedMarketplaceId(savedEstimate.marketplace.id);
