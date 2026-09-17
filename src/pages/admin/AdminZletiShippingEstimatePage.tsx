@@ -351,10 +351,11 @@ export default function AdminZletiShippingEstimatePage() {
     const landedCostUsd = sumBy((item) => Number(item.landedUnitCost || 0));
     const suggestedSaleTotal = sumBy((item) => Number(item.suggestedSalePrice || 0));
     const marketplaceDeductions = sumBy((item) => Number(item.totalDeductions || 0));
+    const landedExtraCosts = sumBy((item) => Number(item.landedExtraCost || 0));
 
     const supplierCostInCurrency = supplierCostUsd * exchangeRate;
     const shippingCostInCurrency = shippingCostUsd * exchangeRate;
-    const landedCostInCurrency = landedCostUsd * exchangeRate;
+    const landedCostInCurrency = landedCostUsd * exchangeRate + landedExtraCosts;
     const expectedProfit = suggestedSaleTotal - landedCostInCurrency - marketplaceDeductions;
     const marginPercent = suggestedSaleTotal > 0 ? (expectedProfit / suggestedSaleTotal) * 100 : 0;
 
@@ -367,6 +368,7 @@ export default function AdminZletiShippingEstimatePage() {
       shippingCostInCurrency,
       landedCostUsd,
       landedCostInCurrency,
+      landedExtraCosts,
       marketplaceDeductions,
       suggestedSaleTotal,
       expectedProfit,
