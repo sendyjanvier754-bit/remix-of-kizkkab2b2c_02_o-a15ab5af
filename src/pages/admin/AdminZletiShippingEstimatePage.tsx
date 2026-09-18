@@ -1002,6 +1002,12 @@ export default function AdminZletiShippingEstimatePage() {
                             {!marketplaceDraft.fees.length && <p className="py-3 text-center text-xs text-muted-foreground">Sin cargos configurados.</p>}
                           </div>
                           {!marketplaceTotals.viable && <p className="mt-3 text-sm font-medium text-destructive">Total percentage fees cannot be equal to or exceed 100%. Los cargos sobre precio de venta deben ser menores al 100%.</p>}
+                          <div className="mt-4 flex justify-end border-t pt-4">
+                            <Button type="button" className="gap-2" onClick={() => saveMarketplaceConfig.mutate()} disabled={saveMarketplaceConfig.isPending}>
+                              <Save className="h-4 w-4" />
+                              {saveMarketplaceConfig.isPending ? 'Guardando...' : 'Guardar configuración del marketplace'}
+                            </Button>
+                          </div>
                         </div>
                       </TabsContent>
                     ))}
