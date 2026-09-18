@@ -971,7 +971,7 @@ export default function AdminZletiShippingEstimatePage() {
                                 </div>
                                 <div className="space-y-1">
                                   <Label className="text-xs">Aplicar sobre</Label>
-                                  <Select value={fee.apply_to} disabled={fee.fee_type === 'percentage'} onValueChange={value => updateMarketplaceFee(fee.id, { apply_to: value as FeeApplyTo })}>
+                                  <Select value={fee.apply_to} onValueChange={value => updateMarketplaceFee(fee.id, { apply_to: value as FeeApplyTo })}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent><SelectItem value="sale_price">Precio de venta</SelectItem><SelectItem value="landed_cost">Costo aterrizado</SelectItem></SelectContent>
                                   </Select>
