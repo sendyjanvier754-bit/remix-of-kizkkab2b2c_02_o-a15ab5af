@@ -585,6 +585,19 @@ export default function AdminZletiShippingEstimatePage() {
     }
   };
 
+  const saveMarketplaceConfig = useMutation({
+    mutationFn: async () => {
+      await persistMarketplaceConfiguration();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['zleti-marketplaces-pricing'] });
+      toast.success('Configuración del marketplace guardada', {
+        description: `${marketplaceDraft?.name || 'El marketplace'} quedó guardado y disponible para todos los cálculos.`,
+      });
+    },
+    onError: (error: any) => toast.error(error?.message || 'No se pudo guardar la configuración del marketplace'),
+  });
+
   const saveShippingEstimateToPo = useMutation({
     mutationFn: async () => {
       if (!poId || !selectedPo) {
@@ -858,6 +871,10 @@ export default function AdminZletiShippingEstimatePage() {
                     <p className="text-xs text-muted-foreground">Cada pestaña tiene su moneda, tipo de cambio y cargos propios.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" className="gap-2" onClick={() => saveMarketplaceConfig.mutate()} disabled={!marketplaceDraft || saveMarketplaceConfig.isPending}>
+                      <Save className="h-4 w-4" />
+                      {saveMarketplaceConfig.isPending ? 'Guardando...' : 'Guardar configuración'}
+                    </Button>
                     <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => addMarketplace.mutate()} disabled={addMarketplace.isPending}>
                       <Plus className="h-4 w-4" /> Agregar marketplace
                     </Button>
@@ -985,6 +1002,12 @@ export default function AdminZletiShippingEstimatePage() {
                             {!marketplaceDraft.fees.length && <p className="py-3 text-center text-xs text-muted-foreground">Sin cargos configurados.</p>}
                           </div>
                           {!marketplaceTotals.viable && <p className="mt-3 text-sm font-medium text-destructive">Total percentage fees cannot be equal to or exceed 100%. Los cargos sobre precio de venta deben ser menores al 100%.</p>}
+                          <div className="mt-4 flex justify-end border-t pt-4">
+                            <Button type="button" className="gap-2" onClick={() => saveMarketplaceConfig.mutate()} disabled={saveMarketplaceConfig.isPending}>
+                              <Save className="h-4 w-4" />
+                              {saveMarketplaceConfig.isPending ? 'Guardando...' : 'Guardar configuración del marketplace'}
+                            </Button>
+                          </div>
                         </div>
                       </TabsContent>
                     ))}
