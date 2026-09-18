@@ -189,7 +189,7 @@ export default function AdminZletiShippingEstimatePage() {
           ...fee,
           value: Number(fee.value || 0),
           fee_type: fee.fee_type as FeeType,
-          apply_to: fee.fee_type === 'percentage' ? 'sale_price' : fee.apply_to as FeeApplyTo,
+          apply_to: (fee.apply_to === 'landed_cost' ? 'landed_cost' : 'sale_price') as FeeApplyTo,
         })),
       }));
     },
@@ -404,35 +404,47 @@ export default function AdminZletiShippingEstimatePage() {
 
     const marketplace = selectedDetailMarketplace;
     const fees = marketplace.fees || [];
-    const percentageSalePrice = fees
+    const onSale = fees.filter(fee => fee.apply_to !== 'landed_cost');
+    const onLanded = fees.filter(fee => fee.apply_to === 'landed_cost');
+    const percentageSalePrice = onSale
       .filter(fee => fee.fee_type === 'percentage')
       .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
-    const fixedFees = fees.filter(fee => fee.fee_type === 'fixed').reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const fixedFees = onSale.filter(fee => fee.fee_type === 'fixed').reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const percentageLandedCost = onLanded
+      .filter(fee => fee.fee_type === 'percentage')
+      .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const fixedLandedCost = onLanded.filter(fee => fee.fee_type === 'fixed').reduce((sum, fee) => sum + Number(fee.value || 0), 0);
     const denominator = 1 - percentageSalePrice / 100;
     const viable = percentageSalePrice < 100;
     const desiredProfit = Number(marketplace.target_profit_per_unit ?? suggestedProfitInput ?? 0);
     const landedUnitCostInCurrency = selectedDetailItem.landedUnitCost * Number(marketplace.exchange_rate || 1);
+    const landedExtraCost = landedUnitCostInCurrency * percentageLandedCost / 100 + fixedLandedCost;
+    const totalLandedCostInCurrency = landedUnitCostInCurrency + landedExtraCost;
     const suggestedSalePrice = viable
-      ? (landedUnitCostInCurrency + desiredProfit + fixedFees) / denominator
+      ? (totalLandedCostInCurrency + desiredProfit + fixedFees) / denominator
       : 0;
     const feeBreakdown = fees.map(fee => ({
       ...fee,
       amount: fee.fee_type === 'fixed'
         ? Number(fee.value || 0)
-        : suggestedSalePrice * Number(fee.value || 0) / 100,
+        : (fee.apply_to === 'landed_cost' ? landedUnitCostInCurrency : suggestedSalePrice) * Number(fee.value || 0) / 100,
     }));
-    const totalDeductions = feeBreakdown.reduce((sum, fee) => sum + fee.amount, 0);
+    const totalDeductions = feeBreakdown
+      .filter(fee => fee.apply_to !== 'landed_cost')
+      .reduce((sum, fee) => sum + fee.amount, 0);
 
     return {
       ...selectedDetailItem,
       marketplace,
       desiredProfit,
       landedUnitCostInCurrency,
+      landedExtraCost,
+      totalLandedCostInCurrency,
       suggestedSalePrice,
       feeBreakdown,
       totalDeductions,
       netReceived: suggestedSalePrice - totalDeductions,
-      netProfit: suggestedSalePrice - totalDeductions - landedUnitCostInCurrency,
+      netProfit: suggestedSalePrice - totalDeductions - totalLandedCostInCurrency,
       viable,
     };
   }, [marketplaceDraft, marketplaces, selectedDetailItem, selectedDetailMarketplace, selectedDetailMarketplaceId, suggestedProfitInput]);
@@ -809,6 +821,7 @@ export default function AdminZletiShippingEstimatePage() {
                         )}
                         <p className="text-xs text-muted-foreground">
                           Proveedor ${poTotals.supplierCostUsd.toFixed(2)} + envío/gastos ${poTotals.shippingCostUsd.toFixed(2)}
+                          {poTotals.landedExtraCosts > 0 && ` + cargos sobre costo ${formattedCurrencyWithCode(poTotals.landedExtraCosts, poTotals.currency)}`}
                         </p>
                       </div>
                       <div>
@@ -951,14 +964,15 @@ export default function AdminZletiShippingEstimatePage() {
                                 </div>
                                 <div className="space-y-1">
                                   <Label className="text-xs">Tipo</Label>
-                                  <Select value={fee.fee_type} onValueChange={value => updateMarketplaceFee(fee.id, { fee_type: value as FeeType, apply_to: value === 'percentage' ? 'sale_price' : fee.apply_to })}>
+                                  <Select value={fee.fee_type} onValueChange={value => updateMarketplaceFee(fee.id, { fee_type: value as FeeType })}>
+
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent><SelectItem value="percentage">Porcentaje (%)</SelectItem><SelectItem value="fixed">Fijo ({marketplaceDraft.currency})</SelectItem></SelectContent>
                                   </Select>
                                 </div>
                                 <div className="space-y-1">
                                   <Label className="text-xs">Aplicar sobre</Label>
-                                  <Select value={fee.apply_to} disabled={fee.fee_type === 'percentage'} onValueChange={value => updateMarketplaceFee(fee.id, { apply_to: value as FeeApplyTo })}>
+                                  <Select value={fee.apply_to} onValueChange={value => updateMarketplaceFee(fee.id, { apply_to: value as FeeApplyTo })}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent><SelectItem value="sale_price">Precio de venta</SelectItem><SelectItem value="landed_cost">Costo aterrizado</SelectItem></SelectContent>
                                   </Select>
