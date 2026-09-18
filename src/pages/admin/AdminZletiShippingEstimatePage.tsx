@@ -189,7 +189,7 @@ export default function AdminZletiShippingEstimatePage() {
           ...fee,
           value: Number(fee.value || 0),
           fee_type: fee.fee_type as FeeType,
-          apply_to: fee.fee_type === 'percentage' ? 'sale_price' : fee.apply_to as FeeApplyTo,
+          apply_to: (fee.apply_to === 'landed_cost' ? 'landed_cost' : 'sale_price') as FeeApplyTo,
         })),
       }));
     },
