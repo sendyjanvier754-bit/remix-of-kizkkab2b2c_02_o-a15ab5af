@@ -821,6 +821,7 @@ export default function AdminZletiShippingEstimatePage() {
                         )}
                         <p className="text-xs text-muted-foreground">
                           Proveedor ${poTotals.supplierCostUsd.toFixed(2)} + envío/gastos ${poTotals.shippingCostUsd.toFixed(2)}
+                          {poTotals.landedExtraCosts > 0 && ` + cargos sobre costo ${formattedCurrencyWithCode(poTotals.landedExtraCosts, poTotals.currency)}`}
                         </p>
                       </div>
                       <div>
