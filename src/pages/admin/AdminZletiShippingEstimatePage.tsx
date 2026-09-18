@@ -585,6 +585,19 @@ export default function AdminZletiShippingEstimatePage() {
     }
   };
 
+  const saveMarketplaceConfig = useMutation({
+    mutationFn: async () => {
+      await persistMarketplaceConfiguration();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['zleti-marketplaces-pricing'] });
+      toast.success('Configuración del marketplace guardada', {
+        description: `${marketplaceDraft?.name || 'El marketplace'} quedó guardado y disponible para todos los cálculos.`,
+      });
+    },
+    onError: (error: any) => toast.error(error?.message || 'No se pudo guardar la configuración del marketplace'),
+  });
+
   const saveShippingEstimateToPo = useMutation({
     mutationFn: async () => {
       if (!poId || !selectedPo) {
