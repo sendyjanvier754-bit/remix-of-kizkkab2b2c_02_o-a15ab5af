@@ -404,35 +404,47 @@ export default function AdminZletiShippingEstimatePage() {
 
     const marketplace = selectedDetailMarketplace;
     const fees = marketplace.fees || [];
-    const percentageSalePrice = fees
+    const onSale = fees.filter(fee => fee.apply_to !== 'landed_cost');
+    const onLanded = fees.filter(fee => fee.apply_to === 'landed_cost');
+    const percentageSalePrice = onSale
       .filter(fee => fee.fee_type === 'percentage')
       .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
-    const fixedFees = fees.filter(fee => fee.fee_type === 'fixed').reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const fixedFees = onSale.filter(fee => fee.fee_type === 'fixed').reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const percentageLandedCost = onLanded
+      .filter(fee => fee.fee_type === 'percentage')
+      .reduce((sum, fee) => sum + Number(fee.value || 0), 0);
+    const fixedLandedCost = onLanded.filter(fee => fee.fee_type === 'fixed').reduce((sum, fee) => sum + Number(fee.value || 0), 0);
     const denominator = 1 - percentageSalePrice / 100;
     const viable = percentageSalePrice < 100;
     const desiredProfit = Number(marketplace.target_profit_per_unit ?? suggestedProfitInput ?? 0);
     const landedUnitCostInCurrency = selectedDetailItem.landedUnitCost * Number(marketplace.exchange_rate || 1);
+    const landedExtraCost = landedUnitCostInCurrency * percentageLandedCost / 100 + fixedLandedCost;
+    const totalLandedCostInCurrency = landedUnitCostInCurrency + landedExtraCost;
     const suggestedSalePrice = viable
-      ? (landedUnitCostInCurrency + desiredProfit + fixedFees) / denominator
+      ? (totalLandedCostInCurrency + desiredProfit + fixedFees) / denominator
       : 0;
     const feeBreakdown = fees.map(fee => ({
       ...fee,
       amount: fee.fee_type === 'fixed'
         ? Number(fee.value || 0)
-        : suggestedSalePrice * Number(fee.value || 0) / 100,
+        : (fee.apply_to === 'landed_cost' ? landedUnitCostInCurrency : suggestedSalePrice) * Number(fee.value || 0) / 100,
     }));
-    const totalDeductions = feeBreakdown.reduce((sum, fee) => sum + fee.amount, 0);
+    const totalDeductions = feeBreakdown
+      .filter(fee => fee.apply_to !== 'landed_cost')
+      .reduce((sum, fee) => sum + fee.amount, 0);
 
     return {
       ...selectedDetailItem,
       marketplace,
       desiredProfit,
       landedUnitCostInCurrency,
+      landedExtraCost,
+      totalLandedCostInCurrency,
       suggestedSalePrice,
       feeBreakdown,
       totalDeductions,
       netReceived: suggestedSalePrice - totalDeductions,
-      netProfit: suggestedSalePrice - totalDeductions - landedUnitCostInCurrency,
+      netProfit: suggestedSalePrice - totalDeductions - totalLandedCostInCurrency,
       viable,
     };
   }, [marketplaceDraft, marketplaces, selectedDetailItem, selectedDetailMarketplace, selectedDetailMarketplaceId, suggestedProfitInput]);
