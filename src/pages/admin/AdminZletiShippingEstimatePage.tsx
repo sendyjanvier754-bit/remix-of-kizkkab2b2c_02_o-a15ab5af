@@ -871,6 +871,10 @@ export default function AdminZletiShippingEstimatePage() {
                     <p className="text-xs text-muted-foreground">Cada pestaña tiene su moneda, tipo de cambio y cargos propios.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" className="gap-2" onClick={() => saveMarketplaceConfig.mutate()} disabled={!marketplaceDraft || saveMarketplaceConfig.isPending}>
+                      <Save className="h-4 w-4" />
+                      {saveMarketplaceConfig.isPending ? 'Guardando...' : 'Guardar configuración'}
+                    </Button>
                     <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => addMarketplace.mutate()} disabled={addMarketplace.isPending}>
                       <Plus className="h-4 w-4" /> Agregar marketplace
                     </Button>
