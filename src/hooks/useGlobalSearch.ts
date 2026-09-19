@@ -151,7 +151,7 @@ const searchB2BProducts = async (
     name: item.nombre,
     price: Number(item.precio_b2b) || 0,
     image: item.imagen_principal || "",
-    stock: item.stock,
+    stock: item.stock_fisico,
     categoryId: item.categoria_id ?? null,
     moq: item.moq ?? null,
     createdAt: item.created_at,
