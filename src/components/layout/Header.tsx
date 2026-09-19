@@ -287,7 +287,7 @@ const Header = ({
       const results = await searchProductsByImage(file);
       if (results && results.length > 0) {
         sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
-        navigate('/productos?source=image');
+        navigate('/busqueda', { state: { products: results, type: 'image' } });
         toast.success(t('header.similarFound', { count: results.length }));
       } else {
         toast.info(t('header.noSimilarFound'));
