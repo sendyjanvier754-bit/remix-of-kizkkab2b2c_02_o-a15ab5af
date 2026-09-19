@@ -128,7 +128,7 @@ const searchB2BProducts = async (
   let query = supabase
     .from("v_productos_con_precio_b2b")
     .select(
-      "id, nombre, sku_interno, imagen_principal, precio_b2b, stock, categoria_id, moq, created_at",
+      "id, nombre, sku_interno, imagen_principal, precio_b2b, stock_fisico, categoria_id, moq, created_at",
       { count: "exact" }
     )
     .eq("is_active", true)
