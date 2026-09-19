@@ -136,6 +136,12 @@ const Header = ({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const prevCartCountRef = useRef<number>(0);
   
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  const searchScope = useSearchScope();
+  const { data: suggestions, isFetching: loadingSuggestions } = useSearchSuggestions(searchQuery, searchScope);
+
   const { role, user } = useAuth();
   const { items: b2cItems } = useB2CCartItems();
   const { items: b2bItems } = useB2BCartItems();
