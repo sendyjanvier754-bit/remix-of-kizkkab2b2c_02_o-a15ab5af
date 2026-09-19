@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useBranding } from "@/hooks/useBranding";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useSearchScope, useSearchSuggestions, saveRecentSearch, getRecentSearches } from "@/hooks/useGlobalSearch";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
