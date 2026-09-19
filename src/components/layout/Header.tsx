@@ -597,15 +597,91 @@ const Header = ({
           </Link>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 -ml-2 mr-4 max-w-[340px]">
+          <div className="hidden md:flex flex-1 -ml-2 mr-4 max-w-[340px]" ref={searchBoxRef}>
             <div className="relative w-full flex items-center">
               <Input
                 type="text"
                 placeholder={t('header.searchProducts')}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
+                onFocus={openSuggestions}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitSearch(); } }}
                 className="pl-4 pr-20 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#071d7f]"
               />
+              {showSuggestions && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 max-h-[70vh] overflow-y-auto">
+                  {searchQuery.trim().length < 2 ? (
+                    recentSearches.length > 0 ? (
+                      <div className="p-2">
+                        <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Búsquedas recientes</p>
+                        {recentSearches.map((r) => (
+                          <button
+                            key={r}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setSearchQuery(r); submitSearch(r); }}
+                            className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-lg"
+                          >
+                            <Search className="w-4 h-4 text-gray-400" />
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null
+                  ) : (
+                    <div className="p-2">
+                      {loadingSuggestions && (
+                        <div className="px-3 py-3 text-sm text-gray-400 flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" /> Buscando...
+                        </div>
+                      )}
+                      {suggestions?.products?.length ? (
+                        <>
+                          <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Productos</p>
+                          {suggestions.products.map((p) => (
+                            <button
+                              key={p.id}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => goToSuggestion(`/producto/${p.sku || p.id}`)}
+                              className="flex items-center gap-3 w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg"
+                            >
+                              <div className="w-9 h-9 rounded bg-gray-100 overflow-hidden flex-shrink-0">
+                                {p.image && <img src={p.image} alt={p.name} className="w-full h-full object-cover" />}
+                              </div>
+                              <span className="text-sm text-gray-700 line-clamp-1 flex-1">{p.name}</span>
+                              <span className="text-xs font-semibold text-gray-900">${Number(p.price).toFixed(2)}</span>
+                            </button>
+                          ))}
+                        </>
+                      ) : null}
+                      {suggestions?.stores?.length ? (
+                        <>
+                          <p className="px-3 py-1 mt-1 text-xs font-semibold text-gray-400 uppercase">Tiendas</p>
+                          {suggestions.stores.map((s) => (
+                            <button
+                              key={s.id}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => goToSuggestion(`/tienda/${s.slug || s.id}`)}
+                              className="flex items-center gap-3 w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+                                {s.logo && <img src={s.logo} alt={s.name} className="w-full h-full object-cover" />}
+                              </div>
+                              <span className="text-sm text-gray-700 line-clamp-1">{s.name}</span>
+                            </button>
+                          ))}
+                        </>
+                      ) : null}
+                      <button
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => submitSearch()}
+                        className="w-full text-left px-3 py-2 mt-1 text-sm font-medium text-[#071d7f] hover:bg-gray-50 rounded-lg"
+                      >
+                        Ver todos los resultados de "{searchQuery.trim()}"
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                 {/* Camera icon for image search */}
                 <input
