@@ -257,6 +257,25 @@ const Header = ({
     }
   };
 
+  const submitSearch = (raw?: string) => {
+    const term = (raw ?? searchQuery).trim();
+    if (!term) return;
+    saveRecentSearch(term);
+    setShowSuggestions(false);
+    navigate(`/busqueda?q=${encodeURIComponent(term)}`);
+  };
+
+  const openSuggestions = () => {
+    setRecentSearches(getRecentSearches());
+    setShowSuggestions(true);
+  };
+
+  const goToSuggestion = (path: string) => {
+    setShowSuggestions(false);
+    setSearchQuery("");
+    navigate(path);
+  };
+
   const handleImageSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
