@@ -126,7 +126,7 @@ const SearchResultsPage = () => {
     return categories.filter((c) => c.name.toLowerCase().includes(term));
   }, [categories, query]);
 
-  const products = isImageSearch ? (imageState.products || []) : accumulated;
+  const products = isImageSearch ? (imageState.products || sessionImageProducts || []) : accumulated;
   const total = isImageSearch ? products.length : productData?.total ?? 0;
   const hasMore = !isImageSearch && accumulated.length < total && (productData?.items.length ?? 0) > 0;
 
