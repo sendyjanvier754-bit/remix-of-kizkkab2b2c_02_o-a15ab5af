@@ -159,10 +159,11 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     };
   }, []);
 
-  // Real-time search
+  // Real-time search: letter-by-letter, prefix matches first
   useEffect(() => {
     const searchProducts = async () => {
-      if (searchQuery.trim().length < 2) {
+      const term = sanitizeSearchTerm(searchQuery);
+      if (term.length < 1) {
         setSearchResults([]);
         setShowResults(false);
         return;
@@ -173,10 +174,10 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
           .from("v_productos_con_precio_b2b")
           .select("id, nombre, sku_interno, imagen_principal, precio_b2b, descripcion_corta")
           .eq("is_active", true)
-          .or(`nombre.ilike.%${searchQuery}%,sku_interno.ilike.%${searchQuery}%,descripcion_corta.ilike.%${searchQuery}%`)
-          .limit(8);
+          .or(`nombre.ilike.%${term}%,sku_interno.ilike.%${term}%,descripcion_corta.ilike.%${term}%`)
+          .limit(16);
         if (error) throw error;
-        setSearchResults(data || []);
+        setSearchResults(rankByPrefix((data || []) as any[], term).slice(0, 8) as any);
         setShowResults(true);
       } catch (error) {
         console.error("Search error:", error);
@@ -185,7 +186,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
         setIsSearching(false);
       }
     };
-    const debounce = setTimeout(searchProducts, 300);
+    const debounce = setTimeout(searchProducts, 180);
     return () => clearTimeout(debounce);
   }, [searchQuery]);
 
