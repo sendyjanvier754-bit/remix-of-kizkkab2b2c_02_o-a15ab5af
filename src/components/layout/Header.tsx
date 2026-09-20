@@ -723,7 +723,14 @@ const Header = ({
                     )}
                   </button>
                 )}
-                <Search className="w-5 h-5 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => submitSearch()}
+                  aria-label={t('header.searchProducts')}
+                  className="text-gray-400 hover:text-[#071d7f] transition-colors"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
               </div>
             </div>
           </div>
