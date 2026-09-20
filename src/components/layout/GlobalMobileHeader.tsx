@@ -226,7 +226,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       setShowResults(false);
-      navigate(`/productos?q=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/busqueda?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -279,7 +279,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
       if (finalTranscript) {
         setSearchQuery(finalTranscript);
         toast.success(t('header.searching', { query: finalTranscript }));
-        navigate(`/productos?q=${encodeURIComponent(finalTranscript.trim())}`);
+        navigate(`/busqueda?q=${encodeURIComponent(finalTranscript.trim())}`);
       }
     };
 
@@ -306,7 +306,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
       const results = await searchProductsByImage(file);
       if (results && results.length > 0) {
         sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
-        navigate('/productos?source=image');
+        navigate('/busqueda?source=image');
         toast.success(t('header.similarFound', { count: results.length }));
       } else {
         toast.info(t('header.noSimilarFound'));

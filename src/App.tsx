@@ -212,6 +212,7 @@ const AppContent = () => {
             <Route path="/favoritos" element={<LazyRoute><FavoritesPage /></LazyRoute>} />
             <Route path="/tendencias" element={<LazyRoute><TrendsPage /></LazyRoute>} />
             <Route path="/busqueda" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />
+            <Route path="/productos" element={<LazyRoute><SearchResultsPage /></LazyRoute>} />
             <Route path="/soporte" element={<ProtectedRoute><LazyRoute><UserSupportPage /></LazyRoute></ProtectedRoute>} />
             <Route path="/notificaciones" element={<ProtectedRoute><LazyRoute><UserNotificationsPage /></LazyRoute></ProtectedRoute>} />
             <Route path="/dashboard/affiliates" element={<ProtectedRoute><LazyRoute><AffiliatesDashboardPage /></LazyRoute></ProtectedRoute>} />

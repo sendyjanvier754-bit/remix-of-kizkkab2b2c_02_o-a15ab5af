@@ -200,6 +200,16 @@ const Header = ({
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
   const scrollHeader = (dir) => {
     const el = catBarRef.current;
     if (!el) return;
@@ -404,6 +414,7 @@ const Header = ({
                 placeholder={t('header.searchProducts')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitSearch(); } }}
                 className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-500 px-4 py-2 outline-none"
               />
               {/* Camera icon for image search - Mobile */}
@@ -723,7 +734,14 @@ const Header = ({
                     )}
                   </button>
                 )}
-                <Search className="w-5 h-5 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => submitSearch()}
+                  aria-label={t('header.searchProducts')}
+                  className="text-gray-400 hover:text-[#071d7f] transition-colors"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
               </div>
             </div>
           </div>
