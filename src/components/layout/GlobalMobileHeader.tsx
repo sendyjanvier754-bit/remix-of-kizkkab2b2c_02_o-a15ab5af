@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { rankByPrefix, sanitizeSearchTerm } from "@/hooks/useGlobalSearch";
 
 interface SearchResult {
   id: string;
