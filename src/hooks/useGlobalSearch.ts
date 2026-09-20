@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -202,21 +203,49 @@ export const useSearchStores = (query: string) => {
   });
 };
 
-/** Compact suggestions for the header dropdown. */
+/** Debounced value so each keystroke doesn't fire a request. */
+const useDebouncedValue = (value: string, delayMs = 180): string => {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(id);
+  }, [value, delayMs]);
+  return debounced;
+};
+
+/** Puts names that start with the term first, then word-boundary matches. */
+export const rankByPrefix = <T extends { name: string }>(items: T[], rawTerm: string): T[] => {
+  const term = rawTerm.trim().toLowerCase();
+  if (!term) return items;
+  const score = (name: string): number => {
+    const n = (name || "").toLowerCase();
+    if (n.startsWith(term)) return 0;
+    if (n.split(/\s+/).some((w) => w.startsWith(term))) return 1;
+    return 2;
+  };
+  return [...items].sort((a, b) => score(a.name) - score(b.name));
+};
+
+/** Compact suggestions for the header dropdown: live, letter-by-letter. */
 export const useSearchSuggestions = (query: string, scope: SearchScope) => {
-  const term = sanitizeSearchTerm(query);
+  const debounced = useDebouncedValue(query, 180);
+  const term = sanitizeSearchTerm(debounced);
   return useQuery({
     queryKey: ["global-search", "suggestions", scope, term],
     queryFn: async () => {
       const [products, stores] = await Promise.all([
         scope === "b2b"
-          ? searchB2BProducts(term, { sort: "relevance" }, 0, 6)
-          : searchB2CProducts(term, { sort: "relevance" }, 0, 6),
-        searchStores(term, 4),
+          ? searchB2BProducts(term, { sort: "relevance" }, 0, 12)
+          : searchB2CProducts(term, { sort: "relevance" }, 0, 12),
+        searchStores(term, 6),
       ]);
-      return { products: products.items, stores };
+      return {
+        products: rankByPrefix(products.items, term).slice(0, 6),
+        stores: rankByPrefix(stores, term).slice(0, 4),
+      };
     },
-    enabled: term.length >= 2,
+    enabled: term.length >= 1,
+    placeholderData: (prev) => prev,
     staleTime: 30 * 1000,
   });
 };
