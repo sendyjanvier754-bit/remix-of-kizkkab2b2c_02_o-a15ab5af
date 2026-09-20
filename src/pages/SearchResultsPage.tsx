@@ -69,7 +69,16 @@ const SearchResultsPage = () => {
     imageUrl?: string;
     query?: string;
   };
-  const isImageSearch = imageState.type === "image";
+  const sessionImageProducts = useMemo(() => {
+    if (searchParams.get("source") !== "image") return null;
+    try {
+      const raw = sessionStorage.getItem("imageSearchResults");
+      return raw ? (JSON.parse(raw) as any[]) : null;
+    } catch {
+      return null;
+    }
+  }, [searchParams]);
+  const isImageSearch = imageState.type === "image" || !!sessionImageProducts;
 
   const query = searchParams.get("q") || imageState.query || "";
   const tab = (searchParams.get("tab") || "products") as "products" | "stores" | "categories";
