@@ -200,6 +200,16 @@ const Header = ({
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
   const scrollHeader = (dir) => {
     const el = catBarRef.current;
     if (!el) return;
