@@ -359,7 +359,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
+              onFocus={() => searchQuery.length >= 1 && setShowResults(true)}
               className="flex-1 bg-transparent text-sm sm:text-base text-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 outline-none min-w-0"
               placeholder={t('header.searchProducts')}
             />
