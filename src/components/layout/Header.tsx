@@ -621,7 +621,7 @@ const Header = ({
               />
               {showSuggestions && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 max-h-[70vh] overflow-y-auto">
-                  {searchQuery.trim().length < 2 ? (
+                  {searchQuery.trim().length < 1 ? (
                     recentSearches.length > 0 ? (
                       <div className="p-2">
                         <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Búsquedas recientes</p>
