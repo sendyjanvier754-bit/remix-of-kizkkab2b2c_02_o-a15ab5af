@@ -308,7 +308,13 @@ const SearchResultsPage = () => {
                         p={{
                           id: p.id,
                           sku: p.sku || p.id,
-                          name: p.name || p.nombre,
+                          name:
+                            getTranslatedProduct({
+                              id: p.sourceProductId || p.source_product_id || p.id,
+                              nombre: p.name || p.nombre,
+                            }).name ||
+                            p.name ||
+                            p.nombre,
                           price: p.price ?? p.precio ?? 0,
                           image: p.image || p.imagen || p.images?.[0] || "",
                           storeName: p.storeName,
@@ -380,7 +386,7 @@ const SearchResultsPage = () => {
                 className="bg-white p-4 rounded-lg border border-gray-100 hover:shadow-md transition text-center"
               >
                 <LayoutGrid className="w-6 h-6 mx-auto text-[#071d7f]" />
-                <p className="mt-2 font-medium text-gray-900 text-sm line-clamp-2">{c.name}</p>
+                <p className="mt-2 font-medium text-gray-900 text-sm line-clamp-2">{getTranslatedCategory(c).name || c.name}</p>
               </Link>
             ))}
           </div>
