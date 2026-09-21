@@ -95,6 +95,12 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     rootCategoriesForTranslation,
     (c) => ({ name: c.name })
   );
+  // Show search result names in the current UI language
+  const { getTranslated: getProductTranslated } = useTranslatedList(
+    'product',
+    searchResults,
+    (p: any) => ({ name: p.nombre })
+  );
   const { items: b2cItems } = useB2CCartItems();
   const { items: b2bItems } = useB2BCartItems();
   const { role, user } = useAuth();
@@ -171,11 +177,24 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
       }
       setIsSearching(true);
       try {
+        const lang = i18n.language?.substring(0, 2) || "es";
+        let orClause = `nombre.ilike.%${term}%,sku_interno.ilike.%${term}%,descripcion_corta.ilike.%${term}%`;
+        if (lang !== "es") {
+          const { data: translated } = await (supabase as any)
+            .from("content_translations")
+            .select("entity_id")
+            .eq("entity_type", "product")
+            .eq("language", lang)
+            .or(`translated_text.ilike.%${term}%`)
+            .limit(100);
+          const ids = Array.from(new Set((translated || []).map((r: any) => r.entity_id as string)));
+          if (ids.length > 0) orClause += `,id.in.(${ids.join(",")})`;
+        }
         const { data, error } = await supabase
           .from("v_productos_con_precio_b2b")
           .select("id, nombre, sku_interno, imagen_principal, precio_b2b, descripcion_corta")
           .eq("is_active", true)
-          .or(`nombre.ilike.%${term}%,sku_interno.ilike.%${term}%,descripcion_corta.ilike.%${term}%`)
+          .or(orClause)
           .limit(16);
         if (error) throw error;
         setSearchResults(rankByPrefix((data || []) as any[], term).slice(0, 8) as any);
