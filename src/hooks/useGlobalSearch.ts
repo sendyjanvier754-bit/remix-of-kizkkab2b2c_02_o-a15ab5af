@@ -225,12 +225,13 @@ export const useSearchProductsPage = (
   pageSize = RESULTS_PAGE_SIZE
 ) => {
   const term = sanitizeSearchTerm(query);
+  const lang = useSearchLanguage();
   return useQuery({
-    queryKey: ["global-search", "products", scope, term, filters, page, pageSize],
+    queryKey: ["global-search", "products", scope, term, lang, filters, page, pageSize],
     queryFn: () =>
       scope === "b2b"
-        ? searchB2BProducts(term, filters, page, pageSize)
-        : searchB2CProducts(term, filters, page, pageSize),
+        ? searchB2BProducts(term, filters, page, pageSize, lang)
+        : searchB2CProducts(term, filters, page, pageSize, lang),
     enabled: term.length >= 2,
     staleTime: 60 * 1000,
   });
@@ -274,13 +275,14 @@ export const rankByPrefix = <T extends { name: string }>(items: T[], rawTerm: st
 export const useSearchSuggestions = (query: string, scope: SearchScope) => {
   const debounced = useDebouncedValue(query, 180);
   const term = sanitizeSearchTerm(debounced);
+  const lang = useSearchLanguage();
   return useQuery({
-    queryKey: ["global-search", "suggestions", scope, term],
+    queryKey: ["global-search", "suggestions", scope, term, lang],
     queryFn: async () => {
       const [products, stores] = await Promise.all([
         scope === "b2b"
-          ? searchB2BProducts(term, { sort: "relevance" }, 0, 12)
-          : searchB2CProducts(term, { sort: "relevance" }, 0, 12),
+          ? searchB2BProducts(term, { sort: "relevance" }, 0, 12, lang)
+          : searchB2CProducts(term, { sort: "relevance" }, 0, 12, lang),
         searchStores(term, 6),
       ]);
       return {
