@@ -146,6 +146,7 @@ const searchB2CProducts = async (
     storeName: item.store?.name,
     categoryId: item.source_product?.categoria_id ?? null,
     createdAt: item.created_at,
+    sourceProductId: item.source_product?.id ?? null,
   }));
 
   // Category lives on the joined product, so it is filtered client-side.
@@ -160,8 +161,15 @@ const searchB2BProducts = async (
   term: string,
   filters: SearchFilters,
   page: number,
-  pageSize: number
+  pageSize: number,
+  lang = "es"
 ): Promise<{ items: SearchProductResult[]; total: number }> => {
+  const translatedIds = await searchTranslatedProductIds(term, lang);
+  let orClause = `nombre.ilike.%${term}%,sku_interno.ilike.%${term}%,descripcion_corta.ilike.%${term}%`;
+  if (translatedIds.length > 0) {
+    orClause += `,id.in.(${translatedIds.join(",")})`;
+  }
+
   let query = supabase
     .from("v_productos_con_precio_b2b")
     .select(
@@ -169,7 +177,7 @@ const searchB2BProducts = async (
       { count: "exact" }
     )
     .eq("is_active", true)
-    .or(`nombre.ilike.%${term}%,sku_interno.ilike.%${term}%,descripcion_corta.ilike.%${term}%`);
+    .or(orClause);
 
   if (filters.categoryId) query = query.eq("categoria_id", filters.categoryId);
   if (filters.minPrice != null) query = query.gte("precio_b2b", filters.minPrice);
