@@ -17,6 +17,7 @@ import {
   type SearchFilters,
   type SearchProductResult,
 } from "@/hooks/useGlobalSearch";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { cn } from "@/lib/utils";
 
 const ProductCard = ({ p, onOpen }: { p: SearchProductResult; onOpen: () => void }) => (
@@ -127,6 +128,22 @@ const SearchResultsPage = () => {
   }, [categories, query]);
 
   const products = isImageSearch ? (imageState.products || sessionImageProducts || []) : accumulated;
+
+  // Show product and category names in the current UI language
+  const { getTranslated: getTranslatedProduct } = useTranslatedList(
+    "product",
+    (products as any[]).map((p: any) => ({
+      id: p.sourceProductId || p.source_product_id || p.id,
+      nombre: p.name || p.nombre,
+    })),
+    (item) => ({ name: item.nombre })
+  );
+  const { getTranslated: getTranslatedCategory } = useTranslatedList(
+    "category",
+    matchedCategories,
+    (c) => ({ name: c.name })
+  );
+
   const total = isImageSearch ? products.length : productData?.total ?? 0;
   const hasMore = !isImageSearch && accumulated.length < total && (productData?.items.length ?? 0) > 0;
 
