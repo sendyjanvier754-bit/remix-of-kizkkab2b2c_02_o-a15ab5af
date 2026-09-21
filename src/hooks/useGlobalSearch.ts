@@ -20,6 +20,8 @@ export interface SearchProductResult {
   categoryId?: string | null;
   createdAt?: string | null;
   moq?: number | null;
+  /** B2C items are translated under their source product id. */
+  sourceProductId?: string | null;
 }
 
 export interface SearchStoreResult {
