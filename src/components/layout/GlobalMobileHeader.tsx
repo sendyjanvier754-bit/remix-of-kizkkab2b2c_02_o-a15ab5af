@@ -208,7 +208,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     };
     const debounce = setTimeout(searchProducts, 180);
     return () => clearTimeout(debounce);
-  }, [searchQuery]);
+  }, [searchQuery, i18n.language]);
 
   if (!isMobile) return null;
 
@@ -413,7 +413,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
                         )}
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-gray-900 line-clamp-1">{product.nombre}</p>
+                        <p className="text-sm font-medium text-gray-900 line-clamp-1">{getProductTranslated(product).name || product.nombre}</p>
                         <p className="text-xs text-gray-500">SKU: {product.sku_interno}</p>
                         <p className={cn("text-sm font-bold", isSellerOrAdmin ? "text-blue-600" : "text-green-600")}>
                           ${product.precio_b2b?.toFixed(2) || '0.00'}
