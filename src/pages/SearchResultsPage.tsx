@@ -17,6 +17,7 @@ import {
   type SearchFilters,
   type SearchProductResult,
 } from "@/hooks/useGlobalSearch";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { cn } from "@/lib/utils";
 
 const ProductCard = ({ p, onOpen }: { p: SearchProductResult; onOpen: () => void }) => (
@@ -127,6 +128,22 @@ const SearchResultsPage = () => {
   }, [categories, query]);
 
   const products = isImageSearch ? (imageState.products || sessionImageProducts || []) : accumulated;
+
+  // Show product and category names in the current UI language
+  const { getTranslated: getTranslatedProduct } = useTranslatedList(
+    "product",
+    (products as any[]).map((p: any) => ({
+      id: p.sourceProductId || p.source_product_id || p.id,
+      nombre: p.name || p.nombre,
+    })),
+    (item) => ({ name: item.nombre })
+  );
+  const { getTranslated: getTranslatedCategory } = useTranslatedList(
+    "category",
+    matchedCategories,
+    (c) => ({ name: c.name })
+  );
+
   const total = isImageSearch ? products.length : productData?.total ?? 0;
   const hasMore = !isImageSearch && accumulated.length < total && (productData?.items.length ?? 0) > 0;
 
@@ -291,7 +308,13 @@ const SearchResultsPage = () => {
                         p={{
                           id: p.id,
                           sku: p.sku || p.id,
-                          name: p.name || p.nombre,
+                          name:
+                            getTranslatedProduct({
+                              id: p.sourceProductId || p.source_product_id || p.id,
+                              nombre: p.name || p.nombre,
+                            }).name ||
+                            p.name ||
+                            p.nombre,
                           price: p.price ?? p.precio ?? 0,
                           image: p.image || p.imagen || p.images?.[0] || "",
                           storeName: p.storeName,
@@ -363,7 +386,7 @@ const SearchResultsPage = () => {
                 className="bg-white p-4 rounded-lg border border-gray-100 hover:shadow-md transition text-center"
               >
                 <LayoutGrid className="w-6 h-6 mx-auto text-[#071d7f]" />
-                <p className="mt-2 font-medium text-gray-900 text-sm line-clamp-2">{c.name}</p>
+                <p className="mt-2 font-medium text-gray-900 text-sm line-clamp-2">{getTranslatedCategory(c).name || c.name}</p>
               </Link>
             ))}
           </div>

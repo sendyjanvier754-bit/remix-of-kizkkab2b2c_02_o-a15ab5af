@@ -142,6 +142,13 @@ const Header = ({
   const searchScope = useSearchScope();
   const { data: suggestions, isFetching: loadingSuggestions } = useSearchSuggestions(searchQuery, searchScope);
 
+  // Show suggestion product names in the current UI language
+  const { getTranslated: getTranslatedSuggestion } = useTranslatedList(
+    'product',
+    suggestions?.products?.map((p) => ({ id: p.sourceProductId || p.id, nombre: p.name })),
+    (item) => ({ name: item.nombre })
+  );
+
   const { role, user } = useAuth();
   const { items: b2cItems } = useB2CCartItems();
   const { items: b2bItems } = useB2BCartItems();
@@ -658,7 +665,9 @@ const Header = ({
                               <div className="w-9 h-9 rounded bg-gray-100 overflow-hidden flex-shrink-0">
                                 {p.image && <img src={p.image} alt={p.name} className="w-full h-full object-cover" />}
                               </div>
-                              <span className="text-sm text-gray-700 line-clamp-1 flex-1">{p.name}</span>
+                              <span className="text-sm text-gray-700 line-clamp-1 flex-1">
+                                {getTranslatedSuggestion({ id: p.sourceProductId || p.id, nombre: p.name }).name || p.name}
+                              </span>
                               <span className="text-xs font-semibold text-gray-900">${Number(p.price).toFixed(2)}</span>
                             </button>
                           ))}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useViewMode } from "@/contexts/ViewModeContext";
@@ -19,6 +20,8 @@ export interface SearchProductResult {
   categoryId?: string | null;
   createdAt?: string | null;
   moq?: number | null;
+  /** B2C items are translated under their source product id. */
+  sourceProductId?: string | null;
 }
 
 export interface SearchStoreResult {
@@ -72,12 +75,45 @@ export const useSearchScope = (): SearchScope => {
   return b2bRoles.includes(role as UserRole) ? "b2b" : "b2c";
 };
 
+/** Current UI language (2-letter), used to match translated content. */
+const useSearchLanguage = (): string => {
+  const { i18n } = useTranslation();
+  return i18n.language?.substring(0, 2) || "es";
+};
+
+/**
+ * Product ids whose translated name/description in `lang` match the term.
+ * Products are translated under entity_type 'product' with the source product id.
+ */
+const searchTranslatedProductIds = async (term: string, lang: string): Promise<string[]> => {
+  if (!lang || lang === "es" || !term) return [];
+  const { data, error } = await (supabase as any)
+    .from("content_translations")
+    .select("entity_id")
+    .eq("entity_type", "product")
+    .eq("language", lang)
+    .or(`translated_text.ilike.%${term}%`)
+    .limit(200);
+  if (error) {
+    console.warn("Translated search failed:", error);
+    return [];
+  }
+  return Array.from(new Set((data || []).map((r: any) => r.entity_id as string)));
+};
+
 const searchB2CProducts = async (
   term: string,
   filters: SearchFilters,
   page: number,
-  pageSize: number
+  pageSize: number,
+  lang = "es"
 ): Promise<{ items: SearchProductResult[]; total: number }> => {
+  const translatedIds = await searchTranslatedProductIds(term, lang);
+  let orClause = `nombre.ilike.%${term}%,sku.ilike.%${term}%,descripcion.ilike.%${term}%`;
+  if (translatedIds.length > 0) {
+    orClause += `,source_product_id.in.(${translatedIds.join(",")})`;
+  }
+
   let query = supabase
     .from("seller_catalog")
     .select(
@@ -87,7 +123,7 @@ const searchB2CProducts = async (
       { count: "exact" }
     )
     .eq("is_active", true)
-    .or(`nombre.ilike.%${term}%,sku.ilike.%${term}%,descripcion.ilike.%${term}%`);
+    .or(orClause);
 
   if (filters.minPrice != null) query = query.gte("precio_venta", filters.minPrice);
   if (filters.maxPrice != null) query = query.lte("precio_venta", filters.maxPrice);
@@ -110,6 +146,7 @@ const searchB2CProducts = async (
     storeName: item.store?.name,
     categoryId: item.source_product?.categoria_id ?? null,
     createdAt: item.created_at,
+    sourceProductId: item.source_product?.id ?? null,
   }));
 
   // Category lives on the joined product, so it is filtered client-side.
@@ -124,8 +161,15 @@ const searchB2BProducts = async (
   term: string,
   filters: SearchFilters,
   page: number,
-  pageSize: number
+  pageSize: number,
+  lang = "es"
 ): Promise<{ items: SearchProductResult[]; total: number }> => {
+  const translatedIds = await searchTranslatedProductIds(term, lang);
+  let orClause = `nombre.ilike.%${term}%,sku_interno.ilike.%${term}%,descripcion_corta.ilike.%${term}%`;
+  if (translatedIds.length > 0) {
+    orClause += `,id.in.(${translatedIds.join(",")})`;
+  }
+
   let query = supabase
     .from("v_productos_con_precio_b2b")
     .select(
@@ -133,7 +177,7 @@ const searchB2BProducts = async (
       { count: "exact" }
     )
     .eq("is_active", true)
-    .or(`nombre.ilike.%${term}%,sku_interno.ilike.%${term}%,descripcion_corta.ilike.%${term}%`);
+    .or(orClause);
 
   if (filters.categoryId) query = query.eq("categoria_id", filters.categoryId);
   if (filters.minPrice != null) query = query.gte("precio_b2b", filters.minPrice);
@@ -181,12 +225,13 @@ export const useSearchProductsPage = (
   pageSize = RESULTS_PAGE_SIZE
 ) => {
   const term = sanitizeSearchTerm(query);
+  const lang = useSearchLanguage();
   return useQuery({
-    queryKey: ["global-search", "products", scope, term, filters, page, pageSize],
+    queryKey: ["global-search", "products", scope, term, lang, filters, page, pageSize],
     queryFn: () =>
       scope === "b2b"
-        ? searchB2BProducts(term, filters, page, pageSize)
-        : searchB2CProducts(term, filters, page, pageSize),
+        ? searchB2BProducts(term, filters, page, pageSize, lang)
+        : searchB2CProducts(term, filters, page, pageSize, lang),
     enabled: term.length >= 2,
     staleTime: 60 * 1000,
   });
@@ -230,13 +275,14 @@ export const rankByPrefix = <T extends { name: string }>(items: T[], rawTerm: st
 export const useSearchSuggestions = (query: string, scope: SearchScope) => {
   const debounced = useDebouncedValue(query, 180);
   const term = sanitizeSearchTerm(debounced);
+  const lang = useSearchLanguage();
   return useQuery({
-    queryKey: ["global-search", "suggestions", scope, term],
+    queryKey: ["global-search", "suggestions", scope, term, lang],
     queryFn: async () => {
       const [products, stores] = await Promise.all([
         scope === "b2b"
-          ? searchB2BProducts(term, { sort: "relevance" }, 0, 12)
-          : searchB2CProducts(term, { sort: "relevance" }, 0, 12),
+          ? searchB2BProducts(term, { sort: "relevance" }, 0, 12, lang)
+          : searchB2CProducts(term, { sort: "relevance" }, 0, 12, lang),
         searchStores(term, 6),
       ]);
       return {
