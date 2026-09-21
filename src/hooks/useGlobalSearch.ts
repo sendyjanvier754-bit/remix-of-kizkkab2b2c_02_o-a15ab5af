@@ -75,12 +75,45 @@ export const useSearchScope = (): SearchScope => {
   return b2bRoles.includes(role as UserRole) ? "b2b" : "b2c";
 };
 
+/** Current UI language (2-letter), used to match translated content. */
+const useSearchLanguage = (): string => {
+  const { i18n } = useTranslation();
+  return i18n.language?.substring(0, 2) || "es";
+};
+
+/**
+ * Product ids whose translated name/description in `lang` match the term.
+ * Products are translated under entity_type 'product' with the source product id.
+ */
+const searchTranslatedProductIds = async (term: string, lang: string): Promise<string[]> => {
+  if (!lang || lang === "es" || !term) return [];
+  const { data, error } = await (supabase as any)
+    .from("content_translations")
+    .select("entity_id")
+    .eq("entity_type", "product")
+    .eq("language", lang)
+    .or(`translated_text.ilike.%${term}%`)
+    .limit(200);
+  if (error) {
+    console.warn("Translated search failed:", error);
+    return [];
+  }
+  return Array.from(new Set((data || []).map((r: any) => r.entity_id as string)));
+};
+
 const searchB2CProducts = async (
   term: string,
   filters: SearchFilters,
   page: number,
-  pageSize: number
+  pageSize: number,
+  lang = "es"
 ): Promise<{ items: SearchProductResult[]; total: number }> => {
+  const translatedIds = await searchTranslatedProductIds(term, lang);
+  let orClause = `nombre.ilike.%${term}%,sku.ilike.%${term}%,descripcion.ilike.%${term}%`;
+  if (translatedIds.length > 0) {
+    orClause += `,source_product_id.in.(${translatedIds.join(",")})`;
+  }
+
   let query = supabase
     .from("seller_catalog")
     .select(
@@ -90,7 +123,7 @@ const searchB2CProducts = async (
       { count: "exact" }
     )
     .eq("is_active", true)
-    .or(`nombre.ilike.%${term}%,sku.ilike.%${term}%,descripcion.ilike.%${term}%`);
+    .or(orClause);
 
   if (filters.minPrice != null) query = query.gte("precio_venta", filters.minPrice);
   if (filters.maxPrice != null) query = query.lte("precio_venta", filters.maxPrice);
