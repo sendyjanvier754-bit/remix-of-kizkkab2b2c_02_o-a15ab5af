@@ -110,11 +110,17 @@
     "imageSearchError": "Erè nan chèche pa imaj",
     "voiceNotSupported": "Rechèch vwa pa sipòte nan navigatè sa a",
     "listening": "Ap koute...",
-    "searching": "Ap chèche: \"{{query}}\"",
+    "searching": "Ap chèche...",
     "noSpeech": "Pa detekte vwa. Eseye ankò.",
     "noMicrophone": "Pa kapab jwenn mikwofòn.",
     "micDenied": "Pèmisyon mikwofòn refize.",
-    "voiceError": "Erè rekonesans vwa. Eseye ankò."
+    "voiceError": "Erè rekonesans vwa. Eseye ankò.",
+    "recentSearches": "Rechèch resan",
+    "products": "Pwodwi",
+    "stores": "Boutik",
+    "viewAllResults": "Wè tout rezilta pou \"{{query}}\"",
+    "clear": "Efase",
+    "clearHistory": "Efase istorik"
   },
   "footer": {
     "tagline": "Boutik an liy ou ka fè konfyans ak pi bon pwodwi nan pi bon pri.",

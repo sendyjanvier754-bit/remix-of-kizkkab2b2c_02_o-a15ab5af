@@ -110,11 +110,17 @@
     "imageSearchError": "Erreur lors de la recherche par image",
     "voiceNotSupported": "Recherche vocale non prise en charge dans ce navigateur",
     "listening": "Écoute en cours...",
-    "searching": "Recherche : \"{{query}}\"",
+    "searching": "Recherche...",
     "noSpeech": "Aucune voix détectée. Réessayez.",
     "noMicrophone": "Impossible d'accéder au microphone.",
     "micDenied": "Permission du microphone refusée.",
-    "voiceError": "Erreur de reconnaissance vocale. Réessayez."
+    "voiceError": "Erreur de reconnaissance vocale. Réessayez.",
+    "recentSearches": "Recherches récentes",
+    "products": "Produits",
+    "stores": "Boutiques",
+    "viewAllResults": "Voir tous les résultats pour \"{{query}}\"",
+    "clear": "Effacer",
+    "clearHistory": "Effacer l'historique"
   },
   "footer": {
     "tagline": "Votre boutique en ligne de confiance avec les meilleurs produits aux meilleurs prix.",

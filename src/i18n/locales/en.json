@@ -110,11 +110,17 @@
     "imageSearchError": "Error searching by image",
     "voiceNotSupported": "Voice search not supported in this browser",
     "listening": "Listening...",
-    "searching": "Searching: \"{{query}}\"",
+    "searching": "Searching...",
     "noSpeech": "No speech detected. Try again.",
     "noMicrophone": "Could not access microphone.",
     "micDenied": "Microphone permission denied.",
-    "voiceError": "Voice recognition error. Try again."
+    "voiceError": "Voice recognition error. Try again.",
+    "recentSearches": "Recent searches",
+    "products": "Products",
+    "stores": "Stores",
+    "viewAllResults": "See all results for \"{{query}}\"",
+    "clear": "Clear",
+    "clearHistory": "Clear history"
   },
   "footer": {
     "tagline": "Your trusted online shopping store with the best products at the best prices.",
