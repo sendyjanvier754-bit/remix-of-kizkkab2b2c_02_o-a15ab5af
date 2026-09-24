@@ -18,6 +18,7 @@ import {
   type SearchProductResult,
 } from "@/hooks/useGlobalSearch";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 const ProductCard = ({ p, onOpen }: { p: SearchProductResult; onOpen: () => void }) => (
@@ -60,6 +61,7 @@ const SearchResultsPage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const scope = useSearchScope();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories = [] } = usePublicCategories();
 
