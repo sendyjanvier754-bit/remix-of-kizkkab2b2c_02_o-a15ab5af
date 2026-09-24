@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { useBranding } from "@/hooks/useBranding";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { useTranslation } from "react-i18next";
 const SEARCH_HISTORY_KEY = 'b2b_search_history';
 const MAX_HISTORY_ITEMS = 8;
 
@@ -77,6 +78,7 @@ const HeaderB2B = ({
   onCategorySelect,
   onSearch
 }: HeaderB2BProps) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
