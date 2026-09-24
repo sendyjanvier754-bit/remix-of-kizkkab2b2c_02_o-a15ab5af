@@ -208,13 +208,13 @@ const SearchResultsPage = () => {
             {!isImageSearch && !isMobile && (
               <aside className="w-60 flex-shrink-0 space-y-6">
                 <div className="bg-white rounded-lg border border-gray-100 p-4">
-                  <p className="font-semibold text-sm mb-3">Ordenar por</p>
+                  <p className="font-semibold text-sm mb-3">{t('search.sortBy')}</p>
                   <div className="space-y-2 text-sm">
                     {[
-                      { id: "relevance", label: "Relevancia" },
-                      { id: "price_asc", label: "Precio: menor a mayor" },
-                      { id: "price_desc", label: "Precio: mayor a menor" },
-                      { id: "newest", label: "Más recientes" },
+                      { id: "relevance", label: t('search.relevance') },
+                      { id: "price_asc", label: t('search.priceAsc') },
+                      { id: "price_desc", label: t('search.priceDesc') },
+                      { id: "newest", label: t('search.newest') },
                     ].map((o) => (
                       <button
                         key={o.id}
