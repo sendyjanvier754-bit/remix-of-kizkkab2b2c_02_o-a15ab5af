@@ -1598,5 +1598,12 @@
     "trends": "Trends",
     "account": "Account",
     "login": "Login"
+  },
+  "search": {
+    "sortBy": "Sort by",
+    "relevance": "Relevance",
+    "priceAsc": "Price: low to high",
+    "priceDesc": "Price: high to low",
+    "newest": "Newest"
   }
 }

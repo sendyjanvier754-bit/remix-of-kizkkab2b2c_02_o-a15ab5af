@@ -1598,5 +1598,12 @@
     "trends": "Tendencias",
     "account": "Cuenta",
     "login": "Login"
+  },
+  "search": {
+    "sortBy": "Ordenar por",
+    "relevance": "Relevancia",
+    "priceAsc": "Precio: menor a mayor",
+    "priceDesc": "Precio: mayor a menor",
+    "newest": "Más recientes"
   }
 }

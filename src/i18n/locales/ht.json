@@ -1598,5 +1598,12 @@
     "trends": "Tandans",
     "account": "Kont",
     "login": "Konekte"
+  },
+  "search": {
+    "sortBy": "Triye pa",
+    "relevance": "Pertinans",
+    "priceAsc": "Pri: pi ba a pi wo",
+    "priceDesc": "Pri: pi wo a pi ba",
+    "newest": "Pi resan"
   }
 }
