@@ -110,11 +110,17 @@
     "imageSearchError": "Error al buscar por imagen",
     "voiceNotSupported": "Búsqueda por voz no soportada en este navegador",
     "listening": "Escuchando...",
-    "searching": "Buscando: \"{{query}}\"",
+    "searching": "Buscando...",
     "noSpeech": "No se detectó ninguna voz. Intenta de nuevo.",
     "noMicrophone": "No se pudo acceder al micrófono.",
     "micDenied": "Permiso de micrófono denegado.",
-    "voiceError": "Error al reconocer voz. Intenta de nuevo."
+    "voiceError": "Error al reconocer voz. Intenta de nuevo.",
+    "recentSearches": "Búsquedas recientes",
+    "products": "Productos",
+    "stores": "Tiendas",
+    "viewAllResults": "Ver todos los resultados de \"{{query}}\"",
+    "clear": "Limpiar",
+    "clearHistory": "Limpiar historial"
   },
   "footer": {
     "tagline": "Tu tienda de compras en línea confiable con los mejores productos a los mejores precios.",
@@ -1592,5 +1598,12 @@
     "trends": "Tendencias",
     "account": "Cuenta",
     "login": "Login"
+  },
+  "search": {
+    "sortBy": "Ordenar por",
+    "relevance": "Relevancia",
+    "priceAsc": "Precio: menor a mayor",
+    "priceDesc": "Precio: mayor a menor",
+    "newest": "Más recientes"
   }
 }

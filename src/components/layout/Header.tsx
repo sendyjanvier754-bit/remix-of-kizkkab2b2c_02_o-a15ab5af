@@ -631,7 +631,7 @@ const Header = ({
                   {searchQuery.trim().length < 1 ? (
                     recentSearches.length > 0 ? (
                       <div className="p-2">
-                        <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Búsquedas recientes</p>
+                        <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">{t('header.recentSearches')}</p>
                         {recentSearches.map((r) => (
                           <button
                             key={r}
@@ -649,12 +649,12 @@ const Header = ({
                     <div className="p-2">
                       {loadingSuggestions && (
                         <div className="px-3 py-3 text-sm text-gray-400 flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin" /> Buscando...
+                          <Loader2 className="w-4 h-4 animate-spin" /> {t('header.searching')}
                         </div>
                       )}
                       {suggestions?.products?.length ? (
                         <>
-                          <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Productos</p>
+                          <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">{t('header.products')}</p>
                           {suggestions.products.map((p) => (
                             <button
                               key={p.id}
@@ -675,7 +675,7 @@ const Header = ({
                       ) : null}
                       {suggestions?.stores?.length ? (
                         <>
-                          <p className="px-3 py-1 mt-1 text-xs font-semibold text-gray-400 uppercase">Tiendas</p>
+                          <p className="px-3 py-1 mt-1 text-xs font-semibold text-gray-400 uppercase">{t('header.stores')}</p>
                           {suggestions.stores.map((s) => (
                             <button
                               key={s.id}
@@ -696,7 +696,7 @@ const Header = ({
                         onClick={() => submitSearch()}
                         className="w-full text-left px-3 py-2 mt-1 text-sm font-medium text-[#071d7f] hover:bg-gray-50 rounded-lg"
                       >
-                        Ver todos los resultados de "{searchQuery.trim()}"
+                        {t('header.viewAllResults', { query: searchQuery.trim() })}
                       </button>
                     </div>
                   )}

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { useBranding } from "@/hooks/useBranding";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { useTranslation } from "react-i18next";
 const SEARCH_HISTORY_KEY = 'b2b_search_history';
 const MAX_HISTORY_ITEMS = 8;
 
@@ -77,6 +78,7 @@ const HeaderB2B = ({
   onCategorySelect,
   onSearch
 }: HeaderB2BProps) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
@@ -331,9 +333,9 @@ const HeaderB2B = ({
               {/* Search History Dropdown - Mobile */}
               {showHistory && filteredHistory.length > 0 && <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
                   <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-                    <span className="text-xs font-medium text-gray-500">Búsquedas recientes</span>
+                    <span className="text-xs font-medium text-gray-500">{t('header.recentSearches')}</span>
                     <button onClick={clearHistory} className="text-xs text-blue-600 hover:text-blue-700">
-                      Limpiar
+                      {t('header.clear')}
                     </button>
                   </div>
                   {filteredHistory.map((query, index) => <button key={index} onClick={() => handleHistoryClick(query)} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 transition-colors text-left">
@@ -444,9 +446,9 @@ const HeaderB2B = ({
               {/* Search History Dropdown - Desktop */}
               {showHistory && filteredHistory.length > 0 && <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-72 overflow-y-auto">
                   <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
-                    <span className="text-xs font-medium text-gray-500">Búsquedas recientes</span>
+                    <span className="text-xs font-medium text-gray-500">{t('header.recentSearches')}</span>
                     <button onClick={clearHistory} className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                      Limpiar historial
+                      {t('header.clearHistory')}
                     </button>
                   </div>
                   {filteredHistory.map((query, index) => <button key={index} onClick={() => handleHistoryClick(query)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left group">
