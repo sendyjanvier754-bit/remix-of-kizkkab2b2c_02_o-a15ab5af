@@ -575,6 +575,7 @@ export default function AdminPOMasterPage() {
                           po_number: viewingPONumber || selectedMarket?.active_po_number || '',
                           market_name: selectedMarket?.market_name || '',
                           brand_identity: viewingPO?.brand_identity || 'kizkka',
+                          audience: 'purchasing_agent',
                           generated_at: new Date().toISOString(),
                           items: rows.map(r => ({
                             sku: r.sku,
