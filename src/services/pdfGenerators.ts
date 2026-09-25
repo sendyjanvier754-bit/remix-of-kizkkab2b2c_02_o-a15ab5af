@@ -1326,6 +1326,7 @@ export interface POBuyingListData {
   po_number: string;
   market_name: string;
   brand_identity?: 'kizkka' | 'zleti';
+  audience?: 'admin' | 'purchasing_agent';
   generated_at: string;
   items: {
     sku: string;
@@ -1342,6 +1343,7 @@ export const buildPOBuyingListHtml = (
   data: POBuyingListData,
   options: { download?: boolean; showActions?: boolean } = {},
 ) => {
+  const showCosts = data.audience !== 'purchasing_agent';
   const totalUnits = data.items.reduce((s, i) => s + i.cantidad, 0);
   const totalPurchaseCost = data.items.reduce(
     (sum, item) => sum + Number(item.unit_cost || 0) * item.cantidad,
@@ -1466,12 +1468,12 @@ export const buildPOBuyingListHtml = (
           <thead>
             <tr>
               <th style="width:8%">Image</th>
-              <th style="width:23%">Product</th>
-              <th style="width:19%">Variant</th>
-              <th style="width:8%" class="center">Unit price</th>
-              <th style="width:7%" class="center">Qty.</th>
-              <th style="width:10%" class="center">Total cost</th>
-              <th style="width:25%">Source URL</th>
+              <th style="width:${showCosts ? '23%' : '30%'}">Product</th>
+              <th style="width:${showCosts ? '19%' : '24%'}">Variant</th>
+              ${showCosts ? '<th style="width:8%" class="center">Unit price</th>' : ''}
+              <th style="width:${showCosts ? '7%' : '8%'}" class="center">Qty.</th>
+              ${showCosts ? '<th style="width:10%" class="center">Total cost</th>' : ''}
+              <th style="width:${showCosts ? '25%' : '30%'}">Source URL</th>
             </tr>
           </thead>
           <tbody>
@@ -1487,9 +1489,9 @@ export const buildPOBuyingListHtml = (
                   <div class="sku-text">${escapeHtml(displaySku(item.sku))}</div>
                 </td>
                 <td class="variant-name">${escapeHtml(displayVariantName(item.variantName))}</td>
-                <td class="center excel-cost">$${Number(item.unit_cost || 0).toFixed(2)}</td>
+                ${showCosts ? `<td class="center excel-cost">$${Number(item.unit_cost || 0).toFixed(2)}</td>` : ''}
                 <td class="center"><span class="qty-badge">${item.cantidad}</span></td>
-                <td class="center">$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}</td>
+                ${showCosts ? `<td class="center">$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}</td>` : ''}
                 <td>
                   ${safeExternalUrl(item.url_origen)
                     ? `<div class="url-cell">
@@ -1502,14 +1504,14 @@ export const buildPOBuyingListHtml = (
             `).join('')}
             <tr class="total-row">
               <td colspan="3">TOTAL</td>
-              <td></td>
+              ${showCosts ? '<td></td>' : ''}
               <td class="center">${totalUnits}</td>
-              <td class="center">$${totalPurchaseCost.toFixed(2)}</td>
+              ${showCosts ? `<td class="center">$${totalPurchaseCost.toFixed(2)}</td>` : ''}
               <td></td>
             </tr>
           </tbody>
         </table>
-        <div class="purchase-total">Approx. total purchase cost: $${totalPurchaseCost.toFixed(2)}</div>
+        ${showCosts ? `<div class="purchase-total">Approx. total purchase cost: $${totalPurchaseCost.toFixed(2)}</div>` : ''}
       </div>
 
       <div class="footer">
@@ -1586,12 +1588,15 @@ const imageToDataUrl = async (url: string | null) => {
 };
 
 export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
+  const showCosts = data.audience !== 'purchasing_agent';
   const filename = `Purchase_List_${data.po_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 10;
-  const columns = [10, 32, 91, 137, 158, 174, 197, 287];
+  const columns = showCosts
+    ? [10, 32, 91, 137, 158, 174, 197, 287]
+    : [10, 32, 112, 174, 197, 287];
   const totalUnits = data.items.reduce((sum, item) => sum + item.cantidad, 0);
   const totalCost = data.items.reduce((sum, item) => sum + Number(item.unit_cost || 0) * item.cantidad, 0);
   const brand = data.brand_identity === 'zleti' ? 'ZleTI' : _platformBrandName;
@@ -1625,7 +1630,9 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
     pdf.rect(margin, 45, pageWidth - margin * 2, 9);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7.5);
-    const headings = ['Image', 'Product', 'Variant', 'Unit price', 'Qty.', 'Total cost', 'Source URL'];
+    const headings = showCosts
+      ? ['Image', 'Product', 'Variant', 'Unit price', 'Qty.', 'Total cost', 'Source URL']
+      : ['Image', 'Product', 'Variant', 'Qty.', 'Source URL'];
     headings.forEach((heading, index) => pdf.text(heading, columns[index] + 2, 50.7));
   };
 
@@ -1664,19 +1671,25 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
     pdf.text(pdf.splitTextToSize(item.variantName || '—', columns[3] - columns[2] - 4).slice(0, 3), columns[2] + 2, y + 5);
     pdf.setTextColor(31, 41, 55);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`$${Number(item.unit_cost || 0).toFixed(2)}`, columns[3] + 2, y + 14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(String(item.cantidad), columns[4] + 5, y + 14);
-    pdf.text(`$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}`, columns[5] + 2, y + 14);
+    if (showCosts) {
+      pdf.text(`$${Number(item.unit_cost || 0).toFixed(2)}`, columns[3] + 2, y + 14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(String(item.cantidad), columns[4] + 5, y + 14);
+      pdf.text(`$${(Number(item.unit_cost || 0) * item.cantidad).toFixed(2)}`, columns[5] + 2, y + 14);
+    } else {
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(String(item.cantidad), columns[3] + 5, y + 14);
+    }
 
     const url = safeExternalUrl(item.url_origen);
     if (url) {
       pdf.setTextColor(29, 78, 216);
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(6.5);
-      const urlLines = pdf.splitTextToSize(url, columns[7] - columns[6] - 4).slice(0, 4);
-      pdf.textWithLink(urlLines.join('\n'), columns[6] + 2, y + 5, { url });
-      pdf.link(columns[6], y, columns[7] - columns[6], rowHeight, { url });
+      const urlColumn = showCosts ? 6 : 4;
+      const urlLines = pdf.splitTextToSize(url, columns[urlColumn + 1] - columns[urlColumn] - 4).slice(0, 4);
+      pdf.textWithLink(urlLines.join('\n'), columns[urlColumn] + 2, y + 5, { url });
+      pdf.link(columns[urlColumn], y, columns[urlColumn + 1] - columns[urlColumn], rowHeight, { url });
     }
     y += rowHeight;
   }
@@ -1692,8 +1705,10 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
   pdf.setTextColor(22, 101, 52);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(9);
-  pdf.text(`TOTAL UNITS: ${totalUnits}`, columns[4], y + 7.5);
-  pdf.text(`APPROX. TOTAL PURCHASE COST: $${totalCost.toFixed(2)}`, pageWidth - margin - 2, y + 7.5, { align: 'right' });
+  pdf.text(`TOTAL UNITS: ${totalUnits}`, showCosts ? columns[4] : columns[3], y + 7.5);
+  if (showCosts) {
+    pdf.text(`APPROX. TOTAL PURCHASE COST: $${totalCost.toFixed(2)}`, pageWidth - margin - 2, y + 7.5, { align: 'right' });
+  }
 
   const pages = pdf.getNumberOfPages();
   for (let page = 1; page <= pages; page += 1) {
