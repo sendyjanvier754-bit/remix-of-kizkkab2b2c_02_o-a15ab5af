@@ -178,14 +178,14 @@ export const useBestSellers = (defaultLimit = 10) => {
         .eq("is_active", true)
         .gt("stock", 0)
         .order("updated_at", { ascending: false })
-        .limit(limit);
+        .limit(Math.max(limit * 6, 120));
 
       if (error) {
         console.error("Error fetching bestsellers:", error);
         return [];
       }
 
-      return (catalogData || []).map(transformProduct);
+      return dedupeBySourceProduct(catalogData || []).slice(0, limit).map(transformProduct);
     },
     staleTime: 5 * 60 * 1000,
   });
