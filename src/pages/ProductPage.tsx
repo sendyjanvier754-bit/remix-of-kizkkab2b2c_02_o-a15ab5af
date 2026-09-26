@@ -498,7 +498,8 @@ const ProductPage = () => {
   const { data: recommendedProducts = [], isLoading: loadingRecommended } = useRecommendedProducts(
     product?.id || null,
     categoryId,
-    100
+    100,
+    product?.source_product?.id || null
   );
 
   // Fetch product variants with B2B prices if user is seller
