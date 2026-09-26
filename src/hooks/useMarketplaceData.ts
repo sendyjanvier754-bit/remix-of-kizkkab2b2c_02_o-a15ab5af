@@ -377,9 +377,14 @@ export const useProductsByCategory = (categoryId: string | null, limit = 10) => 
 /**
  * Hook para productos recomendados basados en un producto actual
  */
-export const useRecommendedProducts = (productId: string | null, categoryId: string | null, limit = 8) => {
+export const useRecommendedProducts = (
+  productId: string | null,
+  categoryId: string | null,
+  limit = 8,
+  sourceProductId?: string | null
+) => {
   return useQuery({
-    queryKey: ["marketplace-recommended", productId, categoryId, limit],
+    queryKey: ["marketplace-recommended", productId, categoryId, limit, sourceProductId],
     queryFn: async (): Promise<MarketplaceProduct[]> => {
       // Strategy: Get products from the same category, excluding the current product
       let query = supabase
@@ -394,10 +399,14 @@ export const useRecommendedProducts = (productId: string | null, categoryId: str
         `)
         .eq("is_active", true)
         .gt("stock", 0)
-        .limit(Math.max(limit * 2, 200));
+        .limit(Math.max(limit * 4, 400));
 
       if (productId) {
         query = query.neq("id", productId);
+      }
+
+      if (sourceProductId) {
+        query = query.neq("source_product_id", sourceProductId);
       }
 
       const { data, error } = await query;
@@ -407,7 +416,8 @@ export const useRecommendedProducts = (productId: string | null, categoryId: str
         return [];
       }
 
-      let products = data || [];
+      // Keep only one listing per base product (best offer)
+      let products = dedupeBySourceProduct(data || []);
 
       // If we have a categoryId, prioritize products from the same category
       if (categoryId) {
