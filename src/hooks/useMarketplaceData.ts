@@ -83,6 +83,36 @@ const transformProduct = (item: any): MarketplaceProduct => {
 };
 
 /**
+ * Agrupa las publicaciones de distintas tiendas que corresponden al mismo
+ * producto base y conserva solo la mejor oferta (menor precio, luego mayor stock).
+ * Así el feed general nunca muestra la misma ficha repetida, como en AliExpress.
+ */
+const dedupeBySourceProduct = (items: any[]): any[] => {
+  const best = new Map<string, any>();
+
+  for (const item of items || []) {
+    const key = (item.source_product as any)?.id || item.source_product_id || item.id;
+    const current = best.get(key);
+
+    if (!current) {
+      best.set(key, item);
+      continue;
+    }
+
+    const currentPrice = Number(current.precio_venta) || Number.MAX_SAFE_INTEGER;
+    const itemPrice = Number(item.precio_venta) || Number.MAX_SAFE_INTEGER;
+
+    if (itemPrice < currentPrice) {
+      best.set(key, item);
+    } else if (itemPrice === currentPrice && (Number(item.stock) || 0) > (Number(current.stock) || 0)) {
+      best.set(key, item);
+    }
+  }
+
+  return Array.from(best.values());
+};
+
+/**
  * Hook para productos destacados - productos con mayor stock o más recientes
  */
 export const useFeaturedProducts = (defaultLimit = 10) => {
