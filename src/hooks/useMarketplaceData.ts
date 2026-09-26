@@ -83,6 +83,36 @@ const transformProduct = (item: any): MarketplaceProduct => {
 };
 
 /**
+ * Agrupa las publicaciones de distintas tiendas que corresponden al mismo
+ * producto base y conserva solo la mejor oferta (menor precio, luego mayor stock).
+ * Así el feed general nunca muestra la misma ficha repetida, como en AliExpress.
+ */
+const dedupeBySourceProduct = (items: any[]): any[] => {
+  const best = new Map<string, any>();
+
+  for (const item of items || []) {
+    const key = (item.source_product as any)?.id || item.source_product_id || item.id;
+    const current = best.get(key);
+
+    if (!current) {
+      best.set(key, item);
+      continue;
+    }
+
+    const currentPrice = Number(current.precio_venta) || Number.MAX_SAFE_INTEGER;
+    const itemPrice = Number(item.precio_venta) || Number.MAX_SAFE_INTEGER;
+
+    if (itemPrice < currentPrice) {
+      best.set(key, item);
+    } else if (itemPrice === currentPrice && (Number(item.stock) || 0) > (Number(current.stock) || 0)) {
+      best.set(key, item);
+    }
+  }
+
+  return Array.from(best.values());
+};
+
+/**
  * Hook para productos destacados - productos con mayor stock o más recientes
  */
 export const useFeaturedProducts = (defaultLimit = 10) => {
@@ -109,14 +139,14 @@ export const useFeaturedProducts = (defaultLimit = 10) => {
         .gt("stock", 0)
         .order("stock", { ascending: false })
         .order("updated_at", { ascending: false })
-        .limit(limit);
+        .limit(Math.max(limit * 6, 120));
 
       if (error) {
         console.error("Error fetching featured products:", error);
         return [];
       }
 
-      return (data || []).map(transformProduct);
+      return dedupeBySourceProduct(data || []).slice(0, limit).map(transformProduct);
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -148,14 +178,14 @@ export const useBestSellers = (defaultLimit = 10) => {
         .eq("is_active", true)
         .gt("stock", 0)
         .order("updated_at", { ascending: false })
-        .limit(limit);
+        .limit(Math.max(limit * 6, 120));
 
       if (error) {
         console.error("Error fetching bestsellers:", error);
         return [];
       }
 
-      return (catalogData || []).map(transformProduct);
+      return dedupeBySourceProduct(catalogData || []).slice(0, limit).map(transformProduct);
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -187,14 +217,14 @@ export const useNewArrivals = (defaultLimit = 10) => {
         .eq("is_active", true)
         .gt("stock", 0)
         .order("imported_at", { ascending: false })
-        .limit(limit);
+        .limit(Math.max(limit * 6, 120));
 
       if (error) {
         console.error("Error fetching new arrivals:", error);
         return [];
       }
 
-      return (data || []).map(transformProduct);
+      return dedupeBySourceProduct(data || []).slice(0, limit).map(transformProduct);
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -226,14 +256,14 @@ export const useDeals = (defaultLimit = 10) => {
         .eq("is_active", true)
         .gt("stock", 0)
         .order("precio_venta", { ascending: true })
-        .limit(limit);
+        .limit(Math.max(limit * 6, 120));
 
       if (error) {
         console.error("Error fetching deals:", error);
         return [];
       }
 
-      return (data || []).map(transformProduct);
+      return dedupeBySourceProduct(data || []).slice(0, limit).map(transformProduct);
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -324,7 +354,7 @@ export const useProductsByCategory = (categoryId: string | null, limit = 10) => 
         `)
         .eq("is_active", true)
         .gt("stock", 0)
-        .limit(limit * 3); // Get more to filter
+        .limit(Math.max(limit * 8, 200)); // Get more to filter and dedupe
 
       if (error) {
         console.error("Error fetching category products:", error);
@@ -337,7 +367,7 @@ export const useProductsByCategory = (categoryId: string | null, limit = 10) => 
         return prodCatId && categoryIds.includes(prodCatId);
       });
 
-      return filtered.slice(0, limit).map(transformProduct);
+      return dedupeBySourceProduct(filtered).slice(0, limit).map(transformProduct);
     },
     enabled: !!categoryId,
     staleTime: 5 * 60 * 1000,
@@ -347,9 +377,14 @@ export const useProductsByCategory = (categoryId: string | null, limit = 10) => 
 /**
  * Hook para productos recomendados basados en un producto actual
  */
-export const useRecommendedProducts = (productId: string | null, categoryId: string | null, limit = 8) => {
+export const useRecommendedProducts = (
+  productId: string | null,
+  categoryId: string | null,
+  limit = 8,
+  sourceProductId?: string | null
+) => {
   return useQuery({
-    queryKey: ["marketplace-recommended", productId, categoryId, limit],
+    queryKey: ["marketplace-recommended", productId, categoryId, limit, sourceProductId],
     queryFn: async (): Promise<MarketplaceProduct[]> => {
       // Strategy: Get products from the same category, excluding the current product
       let query = supabase
@@ -364,10 +399,14 @@ export const useRecommendedProducts = (productId: string | null, categoryId: str
         `)
         .eq("is_active", true)
         .gt("stock", 0)
-        .limit(Math.max(limit * 2, 200));
+        .limit(Math.max(limit * 4, 400));
 
       if (productId) {
         query = query.neq("id", productId);
+      }
+
+      if (sourceProductId) {
+        query = query.neq("source_product_id", sourceProductId);
       }
 
       const { data, error } = await query;
@@ -377,7 +416,8 @@ export const useRecommendedProducts = (productId: string | null, categoryId: str
         return [];
       }
 
-      let products = data || [];
+      // Keep only one listing per base product (best offer)
+      let products = dedupeBySourceProduct(data || []);
 
       // If we have a categoryId, prioritize products from the same category
       if (categoryId) {
