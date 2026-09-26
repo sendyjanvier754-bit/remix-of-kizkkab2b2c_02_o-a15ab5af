@@ -256,14 +256,14 @@ export const useDeals = (defaultLimit = 10) => {
         .eq("is_active", true)
         .gt("stock", 0)
         .order("precio_venta", { ascending: true })
-        .limit(limit);
+        .limit(Math.max(limit * 6, 120));
 
       if (error) {
         console.error("Error fetching deals:", error);
         return [];
       }
 
-      return (data || []).map(transformProduct);
+      return dedupeBySourceProduct(data || []).slice(0, limit).map(transformProduct);
     },
     staleTime: 5 * 60 * 1000,
   });
