@@ -354,7 +354,7 @@ export const useProductsByCategory = (categoryId: string | null, limit = 10) => 
         `)
         .eq("is_active", true)
         .gt("stock", 0)
-        .limit(limit * 3); // Get more to filter
+        .limit(Math.max(limit * 8, 200)); // Get more to filter and dedupe
 
       if (error) {
         console.error("Error fetching category products:", error);
@@ -367,7 +367,7 @@ export const useProductsByCategory = (categoryId: string | null, limit = 10) => 
         return prodCatId && categoryIds.includes(prodCatId);
       });
 
-      return filtered.slice(0, limit).map(transformProduct);
+      return dedupeBySourceProduct(filtered).slice(0, limit).map(transformProduct);
     },
     enabled: !!categoryId,
     staleTime: 5 * 60 * 1000,
