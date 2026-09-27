@@ -1376,7 +1376,7 @@ const ProductPage = () => {
                                 {[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-3.5 h-3.5 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}
                               </div>
                               <span className="text-sm font-semibold text-gray-800">{storeRatingData.avg}</span>
-                              <span className="text-sm text-gray-400">({t('otherSellers.reviewsCount', { count: storeRatingData.count })}</span>
+                              <span className="text-sm text-gray-400">{t('otherSellers.reviewsCount', { count: storeRatingData.count })}</span>
                             </> :
                       <span className="text-sm text-gray-400">{t('otherSellers.noReviews')}</span>}
                       </div>
