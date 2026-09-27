@@ -79,7 +79,7 @@ const OtherSellersSection = ({
                 {offer.storeName || t("otherSellers.unnamedStore")}
               </p>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                {offer.price === bestPrice && (
+                {hasPriceDifference && offer.price === bestPrice && (
                   <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">
                     {t("otherSellers.bestPrice")}
                   </span>
