@@ -34,7 +34,9 @@ const OtherSellersSection = ({
 
   if (offers.length < 2) return null;
 
-  const bestPrice = Math.min(...offers.map((o) => o.price));
+  const prices = offers.map((o) => o.price);
+  const bestPrice = Math.min(...prices);
+  const hasPriceDifference = Math.max(...prices) > bestPrice;
 
   const goToOffer = (offer: { sku: string; storeId: string | null }) => {
     const path = `/producto/${encodeURIComponent(offer.sku)}${offer.storeId ? `?seller=${offer.storeId}` : ""}`;
