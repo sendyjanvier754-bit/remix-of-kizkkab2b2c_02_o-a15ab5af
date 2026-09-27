@@ -1478,6 +1478,11 @@ const ProductPage = () => {
                     </div>
                   </div>
               }
+                <OtherSellersSection
+                  sourceProductId={(product as any)?.source_product?.id || (product as any)?.source_product_id || null}
+                  currentCatalogId={(product as any)?.type === 'seller_catalog' ? product.id : null}
+                  compact
+                />
                 <div id="section-reviews" ref={reviewsRef} className="mt-6 scroll-mt-20">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('productPage.productReviews')}</h3>
                   <ProductReviews productId={product.source_product?.id || product.id} productName={product.nombre} />
