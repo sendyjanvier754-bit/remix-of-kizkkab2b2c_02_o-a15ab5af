@@ -41,6 +41,7 @@ interface Product {
   currency_code?: string | null;
   // Source product reference
   source_product_id?: string;
+  offersCount?: number;
 }
 
 interface ProductB2BData {
