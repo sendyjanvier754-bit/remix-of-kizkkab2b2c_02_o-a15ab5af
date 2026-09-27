@@ -1,0 +1,16 @@
+{
+  "otherSellers": {
+    "title": "Other buying options",
+    "storesAvailable": "{{count}} stores available",
+    "storesAvailable_one": "{{count}} store available",
+    "bestPrice": "Best price",
+    "currentlyViewing": "You are viewing this one",
+    "inStock": "{{count}} in stock",
+    "inStock_one": "{{count}} in stock",
+    "chooseStore": "Choose this store",
+    "unnamedStore": "Store",
+    "fromPrice": "From ${{price}}",
+    "sellersBadge": "{{count}} stores",
+    "sellersBadge_one": "{{count}} store"
+  }
+}

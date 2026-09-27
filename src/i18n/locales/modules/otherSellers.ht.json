@@ -1,0 +1,16 @@
+{
+  "otherSellers": {
+    "title": "Lòt opsyon pou achte",
+    "storesAvailable": "{{count}} boutik disponib",
+    "storesAvailable_one": "{{count}} boutik disponib",
+    "bestPrice": "Pi bon pri",
+    "currentlyViewing": "Se sa a w ap gade",
+    "inStock": "{{count}} disponib",
+    "inStock_one": "{{count}} disponib",
+    "chooseStore": "Chwazi boutik sa a",
+    "unnamedStore": "Boutik",
+    "fromPrice": "Apati $${{price}}",
+    "sellersBadge": "{{count}} boutik",
+    "sellersBadge_one": "{{count}} boutik"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "otherSellers": {
+    "title": "Otras opciones de compra",
+    "storesAvailable": "{{count}} tiendas disponibles",
+    "storesAvailable_one": "{{count}} tienda disponible",
+    "bestPrice": "Mejor precio",
+    "currentlyViewing": "Estás viendo esta",
+    "inStock": "{{count}} disponibles",
+    "inStock_one": "{{count}} disponible",
+    "chooseStore": "Elegir esta tienda",
+    "unnamedStore": "Tienda",
+    "fromPrice": "Desde ${{price}}",
+    "sellersBadge": "{{count}} tiendas",
+    "sellersBadge_one": "{{count}} tienda"
+  }
+}
