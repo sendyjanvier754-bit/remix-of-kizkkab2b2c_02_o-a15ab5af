@@ -1390,6 +1390,11 @@ const ProductPage = () => {
                 </div>
               }
 
+              <OtherSellersSection
+                sourceProductId={(product as any)?.source_product?.id || (product as any)?.source_product_id || null}
+                currentCatalogId={(product as any)?.type === 'seller_catalog' ? product.id : null}
+              />
+
               <div id="section-desc" ref={descRef} className="scroll-mt-20">
               <Accordion type="single" collapsible defaultValue="descripcion" className="w-full mt-4">
                 <AccordionItem value="descripcion" className="border border-gray-200 rounded-lg overflow-hidden">
