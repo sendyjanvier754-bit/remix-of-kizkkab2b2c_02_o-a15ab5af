@@ -253,6 +253,13 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
               <span className="text-sm">★</span>
               {(product.rating || 0).toFixed(1)}
             </span>
+
+            {!isB2BUser && (product.offersCount || 1) > 1 && (
+              <span className="text-[9px] font-semibold text-[#071d7f] bg-blue-50 border border-blue-100 px-1 py-0.5 rounded">
+                {t('otherSellers.sellersBadge', { count: product.offersCount })}
+              </span>
+            )}
+            
             
             {isB2BUser && strikethroughPrice && strikethroughPrice > displayPrice && (
               <span className="text-[9px] text-green-600 font-semibold">
