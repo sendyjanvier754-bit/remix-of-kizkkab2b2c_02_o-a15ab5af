@@ -1358,7 +1358,7 @@ const ProductPage = () => {
               {/* Sección del Vendedor - Desktop (visible siempre, encima de los accordions) */}
               {realStore &&
               <div className="bg-white rounded-xl p-5 mt-6 mb-4 border border-gray-200 shadow-sm">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Vendido por</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('otherSellers.soldBy')}</p>
                   <div className="flex items-center gap-4">
                     <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center hover:opacity-90 transition">
                       {realStore.logo ?
@@ -1376,15 +1376,15 @@ const ProductPage = () => {
                                 {[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-3.5 h-3.5 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}
                               </div>
                               <span className="text-sm font-semibold text-gray-800">{storeRatingData.avg}</span>
-                              <span className="text-sm text-gray-400">({storeRatingData.count} reseñas)</span>
+                              <span className="text-sm text-gray-400">({t('otherSellers.reviewsCount', { count: storeRatingData.count })}</span>
                             </> :
-                      <span className="text-sm text-gray-400">Sin reseñas aún</span>}
+                      <span className="text-sm text-gray-400">{t('otherSellers.noReviews')}</span>}
                       </div>
                     </div>
                     <button type="button" onClick={handleStoreFollowToggle} disabled={followLoading} className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition disabled:opacity-50 ${isFollowing ? 'bg-red-50 border-red-300 text-red-600' : 'bg-[#071d7f] border-[#071d7f] text-white'}`}>
                       <Heart className={`w-4 h-4 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
                       {storeFollowersCount > 0 && <span>{storeFollowersCount}</span>}
-                      <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
+                      <span>{isFollowing ? t('otherSellers.following') : t('otherSellers.follow')}</span>
                     </button>
                   </div>
                 </div>
@@ -1462,7 +1462,7 @@ const ProductPage = () => {
                 {/* Sección del Vendedor - Mobile */}
                 {realStore &&
               <div className="bg-white rounded-xl p-4 mt-6 mb-2 border border-gray-100 shadow-sm">
-                    <h2 className="text-sm font-bold text-gray-700 mb-3">Vendido por</h2>
+                    <h2 className="text-sm font-bold text-gray-700 mb-3">{t('otherSellers.soldBy')}</h2>
                     <div className="flex items-center gap-3">
                       <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
                         {realStore.logo ? <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" /> : <span className="text-base font-bold text-[#071d7f]">{realStore.name.substring(0, 2).toUpperCase()}</span>}
@@ -1472,13 +1472,13 @@ const ProductPage = () => {
                           {realStore.name}<ExternalLink className="w-3 h-3 opacity-40" />
                         </button>
                         <div className="flex items-center gap-1 mt-0.5">
-                          {storeRatingData ? <><div className="flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-3 h-3 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}</div><span className="text-xs font-semibold text-gray-700">{storeRatingData.avg}</span><span className="text-xs text-gray-400">({storeRatingData.count})</span></> : <span className="text-xs text-gray-400">Sin reseñas</span>}
+                          {storeRatingData ? <><div className="flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-3 h-3 ${i <= Math.round(storeRatingData.avg) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'}`} />)}</div><span className="text-xs font-semibold text-gray-700">{storeRatingData.avg}</span><span className="text-xs text-gray-400">({storeRatingData.count})</span></> : <span className="text-xs text-gray-400">{t('otherSellers.noReviews')}</span>}
                         </div>
                       </div>
                       <button type="button" onClick={handleStoreFollowToggle} disabled={followLoading} className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border disabled:opacity-50 ${isFollowing ? 'bg-red-50 border-red-300 text-red-600' : 'bg-[#071d7f] border-[#071d7f] text-white'}`}>
                         <Heart className={`w-3.5 h-3.5 ${isFollowing ? 'fill-red-500 text-red-500' : 'fill-white text-white'}`} />
                         {storeFollowersCount > 0 && <span>{storeFollowersCount}</span>}
-                        <span>{isFollowing ? 'Siguiendo' : 'Seguir'}</span>
+                        <span>{isFollowing ? t('otherSellers.following') : t('otherSellers.follow')}</span>
                       </button>
                     </div>
                   </div>
