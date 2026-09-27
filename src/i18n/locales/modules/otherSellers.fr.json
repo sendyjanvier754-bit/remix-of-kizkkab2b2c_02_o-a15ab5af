@@ -11,6 +11,11 @@
     "unnamedStore": "Boutique",
     "fromPrice": "À partir de ${{price}}",
     "sellersBadge": "{{count}} boutiques",
-    "sellersBadge_one": "{{count}} boutique"
+    "sellersBadge_one": "{{count}} boutique",
+    "soldBy": "Vendu par",
+    "follow": "Suivre",
+    "following": "Abonné",
+    "noReviews": "Pas encore d'avis",
+    "reviewsCount": "({{count}} avis)"
   }
 }

@@ -11,6 +11,11 @@
     "unnamedStore": "Boutik",
     "fromPrice": "Apati ${{price}}",
     "sellersBadge": "{{count}} boutik",
-    "sellersBadge_one": "{{count}} boutik"
+    "sellersBadge_one": "{{count}} boutik",
+    "soldBy": "Vann pa",
+    "follow": "Swiv",
+    "following": "W ap swiv",
+    "noReviews": "Poko gen avi",
+    "reviewsCount": "({{count}} avi)"
   }
 }

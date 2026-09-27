@@ -11,6 +11,11 @@
     "unnamedStore": "Store",
     "fromPrice": "From ${{price}}",
     "sellersBadge": "{{count}} stores",
-    "sellersBadge_one": "{{count}} store"
+    "sellersBadge_one": "{{count}} store",
+    "soldBy": "Sold by",
+    "follow": "Follow",
+    "following": "Following",
+    "noReviews": "No reviews yet",
+    "reviewsCount": "({{count}} reviews)"
   }
 }
