@@ -23,6 +23,7 @@ export interface MarketplaceProduct {
   rating?: number;
   reviewCount?: number;
   source_product_id?: string;
+  offersCount?: number;
 }
 
 export interface TopStore {
