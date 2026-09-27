@@ -23,6 +23,7 @@ export interface MarketplaceProduct {
   rating?: number;
   reviewCount?: number;
   source_product_id?: string;
+  offersCount?: number;
 }
 
 export interface TopStore {
@@ -79,6 +80,7 @@ const transformProduct = (item: any): MarketplaceProduct => {
     rating: item.avg_rating || 0,
     reviewCount: item.review_count || 0,
     source_product_id: item.source_product?.id,
+    offersCount: item.__offers_count || 1,
   };
 };
 
@@ -89,9 +91,14 @@ const transformProduct = (item: any): MarketplaceProduct => {
  */
 const dedupeBySourceProduct = (items: any[]): any[] => {
   const best = new Map<string, any>();
+  const counts = new Map<string, Set<string>>();
 
   for (const item of items || []) {
     const key = (item.source_product as any)?.id || item.source_product_id || item.id;
+    const storeKey = item.store?.id || item.seller_store_id || item.id;
+    if (!counts.has(key)) counts.set(key, new Set());
+    counts.get(key)!.add(storeKey);
+
     const current = best.get(key);
 
     if (!current) {
@@ -109,7 +116,10 @@ const dedupeBySourceProduct = (items: any[]): any[] => {
     }
   }
 
-  return Array.from(best.values());
+  return Array.from(best.entries()).map(([key, item]) => ({
+    ...item,
+    __offers_count: counts.get(key)?.size || 1,
+  }));
 };
 
 /**
