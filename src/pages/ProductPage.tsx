@@ -25,6 +25,7 @@ import VariantSelector from "@/components/products/VariantSelector";
 import VariantDrawer from '@/components/products/VariantDrawer';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
 import ProductReviews from "@/components/products/ProductReviews";
+import OtherSellersSection from "@/components/products/OtherSellersSection";
 import ProductCarousel from "@/components/landing/ProductCarousel";
 import ProductGrid from "@/components/landing/ProductGrid";
 import { Button } from "@/components/ui/button";

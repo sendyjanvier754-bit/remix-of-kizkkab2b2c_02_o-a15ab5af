@@ -9,7 +9,7 @@
     "inStock_one": "{{count}} disponib",
     "chooseStore": "Chwazi boutik sa a",
     "unnamedStore": "Boutik",
-    "fromPrice": "Apati $${{price}}",
+    "fromPrice": "Apati ${{price}}",
     "sellersBadge": "{{count}} boutik",
     "sellersBadge_one": "{{count}} boutik"
   }
