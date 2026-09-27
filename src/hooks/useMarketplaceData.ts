@@ -80,6 +80,7 @@ const transformProduct = (item: any): MarketplaceProduct => {
     rating: item.avg_rating || 0,
     reviewCount: item.review_count || 0,
     source_product_id: item.source_product?.id,
+    offersCount: item.__offers_count || 1,
   };
 };
 
