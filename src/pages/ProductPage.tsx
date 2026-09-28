@@ -1539,6 +1539,11 @@ const ProductPage = () => {
         {/* Recomendados - Full Width */}
         <div id="section-recs" ref={recsRef} className="mt-12 pt-8 border-t border-gray-200 scroll-mt-20">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('products.seeMore')}</h3>
+          <OtherSellersSection
+            sourceProductId={(product as any)?.source_product?.id || (product as any)?.source_product_id || null}
+            currentCatalogId={(product as any)?.type === 'seller_catalog' ? product.id : null}
+          />
+
           {loadingRecommended ?
           <ProductGrid products={[]} isLoading={true} skeletonCount={20} /> :
           recommendedProducts.length > 0 ?
