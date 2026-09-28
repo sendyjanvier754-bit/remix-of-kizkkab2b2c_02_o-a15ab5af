@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface SellerOffer {
   catalogId: string;
   sku: string;
+  productName: string;
   price: number;
   stock: number;
   image: string | null;
@@ -65,6 +66,7 @@ export const useOtherSellerOffers = (
         offers.push({
           catalogId: item.id,
           sku: item.sku,
+          productName: item.nombre || "",
           price: Number(item.precio_venta) || 0,
           stock: Number(item.stock) || 0,
           image: firstImage(item.images),
