@@ -12,6 +12,7 @@ import { SuggestedPricesDetailModal } from '@/components/seller/SuggestedPricesD
 import { useBusinessPanelData } from '@/hooks/useBusinessPanelData';
 import { useB2BFavorites } from '@/hooks/useB2BFavorites';
 import { useTranslatedContent } from '@/hooks/useTranslatedContent';
+import { useTranslation } from 'react-i18next';
 import ProductImage from '@/components/shared/ProductImage';
 
 interface ProductCardB2BProps {
@@ -24,6 +25,7 @@ interface ProductCardB2BProps {
 }
 
 const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "50312345678", showExcelCost = false, onOpenZletiPriceCalculator }: ProductCardB2BProps) => {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const isAdmin = role === UserRole.ADMIN;
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -128,7 +130,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
           {/* In Cart Badge */}
           {cartItem && (
             <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5">
-              En carrito
+              {t('b2bCatalog.inCart')}
             </Badge>
           )}
         </div>
@@ -137,7 +139,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
         <div className="absolute top-2 right-2 flex flex-col gap-1">
           <div className="flex items-center gap-0.5 text-[10px] font-bold text-muted-foreground bg-white/90 px-1.5 py-0.5 rounded">
             <ShieldCheck className="w-3 h-3 text-orange-500" />
-            Verified
+            {t('b2bCatalog.verified')}
           </div>
         </div>
 
@@ -156,7 +158,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
               e.stopPropagation();
               toggleFav(product.id);
             }}
-            title={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            title={isFav ? t('b2bCatalog.removeFavorite') : t('b2bCatalog.addFavorite')}
           >
             <Heart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
           </Button>
@@ -182,7 +184,7 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
         {/* Out of Stock Overlay */}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <Badge variant="destructive" className="text-xs font-bold">Agotado</Badge>
+            <Badge variant="destructive" className="text-xs font-bold">{t('b2bCatalog.outOfStock')}</Badge>
           </div>
         )}
       </div>
@@ -237,18 +239,18 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
                       {isMarketSynced && (
                         <ArrowUpRight className="w-3 h-3 text-green-500" />
                       )}
-                      PVP: ${product.precio_sugerido.toFixed(2)}
+                      {t('b2bCatalog.pvp', { price: product.precio_sugerido.toFixed(2) })}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
                     {isMarketSynced ? (
                       <span className="text-green-600">
-                        ✓ Precio máximo del mercado B2C ({product.num_b2c_sellers || 0} vendedores)
+                        {t('b2bCatalog.marketPriceTooltip', { count: product.num_b2c_sellers || 0 })}
                       </span>
                     ) : pvpSource === 'admin' ? (
-                      <span>Precio sugerido por administrador</span>
+                      <span>{t('b2bCatalog.adminPriceTooltip')}</span>
                     ) : (
-                      <span>Precio calculado (+{actualMarginPercent}% margen)</span>
+                      <span>{t('b2bCatalog.calculatedPriceTooltip', { margin: actualMarginPercent })}</span>
                     )}
                   </TooltipContent>
                 </Tooltip>
@@ -260,10 +262,10 @@ const ProductCardB2B = ({ product, onAddToCart, cartItem, whatsappNumber = "5031
           {profit > 0 && (
             <div className="flex items-center justify-between mt-1 px-1.5 py-0.5 bg-green-50 rounded text-[10px]">
               <span className="text-green-700 font-medium">
-                Ganancia: +${profit.toFixed(2)}
+                {t('b2bCatalog.profit', { amount: profit.toFixed(2) })}
               </span>
               <span className="text-green-600 font-bold">
-                ROI {roiPercent.toFixed(0)}%
+                {t('b2bCatalog.roi', { percent: roiPercent.toFixed(0) })}
               </span>
             </div>
           )}
