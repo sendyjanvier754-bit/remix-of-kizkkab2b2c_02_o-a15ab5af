@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import FeaturedProductsCarousel from "@/components/b2b/FeaturedProductsCarousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 
 // Content component removed - logic moved to SellerAcquisicionLotesContentWithFilters
 const normalizeCategoryId = (value: unknown): string | null => {
@@ -88,6 +89,7 @@ interface ContentWithFiltersProps {
 }
 
 const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: ContentWithFiltersProps) => {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { cart, addItem: addItemToCart, updateQuantity, removeItem } = useB2BCartSupabase();
   const isMobile = useIsMobile();
