@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import FeaturedProductsCarousel from "@/components/b2b/FeaturedProductsCarousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 
 // Content component removed - logic moved to SellerAcquisicionLotesContentWithFilters
 const normalizeCategoryId = (value: unknown): string | null => {
@@ -88,6 +89,7 @@ interface ContentWithFiltersProps {
 }
 
 const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: ContentWithFiltersProps) => {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { cart, addItem: addItemToCart, updateQuantity, removeItem } = useB2BCartSupabase();
   const isMobile = useIsMobile();
@@ -188,7 +190,7 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <p>Cargando...</p>
+          <p>{t('b2bCatalog.loading')}</p>
         </div>
       </div>
     );
@@ -207,39 +209,39 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
         {/* Encabezado Desktop */}
         {!isMobile && (
           <div className="mb-2">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Catálogo Mayorista</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('b2bCatalog.title')}</h1>
             <p className="text-gray-600">
-              Bienvenido, {user?.name || "Vendedor"}. Explora nuestro catálogo de productos al por mayor.
+              {t('b2bCatalog.welcome', { name: user?.name || t('b2bCatalog.defaultSeller') })}
             </p>
           </div>
         )}
 
         {/* Filtros inline */}
         <div className="flex items-center gap-2 mb-1 bg-white px-3 py-1 rounded-lg border border-gray-200 overflow-x-auto">
-          <span className="text-xs text-gray-500 whitespace-nowrap">Ordenar:</span>
+          <span className="text-xs text-gray-500 whitespace-nowrap">{t('b2bCatalog.sort')}</span>
           <Select value={filters.sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="w-[130px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Más recientes</SelectItem>
-              <SelectItem value="price_asc">Precio: menor a mayor</SelectItem>
-              <SelectItem value="price_desc">Precio: mayor a menor</SelectItem>
-              <SelectItem value="moq_asc">MOQ: menor a mayor</SelectItem>
-              <SelectItem value="moq_desc">MOQ: mayor a menor</SelectItem>
+              <SelectItem value="newest">{t('b2bCatalog.sortNewest')}</SelectItem>
+              <SelectItem value="price_asc">{t('b2bCatalog.sortPriceAsc')}</SelectItem>
+              <SelectItem value="price_desc">{t('b2bCatalog.sortPriceDesc')}</SelectItem>
+              <SelectItem value="moq_asc">{t('b2bCatalog.sortMoqAsc')}</SelectItem>
+              <SelectItem value="moq_desc">{t('b2bCatalog.sortMoqDesc')}</SelectItem>
             </SelectContent>
           </Select>
 
-          <span className="text-xs text-gray-500 whitespace-nowrap">Stock:</span>
+          <span className="text-xs text-gray-500 whitespace-nowrap">{t('b2bCatalog.stock')}</span>
           <Select value={filters.stockStatus} onValueChange={handleStockFilterChange}>
             <SelectTrigger className="w-[100px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="in_stock">En stock</SelectItem>
-              <SelectItem value="low_stock">Stock bajo</SelectItem>
-              <SelectItem value="out_of_stock">Agotado</SelectItem>
+              <SelectItem value="all">{t('b2bCatalog.stockAll')}</SelectItem>
+              <SelectItem value="in_stock">{t('b2bCatalog.stockInStock')}</SelectItem>
+              <SelectItem value="low_stock">{t('b2bCatalog.stockLow')}</SelectItem>
+              <SelectItem value="out_of_stock">{t('b2bCatalog.stockOut')}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -255,7 +257,7 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
               })}
               className="text-blue-600 hover:text-blue-700 text-xs h-8 whitespace-nowrap"
             >
-              Limpiar filtros
+              {t('b2bCatalog.clearFilters')}
             </Button>
           )}
         </div>
@@ -264,14 +266,14 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
         <div className="mb-1">
           {productsError ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-              <p className="text-red-600 font-medium mb-2">Error al cargar productos</p>
+              <p className="text-red-600 font-medium mb-2">{t('b2bCatalog.errorTitle')}</p>
               <p className="text-sm text-red-500">{productsError.message}</p>
               <Button 
                 variant="outline" 
                 className="mt-4 border-red-200 text-red-600 hover:bg-red-50"
                 onClick={() => window.location.reload()}
               >
-                Reintentar
+                {t('b2bCatalog.retry')}
               </Button>
             </div>
           ) : (productsLoading || (isFetching && allProducts.length === 0)) ? (
@@ -281,7 +283,7 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
           ) : allProducts.length === 0 ? (
             <div className="bg-white rounded-lg p-12 text-center">
               <p className="text-gray-600 mb-4">
-                No se encontraron productos que coincidan con tus filtros.
+                {t('b2bCatalog.noProducts')}
               </p>
               <Button 
                 variant="outline" 
@@ -292,7 +294,7 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
                   sortBy: "newest"
                 })}
               >
-                Ver todos los productos
+                {t('b2bCatalog.viewAll')}
               </Button>
             </div>
           ) : (
@@ -322,7 +324,7 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
               {/* Load more section */}
               <div ref={loadMoreRef} className="flex flex-col items-center gap-1 py-0.5">
                 {!hasMore && !isFetching && allProducts.length > 0 && (
-                  <p className="text-xs text-gray-500">Mostrando todos los {allProducts.length} productos</p>
+                  <p className="text-xs text-gray-500">{t('b2bCatalog.showingAll', { count: allProducts.length })}</p>
                 )}
               </div>
             </>
