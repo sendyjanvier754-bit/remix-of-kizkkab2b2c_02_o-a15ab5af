@@ -1567,28 +1567,56 @@ const ProductPage = () => {
       {/* Variant Drawer portal */}
       <VariantDrawer />
 
-      {/* Floating Cart Icon - appears when buy button is not visible */}
-      {isMobile && showFloatingCart && product &&
-      <button
-        onClick={() => {
-          useVariantDrawerStore.getState().open({
-            id: product.id,
-            sku: product.sku,
-            nombre: product.nombre,
-            images: images,
-            price: product.precio_venta,
-            costB2B: costB2B,
-            moq: moq,
-            stock: isB2BUser ? stockB2B : product.stock,
-            source_product_id: product.source_product?.id
-          }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
-        }}
-        className="fixed bottom-32 right-6 z-40 bg-transparent border border-[#94111f] p-1 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 active:scale-95">
-        
-          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="#29892a" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 18C5.9 18 5 18.9 5 20s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.16.12-.33.12-.5 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-          </svg>
-        </button>
+      {/* Mobile sticky action bar - stays above the site bottom navigation */}
+      {isMobile && product &&
+      <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-3 py-2 flex items-center gap-2">
+          <button
+            onClick={() => toggleFavorite()}
+            aria-label="favorite"
+            className="p-2.5 rounded-lg border border-gray-200 bg-white">
+            <Heart className={`w-5 h-5 ${isFavorite() ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+          </button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              useVariantDrawerStore.getState().open({
+                id: product.id,
+                sku: product.sku,
+                nombre: product.nombre,
+                images: images,
+                price: product.precio_venta,
+                costB2B: costB2B,
+                moq: moq,
+                stock: isB2BUser ? stockB2B : product.stock,
+                source_product_id: product.source_product?.id,
+                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
+                storeId: product.store?.id || sellerParam || undefined
+              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
+            }}
+            className="flex-1 h-11 text-sm font-semibold gap-2">
+            <ShoppingCart className="w-4 h-4" />
+            {t('common.addToCart')}
+          </Button>
+          <Button
+            onClick={() => {
+              useVariantDrawerStore.getState().open({
+                id: product.id,
+                sku: product.sku,
+                nombre: product.nombre,
+                images: images,
+                price: product.precio_venta,
+                costB2B: costB2B,
+                moq: moq,
+                stock: isB2BUser ? stockB2B : product.stock,
+                source_product_id: product.source_product?.id,
+                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
+                storeId: product.store?.id || sellerParam || undefined
+              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
+            }}
+            className="flex-1 h-11 text-sm font-semibold">
+            {isB2BUser ? t('productPage.buyWholesale') : t('common.buy')}
+          </Button>
+        </div>
       }
 
 
