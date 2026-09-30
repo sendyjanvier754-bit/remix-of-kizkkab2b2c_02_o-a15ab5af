@@ -1,0 +1,31 @@
+{
+  "productPdp": {
+    "margin": {
+      "title": "Votre marge bénéficiaire",
+      "b2bPrice": "Prix de gros B2B",
+      "profitPerUnit": "Bénéfice par unité",
+      "marginPercent": "Marge",
+      "suggestedPvp": "Prix de vente conseillé"
+    },
+    "sizeGuide": "Guide des tailles",
+    "sizeGuideTitle": "Guide des tailles",
+    "sizeGuideIntro": "Mesures approximatives. Elles peuvent varier légèrement selon le modèle.",
+    "minUnits": "Min. {{count}} u.",
+    "reviews": {
+      "title": "Avis sur le produit",
+      "comments": "Commentaires",
+      "write": "Écrire un avis",
+      "seeAll": "Tout voir",
+      "emptyTitle": "Soyez le premier à noter ce produit",
+      "emptySubtitle": "Partagez votre expérience et aidez les autres acheteurs.",
+      "emptyCta": "Écrire le premier avis",
+      "attributes": "Notes par critère",
+      "fit": "Coupe",
+      "comfort": "Confort",
+      "quality": "Qualité",
+      "localReviews": "Avis locaux",
+      "tagBuyAgain": "Je le rachèterai",
+      "tagGoodMaterial": "Excellent matériau"
+    }
+  }
+}
