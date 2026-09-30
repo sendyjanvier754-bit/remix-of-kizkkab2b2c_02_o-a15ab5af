@@ -1,0 +1,31 @@
+{
+  "productPdp": {
+    "margin": {
+      "title": "Benefis ou",
+      "b2bPrice": "Pri an gwo B2B",
+      "profitPerUnit": "Benefis pou chak inite",
+      "marginPercent": "Maj",
+      "suggestedPvp": "Pri vant sijere"
+    },
+    "sizeGuide": "Gid gwosè",
+    "sizeGuideTitle": "Gid gwosè",
+    "sizeGuideIntro": "Mezi apwoksimatif. Yo ka varye yon ti jan selon modèl la.",
+    "minUnits": "Min. {{count}} inite",
+    "reviews": {
+      "title": "Avi sou pwodwi a",
+      "comments": "Kòmantè",
+      "write": "Ekri yon avi",
+      "seeAll": "Wè tout",
+      "emptyTitle": "Se ou ki premye pou bay pwodwi sa a yon nòt",
+      "emptySubtitle": "Pataje eksperyans ou pou ede lòt achtè yo.",
+      "emptyCta": "Ekri premye avi a",
+      "attributes": "Nòt pa kritè",
+      "fit": "Ajisteman",
+      "comfort": "Konfò",
+      "quality": "Kalite",
+      "localReviews": "Avi lokal",
+      "tagBuyAgain": "M ap acheteI ankò",
+      "tagGoodMaterial": "Materyèl eksèlan"
+    }
+  }
+}

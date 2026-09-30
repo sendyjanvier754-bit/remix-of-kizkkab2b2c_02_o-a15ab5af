@@ -1,0 +1,31 @@
+{
+  "productPdp": {
+    "margin": {
+      "title": "Tu Margen de Ganancia",
+      "b2bPrice": "Precio Mayoreo B2B",
+      "profitPerUnit": "Ganancia por unidad",
+      "marginPercent": "Margen",
+      "suggestedPvp": "PVP sugerido"
+    },
+    "sizeGuide": "Guía de tallas",
+    "sizeGuideTitle": "Guía de tallas",
+    "sizeGuideIntro": "Medidas aproximadas. Pueden variar levemente según el modelo.",
+    "minUnits": "Mín. {{count}} uds",
+    "reviews": {
+      "title": "Reseñas del producto",
+      "comments": "Comentarios",
+      "write": "Escribir reseña",
+      "seeAll": "Ver todo",
+      "emptyTitle": "Sé el primero en calificar este producto",
+      "emptySubtitle": "Comparte tu experiencia y ayuda a otros compradores.",
+      "emptyCta": "Escribir la primera reseña",
+      "attributes": "Valoración por atributos",
+      "fit": "Ajuste",
+      "comfort": "Comodidad",
+      "quality": "Calidad",
+      "localReviews": "Reseñas locales",
+      "tagBuyAgain": "Lo volveré a comprar",
+      "tagGoodMaterial": "Excelente material"
+    }
+  }
+}

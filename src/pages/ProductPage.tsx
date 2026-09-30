@@ -1119,13 +1119,7 @@ const ProductPage = () => {
                   </button>
                 </>}
 
-              {/* B2B Profit Badge Overlay */}
-              {isB2BUser && businessSummary && businessSummary.profitPerUnit > 0 && <div className="absolute top-4 left-4 animate-blink">
-                  <Badge className="bg-green-600 hover:bg-green-700 text-white border-none px-3 py-1.5 shadow-lg flex gap-1.5 items-center text-sm">
-                    <TrendingUp className="w-4 h-4" />
-                    Ganas ${businessSummary.profitPerUnit.toFixed(2)}/u
-                  </Badge>
-                </div>}
+              {/* B2B metrics are shown in the dedicated margin card below the price */}
               
               <button
                 onClick={() => toggleFavorite()}
@@ -1201,7 +1195,7 @@ const ProductPage = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <h1 className={`text-lg md:text-xl font-semibold text-gray-900 leading-tight mb-0`}>
+                <h1 className={`text-xl md:text-2xl font-bold text-gray-900 leading-snug tracking-tight mb-0`}>
                   {titleExpanded ? <div className="flex items-start gap-2">
                       <div className="whitespace-normal">{product.nombre}</div>
                       {showTitleToggle && <button onClick={() => setTitleExpanded(false)} className="ml-2 text-xs font-semibold px-2 py-1 rounded border border-[#071d7f] text-[#071d7f] pulse-btn bg-white z-10" aria-expanded={true} aria-label="Collapse product title">
@@ -1253,22 +1247,36 @@ const ProductPage = () => {
                         </>}
                     </div>;
                 })()}
-                {isB2BUser && <span className="text-xs font-medium text-white bg-[#94111f] px-2 py-0.5 rounded animate-bounce">
+                {isB2BUser && <span className="text-[12px] font-medium text-white bg-[#94111f] px-2 py-0.5 rounded">
                     B2B
-                  </span>}
-                {isB2BUser && dynamicPrice !== null && <span className="text-xs font-medium text-white bg-blue-600 px-2 py-0.5 rounded">
-                    Motor DinÃ¡mico âš¡
                   </span>}
               </div>
 
-              {isB2BUser && <div className="mt-2 flex items-center gap-3 text-xs text-gray-600">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-green-600 font-bold">${pvp.toFixed(2)}</span>
-                    <span className="text-xs bg-[#29892a] px-1 py-0.5 rounded text-white font-bold animate-bounce">PVP</span>
+              {/* B2B margin card */}
+              {isB2BUser && businessSummary &&
+              <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                  <div className="flex items-center gap-1.5 mb-2.5">
+                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                    <p className="text-[12px] font-semibold uppercase tracking-wide text-emerald-700">
+                      {t('productPdp.margin.title')}
+                    </p>
                   </div>
-                  <div className="h-4 w-px bg-gray-300"></div>
-                  <div className="text-green-600 font-medium">
-                    Margen: {businessSummary?.profitPercentage}%
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-[12px] font-medium text-gray-500">{t('productPdp.margin.b2bPrice')}</p>
+                      <p className="text-sm font-bold text-gray-900">${costB2B.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[12px] font-medium text-gray-500">{t('productPdp.margin.profitPerUnit')}</p>
+                      <p className="text-sm font-bold text-emerald-700">
+                        ${businessSummary.profitPerUnit.toFixed(2)}
+                        <span className="ml-1 text-[12px] font-medium text-emerald-600">({businessSummary.profitPercentage}%)</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[12px] font-medium text-gray-500">{t('productPdp.margin.suggestedPvp')}</p>
+                      <p className="text-sm font-bold text-gray-900">${pvp.toFixed(2)}</p>
+                    </div>
                   </div>
                 </div>}
             </div>
@@ -1508,11 +1516,11 @@ const ProductPage = () => {
 
           {/* Related Products */}
         {relatedProducts.length > 0 && <div className="mt-12">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">{t('products.seeMore')}</h2>
+            <h2 className="text-lg md:text-[18px] font-semibold text-gray-900 mb-6">{t('products.seeMore')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {relatedProducts.map((p) => <Link key={p.id} to={`/producto/${p.sku}`} className="group">
                   <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all">
-                    <div className="aspect-square bg-gray-100 relative">
+                    <div className="aspect-[3/4] bg-gray-100 relative">
                       {Array.isArray(p.images) && p.images[0] &&
                   <img
                     src={p.images[0]}
@@ -1524,7 +1532,7 @@ const ProductPage = () => {
                   }
                     </div>
                     <div className="p-3">
-                      <h3 className="text-sm font-medium text-gray-900 line-clamp-1 mb-1 group-hover:text-blue-600">
+                      <h3 className="text-sm font-normal text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600">
                         {p.nombre}
                       </h3>
                       <p className="text-sm font-bold text-gray-900">
@@ -1538,7 +1546,7 @@ const ProductPage = () => {
 
         {/* Recomendados - Full Width */}
         <div id="section-recs" ref={recsRef} className="mt-12 pt-8 border-t border-gray-200 scroll-mt-20">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('products.seeMore')}</h3>
+          <h2 className="text-lg md:text-[18px] font-semibold text-gray-900 mb-4">{t('products.seeMore')}</h2>
           <OtherSellersSection
             sourceProductId={(product as any)?.source_product?.id || (product as any)?.source_product_id || null}
             currentCatalogId={(product as any)?.type === 'seller_catalog' ? product.id : null}
@@ -1559,28 +1567,56 @@ const ProductPage = () => {
       {/* Variant Drawer portal */}
       <VariantDrawer />
 
-      {/* Floating Cart Icon - appears when buy button is not visible */}
-      {isMobile && showFloatingCart && product &&
-      <button
-        onClick={() => {
-          useVariantDrawerStore.getState().open({
-            id: product.id,
-            sku: product.sku,
-            nombre: product.nombre,
-            images: images,
-            price: product.precio_venta,
-            costB2B: costB2B,
-            moq: moq,
-            stock: isB2BUser ? stockB2B : product.stock,
-            source_product_id: product.source_product?.id
-          }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
-        }}
-        className="fixed bottom-32 right-6 z-40 bg-transparent border border-[#94111f] p-1 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 active:scale-95">
-        
-          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="#29892a" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 18C5.9 18 5 18.9 5 20s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.16.12-.33.12-.5 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-          </svg>
-        </button>
+      {/* Mobile sticky action bar - stays above the site bottom navigation */}
+      {isMobile && product &&
+      <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-3 py-2 flex items-center gap-2">
+          <button
+            onClick={() => toggleFavorite()}
+            aria-label="favorite"
+            className="p-2.5 rounded-lg border border-gray-200 bg-white">
+            <Heart className={`w-5 h-5 ${isFavorite() ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+          </button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              useVariantDrawerStore.getState().open({
+                id: product.id,
+                sku: product.sku,
+                nombre: product.nombre,
+                images: images,
+                price: product.precio_venta,
+                costB2B: costB2B,
+                moq: moq,
+                stock: isB2BUser ? stockB2B : product.stock,
+                source_product_id: product.source_product?.id,
+                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
+                storeId: product.store?.id || sellerParam || undefined
+              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
+            }}
+            className="flex-1 h-11 text-sm font-semibold gap-2">
+            <ShoppingCart className="w-4 h-4" />
+            {t('common.addToCart')}
+          </Button>
+          <Button
+            onClick={() => {
+              useVariantDrawerStore.getState().open({
+                id: product.id,
+                sku: product.sku,
+                nombre: product.nombre,
+                images: images,
+                price: product.precio_venta,
+                costB2B: costB2B,
+                moq: moq,
+                stock: isB2BUser ? stockB2B : product.stock,
+                source_product_id: product.source_product?.id,
+                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
+                storeId: product.store?.id || sellerParam || undefined
+              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
+            }}
+            className="flex-1 h-11 text-sm font-semibold">
+            {isB2BUser ? t('productPage.buyWholesale') : t('common.buy')}
+          </Button>
+        </div>
       }
 
 

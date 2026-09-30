@@ -1,0 +1,31 @@
+{
+  "productPdp": {
+    "margin": {
+      "title": "Your Profit Margin",
+      "b2bPrice": "B2B Wholesale Price",
+      "profitPerUnit": "Profit per unit",
+      "marginPercent": "Margin",
+      "suggestedPvp": "Suggested retail price"
+    },
+    "sizeGuide": "Size guide",
+    "sizeGuideTitle": "Size guide",
+    "sizeGuideIntro": "Approximate measurements. They may vary slightly by model.",
+    "minUnits": "Min. {{count}} pcs",
+    "reviews": {
+      "title": "Product reviews",
+      "comments": "Comments",
+      "write": "Write a review",
+      "seeAll": "See all",
+      "emptyTitle": "Be the first to rate this product",
+      "emptySubtitle": "Share your experience and help other shoppers.",
+      "emptyCta": "Write the first review",
+      "attributes": "Attribute ratings",
+      "fit": "Fit",
+      "comfort": "Comfort",
+      "quality": "Quality",
+      "localReviews": "Local reviews",
+      "tagBuyAgain": "I would buy it again",
+      "tagGoodMaterial": "Great material"
+    }
+  }
+}

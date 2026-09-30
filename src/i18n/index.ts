@@ -44,7 +44,7 @@ i18n
       fr: { translation: { ...fr, ...mergeModules('fr') } },
       ht: { translation: { ...ht, ...mergeModules('ht') } },
     },
-    fallbackLng: 'fr',
+    fallbackLng: 'es',
     supportedLngs: ['es', 'en', 'fr', 'ht'],
     detection: {
       order: ['localStorage'],
