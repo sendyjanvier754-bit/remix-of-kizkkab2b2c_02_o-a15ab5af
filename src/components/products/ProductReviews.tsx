@@ -216,103 +216,79 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
     );
   }
 
+  const hasReviews = stats.totalReviews > 0;
+  const openWriteForm = () => {
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+    setIsReply(false);
+    setShowForm(true);
+  };
+
   return (
-    <div className="space-y-6 bg-gray-50 rounded-lg p-4">
-      {/* Header con Ver todo y Escribir reseña */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4 flex-wrap">
-          <h3 className="text-xl font-bold text-gray-900">Comentarios</h3>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`w-4 h-4 ${i < Math.round(stats.averageRating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
-              ))}
-            </div>
-            <span className="text-sm text-gray-600">({stats.totalReviews}+)</span>
+    <div className="space-y-5">
+      {!hasReviews ? (
+        /* Empty state */
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-yellow-50">
+            <Star className="h-5 w-5 text-yellow-400" />
           </div>
-          {user && !userReview && (
-            <Button
-              onClick={() => setShowForm(true)}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-            >
-              <MessageSquare className="h-3 w-3 mr-1" />
-              Escribir reseña
-            </Button>
-          )}
+          <h3 className="text-base font-semibold text-gray-900">{t('productPdp.reviews.emptyTitle')}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t('productPdp.reviews.emptySubtitle')}</p>
+          <Button onClick={openWriteForm} className="mt-4" size="sm">
+            <MessageSquare className="mr-1.5 h-4 w-4" />
+            {t('productPdp.reviews.emptyCta')}
+          </Button>
         </div>
-        
-        <button 
-          onClick={() => setShowAllReviews(true)}
-          className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
-        >
-          Ver todo <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Stats Summary - Diseño compacto */}
-      <div className="bg-gray-100 rounded-lg p-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {/* Rating Promedio */}
-          <div className="flex items-start gap-3">
-            <div>
-              <div className="text-3xl font-bold text-gray-900">
-                {stats.averageRating.toFixed(2)}
-              </div>
-              <StarRating rating={stats.averageRating} size="sm" />
+      ) : (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <h3 className="text-base md:text-lg font-semibold text-gray-900">{t('productPdp.reviews.comments')}</h3>
+            <div className="flex items-center gap-3">
+              {user && !userReview && (
+                <Button onClick={openWriteForm} variant="outline" size="sm" className="text-xs">
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  {t('productPdp.reviews.write')}
+                </Button>
+              )}
+              <button
+                onClick={() => setShowAllReviews(true)}
+                className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
+              >
+                {t('productPdp.reviews.seeAll')} <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* Atributos de calidad */}
-          <div className="flex flex-col gap-2 col-span-2 md:col-span-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-600">Ajuste</span>
-              <span className="font-bold text-gray-900">4.23</span>
+          {/* Summary + rating bars */}
+          <div className="grid gap-5 rounded-xl border border-gray-200 bg-white p-4 md:grid-cols-[160px_1fr]">
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="text-4xl font-bold text-gray-900">{stats.averageRating.toFixed(1)}</div>
+              <StarRating rating={stats.averageRating} size="md" />
+              <span className="mt-1 text-[12px] font-medium text-gray-500">
+                {t('otherSellers.reviewsCount', { count: stats.totalReviews })}
+              </span>
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-600">Comodidad</span>
-              <span className="font-bold text-gray-900">4.40</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-600">Calidad</span>
-              <span className="font-bold text-gray-900">4.24</span>
+            <div className="space-y-2">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = stats.distribution[star] || 0;
+                const pct = stats.totalReviews > 0 ? Math.round((count / stats.totalReviews) * 100) : 0;
+                return (
+                  <div key={star} className="flex items-center gap-3">
+                    <span className="flex w-8 items-center gap-0.5 text-[12px] font-medium text-gray-600">
+                      {star}<Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    </span>
+                    <Progress value={pct} className="h-2 flex-1" />
+                    <span className="w-10 text-right text-[12px] font-medium text-gray-500">{pct}%</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
-
-          {/* Taller/Size info */}
-          <div className="col-span-2 md:col-span-1 flex items-center gap-2 text-xs">
-            <span>👕</span>
-            <span className="text-gray-600">Taller</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Reseñas locales */}
-      <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-gray-900">Reseñas locales</span>
-          <span className="font-bold text-gray-900">4.94</span>
-          <div className="flex gap-0.5">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-            ))}
-          </div>
-        </div>
-        <button className="text-gray-600 hover:text-gray-900">
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Keywords/Chips */}
-      <div className="flex flex-wrap gap-2">
-        <span className="px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-full text-xs text-gray-700">
-          lo volveré a comprar (10)
-        </span>
-        <span className="px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-full text-xs text-gray-700">
-          elaborado con buen material (100+)
-        </span>
-      </div>
+        </>
+      )}
 
       {/* Add Review Modal */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
