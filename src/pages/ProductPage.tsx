@@ -1031,7 +1031,7 @@ const ProductPage = () => {
       {/* Sticky Nav Tabs: reemplaza la barra de categorÃ­as */}
       {/* REMOVED: Desktop sticky nav replaced with Accordion component */}
 
-      <main className={`container mx-auto ${isMobile ? 'px-0 pb-12' : 'px-4 pb-12'} py-4`}>
+      <main className={`container mx-auto ${isMobile ? 'px-0 pb-32' : 'px-4 pb-12'} py-4`}>
         {/* Breadcrumb / Retorno Button - Desktop */}
         {!isMobile &&
         <button
@@ -1595,7 +1595,7 @@ const ProductPage = () => {
             }}
             className="flex-1 h-11 text-sm font-semibold gap-2">
             <ShoppingCart className="w-4 h-4" />
-            {t('common.addToCart')}
+            {t('products.addToCart')}
           </Button>
           <Button
             onClick={() => {
