@@ -163,7 +163,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
     <div className="bg-card rounded-lg overflow-hidden hover:shadow-lg transition group border border-border h-full flex flex-col">
       {/* Image Container */}
       <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'} className="relative block">
-        <div className="relative overflow-hidden aspect-square bg-muted">
+        <div className="relative overflow-hidden aspect-[3/4] bg-muted [&_img]:object-cover">
           <ProductImage
             src={product.image}
             fallbackSrcs={product.images}
@@ -179,9 +179,9 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
             </div>
           )}
 
-          {/* B2B Profitability Badge - "Ganas: $..." */}
+          {/* B2B profit - revealed only on hover/tap */}
           {isB2BUser && profit > 0 && (
-            <Badge className="absolute top-2 left-2 bg-green-600 hover:bg-green-700 text-white gap-1 z-10 shadow-sm border-0">
+            <Badge className="absolute bottom-2 left-2 bg-green-600 hover:bg-green-700 text-white gap-1 z-10 shadow-sm border-0 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 group-active:opacity-100 transition-all duration-200">
               <TrendingUp className="h-3 w-3" />
               {t('catalogExtra.productCard.gain')}: ${profit.toFixed(2)}
             </Badge>
@@ -227,16 +227,16 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
       {/* Product Info */}
       <div className="p-1 flex flex-col flex-1">
         <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'}>
-          <h3 className="text-sm font-medium text-foreground line-clamp-1 mb-1 hover:text-primary transition h-5">
+          <h3 className="text-sm font-normal text-foreground line-clamp-2 mb-1 hover:text-primary transition min-h-[2.5rem] leading-5">
             {displayName}
           </h3>
         </Link>
 
         {/* MOQ Label for Seller */}
         {isB2BUser && moq > 1 && (
-          <div className="text-xs text-amber-600 font-medium mb-2">
-            {t('catalogExtra.productCard.minUnits', { count: moq })}
-          </div>
+          <span className="self-start text-[11px] text-muted-foreground font-medium mb-1.5 border border-border rounded px-1.5 py-0.5">
+            {t('productPdp.minUnits', { count: moq })}
+          </span>
         )}
 
         {/* Precios */}
