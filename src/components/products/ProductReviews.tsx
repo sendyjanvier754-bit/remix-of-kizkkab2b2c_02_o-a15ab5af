@@ -14,6 +14,7 @@ import { Star, ThumbsUp, Trash2, User, MessageSquare, ChevronRight, X } from "lu
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface ProductReviewsProps {
   productId: string;
@@ -138,6 +139,7 @@ const ReviewCard = ({
 };
 
 const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: reviews, isLoading } = useProductReviews(productId);
   const stats = useReviewStats(productId);
@@ -295,7 +297,7 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {isReply ? `Responder a ${replyingToName}` : "Escribir reseña"}
+              {isReply ? `${replyingToName}` : t("productPdp.reviews.write")}
             </DialogTitle>
           </DialogHeader>
 
