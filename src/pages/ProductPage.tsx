@@ -1254,28 +1254,34 @@ const ProductPage = () => {
 
               {/* B2B margin card */}
               {isB2BUser && businessSummary &&
-              <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
-                  <div className="flex items-center gap-1.5 mb-2.5">
-                    <TrendingUp className="w-4 h-4 text-emerald-600" />
-                    <p className="text-[12px] font-semibold uppercase tracking-wide text-emerald-700">
+              <div className="mt-3 rounded-lg border border-profit-border bg-card p-3 shadow-sm lg:bg-profit-soft lg:p-3 lg:shadow-none">
+                  <div className="mb-3 flex items-center gap-2 lg:mb-2.5 lg:gap-1.5">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-profit-soft lg:size-auto lg:bg-transparent">
+                      <TrendingUp className="size-4 text-profit" />
+                    </span>
+                    <p className="text-[11px] font-bold uppercase text-profit lg:text-[12px] lg:font-semibold">
                       {t('productPdp.margin.title')}
                     </p>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <p className="text-[12px] font-medium text-gray-500">{t('productPdp.margin.b2bPrice')}</p>
-                      <p className="text-sm font-bold text-gray-900">${costB2B.toFixed(2)}</p>
+                  <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 lg:gap-3">
+                    <div className="col-span-2 rounded-lg border border-profit-border bg-profit-soft p-3 lg:col-span-1 lg:order-2 lg:border-0 lg:bg-transparent lg:p-0">
+                      <p className="mb-1 text-[12px] font-medium text-profit-foreground">{t('productPdp.margin.profitPerUnit')}</p>
+                      <div className="flex items-end justify-between gap-3 lg:block">
+                        <p className="text-2xl font-bold leading-none text-foreground lg:text-sm lg:leading-5 lg:text-profit">
+                          ${businessSummary.profitPerUnit.toFixed(2)}
+                        </p>
+                        <span className="shrink-0 rounded-full bg-profit px-2.5 py-1 text-[12px] font-bold leading-none text-primary-foreground lg:ml-1 lg:bg-transparent lg:p-0 lg:font-medium lg:text-profit">
+                          +{businessSummary.profitPercentage}%
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[12px] font-medium text-gray-500">{t('productPdp.margin.profitPerUnit')}</p>
-                      <p className="text-sm font-bold text-emerald-700">
-                        ${businessSummary.profitPerUnit.toFixed(2)}
-                        <span className="ml-1 text-[12px] font-medium text-emerald-600">({businessSummary.profitPercentage}%)</span>
-                      </p>
+                    <div className="rounded-lg border border-border bg-muted/40 p-3 lg:order-1 lg:border-0 lg:bg-transparent lg:p-0">
+                      <p className="mb-1 text-[11px] font-medium leading-4 text-muted-foreground lg:text-[12px]">{t('productPdp.margin.b2bPrice')}</p>
+                      <p className="text-base font-bold leading-5 text-foreground lg:text-sm">${costB2B.toFixed(2)}</p>
                     </div>
-                    <div>
-                      <p className="text-[12px] font-medium text-gray-500">{t('productPdp.margin.suggestedPvp')}</p>
-                      <p className="text-sm font-bold text-gray-900">${pvp.toFixed(2)}</p>
+                    <div className="rounded-lg border border-border bg-muted/40 p-3 lg:order-3 lg:border-0 lg:bg-transparent lg:p-0">
+                      <p className="mb-1 text-[11px] font-medium leading-4 text-muted-foreground lg:text-[12px]">{t('productPdp.margin.suggestedPvp')}</p>
+                      <p className="text-base font-bold leading-5 text-foreground lg:text-sm">${pvp.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>}
