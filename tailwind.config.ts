@@ -73,6 +73,12 @@ export default {
           DEFAULT: "hsl(var(--navy))",
           dark: "hsl(var(--navy-dark))",
         },
+        profit: {
+          DEFAULT: "hsl(var(--profit))",
+          foreground: "hsl(var(--profit-foreground))",
+          soft: "hsl(var(--profit-soft))",
+          border: "hsl(var(--profit-border))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
