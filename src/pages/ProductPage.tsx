@@ -640,6 +640,8 @@ const ProductPage = () => {
 
   // Tabs state for Description / Reviews / Recs
   const [activeTab, setActiveTab] = useState<'desc' | 'reviews' | 'recs'>('desc');
+  // Mobile reviews collapsible (same accordion behavior as desktop)
+  const [mobileReviewsOpen, setMobileReviewsOpen] = useState(false);
 
   // Keyboard navigation for tabs
   const handleTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -1012,6 +1014,7 @@ const ProductPage = () => {
 
               <button id="tab-reviews-mobile" role="tab" aria-selected={activeTab === 'reviews'} aria-controls="section-reviews" tabIndex={activeTab === 'reviews' ? 0 : -1} onClick={() => {
               setActiveTab('reviews');
+              setMobileReviewsOpen(true);
               scrollToSection(reviewsRef);
             }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'reviews' ? 'bg-[#071d7f] text-white rounded-full shadow-sm' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
                 {t('productPage.productReviews')}
@@ -1494,8 +1497,21 @@ const ProductPage = () => {
                   </div>
               }
                 <div id="section-reviews" ref={reviewsRef} className="mt-6 scroll-mt-20">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('productPage.productReviews')}</h3>
-                  <ProductReviews productId={product.source_product?.id || product.id} productName={product.nombre} />
+                  <Accordion
+                    type="single"
+                    collapsible
+                    value={mobileReviewsOpen ? 'valoraciones-movil' : ''}
+                    onValueChange={(v) => setMobileReviewsOpen(v === 'valoraciones-movil')}
+                    className="w-full">
+                    <AccordionItem value="valoraciones-movil" className="border border-gray-200 rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between text-base">
+                        <span>{t('productPage.productReviews')}</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 py-4 bg-white border-t border-gray-200">
+                        <ProductReviews productId={product.source_product?.id || product.id} productName={product.nombre} />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </>
             }

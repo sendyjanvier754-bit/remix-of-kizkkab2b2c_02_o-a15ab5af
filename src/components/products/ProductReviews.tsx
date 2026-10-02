@@ -391,25 +391,16 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
 
       {/* Reviews List */}
       <div className="space-y-4">
-        {reviews && reviews.length > 0 ? (
-          <>
-            {reviews.slice(0, 3).map((review) => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                currentUserId={user?.id}
-                onDelete={handleDelete}
-                onReply={handleReply}
-              />
-            ))}
-          </>
-        ) : (
-          <div className="text-center py-8">
-            <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">
-              Aún no hay reseñas para este producto
-            </p>
-          </div>
+        {reviews && reviews.length > 0 && (
+          reviews.slice(0, 3).map((review) => (
+            <ReviewCard
+              key={review.id}
+              review={review}
+              currentUserId={user?.id}
+              onDelete={handleDelete}
+              onReply={handleReply}
+            />
+          ))
         )}
       </div>
 
