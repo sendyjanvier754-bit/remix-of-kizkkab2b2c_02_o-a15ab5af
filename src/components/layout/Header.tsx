@@ -545,6 +545,7 @@ const Header = ({
     <style>{headerCss}</style>
     <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 dyn-header" style={{ backgroundColor: headerBg || '#ffdcdc' }}>
       {/* Top Bar — configurable desde Admin › Identidad › Barra Superior */}
+      <div className={collapseCls(isCompact)}><div className="overflow-hidden">
       {(() => {
         const bgColor = getValue('topbar_bg_color') || '#f9fafb';
         const textColor = getValue('topbar_text_color') || '#4b5563';
@@ -617,7 +618,7 @@ const Header = ({
             </div>
           </div>
         );
-      })()}
+      })()}</div></div>
 
       {/* Main Header */}
       <div className="container mx-auto px-4">
@@ -873,6 +874,7 @@ const Header = ({
         </div>
 
         {/* Categories Bar */}
+        <div className={collapseCls(isCompact || isProductPage)}><div className="overflow-hidden">
         <div className="hidden lg:block border-t border-gray-200 relative">
           <div ref={catBarRef} className="flex items-center gap-0 h-12 overflow-hidden whitespace-nowrap pl-12 pr-12">
           {categoriesLoading ? (
@@ -966,7 +968,7 @@ const Header = ({
               </button>
             </>
           )}
-        </div>
+        </div></div></div>
       </div>
 
       {/* Mobile Menu */}
