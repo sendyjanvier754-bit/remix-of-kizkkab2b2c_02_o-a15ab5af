@@ -366,7 +366,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
   const buttonColor = showB2BStyle ? "bg-blue-600 hover:bg-blue-700" : "bg-[#071d7f] hover:bg-[#071d7f]/90";
 
   return (
-    <header className={`bg-[#ffdcdc] sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-transform duration-300 ${mobileHidden && !location.pathname.startsWith('/producto/') ? '-translate-y-full' : 'translate-y-0'}`}>
+    <header className="bg-[#ffdcdc] sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
       {/* Top search bar */}
       <div className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 bg-[#fff3f3]">
         <button
@@ -507,7 +507,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
       </div>
 
       {/* Category tabs */}
-      <div className="border-b border-gray-200 bg-[#071d7f] overflow-hidden" style={{ overscrollBehavior: 'none' }}>
+      <div className={`border-b border-gray-200 bg-[#071d7f] overflow-hidden transition-all duration-300 ${mobileHidden && !location.pathname.startsWith('/producto/') ? 'max-h-0 border-b-0' : 'max-h-12'}`} style={{ overscrollBehavior: 'none' }}>
         <div
           className="overflow-x-auto overflow-y-hidden scrollbar-hide w-full flex"
           style={{
