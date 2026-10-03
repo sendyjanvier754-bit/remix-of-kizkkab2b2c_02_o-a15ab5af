@@ -201,11 +201,35 @@ const Header = ({
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    const update = () => setHeaderHeight(el.offsetHeight);
+    const update = () => { if (window.scrollY < 80) setHeaderHeight(el.offsetHeight); };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
+
+  // Smart sticky: compact when scrolling down past 80px, expand when scrolling up
+  const [isCompact, setIsCompact] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y < 80) setIsCompact(false);
+        else if (y > lastY + 6) setIsCompact(true);
+        else if (y < lastY - 6) setIsCompact(false);
+        lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const isProductPage = location.pathname.startsWith('/producto/');
+  const collapseCls = (hide: boolean) =>
+    `grid transition-[grid-template-rows,opacity] duration-300 ease-out ${hide ? 'grid-rows-[0fr] opacity-0 pointer-events-none' : 'grid-rows-[1fr] opacity-100'}`;
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
