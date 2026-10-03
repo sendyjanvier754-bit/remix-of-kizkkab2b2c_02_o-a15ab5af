@@ -210,6 +210,21 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     return () => clearTimeout(debounce);
   }, [searchQuery, i18n.language]);
 
+  // Smart sticky (mobile): hide on scroll down, show on scroll up
+  const [mobileHidden, setMobileHidden] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < 80) setMobileHidden(false);
+      else if (y > lastY + 8) setMobileHidden(true);
+      else if (y < lastY - 8) setMobileHidden(false);
+      lastY = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   if (!isMobile) return null;
 
   if (role) {
@@ -351,7 +366,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
   const buttonColor = showB2BStyle ? "bg-blue-600 hover:bg-blue-700" : "bg-[#071d7f] hover:bg-[#071d7f]/90";
 
   return (
-    <header className="bg-[#ffdcdc] sticky top-0 z-40">
+    <header className={`bg-[#ffdcdc] sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-transform duration-300 ${mobileHidden && !location.pathname.startsWith('/producto/') ? '-translate-y-full' : 'translate-y-0'}`}>
       {/* Top search bar */}
       <div className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 bg-[#fff3f3]">
         <button
