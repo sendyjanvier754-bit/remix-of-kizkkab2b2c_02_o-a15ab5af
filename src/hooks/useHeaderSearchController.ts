@@ -51,12 +51,20 @@ const VOICE_LANGS: Record<string, string> = {
   ht: "fr-HT",
 };
 
+interface HeaderSearchControllerOptions {
+  /** Override the default submit behavior (navigate to /busqueda). */
+  onSubmit?: (term: string) => void;
+  /** Where to navigate with image search results. Defaults to /busqueda?source=image. */
+  imageSearchPath?: string;
+}
+
 /**
  * Shared search controller for all headers (desktop + mobile):
  * text submit (saves recent searches), voice search in the UI language,
- * and image search. All navigate to /busqueda.
+ * and image search. All navigate to /busqueda unless overridden.
  */
-export const useHeaderSearchController = () => {
+export const useHeaderSearchController = (options: HeaderSearchControllerOptions = {}) => {
+  const { onSubmit, imageSearchPath = "/busqueda?source=image" } = options;
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,9 +91,10 @@ export const useHeaderSearchController = () => {
       const term = (raw ?? searchQuery).trim();
       if (!term) return;
       saveRecentSearch(term);
-      navigate(`/busqueda?q=${encodeURIComponent(term)}`);
+      if (onSubmit) onSubmit(term);
+      else navigate(`/busqueda?q=${encodeURIComponent(term)}`);
     },
-    [searchQuery, navigate]
+    [searchQuery, navigate, onSubmit]
   );
 
   const startVoiceSearch = useCallback(() => {
@@ -122,7 +131,8 @@ export const useHeaderSearchController = () => {
         setSearchQuery(finalTranscript);
         toast.success(t("header.searching", { query: finalTranscript }));
         saveRecentSearch(finalTranscript.trim());
-        navigate(`/busqueda?q=${encodeURIComponent(finalTranscript.trim())}`);
+        if (onSubmit) onSubmit(finalTranscript.trim());
+        else navigate(`/busqueda?q=${encodeURIComponent(finalTranscript.trim())}`);
       }
     };
 
@@ -138,7 +148,7 @@ export const useHeaderSearchController = () => {
     recognition.onend = () => setIsListening(false);
     recognitionRef.current = recognition;
     recognition.start();
-  }, [isListening, i18n.language, navigate, t]);
+  }, [isListening, i18n.language, navigate, onSubmit, t]);
 
   const handleImageSearch = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,7 +160,7 @@ export const useHeaderSearchController = () => {
         const results = await searchProductsByImage(file);
         if (results && results.length > 0) {
           sessionStorage.setItem("imageSearchResults", JSON.stringify(results));
-          navigate("/busqueda?source=image");
+          navigate(imageSearchPath);
           toast.success(t("header.similarFound", { count: results.length }));
         } else {
           toast.info(t("header.noSimilarFound"));
@@ -163,7 +173,7 @@ export const useHeaderSearchController = () => {
         if (imageInputRef.current) imageInputRef.current.value = "";
       }
     },
-    [navigate, t]
+    [navigate, imageSearchPath, t]
   );
 
   const clearSearch = useCallback(() => setSearchQuery(""), []);
