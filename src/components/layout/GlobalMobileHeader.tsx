@@ -99,12 +99,6 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
   const isLoginRoute = location.pathname === '/login';
   const isTrendsRoute = location.pathname === '/tendencias';
 
-  // Check for Web Speech API support
-  useEffect(() => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setVoiceSupported(!!SpeechRecognitionAPI);
-  }, []);
-
   // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -114,15 +108,6 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Cleanup speech recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
   }, []);
 
   // Real-time search: letter-by-letter, prefix matches first
