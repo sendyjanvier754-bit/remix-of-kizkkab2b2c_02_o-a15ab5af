@@ -80,15 +80,14 @@ const Header = ({
   const { getValue: getBranding } = useBranding();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isImageSearching, setIsImageSearching] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
+  const {
+    searchQuery, setSearchQuery, submitSearch: submitSearchBase,
+    startVoiceSearch, isListening, voiceSupported,
+    handleImageSearch, isImageSearching, imageInputRef,
+  } = useHeaderSearchController();
   const [cartBounce, setCartBounce] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const isMobile = useIsMobile();
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const prevCartCountRef = useRef<number>(0);
   
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -129,20 +128,6 @@ const Header = ({
   const headerRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  // Check for Web Speech API support
-  useEffect(() => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setVoiceSupported(!!SpeechRecognitionAPI);
-  }, []);
-
-  // Cleanup speech recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const el = catBarRef.current;
