@@ -7,8 +7,6 @@ import { cn } from "@/lib/utils";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { searchProductsByImage } from "@/services/api/imageSearch";
 import { useB2CCartItems } from "@/hooks/useB2CCartItems";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +14,7 @@ import { UserRole } from "@/types/auth";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { rankByPrefix, sanitizeSearchTerm } from "@/hooks/useGlobalSearch";
+import { useHeaderSearchController } from "@/hooks/useHeaderSearchController";
 
 interface SearchResult {
   id: string;
@@ -26,63 +25,23 @@ interface SearchResult {
   descripcion_corta?: string;
 }
 
-// Web Speech API types
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-interface SpeechRecognitionResult {
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: Event & { error: string }) => void) | null;
-  onend: (() => void) | null;
-  onstart: (() => void) | null;
-}
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
-}
-
 interface GlobalMobileHeaderProps {
   forceShow?: boolean;
 }
 
 const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
   const { t, i18n } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    searchQuery, setSearchQuery, submitSearch, clearSearch: clearSearchQuery,
+    startVoiceSearch, isListening, voiceSupported,
+    handleImageSearch, isImageSearching, imageInputRef,
+  } = useHeaderSearchController();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
-  const [isImageSearching, setIsImageSearching] = useState(false);
   const [cartBounce, setCartBounce] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
   const prevCartCountRef = useRef<number>(0);
   const langRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -140,12 +99,6 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
   const isLoginRoute = location.pathname === '/login';
   const isTrendsRoute = location.pathname === '/tendencias';
 
-  // Check for Web Speech API support
-  useEffect(() => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setVoiceSupported(!!SpeechRecognitionAPI);
-  }, []);
-
   // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -155,15 +108,6 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Cleanup speech recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
   }, []);
 
   // Real-time search: letter-by-letter, prefix matches first
@@ -262,7 +206,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       setShowResults(false);
-      navigate(`/busqueda?q=${encodeURIComponent(searchQuery.trim())}`);
+      submitSearch();
     }
   };
 
@@ -273,87 +217,9 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
   };
 
   const clearSearch = () => {
-    setSearchQuery("");
+    clearSearchQuery();
     setSearchResults([]);
     setShowResults(false);
-  };
-
-  const startVoiceSearch = () => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognitionAPI) {
-      toast.error(t('header.voiceNotSupported'));
-      return;
-    }
-
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-      return;
-    }
-
-    const recognition = new SpeechRecognitionAPI();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = i18n.language === 'en' ? 'en-US' : i18n.language === 'fr' ? 'fr-FR' : i18n.language === 'ht' ? 'fr-HT' : 'es-ES';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      toast.info(t('header.listening'), { duration: 2000 });
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-      if (interimTranscript) setSearchQuery(interimTranscript);
-      if (finalTranscript) {
-        setSearchQuery(finalTranscript);
-        toast.success(t('header.searching', { query: finalTranscript }));
-        navigate(`/busqueda?q=${encodeURIComponent(finalTranscript.trim())}`);
-      }
-    };
-
-    recognition.onerror = event => {
-      console.error("Speech recognition error:", event.error);
-      setIsListening(false);
-      if (event.error === 'no-speech') toast.error(t('header.noSpeech'));
-      else if (event.error === 'audio-capture') toast.error(t('header.noMicrophone'));
-      else if (event.error === 'not-allowed') toast.error(t('header.micDenied'));
-      else toast.error(t('header.voiceError'));
-    };
-
-    recognition.onend = () => setIsListening(false);
-    recognitionRef.current = recognition;
-    recognition.start();
-  };
-
-  const handleImageSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsImageSearching(true);
-    toast.info(t('header.loadingAI'));
-    try {
-      const results = await searchProductsByImage(file);
-      if (results && results.length > 0) {
-        sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
-        navigate('/busqueda?source=image');
-        toast.success(t('header.similarFound', { count: results.length }));
-      } else {
-        toast.info(t('header.noSimilarFound'));
-      }
-    } catch (error) {
-      console.error("Image search error:", error);
-      toast.error(t('header.imageSearchError'));
-    } finally {
-      setIsImageSearching(false);
-      if (imageInputRef.current) imageInputRef.current.value = '';
-    }
   };
 
   const showB2BStyle = isSellerOrAdmin && !showAsClient;

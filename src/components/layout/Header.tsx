@@ -7,8 +7,6 @@ import { usePublicCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { searchProductsByImage } from "@/services/api/imageSearch";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useB2CCartItems } from "@/hooks/useB2CCartItems";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
@@ -18,51 +16,8 @@ import { useTranslation } from "react-i18next";
 import { useBranding } from "@/hooks/useBranding";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useSearchScope, useSearchSuggestions, saveRecentSearch, getRecentSearches } from "@/hooks/useGlobalSearch";
-
-// Web Speech API types
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: Event & { error: string }) => void) | null;
-  onend: (() => void) | null;
-  onstart: (() => void) | null;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
-}
+import { useSearchScope, useSearchSuggestions, getRecentSearches } from "@/hooks/useGlobalSearch";
+import { useHeaderSearchController } from "@/hooks/useHeaderSearchController";
 
 // ── Dynamic color helper ──────────────────────────────────
 const hexAlpha = (hex: string, a: number): string => {
@@ -125,15 +80,14 @@ const Header = ({
   const { getValue: getBranding } = useBranding();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isImageSearching, setIsImageSearching] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
+  const {
+    searchQuery, setSearchQuery, submitSearch: submitSearchBase,
+    startVoiceSearch, isListening, voiceSupported,
+    handleImageSearch, isImageSearching, imageInputRef,
+  } = useHeaderSearchController();
   const [cartBounce, setCartBounce] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const isMobile = useIsMobile();
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const prevCartCountRef = useRef<number>(0);
   
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -174,20 +128,6 @@ const Header = ({
   const headerRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  // Check for Web Speech API support
-  useEffect(() => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setVoiceSupported(!!SpeechRecognitionAPI);
-  }, []);
-
-  // Cleanup speech recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const el = catBarRef.current;
@@ -299,11 +239,8 @@ const Header = ({
   };
 
   const submitSearch = (raw?: string) => {
-    const term = (raw ?? searchQuery).trim();
-    if (!term) return;
-    saveRecentSearch(term);
     setShowSuggestions(false);
-    navigate(`/busqueda?q=${encodeURIComponent(term)}`);
+    submitSearchBase(raw);
   };
 
   const openSuggestions = () => {
@@ -315,103 +252,6 @@ const Header = ({
     setShowSuggestions(false);
     setSearchQuery("");
     navigate(path);
-  };
-
-  const handleImageSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsImageSearching(true);
-    toast.info(t('header.loadingAI'));
-
-    try {
-      const results = await searchProductsByImage(file);
-      if (results && results.length > 0) {
-        sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
-        navigate('/busqueda', { state: { products: results, type: 'image' } });
-        toast.success(t('header.similarFound', { count: results.length }));
-      } else {
-        toast.info(t('header.noSimilarFound'));
-      }
-    } catch (error) {
-      console.error("Image search error:", error);
-      toast.error(t('header.imageSearchError'));
-    } finally {
-      setIsImageSearching(false);
-      if (imageInputRef.current) {
-        imageInputRef.current.value = '';
-      }
-    }
-  };
-
-  const startVoiceSearch = () => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognitionAPI) {
-      toast.error(t('header.voiceNotSupported'));
-      return;
-    }
-
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-      return;
-    }
-
-    const recognition = new SpeechRecognitionAPI();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'es-ES';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      toast.info(t('header.listening'), { duration: 2000 });
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-
-      if (interimTranscript) {
-        setSearchQuery(interimTranscript);
-      }
-
-      if (finalTranscript) {
-        setSearchQuery(finalTranscript);
-        toast.success(t('header.searching', { query: finalTranscript }));
-        navigate(`/productos?q=${encodeURIComponent(finalTranscript.trim())}`);
-      }
-    };
-
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-      setIsListening(false);
-      
-      if (event.error === 'no-speech') {
-        toast.error(t('header.noSpeech'));
-      } else if (event.error === 'audio-capture') {
-        toast.error(t('header.noMicrophone'));
-      } else if (event.error === 'not-allowed') {
-        toast.error(t('header.micDenied'));
-      } else {
-        toast.error(t('header.voiceError'));
-      }
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
   };
 
   if (isMobile) {
