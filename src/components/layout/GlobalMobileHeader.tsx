@@ -7,8 +7,6 @@ import { cn } from "@/lib/utils";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { searchProductsByImage } from "@/services/api/imageSearch";
 import { useB2CCartItems } from "@/hooks/useB2CCartItems";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +14,7 @@ import { UserRole } from "@/types/auth";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { rankByPrefix, sanitizeSearchTerm } from "@/hooks/useGlobalSearch";
+import { useHeaderSearchController } from "@/hooks/useHeaderSearchController";
 
 interface SearchResult {
   id: string;
@@ -24,45 +23,6 @@ interface SearchResult {
   imagen_principal: string | null;
   precio_b2b: number;
   descripcion_corta?: string;
-}
-
-// Web Speech API types
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-interface SpeechRecognitionResult {
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: Event & { error: string }) => void) | null;
-  onend: (() => void) | null;
-  onstart: (() => void) | null;
-}
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
 }
 
 interface GlobalMobileHeaderProps {
