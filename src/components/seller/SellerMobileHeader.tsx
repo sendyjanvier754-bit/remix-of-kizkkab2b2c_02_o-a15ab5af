@@ -319,7 +319,7 @@ const ViewModeToggle = () => {
         "flex-shrink-0 p-1 rounded-full transition-colors",
         isClientPreview ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
       )}
-      title={isClientPreview ? "Vista Cliente activa" : "Cambiar a Vista Cliente"}
+      title={isClientPreview ? t('header.backToB2B') : t('header.viewAsClient')}
     >
       {isClientPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
     </button>
