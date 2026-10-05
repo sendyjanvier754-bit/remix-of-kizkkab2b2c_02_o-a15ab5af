@@ -70,12 +70,6 @@ const SellerDesktopHeader = ({
   // Root categories
   const rootCategories = categories.filter((c) => !c.parent_id);
 
-  // Check for Web Speech API support
-  useEffect(() => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setVoiceSupported(!!SpeechRecognitionAPI);
-  }, []);
-
   // Check category bar overflow
   useEffect(() => {
     const el = catBarRef.current;
@@ -105,15 +99,6 @@ const SellerDesktopHeader = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Cleanup speech recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
   }, []);
 
   // Real-time search
