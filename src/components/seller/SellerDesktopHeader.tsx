@@ -31,13 +31,17 @@ const SellerDesktopHeader = ({
   onCategorySelect,
   onSearch
 }: SellerDesktopHeaderProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    searchQuery, setSearchQuery, submitSearch, clearSearch: clearSearchQuery,
+    startVoiceSearch, isListening, voiceSupported,
+    handleImageSearch, isImageSearching, imageInputRef,
+  } = useHeaderSearchController({
+    onSubmit: (term) => { setShowResults(false); onSearch?.(term); },
+    imageSearchPath: '/seller/adquisicion-lotes?source=image',
+  });
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
-  const [isImageSearching, setIsImageSearching] = useState(false);
   const [isRedirectingToCart, setIsRedirectingToCart] = useState(false);
   const { items: b2bItems } = useB2BCartItems();
   const cartCount = b2bItems.reduce((sum, item) => sum + item.cantidad, 0);
@@ -49,10 +53,9 @@ const SellerDesktopHeader = ({
   };
   
   const searchRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const catBarRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+
   
   const [hasOverflow, setHasOverflow] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
