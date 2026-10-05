@@ -31,17 +31,19 @@ const SellerMobileHeader = ({
   onSearch 
 }: SellerMobileHeaderProps) => {
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    searchQuery, setSearchQuery, submitSearch, clearSearch: clearSearchQuery,
+    startVoiceSearch, isListening, voiceSupported,
+    handleImageSearch, isImageSearching, imageInputRef,
+  } = useHeaderSearchController({
+    onSubmit: (term) => { setShowResults(false); onSearch?.(term); },
+    imageSearchPath: '/seller/adquisicion-lotes?source=image',
+  });
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
-  const [isImageSearching, setIsImageSearching] = useState(false);
   const [cartBounce, setCartBounce] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
   const prevCartCountRef = useRef<number>(0);
   const navigate = useNavigate();
   const location = useLocation();
