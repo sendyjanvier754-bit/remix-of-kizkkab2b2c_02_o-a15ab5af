@@ -120,7 +120,11 @@
     "stores": "Stores",
     "viewAllResults": "See all results for \"{{query}}\"",
     "clear": "Clear",
-    "clearHistory": "Clear history"
+    "clearHistory": "Clear history",
+    "modeWholesale": "Wholesale",
+    "modeRetail": "Retail",
+    "viewAsClient": "View as customer",
+    "backToB2B": "Back to wholesale view"
   },
   "footer": {
     "tagline": "Your trusted online shopping store with the best products at the best prices.",

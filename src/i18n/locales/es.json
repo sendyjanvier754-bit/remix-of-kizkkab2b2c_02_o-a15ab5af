@@ -120,7 +120,11 @@
     "stores": "Tiendas",
     "viewAllResults": "Ver todos los resultados de \"{{query}}\"",
     "clear": "Limpiar",
-    "clearHistory": "Limpiar historial"
+    "clearHistory": "Limpiar historial",
+    "modeWholesale": "Mayorista",
+    "modeRetail": "Cliente",
+    "viewAsClient": "Ver como cliente",
+    "backToB2B": "Volver a vista mayorista"
   },
   "footer": {
     "tagline": "Tu tienda de compras en línea confiable con los mejores productos a los mejores precios.",
