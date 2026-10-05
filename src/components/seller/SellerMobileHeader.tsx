@@ -310,6 +310,7 @@ const SellerMobileHeader = ({
 
 const ViewModeToggle = () => {
   const { isClientPreview, toggleViewMode, canToggle } = useViewMode();
+  const { t } = useTranslation();
   if (!canToggle) return null;
   return (
     <button
