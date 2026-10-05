@@ -120,7 +120,11 @@
     "stores": "Boutiques",
     "viewAllResults": "Voir tous les résultats pour \"{{query}}\"",
     "clear": "Effacer",
-    "clearHistory": "Effacer l'historique"
+    "clearHistory": "Effacer l'historique",
+    "modeWholesale": "Gros",
+    "modeRetail": "Détail",
+    "viewAsClient": "Voir comme client",
+    "backToB2B": "Retour à la vue gros"
   },
   "footer": {
     "tagline": "Votre boutique en ligne de confiance avec les meilleurs produits aux meilleurs prix.",

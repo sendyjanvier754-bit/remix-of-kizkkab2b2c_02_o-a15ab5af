@@ -669,10 +669,10 @@ const Header = ({
                     ? "bg-emerald-600 text-white hover:bg-emerald-700"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 )}
-                title={isClientPreview ? "Volver a vista B2B" : "Ver como cliente"}
+                title={isClientPreview ? t('header.backToB2B') : t('header.viewAsClient')}
               >
                 {isClientPreview ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                <span>{isClientPreview ? "Vista B2B" : "Vista Cliente"}</span>
+                <span>{isClientPreview ? t('header.modeWholesale') : t('header.modeRetail')}</span>
               </button>
             )}
             {user ? (

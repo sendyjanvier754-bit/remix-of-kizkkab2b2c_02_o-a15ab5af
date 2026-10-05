@@ -120,7 +120,11 @@
     "stores": "Boutik",
     "viewAllResults": "Wè tout rezilta pou \"{{query}}\"",
     "clear": "Efase",
-    "clearHistory": "Efase istorik"
+    "clearHistory": "Efase istorik",
+    "modeWholesale": "Angrò",
+    "modeRetail": "Detay",
+    "viewAsClient": "Gade kòm kliyan",
+    "backToB2B": "Retounen nan vi angrò"
   },
   "footer": {
     "tagline": "Boutik an liy ou ka fè konfyans ak pi bon pwodwi nan pi bon pri.",

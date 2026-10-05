@@ -6,11 +6,10 @@ import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { searchProductsByImage } from "@/services/api/imageSearch";
 import { useTranslation } from "react-i18next";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useBranding } from "@/hooks/useBranding";
+import { useHeaderSearchController } from "@/hooks/useHeaderSearchController";
 
 interface SearchResult {
   id: string;
@@ -19,50 +18,6 @@ interface SearchResult {
   imagen_principal: string | null;
   precio_b2b: number;
   descripcion_corta?: string;
-}
-
-// Web Speech API types
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: Event & { error: string }) => void) | null;
-  onend: (() => void) | null;
-  onstart: (() => void) | null;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
 }
 
 interface SellerDesktopHeaderProps {
@@ -76,13 +31,17 @@ const SellerDesktopHeader = ({
   onCategorySelect,
   onSearch
 }: SellerDesktopHeaderProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    searchQuery, setSearchQuery, submitSearch, clearSearch: clearSearchQuery,
+    startVoiceSearch, isListening, voiceSupported,
+    handleImageSearch, isImageSearching, imageInputRef,
+  } = useHeaderSearchController({
+    onSubmit: (term) => { setShowResults(false); onSearch?.(term); },
+    imageSearchPath: '/seller/adquisicion-lotes?source=image',
+  });
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
-  const [isImageSearching, setIsImageSearching] = useState(false);
   const [isRedirectingToCart, setIsRedirectingToCart] = useState(false);
   const { items: b2bItems } = useB2BCartItems();
   const cartCount = b2bItems.reduce((sum, item) => sum + item.cantidad, 0);
@@ -94,10 +53,9 @@ const SellerDesktopHeader = ({
   };
   
   const searchRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const catBarRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+
   
   const [hasOverflow, setHasOverflow] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -111,12 +69,6 @@ const SellerDesktopHeader = ({
 
   // Root categories
   const rootCategories = categories.filter((c) => !c.parent_id);
-
-  // Check for Web Speech API support
-  useEffect(() => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setVoiceSupported(!!SpeechRecognitionAPI);
-  }, []);
 
   // Check category bar overflow
   useEffect(() => {
@@ -147,15 +99,6 @@ const SellerDesktopHeader = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Cleanup speech recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
   }, []);
 
   // Real-time search
@@ -200,10 +143,7 @@ const SellerDesktopHeader = ({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim() && onSearch) {
-      setShowResults(false);
-      onSearch(searchQuery.trim());
-    }
+    if (searchQuery.trim()) submitSearch();
   };
 
   const handleResultClick = (productId: string) => {
@@ -216,110 +156,11 @@ const SellerDesktopHeader = ({
   };
 
   const clearSearch = () => {
-    setSearchQuery("");
+    clearSearchQuery();
     setSearchResults([]);
     setShowResults(false);
     if (onSearch) {
       onSearch("");
-    }
-  };
-
-  const startVoiceSearch = () => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognitionAPI) {
-      toast.error(t('header.voiceNotSupported'));
-      return;
-    }
-
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-      return;
-    }
-
-    const recognition = new SpeechRecognitionAPI();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'es-ES';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      toast.info(t('header.listening'), { duration: 2000 });
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-
-      if (interimTranscript) {
-        setSearchQuery(interimTranscript);
-      }
-
-      if (finalTranscript) {
-        setSearchQuery(finalTranscript);
-        toast.success(t('header.searching', { query: finalTranscript }));
-        if (onSearch) {
-          onSearch(finalTranscript.trim());
-        }
-      }
-    };
-
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-      setIsListening(false);
-      
-      if (event.error === 'no-speech') {
-        toast.error(t('header.noSpeech'));
-      } else if (event.error === 'audio-capture') {
-        toast.error(t('header.noMicrophone'));
-      } else if (event.error === 'not-allowed') {
-        toast.error(t('header.micDenied'));
-      } else {
-        toast.error(t('header.voiceError'));
-      }
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  };
-
-  const handleImageSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsImageSearching(true);
-    toast.info(t('header.loadingAI'));
-
-    try {
-      const results = await searchProductsByImage(file);
-      if (results && results.length > 0) {
-        sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
-        navigate('/seller/adquisicion-lotes?source=image');
-        toast.success(t('header.similarFound', { count: results.length }));
-      } else {
-        toast.info(t('header.noSimilarFound'));
-      }
-    } catch (error) {
-      console.error("Image search error:", error);
-      toast.error(t('header.imageSearchError'));
-    } finally {
-      setIsImageSearching(false);
-      if (imageInputRef.current) {
-        imageInputRef.current.value = '';
-      }
     }
   };
 

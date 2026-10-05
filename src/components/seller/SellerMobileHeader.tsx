@@ -31,17 +31,19 @@ const SellerMobileHeader = ({
   onSearch 
 }: SellerMobileHeaderProps) => {
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    searchQuery, setSearchQuery, submitSearch, clearSearch: clearSearchQuery,
+    startVoiceSearch, isListening, voiceSupported,
+    handleImageSearch, isImageSearching, imageInputRef,
+  } = useHeaderSearchController({
+    onSubmit: (term) => { setShowResults(false); onSearch?.(term); },
+    imageSearchPath: '/seller/adquisicion-lotes?source=image',
+  });
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
-  const [isImageSearching, setIsImageSearching] = useState(false);
   const [cartBounce, setCartBounce] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
   const prevCartCountRef = useRef<number>(0);
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,12 +62,6 @@ const SellerMobileHeader = ({
     prevCartCountRef.current = cartCount;
   }, [cartCount]);
 
-  // Check for Web Speech API support
-  useEffect(() => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setVoiceSupported(!!SpeechRecognitionAPI);
-  }, []);
-
   // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -75,15 +71,6 @@ const SellerMobileHeader = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Cleanup speech recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
   }, []);
 
   // Real-time search
@@ -134,10 +121,7 @@ const SellerMobileHeader = ({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim() && onSearch) {
-      setShowResults(false);
-      onSearch(searchQuery.trim());
-    }
+    if (searchQuery.trim()) submitSearch();
   };
 
   const handleResultClick = (productId: string) => {
@@ -153,110 +137,11 @@ const SellerMobileHeader = ({
   };
 
   const clearSearch = () => {
-    setSearchQuery("");
+    clearSearchQuery();
     setSearchResults([]);
     setShowResults(false);
     if (onSearch) {
       onSearch("");
-    }
-  };
-
-  const startVoiceSearch = () => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognitionAPI) {
-      toast.error(t('header.voiceNotSupported'));
-      return;
-    }
-
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-      return;
-    }
-
-    const recognition = new SpeechRecognitionAPI();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'es-ES';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      toast.info(t('header.listening'), { duration: 2000 });
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-
-      if (interimTranscript) {
-        setSearchQuery(interimTranscript);
-      }
-
-      if (finalTranscript) {
-        setSearchQuery(finalTranscript);
-        toast.success(t('header.searching', { query: finalTranscript }));
-        if (onSearch) {
-          onSearch(finalTranscript.trim());
-        }
-      }
-    };
-
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-      setIsListening(false);
-      
-      if (event.error === 'no-speech') {
-        toast.error(t('header.noSpeech'));
-      } else if (event.error === 'audio-capture') {
-        toast.error(t('header.noMicrophone'));
-      } else if (event.error === 'not-allowed') {
-        toast.error(t('header.micDenied'));
-      } else {
-        toast.error(t('header.voiceError'));
-      }
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  };
-
-  const handleImageSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsImageSearching(true);
-    toast.info(t('header.loadingAI'));
-
-    try {
-      const results = await searchProductsByImage(file);
-      if (results && results.length > 0) {
-        sessionStorage.setItem('imageSearchResults', JSON.stringify(results));
-        navigate('/seller/adquisicion-lotes?source=image');
-        toast.success(t('header.similarFound', { count: results.length }));
-      } else {
-        toast.info(t('header.noSimilarFound'));
-      }
-    } catch (error) {
-      console.error("Image search error:", error);
-      toast.error(t('header.imageSearchError'));
-    } finally {
-      setIsImageSearching(false);
-      if (imageInputRef.current) {
-        imageInputRef.current.value = '';
-      }
     }
   };
 
@@ -425,6 +310,7 @@ const SellerMobileHeader = ({
 
 const ViewModeToggle = () => {
   const { isClientPreview, toggleViewMode, canToggle } = useViewMode();
+  const { t } = useTranslation();
   if (!canToggle) return null;
   return (
     <button
@@ -433,7 +319,7 @@ const ViewModeToggle = () => {
         "flex-shrink-0 p-1 rounded-full transition-colors",
         isClientPreview ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
       )}
-      title={isClientPreview ? "Vista Cliente activa" : "Cambiar a Vista Cliente"}
+      title={isClientPreview ? t('header.backToB2B') : t('header.viewAsClient')}
     >
       {isClientPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
     </button>

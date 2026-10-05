@@ -67,8 +67,9 @@ const ViewModeSwitch = () => {
     toggleViewMode,
     canToggle
   } = useViewMode();
+  const { t } = useTranslation();
   if (!canToggle) return null;
-  return <button onClick={toggleViewMode} className="flex flex-col items-center gap-1 text-amber-600 hover:text-amber-700 transition" title="Ver como cliente">
+  return <button onClick={toggleViewMode} className="flex flex-col items-center gap-1 text-amber-600 hover:text-amber-700 transition" title={t('header.viewAsClient')}>
       
       
     </button>;
