@@ -21,35 +21,27 @@ const LANG_NAMES: Record<string, string> = {
   zh: "Simplified Chinese (简体中文)",
 };
 
-// LibreTranslate has no Haitian Creole; translate via French as a bridge.
+// Free fallback translator (MyMemory) used when AI credits run out.
+// Supports es/en/fr/ht directly from Chinese.
 const FREE_LANG_MAP: Record<string, string> = {
-  es: "es",
-  en: "en",
-  fr: "fr",
-  pt: "pt",
-  ht: "fr",
+  es: "es-ES",
+  en: "en-US",
+  fr: "fr-FR",
+  pt: "pt-PT",
+  ht: "ht-HT",
 };
-
-const FREE_TRANSLATE_URL = "https://libretranslate.de/translate";
 
 async function freeTranslateText(
   text: string,
   target: string
 ): Promise<string> {
   if (!text?.trim()) return "";
-  const res = await fetch(FREE_TRANSLATE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      q: text,
-      source: "zh",
-      target,
-      format: "text",
-    }),
-  });
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh-CN%7C${target}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`Free translate error: ${res.status}`);
   const data = await res.json();
-  return data?.translatedText ?? "";
+  if (data?.quotaFinished) throw new Error("Free translate quota finished");
+  return data?.responseData?.translatedText ?? "";
 }
 
 async function translateWithFreeService(
