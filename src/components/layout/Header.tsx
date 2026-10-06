@@ -676,7 +676,7 @@ const Header = ({
               </button>
             )}
             {user ? (
-              <Link to={cartLink} className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
+              <Link to={cartLink} data-cart-icon className="flex flex-col items-center gap-1 text-gray-700 hover:text-[#071d7f] transition relative">
                 <ShoppingBag className="w-6 h-6" />
                 <span className="text-xs">{t('header.cart')}</span>
                 {cartCount > 0 && (

@@ -17,6 +17,7 @@ import { ShippingTiersRealtimeProvider } from "@/hooks/useShippingTiersRealtimeS
 import VariantDrawer from "@/components/products/VariantDrawer";
 import { PageLoader } from "./components/ui/PageLoader";
 import { NavigationLoader } from "./components/ui/NavigationLoader";
+import { CartAddedConfirmation } from "@/components/cart/CartAddedConfirmation";
 import MobileBottomNav from "./components/categories/MobileBottomNav";
 import { PopupRenderer } from "./components/marketing/PopupRenderer";
 import GlobalMobileHeader from "./components/layout/GlobalMobileHeader";
@@ -184,6 +185,7 @@ const AppContent = () => {
   return (
     <>
       <NavigationLoader />
+      <CartAddedConfirmation />
       <GlobalMobileHeader />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <Toaster />
