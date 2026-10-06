@@ -20,41 +20,7 @@ import {
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-
-const ProductCard = ({ p, onOpen }: { p: SearchProductResult; onOpen: () => void }) => (
-  <div className="bg-white rounded-lg overflow-hidden hover:shadow-xl transition duration-300 flex flex-col group border border-gray-100">
-    <div className="relative h-56 bg-gray-100 cursor-pointer overflow-hidden" onClick={onOpen}>
-      {p.image ? (
-        <img
-          src={p.image}
-          alt={p.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-          loading="lazy"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-gray-300">
-          <ShoppingBag className="w-10 h-10" />
-        </div>
-      )}
-    </div>
-    <div className="p-4 flex-1 flex flex-col">
-      <h3
-        className="text-sm font-semibold text-gray-900 line-clamp-2 cursor-pointer hover:text-[#071d7f] transition"
-        onClick={onOpen}
-      >
-        {p.name}
-      </h3>
-      {p.storeName && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{p.storeName}</p>}
-      <div className="mt-3 flex items-baseline gap-2">
-        <span className="text-lg font-bold text-gray-900">${Number(p.price).toFixed(2)}</span>
-        {p.moq ? <span className="text-xs text-gray-500">MOQ {p.moq}</span> : null}
-      </div>
-      <Button onClick={onOpen} className="w-full mt-4 bg-[#071d7f] hover:bg-[#0a2699]">
-        Ver detalles
-      </Button>
-    </div>
-  </div>
-);
+import LandingProductCard from "@/components/landing/ProductCard";
 
 const SearchResultsPage = () => {
   const location = useLocation();
@@ -303,11 +269,11 @@ const SearchResultsPage = () => {
                 </div>
               ) : products.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {products.map((p: any) => (
-                      <ProductCard
+                      <LandingProductCard
                         key={p.id || p.sku}
-                        p={{
+                        product={{
                           id: p.id,
                           sku: p.sku || p.id,
                           name:
@@ -317,12 +283,15 @@ const SearchResultsPage = () => {
                             }).name ||
                             p.name ||
                             p.nombre,
-                          price: p.price ?? p.precio ?? 0,
+                          price: Number(p.price ?? p.precio ?? 0),
                           image: p.image || p.imagen || p.images?.[0] || "",
+                          images: p.images,
+                          storeId: p.storeId,
                           storeName: p.storeName,
-                          moq: p.moq,
+                          moq: p.moq ?? undefined,
+                          stock: p.stock,
+                          source_product_id: p.sourceProductId || p.source_product_id || undefined,
                         }}
-                        onOpen={() => openProduct(p)}
                       />
                     ))}
                   </div>
