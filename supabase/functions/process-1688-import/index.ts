@@ -120,21 +120,19 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required. Please add credits." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      // Never fail the import because of AI limits: return no translations so the
+      // client keeps the original texts, plus a warning flag it can show.
       const errText = await response.text();
       console.error("AI gateway error:", response.status, errText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      const warning =
+        response.status === 402
+          ? "ai_credits_exhausted"
+          : response.status === 429
+            ? "ai_rate_limited"
+            : "ai_unavailable";
+      return new Response(JSON.stringify({ translations: [], warning }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const data = await response.json();
