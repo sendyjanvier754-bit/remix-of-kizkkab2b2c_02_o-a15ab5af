@@ -86,7 +86,7 @@ const MobileBottomNav = () => {
                 isActive ? "bg-[#071d7f]" : ""
               )}
             >
-              <div className="relative">
+              <div className="relative" {...(item.href === cartLink ? { "data-cart-icon": "" } : {})}>
                 <IconComponent 
                   className={cn(
                     "w-5 h-5",
