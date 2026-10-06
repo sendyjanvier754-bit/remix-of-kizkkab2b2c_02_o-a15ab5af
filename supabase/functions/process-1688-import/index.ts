@@ -21,6 +21,70 @@ const LANG_NAMES: Record<string, string> = {
   zh: "Simplified Chinese (简体中文)",
 };
 
+// LibreTranslate has no Haitian Creole; translate via French as a bridge.
+const FREE_LANG_MAP: Record<string, string> = {
+  es: "es",
+  en: "en",
+  fr: "fr",
+  pt: "pt",
+  ht: "fr",
+};
+
+const FREE_TRANSLATE_URL = "https://libretranslate.de/translate";
+
+async function freeTranslateText(
+  text: string,
+  target: string
+): Promise<string> {
+  if (!text?.trim()) return "";
+  const res = await fetch(FREE_TRANSLATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      q: text,
+      source: "zh",
+      target,
+      format: "text",
+    }),
+  });
+  if (!res.ok) throw new Error(`Free translate error: ${res.status}`);
+  const data = await res.json();
+  return data?.translatedText ?? "";
+}
+
+async function translateWithFreeService(
+  items: ProductRow[],
+  language: string
+) {
+  const target = FREE_LANG_MAP[language];
+  if (!target) return [];
+  const results = [];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    try {
+      const nombre = await freeTranslateText(item.title, target);
+      const variante_color = item.variant1
+        ? await freeTranslateText(item.variant1, target)
+        : "";
+      results.push({
+        index: i + 1,
+        nombre: nombre || item.title,
+        variante_color: variante_color || item.variant1 || "",
+        descripcion: "",
+      });
+    } catch (e) {
+      console.error("Free translate failed for item", i + 1, e);
+      results.push({
+        index: i + 1,
+        nombre: item.title,
+        variante_color: item.variant1 || "",
+        descripcion: "",
+      });
+    }
+  }
+  return results;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
