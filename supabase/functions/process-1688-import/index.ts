@@ -21,6 +21,62 @@ const LANG_NAMES: Record<string, string> = {
   zh: "Simplified Chinese (简体中文)",
 };
 
+// Free fallback translator (MyMemory) used when AI credits run out.
+// Supports es/en/fr/ht directly from Chinese.
+const FREE_LANG_MAP: Record<string, string> = {
+  es: "es-ES",
+  en: "en-US",
+  fr: "fr-FR",
+  pt: "pt-PT",
+  ht: "ht-HT",
+};
+
+async function freeTranslateText(
+  text: string,
+  target: string
+): Promise<string> {
+  if (!text?.trim()) return "";
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh-CN%7C${target}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Free translate error: ${res.status}`);
+  const data = await res.json();
+  if (data?.quotaFinished) throw new Error("Free translate quota finished");
+  return data?.responseData?.translatedText ?? "";
+}
+
+async function translateWithFreeService(
+  items: ProductRow[],
+  language: string
+) {
+  const target = FREE_LANG_MAP[language];
+  if (!target) return [];
+  const results = [];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    try {
+      const nombre = await freeTranslateText(item.title, target);
+      const variante_color = item.variant1
+        ? await freeTranslateText(item.variant1, target)
+        : "";
+      results.push({
+        index: i + 1,
+        nombre: nombre || item.title,
+        variante_color: variante_color || item.variant1 || "",
+        descripcion: "",
+      });
+    } catch (e) {
+      console.error("Free translate failed for item", i + 1, e);
+      results.push({
+        index: i + 1,
+        nombre: item.title,
+        variante_color: item.variant1 || "",
+        descripcion: "",
+      });
+    }
+  }
+  return results;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -120,8 +176,8 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      // Never fail the import because of AI limits: return no translations so the
-      // client keeps the original texts, plus a warning flag it can show.
+      // AI unavailable (no credits, rate limit, outage): fall back to the free
+      // LibreTranslate service so products still get translated titles/variants.
       const errText = await response.text();
       console.error("AI gateway error:", response.status, errText);
       const warning =
@@ -130,9 +186,14 @@ serve(async (req) => {
           : response.status === 429
             ? "ai_rate_limited"
             : "ai_unavailable";
-      return new Response(JSON.stringify({ translations: [], warning }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+
+      const fallback = await translateWithFreeService(items, language);
+      return new Response(
+        JSON.stringify({ translations: fallback, warning }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     const data = await response.json();
