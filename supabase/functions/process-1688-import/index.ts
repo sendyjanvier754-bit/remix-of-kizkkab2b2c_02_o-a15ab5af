@@ -120,8 +120,8 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      // Never fail the import because of AI limits: return no translations so the
-      // client keeps the original texts, plus a warning flag it can show.
+      // AI unavailable (no credits, rate limit, outage): fall back to the free
+      // LibreTranslate service so products still get translated titles/variants.
       const errText = await response.text();
       console.error("AI gateway error:", response.status, errText);
       const warning =
@@ -130,9 +130,14 @@ serve(async (req) => {
           : response.status === 429
             ? "ai_rate_limited"
             : "ai_unavailable";
-      return new Response(JSON.stringify({ translations: [], warning }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+
+      const fallback = await translateWithFreeService(items, language);
+      return new Response(
+        JSON.stringify({ translations: fallback, warning }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     const data = await response.json();
