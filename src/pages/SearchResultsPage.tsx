@@ -20,6 +20,7 @@ import {
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import LandingProductCard from "@/components/landing/ProductCard";
 
 const ProductCard = ({ p, onOpen }: { p: SearchProductResult; onOpen: () => void }) => (
   <div className="bg-white rounded-lg overflow-hidden hover:shadow-xl transition duration-300 flex flex-col group border border-gray-100">
@@ -303,11 +304,11 @@ const SearchResultsPage = () => {
                 </div>
               ) : products.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {products.map((p: any) => (
-                      <ProductCard
+                      <LandingProductCard
                         key={p.id || p.sku}
-                        p={{
+                        product={{
                           id: p.id,
                           sku: p.sku || p.id,
                           name:
@@ -317,12 +318,15 @@ const SearchResultsPage = () => {
                             }).name ||
                             p.name ||
                             p.nombre,
-                          price: p.price ?? p.precio ?? 0,
+                          price: Number(p.price ?? p.precio ?? 0),
                           image: p.image || p.imagen || p.images?.[0] || "",
+                          images: p.images,
+                          storeId: p.storeId,
                           storeName: p.storeName,
-                          moq: p.moq,
+                          moq: p.moq ?? undefined,
+                          stock: p.stock,
+                          source_product_id: p.sourceProductId || p.source_product_id || undefined,
                         }}
-                        onOpen={() => openProduct(p)}
                       />
                     ))}
                   </div>
