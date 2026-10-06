@@ -79,7 +79,7 @@ export const CartAddedConfirmation = () => {
         </div>
         <div className="grid grid-cols-2 gap-2 px-4 pb-4">
           <Button variant="outline" size="sm" onClick={close}>{tx.keep}</Button>
-          <Button size="sm" onClick={() => { close(); navigate("/carrito"); }}>
+          <Button size="sm" onClick={() => { close(); navigate(item.isB2B ? "/seller/carrito" : "/carrito"); }}>
             <ShoppingCart className="h-4 w-4 mr-1" />{tx.view}
           </Button>
         </div>
