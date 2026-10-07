@@ -46,50 +46,48 @@ export const PageLoader = () => {
   const mediaSrc = loaderUrl || logoUrl || faviconUrl;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <div className="relative flex flex-col items-center justify-center gap-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-md animate-loader-fade" role="status" aria-live="polite">
+      <div className="relative flex flex-col items-center justify-center gap-5">
         <div className="relative" style={{ width: loaderRingSize, height: loaderRingSize }}>
-          {/* Circular media base (fills the same diameter as spinner ring) */}
-          <div className="absolute inset-0 rounded-full overflow-hidden bg-background" style={{ border: `1px solid ${loaderRingColor}33` }}>
+          {/* Brand glow */}
+          <div className="absolute -inset-4 rounded-full blur-2xl animate-loader-glow" style={{ background: loaderRingColor }} />
+          {/* Track + orbiting arc */}
+          <div className="absolute -inset-2 rounded-full" style={{ border: `${loaderRingWidth}px solid ${loaderRingColor}22` }} />
+          <div
+            className="absolute -inset-2 rounded-full animate-spin pointer-events-none"
+            style={{ border: `${loaderRingWidth}px solid transparent`, borderTopColor: loaderRingColor, borderRightColor: `${loaderRingColor}88`, animationDuration: '1.1s' }}
+          />
+          {/* Logo */}
+          <div className="absolute inset-0 rounded-full overflow-hidden bg-background shadow-lg animate-loader-breathe">
             {loaderType === 'video' && loaderUrl ? (
-              <video
-                src={loaderUrl}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className={`h-full w-full ${mediaFitClass}`}
-              />
+              <video src={loaderUrl} autoPlay loop muted playsInline className={`h-full w-full ${mediaFitClass}`} />
             ) : (
               <img
                 src={mediaSrc}
-                alt="Loading…"
+                alt={platformName || 'Logo'}
                 className={`h-full w-full ${mediaFitClass}`}
                 decoding="async"
                 loading="eager"
-                style={{ imageRendering: 'auto' }}
                 onError={(e) => {
                   const img = e.target as HTMLImageElement;
-                  if (img.src !== faviconUrl) {
-                    img.src = faviconUrl;
-                  } else {
-                    img.style.display = 'none';
-                  }
+                  if (img.src !== faviconUrl) img.src = faviconUrl;
+                  else img.style.display = 'none';
                 }}
               />
             )}
+            {/* Shimmer sweep */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-background/60 to-transparent animate-loader-shimmer" />
           </div>
-
-          {/* Spinning ring overlay */}
-          <div
-            className="absolute inset-0 animate-spin rounded-full border-4 pointer-events-none"
-            style={{ borderColor: loaderRingColor, borderTopColor: 'transparent', borderWidth: loaderRingWidth }}
-          />
         </div>
 
-        <p className="text-sm font-semibold text-foreground/80">
-          {platformName || 'Cargando...' }
-        </p>
+        <div className="flex items-center gap-1 text-sm font-semibold tracking-wide text-foreground/80">
+          <span>{platformName || 'Cargando'}</span>
+          <span className="flex gap-0.5 ml-0.5">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="h-1 w-1 rounded-full animate-loader-dot" style={{ background: loaderRingColor, animationDelay: `${i * 0.15}s` }} />
+            ))}
+          </span>
+        </div>
       </div>
     </div>
   );
