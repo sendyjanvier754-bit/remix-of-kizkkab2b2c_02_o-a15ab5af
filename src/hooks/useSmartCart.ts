@@ -14,6 +14,7 @@ import { useB2BCartSupabase } from "@/hooks/useB2BCartSupabase";
 import { UserRole } from "@/types/auth";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { toast } from "sonner";
+import { notifyCartAdded } from "@/lib/cartFeedback";
 
 interface ProductForCart {
   id: string;
@@ -71,9 +72,7 @@ export const useSmartCart = () => {
         storeWhatsapp: product.storeWhatsapp,
       });
 
-      toast.success("Añadido al carrito", {
-        description: product.name,
-      });
+      notifyCartAdded({ name: product.name, image: product.image, quantity: 1, price: product.price });
       return true;
     }
 
@@ -100,9 +99,7 @@ export const useSmartCart = () => {
         stockDisponible: stock
       });
 
-      toast.success(`Agregado al carrito B2B`, {
-        description: `${product.name} x ${moq} unidades (MOQ)`,
-      });
+      notifyCartAdded({ name: product.name, image: product.image, quantity: moq, price: priceB2B, isB2B: true });
       return true;
     } else {
       // Authenticated B2C user
@@ -117,9 +114,7 @@ export const useSmartCart = () => {
         storeWhatsapp: product.storeWhatsapp,
       });
 
-      toast.success("Añadido al carrito", {
-        description: product.name,
-      });
+      notifyCartAdded({ name: product.name, image: product.image, quantity: 1, price: product.price });
       return true;
     }
   };

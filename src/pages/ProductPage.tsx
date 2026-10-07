@@ -1,4 +1,5 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+import { notifyCartAdded } from "@/lib/cartFeedback";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
@@ -840,11 +841,7 @@ const ProductPage = () => {
         moq: moq,
         stockDisponible: stockB2B
       });
-      toast({
-        title: "Agregado al pedido B2B",
-        description: `${quantity} unidades de ${product.nombre}`,
-        className: "bg-blue-600 text-white border-none"
-      });
+      notifyCartAdded({ name: product.nombre || '', image: images[0], quantity, isB2B: true });
     } else {
       for (let i = 0; i < quantity; i++) {
         addItemB2C({
@@ -858,10 +855,7 @@ const ProductPage = () => {
           storeWhatsapp: product.store?.whatsapp || undefined
         });
       }
-      toast({
-        title: "Producto agregado",
-        description: `${product.nombre} (x${quantity}) se agregÃ³ al carrito`
-      });
+      notifyCartAdded({ name: product.nombre, image: images[0], quantity });
     }
   };
 
