@@ -42,6 +42,14 @@ const VariantDrawer: React.FC = () => {
   const [variantSelectorResetKey, setVariantSelectorResetKey] = useState(0);
   const [supplierUnitCost, setSupplierUnitCost] = useState<number | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ name: string; image: string | null; qty: number } | null>(null);
+  const [successLeaving, setSuccessLeaving] = useState(false);
+  const successTimer = useRef<number | null>(null);
+
+  // Clear any pending close timer when the drawer unmounts
+  useEffect(() => () => {
+    if (successTimer.current) window.clearTimeout(successTimer.current);
+  }, []);
+
 
   const { user, role } = useAuth();
   const { toast } = useToast();
