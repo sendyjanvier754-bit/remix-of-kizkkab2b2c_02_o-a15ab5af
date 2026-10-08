@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import VariantSelector from './VariantSelector';
