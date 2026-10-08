@@ -361,7 +361,7 @@ const VariantDrawer: React.FC = () => {
           });
         }
       }
-      toast({ title: isB2BUser ? t('catalogExtra.variantDrawer.addedToB2BOrder') : t('catalogExtra.variantDrawer.addedToCart'), description: `${displayName} ${t('catalogExtra.variantDrawer.unitsSuffix', { count: totalQty })}` });
+      setSuccessInfo({ name: displayName, image: variantImage || product.images?.[0] || null, qty: totalQty });
     } else if (totalQty > 0) {
       // No variants exist for this product — add directly
       const normalizedItem = {
@@ -405,7 +405,7 @@ const VariantDrawer: React.FC = () => {
         } else {
           await addItemB2B(itemData);
         }
-        toast({ title: t('catalogExtra.variantDrawer.addedToB2BOrder'), description: `${displayName} ${t('catalogExtra.variantDrawer.unitsSuffix', { count: totalQty })}` });
+        setSuccessInfo({ name: displayName, image: product.images?.[0] || null, qty: totalQty });
       } else {
         await addItemB2C({
           userId: user.id,
@@ -417,7 +417,7 @@ const VariantDrawer: React.FC = () => {
           storeId: product.storeId || null,
           sellerCatalogId: product.sellerCatalogId || null,
         });
-        toast({ title: t('catalogExtra.variantDrawer.addedToCart') });
+        setSuccessInfo({ name: displayName, image: product.images?.[0] || null, qty: totalQty });
       }
     }
 
