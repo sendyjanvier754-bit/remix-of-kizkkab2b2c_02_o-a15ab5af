@@ -41,6 +41,7 @@ const VariantDrawer: React.FC = () => {
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [variantSelectorResetKey, setVariantSelectorResetKey] = useState(0);
   const [supplierUnitCost, setSupplierUnitCost] = useState<number | null>(null);
+  const [successInfo, setSuccessInfo] = useState<{ name: string; image: string | null; qty: number } | null>(null);
 
   const { user, role } = useAuth();
   const { toast } = useToast();
@@ -360,7 +361,7 @@ const VariantDrawer: React.FC = () => {
           });
         }
       }
-      toast({ title: isB2BUser ? t('catalogExtra.variantDrawer.addedToB2BOrder') : t('catalogExtra.variantDrawer.addedToCart'), description: `${displayName} ${t('catalogExtra.variantDrawer.unitsSuffix', { count: totalQty })}` });
+      setSuccessInfo({ name: displayName, image: variantImage || product.images?.[0] || null, qty: totalQty });
     } else if (totalQty > 0) {
       // No variants exist for this product — add directly
       const normalizedItem = {
@@ -404,7 +405,7 @@ const VariantDrawer: React.FC = () => {
         } else {
           await addItemB2B(itemData);
         }
-        toast({ title: t('catalogExtra.variantDrawer.addedToB2BOrder'), description: `${displayName} ${t('catalogExtra.variantDrawer.unitsSuffix', { count: totalQty })}` });
+        setSuccessInfo({ name: displayName, image: product.images?.[0] || null, qty: totalQty });
       } else {
         await addItemB2C({
           userId: user.id,
@@ -416,7 +417,7 @@ const VariantDrawer: React.FC = () => {
           storeId: product.storeId || null,
           sellerCatalogId: product.sellerCatalogId || null,
         });
-        toast({ title: t('catalogExtra.variantDrawer.addedToCart') });
+        setSuccessInfo({ name: displayName, image: product.images?.[0] || null, qty: totalQty });
       }
     }
 
@@ -432,9 +433,11 @@ const VariantDrawer: React.FC = () => {
     setValidationErrors([]);
     setVariantSelectorResetKey((current) => current + 1);
 
-    if (isZletiManualPO) {
+    // Show the in-modal success animation, then close the drawer
+    window.setTimeout(() => {
+      setSuccessInfo(null);
       close();
-    }
+    }, 1600);
 
     if (onComplete) (onComplete as (items?: unknown) => void)(addedItems);
   };
@@ -671,6 +674,27 @@ const VariantDrawer: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* In-modal success confirmation */}
+        {successInfo && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/95 backdrop-blur-sm rounded-t-2xl" style={{ animation: 'fadeIn 0.25s ease-out' }}>
+            <div className="flex flex-col items-center gap-3 px-6 text-center animate-cart-pop">
+              <svg viewBox="0 0 52 52" className="h-16 w-16">
+                <circle cx="26" cy="26" r="24" fill="none" className="stroke-primary animate-check-circle" strokeWidth="3" />
+                <path d="M15 27l7 7 15-15" fill="none" className="stroke-primary animate-check-mark" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {successInfo.image && (
+                <img src={successInfo.image} alt="" className="h-20 w-20 rounded-xl object-cover border border-border shadow-md animate-cart-thumb" />
+              )}
+              <p className="text-base font-bold text-foreground">
+                {isB2BUser ? t('catalogExtra.variantDrawer.addedToB2BOrder') : t('catalogExtra.variantDrawer.addedToCart')}
+              </p>
+              <p className="text-sm text-muted-foreground line-clamp-2 max-w-[260px]">
+                {successInfo.name} {t('catalogExtra.variantDrawer.unitsSuffix', { count: successInfo.qty })}
+              </p>
+            </div>
+          </div>
+        )}
       </aside>
 
       <style>{`
