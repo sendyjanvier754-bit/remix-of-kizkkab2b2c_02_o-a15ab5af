@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import VariantSelector from './VariantSelector';
@@ -42,6 +42,13 @@ const VariantDrawer: React.FC = () => {
   const [variantSelectorResetKey, setVariantSelectorResetKey] = useState(0);
   const [supplierUnitCost, setSupplierUnitCost] = useState<number | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ name: string; image: string | null; qty: number } | null>(null);
+  const [successLeaving, setSuccessLeaving] = useState(false);
+  const successTimer = useRef<number | null>(null);
+
+  // Clear any pending close timer when the drawer unmounts
+  useEffect(() => () => {
+    if (successTimer.current) window.clearTimeout(successTimer.current);
+  }, []);
 
   const { user, role } = useAuth();
   const { toast } = useToast();
@@ -434,12 +441,19 @@ const VariantDrawer: React.FC = () => {
     setVariantSelectorResetKey((current) => current + 1);
 
     // Show the in-modal success animation, then close the drawer
-    window.setTimeout(() => {
-      setSuccessInfo(null);
-      close();
-    }, 1600);
+    if (successTimer.current) window.clearTimeout(successTimer.current);
+    setSuccessLeaving(false);
+    successTimer.current = window.setTimeout(() => {
+      setSuccessLeaving(true);
+      successTimer.current = window.setTimeout(() => {
+        setSuccessInfo(null);
+        setSuccessLeaving(false);
+        close();
+      }, 350);
+    }, 2800);
 
     if (onComplete) (onComplete as (items?: unknown) => void)(addedItems);
+
   };
 
   // No renderizar en SellerCartPage (moved after all hooks to avoid hooks count mismatch)
@@ -677,7 +691,7 @@ const VariantDrawer: React.FC = () => {
 
         {/* In-modal success confirmation */}
         {successInfo && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/95 backdrop-blur-sm rounded-t-2xl" style={{ animation: 'fadeIn 0.25s ease-out' }}>
+          <div className={`absolute inset-0 z-20 flex items-center justify-center bg-background/95 backdrop-blur-sm rounded-t-2xl transition-opacity duration-300 ease-out ${successLeaving ? 'opacity-0' : 'opacity-100'}`} style={{ animation: 'fadeIn 0.25s ease-out' }}>
             <div className="flex flex-col items-center gap-3 px-6 text-center animate-cart-pop">
               <svg viewBox="0 0 52 52" className="h-16 w-16">
                 <circle cx="26" cy="26" r="24" fill="none" className="stroke-primary animate-check-circle" strokeWidth="3" />
