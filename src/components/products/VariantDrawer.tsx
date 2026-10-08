@@ -433,9 +433,11 @@ const VariantDrawer: React.FC = () => {
     setValidationErrors([]);
     setVariantSelectorResetKey((current) => current + 1);
 
-    if (isZletiManualPO) {
+    // Show the in-modal success animation, then close the drawer
+    window.setTimeout(() => {
+      setSuccessInfo(null);
       close();
-    }
+    }, 1600);
 
     if (onComplete) (onComplete as (items?: unknown) => void)(addedItems);
   };
