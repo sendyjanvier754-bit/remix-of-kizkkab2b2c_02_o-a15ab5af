@@ -50,7 +50,7 @@ const VariantDrawer: React.FC = () => {
     if (successTimer.current) window.clearTimeout(successTimer.current);
   }, []);
 
-  const { user, role } = useAuth()
+  const { user, role } = useAuth();
   const { toast } = useToast();
   const { isClientPreview } = useViewMode();
   const { t } = useTranslation();
