@@ -63,6 +63,8 @@ import {
   Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 type PaymentMethod = 'stripe' | 'moncash' | 'transfer';
@@ -122,6 +124,9 @@ const SellerCheckout = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [proofUploaded, setProofUploaded] = useState(false);
+  const [cardPaid, setCardPaid] = useState(false);
+  const proofQueryClient = useQueryClient();
   const [orderId, setOrderId] = useState<string | null>(null);
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentNotes, setPaymentNotes] = useState('');
@@ -724,19 +729,27 @@ const SellerCheckout = () => {
           <main className="container mx-auto px-4 pb-8">
             <div className="max-w-2xl mx-auto">
               <Card className="p-8 text-center">
-                <div className="mb-4">
-                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                    <Check className="w-10 h-10 text-green-600" />
-                  </div>
-                </div>
-                <h1 className="text-2xl font-bold mb-2">
-                  {needsCardPayment ? t('checkoutExtra.orderCreatedMissingPayment') : t('checkoutExtra.orderCreatedCard')}
-                </h1>
-                <p className="text-muted-foreground mb-4">
-                  {needsCardPayment
-                    ? t('checkoutExtra.completeCardPayment')
-                    : t('checkoutExtra.orderCreatedMessage')}
-                </p>
+                {(() => {
+                  const manual = paymentMethod !== 'stripe';
+                  const done = manual ? proofUploaded : cardPaid;
+                  const title = manual
+                    ? (done ? t('checkoutExtra.proof.received') : t('checkoutExtra.proof.title'))
+                    : (done ? t('checkoutExtra.proof.paid') : t('checkoutExtra.proof.cardTitle'));
+                  const sub = manual
+                    ? (done ? t('checkoutExtra.proof.receivedMessage') : t('checkoutExtra.proof.subtitle'))
+                    : (done ? t('checkoutExtra.proof.paidMessage') : t('checkoutExtra.proof.cardSubtitle'));
+                  return (
+                    <>
+                      <div className="mb-4">
+                        <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${done ? 'bg-green-100' : 'bg-amber-100'}`}>
+                          {done ? <Check className="w-10 h-10 text-green-600" /> : <Clock className="w-10 h-10 text-amber-600" />}
+                        </div>
+                      </div>
+                      <h1 className="text-2xl font-bold mb-2">{title}</h1>
+                      <p className="text-muted-foreground mb-4">{sub}</p>
+                    </>
+                  );
+                })()}
                 {orderId && (
                   <div className="bg-muted p-4 rounded-lg mb-4">
                     <p className="text-sm text-muted-foreground">{t('checkoutExtra.orderId')}</p>
@@ -752,23 +765,27 @@ const SellerCheckout = () => {
                       amount={Math.max(0.5, orderTotal)}
                       currency="usd"
                       onSuccess={() => {
+                        setCardPaid(true);
                         toast.success(t('checkoutExtra.paymentSent'));
                       }}
                     />
                   </div>
                 )}
 
-                {paymentMethod !== 'stripe' && (
-                  <div className="text-left bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-yellow-800">{t('checkoutExtra.pendingVerification')}</p>
-                        <p className="text-sm text-yellow-700 mt-1">
-                          {t('checkoutExtra.pendingMessage')}
-                        </p>
-                      </div>
-                    </div>
+                {paymentMethod !== 'stripe' && orderId && (
+                  <div className="text-left border border-amber-200 bg-amber-50/60 p-4 rounded-lg mb-4 space-y-3">
+                    <PaymentProofUpload
+                      orderId={orderId}
+                      orderTable="orders_b2b"
+                      showReferenceInput
+                      onUploaded={() => {
+                        setProofUploaded(true);
+                        proofQueryClient.invalidateQueries({ queryKey: ['pending-payment-proofs'] });
+                      }}
+                    />
+                    {!proofUploaded && (
+                      <p className="text-xs text-muted-foreground">{t('checkoutExtra.proof.later')}</p>
+                    )}
                   </div>
                 )}
 

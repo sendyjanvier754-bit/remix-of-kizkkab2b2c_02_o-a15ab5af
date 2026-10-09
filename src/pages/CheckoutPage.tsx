@@ -48,6 +48,9 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
+import { useQueryClient } from '@tanstack/react-query';
+import { Clock } from 'lucide-react';
 
 type PaymentMethod = 'stripe' | 'moncash' | 'natcash' | 'transfer';
 type PaymentMode = 'manual' | 'automatic';
@@ -105,6 +108,9 @@ const CheckoutPage = () => {
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('manual');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [fullOrderId, setFullOrderId] = useState<string | null>(null);
+  const [proofUploaded, setProofUploaded] = useState(false);
+  const proofQueryClient = useQueryClient();
   const [orderId, setOrderId] = useState<string | null>(null);
   const [paymentReference, setPaymentReference] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
@@ -393,15 +399,25 @@ const CheckoutPage = () => {
         <main className="flex-1 container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
             <Card className="p-8 text-center">
-              <div className="mb-6">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                  <Check className="w-10 h-10 text-green-600" />
-                </div>
-              </div>
-              <h1 className="text-2xl font-bold mb-2">{t('checkout.orderSent')}</h1>
-              <p className="text-muted-foreground mb-4">
-                {t('checkout.orderReceivedMessage')}
-              </p>
+              {(() => {
+                const manual = paymentMethod !== 'stripe';
+                const pending = manual && !proofUploaded;
+                return (
+                  <>
+                    <div className="mb-6">
+                      <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${pending ? 'bg-amber-100' : 'bg-green-100'}`}>
+                        {pending ? <Clock className="w-10 h-10 text-amber-600" /> : <Check className="w-10 h-10 text-green-600" />}
+                      </div>
+                    </div>
+                    <h1 className="text-2xl font-bold mb-2">
+                      {!manual ? t('checkout.orderSent') : pending ? t('checkoutExtra.proof.title') : t('checkoutExtra.proof.received')}
+                    </h1>
+                    <p className="text-muted-foreground mb-4">
+                      {!manual ? t('checkout.orderReceivedMessage') : pending ? t('checkoutExtra.proof.subtitle') : t('checkoutExtra.proof.receivedMessage')}
+                    </p>
+                  </>
+                );
+              })()}
               {orderId && (
                 <div className="bg-muted p-4 rounded-lg mb-6">
                   <p className="text-sm text-muted-foreground">{t('checkout.orderNumberLabel')}</p>
@@ -423,12 +439,20 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {paymentMethod !== 'stripe' && (
-                <div className="text-left bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
-                  <p className="font-semibold text-yellow-800">{t('checkout.pendingVerification')}</p>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    {t('checkout.pendingVerificationMessage')}
-                  </p>
+              {paymentMethod !== 'stripe' && fullOrderId && (
+                <div className="text-left border border-amber-200 bg-amber-50/60 p-4 rounded-lg mb-6 space-y-3">
+                  <PaymentProofUpload
+                    orderId={fullOrderId}
+                    orderTable="orders_b2c"
+                    showReferenceInput
+                    onUploaded={() => {
+                      setProofUploaded(true);
+                      proofQueryClient.invalidateQueries({ queryKey: ['pending-payment-proofs'] });
+                    }}
+                  />
+                  {!proofUploaded && (
+                    <p className="text-xs text-muted-foreground">{t('checkoutExtra.proof.later')}</p>
+                  )}
                 </div>
               )}
 
@@ -524,6 +548,7 @@ const CheckoutPage = () => {
 
       if (order) {
         setOrderId(order.id.slice(0, 8).toUpperCase());
+        setFullOrderId(order.id);
         
         // Complete the cart by marking it as completed
         try {

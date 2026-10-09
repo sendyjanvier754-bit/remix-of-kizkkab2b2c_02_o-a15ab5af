@@ -16,6 +16,7 @@ import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTranslatedContent } from '@/hooks/useTranslatedContent';
+import { usePendingPaymentProofs } from '@/hooks/usePendingPaymentProofs';
 
 const getNotificationIcon = (type: DBNotification['type']) => {
   switch (type) {
@@ -95,6 +96,8 @@ export const NotificationBell = () => {
   const { t } = useTranslation();
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
   const { role } = useAuth();
+  const { data: pendingProofs = [] } = usePendingPaymentProofs();
+  const totalBadge = unreadCount + pendingProofs.length;
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -114,11 +117,11 @@ export const NotificationBell = () => {
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
+          {totalBadge > 0 && (
             <Badge
               className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground text-xs"
             >
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {totalBadge > 9 ? '9+' : totalBadge}
             </Badge>
           )}
         </Button>
@@ -144,13 +147,32 @@ export const NotificationBell = () => {
             <div className="flex items-center justify-center h-full py-10">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : notifications.length === 0 ? (
+          ) : notifications.length === 0 && pendingProofs.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-6 py-10">
               <Bell className="h-8 w-8 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">{t('notifications.empty', { defaultValue: 'No tienes notificaciones' })}</p>
             </div>
           ) : (
             <div className="divide-y">
+              {pendingProofs.map((o) => (
+                <button
+                  key={`proof-${o.id}`}
+                  type="button"
+                  className="w-full text-left p-3 bg-accent/40 hover:bg-accent/60 transition-colors"
+                  onClick={() => { setOpen(false); navigate(o.action_url); }}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg">🧾</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {t('checkoutExtra.proof.notifTitle', { code: o.id.slice(0, 8).toUpperCase() })}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('checkoutExtra.proof.notifBody')}</p>
+                      <p className="text-xs font-semibold text-primary mt-1">{t('checkoutExtra.proof.uploadNow')} →</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
               {notifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}

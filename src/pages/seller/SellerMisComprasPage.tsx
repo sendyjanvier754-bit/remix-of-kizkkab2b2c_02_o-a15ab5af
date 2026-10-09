@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { OpenChatButton } from '@/components/chat/OpenChatButton';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -111,6 +112,16 @@ const SellerMisComprasPage = () => {
       ? rawOrders?.filter(o => o.status === 'preparing' || o.status === 'in_transit')
       : rawOrders?.filter(o => o.status === statusFilter);
   const cancelOrder = useCancelBuyerOrder();
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const target = searchParams.get('order');
+    if (!target || !rawOrders?.length) return;
+    const found = rawOrders.find(o => o.id === target);
+    if (found) {
+      setSelectedOrder(found);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, rawOrders, setSearchParams]);
   const createReturnRequest = useCreateReturnRequest();
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [returnReason, setReturnReason] = useState('');
@@ -855,6 +866,7 @@ const SellerMisComprasPage = () => {
                       existingUrl={(selectedOrder.metadata as any)?.payment_proof_url}
                       onUploaded={() => {
                         queryClient.invalidateQueries({ queryKey: ['buyer-b2b-orders'] });
+                        queryClient.invalidateQueries({ queryKey: ['pending-payment-proofs'] });
                       }}
                     />
                   </div>

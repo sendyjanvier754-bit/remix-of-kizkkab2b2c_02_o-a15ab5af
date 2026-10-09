@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { OpenChatButton } from "@/components/chat/OpenChatButton";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/hooks/useAuth";
@@ -313,6 +313,7 @@ const OrderDetailDialog = ({
   onCancelClick: (order: BuyerOrder) => void;
   poInfo?: OrderPOInfo;
 }) => {
+  const queryClient = useQueryClient();
   if (!order) return null;
   const status = statusConfig[order.status] || statusConfig.draft;
   const carrier = order.metadata?.carrier || "";
@@ -512,7 +513,7 @@ const OrderDetailDialog = ({
           )}
 
           {/* Payment Proof Upload - for B2C pending_validation orders */}
-          {!isB2B && order.payment_status === 'pending_validation' && order.payment_method !== 'stripe' && (
+          {!isB2B && ['pending', 'pending_validation', 'placed'].includes(order.payment_status as string) && order.status !== 'cancelled' && order.payment_method !== 'stripe' && (
             <Card className="border-amber-200 bg-amber-50/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-amber-700">
@@ -530,7 +531,7 @@ const OrderDetailDialog = ({
                   existingUrl={(order.metadata as any)?.payment_proof_url}
                   orderTable="orders_b2c"
                   onUploaded={() => {
-                    // Refetch B2C orders to reflect new proof
+                    queryClient.invalidateQueries({ queryKey: ['pending-payment-proofs'] });
                   }}
                 />
               </CardContent>
@@ -801,6 +802,17 @@ const MyPurchasesPage = () => {
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   }, [orders, normalizedB2COrders, statusFilter]);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const target = searchParams.get('order');
+    if (!target || !allOrders.length) return;
+    const found = allOrders.find(o => o.id === target);
+    if (found) {
+      setSelectedOrder(found);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, allOrders, setSearchParams]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
