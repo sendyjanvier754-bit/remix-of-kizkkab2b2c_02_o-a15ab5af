@@ -314,6 +314,7 @@ const OrderDetailDialog = ({
   poInfo?: OrderPOInfo;
 }) => {
   if (!order) return null;
+  const queryClient = useQueryClient();
   const status = statusConfig[order.status] || statusConfig.draft;
   const carrier = order.metadata?.carrier || "";
   const trackingNumber = order.metadata?.tracking_number || "";
