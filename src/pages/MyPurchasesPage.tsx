@@ -313,8 +313,8 @@ const OrderDetailDialog = ({
   onCancelClick: (order: BuyerOrder) => void;
   poInfo?: OrderPOInfo;
 }) => {
-  if (!order) return null;
   const queryClient = useQueryClient();
+  if (!order) return null;
   const status = statusConfig[order.status] || statusConfig.draft;
   const carrier = order.metadata?.carrier || "";
   const trackingNumber = order.metadata?.tracking_number || "";
