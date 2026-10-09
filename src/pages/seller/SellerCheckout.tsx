@@ -65,7 +65,6 @@ import {
 import { toast } from 'sonner';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
 import { useQueryClient } from '@tanstack/react-query';
-import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 type PaymentMethod = 'stripe' | 'moncash' | 'transfer';
