@@ -28,6 +28,7 @@ import {
   MousePointerClick, ShoppingCart, Clock, Gift, Ticket,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { PendingProofPopupSettings } from '@/components/admin/PendingProofPopupSettings';
 import { useTranslation } from 'react-i18next';
 
 type TriggerType = 'welcome' | 'exit_intent' | 'cart_abandon' | 'timed_promotion';
@@ -144,6 +145,8 @@ const AdminPopupsPage = () => {
           <Card><CardHeader className="pb-2"><CardDescription>{t('popups.stats.views')}</CardDescription><CardTitle className="text-2xl">{stats.totalViews.toLocaleString()}</CardTitle></CardHeader></Card>
           <Card><CardHeader className="pb-2"><CardDescription>{t('popups.stats.clicks')}</CardDescription><CardTitle className="text-2xl">{stats.totalClicks.toLocaleString()}</CardTitle></CardHeader></Card>
         </div>
+
+        <PendingProofPopupSettings />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
