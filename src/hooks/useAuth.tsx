@@ -251,7 +251,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 } else if (userRole === UserRole.GROSSISTE) {
                   navigate('/grossiste/dashboard', { replace: true });
                 } else {
-                  navigate('/', { replace: true });
+                  navigate('/perfil', { replace: true });
                 }
               }
             }
