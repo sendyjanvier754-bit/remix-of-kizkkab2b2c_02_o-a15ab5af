@@ -64,14 +64,18 @@ const LoginPage = () => {
     if (!authLoading && user) {
       const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
       if (!justLoggedIn) {
+        // Wait until the role is resolved before deciding where to send the user
+        if (!role) return;
         if (role === UserRole.SELLER) {
           navigate('/seller/adquisicion-lotes', { replace: true });
         } else if (role === UserRole.ADMIN) {
           navigate('/admin/dashboard', { replace: true });
-        } else if (role === UserRole.USER) {
-          navigate('/perfil', { replace: true });
+        } else if (role === UserRole.ZLETI_ADMIN) {
+          navigate('/admin/logistica-zleti', { replace: true });
+        } else if (role === UserRole.GROSSISTE) {
+          navigate('/grossiste/dashboard', { replace: true });
         } else {
-          navigate('/', { replace: true });
+          navigate('/perfil', { replace: true });
         }
       }
     }
