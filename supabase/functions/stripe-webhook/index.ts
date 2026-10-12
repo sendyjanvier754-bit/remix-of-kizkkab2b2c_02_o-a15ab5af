@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
           .update({
             payment_status: 'paid',
             status: 'paid',
-            payment_reference: pi.id,
+            ...(table === 'orders_b2c' ? { payment_reference: pi.id } : {}),
             payment_confirmed_at: new Date().toISOString(),
             metadata: { ...((cur?.metadata as Record<string, unknown>) || {}), stripe_payment_intent_id: pi.id },
           })
