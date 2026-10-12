@@ -38,11 +38,11 @@ Deno.serve(async (req) => {
     }
 
     const pi = event.data.object as Stripe.PaymentIntent;
-    const orderId = pi.metadata?.order_id;
     const orderType = pi.metadata?.order_type;
+    const ids = (pi.metadata?.order_ids || pi.metadata?.order_id || '').split(',').filter(Boolean);
     const table = orderType === 'b2b' ? 'orders_b2b' : orderType === 'b2c' ? 'orders_b2c' : null;
 
-    if (!table || !orderId) {
+    if (!table || ids.length === 0) {
       console.log('Event ignored — missing metadata', event.type);
       return new Response(JSON.stringify({ received: true }), {
         status: 200,
@@ -51,23 +51,24 @@ Deno.serve(async (req) => {
     }
 
     if (event.type === 'payment_intent.succeeded') {
-      const { error } = await admin
-        .from(table)
-        .update({
-          payment_status: 'paid',
-          status: 'paid',
-          metadata: { stripe_payment_intent_id: pi.id },
-        })
-        .eq('id', orderId);
-      if (error) console.error('Update order failed:', error);
-      console.log(`✅ Order ${orderId} (${table}) marked as paid`);
+      for (const id of ids) {
+        const { data: cur } = await admin.from(table).select('metadata').eq('id', id).maybeSingle();
+        const { error } = await admin
+          .from(table)
+          .update({
+            payment_status: 'paid',
+            status: 'paid',
+            payment_reference: pi.id,
+            payment_confirmed_at: new Date().toISOString(),
+            metadata: { ...((cur?.metadata as Record<string, unknown>) || {}), stripe_payment_intent_id: pi.id },
+          })
+          .eq('id', id);
+        if (error) console.error('Update order failed:', id, error);
+      }
+      console.log(`✅ Orders ${ids.join(',')} (${table}) marked as paid`);
     } else if (event.type === 'payment_intent.payment_failed') {
-      const { error } = await admin
-        .from(table)
-        .update({ payment_status: 'failed' })
-        .eq('id', orderId);
+      const { error } = await admin.from(table).update({ payment_status: 'failed' }).in('id', ids);
       if (error) console.error('Update order failed:', error);
-      console.log(`❌ Order ${orderId} payment failed`);
     }
 
     return new Response(JSON.stringify({ received: true }), {
