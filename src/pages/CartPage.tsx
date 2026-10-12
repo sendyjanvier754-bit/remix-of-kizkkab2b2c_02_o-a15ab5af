@@ -1075,10 +1075,10 @@ const CartPage = () => {
                     onClick={handleShareCart}
                     disabled={isSharing}
                     className="px-4 py-2 rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2 bg-transparent border border-border hover:bg-muted"
-                    title="Compartir carrito"
+                    title={t('cartExtra.shareCart')}
                   >
                     {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                    Compartir
+                    {t('cartExtra.share')}
                   </button>
                   {someSelected ? (
                     <Link
@@ -1242,7 +1242,7 @@ const CartPage = () => {
                 onClick={handleShareCart}
                 disabled={isSharing}
                 className="p-2 rounded-lg font-semibold text-sm transition flex items-center justify-center border border-border bg-muted hover:bg-muted/80"
-                title="Compartir carrito"
+                title={t('cartExtra.shareCart')}
               >
                 {isSharing ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : <Share2 className="w-5 h-5 text-foreground" />}
               </button>
@@ -1263,7 +1263,7 @@ const CartPage = () => {
               <button
                 onClick={handleClearCart}
                 className="p-2 rounded-lg transition hover:bg-red-100 border border-gray-300 text-red-600"
-                title="Vaciar carrito"
+                title={t('cartExtra.clearCartTitle')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -1276,7 +1276,7 @@ const CartPage = () => {
                   style={{ backgroundColor: '#071d7f' }}
                 >
                   <ShoppingCart className="w-4 h-4" />
-                  Comprar ({totalQuantity})
+                  {t('cartExtra.buyCount', { count: totalQuantity })}
                 </Link>
               ) : (
                 <button
@@ -1285,7 +1285,7 @@ const CartPage = () => {
                   style={{ backgroundColor: '#071d7f' }}
                 >
                   <ShoppingCart className="w-4 h-4" />
-                  Selecciona
+                  {t('cartExtra.selectItems')}
                 </button>
               )}
             </div>
