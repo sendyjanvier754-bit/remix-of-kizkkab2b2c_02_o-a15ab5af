@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
+import { StripeCardForm } from '@/components/payments/StripeCardForm';
 import { useQueryClient } from '@tanstack/react-query';
 import { Clock } from 'lucide-react';
 
@@ -110,6 +111,9 @@ const CheckoutPage = () => {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [fullOrderId, setFullOrderId] = useState<string | null>(null);
   const [proofUploaded, setProofUploaded] = useState(false);
+  const [allOrderIds, setAllOrderIds] = useState<string[]>([]);
+  const [cardPaid, setCardPaid] = useState(false);
+  const [cardAmount, setCardAmount] = useState(0);
   const proofQueryClient = useQueryClient();
   const [orderId, setOrderId] = useState<string | null>(null);
   const [paymentReference, setPaymentReference] = useState('');
@@ -401,7 +405,7 @@ const CheckoutPage = () => {
             <Card className="p-8 text-center">
               {(() => {
                 const manual = paymentMethod !== 'stripe';
-                const pending = manual && !proofUploaded;
+                const pending = manual ? !proofUploaded : !cardPaid;
                 return (
                   <>
                     <div className="mb-6">
@@ -410,10 +414,10 @@ const CheckoutPage = () => {
                       </div>
                     </div>
                     <h1 className="text-2xl font-bold mb-2">
-                      {!manual ? t('checkout.orderSent') : pending ? t('checkoutExtra.proof.title') : t('checkoutExtra.proof.received')}
+                      {!manual ? (cardPaid ? t('checkoutExtra.proof.paidTitle', 'Pago confirmado') : t('stripeForm.completeTitle', 'Completa tu pago')) : pending ? t('checkoutExtra.proof.title') : t('checkoutExtra.proof.received')}
                     </h1>
                     <p className="text-muted-foreground mb-4">
-                      {!manual ? t('checkout.orderReceivedMessage') : pending ? t('checkoutExtra.proof.subtitle') : t('checkoutExtra.proof.receivedMessage')}
+                      {!manual ? (cardPaid ? t('checkout.orderReceivedMessage') : t('stripeForm.completeSubtitle', 'Tu pedido está reservado. Introduce los datos de tu tarjeta para confirmarlo.')) : pending ? t('checkoutExtra.proof.subtitle') : t('checkoutExtra.proof.receivedMessage')}
                     </p>
                   </>
                 );
@@ -436,6 +440,18 @@ const CheckoutPage = () => {
                   <p className="text-sm text-muted-foreground">
                     {selectedAddressData.city}, {selectedAddressData.country}
                   </p>
+                </div>
+              )}
+
+              {paymentMethod === 'stripe' && !cardPaid && allOrderIds.length > 0 && (
+                <div className="text-left border rounded-lg p-4 mb-6">
+                  <StripeCardForm
+                    orderIds={allOrderIds}
+                    orderType="b2c"
+                    amount={cardAmount}
+                    currency="usd"
+                    onSuccess={() => setCardPaid(true)}
+                  />
                 </div>
               )}
 
@@ -549,6 +565,8 @@ const CheckoutPage = () => {
       if (order) {
         setOrderId(order.id.slice(0, 8).toUpperCase());
         setFullOrderId(order.id);
+        setAllOrderIds((order as any).all_order_ids ?? [order.id]);
+        setCardAmount(totalWithShipping);
         
         // Complete the cart by marking it as completed
         try {

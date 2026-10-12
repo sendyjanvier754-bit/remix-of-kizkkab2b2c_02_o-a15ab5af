@@ -33,15 +33,13 @@ Deno.serve(async (req) => {
     const userId = claimsData.claims.sub as string;
 
     const body = await req.json();
-    const { order_id, order_type, amount, currency = 'usd' } = body ?? {};
-    if (!order_id || !order_type || typeof amount !== 'number' || amount <= 0) {
+    const { order_id, order_type, currency = 'usd' } = body ?? {};
+    const rawIds: unknown = body?.order_ids ?? (order_id ? [order_id] : []);
+    const orderIds = Array.isArray(rawIds)
+      ? rawIds.filter((x): x is string => typeof x === 'string' && /^[0-9a-f-]{36}$/i.test(x)).slice(0, 20)
+      : [];
+    if (orderIds.length === 0 || (order_type !== 'b2b' && order_type !== 'b2c')) {
       return new Response(JSON.stringify({ error: 'Invalid input' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    if (order_type !== 'b2b' && order_type !== 'b2c') {
-      return new Response(JSON.stringify({ error: 'Invalid order_type' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -49,7 +47,6 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // Load active Stripe settings
     const { data: settings, error: settingsErr } = await admin
       .from('stripe_settings')
       .select('secret_key, mode')
@@ -58,43 +55,55 @@ Deno.serve(async (req) => {
 
     if (settingsErr || !settings?.secret_key) {
       return new Response(
-        JSON.stringify({ error: 'Stripe no configurado. Pídele al admin que configure las llaves en /admin/payment-keys.' }),
+        JSON.stringify({ error: 'card_unavailable' }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verify order ownership
+    // Verify ownership and compute amount server-side (never trust client amount)
     const table = order_type === 'b2b' ? 'orders_b2b' : 'orders_b2c';
-    const { data: order, error: orderErr } = await admin
+    const buyerCol = order_type === 'b2b' ? 'buyer_id' : 'buyer_user_id';
+    const { data: orders, error: orderErr } = await admin
       .from(table)
-      .select('id, buyer_id, total_amount')
-      .eq('id', order_id)
-      .maybeSingle();
+      .select(`id, ${buyerCol}, total_amount, payment_status`)
+      .in('id', orderIds);
 
-    if (orderErr || !order) {
+    if (orderErr || !orders || orders.length !== orderIds.length) {
       return new Response(JSON.stringify({ error: 'Order not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    if (order.buyer_id !== userId) {
+    if (orders.some((o: any) => o[buyerCol] !== userId)) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    if (orders.some((o: any) => o.payment_status === 'paid')) {
+      return new Response(JSON.stringify({ error: 'already_paid' }), {
+        status: 409,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const total = orders.reduce((s: number, o: any) => s + Number(o.total_amount || 0), 0);
+    const amountCents = Math.max(50, Math.round(total * 100));
 
     const stripe = new Stripe(settings.secret_key, { apiVersion: '2024-12-18.acacia' });
 
-    const intent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100),
-      currency,
-      automatic_payment_methods: { enabled: true },
-      metadata: { order_id, order_type, user_id: userId },
-    });
+    const intent = await stripe.paymentIntents.create(
+      {
+        amount: amountCents,
+        currency,
+        automatic_payment_methods: { enabled: true },
+        description: `KIZKKA ${order_type.toUpperCase()} ${orderIds.map((i) => i.slice(0, 8)).join(',')}`,
+        metadata: { order_id: orderIds[0], order_ids: orderIds.join(','), order_type, user_id: userId },
+      },
+      { idempotencyKey: `pi-${order_type}-${[...orderIds].sort().join('-')}-${amountCents}` },
+    );
 
     return new Response(
-      JSON.stringify({ client_secret: intent.client_secret, payment_intent_id: intent.id, mode: settings.mode }),
+      JSON.stringify({ client_secret: intent.client_secret, payment_intent_id: intent.id, mode: settings.mode, amount: amountCents / 100 }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (e) {

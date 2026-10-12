@@ -150,7 +150,7 @@ export const useCreateB2COrder = () => {
           if (itemsError) throw itemsError;
         }
 
-        return firstOrder;
+        return { ...firstOrder, all_order_ids: [...createdOrderIds] };
       } catch (err) {
         // Rollback all created orders on any failure
         if (createdOrderIds.length > 0) {
