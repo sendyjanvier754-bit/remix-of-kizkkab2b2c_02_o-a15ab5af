@@ -115,6 +115,7 @@ export function AdminSidebar() {
     { title: t('adminSidebar.commissions'), url: "/admin/commissions", icon: Settings },
     { title: t('adminSidebar.paymentMethods'), url: "/admin/payment-methods", icon: CreditCard },
     { title: "Llaves de Pago (Stripe)", url: "/admin/payment-keys", icon: CreditCard },
+    { title: "Liquidaciones a Vendedores", url: "/admin/liquidaciones-vendedores", icon: CreditCard },
     { title: "Identidad del Sistema", url: "/admin/branding", icon: Globe },
   ];
 
