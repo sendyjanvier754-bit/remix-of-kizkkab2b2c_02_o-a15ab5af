@@ -50,6 +50,7 @@ import {
 import { toast } from 'sonner';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
 import { StripeCardForm } from '@/components/payments/StripeCardForm';
+import { usePublicStripeKey } from '@/hooks/usePublicStripeKey';
 import { useQueryClient } from '@tanstack/react-query';
 import { Clock } from 'lucide-react';
 
@@ -157,6 +158,7 @@ const CheckoutPage = () => {
   } = useAdminPaymentMethodsReadOnly();
 
   // Build payment methods list dynamically from admin-configured active methods
+  const { data: stripeKey } = usePublicStripeKey();
   const paymentMethods = useMemo(() => {
     const list: Array<{
       id: PaymentMethod;
@@ -167,7 +169,7 @@ const CheckoutPage = () => {
       bgColor: string;
     }> = [];
     if (adminPaymentMethodsLoading) return list;
-    if (adminMethods.some(m => m.method_type === 'stripe' && m.is_active)) {
+    if (stripeKey?.publishable_key || adminMethods.some(m => m.method_type === 'stripe' && m.is_active)) {
       list.push({ id: 'stripe', name: t('payments.creditCard'), description: t('checkout.creditCardDesc'), icon: CreditCard, color: 'text-blue-600', bgColor: 'bg-blue-50' });
     }
     if (adminMoncash?.is_active) {
@@ -180,7 +182,7 @@ const CheckoutPage = () => {
       list.push({ id: 'transfer', name: adminBank.display_name || t('payments.bankTransfer'), description: t('checkout.bankTransferDesc'), icon: Building2, color: 'text-green-600', bgColor: 'bg-green-50' });
     }
     return list;
-  }, [adminPaymentMethodsLoading, adminMethods, adminMoncash, adminNatcash, adminBank, t]);
+  }, [stripeKey, adminPaymentMethodsLoading, adminMethods, adminMoncash, adminNatcash, adminBank, t]);
 
   // Check if automatic payment is available for each method
   const moncashAutoAvailable = adminMoncash?.automatic_enabled && adminMoncash?.is_active;
