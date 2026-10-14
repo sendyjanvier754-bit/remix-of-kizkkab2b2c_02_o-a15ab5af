@@ -25,6 +25,8 @@ import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
 import VariantDrawer from '@/components/products/VariantDrawer';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
+import { useWhatsAppShareStore } from '@/stores/useWhatsAppShareStore';
+import { WhatsAppIcon } from '@/components/products/WhatsAppShareDialog';
 import ProductReviews from "@/components/products/ProductReviews";
 import OtherSellersSection from "@/components/products/OtherSellersSection";
 import ProductCarousel from "@/components/landing/ProductCarousel";
@@ -946,6 +948,23 @@ const ProductPage = () => {
   // Usar precio de v_productos_con_precio_b2b (ya viene en product.precio_venta)
   const displayPrice = isB2BUser ? product.precio_venta : product.precio_venta;
 
+  // Abre el diálogo de WhatsApp con el detalle del producto actual
+  const openWhatsAppShare = () => {
+    const currencyCode = ((storeData && (storeData?.metadata?.currency || (storeData as any).currency)) || 'USD').toUpperCase();
+    useWhatsAppShareStore.getState().open({
+      id: product.id,
+      name: product.nombre,
+      sku: product.sku,
+      price: displayPrice,
+      currency: currencyCode,
+      image: images[selectedImage] || images[0],
+      sourceProductId: product.source_product?.id,
+      storeId: product.store?.id || sellerParam || undefined,
+      storeWhatsapp: (product as any).store?.whatsapp || undefined
+    });
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Mobile Header Hide - Apply to body via style */}
@@ -1320,6 +1339,15 @@ const ProductPage = () => {
                     <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
                       <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
                     </button>
+                    <button
+                      type="button"
+                      onClick={openWhatsAppShare}
+                      title={t('whatsappShare.button')}
+                      aria-label={t('whatsappShare.button')}
+                      className="p-3 rounded-lg bg-green-500 hover:bg-green-600 text-white shadow-sm transition-all duration-300 active:scale-90"
+                    >
+                      <WhatsAppIcon className="w-5 h-5" />
+                    </button>
                     <Button
                     onClick={() => {
                       useVariantDrawerStore.getState().open({
@@ -1591,6 +1619,14 @@ const ProductPage = () => {
             aria-label="favorite"
             className="p-2.5 rounded-lg border border-gray-200 bg-white">
             <Heart className={`w-5 h-5 ${isFavorite() ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+          </button>
+          <button
+            type="button"
+            onClick={openWhatsAppShare}
+            aria-label={t('whatsappShare.button')}
+            title={t('whatsappShare.button')}
+            className="p-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white">
+            <WhatsAppIcon className="w-5 h-5" />
           </button>
           <Button
             variant="outline"
