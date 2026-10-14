@@ -227,57 +227,53 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
       </Link>
 
       {/* Product Info */}
-      <div className="p-1 flex flex-col flex-1">
+      <div className="p-2.5 flex flex-col flex-1 gap-1.5">
         <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'}>
-          <h3 className="text-sm font-normal text-foreground line-clamp-2 mb-1 hover:text-primary transition min-h-[2.5rem] leading-5">
+          <h3 className="text-sm font-normal text-foreground line-clamp-2 hover:text-primary transition min-h-[2.5rem] leading-5">
             {displayName}
           </h3>
         </Link>
 
-        {/* MOQ Label for Seller */}
-        {isB2BUser && moq > 1 && (
-          <span className="self-start text-[11px] text-muted-foreground font-medium mb-1.5 border border-border rounded px-1.5 py-0.5">
-            {t('productPdp.minUnits', { count: moq })}
-          </span>
-        )}
-
-        {/* Precios */}
-        <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'}>
-          <div className="flex items-baseline gap-2 flex-wrap hover:opacity-80 transition-opacity mb-3">
-            {/* Price badge with currency from database */}
-            <span className="inline-flex items-center gap-1 bg-[#ef481b] border border-[#ef481b] px-1 py-0.5 rounded-md animate-pulse">
-              <span className="text-white font-bold text-xs">${displayPrice.toFixed(2)}</span>
-              <span className="text-[7px] font-medium text-white">{currency}</span>
+        <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'} className="flex flex-col gap-1 hover:opacity-80 transition-opacity">
+          {/* Row 1: price + rating */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-baseline gap-1 bg-[#ef481b] px-1.5 py-0.5 rounded-md">
+              <span className="text-white font-bold text-sm">${displayPrice.toFixed(2)}</span>
+              <span className="text-[8px] font-medium text-white">{currency}</span>
             </span>
-            
-            {/* Rating Display */}
             <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-yellow-500">
               <span className="text-sm">★</span>
               {(product.rating || 0).toFixed(1)}
             </span>
+          </div>
 
-            {!isB2BUser && (product.offersCount || 1) > 1 && (
-              <span className="text-[9px] font-semibold text-[#071d7f] bg-blue-50 border border-blue-100 px-1 py-0.5 rounded">
-                {t('otherSellers.sellersBadge', { count: product.offersCount })}
-              </span>
-            )}
-            
-            
-            {isB2BUser && strikethroughPrice && strikethroughPrice > displayPrice && (
-              <span className="text-[9px] text-green-600 font-semibold">
+          {/* Row 2: secondary info */}
+          <div className="flex items-center justify-between gap-2 min-h-[1.125rem]">
+            {isB2BUser && strikethroughPrice && strikethroughPrice > displayPrice ? (
+              <span className="text-[10px] text-green-600 font-semibold">
                 ${strikethroughPrice.toFixed(2)} {t('catalogExtra.productCard.pvp')}
               </span>
-            )}
-            {!isB2BUser && strikethroughPrice && strikethroughPrice > displayPrice && (
-              <span className="text-[9px] text-muted-foreground line-through">
+            ) : !isB2BUser && strikethroughPrice && strikethroughPrice > displayPrice ? (
+              <span className="text-[10px] text-muted-foreground line-through">
                 ${strikethroughPrice.toFixed(2)}
+              </span>
+            ) : <span />}
+
+            {isB2BUser && moq > 1 && (
+              <span className="text-[10px] text-muted-foreground font-medium border border-border rounded px-1.5 py-0.5 whitespace-nowrap">
+                {t('productPdp.minUnits', { count: moq })}
+              </span>
+            )}
+            {!isB2BUser && (product.offersCount || 1) > 1 && (
+              <span className="text-[9px] font-semibold text-[#071d7f] bg-blue-50 border border-blue-100 px-1 py-0.5 rounded whitespace-nowrap">
+                {t('otherSellers.sellersBadge', { count: product.offersCount })}
               </span>
             )}
           </div>
         </Link>
 
         {/* Action Buttons - Footer */}
-        <div className="mt-auto flex items-center gap-1.5 pt-3">
+        <div className="mt-auto flex items-center gap-1.5 pt-1">
           {/* WhatsApp order / share button */}
           <button
             type="button"
