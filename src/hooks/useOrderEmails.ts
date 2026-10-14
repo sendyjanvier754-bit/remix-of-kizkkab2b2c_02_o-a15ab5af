@@ -235,6 +235,10 @@ export async function sendSellerNewOrderEmail(params: OrderEmailParams) {
 
 /** Send order status change email to buyer */
 export async function sendOrderStatusChangeEmail(params: StatusChangeParams) {
+  // WhatsApp automation (shipped / ready for pickup / delivered) — fire and forget
+  supabase.functions.invoke('send-transactional-email', {
+    body: { event: 'order_status', order_id: params.orderId, order_type: params.orderType || 'b2b', status: params.newStatus, tracking: params.trackingNumber },
+  }).catch(() => {});
   const orderNum = params.orderNumber || formatOrderNumber(params.orderId);
   const statusLabel = STATUS_LABELS[params.newStatus] || params.newStatus;
 

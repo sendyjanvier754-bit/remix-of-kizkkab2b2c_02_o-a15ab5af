@@ -140,6 +140,7 @@ const NotificationsPage = lazyWithRetry(() => import("./pages/admin/Notification
 const AdminPurchasingAgentsPage = lazyWithRetry(() => import("./pages/admin/AdminPurchasingAgentsPage"));
 const AdminBrandingPage = lazyWithRetry(() => import("./pages/admin/AdminBrandingPage"));
 const AdminEmailConfigPage = lazyWithRetry(() => import("./pages/admin/AdminEmailConfigPage"));
+const AdminWhatsAppAutomationPage = lazyWithRetry(() => import("./pages/admin/AdminWhatsAppAutomationPage"));
 const AdminEmailTemplatesPage = lazyWithRetry(() => import("./pages/admin/AdminEmailTemplatesPage"));
 const AdminAffiliatesPage = lazyWithRetry(() => import("./pages/admin/AdminAffiliatesPage"));
 const AdminAccountsPage = lazyWithRetry(() => import("./pages/admin/AdminAccountsPage"));
@@ -675,6 +676,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
                   <LazyRoute><AdminEmailConfigPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/whatsapp-automation" 
+              element={
+                <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                  <LazyRoute><AdminWhatsAppAutomationPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
