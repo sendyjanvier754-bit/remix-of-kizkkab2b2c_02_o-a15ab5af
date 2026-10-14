@@ -16,8 +16,8 @@ const TrendingStoresSection = () => {
 
   if (isLoading) {
     return (
-      <section className="space-y-4">
-        <div className="flex items-center gap-3 mb-6">
+      <section className="space-y-2">
+        <div className="flex items-center gap-2 mb-2">
           <div className="p-2 bg-orange-100 rounded-full">
             <TrendingUp className="w-6 h-6 text-orange-500" />
           </div>
@@ -26,7 +26,7 @@ const TrendingStoresSection = () => {
             <p className="text-muted-foreground text-sm">Las tiendas más populares del momento</p>
           </div>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-2">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center gap-3 mb-4">
@@ -55,7 +55,7 @@ const TrendingStoresSection = () => {
   if (!stores || stores.length === 0) {
     return (
       <section>
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-2 mb-2">
           <div className="p-2 bg-orange-100 rounded-full">
             <TrendingUp className="w-6 h-6 text-orange-500" />
           </div>
@@ -64,7 +64,7 @@ const TrendingStoresSection = () => {
             <p className="text-muted-foreground text-sm">Las tiendas más populares del momento</p>
           </div>
         </div>
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-6 text-muted-foreground">
           No hay tiendas con productos disponibles en este momento.
         </div>
       </section>
@@ -73,7 +73,7 @@ const TrendingStoresSection = () => {
 
   return (
     <section>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-2 mb-2">
         <div className="p-2 bg-orange-100 rounded-full">
           <TrendingUp className="w-6 h-6 text-orange-500" />
         </div>
@@ -83,7 +83,7 @@ const TrendingStoresSection = () => {
         </div>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-2">
         {stores.map((store) => (
           <TrendingStoreCard 
             key={store.id} 

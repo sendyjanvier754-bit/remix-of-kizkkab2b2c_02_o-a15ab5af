@@ -53,7 +53,7 @@ const TrendingCategoryCard = ({ category }: TrendingCategoryCardProps) => {
   return (
     <div className="bg-card overflow-hidden animate-fade-in">
       {/* Category Header */}
-      <div className="p-3 flex items-start gap-3">
+      <div className="p-2.5 flex items-start gap-3">
         {/* Category Icon with Trends Badge */}
         <div 
           className="relative cursor-pointer flex-shrink-0"
@@ -135,7 +135,7 @@ const TrendingCategoryCard = ({ category }: TrendingCategoryCardProps) => {
               />
             </div>
             {/* Price in orange */}
-            <p className="text-orange-500 font-bold text-sm mt-1.5">
+            <p className="text-orange-500 font-bold text-sm mt-1">
               <span className="text-orange-500/70 text-xs">$</span>
               <span className="text-orange-500">{product.precio.toFixed(2)}</span>
             </p>
@@ -149,14 +149,14 @@ const TrendingCategoryCard = ({ category }: TrendingCategoryCardProps) => {
               <div className="aspect-[3/4] bg-muted/30 rounded flex items-center justify-center">
                 <Package className="w-6 h-6 text-muted-foreground/30" />
               </div>
-              <div className="h-5 mt-1.5" />
+              <div className="h-5 mt-1" />
             </div>
           ))
         }
       </div>
 
       {/* Category Description Footer */}
-      <div className="px-3 py-3 flex items-center gap-1">
+      <div className="px-3 py-2 flex items-center gap-1">
         <span className="text-orange-400 text-xl leading-none font-serif">"</span>
         <p className="text-sm text-muted-foreground flex-1 line-clamp-1">
           {category.description || `Explora los mejores productos en ${displayCategoryName}`}

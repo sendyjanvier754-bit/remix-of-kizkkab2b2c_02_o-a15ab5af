@@ -171,16 +171,16 @@ const TrendsPage = () => {
       ) : null}
 
       {/* Featured Carousel - Mobile Only */}
-      {isMobile && featuredProducts.length > 0 && <div className={isSeller ? "pt-2" : "pt-2"}>
+      {isMobile && featuredProducts.length > 0 && <div>
           <FeaturedCarousel products={featuredProducts} showMoq={isB2B} />
         </div>}
       
       {/* Hero Section */}
       
 
-      <div className={`container mx-auto px-4 py-12 ${isMobile ? 'pb-20' : ''} ${isSeller && !isMobile ? 'pt-4' : ''}`}>
+      <div className={`container mx-auto px-3 py-3 md:py-6 ${isMobile ? 'pb-20' : ''} ${isSeller && !isMobile ? 'pt-4' : ''}`}>
         {/* Filters Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 bg-white p-2.5 md:p-4 rounded-lg shadow-sm">
           {/* Desktop Filters */}
           <div className="hidden md:flex items-center gap-4 flex-1">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -242,7 +242,7 @@ const TrendsPage = () => {
           </div>
         </div>
 
-        <div className="space-y-16">
+        <div className="space-y-5 md:space-y-8">
           {/* Trending Stores Section */}
           <TrendingStoresSection />
 
