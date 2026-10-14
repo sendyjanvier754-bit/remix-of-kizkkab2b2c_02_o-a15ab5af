@@ -1,0 +1,11 @@
+{
+  "categoriesNav": {
+    "search": "Search category",
+    "departments": "Departments",
+    "shopAll": "Shop all {{name}}",
+    "explore": "Shop by category",
+    "noResults": "No categories found",
+    "subcount": "{{count}} subcategories",
+    "subcount_one": "{{count}} subcategory"
+  }
+}
