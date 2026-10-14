@@ -12,6 +12,8 @@ import { useB2BFavorites } from "@/hooks/useB2BFavorites";
 import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 import ProductImage from "@/components/shared/ProductImage";
 import { useTranslation } from "react-i18next";
+import { useWhatsAppShareStore } from "@/stores/useWhatsAppShareStore";
+import { WhatsAppIcon } from "@/components/products/WhatsAppShareDialog";
 
 interface Product {
   id: string;
@@ -276,18 +278,30 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
 
         {/* Action Buttons - Footer */}
         <div className="mt-auto flex items-center gap-1.5 pt-3">
-          {/* WhatsApp Contact Button */}
-          <a
-            href={product.storeWhatsapp ? `https://wa.me/${product.storeWhatsapp.replace(/\D/g, '')}` : '#'}
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* WhatsApp order / share button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              useWhatsAppShareStore.getState().open({
+                id: product.id,
+                name: displayName,
+                sku: product.sku,
+                price: displayPrice,
+                currency,
+                image: product.image,
+                sourceProductId: product.source_product_id,
+                storeId: product.storeId,
+                storeWhatsapp: product.storeWhatsapp,
+              });
+            }}
             className="p-1.5 rounded-lg transition shadow-sm flex items-center justify-center bg-green-500 hover:bg-green-600 text-white"
-            title={t('catalogExtra.productCard.contactWhatsapp')}
+            title={t('whatsappShare.button')}
+            aria-label={t('whatsappShare.button')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-          </a>
+            <WhatsAppIcon className="w-3.5 h-3.5" />
+          </button>
           
           {/* Cart Button */}
           <button 
