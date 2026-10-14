@@ -948,6 +948,23 @@ const ProductPage = () => {
   // Usar precio de v_productos_con_precio_b2b (ya viene en product.precio_venta)
   const displayPrice = isB2BUser ? product.precio_venta : product.precio_venta;
 
+  // Abre el diálogo de WhatsApp con el detalle del producto actual
+  const openWhatsAppShare = () => {
+    const currencyCode = ((storeData && (storeData?.metadata?.currency || (storeData as any).currency)) || 'USD').toUpperCase();
+    useWhatsAppShareStore.getState().open({
+      id: product.id,
+      name: product.nombre,
+      sku: product.sku,
+      price: displayPrice,
+      currency: currencyCode,
+      image: images[selectedImage] || images[0],
+      sourceProductId: product.source_product?.id,
+      storeId: product.store?.id || sellerParam || undefined,
+      storeWhatsapp: (product as any).store?.whatsapp || undefined
+    });
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Mobile Header Hide - Apply to body via style */}
