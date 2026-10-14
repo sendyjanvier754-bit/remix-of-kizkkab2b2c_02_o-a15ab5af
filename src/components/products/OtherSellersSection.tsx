@@ -6,6 +6,7 @@ import { Store as StoreIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useOtherSellerOffers } from "@/hooks/useOtherSellerOffers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface OtherSellersSectionProps {
   sourceProductId?: string | null;

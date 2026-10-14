@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useB2BPricesMap } from "@/hooks/useMarketplaceData";
 import { useViewMode } from "@/contexts/ViewModeContext";
+import { cn } from "@/lib/utils";
 
 interface Product {
   id: string;
