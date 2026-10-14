@@ -7,6 +7,7 @@ import { useWhatsAppShareStore } from '@/stores/useWhatsAppShareStore';
 import { useProductVariants } from '@/hooks/useProductVariants';
 import { useWhatsAppSupport } from '@/hooks/useWhatsAppSupport';
 import { getStoredAffiliateCode } from '@/components/affiliates/AffiliateRefCapture';
+import { supabase } from '@/integrations/supabase/client';
 
 type Intent = 'order' | 'info' | 'share';
 
@@ -22,6 +23,33 @@ const WhatsAppShareDialog = () => {
   useEffect(() => {
     if (isOpen) { setSelected({}); setQty(1); setIntent('order'); }
   }, [isOpen, product?.id]);
+
+  // Resolve the seller's WhatsApp when it wasn't passed in:
+  // store by id → otherwise the active B2B seller store offering this product.
+  const [resolvedSellerPhone, setResolvedSellerPhone] = useState<string | null>(null);
+  useEffect(() => {
+    setResolvedSellerPhone(null);
+    if (!isOpen || !product || product.storeWhatsapp) return;
+    let cancelled = false;
+    (async () => {
+      let phone: string | null = null;
+      if (product.storeId) {
+        const { data } = await supabase.from('stores').select('whatsapp').eq('id', product.storeId).maybeSingle();
+        phone = (data as any)?.whatsapp || null;
+      }
+      if (!phone && product.sourceProductId) {
+        const { data } = await supabase
+          .from('seller_catalog')
+          .select('store:stores!inner(whatsapp,is_active)')
+          .eq('source_product_id', product.sourceProductId)
+          .eq('is_active', true)
+          .limit(10);
+        phone = ((data as any[]) || []).map((r) => r.store?.whatsapp).find((w) => w && String(w).replace(/\D/g, '').length >= 6) || null;
+      }
+      if (!cancelled) setResolvedSellerPhone(phone);
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen, product?.id, product?.storeId, product?.storeWhatsapp, product?.sourceProductId]);
 
   // Build attribute → values map from active variants
   const attributes = useMemo(() => {
@@ -65,7 +93,11 @@ const WhatsAppShareDialog = () => {
   const variantText = Object.entries(selected).map(([k, v]) => `${k}: ${v}`).join(' | ');
 
   const buildMessage = () => {
-    const lines = [t(`whatsappShare.greeting.${intent}`), '', `*${product.name}*`];
+    // Image link goes first: WhatsApp builds the preview from the first URL,
+    // so the chat shows the selected variant / product photo instead of the site logo.
+    const lines: string[] = [];
+    if (image && /^https?:\/\//.test(image)) lines.push(image, '');
+    lines.push(t(`whatsappShare.greeting.${intent}`), '', `*${product.name}*`);
     if (product.sku) lines.push(`SKU: ${product.sku}`);
     if (variantText) lines.push(`${t('whatsappShare.variant')}: ${variantText}`);
     if (intent !== 'share') {
@@ -83,7 +115,7 @@ const WhatsAppShareDialog = () => {
     const message = buildMessage();
     const text = encodeURIComponent(message);
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const seller = (product.storeWhatsapp || '').replace(/\D/g, '');
+    const seller = (product.storeWhatsapp || resolvedSellerPhone || '').replace(/\D/g, '');
     let url: string;
     if (intent === 'share') {
       // Let the visitor choose any contact
