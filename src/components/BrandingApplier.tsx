@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useBranding } from '@/hooks/useBranding';
-import { setBrandingName } from '@/services/pdfGenerators';
+import { setBrandingName } from '@/services/brandConfig';
 
 /**
  * Invisible component mounted once at app root.
