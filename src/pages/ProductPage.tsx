@@ -305,6 +305,8 @@ const ProductPage = () => {
     touchDeltaX.current = 0;
     if (Math.abs(delta) >= SWIPE_THRESHOLD) {
       goToImage(delta < 0 ? 'next' : 'prev');
+    } else if (Math.abs(delta) < 8) {
+      setZoomOpen(true);
     }
   };
 
@@ -1654,43 +1656,66 @@ const ProductPage = () => {
 
 
 
-      {/* Image Zoom Modal */}
+      {/* Image Zoom Modal - swipeable fullscreen gallery */}
       <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-white">
+        <DialogContent className="max-w-4xl w-screen h-[100dvh] sm:h-auto sm:max-h-[92vh] p-0 bg-background border-0 sm:rounded-lg [&>button]:hidden">
           <div className="relative w-full h-full flex flex-col">
-            <button
-              onClick={() => setZoomOpen(false)}
-              className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100">
-              
-              <X className="w-6 h-6" />
-            </button>
-            
-            <div className="flex-1 flex items-center justify-center bg-gray-50 p-4 rounded-lg m-4">
-              {images.length > 0 ?
-              <img
-                src={images[selectedImage]}
-                alt={product?.nombre}
-                className="max-w-full max-h-[70vh] object-contain" /> :
-
-
-              <Package className="w-24 h-24 text-gray-300" />
-              }
+            <div className="absolute top-3 left-0 right-0 z-10 flex items-center justify-between px-3">
+              <span className="rounded-full bg-foreground/60 px-3 py-1 text-xs font-bold text-background">
+                {selectedImage + 1}/{images.length || 1}
+              </span>
+              <button
+                onClick={() => setZoomOpen(false)}
+                aria-label="Close"
+                className="bg-background rounded-full p-2 shadow-lg">
+                <X className="w-6 h-6" />
+              </button>
             </div>
 
-            {/* Thumbnail Navigation */}
+            {images.length > 0 ?
+            <div
+              ref={(el) => {
+                if (el && !el.dataset.init) {
+                  el.dataset.init = '1';
+                  requestAnimationFrame(() => { el.scrollLeft = el.clientWidth * selectedImage; });
+                }
+              }}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                const idx = Math.round(el.scrollLeft / el.clientWidth);
+                if (idx !== selectedImage && idx >= 0 && idx < images.length) setSelectedImage(idx);
+              }}
+              className="flex-1 min-h-0 flex overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{ touchAction: 'pan-x pinch-zoom' }}>
+                {images.map((image, index) =>
+              <div key={index} className="w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-muted/40 sm:min-h-[70vh]">
+                    <img
+                  src={image}
+                  alt={product?.nombre}
+                  className="max-w-full max-h-[80vh] object-contain"
+                  referrerPolicy="no-referrer"
+                  draggable={false} />
+                  </div>
+              )}
+              </div> :
+            <div className="flex-1 flex items-center justify-center">
+                <Package className="w-24 h-24 text-muted-foreground" />
+              </div>
+            }
+
             {images.length > 1 &&
-            <div className="flex gap-3 overflow-x-auto pb-4 px-4 justify-center">
+            <div className="flex gap-2 overflow-x-auto py-3 px-3">
                 {images.map((image, index) =>
               <button
                 key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                selectedImage === index ?
-                'border-blue-600 ring-2 ring-blue-100' :
-                'border-gray-300 hover:border-gray-400'}`
-                }>
-                
-                    <img src={image} alt="" className="w-full h-full object-cover" />
+                onClick={(e) => {
+                  setSelectedImage(index);
+                  const scroller = (e.currentTarget.parentElement?.previousElementSibling as HTMLElement | null);
+                  scroller?.scrollTo({ left: scroller.clientWidth * index, behavior: 'smooth' });
+                }}
+                className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                selectedImage === index ? 'border-primary' : 'border-border'}`}>
+                    <img src={image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </button>
               )}
               </div>
