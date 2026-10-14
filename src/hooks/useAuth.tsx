@@ -314,6 +314,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         );
     }
 
+    // Automatic welcome email (only when a session exists right away)
+    if (!error && data?.session) {
+      const lang = (localStorage.getItem('i18n_language') || 'es').slice(0, 2);
+      supabase.functions.invoke('send-transactional-email', { body: { event: 'welcome', lang } }).catch(() => {});
+    }
+
     return { error };
   };
 

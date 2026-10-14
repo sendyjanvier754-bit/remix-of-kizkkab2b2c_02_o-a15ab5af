@@ -446,6 +446,11 @@ export const useOrders = () => {
         throw new Error(message);
       }
 
+      // Automatic "payment confirmed" email to buyer (deduplicated server-side)
+      for (const order_type of ['b2b', 'b2c'] as const) {
+        supabase.functions.invoke('send-transactional-email', { body: { event: 'order_paid', order_id: orderId, order_type } }).catch(() => {});
+      }
+
       return data;
     },
     onSuccess: () => {
