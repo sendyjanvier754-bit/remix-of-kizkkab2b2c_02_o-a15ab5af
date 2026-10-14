@@ -6,12 +6,15 @@ import { useTranslatedList } from "@/hooks/useTranslatedContent";
 const CategoryGrid = () => {
   const { data: categories = [], isLoading } = usePublicCategories();
 
-  // Filter only root categories (no parent) for main display
-  const rootCategories = categories.filter(cat => !cat.parent_id);
+  // Departments first, then subcategories; max 3 rows x 12 columns
+  const displayCategories = [
+    ...categories.filter(cat => !cat.parent_id),
+    ...categories.filter(cat => cat.parent_id),
+  ].slice(0, 36);
 
   const { getTranslated } = useTranslatedList(
     'category',
-    rootCategories,
+    displayCategories,
     (cat) => ({ name: cat.name })
   );
 
@@ -54,50 +57,33 @@ const CategoryGrid = () => {
     );
   }
 
-  // Split categories into two rows for mobile scroll
-  const half = Math.ceil(rootCategories.length / 2);
-  const firstRow = rootCategories.slice(0, half);
-  const secondRow = rootCategories.slice(half);
+  // Mobile: split into 3 horizontally scrollable rows
+  const perRow = Math.ceil(displayCategories.length / 3);
+  const rows = [0, 1, 2].map((i) => displayCategories.slice(i * perRow, (i + 1) * perRow)).filter((r) => r.length);
 
-  const labelOf = (cat: typeof rootCategories[number]) =>
+  const labelOf = (cat: typeof displayCategories[number]) =>
     getTranslated(cat).name || cat.name;
 
   return (
     <section className="w-full py-6 md:py-10 px-4 overflow-x-hidden">
-      {/* Mobile/Tablet: Horizontal scroll with 2 rows */}
       <div className="lg:hidden w-full">
         <div className="w-full overflow-x-auto scrollbar-hide">
-          <div className="flex flex-col gap-4 pb-2">
-            {/* First row */}
-            <div className="flex gap-4">
-              {firstRow.map((cat) => (
-                <CategoryCard
-                  key={cat.id}
-                  label={labelOf(cat)}
-                  image={cat.icon}
-                  href={`/categoria/${cat.slug}`}
-                />
-              ))}
-            </div>
-            {/* Second row */}
-            <div className="flex gap-4">
-              {secondRow.map((cat) => (
-                <CategoryCard
-                  key={cat.id}
-                  label={labelOf(cat)}
-                  image={cat.icon}
-                  href={`/categoria/${cat.slug}`}
-                />
-              ))}
-            </div>
+          <div className="flex flex-col gap-3 pb-2">
+            {rows.map((row, idx) => (
+              <div key={idx} className="flex gap-4">
+                {row.map((cat) => (
+                  <CategoryCard key={cat.id} label={labelOf(cat)} image={cat.icon} href={`/categoria/${cat.slug}`} />
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Desktop: Grid layout - full width */}
+      {/* Desktop: up to 3 rows x 12 columns */}
       <div className="hidden lg:block w-full px-4">
-          <div className="grid grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-x-4 gap-y-6 justify-items-center">
-            {rootCategories.map((cat) => (
+          <div className="grid grid-cols-12 gap-x-3 gap-y-5 justify-items-center">
+            {displayCategories.map((cat) => (
               <div key={cat.id} className="w-full flex flex-col items-center">
                 <CategoryCard
                   label={labelOf(cat)}
@@ -108,6 +94,7 @@ const CategoryGrid = () => {
             ))}
           </div>
         </div>
+
     </section>
   );
 };
