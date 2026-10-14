@@ -97,7 +97,7 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
   const [currentPage, setCurrentPage] = useState(0);
   const [allProducts, setAllProducts] = useState<ProductB2BCard[]>([]);
   const [hasMore, setHasMore] = useState(true);
-  const itemsPerPage = 24;
+  const itemsPerPage: number | null = null; // show all products, no pagination
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const didMountRef = useRef(false);
   const [whatsappNumber, setWhatsappNumber] = useState("50369596772");
@@ -120,7 +120,7 @@ const SellerAcquisicionLotesContentWithFilters = ({ filters, setFilters }: Conte
       } else {
         setAllProducts(prev => [...prev, ...productsData.products]);
       }
-      setHasMore(productsData.products.length === itemsPerPage);
+      setHasMore(itemsPerPage !== null && productsData.products.length === itemsPerPage);
     }
   }, [productsData, currentPage]);
 
