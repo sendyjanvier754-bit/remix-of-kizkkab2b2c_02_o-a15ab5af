@@ -2847,6 +2847,101 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaign_sends: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          email: string
+          error: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          email: string
+          error?: string | null
+          id?: string
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          email?: string
+          error?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cta_label: string | null
+          cta_url: string | null
+          failed_count: number
+          html_content: string
+          id: string
+          language: string
+          name: string
+          preheader: string | null
+          recipients_count: number
+          segment: string
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          failed_count?: number
+          html_content?: string
+          id?: string
+          language?: string
+          name: string
+          preheader?: string | null
+          recipients_count?: number
+          segment?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          failed_count?: number
+          html_content?: string
+          id?: string
+          language?: string
+          name?: string
+          preheader?: string | null
+          recipients_count?: number
+          segment?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_configuration: {
         Row: {
           api_key: string
@@ -2926,6 +3021,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          language: string
+          source: string
+          status: string
+          unsubscribe_token: string
+          unsubscribed_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          language?: string
+          source?: string
+          status?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          language?: string
+          source?: string
+          status?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       email_templates: {
         Row: {
