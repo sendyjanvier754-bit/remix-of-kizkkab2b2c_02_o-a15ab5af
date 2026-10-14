@@ -237,8 +237,10 @@ export async function sendSellerNewOrderEmail(params: OrderEmailParams) {
 export async function sendOrderStatusChangeEmail(params: StatusChangeParams) {
   // WhatsApp automation (shipped / ready for pickup / delivered) — fire and forget
   supabase.functions.invoke('send-transactional-email', {
-    body: { event: 'order_status', order_id: params.orderId, order_type: params.orderType || 'b2b', status: params.newStatus, tracking: params.trackingNumber },
+    body: { event: 'order_status', order_id: params.orderId, order_type: params.orderType || 'b2b', status: params.newStatus, tracking: params.trackingNumber, carrier: params.carrier },
   }).catch(() => {});
+  // Logistics statuses are emailed server-side (branded, 4 languages, review request)
+  if (['shipped', 'in_transit', 'ready_for_pickup', 'delivered', 'completed'].includes(params.newStatus)) return;
   const orderNum = params.orderNumber || formatOrderNumber(params.orderId);
   const statusLabel = STATUS_LABELS[params.newStatus] || params.newStatus;
 

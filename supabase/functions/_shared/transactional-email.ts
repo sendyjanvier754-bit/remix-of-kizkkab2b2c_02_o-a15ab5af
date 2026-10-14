@@ -255,9 +255,15 @@ export async function sendLogisticsEmail(admin: any, table: "orders_b2b" | "orde
       const { data } = await admin.from("order_items_b2b").select("*").eq("order_id", orderId);
       items = (data || []).map((i: any) => ({ id: i.product_id, n: i.nombre }));
     }
+    const pids = [...new Set(items.map((i) => i.id).filter(Boolean))];
+    const skuMap: Record<string, string> = {};
+    if (pids.length) {
+      const { data: ps } = await admin.from("products").select("id,sku_interno").in("id", pids);
+      (ps || []).forEach((p: any) => { if (p.sku_interno) skuMap[p.id] = p.sku_interno; });
+    }
     const seen = new Set<string>();
     const rows = items.filter((i) => i.id && !seen.has(i.id) && seen.add(i.id)).slice(0, 5).map((i) =>
-      `<tr><td style="padding:8px;border-bottom:1px solid #eee">${esc(i.n)}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right"><a href="${SITE}/producto/${esc(i.id)}?review=1#reviews" style="color:#ce2e2e;font-weight:700;text-decoration:none">★★★★★ ${t.rate}</a></td></tr>`).join("");
+      `<tr><td style="padding:8px;border-bottom:1px solid #eee">${esc(i.n)}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right"><a href="${skuMap[i.id] ? `${SITE}/producto/${encodeURIComponent(skuMap[i.id])}?review=1#reviews` : ordersUrl}" style="color:#ce2e2e;font-weight:700;text-decoration:none">★★★★★ ${t.rate}</a></td></tr>`).join("");
     const review = `<div style="margin-top:22px;border-top:1px solid #eee;padding-top:18px"><h2 style="font-size:18px;color:#071d7f;margin:0 0 8px">${t.reviewTitle}</h2><p style="margin:0 0 8px">${t.reviewBody}</p>${rows ? `<table style="width:100%;border-collapse:collapse;font-size:14px">${rows}</table>` : `<div style="text-align:center">${btn(ordersUrl, t.rate)}</div>`}</div>`;
     body = `<p style="font-size:15px;line-height:1.6">${fill(t.deliveredBody, v)}</p>${review}`;
   }

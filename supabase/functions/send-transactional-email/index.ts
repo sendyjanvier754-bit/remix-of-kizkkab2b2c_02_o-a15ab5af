@@ -1,6 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { sendOrderEmail, sendWelcome } from "../_shared/transactional-email.ts";
+import { sendOrderEmail, sendWelcome, sendLogisticsEmail } from "../_shared/transactional-email.ts";
 import { sendOrderWhatsApp, sendWhatsAppTest, statusToWaKind, waConfigured } from "../_shared/transactional-whatsapp.ts";
 
 const json = (b: unknown, status = 200) =>
@@ -71,9 +71,12 @@ Deno.serve(async (req) => {
         if (!allowed) return json({ error: "forbidden" }, 403);
         const kind = statusToWaKind(String(body.status || o.status || ""));
         if (!kind || kind === "paid") return json({ ok: true, skipped: "no_whatsapp_for_status" });
-        return json(await sendOrderWhatsApp(admin, table, id, kind, {
-          tracking: typeof body.tracking === "string" ? body.tracking.slice(0, 80) : undefined,
-        }));
+        const tracking = typeof body.tracking === "string" ? body.tracking.slice(0, 80) : undefined;
+        const carrier = typeof body.carrier === "string" ? body.carrier.slice(0, 80) : undefined;
+        let email: unknown = null;
+        try { email = await sendLogisticsEmail(admin, table, id, kind, { tracking, carrier }); } catch (e) { console.error("logistics email", e); }
+        const whatsapp = await sendOrderWhatsApp(admin, table, id, kind, { tracking });
+        return json({ email, whatsapp });
       }
       if (event === "order_paid") {
         if (!isAdmin) return json({ error: "forbidden" }, 403);
