@@ -32,7 +32,11 @@ const ProductImage = ({
 }: ProductImageProps) => {
   // Build ordered candidate list (dedup, drop falsy)
   const candidates = [src, ...fallbackSrcs, PLACEHOLDER]
-    .filter((s): s is string => Boolean(s && s.trim()))
+    .filter((s): s is string => {
+      if (typeof s !== 'string') return false;
+      const v = s.trim().replace(/^\[?"?|"?\]?$/g, '').toLowerCase();
+      return Boolean(v) && v !== 'null' && v !== 'undefined';
+    })
     .filter((s, i, arr) => arr.indexOf(s) === i);
 
   const [index, setIndex] = useState(0);
