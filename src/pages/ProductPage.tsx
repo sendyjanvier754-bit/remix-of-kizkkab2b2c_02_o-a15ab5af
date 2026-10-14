@@ -760,8 +760,20 @@ const ProductPage = () => {
   }, [images, selectedImage]);
 
   // B2B Specific Data
-  const costB2B = product?.source_product?.precio_mayorista_base || 0;
-  const pvp = product?.precio_venta || 0;
+  // Precio B2B real que paga el mayorista (vista v_productos_con_precio_b2b)
+  const costB2B = product?.precio_venta || product?.source_product?.precio_mayorista_base || 0;
+  const sourceProductIdForPvp = product?.source_product?.id || null;
+  const { data: suggestedPvpRpc } = useQuery({
+    queryKey: ['suggested-pvp', sourceProductIdForPvp],
+    enabled: !!isB2BUser && !!sourceProductIdForPvp,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('calculate_suggested_pvp', { p_product_id: sourceProductIdForPvp as string });
+      if (error) throw error;
+      return Number(data) || 0;
+    },
+  });
+  const pvp = suggestedPvpRpc && suggestedPvpRpc > 0 ? suggestedPvpRpc : 0;
   const moq = product?.source_product?.moq || 1;
   const stockB2B = product?.source_product?.stock_fisico || 0;
 
@@ -776,21 +788,19 @@ const ProductPage = () => {
     }
   }, [isB2BUser, moq]);
 
-  // Business Logic for B2B
+  // Business Logic for B2B: compra B2B vs PVP sugerido de reventa
   const businessSummary = useMemo(() => {
-    if (!isB2BUser || !product) return null;
-    // Usar precio de la vista v_productos_con_precio_b2b
-    const priceToUse = product.precio_venta || pvp;
+    if (!isB2BUser || !product || pvp <= 0 || costB2B <= 0) return null;
     const investment = costB2B * quantity;
-    const estimatedRevenue = priceToUse * quantity;
+    const estimatedRevenue = pvp * quantity;
     const estimatedProfit = estimatedRevenue - investment;
-    const profitPercentage = costB2B > 0 ? (priceToUse - costB2B) / costB2B * 100 : 0;
-    const profitPerUnit = priceToUse - costB2B;
+    const profitPerUnit = pvp - costB2B;
+    const profitPercentage = (profitPerUnit / costB2B) * 100;
     return {
       investment,
       estimatedRevenue,
       estimatedProfit,
-      profitPercentage: profitPercentage.toFixed(1),
+      profitPercentage: profitPercentage.toFixed(0),
       profitPerUnit
     };
   }, [isB2BUser, product, quantity, costB2B, pvp]);
