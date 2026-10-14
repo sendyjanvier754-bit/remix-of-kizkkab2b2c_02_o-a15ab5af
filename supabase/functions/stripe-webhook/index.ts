@@ -1,6 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import Stripe from 'npm:stripe@17';
+import { sendOrderEmail } from '../_shared/transactional-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -64,6 +65,9 @@ Deno.serve(async (req) => {
           })
           .eq('id', id);
         if (error) console.error('Update order failed:', id, error);
+      }
+      for (const id of ids) {
+        try { await sendOrderEmail(admin, table as 'orders_b2b' | 'orders_b2c', id, 'paid'); } catch (e) { console.error('paid email failed', id, e); }
       }
       console.log(`✅ Orders ${ids.join(',')} (${table}) marked as paid`);
     } else if (event.type === 'payment_intent.payment_failed') {

@@ -115,14 +115,14 @@ function wrapEmailHtml(title: string, body: string): string {
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;line-height:1.6;color:#333;margin:0;padding:0;background:#f9fafb">
   <div style="max-width:600px;margin:0 auto;padding:20px">
     <div style="background:linear-gradient(135deg,#071d7f 0%,#1e40af 100%);color:white;padding:30px;text-align:center;border-radius:8px 8px 0 0">
-      <h1 style="margin:0;font-size:22px">Siver Market</h1>
+      <h1 style="margin:0;font-size:22px">Kizkka</h1>
     </div>
     <div style="background:#fff;padding:30px;border:1px solid #e5e7eb;border-top:none">
       ${body}
     </div>
     <div style="text-align:center;padding:20px;color:#6b7280;font-size:12px">
-      <p>Este es un mensaje automático de Siver Market.</p>
-      <p>© ${new Date().getFullYear()} Siver Market. Todos los derechos reservados.</p>
+      <p>Este es un mensaje automático de Kizkka.</p>
+      <p>© ${new Date().getFullYear()} Kizkka. Todos los derechos reservados.</p>
     </div>
   </div>
 </body>
@@ -133,31 +133,17 @@ function wrapEmailHtml(title: string, body: string): string {
 // PUBLIC API
 // ============================================================================
 
-/** Send order confirmation email to buyer */
+/** Buyer email at order creation: "pending payment" in the buyer's language.
+ *  Card (Stripe) orders are skipped — the payment webhook sends "payment confirmed". */
 export async function sendOrderConfirmationEmail(params: OrderEmailParams) {
-  const orderNum = params.orderNumber || formatOrderNumber(params.orderId);
-  const itemsHtml = buildItemsTable(params.items || []);
-  const paymentLabel = PAYMENT_METHOD_LABELS[params.paymentMethod || ''] || params.paymentMethod || 'N/A';
-
-  const body = `
-    <h2 style="color:#071d7f;margin-top:0">¡Pedido Confirmado! 🎉</h2>
-    <p>Hola <strong>${params.buyerName}</strong>,</p>
-    <p>Tu pedido <strong>#${orderNum}</strong> ha sido registrado exitosamente.</p>
-    ${itemsHtml}
-    <div style="background:#f0f9ff;padding:16px;border-radius:8px;margin:16px 0">
-      <p style="margin:0"><strong>Total:</strong> ${formatCurrency(params.totalAmount, params.currency)}</p>
-      <p style="margin:4px 0 0"><strong>Método de pago:</strong> ${paymentLabel}</p>
-      <p style="margin:4px 0 0"><strong>Tipo:</strong> ${params.orderType === 'b2c' ? 'Tienda B2C' : 'Mayorista B2B'}</p>
-    </div>
-    <p>Te mantendremos informado sobre el estado de tu pedido.</p>`;
-
-  return sendOrderEmail({
-    to: params.buyerEmail,
-    subject: `Pedido #${orderNum} confirmado - Siver Market`,
-    htmlContent: wrapEmailHtml('Pedido Confirmado', body),
-    type: 'orders',
-    destinationCountryId: params.destinationCountryId,
-  });
+  const m = (params.paymentMethod || '').toLowerCase();
+  if (m === 'stripe' || m.includes('card') || m.includes('tarjeta')) return true;
+  try {
+    await supabase.functions.invoke('send-transactional-email', {
+      body: { event: 'order_pending', order_id: params.orderId, order_type: params.orderType || 'b2c' },
+    });
+    return true;
+  } catch { return false; }
 }
 
 /** Send payment instructions email to buyer */
@@ -240,7 +226,7 @@ export async function sendSellerNewOrderEmail(params: OrderEmailParams) {
 
   return sendOrderEmail({
     to: params.sellerEmail,
-    subject: `Nuevo pedido #${orderNum} recibido - Siver Market`,
+    subject: `Nuevo pedido #${orderNum} recibido - Kizkka`,
     htmlContent: wrapEmailHtml('Nuevo Pedido', body),
     type: 'orders',
     destinationCountryId: params.destinationCountryId,
@@ -311,7 +297,7 @@ export async function sendOrderCancelledEmail(params: OrderEmailParams & { reaso
 
   return sendOrderEmail({
     to: params.buyerEmail,
-    subject: `Pedido #${orderNum} cancelado - Siver Market`,
+    subject: `Pedido #${orderNum} cancelado - Kizkka`,
     htmlContent: wrapEmailHtml('Pedido Cancelado', body),
     type: 'orders',
     destinationCountryId: params.destinationCountryId,

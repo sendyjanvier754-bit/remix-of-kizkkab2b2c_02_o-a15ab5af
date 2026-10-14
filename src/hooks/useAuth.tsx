@@ -168,6 +168,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         setSession(session);
 
+        // Welcome email after first sign-in (covers email-confirmation flow; deduplicated server-side)
+        const u = session?.user;
+        if (event === 'SIGNED_IN' && u && !u.user_metadata?.welcome_email_sent_at
+          && Date.now() - new Date(u.created_at).getTime() < 3 * 86400000) {
+          const lang = (localStorage.getItem('i18n_language') || 'es').slice(0, 2);
+          setTimeout(() => {
+            supabase.functions.invoke('send-transactional-email', { body: { event: 'welcome', lang } }).catch(() => {});
+          }, 0);
+        }
+
         // Procesar cambios de auth
         if (event === 'TOKEN_REFRESHED') {
           // Session refreshed silently — nothing to do, state already updated above
@@ -312,6 +322,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           { id: data.user.id, email, full_name: fullName, terms_accepted_at: termsAcceptedAt } as any,
           { onConflict: 'id' }
         );
+    }
+
+    // Automatic welcome email (only when a session exists right away)
+    if (!error && data?.session) {
+      const lang = (localStorage.getItem('i18n_language') || 'es').slice(0, 2);
+      supabase.functions.invoke('send-transactional-email', { body: { event: 'welcome', lang } }).catch(() => {});
     }
 
     return { error };

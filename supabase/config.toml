@@ -24,3 +24,6 @@ verify_jwt = false
 [functions.stripe-test-connection]
 verify_jwt = false
 
+
+[functions.send-transactional-email]
+verify_jwt = false
