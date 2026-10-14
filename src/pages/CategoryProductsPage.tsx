@@ -237,125 +237,137 @@ const CategoryProductsPage = () => {
           <p className="text-xs text-gray-600 whitespace-nowrap">{t('pagesExtra.categoryProducts.productsAvailable', { count: visibleProductsCount })}</p>
         </div>
 
-        {/* Compact Filters Bar */}
-        {/* Filters Bar - Responsive */}
-        <div className="bg-white rounded-lg border border-gray-200 px-3 py-2 mb-3">
-          <div className="flex flex-col md:flex-row md:items-center md:flex-wrap gap-2">
-            {/* Row 1: Primary Filters */}
-            <div className="flex flex-wrap items-center gap-2 w-full">
-              {/* Sort Dropdown */}
-              <select 
-                value={filters.sortBy} 
-                onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as FilterOptions["sortBy"] })}
-                className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-fit"
-              >
-                <option value="newest">{t('pagesExtra.categoryProducts.sortNewest')}</option>
-                <option value="price_asc">{t('pagesExtra.categoryProducts.sortPriceAsc')}</option>
-                <option value="price_desc">{t('pagesExtra.categoryProducts.sortPriceDesc')}</option>
-                <option value="rating">{t('pagesExtra.categoryProducts.sortRating')}</option>
-              </select>
-
-              {/* Price Range Compact */}
-              <div className="flex items-center gap-1">
-                <span className="text-sm text-gray-600">{t('pagesExtra.categoryProducts.priceLabel')}</span>
-                <input 
-                  type="number" 
-                  placeholder={t('pagesExtra.categoryProducts.min')} 
-                  value={priceMin ?? ""}
-                  onChange={(e) => { setPriceMin(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
-                  className="w-16 px-2 py-1.5 border border-gray-300 rounded text-sm"
-                />
-                <span className="text-gray-400">-</span>
-                <input 
-                  type="number" 
-                  placeholder={t('pagesExtra.categoryProducts.max')} 
-                  value={priceMax ?? ""}
-                  onChange={(e) => { setPriceMax(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
-                  className="w-16 px-2 py-1.5 border border-gray-300 rounded text-sm"
-                />
-              </div>
-
-              {/* More Filters Button */}
-              <button 
-                onClick={() => setShowMoreFilters(!showMoreFilters)}
-                className="ml-auto flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50 transition"
-              >
-                <Filter className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Row 2: Secondary Filters (shown when expanded) */}
-            {showMoreFilters && (
-              <div className="flex flex-wrap items-center gap-2 w-full">
-                {/* Subcategories Dropdown */}
-                {subcategories.length > 0 && (
-                  <select 
-                    value={selectedSubcategory ?? ""} 
-                    onChange={(e) => { setSelectedSubcategory(e.target.value || null); setCurrentPage(1); }}
-                    className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        {/* Filters Bar - sticky pill row on mobile, panel on desktop */}
+        {(() => {
+          const activeCount = [priceMin, priceMax, selectedSubcategory, minRating, onlyPromo || null, inStockOnly || null].filter(Boolean).length;
+          const sortLabels: Record<string, string> = {
+            newest: t('pagesExtra.categoryProducts.sortNewest'),
+            price_asc: t('pagesExtra.categoryProducts.sortPriceAsc'),
+            price_desc: t('pagesExtra.categoryProducts.sortPriceDesc'),
+            rating: t('pagesExtra.categoryProducts.sortRating'),
+          };
+          return (
+            <div className={`${isMobile ? 'sticky top-0 z-30 -mx-4 px-4 py-2 bg-gray-50/95 backdrop-blur-sm' : 'bg-white rounded-lg border border-gray-200 px-3 py-2'} mb-3`}>
+              {/* Row 1: horizontal scrollable pills */}
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+                {/* Sort pill */}
+                <div className="relative flex-shrink-0">
+                  <select
+                    value={filters.sortBy}
+                    onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as FilterOptions["sortBy"] })}
+                    className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-gray-300 rounded-full text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">{t('pagesExtra.categoryProducts.all')}</option>
-                    {subcategories.map((s: any) => (
-                      <option key={s.id} value={s.id}>{getSubTranslated(s).name || s.name}</option>
-                    ))}
+                    <option value="newest">{sortLabels.newest}</option>
+                    <option value="price_asc">{sortLabels.price_asc}</option>
+                    <option value="price_desc">{sortLabels.price_desc}</option>
+                    <option value="rating">{sortLabels.rating}</option>
                   </select>
-                )}
+                  <ChevronRight className="w-3 h-3 text-gray-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+                </div>
 
-                {/* Rating Filter */}
-                <select 
-                  value={minRating ?? ""} 
-                  onChange={(e) => { setMinRating(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
-                  className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {/* Price range pill */}
+                <div className="flex-shrink-0 flex items-center gap-1 bg-white border border-gray-300 rounded-full pl-3 pr-1.5 py-1">
+                  <span className="text-xs font-medium text-gray-600">{t('pagesExtra.categoryProducts.priceLabel')}</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder={t('pagesExtra.categoryProducts.min')}
+                    value={priceMin ?? ""}
+                    onChange={(e) => { setPriceMin(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
+                    className="w-12 px-1 py-0.5 text-xs text-center bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-400 text-xs">–</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder={t('pagesExtra.categoryProducts.max')}
+                    value={priceMax ?? ""}
+                    onChange={(e) => { setPriceMax(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
+                    className="w-12 px-1 py-0.5 text-xs text-center bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Quick toggle: in stock */}
+                <button
+                  onClick={() => { setInStockOnly(!inStockOnly); setCurrentPage(1); }}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition ${inStockOnly ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
                 >
-                  <option value="">{t('pagesExtra.categoryProducts.ratingLabel')}</option>
-                  <option value="4">⭐ 4+</option>
-                  <option value="3">⭐ 3+</option>
-                  <option value="2">⭐ 2+</option>
-                </select>
+                  {t('pagesExtra.categoryProducts.inStock')}
+                </button>
 
-                {/* Promo Filter */}
-                <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-100 px-2 py-1.5 rounded">
-                  <input 
-                    type="checkbox" 
-                    checked={onlyPromo}
-                    onChange={(e) => { setOnlyPromo(e.target.checked); setCurrentPage(1); }}
-                    className="w-4 h-4 rounded border-gray-300"
-                  />
-                  <span>{t('pagesExtra.categoryProducts.promotions')}</span>
-                </label>
+                {/* Quick toggle: promo */}
+                <button
+                  onClick={() => { setOnlyPromo(!onlyPromo); setCurrentPage(1); }}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition ${onlyPromo ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
+                >
+                  {t('pagesExtra.categoryProducts.promotions')}
+                </button>
 
-                {/* Stock Filter */}
-                <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-100 px-2 py-1.5 rounded">
-                  <input 
-                    type="checkbox" 
-                    checked={inStockOnly}
-                    onChange={(e) => { setInStockOnly(e.target.checked); setCurrentPage(1); }}
-                    className="w-4 h-4 rounded border-gray-300"
-                  />
-                  <span>{t('pagesExtra.categoryProducts.inStock')}</span>
-                </label>
-
-                {/* Clear Filters */}
-                {(priceMin || priceMax || selectedSubcategory || minRating || onlyPromo || inStockOnly) && (
-                  <button 
-                    onClick={() => { 
-                      setPriceMin(undefined); 
-                      setPriceMax(undefined); 
-                      setSelectedSubcategory(null);
-                      setMinRating(undefined);
-                      setOnlyPromo(false);
-                      setInStockOnly(false);
-                      setCurrentPage(1); 
-                    }}
-                    className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 font-medium"
-                  >
-                    {t('pagesExtra.categoryProducts.clear')}
-                  </button>
-                )}
+                {/* More filters button with badge */}
+                <button
+                  onClick={() => setShowMoreFilters(!showMoreFilters)}
+                  className={`flex-shrink-0 ml-auto relative flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition ${showMoreFilters ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  {activeCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 bg-[#071d7f] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {activeCount}
+                    </span>
+                  )}
+                </button>
               </div>
-            )}
-          </div>
-        </div>
+
+              {/* Row 2: expanded filters panel */}
+              {showMoreFilters && (
+                <div className="flex flex-wrap items-center gap-2 w-full mt-2 pt-2 border-t border-gray-200">
+                  {/* Subcategories Dropdown */}
+                  {subcategories.length > 0 && (
+                    <select
+                      value={selectedSubcategory ?? ""}
+                      onChange={(e) => { setSelectedSubcategory(e.target.value || null); setCurrentPage(1); }}
+                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">{t('pagesExtra.categoryProducts.all')}</option>
+                      {subcategories.map((s: any) => (
+                        <option key={s.id} value={s.id}>{getSubTranslated(s).name || s.name}</option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* Rating Filter */}
+                  <select
+                    value={minRating ?? ""}
+                    onChange={(e) => { setMinRating(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
+                    className="px-3 py-1.5 bg-white border border-gray-300 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">{t('pagesExtra.categoryProducts.ratingLabel')}</option>
+                    <option value="4">⭐ 4+</option>
+                    <option value="3">⭐ 3+</option>
+                    <option value="2">⭐ 2+</option>
+                  </select>
+
+                  {/* Clear Filters */}
+                  {activeCount > 0 && (
+                    <button
+                      onClick={() => {
+                        setPriceMin(undefined);
+                        setPriceMax(undefined);
+                        setSelectedSubcategory(null);
+                        setMinRating(undefined);
+                        setOnlyPromo(false);
+                        setInStockOnly(false);
+                        setCurrentPage(1);
+                      }}
+                      className="px-3 py-1.5 text-xs text-red-600 hover:text-red-700 font-medium"
+                    >
+                      {t('pagesExtra.categoryProducts.clear')}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Products Grid - Updated with additional filters */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
