@@ -141,7 +141,7 @@ export const useFeaturedProducts = (defaultLimit = 10) => {
           id, sku, nombre, descripcion, precio_venta, precio_costo, stock, images, metadata,
           store:stores!seller_catalog_seller_store_id_fkey(id, name, whatsapp, logo, slug),
           source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id, 
+            id, nombre, categoria_id, 
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
         `)
@@ -181,7 +181,7 @@ export const useBestSellers = (defaultLimit = 10) => {
           id, sku, nombre, descripcion, precio_venta, precio_costo, stock, images, metadata,
           store:stores!seller_catalog_seller_store_id_fkey(id, name, whatsapp, logo, slug),
           source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id, 
+            id, nombre, categoria_id, 
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
         `)
@@ -220,7 +220,7 @@ export const useNewArrivals = (defaultLimit = 10) => {
           id, sku, nombre, descripcion, precio_venta, precio_costo, stock, images, metadata,
           store:stores!seller_catalog_seller_store_id_fkey(id, name, whatsapp, logo, slug),
           source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id, 
+            id, nombre, categoria_id, 
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
         `)
@@ -259,7 +259,7 @@ export const useDeals = (defaultLimit = 10) => {
           id, sku, nombre, descripcion, precio_venta, precio_costo, stock, images, metadata,
           store:stores!seller_catalog_seller_store_id_fkey(id, name, whatsapp, logo, slug),
           source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id, 
+            id, nombre, categoria_id, 
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
         `)
@@ -358,7 +358,7 @@ export const useProductsByCategory = (categoryId: string | null, limit = 10) => 
           id, sku, nombre, descripcion, precio_venta, precio_costo, stock, images, metadata,
           store:stores!seller_catalog_seller_store_id_fkey(id, name, whatsapp, logo, slug),
           source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id, 
+            id, nombre, categoria_id, 
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
         `)
@@ -403,7 +403,7 @@ export const useRecommendedProducts = (
           id, sku, nombre, descripcion, precio_venta, precio_costo, stock, images, metadata,
           store:stores!seller_catalog_seller_store_id_fkey(id, name, whatsapp, logo, slug),
           source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id, 
+            id, nombre, categoria_id, 
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
         `)
@@ -492,7 +492,7 @@ export const useAllSellerProducts = (limit = 200) => {
           id, sku, nombre, descripcion, precio_venta, precio_costo, stock, images, metadata,
           store:stores!seller_catalog_seller_store_id_fkey(id, name, whatsapp, logo, slug),
           source_product:products!seller_catalog_source_product_id_fkey(
-            id, categoria_id,
+            id, nombre, categoria_id,
             category:categories!products_categoria_id_fkey(id, name, slug)
           )
         `)
