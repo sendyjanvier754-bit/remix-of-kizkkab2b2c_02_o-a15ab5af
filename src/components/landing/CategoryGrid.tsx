@@ -44,8 +44,8 @@ const CategoryGrid = () => {
         </div>
         {/* Desktop skeleton */}
         <div className="hidden lg:block w-full px-4">
-          <div className="grid grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-x-4 gap-y-6 justify-items-center">
-              {Array.from({ length: 8 }).map((_, i) => (
+          <div className="grid grid-cols-12 gap-x-3 gap-y-5 justify-items-center">
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="flex flex-col items-center">
                   <Skeleton className="w-28 h-28 md:w-32 md:h-32 rounded-full" />
                   <Skeleton className="w-20 h-4 mt-3" />
