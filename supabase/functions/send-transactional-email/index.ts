@@ -44,7 +44,8 @@ Deno.serve(async (req) => {
       const { data: o } = await admin.from(table).select("*").eq("id", id).maybeSingle();
       if (!o) return json({ error: "not found" }, 404);
       const buyer = table === "orders_b2c" ? o.buyer_user_id : o.buyer_id;
-      const { data: isAdmin } = await admin.rpc("is_admin", { _user_id: user.id }).then((r) => r, () => ({ data: false }));
+      const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
+      const isAdmin = (roles || []).length > 0;
       if (event === "order_paid") {
         if (!isAdmin) return json({ error: "forbidden" }, 403);
         if (o.payment_status !== "paid") return json({ error: "order not paid" }, 409);
