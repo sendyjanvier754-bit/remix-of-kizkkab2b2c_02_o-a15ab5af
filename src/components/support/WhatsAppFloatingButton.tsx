@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWhatsAppSupport } from '@/hooks/useWhatsAppSupport';
@@ -12,8 +13,10 @@ export function WhatsAppFloatingButton() {
   const isMobile = useIsMobile();
   const { isEnabled } = useWhatsAppSupport();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { pathname } = useLocation();
 
-  if (!isEnabled) return null;
+  // Product pages already have their own WhatsApp button.
+  if (!isEnabled || pathname.startsWith('/producto')) return null;
 
   return (
     <>
