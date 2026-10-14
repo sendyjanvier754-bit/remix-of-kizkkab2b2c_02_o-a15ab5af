@@ -1339,6 +1339,15 @@ const ProductPage = () => {
                     <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
                       <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
                     </button>
+                    <button
+                      type="button"
+                      onClick={openWhatsAppShare}
+                      title={t('whatsappShare.button')}
+                      aria-label={t('whatsappShare.button')}
+                      className="p-3 rounded-lg bg-green-500 hover:bg-green-600 text-white shadow-sm transition-all duration-300 active:scale-90"
+                    >
+                      <WhatsAppIcon className="w-5 h-5" />
+                    </button>
                     <Button
                     onClick={() => {
                       useVariantDrawerStore.getState().open({
@@ -1610,6 +1619,14 @@ const ProductPage = () => {
             aria-label="favorite"
             className="p-2.5 rounded-lg border border-gray-200 bg-white">
             <Heart className={`w-5 h-5 ${isFavorite() ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+          </button>
+          <button
+            type="button"
+            onClick={openWhatsAppShare}
+            aria-label={t('whatsappShare.button')}
+            title={t('whatsappShare.button')}
+            className="p-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white">
+            <WhatsAppIcon className="w-5 h-5" />
           </button>
           <Button
             variant="outline"
