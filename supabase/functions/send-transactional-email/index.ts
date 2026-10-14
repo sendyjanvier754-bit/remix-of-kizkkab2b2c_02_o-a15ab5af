@@ -1,6 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendOrderEmail, sendWelcome } from "../_shared/transactional-email.ts";
+import { sendOrderWhatsApp, sendWhatsAppTest, statusToWaKind, waConfigured } from "../_shared/transactional-whatsapp.ts";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -37,22 +38,54 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
-    if (event === "order_paid" || event === "order_pending") {
+    const { data: adminRoles } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
+    const isAdmin = (adminRoles || []).length > 0;
+
+    if (event === "whatsapp_test") {
+      if (!isAdmin) return json({ error: "forbidden" }, 403);
+      if (!waConfigured()) return json({ ok: false, error: "whatsapp_not_configured" });
+      return json(await sendWhatsAppTest(String(body.phone || ""), typeof body.lang === "string" ? body.lang : undefined));
+    }
+    if (event === "whatsapp_status") {
+      if (!isAdmin) return json({ error: "forbidden" }, 403);
+      return json({ configured: waConfigured() });
+    }
+
+    if (event === "order_paid" || event === "order_pending" || event === "order_status") {
       const table = body.order_type === "b2b" ? "orders_b2b" : body.order_type === "b2c" ? "orders_b2c" : null;
       const id = String(body.order_id || "");
       if (!table || !uuid.test(id)) return json({ error: "invalid order" }, 400);
       const { data: o } = await admin.from(table).select("*").eq("id", id).maybeSingle();
       if (!o) return json({ error: "not found" }, 404);
       const buyer = table === "orders_b2c" ? o.buyer_user_id : o.buyer_id;
-      const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
-      const isAdmin = (roles || []).length > 0;
+      if (event === "order_status") {
+        let allowed = isAdmin;
+        if (!allowed) {
+          const sellerField = table === "orders_b2b" ? o.seller_id : null;
+          if (sellerField === user.id) allowed = true;
+          else if (o.store_id) {
+            const { data: st } = await admin.from("stores").select("owner_user_id").eq("id", o.store_id).maybeSingle();
+            allowed = st?.owner_user_id === user.id;
+          }
+        }
+        if (!allowed) return json({ error: "forbidden" }, 403);
+        const kind = statusToWaKind(String(body.status || o.status || ""));
+        if (!kind || kind === "paid") return json({ ok: true, skipped: "no_whatsapp_for_status" });
+        return json(await sendOrderWhatsApp(admin, table, id, kind, {
+          tracking: typeof body.tracking === "string" ? body.tracking.slice(0, 80) : undefined,
+        }));
+      }
       if (event === "order_paid") {
         if (!isAdmin) return json({ error: "forbidden" }, 403);
         if (o.payment_status !== "paid") return json({ error: "order not paid" }, 409);
-        return json(await sendOrderEmail(admin, table, id, "paid"));
+        const email = await sendOrderEmail(admin, table, id, "paid");
+        const whatsapp = await sendOrderWhatsApp(admin, table, id, "paid");
+        return json({ ...email, whatsapp });
       }
       if (buyer !== user.id && !isAdmin) return json({ error: "forbidden" }, 403);
-      return json(await sendOrderEmail(admin, table, id, "pending"));
+      const email = await sendOrderEmail(admin, table, id, "pending");
+      const whatsapp = await sendOrderWhatsApp(admin, table, id, "pending");
+      return json({ ...email, whatsapp });
     }
     return json({ error: "unknown event" }, 400);
   } catch (e) {
