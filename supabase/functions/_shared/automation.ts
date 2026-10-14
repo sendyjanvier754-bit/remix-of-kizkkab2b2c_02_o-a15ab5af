@@ -7,11 +7,11 @@ const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&
 const money = (n: number) => `$${Number(n || 0).toFixed(2)}`;
 
 export interface AutomationSettings {
-  cart_recovery: { enabled: boolean; delay_hours: number; second_delay_hours: number; max_reminders: number; email: boolean; whatsapp: boolean; coupon_code: string };
+  cart_recovery: { enabled: boolean; delay_hours: number; second_delay_hours: number; max_reminders: number; email: boolean; whatsapp: boolean; coupon_code: string; template_id?: string };
   seller_alerts: { enabled: boolean; new_sale: boolean; low_stock: boolean; low_stock_threshold: number; email: boolean; whatsapp: boolean };
 }
 export const DEFAULT_AUTOMATION: AutomationSettings = {
-  cart_recovery: { enabled: true, delay_hours: 3, second_delay_hours: 24, max_reminders: 2, email: true, whatsapp: true, coupon_code: "" },
+  cart_recovery: { enabled: true, delay_hours: 3, second_delay_hours: 24, max_reminders: 2, email: true, whatsapp: true, coupon_code: "", template_id: "" },
   seller_alerts: { enabled: true, new_sale: true, low_stock: true, low_stock_threshold: 3, email: true, whatsapp: true },
 };
 export async function getAutomationSettings(admin: any): Promise<AutomationSettings> {
@@ -88,8 +88,17 @@ export async function runCartRecovery(admin: any, s: AutomationSettings) {
       if (cfg.email && u.email) {
         const rows = items.map((i: any) => `<tr><td style="padding:8px 0;width:60px">${i.image ? `<img src="${esc(i.image)}" width="52" height="52" style="border-radius:8px;object-fit:cover">` : ""}</td><td style="padding:8px">${esc(i.nombre)} × ${i.quantity}</td><td style="padding:8px;text-align:right;font-weight:700">${money(i.total_price)}</td></tr>`).join("");
         const coupon = cfg.coupon_code ? `<p style="background:#fef3c7;padding:12px;border-radius:10px;text-align:center">${esc(f(t.coupon, { c: cfg.coupon_code }))}</p>` : "";
-        const html = shell(t.title, `<p>${esc(f(t.intro, { n: u.name }))}</p><table style="width:100%;border-collapse:collapse">${rows}</table><p style="text-align:right;font-size:17px;font-weight:800">${money(total)}</p>${coupon}${cta(url, t.btn)}`);
-        try { const r: any = await sendMail(admin, u.email, attempt === 1 ? t.s1 : t.s2, html, "marketing"); emailOk = !!r?.ok; } catch (e) { console.error("cart email", e); }
+        let html = shell(t.title, `<p>${esc(f(t.intro, { n: u.name }))}</p><table style="width:100%;border-collapse:collapse">${rows}</table><p style="text-align:right;font-size:17px;font-weight:800">${money(total)}</p>${coupon}${cta(url, t.btn)}`);
+        let subject = attempt === 1 ? t.s1 : t.s2;
+        if (cfg.template_id) {
+          const { data: tpl } = await admin.from("email_templates").select("subject,html_content").eq("id", cfg.template_id).maybeSingle();
+          if (tpl?.html_content) {
+            const table = `<table style="width:100%;border-collapse:collapse">${rows}</table>`;
+            const fill = (x: string) => x.replace(/\{nombre\}|\{name\}/g, esc(u.name)).replace(/\{productos\}/g, table).replace(/\{total\}/g, money(total)).replace(/\{enlace_carrito\}/g, url).replace(/\{unsubscribe_url\}/g, `${SITE}/unsubscribe`);
+            html = fill(tpl.html_content); if (tpl.subject) subject = fill(tpl.subject);
+          }
+        }
+        try { const r: any = await sendMail(admin, u.email, subject, html, "marketing"); emailOk = !!r?.ok; } catch (e) { console.error("cart email", e); }
       }
       if (cfg.whatsapp && u.phone && waConfigured()) {
         const r: any = await sendWhatsAppText(u.phone, f(t.wa, { n: u.name, q: String(qty), t: money(total), u: url })); waOk = !!r?.ok;

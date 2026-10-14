@@ -87,6 +87,62 @@ Deno.serve(async (req) => {
     return json({ count: list.length });
   }
 
+  // ---- Designer helpers ----
+  if (action === "search_users") {
+    const q = String(body.q || "").replace(/[%,()]/g, "").slice(0, 60);
+    let qq = admin.from("profiles").select("id,email,full_name").not("email", "is", null).order("full_name").limit(30);
+    if (q) qq = qq.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
+    const { data } = await qq;
+    return json({ users: data || [] });
+  }
+  if (action === "list_coupons") {
+    const { data } = await admin.from("discount_codes").select("id,code,discount_type,discount_value,min_purchase_amount,valid_until,is_active").eq("is_active", true).is("store_id", null).order("created_at", { ascending: false }).limit(50);
+    return json({ coupons: data || [] });
+  }
+  if (action === "create_coupon") {
+    const code = String(body.code || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 30);
+    const type = body.discount_type === "fixed" ? "fixed" : "percentage";
+    const value = Number(body.discount_value);
+    if (code.length < 3 || !(value > 0) || (type === "percentage" && value > 100)) return json({ error: "invalid_coupon" }, 400);
+    const row: any = { code, discount_type: type, discount_value: value, created_by: u.user.id, is_active: true, description: String(body.description || "").slice(0, 200) || null,
+      min_purchase_amount: Number(body.min_purchase_amount) || null, max_uses: Number(body.max_uses) || null, max_uses_per_user: 1,
+      valid_from: new Date().toISOString(), valid_until: body.valid_until ? new Date(body.valid_until).toISOString() : null };
+    const { data, error } = await admin.from("discount_codes").insert(row).select("id,code,discount_type,discount_value").single();
+    if (error) return json({ error: error.code === "23505" ? "code_exists" : error.message }, 400);
+    return json({ coupon: data });
+  }
+  if (action === "send_direct") {
+    const subject = String(body.subject || "").slice(0, 200);
+    const html = String(body.html || "");
+    if (!subject || html.length < 20 || html.length > 500000) return json({ error: "invalid_content" }, 400);
+    let list: { email: string; name: string; lang: string; user_id?: string }[] = [];
+    if (Array.isArray(body.user_ids) && body.user_ids.length) {
+      const ids = body.user_ids.filter((x: unknown) => typeof x === "string" && /^[0-9a-f-]{36}$/i.test(x)).slice(0, 1000);
+      const { data } = await admin.from("profiles").select("id,email,full_name").in("id", ids);
+      list = (data || []).filter((p: any) => p.email).map((p: any) => ({ email: p.email, name: p.full_name || "", lang: "es", user_id: p.id }));
+      const { data: un } = await admin.from("email_subscribers").select("email").eq("status", "unsubscribed");
+      const b = new Set((un || []).map((r: any) => r.email.toLowerCase()));
+      list = list.filter((r) => !b.has(r.email.toLowerCase()));
+    } else {
+      list = await audience(admin, String(body.segment || "all"), String(body.language || "all"));
+    }
+    if (!list.length) return json({ error: "no_recipients" }, 400);
+    await admin.from("email_subscribers").upsert(list.map((r) => ({ email: r.email, full_name: r.name || null, user_id: r.user_id || null, language: normLang(r.lang), source: r.user_id ? "account" : "newsletter" })), { onConflict: "email", ignoreDuplicates: true });
+    const { data: toks } = await admin.from("email_subscribers").select("email,unsubscribe_token").in("email", list.map((r) => r.email));
+    const tok = new Map((toks || []).map((t: any) => [t.email.toLowerCase(), t.unsubscribe_token]));
+    let sent = 0, failed = 0;
+    for (let i = 0; i < list.length; i += 10) {
+      const res = await Promise.all(list.slice(i, i + 10).map(async (r) => {
+        const fill = (s: string) => s.replace(/\{nombre\}|\{name\}/g, esc(r.name)).replace(/\{unsubscribe_url\}/g, `${SITE}/unsubscribe?token=${tok.get(r.email.toLowerCase()) || ""}`);
+        const out: any = await sendMail(admin, r.email, fill(subject).replace(/&amp;/g, "&"), fill(html), "marketing").catch((e) => ({ ok: false, error: String(e) }));
+        return !!out?.ok;
+      }));
+      res.forEach((ok) => (ok ? sent++ : failed++));
+    }
+    return json({ recipients: list.length, sent, failed });
+  }
+
+
   const { data: c } = await admin.from("email_campaigns").select("*").eq("id", body.campaign_id).maybeSingle();
   if (!c) return json({ error: "campaign_not_found" }, 404);
 

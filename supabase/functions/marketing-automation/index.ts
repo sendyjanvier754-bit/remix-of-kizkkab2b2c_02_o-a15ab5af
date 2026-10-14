@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
       clean.cart_recovery.second_delay_hours = Math.min(168, Math.max(clean.cart_recovery.delay_hours + 1, Number(clean.cart_recovery.second_delay_hours) || 24));
       clean.cart_recovery.max_reminders = Math.min(2, Math.max(1, Number(clean.cart_recovery.max_reminders) || 1));
       clean.cart_recovery.coupon_code = String(clean.cart_recovery.coupon_code || "").slice(0, 40);
+      clean.cart_recovery.template_id = /^[0-9a-f-]{36}$/i.test(String(clean.cart_recovery.template_id || "")) ? String(clean.cart_recovery.template_id) : "";
       clean.seller_alerts.low_stock_threshold = Math.min(100, Math.max(0, Number(clean.seller_alerts.low_stock_threshold) || 0));
       const value = JSON.stringify(clean);
       const { data: ex } = await admin.from("platform_settings").select("id").eq("key", "marketing_automation").maybeSingle();
