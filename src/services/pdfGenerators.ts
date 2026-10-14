@@ -7,10 +7,8 @@ import html2pdf from 'html2pdf.js';
 import jsPDF from 'jspdf';
 
 // Module-level branding name — set via setBrandingName() from BrandingApplier
-let _platformBrandName = 'SIVER MARKET 509';
-export const setBrandingName = (name: string) => {
-  if (name) _platformBrandName = name;
-};
+import { setBrandingName, getBrandingName } from './brandConfig';
+export { setBrandingName };
 
 // Types for PDF data
 interface OrderItem {
@@ -252,7 +250,7 @@ export const generatePurchaseOrderPDF = (data: ConsolidationData) => {
     </head>
     <body>
       <div class="header">
-        <div class="logo">${_platformBrandName}</div>
+        <div class="logo">${getBrandingName()}</div>
         <div class="subtitle">Purchase Order / Orden de Compra</div>
         <div class="po-number">${data.consolidation_number}</div>
       </div>
@@ -304,7 +302,7 @@ export const generatePurchaseOrderPDF = (data: ConsolidationData) => {
       </div>
       
       <div class="footer">
-        <p>${_platformBrandName} - Puerto Príncipe, Haití</p>
+        <p>${getBrandingName()} - Puerto Príncipe, Haití</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>
@@ -336,7 +334,7 @@ export const generateArrivalManifestPDF = (items: ManifestItem[], containerInfo:
     <body>
       <div class="header">
         <div class="logo">MANIFIESTO DE LLEGADA</div>
-        <div class="subtitle">${_platformBrandName} - Almacén Haití</div>
+        <div class="subtitle">${getBrandingName()} - Almacén Haití</div>
       </div>
       
       <div class="section">
@@ -442,7 +440,7 @@ export const generateInvoicePDF = (order: OrderData) => {
     </head>
     <body>
       <div class="header">
-        <div class="logo">${_platformBrandName}</div>
+        <div class="logo">${getBrandingName()}</div>
         <div class="subtitle">Factura / Guía de Entrega</div>
       </div>
       
@@ -520,7 +518,7 @@ export const generateInvoicePDF = (order: OrderData) => {
       </div>
       
       <div class="footer">
-        <p>¡Gracias por su compra! - ${_platformBrandName}</p>
+        <p>¡Gracias por su compra! - ${getBrandingName()}</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>
@@ -916,7 +914,7 @@ export const generatePickingManifestPDF = (data: PickingManifestData) => {
     <body>
       <div class="manifest-header">
         <div class="manifest-title">📋 MANIFIESTO DE PICKING</div>
-        <div class="manifest-subtitle">Hub ${_platformBrandName} - Documento de Separación por Destinatario</div>
+        <div class="manifest-subtitle">Hub ${getBrandingName()} - Documento de Separación por Destinatario</div>
         <div class="manifest-info">
           <div class="manifest-info-item">
             <div class="manifest-info-label">TRACKING CHINA</div>
@@ -962,7 +960,7 @@ export const generatePickingManifestPDF = (data: PickingManifestData) => {
       </div>
       
       <div class="footer">
-        <p>${_platformBrandName} - Hub Haití</p>
+        <p>${getBrandingName()} - Hub Haití</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>
@@ -1254,7 +1252,7 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
     <body>
       <div class="manifest-header">
         <div class="manifest-title">📦 MANIFIESTO DE CONSOLIDACIÓN PO</div>
-        <div class="manifest-subtitle">Hub ${_platformBrandName} - Separación Visual por Dueño</div>
+        <div class="manifest-subtitle">Hub ${getBrandingName()} - Separación Visual por Dueño</div>
         <div class="manifest-info">
           <div class="manifest-info-item">
             <div class="manifest-info-label">ORDEN DE COMPRA</div>
@@ -1311,7 +1309,7 @@ export const generatePOPickingManifestPDF = (data: POPickingManifestData) => {
       </div>
       
       <div class="footer">
-        <p>${_platformBrandName} - Hub Haití</p>
+        <p>${getBrandingName()} - Hub Haití</p>
         <p>Documento generado el ${format(new Date(), 'PPP p', { locale: es })}</p>
       </div>
     </body>
@@ -1365,9 +1363,9 @@ export const buildPOBuyingListHtml = (
     return name.split(/(\s+|\/|:|-)/).map(token => translations[token.toLowerCase()] || token).join('');
   };
   const isZleti = data.brand_identity === 'zleti';
-  const documentBrand = isZleti ? 'ZleTI' : _platformBrandName;
+  const documentBrand = isZleti ? 'ZleTI' : getBrandingName();
   const documentSubtitle = isZleti ? 'Purchase List · ZleTI Mexico' : 'Purchase List';
-  const documentFooter = isZleti ? 'ZleTI Mexico - Purchasing and international logistics' : `${_platformBrandName} - Port-au-Prince, Haiti`;
+  const documentFooter = isZleti ? 'ZleTI Mexico - Purchasing and international logistics' : `${getBrandingName()} - Port-au-Prince, Haiti`;
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1599,7 +1597,7 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
     : [10, 32, 112, 174, 197, 287];
   const totalUnits = data.items.reduce((sum, item) => sum + item.cantidad, 0);
   const totalCost = data.items.reduce((sum, item) => sum + Number(item.unit_cost || 0) * item.cantidad, 0);
-  const brand = data.brand_identity === 'zleti' ? 'ZleTI' : _platformBrandName;
+  const brand = data.brand_identity === 'zleti' ? 'ZleTI' : getBrandingName();
 
   const drawHeader = () => {
     pdf.setTextColor(7, 29, 127);

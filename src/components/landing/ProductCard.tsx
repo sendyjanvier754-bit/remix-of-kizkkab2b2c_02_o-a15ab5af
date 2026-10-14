@@ -171,7 +171,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
             fallbackSrcs={product.images}
             alt={displayName}
             className="w-full h-full group-hover:scale-105 transition duration-300"
-            loading="eager"
+            loading="lazy"
           />
 
           {/* Promo/Discount Badge - Solo para B2C */}
