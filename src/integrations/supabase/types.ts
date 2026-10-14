@@ -1756,6 +1756,57 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_recovery_logs: {
+        Row: {
+          attempt: number
+          cart_id: string
+          cart_total: number
+          cart_type: string
+          created_at: string
+          email_sent: boolean
+          id: string
+          items_count: number
+          recovered_amount: number | null
+          recovered_at: string | null
+          recovered_order_id: string | null
+          updated_at: string
+          user_id: string
+          whatsapp_sent: boolean
+        }
+        Insert: {
+          attempt?: number
+          cart_id: string
+          cart_total?: number
+          cart_type?: string
+          created_at?: string
+          email_sent?: boolean
+          id?: string
+          items_count?: number
+          recovered_amount?: number | null
+          recovered_at?: string | null
+          recovered_order_id?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp_sent?: boolean
+        }
+        Update: {
+          attempt?: number
+          cart_id?: string
+          cart_total?: number
+          cart_type?: string
+          created_at?: string
+          email_sent?: boolean
+          id?: string
+          items_count?: number
+          recovered_amount?: number | null
+          recovered_at?: string | null
+          recovered_order_id?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp_sent?: boolean
+        }
+        Relationships: []
+      }
       catalog_click_tracking: {
         Row: {
           clicked_at: string | null
@@ -3067,6 +3118,7 @@ export type Database = {
       email_templates: {
         Row: {
           created_at: string | null
+          design_blocks: Json | null
           destination_country_id: string | null
           html_content: string
           id: string
@@ -3080,6 +3132,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          design_blocks?: Json | null
           destination_country_id?: string | null
           html_content: string
           id?: string
@@ -3093,6 +3146,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          design_blocks?: Json | null
           destination_country_id?: string | null
           html_content?: string
           id?: string
@@ -8406,6 +8460,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seller_notification_logs: {
+        Row: {
+          created_at: string
+          email_sent: boolean
+          id: string
+          kind: string
+          ref_id: string
+          ref_key: string
+          store_id: string | null
+          whatsapp_sent: boolean
+        }
+        Insert: {
+          created_at?: string
+          email_sent?: boolean
+          id?: string
+          kind: string
+          ref_id: string
+          ref_key?: string
+          store_id?: string | null
+          whatsapp_sent?: boolean
+        }
+        Update: {
+          created_at?: string
+          email_sent?: boolean
+          id?: string
+          kind?: string
+          ref_id?: string
+          ref_key?: string
+          store_id?: string | null
+          whatsapp_sent?: boolean
+        }
+        Relationships: []
       }
       seller_onboarding_progress: {
         Row: {

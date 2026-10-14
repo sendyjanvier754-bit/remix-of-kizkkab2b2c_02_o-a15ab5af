@@ -142,6 +142,8 @@ const AdminBrandingPage = lazyWithRetry(() => import("./pages/admin/AdminBrandin
 const AdminEmailConfigPage = lazyWithRetry(() => import("./pages/admin/AdminEmailConfigPage"));
 const AdminWhatsAppAutomationPage = lazyWithRetry(() => import("./pages/admin/AdminWhatsAppAutomationPage"));
 const AdminEmailCampaignsPage = lazyWithRetry(() => import("./pages/admin/AdminEmailCampaignsPage"));
+const AdminAutomationPage = lazyWithRetry(() => import("./pages/admin/AdminAutomationPage"));
+const AdminEmailDesignerPage = lazyWithRetry(() => import("./pages/admin/AdminEmailDesignerPage"));
 const UnsubscribePage = lazyWithRetry(() => import("./pages/UnsubscribePage"));
 const AdminEmailTemplatesPage = lazyWithRetry(() => import("./pages/admin/AdminEmailTemplatesPage"));
 const AdminAffiliatesPage = lazyWithRetry(() => import("./pages/admin/AdminAffiliatesPage"));
@@ -682,6 +684,8 @@ const AppContent = () => {
               } 
             />
             <Route path="/admin/email-campaigns" element={<ProtectedRoute requiredRoles={[UserRole.ADMIN]}><LazyRoute><AdminEmailCampaignsPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/admin/automatizaciones" element={<ProtectedRoute requiredRoles={[UserRole.ADMIN]}><LazyRoute><AdminAutomationPage /></LazyRoute></ProtectedRoute>} />
+            <Route path="/admin/disenador-email" element={<ProtectedRoute requiredRoles={[UserRole.ADMIN]}><LazyRoute><AdminEmailDesignerPage /></LazyRoute></ProtectedRoute>} />
             <Route path="/unsubscribe" element={<LazyRoute><UnsubscribePage /></LazyRoute>} />
             <Route 
               path="/admin/whatsapp-automation" 

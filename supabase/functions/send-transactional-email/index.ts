@@ -1,6 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendOrderEmail, sendWelcome, sendLogisticsEmail } from "../_shared/transactional-email.ts";
+import { sendSellerSaleAlert } from "../_shared/automation.ts";
 import { sendOrderWhatsApp, sendWhatsAppTest, statusToWaKind, waConfigured } from "../_shared/transactional-whatsapp.ts";
 
 const json = (b: unknown, status = 200) =>
@@ -83,7 +84,9 @@ Deno.serve(async (req) => {
         if (o.payment_status !== "paid") return json({ error: "order not paid" }, 409);
         const email = await sendOrderEmail(admin, table, id, "paid");
         const whatsapp = await sendOrderWhatsApp(admin, table, id, "paid");
-        return json({ ...email, whatsapp });
+        let seller: unknown = null;
+        if (table === "orders_b2c") { try { seller = await sendSellerSaleAlert(admin, id); } catch (e) { console.error("seller alert", e); } }
+        return json({ ...email, whatsapp, seller });
       }
       if (buyer !== user.id && !isAdmin) return json({ error: "forbidden" }, 403);
       const email = await sendOrderEmail(admin, table, id, "pending");
