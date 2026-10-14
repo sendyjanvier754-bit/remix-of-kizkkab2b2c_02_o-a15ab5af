@@ -154,20 +154,8 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     return () => clearTimeout(debounce);
   }, [searchQuery, i18n.language]);
 
-  // Smart sticky (mobile): hide on scroll down, show on scroll up
-  const [mobileHidden, setMobileHidden] = useState(false);
-  useEffect(() => {
-    let lastY = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y < 80) setMobileHidden(false);
-      else if (y > lastY + 8) setMobileHidden(true);
-      else if (y < lastY - 8) setMobileHidden(false);
-      lastY = y;
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  // Category bar stays visible: collapsing it on scroll changed the page
+  // height and caused the scroll position to jump (flicker loop).
 
   if (!isMobile) return null;
 
