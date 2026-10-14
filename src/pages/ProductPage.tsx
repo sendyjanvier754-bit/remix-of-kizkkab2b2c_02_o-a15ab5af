@@ -1605,49 +1605,61 @@ const ProductPage = () => {
 
       {/* Mobile sticky action bar - stays above the site bottom navigation */}
       {isMobile && product &&
-      <div className="fixed bottom-12 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border shadow-[0_-6px_20px_hsl(var(--foreground)/0.08)] px-3 py-2 flex items-center gap-2">
-          {realStore && (
-            <button
-              type="button"
-              onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)}
-              aria-label={t('otherSellers.soldBy')}
-              className="flex flex-col items-center justify-center w-11 text-[10px] font-semibold text-muted-foreground active:scale-90 transition">
-              <StoreIcon className="w-5 h-5 text-foreground" />
-              <span className="truncate max-w-full">{t('pdpPro.store', { defaultValue: 'Tienda' })}</span>
-            </button>
-          )}
+      <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-3 py-2 flex items-center gap-2">
+          <button
+            onClick={() => toggleFavorite()}
+            aria-label="favorite"
+            className="p-2.5 rounded-lg border border-gray-200 bg-white">
+            <Heart className={`w-5 h-5 ${isFavorite() ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+          </button>
           <button
             type="button"
             onClick={openWhatsAppShare}
             aria-label={t('whatsappShare.button')}
-            className="flex flex-col items-center justify-center w-11 text-[10px] font-semibold text-muted-foreground active:scale-90 transition">
-            <WhatsAppIcon className="w-5 h-5 text-profit" />
-            <span>WhatsApp</span>
+            title={t('whatsappShare.button')}
+            className="p-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white">
+            <WhatsAppIcon className="w-5 h-5" />
           </button>
-          {(() => {
-            const openDrawer = () => useVariantDrawerStore.getState().open({
-              id: product.id,
-              sku: product.sku,
-              nombre: product.nombre,
-              images: images,
-              price: product.precio_venta,
-              costB2B: costB2B,
-              moq: moq,
-              stock: isB2BUser ? stockB2B : product.stock,
-              source_product_id: product.source_product?.id,
-              sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
-              storeId: product.store?.id || sellerParam || undefined
-            }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
-            return <div className="flex flex-1 h-11 rounded-full overflow-hidden shadow-lg shadow-price/25">
-                <button onClick={openDrawer} className="flex-1 bg-foreground text-background text-[13px] font-bold flex items-center justify-center gap-1.5 active:brightness-90">
-                  <ShoppingCart className="w-4 h-4" />
-                  {t('products.addToCart')}
-                </button>
-                <button onClick={openDrawer} className="flex-1 bg-price text-price-foreground text-[13px] font-extrabold active:brightness-90">
-                  {isB2BUser ? t('productPage.buyWholesale') : t('common.buy')}
-                </button>
-              </div>;
-          })()}
+          <Button
+            variant="outline"
+            onClick={() => {
+              useVariantDrawerStore.getState().open({
+                id: product.id,
+                sku: product.sku,
+                nombre: product.nombre,
+                images: images,
+                price: product.precio_venta,
+                costB2B: costB2B,
+                moq: moq,
+                stock: isB2BUser ? stockB2B : product.stock,
+                source_product_id: product.source_product?.id,
+                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
+                storeId: product.store?.id || sellerParam || undefined
+              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
+            }}
+            className="flex-1 h-11 text-sm font-semibold gap-2">
+            <ShoppingCart className="w-4 h-4" />
+            {t('products.addToCart')}
+          </Button>
+          <Button
+            onClick={() => {
+              useVariantDrawerStore.getState().open({
+                id: product.id,
+                sku: product.sku,
+                nombre: product.nombre,
+                images: images,
+                price: product.precio_venta,
+                costB2B: costB2B,
+                moq: moq,
+                stock: isB2BUser ? stockB2B : product.stock,
+                source_product_id: product.source_product?.id,
+                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
+                storeId: product.store?.id || sellerParam || undefined
+              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
+            }}
+            className="flex-1 h-11 text-sm font-semibold">
+            {isB2BUser ? t('productPage.buyWholesale') : t('common.buy')}
+          </Button>
         </div>
       }
 
