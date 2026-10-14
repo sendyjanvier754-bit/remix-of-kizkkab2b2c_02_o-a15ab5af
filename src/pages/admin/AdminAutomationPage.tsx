@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ShoppingCart, Store, Play, Save, Loader2, Mail, MessageCircle, TrendingUp, PackageX } from "lucide-react";
 
 type Settings = {
-  cart_recovery: { enabled: boolean; delay_hours: number; second_delay_hours: number; max_reminders: number; email: boolean; whatsapp: boolean; coupon_code: string };
+  cart_recovery: { enabled: boolean; delay_hours: number; second_delay_hours: number; max_reminders: number; email: boolean; whatsapp: boolean; coupon_code: string; template_id?: string };
   seller_alerts: { enabled: boolean; new_sale: boolean; low_stock: boolean; low_stock_threshold: number; email: boolean; whatsapp: boolean };
 };
 type Stats = { reminders: number; emails: number; whatsapps: number; abandoned_value: number; recovered_count: number; recovered_value: number; sale_alerts: number; stock_alerts: number; recent: any[] };
@@ -36,6 +37,8 @@ export default function AdminAutomationPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [saving, setSaving] = useState(false);
   const [running, setRunning] = useState(false);
+  const [designs, setDesigns] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => { supabase.from("email_templates").select("id,name").not("design_blocks", "is", null).order("updated_at", { ascending: false }).then(({ data }) => setDesigns((data as any) || [])); }, []);
 
   const load = async () => {
     try { const [a, b] = await Promise.all([call("get_settings"), call("stats")]); setS(a); setStats(b); }
@@ -94,6 +97,13 @@ export default function AdminAutomationPage() {
                   <div><Label className="text-xs">Máx. avisos</Label><Input type="number" min={1} max={2} value={s.cart_recovery.max_reminders} onChange={(e) => cr("max_reminders", Number(e.target.value))} /></div>
                 </div>
                 <div><Label className="text-xs">Cupón opcional en el correo</Label><Input placeholder="Ej: VUELVE10" value={s.cart_recovery.coupon_code} onChange={(e) => cr("coupon_code", e.target.value)} /></div>
+                <div><Label className="text-xs">Diseño del correo</Label>
+                  <Select value={s.cart_recovery.template_id || "default"} onValueChange={(v) => cr("template_id", v === "default" ? "" : v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="default">Diseño estándar de Kizkka</SelectItem>{designs.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <p className="mt-1 text-xs text-muted-foreground">Crea diseños en el Diseñador. Puedes usar {"{nombre}"}, {"{productos}"}, {"{total}"} y {"{enlace_carrito}"} en los textos.</p>
+                </div>
                 <Row label="Enviar por correo" checked={s.cart_recovery.email} onChange={(v) => cr("email", v)} />
                 <Row label="Enviar por WhatsApp" checked={s.cart_recovery.whatsapp} onChange={(v) => cr("whatsapp", v)} />
               </CardContent>
