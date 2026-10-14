@@ -389,7 +389,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
       </div>
 
       {/* Category tabs */}
-      <div className="border-b border-gray-200 bg-[#071d7f] overflow-hidden max-h-12" style={{ overscrollBehavior: 'none' }}>
+      <div className={`border-b border-gray-200 bg-[#071d7f] overflow-hidden transition-[max-height] duration-300 ease-in-out ${mobileHidden && !location.pathname.startsWith('/producto/') ? 'max-h-0 border-b-0' : 'max-h-12'}`} style={{ overscrollBehavior: 'none' }}>
         <div
           className="overflow-x-auto overflow-y-hidden scrollbar-hide w-full flex"
           style={{
