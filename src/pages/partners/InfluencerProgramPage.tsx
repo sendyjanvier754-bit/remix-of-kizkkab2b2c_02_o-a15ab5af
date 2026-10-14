@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Megaphone, Gift, DollarSign, Link2, Copy, Check, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 import { useMyAffiliate, useApplyAsAffiliate } from "@/hooks/useAffiliates";
 
 export default function InfluencerProgramPage() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { data: affiliate, isLoading } = useMyAffiliate();
@@ -34,7 +36,7 @@ export default function InfluencerProgramPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!displayName.trim() || !code.trim()) {
-      toast.error("Completa tu nombre público y el código que deseas");
+      toast.error(t("affiliateProgram.fillRequired"));
       return;
     }
     await apply.mutateAsync({ display_name: displayName, affiliate_code: code, notes });
@@ -43,7 +45,7 @@ export default function InfluencerProgramPage() {
   const copyLink = async () => {
     await navigator.clipboard.writeText(link);
     setCopied(true);
-    toast.success("Enlace copiado");
+    toast.success(t("affiliateProgram.linkCopied"));
     setTimeout(() => setCopied(false), 1500);
   };
 
@@ -51,21 +53,21 @@ export default function InfluencerProgramPage() {
     <div className="min-h-screen bg-muted/30">
       <header className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Volver">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label={t("affiliateProgram.back")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="p-2 rounded-lg bg-primary/10">
             <Megaphone className="h-5 w-5 text-primary" />
           </div>
-          <h1 className="text-lg font-semibold">Programa de afiliados e influencers</h1>
+          <h1 className="text-lg font-semibold">{t("affiliateProgram.title")}</h1>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <section className="grid gap-4 sm:grid-cols-3">
-          <Benefit icon={Link2} title="Tu enlace único" text="Comparte tu enlace o tu código en redes y mensajería." />
-          <Benefit icon={Gift} title="Descuento para tu público" text="Quien use tu código recibe un descuento automático al pagar." />
-          <Benefit icon={DollarSign} title="Comisión por cada venta" text="Ganas un porcentaje de cada compra pagada con tu código." />
+          <Benefit icon={Link2} title={t("affiliateProgram.benefitLinkTitle")} text={t("affiliateProgram.benefitLinkText")} />
+          <Benefit icon={Gift} title={t("affiliateProgram.benefitDiscountTitle")} text={t("affiliateProgram.benefitDiscountText")} />
+          <Benefit icon={DollarSign} title={t("affiliateProgram.benefitCommissionTitle")} text={t("affiliateProgram.benefitCommissionText")} />
         </section>
 
         {authLoading || isLoading ? (
@@ -73,67 +75,67 @@ export default function InfluencerProgramPage() {
         ) : !user ? (
           <Card>
             <CardHeader>
-              <CardTitle>Crea tu cuenta para participar</CardTitle>
-              <CardDescription>Necesitas una cuenta para recibir tu código y cobrar tus comisiones.</CardDescription>
+              <CardTitle>{t("affiliateProgram.createAccountTitle")}</CardTitle>
+              <CardDescription>{t("affiliateProgram.createAccountDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="flex gap-3">
               <Button asChild>
-                <Link to="/cuenta?redirect=/programa-afiliados">Crear cuenta o entrar</Link>
+                <Link to="/cuenta?redirect=/programa-afiliados">{t("affiliateProgram.createAccountCta")}</Link>
               </Button>
             </CardContent>
           </Card>
         ) : affiliate ? (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Tu participación</CardTitle>
+              <CardTitle>{t("affiliateProgram.yourParticipation")}</CardTitle>
               <Badge variant={affiliate.status === "active" ? "default" : "secondary"}>
                 {affiliate.status === "active"
-                  ? "Activo"
+                  ? t("affiliateProgram.statusActive")
                   : affiliate.status === "pending"
-                    ? "En revisión"
+                    ? t("affiliateProgram.statusPending")
                     : affiliate.status}
               </Badge>
             </CardHeader>
             <CardContent className="space-y-4">
               {affiliate.status === "pending" && (
                 <p className="text-sm text-muted-foreground">
-                  Tu solicitud está en revisión. Te avisaremos en cuanto esté aprobada.
+                  {t("affiliateProgram.pendingReview")}
                 </p>
               )}
               <div className="rounded-lg border border-border p-4 space-y-2">
-                <p className="text-xs text-muted-foreground">Tu código</p>
+                <p className="text-xs text-muted-foreground">{t("affiliateProgram.yourCode")}</p>
                 <p className="font-mono text-xl font-semibold">{affiliate.affiliate_code}</p>
                 <div className="flex items-center gap-2 pt-2">
                   <Input readOnly value={link} className="text-xs" />
-                  <Button size="icon" variant="outline" onClick={copyLink} aria-label="Copiar enlace">
+                  <Button size="icon" variant="outline" onClick={copyLink} aria-label={t("affiliateProgram.copyLink")}>
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
               <Button asChild>
-                <Link to="/socio/afiliado">Ir a mi panel</Link>
+                <Link to="/socio/afiliado">{t("affiliateProgram.goToPanel")}</Link>
               </Button>
             </CardContent>
           </Card>
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Solicita tu código</CardTitle>
-              <CardDescription>Revisamos cada solicitud antes de activarla.</CardDescription>
+              <CardTitle>{t("affiliateProgram.requestCodeTitle")}</CardTitle>
+              <CardDescription>{t("affiliateProgram.requestCodeDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="display_name">Nombre público</Label>
+                  <Label htmlFor="display_name">{t("affiliateProgram.displayNameLabel")}</Label>
                   <Input
                     id="display_name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Ej. Marie Créations"
+                    placeholder={t("affiliateProgram.displayNamePlaceholder")}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="affiliate_code">Código deseado</Label>
+                  <Label htmlFor="affiliate_code">{t("affiliateProgram.codeLabel")}</Label>
                   <Input
                     id="affiliate_code"
                     value={code}
@@ -141,20 +143,20 @@ export default function InfluencerProgramPage() {
                     placeholder="MARIE10"
                     maxLength={20}
                   />
-                  <p className="text-xs text-muted-foreground">Solo letras y números, mínimo 3 caracteres.</p>
+                  <p className="text-xs text-muted-foreground">{t("affiliateProgram.codeHint")}</p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="notes">Cuéntanos de tu audiencia</Label>
+                  <Label htmlFor="notes">{t("affiliateProgram.notesLabel")}</Label>
                   <Textarea
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Redes, número de seguidores, tipo de contenido..."
+                    placeholder={t("affiliateProgram.notesPlaceholder")}
                     rows={4}
                   />
                 </div>
                 <Button type="submit" disabled={apply.isPending}>
-                  {apply.isPending ? "Enviando..." : "Enviar solicitud"}
+                  {apply.isPending ? t("affiliateProgram.submitting") : t("affiliateProgram.submit")}
                 </Button>
               </form>
             </CardContent>
