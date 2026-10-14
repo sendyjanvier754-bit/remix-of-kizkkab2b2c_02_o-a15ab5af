@@ -1194,76 +1194,61 @@ const ProductPage = () => {
           <div className={`space-y-3 ${isMobile ? 'px-4 w-full' : 'overflow-y-auto max-h-[calc(100vh-200px)] pr-4'}`}> 
             <div>
               {/* Badges */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                {isB2BUser ? <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                {isB2BUser ? <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/15 border-0 font-bold">
                     {t('auth.roles.b2b')}
-                  </Badge> : <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                  </Badge> : <Badge className="rounded-full bg-price text-price-foreground hover:bg-price border-0 font-bold">
                     {t('products.new')}
                   </Badge>}
-                {product.store && <Link to={`/tienda/${product.store.slug || product.store.id}`} className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-medium hover:bg-purple-100 transition-colors">
-                    <StoreIcon className="w-3 h-3" />
-                    {product.store.name}
-                    <div className="flex items-center gap-0.5 ml-1 pl-1 border-l border-purple-200">
+                {product.store && <Link to={`/tienda/${product.store.slug || product.store.id}`} className="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border border-border bg-card text-xs font-semibold text-foreground shadow-sm hover:border-primary/40 transition-colors">
+                    <span className="flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <StoreIcon className="w-3 h-3" />
+                    </span>
+                    <span className="max-w-[140px] truncate">{product.store.name}</span>
+                    <span className="flex items-center gap-0.5 ml-0.5 pl-1.5 border-l border-border">
                       <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      <span className="font-semibold">5.0</span>
-                    </div>
+                      <span className="font-bold">5.0</span>
+                    </span>
                   </Link>}
               </div>
 
-              <div className="flex flex-col gap-2">
-                <h1 className={`text-xl md:text-2xl font-bold text-gray-900 leading-snug tracking-tight mb-0`}>
-                  {titleExpanded ? <div className="flex items-start gap-2">
-                      <div className="whitespace-normal">{product.nombre}</div>
-                      {showTitleToggle && <button onClick={() => setTitleExpanded(false)} className="ml-2 text-xs font-semibold px-2 py-1 rounded border border-[#071d7f] text-[#071d7f] pulse-btn bg-white z-10" aria-expanded={true} aria-label="Collapse product title">
-                          View less
-                        </button>}
-                    </div> : <div className="flex items-baseline gap-1">
-                      <div className="flex-1 line-clamp-2 break-words">
-                        {product.nombre}
-                      </div>
-                      {showTitleToggle && <button onClick={() => setTitleExpanded(true)} className="inline-block align-baseline ml-1 text-xs font-semibold px-2 py-1 rounded border border-[#071d7f] text-[#071d7f] pulse-btn bg-white z-10" aria-expanded={false} aria-label="Expand product title">
-                          View more
-                        </button>}
-                    </div>}
+              <div className="flex flex-col gap-1">
+                <h1 className="text-lg md:text-2xl font-bold text-foreground leading-snug tracking-tight mb-0">
+                  <span className={titleExpanded ? 'whitespace-normal' : 'line-clamp-2 break-words'}>{product.nombre}</span>
                 </h1>
+                {showTitleToggle && <button onClick={() => setTitleExpanded(!titleExpanded)} className="self-start text-xs font-semibold text-primary hover:underline" aria-expanded={titleExpanded}>
+                    {titleExpanded ? 'View less' : 'View more'}
+                  </button>}
               </div>
             </div>
 
             {/* Price Section */}
-            <div className={`p-2 rounded-md ${isB2BUser ? 'bg-white' : 'bg-gray-50'}`}>
-              <div className="flex items-baseline gap-2 flex-wrap justify-between">
-                {/* Price area: promo price (left badge) + original price (right, struck) with discount badge */}
+            <div className="rounded-2xl border border-price/15 bg-gradient-to-br from-price/10 via-price/5 to-transparent p-3.5">
+              <div className="flex items-center gap-2 flex-wrap justify-between">
                 {(() => {
                   const currencyCode = (storeData && (storeData?.metadata?.currency || (storeData as any).currency) || 'USD').toUpperCase();
-
-                  // Determine original and promotional prices (use established fields)
                   const originalPriceRaw = (product as any).originalPrice || product.source_product?.precio_sugerido_venta || product.precio_venta;
                   const promoPriceRaw = (product as any).precio_promocion || (product.precio_venta < (originalPriceRaw || Infinity) ? product.precio_venta : null);
                   const originalPriceNum = typeof originalPriceRaw === 'number' ? originalPriceRaw : Number(originalPriceRaw) || null;
                   const promoPriceNum = promoPriceRaw != null ? typeof promoPriceRaw === 'number' ? promoPriceRaw : Number(promoPriceRaw) : null;
-
-                  // Consider it a promo only when original is greater than promo by a sensible amount
                   const hasPromo = promoPriceNum != null && originalPriceNum != null && promoPriceNum < originalPriceNum - 0.005;
-                  return <div className="flex items-center gap-2">
-                      {/* Promo / current price */}
-                      {hasPromo ? <span className={`inline-flex items-center gap-1 bg-[#fff5f6] border border-[#f2dede] px-1.5 py-0.5 rounded-sm ${isMobile ? '' : '-ml-1'}`}>
-                          <span className="text-[#94111f] font-bold text-base">${promoPriceNum!.toFixed(2)}</span>
-                          <span className="text-xs font-medium text-[#94111f]">{currencyCode}</span>
-                        </span> : <span className={`inline-flex items-center gap-1 bg-[#fff5f6] border border-[#f2dede] px-1.5 py-0.5 rounded-sm ${isMobile ? '' : '-ml-1'}`}>
-                          <span className="text-[#94111f] font-bold text-base">${displayPrice.toFixed(2)}</span>
-                          <span className="text-xs font-medium text-[#94111f]">{currencyCode}</span>
-                        </span>}
-
-                      {/* Original price & discount, placed right next to promo price */}
-                      {hasPromo && originalPriceNum != null && promoPriceNum != null && <>
-                          <span className="text-sm text-gray-500 line-through">${originalPriceNum.toFixed(2)}</span>
-                          <span className="inline-flex items-center bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">
+                  const shown = hasPromo ? promoPriceNum! : displayPrice;
+                  return <div className="flex items-end gap-2 flex-wrap">
+                      <span className="flex items-start leading-none text-price">
+                        <span className="text-lg font-bold mt-1">$</span>
+                        <span className="text-4xl font-extrabold tracking-tight">{Math.floor(shown)}</span>
+                        <span className="text-lg font-bold mt-1">.{shown.toFixed(2).split('.')[1]}</span>
+                        <span className="ml-1.5 self-end mb-1 text-xs font-semibold text-muted-foreground">{currencyCode}</span>
+                      </span>
+                      {hasPromo && originalPriceNum != null && promoPriceNum != null && <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-sm text-muted-foreground line-through">${originalPriceNum.toFixed(2)}</span>
+                          <span className="inline-flex items-center rounded-full bg-price px-2 py-0.5 text-xs font-bold text-price-foreground shadow-sm animate-pulse">
                             -{Math.round((originalPriceNum - promoPriceNum) / originalPriceNum * 100)}%
                           </span>
-                        </>}
+                        </div>}
                     </div>;
                 })()}
-                {isB2BUser && <span className="text-[12px] font-medium text-white bg-[#94111f] px-2 py-0.5 rounded">
+                {isB2BUser && <span className="rounded-full bg-gradient-to-r from-primary to-primary/80 px-3 py-1 text-[11px] font-bold tracking-wide text-primary-foreground shadow-sm">
                     B2B
                   </span>}
               </div>
@@ -1334,17 +1319,17 @@ const ProductPage = () => {
               {/* Variant Selector - Uses database variants */}
               <div className="mt-3" ref={buySection}>
                 {/* Open VariantDrawer for both mobile and desktop */}
-                <div className="p-3 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => toggleFavorite()} className="p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-300 active:scale-90">
-                      <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-red-500 text-red-500 animate-heart-shake' : 'text-gray-600'}`} />
+                <div className="py-1">
+                  <div className="flex items-center gap-2.5">
+                    <button onClick={() => toggleFavorite()} aria-label="Favorite" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-sm hover:border-price/40 transition-all duration-300 active:scale-90">
+                      <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-price text-price animate-heart-shake' : 'text-muted-foreground'}`} />
                     </button>
                     <button
                       type="button"
                       onClick={openWhatsAppShare}
                       title={t('whatsappShare.button')}
                       aria-label={t('whatsappShare.button')}
-                      className="p-3 rounded-lg bg-green-500 hover:bg-green-600 text-white shadow-sm transition-all duration-300 active:scale-90"
+                      className="flex size-12 shrink-0 items-center justify-center rounded-full bg-profit text-primary-foreground shadow-md hover:brightness-110 transition-all duration-300 active:scale-90"
                     >
                       <WhatsAppIcon className="w-5 h-5" />
                     </button>
@@ -1370,7 +1355,7 @@ const ProductPage = () => {
                         }
                       }, pdpSelectedAttributes, pdpSelectedQuantities);
                     }}
-                    className="w-auto px-3 h-10 text-sm font-semibold flex items-center gap-2"
+                    className="flex-1 h-12 rounded-full bg-price text-price-foreground text-base font-bold flex items-center justify-center gap-2 shadow-lg shadow-price/30 hover:bg-price/90 hover:shadow-xl transition-all active:scale-[0.98]"
                     ref={buyButtonRef}>
                     
                       <ShoppingCart className="w-4 h-4" />
@@ -1539,22 +1524,28 @@ const ProductPage = () => {
             }
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                <Truck className="w-5 h-5 text-blue-600" />
+            <div className="grid grid-cols-2 gap-3 pt-4">
+              <div className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-transparent">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <Truck className="w-4.5 h-4.5 text-primary" />
+                </span>
                 <div className="text-xs">
-                  <p className="font-semibold text-gray-900">{t('productPage.fastShipping')}</p>
-                  <p className="text-gray-500">24-48h</p>
+                  <p className="font-bold text-foreground">{t('productPage.fastShipping')}</p>
+                  <p className="text-muted-foreground">24-48h</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                <Shield className="w-5 h-5 text-green-600" />
+              <div className="flex items-center gap-3 p-3 rounded-2xl border border-profit-border bg-gradient-to-br from-profit-soft to-transparent">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-profit/10">
+                  <Shield className="w-4.5 h-4.5 text-profit" />
+                </span>
                 <div className="text-xs">
-                  <p className="font-semibold text-gray-900">{t('productPage.buyerProtection')}</p>
-                  <p className="text-gray-500">{t('productPage.buyerProtectionDesc')}</p>
+                  <p className="font-bold text-foreground">{t('productPage.buyerProtection')}</p>
+                  <p className="text-muted-foreground">{t('productPage.buyerProtectionDesc')}</p>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
           </div>
         </div>
 
