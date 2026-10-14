@@ -1527,7 +1527,7 @@ const ProductPage = () => {
             <div className="grid grid-cols-2 gap-3 pt-4">
               <div className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-transparent">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <Truck className="w-4.5 h-4.5 text-primary" />
+                  <Truck className="w-5 h-5 text-primary" />
                 </span>
                 <div className="text-xs">
                   <p className="font-bold text-foreground">{t('productPage.fastShipping')}</p>
@@ -1536,7 +1536,7 @@ const ProductPage = () => {
               </div>
               <div className="flex items-center gap-3 p-3 rounded-2xl border border-profit-border bg-gradient-to-br from-profit-soft to-transparent">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-profit/10">
-                  <Shield className="w-4.5 h-4.5 text-profit" />
+                  <Shield className="w-5 h-5 text-profit" />
                 </span>
                 <div className="text-xs">
                   <p className="font-bold text-foreground">{t('productPage.buyerProtection')}</p>
@@ -1544,8 +1544,6 @@ const ProductPage = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
           </div>
         </div>
 
