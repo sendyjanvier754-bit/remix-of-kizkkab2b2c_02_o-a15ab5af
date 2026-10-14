@@ -1047,7 +1047,7 @@ const ProductPage = () => {
       {/* Sticky Nav Tabs: reemplaza la barra de categorÃ­as */}
       {/* REMOVED: Desktop sticky nav replaced with Accordion component */}
 
-      <main className={`container mx-auto ${isMobile ? 'px-0 pb-32' : 'px-4 pb-12'} py-4`}>
+      <main className={`container mx-auto ${isMobile ? 'px-0 pb-32 pt-0' : 'px-4 pb-12 py-4'}`}>
         {/* Breadcrumb / Retorno Button - Desktop */}
         {!isMobile &&
         <button
@@ -1059,9 +1059,9 @@ const ProductPage = () => {
           </button>
         }
 
-        <div className={`${isMobile ? 'grid grid-cols-1 gap-4 mb-8 px-4' : 'grid grid-cols-2 gap-8 mb-8'}`}>
+        <div className={`${isMobile ? 'grid grid-cols-1 gap-2 mb-3' : 'grid grid-cols-2 gap-8 mb-8'}`}>
           {/* Image Gallery */}
-          <div ref={imageRef} className={`space-y-4 ${isMobile ? 'w-full' : 'sticky top-0 h-fit'}`}>
+          <div ref={imageRef} className={`${isMobile ? 'w-full space-y-2' : 'space-y-4 sticky top-0 h-fit'}`}>
             <div
               ref={galleryScrollRef}
               onClick={() => !isMobile && setZoomOpen(true)}
@@ -1157,7 +1157,7 @@ const ProductPage = () => {
 
             {/* Color Variants Grid for Mobile */}
             {isMobile && images.length > 1 &&
-            <div className="flex gap-2 overflow-x-auto px-4 -mt-2 pb-1 [scrollbar-width:none]">
+            <div className="flex gap-2 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none]">
                 {images.map((image, index) =>
               <button key={index} onClick={() => {setSelectedImage(index);scrollGalleryToIndex(index);}}
               className={`flex-shrink-0 size-14 rounded-xl overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-price shadow-md scale-105' : 'border-transparent opacity-70'}`}>
@@ -1171,10 +1171,10 @@ const ProductPage = () => {
           </div>
 
           {/* Product Info */}
-          <div className={`space-y-3 ${isMobile ? 'px-4 w-full' : 'overflow-y-auto max-h-[calc(100vh-200px)] pr-4'}`}> 
+          <div className={`${isMobile ? 'space-y-2 px-3 w-full' : 'space-y-3 overflow-y-auto max-h-[calc(100vh-200px)] pr-4'}`}> 
             <div>
               {/* Badges */}
-              <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className={`flex flex-wrap items-center gap-2 ${isMobile ? 'mb-1.5' : 'mb-3'}`}>
                 {isB2BUser ? <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/15 border-0 font-bold">
                     {t('auth.roles.b2b')}
                   </Badge> : <Badge className="rounded-full bg-price text-price-foreground hover:bg-price border-0 font-bold">
@@ -1292,7 +1292,7 @@ const ProductPage = () => {
             </div>
 
             {/* Variant Selector - Inline on product page */}
-            <div className="mt-4">
+            <div className={isMobile ? 'mt-1' : 'mt-4'}>
               <VariantSelector
                 productId={product?.source_product?.id || product?.id}
                 basePrice={product?.precio_venta || 0}
@@ -1370,15 +1370,14 @@ const ProductPage = () => {
 
             {/* Description */}
             {isMobile ?
-            <div id="section-desc" ref={descRef} className="mt-10 scroll-mt-20">
-                <Button
+            <div id="section-desc" ref={descRef} className="mt-2 scroll-mt-20 border-t border-border">
+                <button
+                type="button"
                 onClick={() => setIsDescriptionDrawerOpen(true)}
-                variant="outline"
-                className="w-full border-2 text-sm font-semibold"
-                style={{ borderColor: '#94111f', color: '#94111f' }}>
-                
+                className="w-full flex items-center justify-between py-3 text-sm font-semibold text-foreground">
                   {t('productPage.productDescription')}
-                </Button>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </button>
               </div> :
 
             <>
@@ -1484,7 +1483,7 @@ const ProductPage = () => {
             <>
                 {/* Sección del Vendedor - Mobile */}
                 {realStore &&
-              <div className="bg-white rounded-xl p-4 mt-6 mb-2 border border-gray-100 shadow-sm">
+              <div className="bg-card rounded-xl p-3 mt-1 border border-border">
                     <h2 className="text-sm font-bold text-gray-700 mb-3">{t('otherSellers.soldBy')}</h2>
                     <div className="flex items-center gap-3">
                       <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
@@ -1506,7 +1505,7 @@ const ProductPage = () => {
                     </div>
                   </div>
               }
-                <div id="section-reviews" ref={reviewsRef} className="mt-6 scroll-mt-20">
+                <div id="section-reviews" ref={reviewsRef} className="mt-2 scroll-mt-20">
                   <Accordion
                     type="single"
                     collapsible
@@ -1527,7 +1526,7 @@ const ProductPage = () => {
             }
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-2 gap-3 pt-4">
+            <div className={`grid grid-cols-2 ${isMobile ? 'gap-2 pt-1' : 'gap-3 pt-4'}`}>
               <div className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-transparent">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
                   <Truck className="w-5 h-5 text-primary" />
@@ -1551,7 +1550,7 @@ const ProductPage = () => {
         </div>
 
           {/* Related Products */}
-        {relatedProducts.length > 0 && <div className="mt-12">
+        {relatedProducts.length > 0 && <div className={isMobile ? 'mt-3' : 'mt-12'}>
             <h2 className="text-lg md:text-[18px] font-semibold text-gray-900 mb-6">{t('products.seeMore')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {relatedProducts.map((p) => <Link key={p.id} to={`/producto/${p.sku}`} className="group">
@@ -1581,8 +1580,8 @@ const ProductPage = () => {
           </div>}
 
         {/* Recomendados - Full Width */}
-        <div id="section-recs" ref={recsRef} className="mt-12 pt-8 border-t border-gray-200 scroll-mt-20">
-          <h2 className="text-lg md:text-[18px] font-semibold text-gray-900 mb-4">{t('products.seeMore')}</h2>
+        <div id="section-recs" ref={recsRef} className={`${isMobile ? 'mt-3 pt-3' : 'mt-12 pt-8'} border-t border-border scroll-mt-20`}>
+          <h2 className={`text-lg md:text-[18px] font-semibold text-foreground ${isMobile ? 'mb-2' : 'mb-4'}`}>{t('products.seeMore')}</h2>
           <OtherSellersSection
             sourceProductId={(product as any)?.source_product?.id || (product as any)?.source_product_id || null}
             currentCatalogId={(product as any)?.type === 'seller_catalog' ? product.id : null}
