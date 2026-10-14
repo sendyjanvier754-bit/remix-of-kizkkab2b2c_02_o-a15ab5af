@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
 
     // Determine sender: check email_senders table for type+country-specific sender
     let senderEmail = config.sender_email;
-    let senderName = config.sender_name || "Siver";
+    let senderName = config.sender_name || "Kizkka";
 
     if (type && type !== "test") {
       const purposeMap: Record<string, string> = {
@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
           Subject: subject,
           HTMLPart: htmlContent,
           ...(textContent ? { TextPart: textContent } : {}),
-          CustomID: `siver-${type || "general"}-${Date.now()}`,
+          CustomID: `kizkka-${type || "general"}-${Date.now()}`,
         },
       ],
     };
