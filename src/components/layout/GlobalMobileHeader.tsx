@@ -154,8 +154,36 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
     return () => clearTimeout(debounce);
   }, [searchQuery, i18n.language]);
 
-  // Category bar stays visible: collapsing it on scroll changed the page
-  // height and caused the scroll position to jump (flicker loop).
+  // Smart sticky (mobile): hide category bar on scroll down, show on scroll up.
+  // Anti-flicker: wide thresholds + lock while the height animation runs,
+  // so the layout shift can't retrigger the scroll handler in a loop.
+  const [mobileHidden, setMobileHidden] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let locked = false;
+    let lockTimer: ReturnType<typeof setTimeout> | null = null;
+    const onScroll = () => {
+      if (locked) return;
+      const y = window.scrollY;
+      let next: boolean | null = null;
+      if (y < 120) next = false;
+      else if (y > lastY + 24) next = true;
+      else if (y < lastY - 24) next = false;
+      lastY = y;
+      if (next === null) return;
+      setMobileHidden((prev) => {
+        if (prev === next) return prev;
+        locked = true;
+        lockTimer = setTimeout(() => { locked = false; }, 350);
+        return next;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (lockTimer) clearTimeout(lockTimer);
+    };
+  }, []);
 
   if (!isMobile) return null;
 
@@ -361,7 +389,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
       </div>
 
       {/* Category tabs */}
-      <div className="border-b border-gray-200 bg-[#071d7f] overflow-hidden max-h-12" style={{ overscrollBehavior: 'none' }}>
+      <div className={`border-b border-gray-200 bg-[#071d7f] overflow-hidden transition-[max-height] duration-300 ease-in-out ${mobileHidden && !location.pathname.startsWith('/producto/') ? 'max-h-0 border-b-0' : 'max-h-12'}`} style={{ overscrollBehavior: 'none' }}>
         <div
           className="overflow-x-auto overflow-y-hidden scrollbar-hide w-full flex"
           style={{
