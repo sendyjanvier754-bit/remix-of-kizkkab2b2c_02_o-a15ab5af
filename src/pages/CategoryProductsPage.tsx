@@ -12,6 +12,7 @@ import { usePublicCategories } from "@/hooks/useCategories";
 import { useSellerProductsByCategory } from "@/hooks/useSellerProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProductCard from "@/components/landing/ProductCard";
+import FeaturedProductsCarousel from "@/components/b2b/FeaturedProductsCarousel";
 import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
 import { useTranslation } from "react-i18next";
 
@@ -29,7 +30,7 @@ const CategoryProductsPage = () => {
   const { role } = useAuth();
   const isMobile = useIsMobile();
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
+  const ITEMS_PER_PAGE = 2000;
   const [filters, setFilters] = useState<FilterOptions>({ sortBy: "newest", priceRange: [0, 1000] });
 
   const { data: category, isLoading: isCategoryLoading } = useCategoryBySlug(slug);
@@ -56,7 +57,7 @@ const CategoryProductsPage = () => {
   const { data: sellerProducts = [], isLoading: isSellerLoading } = useSellerProductsByCategory(
     !isB2BUser ? (categoryId ?? undefined) : undefined,
     allCategories,
-    100
+    2000
   );
 
   // Unify product list based on user type
@@ -161,10 +162,6 @@ const CategoryProductsPage = () => {
     }
 
     // Paginate for B2C (seller products come all at once)
-    if (!isB2BUser) {
-      const start = (currentPage - 1) * ITEMS_PER_PAGE;
-      list = list.slice(start, start + ITEMS_PER_PAGE);
-    }
 
     // sorting
     switch (filters.sortBy) {
@@ -179,6 +176,18 @@ const CategoryProductsPage = () => {
         return list;
     }
   }, [products, filters.sortBy, selectedSubcategory, priceMin, priceMax, isB2BUser, minRating, onlyPromo, inStockOnly, currentPage]);
+  const featuredProducts = useMemo(() => products
+    .filter((p: any) => (p.imagen_principal || p.imagen) && (p.stock_fisico ?? 1) > 0)
+    .slice(0, 12)
+    .map((p: any) => ({
+      id: p.id,
+      sku: p.sku_interno ?? p.sku ?? p.id,
+      nombre: p.nombre ?? '',
+      imagen_principal: p.imagen_principal ?? p.imagen,
+      precio_b2b: Number(p.precio ?? 0),
+      moq: p.moq ?? 1,
+      stock_fisico: p.stock_fisico ?? 1,
+    })) as any[], [products]);
   const handleViewStore = (sellerId: string) => navigate(`/tienda/${sellerId}`);
 
   const getSku = (p: AnyProduct) => p.sku_interno ?? p.sku ?? p.id;
@@ -209,26 +218,28 @@ const CategoryProductsPage = () => {
       {!isMobile && <GlobalHeader />}
 
       <main className={`container mx-auto px-4 ${isMobile ? 'pb-20' : 'pb-8'}`}>
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <button onClick={() => navigate("/")} className="hover:text-blue-600">{t('pagesExtra.categoryProducts.home')}</button>
-            <ChevronRight className="w-4 h-4" />
-            <button onClick={() => navigate("/categorias")} className="hover:text-blue-600">{t('pagesExtra.categoryProducts.categoriesLabel')}</button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="capitalize">{displayCategoryName ?? slug?.replace("-", " ")}</span>
+        {featuredProducts.length > 0 && (
+          <div className="-mx-4 mb-2">
+            <FeaturedProductsCarousel products={featuredProducts} />
           </div>
-        </div>
+        )}
 
-        {/* Category Header */}
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 capitalize mb-1">{displayCategoryName ?? slug}</h1>
-          <p className="text-sm text-gray-600">{t('pagesExtra.categoryProducts.productsAvailable', { count: visibleProductsCount })}</p>
+        {/* Breadcrumb + header compact */}
+        <div className="flex items-center gap-1.5 text-xs text-gray-600 mb-1 overflow-x-auto whitespace-nowrap">
+          <button onClick={() => navigate("/")} className="hover:text-blue-600">{t('pagesExtra.categoryProducts.home')}</button>
+          <ChevronRight className="w-3 h-3" />
+          <button onClick={() => navigate("/categorias")} className="hover:text-blue-600">{t('pagesExtra.categoryProducts.categoriesLabel')}</button>
+          <ChevronRight className="w-3 h-3" />
+          <span className="capitalize">{displayCategoryName ?? slug?.replace("-", " ")}</span>
+        </div>
+        <div className="flex items-baseline justify-between gap-2 mb-2">
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900 capitalize">{displayCategoryName ?? slug}</h1>
+          <p className="text-xs text-gray-600 whitespace-nowrap">{t('pagesExtra.categoryProducts.productsAvailable', { count: visibleProductsCount })}</p>
         </div>
 
         {/* Compact Filters Bar */}
         {/* Filters Bar - Responsive */}
-        <div className="bg-white rounded-lg shadow-sm p-3 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 px-3 py-2 mb-3">
           <div className="flex flex-col md:flex-row md:items-center md:flex-wrap gap-2">
             {/* Row 1: Primary Filters */}
             <div className="flex flex-wrap items-center gap-2 w-full">
@@ -380,16 +391,6 @@ const CategoryProductsPage = () => {
           })}
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-12">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">{t('pagesExtra.categoryProducts.previous')}</button>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <button key={i + 1} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded-lg ${currentPage === i + 1 ? "bg-blue-600 text-white" : "border border-gray-300 hover:bg-gray-50"}`}>{i + 1}</button>
-            ))}
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">{t('pagesExtra.categoryProducts.next')}</button>
-          </div>
-        )}
       </main>
 
       {!isMobile && <Footer />}
