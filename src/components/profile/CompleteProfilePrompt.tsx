@@ -7,6 +7,14 @@ import { Button } from '@/components/ui/button';
 import { UserCog } from 'lucide-react';
 
 const DISMISS_KEY = 'complete_profile_prompt_dismissed';
+const SHOWN_AT_KEY = 'complete_profile_prompt_shown_at';
+const COOLDOWN_MS = 24 * 60 * 60 * 1000; // show at most once every 24h
+const OPEN_DELAY_MS = 4000;
+const MAX_RETRIES = 5;
+
+const anotherDialogOpen = () =>
+  typeof document !== 'undefined' &&
+  !!document.querySelector('[role="dialog"], [data-state="open"][data-radix-popper-content-wrapper]');
 
 /**
  * Asks users (typically visitors captured via WhatsApp) to finish setting up
@@ -21,11 +29,26 @@ export function CompleteProfilePrompt() {
   useEffect(() => {
     if (isLoading || !user) return;
     if (sessionStorage.getItem(DISMISS_KEY)) return;
+    const lastShown = Number(localStorage.getItem(SHOWN_AT_KEY) || 0);
+    if (Date.now() - lastShown < COOLDOWN_MS) return;
     const incomplete = !user.phone || !user.name;
-    if (incomplete) {
-      const t = setTimeout(() => setOpen(true), 1500);
-      return () => clearTimeout(t);
-    }
+    if (!incomplete) return;
+
+    let retries = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const tryOpen = () => {
+      // Never stack on top of / under another modal — wait until the screen is free
+      if (anotherDialogOpen() && retries < MAX_RETRIES) {
+        retries += 1;
+        timer = setTimeout(tryOpen, 3000);
+        return;
+      }
+      if (anotherDialogOpen()) return; // give up quietly this visit
+      localStorage.setItem(SHOWN_AT_KEY, String(Date.now()));
+      setOpen(true);
+    };
+    timer = setTimeout(tryOpen, OPEN_DELAY_MS);
+    return () => clearTimeout(timer);
   }, [user, isLoading]);
 
   const dismiss = () => {
