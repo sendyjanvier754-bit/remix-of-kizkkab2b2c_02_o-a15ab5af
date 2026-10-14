@@ -167,3 +167,112 @@ export async function sendOrderEmail(admin: any, table: "orders_b2b" | "orders_b
   }
   return res;
 }
+
+// ---------- Phase 3: logistics + review request emails ----------
+export type LogiKind = "shipped" | "ready_pickup" | "delivered";
+const L: Record<Lang, Record<string, string>> = {
+  es: {
+    shippedSubject: "Tu pedido #{order} está en camino 🚚", shippedTitle: "¡Tu pedido está en camino!",
+    shippedBody: "Hola <strong>{name}</strong>, tu pedido <strong>#{order}</strong> ha sido despachado.",
+    pickupSubject: "Pedido #{order} listo para retirar", pickupTitle: "Listo para retirar",
+    pickupBody: "Hola <strong>{name}</strong>, tu pedido <strong>#{order}</strong> ya está disponible en tu punto de entrega. Presenta tu número de pedido al retirarlo.",
+    deliveredSubject: "Pedido #{order} entregado ✅", deliveredTitle: "¡Pedido entregado!",
+    deliveredBody: "Hola <strong>{name}</strong>, tu pedido <strong>#{order}</strong> fue entregado. ¡Gracias por comprar en Kizkka!",
+    reviewTitle: "¿Qué te parecieron tus productos?", reviewBody: "Tu opinión ayuda a otros compradores. Califica tu compra en menos de un minuto:",
+    rate: "Calificar", tracking: "Número de rastreo", carrier: "Transportista", point: "Punto de entrega", track: "Seguir mi pedido",
+  },
+  en: {
+    shippedSubject: "Your order #{order} is on its way 🚚", shippedTitle: "Your order is on its way!",
+    shippedBody: "Hi <strong>{name}</strong>, your order <strong>#{order}</strong> has been shipped.",
+    pickupSubject: "Order #{order} ready for pickup", pickupTitle: "Ready for pickup",
+    pickupBody: "Hi <strong>{name}</strong>, your order <strong>#{order}</strong> is available at your pickup point. Show your order number when collecting it.",
+    deliveredSubject: "Order #{order} delivered ✅", deliveredTitle: "Order delivered!",
+    deliveredBody: "Hi <strong>{name}</strong>, your order <strong>#{order}</strong> was delivered. Thank you for shopping at Kizkka!",
+    reviewTitle: "How were your products?", reviewBody: "Your opinion helps other shoppers. Rate your purchase in under a minute:",
+    rate: "Rate", tracking: "Tracking number", carrier: "Carrier", point: "Pickup point", track: "Track my order",
+  },
+  fr: {
+    shippedSubject: "Votre commande #{order} est en route 🚚", shippedTitle: "Votre commande est en route !",
+    shippedBody: "Bonjour <strong>{name}</strong>, votre commande <strong>#{order}</strong> a été expédiée.",
+    pickupSubject: "Commande #{order} prête à retirer", pickupTitle: "Prête à retirer",
+    pickupBody: "Bonjour <strong>{name}</strong>, votre commande <strong>#{order}</strong> est disponible à votre point de retrait. Présentez votre numéro de commande.",
+    deliveredSubject: "Commande #{order} livrée ✅", deliveredTitle: "Commande livrée !",
+    deliveredBody: "Bonjour <strong>{name}</strong>, votre commande <strong>#{order}</strong> a été livrée. Merci d'avoir acheté sur Kizkka !",
+    reviewTitle: "Qu'avez-vous pensé de vos produits ?", reviewBody: "Votre avis aide les autres acheteurs. Notez votre achat en moins d'une minute :",
+    rate: "Noter", tracking: "Numéro de suivi", carrier: "Transporteur", point: "Point de retrait", track: "Suivre ma commande",
+  },
+  ht: {
+    shippedSubject: "Kòmand ou #{order} sou wout 🚚", shippedTitle: "Kòmand ou sou wout!",
+    shippedBody: "Bonjou <strong>{name}</strong>, kòmand ou <strong>#{order}</strong> fin voye.",
+    pickupSubject: "Kòmand #{order} pare pou w vin chèche", pickupTitle: "Pare pou w vin chèche",
+    pickupBody: "Bonjou <strong>{name}</strong>, kòmand ou <strong>#{order}</strong> disponib nan pwen livrezon ou. Montre nimewo kòmand ou lè w ap vin pran l.",
+    deliveredSubject: "Kòmand #{order} livre ✅", deliveredTitle: "Kòmand livre!",
+    deliveredBody: "Bonjou <strong>{name}</strong>, kòmand ou <strong>#{order}</strong> livre. Mèsi paske w achte sou Kizkka!",
+    reviewTitle: "Kisa w panse de pwodwi ou yo?", reviewBody: "Opinyon ou ede lòt achtè. Bay nòt pou acha ou an mwens pase yon minit:",
+    rate: "Bay nòt", tracking: "Nimewo swivi", carrier: "Transpòtè", point: "Pwen livrezon", track: "Swiv kòmand mwen",
+  },
+};
+
+export async function sendLogisticsEmail(admin: any, table: "orders_b2b" | "orders_b2c", orderId: string, kind: LogiKind, extra: { tracking?: string; carrier?: string } = {}) {
+  const flag = `email_${kind}_sent_at`;
+  const { data: o } = await admin.from(table).select("*").eq("id", orderId).maybeSingle();
+  if (!o) return { ok: false, error: "order_not_found" };
+  const meta = (o.metadata || {}) as Record<string, any>;
+  if (meta[flag]) return { ok: true, skipped: true };
+  const buyerId = table === "orders_b2c" ? o.buyer_user_id : o.buyer_id;
+  if (!buyerId) return { ok: false, error: "no_buyer" };
+  const u = await userInfo(admin, buyerId);
+  if (!u.email) return { ok: false, error: "no_email" };
+  const t = L[u.lang], b = await brand(admin);
+  const orderNo = o.order_number || String(o.id).slice(0, 8).toUpperCase();
+  const v = { name: esc(u.name), order: esc(orderNo) };
+  const ordersUrl = table === "orders_b2b" ? `${SITE}/seller/mis-compras` : `${SITE}/mis-compras`;
+  const box = (rows: string) => rows ? `<div style="background:#eff6ff;border-radius:10px;padding:14px;margin:14px 0">${rows}</div>` : "";
+  const line = (k: string, val?: string | null) => val ? `<p style="margin:2px 0"><strong>${k}:</strong> ${esc(val)}</p>` : "";
+  const tracking = extra.tracking || o.tracking_number || meta.tracking_number;
+  const carrier = extra.carrier || o.carrier || meta.carrier;
+  let title = "", subj = "", body = "";
+
+  if (kind === "shipped") {
+    title = t.shippedTitle; subj = fill(t.shippedSubject, { order: orderNo });
+    body = `<p style="font-size:15px;line-height:1.6">${fill(t.shippedBody, v)}</p>${box(line(t.tracking, tracking) + line(t.carrier, carrier))}<div style="text-align:center">${btn(ordersUrl, t.track)}</div>`;
+  } else if (kind === "ready_pickup") {
+    let point = "";
+    const pid = o.pickup_point_id || meta.pickup_point_id;
+    if (pid) {
+      const { data: p } = await admin.from("pickup_points").select("*").eq("id", pid).maybeSingle();
+      if (p) point = [p.name, p.address].filter(Boolean).join(" — ");
+    }
+    title = t.pickupTitle; subj = fill(t.pickupSubject, { order: orderNo });
+    body = `<p style="font-size:15px;line-height:1.6">${fill(t.pickupBody, v)}</p>${box(line(t.point, point) + line("#", orderNo))}<div style="text-align:center">${btn(ordersUrl, t.track)}</div>`;
+  } else {
+    title = t.deliveredTitle; subj = fill(t.deliveredSubject, { order: orderNo });
+    let items: { id: string; n: string }[] = [];
+    if (table === "orders_b2c") {
+      const { data } = await admin.from("order_items_b2c").select("*").eq("order_id", orderId);
+      items = (data || []).map((i: any) => ({ id: i.product_id || i.seller_catalog_id, n: i.product_name }));
+    } else {
+      const { data } = await admin.from("order_items_b2b").select("*").eq("order_id", orderId);
+      items = (data || []).map((i: any) => ({ id: i.product_id, n: i.nombre }));
+    }
+    const pids = [...new Set(items.map((i) => i.id).filter(Boolean))];
+    const skuMap: Record<string, string> = {};
+    if (pids.length) {
+      const { data: ps } = await admin.from("products").select("id,sku_interno").in("id", pids);
+      (ps || []).forEach((p: any) => { if (p.sku_interno) skuMap[p.id] = p.sku_interno; });
+    }
+    const seen = new Set<string>();
+    const rows = items.filter((i) => i.id && !seen.has(i.id) && seen.add(i.id)).slice(0, 5).map((i) =>
+      `<tr><td style="padding:8px;border-bottom:1px solid #eee">${esc(i.n)}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right"><a href="${skuMap[i.id] ? `${SITE}/producto/${encodeURIComponent(skuMap[i.id])}?review=1#reviews` : ordersUrl}" style="color:#ce2e2e;font-weight:700;text-decoration:none">★★★★★ ${t.rate}</a></td></tr>`).join("");
+    const review = `<div style="margin-top:22px;border-top:1px solid #eee;padding-top:18px"><h2 style="font-size:18px;color:#071d7f;margin:0 0 8px">${t.reviewTitle}</h2><p style="margin:0 0 8px">${t.reviewBody}</p>${rows ? `<table style="width:100%;border-collapse:collapse;font-size:14px">${rows}</table>` : `<div style="text-align:center">${btn(ordersUrl, t.rate)}</div>`}</div>`;
+    body = `<p style="font-size:15px;line-height:1.6">${fill(t.deliveredBody, v)}</p>${review}`;
+  }
+  const res = await sendMail(admin, u.email, subj, layout(u.lang, b, title, body), "orders");
+  if (res.ok) {
+    const { data: fresh } = await admin.from(table).select("metadata").eq("id", orderId).maybeSingle();
+    const upd: Record<string, string> = { [flag]: new Date().toISOString() };
+    if (kind === "delivered") upd.review_request_sent_at = upd[flag];
+    await admin.from(table).update({ metadata: { ...((fresh?.metadata as any) || {}), ...upd } }).eq("id", orderId);
+  }
+  return res;
+}
