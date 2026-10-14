@@ -46,7 +46,7 @@ const FeaturedCarousel = ({ products, showMoq = false }: FeaturedCarouselProps) 
   if (products.length === 0) return null;
 
   return (
-    <div className="w-full bg-white/80 backdrop-blur-sm border-b border-gray-100 py-4 mb-4">
+    <div className="w-full bg-white/80 backdrop-blur-sm border-b border-gray-100 py-2 mb-1">
       <div className="container mx-auto px-4">
         <div className="overflow-hidden" ref={emblaRef}>
           <div className="flex gap-4">

@@ -9,7 +9,7 @@ const TrendingCategoriesSection = () => {
   } = useTrendingCategories(6);
   if (isLoading) {
     return <section>
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-2 mb-2">
           <div className="p-2 bg-purple-100 rounded-full">
             <Layers className="w-6 h-6 text-purple-600" />
           </div>
@@ -18,14 +18,14 @@ const TrendingCategoriesSection = () => {
             <Skeleton className="h-4 w-64" />
           </div>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-2">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 w-full rounded-lg" />)}
         </div>
       </section>;
   }
   if (!categories || categories.length === 0) {
     return <section>
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-2 mb-2">
           <div className="p-2 bg-purple-100 rounded-full">
             <Layers className="w-6 h-6 text-purple-600" />
           </div>
@@ -34,13 +34,13 @@ const TrendingCategoriesSection = () => {
             
           </div>
         </div>
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-6 text-muted-foreground">
           No hay categorías con productos disponibles.
         </div>
       </section>;
   }
   return <section>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-2 mb-2">
         <div className="p-2 bg-purple-100 rounded-full">
           <Layers className="w-6 h-6 text-purple-600" />
         </div>
@@ -50,7 +50,7 @@ const TrendingCategoriesSection = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {categories.map(category => <TrendingCategoryCard key={category.id} category={category} />)}
       </div>
     </section>;

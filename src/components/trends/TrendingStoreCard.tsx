@@ -87,7 +87,7 @@ const TrendingStoreCard = ({ store, onFollowChange }: TrendingStoreCardProps) =>
     <>
       <div className="bg-card overflow-hidden animate-fade-in">
         {/* Store Header */}
-        <div className="p-3 flex items-start gap-3">
+        <div className="p-2.5 flex items-start gap-3">
           {/* Store Logo with Trends Badge */}
           <div 
             className="relative cursor-pointer flex-shrink-0"
@@ -188,7 +188,7 @@ const TrendingStoreCard = ({ store, onFollowChange }: TrendingStoreCardProps) =>
                 />
               </div>
               {/* Price in orange like reference */}
-              <p className="text-orange-500 font-bold text-sm mt-1.5">
+              <p className="text-orange-500 font-bold text-sm mt-1">
                 <span className="text-orange-500/70 text-xs">$</span>
                 <span className="text-orange-500/70 text-[10px]">MXN</span>
                 <span className="text-orange-500">{product.precio_venta.toFixed(2)}</span>
@@ -200,8 +200,8 @@ const TrendingStoreCard = ({ store, onFollowChange }: TrendingStoreCardProps) =>
           {store.products.length < 4 && 
             Array.from({ length: 4 - store.products.length }).map((_, i) => (
               <div key={`empty-${i}`}>
-                <div className="aspect-[3/4] bg-muted/30 rounded" />
-                <div className="h-5 mt-1.5" />
+                <div className="aspect-[3/4] bg-muted/30 rounded hidden" />
+                <div className="h-5 mt-1" />
               </div>
             ))
           }
@@ -209,7 +209,7 @@ const TrendingStoreCard = ({ store, onFollowChange }: TrendingStoreCardProps) =>
 
         {/* Recent Review with quotes */}
         <div 
-          className="px-3 py-3 flex items-start gap-1 cursor-pointer hover:bg-muted/30 transition-colors"
+          className="px-3 py-2 flex items-start gap-1 cursor-pointer hover:bg-muted/30 transition-colors"
           onClick={() => user && setShowReviewModal(true)}
         >
           <span className="text-orange-400 text-xl leading-none font-serif">"</span>
