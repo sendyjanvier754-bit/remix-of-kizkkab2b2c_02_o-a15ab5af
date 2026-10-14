@@ -25,6 +25,8 @@ import Footer from "@/components/layout/Footer";
 import VariantSelector from "@/components/products/VariantSelector";
 import VariantDrawer from '@/components/products/VariantDrawer';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';
+import { useWhatsAppShareStore } from '@/stores/useWhatsAppShareStore';
+import { WhatsAppIcon } from '@/components/products/WhatsAppShareDialog';
 import ProductReviews from "@/components/products/ProductReviews";
 import OtherSellersSection from "@/components/products/OtherSellersSection";
 import ProductCarousel from "@/components/landing/ProductCarousel";
