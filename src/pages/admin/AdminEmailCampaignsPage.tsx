@@ -100,7 +100,7 @@ export default function AdminEmailCampaignsPage() {
   const active = subs?.filter((s) => s.status === "subscribed").length ?? 0;
 
   return (
-    <AdminLayout>
+    <AdminLayout title="Campañas de Email">
       <div className="p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
