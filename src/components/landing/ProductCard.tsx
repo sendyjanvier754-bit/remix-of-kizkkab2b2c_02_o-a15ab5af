@@ -237,7 +237,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
         <Link to={product.sku ? `/producto/${product.sku}${product.storeId ? `?seller=${product.storeId}` : ''}` : '#'} className="flex flex-col gap-1 hover:opacity-80 transition-opacity">
           {/* Row 1: price + rating */}
           <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-baseline gap-1 bg-[#ef481b] px-1.5 py-0.5 rounded-md">
+            <span className="inline-flex items-baseline gap-1 bg-destructive px-1.5 py-0.5 rounded-md">
               <span className="text-white font-bold text-sm">${displayPrice.toFixed(2)}</span>
               <span className="text-[8px] font-medium text-white">{currency}</span>
             </span>
