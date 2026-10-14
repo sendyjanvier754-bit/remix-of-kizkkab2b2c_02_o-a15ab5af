@@ -127,6 +127,8 @@ export function AdminSidebar() {
     { title: "Plantillas Email", url: "/admin/email-templates", icon: Mail },
     { title: "WhatsApp Automático", url: "/admin/whatsapp-automation", icon: MessageCircle },
     { title: "Campañas Email", url: "/admin/email-campaigns", icon: Mail },
+    { title: "Diseñador de Correos", url: "/admin/disenador-email", icon: Mail },
+    { title: "Automatizaciones", url: "/admin/automatizaciones", icon: MessageCircle },
     { title: "Programas Afiliados", url: "/admin/affiliates", icon: Award },
     { title: "Estadísticas Afiliados", url: "/admin/afiliados-estadisticas", icon: TrendingUp },
   ];
