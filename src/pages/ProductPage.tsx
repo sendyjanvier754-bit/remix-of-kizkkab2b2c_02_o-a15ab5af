@@ -1076,7 +1076,7 @@ const ProductPage = () => {
               onTouchEnd={handleGalleryTouchEnd}>
               
               {/* Thumbnails vertical box at left for ALL devices */}
-              {images.length > 1 &&
+              {images.length > 1 && !isMobile &&
               <div
                 className="absolute left-2 bottom-2 z-10 flex flex-col gap-2 bg-transparent rounded-xl p-2 shadow-md overflow-y-auto"
                 style={{
@@ -1134,6 +1134,10 @@ const ProductPage = () => {
                     <ChevronRight className="w-5 h-5 text-gray-700" />
                   </button>
                 </>}
+              {images.length > 1 && isMobile &&
+              <span className="absolute bottom-3 right-3 rounded-full bg-foreground/60 px-2.5 py-1 text-[11px] font-bold text-background backdrop-blur-sm">
+                  {selectedImage + 1}/{images.length}
+                </span>}
 
               {/* B2B metrics are shown in the dedicated margin card below the price */}
               
@@ -1152,39 +1156,15 @@ const ProductPage = () => {
             {/* Thumbnails for Desktop (moved to overlay above) */}
 
             {/* Color Variants Grid for Mobile */}
-            {isMobile && images.length > 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            {isMobile && images.length > 1 &&
+            <div className="flex gap-2 overflow-x-auto px-4 -mt-2 pb-1 [scrollbar-width:none]">
+                {images.map((image, index) =>
+              <button key={index} onClick={() => {setSelectedImage(index);scrollGalleryToIndex(index);}}
+              className={`flex-shrink-0 size-14 rounded-xl overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-price shadow-md scale-105' : 'border-transparent opacity-70'}`}>
+                    <img src={image} alt="" loading="lazy" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </button>
+              )}
+              </div>
             }
             {/* Eliminada la cuadrícula de miniaturas para mobile, solo queda el box vertical a la izquierda */}
 
@@ -1220,6 +1200,29 @@ const ProductPage = () => {
                     {titleExpanded ? 'View less' : 'View more'}
                   </button>}
               </div>
+
+              {/* Social proof & urgency */}
+              {(() => {
+                const stockNow = Number(isB2BUser ? stockB2B : product.stock) || 0;
+                return <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                    {storeRatingData && <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                        <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                        {storeRatingData.avg}
+                        <span className="font-normal text-muted-foreground">({storeRatingData.count})</span>
+                      </span>}
+                    {stockNow > 0 && stockNow <= 10 ? <span className="inline-flex items-center gap-1 rounded-full bg-price/10 px-2 py-0.5 font-bold text-price">
+                        <span className="size-1.5 rounded-full bg-price animate-pulse" />
+                        {t('pdpPro.lowStock', { count: stockNow, defaultValue: 'Solo quedan {{count}}' })}
+                      </span> : stockNow > 10 ? <span className="inline-flex items-center gap-1 font-semibold text-profit">
+                        <span className="size-1.5 rounded-full bg-profit" />
+                        {t('pdpPro.inStock', { defaultValue: 'En stock' })}
+                      </span> : null}
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">
+                      <Truck className="w-3.5 h-3.5 text-primary" />
+                      {t('pdpPro.delivery', { defaultValue: 'Entrega estimada 24-48h' })}
+                    </span>
+                  </div>;
+              })()}
             </div>
 
             {/* Price Section */}
@@ -1602,61 +1605,49 @@ const ProductPage = () => {
 
       {/* Mobile sticky action bar - stays above the site bottom navigation */}
       {isMobile && product &&
-      <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-3 py-2 flex items-center gap-2">
-          <button
-            onClick={() => toggleFavorite()}
-            aria-label="favorite"
-            className="p-2.5 rounded-lg border border-gray-200 bg-white">
-            <Heart className={`w-5 h-5 ${isFavorite() ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
-          </button>
+      <div className="fixed bottom-12 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border shadow-[0_-6px_20px_hsl(var(--foreground)/0.08)] px-3 py-2 flex items-center gap-2">
+          {realStore && (
+            <button
+              type="button"
+              onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)}
+              aria-label={t('otherSellers.soldBy')}
+              className="flex flex-col items-center justify-center w-11 text-[10px] font-semibold text-muted-foreground active:scale-90 transition">
+              <StoreIcon className="w-5 h-5 text-foreground" />
+              <span className="truncate max-w-full">{t('pdpPro.store', { defaultValue: 'Tienda' })}</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={openWhatsAppShare}
             aria-label={t('whatsappShare.button')}
-            title={t('whatsappShare.button')}
-            className="p-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white">
-            <WhatsAppIcon className="w-5 h-5" />
+            className="flex flex-col items-center justify-center w-11 text-[10px] font-semibold text-muted-foreground active:scale-90 transition">
+            <WhatsAppIcon className="w-5 h-5 text-profit" />
+            <span>WhatsApp</span>
           </button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              useVariantDrawerStore.getState().open({
-                id: product.id,
-                sku: product.sku,
-                nombre: product.nombre,
-                images: images,
-                price: product.precio_venta,
-                costB2B: costB2B,
-                moq: moq,
-                stock: isB2BUser ? stockB2B : product.stock,
-                source_product_id: product.source_product?.id,
-                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
-                storeId: product.store?.id || sellerParam || undefined
-              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
-            }}
-            className="flex-1 h-11 text-sm font-semibold gap-2">
-            <ShoppingCart className="w-4 h-4" />
-            {t('products.addToCart')}
-          </Button>
-          <Button
-            onClick={() => {
-              useVariantDrawerStore.getState().open({
-                id: product.id,
-                sku: product.sku,
-                nombre: product.nombre,
-                images: images,
-                price: product.precio_venta,
-                costB2B: costB2B,
-                moq: moq,
-                stock: isB2BUser ? stockB2B : product.stock,
-                source_product_id: product.source_product?.id,
-                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
-                storeId: product.store?.id || sellerParam || undefined
-              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
-            }}
-            className="flex-1 h-11 text-sm font-semibold">
-            {isB2BUser ? t('productPage.buyWholesale') : t('common.buy')}
-          </Button>
+          {(() => {
+            const openDrawer = () => useVariantDrawerStore.getState().open({
+              id: product.id,
+              sku: product.sku,
+              nombre: product.nombre,
+              images: images,
+              price: product.precio_venta,
+              costB2B: costB2B,
+              moq: moq,
+              stock: isB2BUser ? stockB2B : product.stock,
+              source_product_id: product.source_product?.id,
+              sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
+              storeId: product.store?.id || sellerParam || undefined
+            }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
+            return <div className="flex flex-1 h-11 rounded-full overflow-hidden shadow-lg shadow-price/25">
+                <button onClick={openDrawer} className="flex-1 bg-foreground text-background text-[13px] font-bold flex items-center justify-center gap-1.5 active:brightness-90">
+                  <ShoppingCart className="w-4 h-4" />
+                  {t('products.addToCart')}
+                </button>
+                <button onClick={openDrawer} className="flex-1 bg-price text-price-foreground text-[13px] font-extrabold active:brightness-90">
+                  {isB2BUser ? t('productPage.buyWholesale') : t('common.buy')}
+                </button>
+              </div>;
+          })()}
         </div>
       }
 
