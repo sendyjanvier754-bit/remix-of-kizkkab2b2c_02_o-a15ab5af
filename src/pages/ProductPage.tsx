@@ -1580,17 +1580,18 @@ const ProductPage = () => {
           </div>}
 
         {/* Recomendados - Full Width */}
-        <div id="section-recs" ref={recsRef} className={`${isMobile ? 'mt-2 pt-2' : 'mt-12 pt-8'} border-t border-border scroll-mt-20`}>
-          <h2 className={`text-lg md:text-[18px] font-semibold text-foreground ${isMobile ? 'mb-2' : 'mb-4'}`}>{t('products.seeMore')}</h2>
+        <div id="section-recs" ref={recsRef} className={`${isMobile ? 'mt-1 pt-1.5' : 'mt-12 pt-8'} border-t border-border scroll-mt-20`}>
+          <h2 className={`text-lg md:text-[18px] font-semibold text-foreground ${isMobile ? 'mb-1.5' : 'mb-4'}`}>{t('products.seeMore')}</h2>
           <OtherSellersSection
             sourceProductId={(product as any)?.source_product?.id || (product as any)?.source_product_id || null}
             currentCatalogId={(product as any)?.type === 'seller_catalog' ? product.id : null}
+            compact={isMobile}
           />
 
           {loadingRecommended ?
-          <ProductGrid products={[]} isLoading={true} skeletonCount={20} /> :
+          <ProductGrid products={[]} isLoading={true} skeletonCount={20} className={isMobile ? 'py-1' : undefined} /> :
           recommendedProducts.length > 0 ?
-          <ProductGrid products={recommendedProducts} isLoading={false} /> :
+          <ProductGrid products={recommendedProducts} isLoading={false} className={isMobile ? 'py-1' : undefined} /> :
 
           <div className="bg-gray-50 border rounded-lg p-6 text-center text-gray-400">
               {t('products.noProducts')}
