@@ -1,0 +1,18 @@
+{
+  "retryPayment": {
+    "button": "Reintentar pago",
+    "failedNotice": "El cobro no pudo completarse. Puedes intentarlo con otra tarjeta o elegir otro método de pago.",
+    "title": "Completar el pago",
+    "subtitle": "Elige cómo deseas pagar este pedido",
+    "card": "Tarjeta de crédito o débito",
+    "cardDesc": "Pago inmediato y seguro con Stripe",
+    "bank": "Transferencia bancaria",
+    "manualDesc": "Paga y sube tu comprobante",
+    "changeMethod": "Cambiar método",
+    "paidTitle": "¡Pago confirmado!",
+    "paidDesc": "Tu pedido ya está pagado y en proceso.",
+    "proofTitle": "Comprobante recibido",
+    "proofDesc": "Verificaremos tu pago en breve.",
+    "close": "Cerrar"
+  }
+}

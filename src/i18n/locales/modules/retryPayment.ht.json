@@ -1,0 +1,18 @@
+{
+  "retryPayment": {
+    "button": "Eseye peye ankò",
+    "failedNotice": "Peman an pa t pase. Ou ka eseye ak yon lòt kat oswa chwazi yon lòt metòd peman.",
+    "title": "Konplete peman an",
+    "subtitle": "Chwazi kijan ou vle peye kòmand sa a",
+    "card": "Kat kredi oswa debi",
+    "cardDesc": "Peman rapid e an sekirite ak Stripe",
+    "bank": "Transfè labank",
+    "manualDesc": "Peye epi voye prèv peman ou",
+    "changeMethod": "Chanje metòd",
+    "paidTitle": "Peman konfime!",
+    "paidDesc": "Kòmand ou peye epi l ap trete.",
+    "proofTitle": "Nou resevwa prèv la",
+    "proofDesc": "N ap verifye peman ou byento.",
+    "close": "Fèmen"
+  }
+}

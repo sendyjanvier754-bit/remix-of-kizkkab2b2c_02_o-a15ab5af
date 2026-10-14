@@ -1,0 +1,18 @@
+{
+  "retryPayment": {
+    "button": "Réessayer le paiement",
+    "failedNotice": "Le paiement n'a pas pu être effectué. Essayez une autre carte ou choisissez un autre moyen de paiement.",
+    "title": "Finaliser le paiement",
+    "subtitle": "Choisissez comment payer cette commande",
+    "card": "Carte de crédit ou de débit",
+    "cardDesc": "Paiement instantané et sécurisé avec Stripe",
+    "bank": "Virement bancaire",
+    "manualDesc": "Payez et téléversez votre reçu",
+    "changeMethod": "Changer de moyen",
+    "paidTitle": "Paiement confirmé !",
+    "paidDesc": "Votre commande est payée et en cours de traitement.",
+    "proofTitle": "Reçu reçu",
+    "proofDesc": "Nous vérifierons votre paiement sous peu.",
+    "close": "Fermer"
+  }
+}
