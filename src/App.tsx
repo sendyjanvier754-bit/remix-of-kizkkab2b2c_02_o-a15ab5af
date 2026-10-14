@@ -15,6 +15,7 @@ import { ViewModeProvider } from "@/contexts/ViewModeContext";
 import { useCartMigration } from "@/hooks/useCartMigration";
 import { ShippingTiersRealtimeProvider } from "@/hooks/useShippingTiersRealtimeSync";
 import VariantDrawer from "@/components/products/VariantDrawer";
+import WhatsAppShareDialog from "@/components/products/WhatsAppShareDialog";
 import { PageLoader } from "./components/ui/PageLoader";
 import { NavigationLoader } from "./components/ui/NavigationLoader";
 import { CartAddedConfirmation } from "@/components/cart/CartAddedConfirmation";
@@ -195,6 +196,7 @@ const AppContent = () => {
       <Toaster />
       <Sonner />
       <VariantDrawer />
+      <WhatsAppShareDialog />
       <LoginPromptModal />
       <WhatsAppFloatingButton />
       <CompleteProfilePrompt />
