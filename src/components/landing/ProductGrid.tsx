@@ -28,9 +28,10 @@ interface ProductGridProps {
   products: Product[];
   isLoading?: boolean;
   skeletonCount?: number;
+  className?: string;
 }
 
-const ProductGrid = ({ products, isLoading = false, skeletonCount = 30 }: ProductGridProps) => {
+const ProductGrid = ({ products, isLoading = false, skeletonCount = 30, className }: ProductGridProps) => {
   const { user } = useAuth();
   const { isClientPreview } = useViewMode();
   const isB2BUser = (user?.role === UserRole.SELLER || user?.role === UserRole.ADMIN) && !isClientPreview;
@@ -43,7 +44,7 @@ const ProductGrid = ({ products, isLoading = false, skeletonCount = 30 }: Produc
   const { data: b2bPricesMap = {} } = useB2BPricesMap(sourceProductIds);
   if (isLoading) {
     return (
-      <div className="w-full px-4 py-2">
+      <div className={cn("w-full px-4 py-2", className)}>
         <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-1">
           {Array.from({ length: skeletonCount }).map((_, i) => (
             <div key={i} className="bg-card rounded-lg overflow-hidden">
@@ -62,7 +63,7 @@ const ProductGrid = ({ products, isLoading = false, skeletonCount = 30 }: Produc
   if (products.length === 0) return null;
 
   return (
-    <div className="w-full px-4 py-2">
+    <div className={cn("w-full px-4 py-2", className)}>
       <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-1">
         {products.map((product) => (
           <ProductCard
