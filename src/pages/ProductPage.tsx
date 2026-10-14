@@ -1047,7 +1047,7 @@ const ProductPage = () => {
       {/* Sticky Nav Tabs: reemplaza la barra de categorÃ­as */}
       {/* REMOVED: Desktop sticky nav replaced with Accordion component */}
 
-      <main className={`container mx-auto ${isMobile ? 'px-0 pb-32 pt-0' : 'px-4 pb-12 py-4'}`}>
+      <main className={`container mx-auto ${isMobile ? 'px-0 pb-24 pt-0' : 'px-4 pb-12 py-4'}`}>
         {/* Breadcrumb / Retorno Button - Desktop */}
         {!isMobile &&
         <button
@@ -1171,7 +1171,7 @@ const ProductPage = () => {
           </div>
 
           {/* Product Info */}
-          <div className={`${isMobile ? 'space-y-2 px-3 w-full' : 'space-y-3 overflow-y-auto max-h-[calc(100vh-200px)] pr-4'}`}> 
+          <div className={`${isMobile ? 'space-y-1.5 px-3 w-full' : 'space-y-3 overflow-y-auto max-h-[calc(100vh-200px)] pr-4'}`}> 
             <div>
               {/* Badges */}
               <div className={`flex flex-wrap items-center gap-2 ${isMobile ? 'mb-1.5' : 'mb-3'}`}>
@@ -1204,7 +1204,7 @@ const ProductPage = () => {
               {/* Social proof & urgency */}
               {(() => {
                 const stockNow = Number(isB2BUser ? stockB2B : product.stock) || 0;
-                return <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                return <div className={`${isMobile ? 'mt-1' : 'mt-2'} flex flex-wrap items-center gap-x-3 gap-y-1 text-xs`}>
                     {storeRatingData && <span className="inline-flex items-center gap-1 font-semibold text-foreground">
                         <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                         {storeRatingData.avg}
@@ -1226,7 +1226,7 @@ const ProductPage = () => {
             </div>
 
             {/* Price Section */}
-            <div className="rounded-2xl border border-price/15 bg-gradient-to-br from-price/10 via-price/5 to-transparent p-3.5">
+            <div className={`rounded-2xl border border-price/15 bg-gradient-to-br from-price/10 via-price/5 to-transparent ${isMobile ? 'px-3 py-2' : 'p-3.5'}`}>
               <div className="flex items-center gap-2 flex-wrap justify-between">
                 {(() => {
                   const currencyCode = (storeData && (storeData?.metadata?.currency || (storeData as any).currency) || 'USD').toUpperCase();
@@ -1239,7 +1239,7 @@ const ProductPage = () => {
                   return <div className="flex items-end gap-2 flex-wrap">
                       <span className="flex items-start leading-none text-price">
                         <span className="text-lg font-bold mt-1">$</span>
-                        <span className="text-4xl font-extrabold tracking-tight">{Math.floor(shown)}</span>
+                        <span className="text-3xl lg:text-4xl font-extrabold tracking-tight">{Math.floor(shown)}</span>
                         <span className="text-lg font-bold mt-1">.{shown.toFixed(2).split('.')[1]}</span>
                         <span className="ml-1.5 self-end mb-1 text-xs font-semibold text-muted-foreground">{currencyCode}</span>
                       </span>
@@ -1258,34 +1258,34 @@ const ProductPage = () => {
 
               {/* B2B margin card */}
               {isB2BUser && businessSummary &&
-              <div className="mt-3 rounded-lg border border-profit-border bg-card p-3 shadow-sm lg:bg-profit-soft lg:p-3 lg:shadow-none">
-                  <div className="mb-3 flex items-center gap-2 lg:mb-2.5 lg:gap-1.5">
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-profit-soft lg:size-auto lg:bg-transparent">
+              <div className="mt-2 rounded-lg border border-profit-border bg-card p-2 shadow-sm lg:mt-3 lg:bg-profit-soft lg:p-3 lg:shadow-none">
+                  <div className="mb-1.5 flex items-center gap-1.5 lg:mb-2.5">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-profit-soft lg:size-auto lg:bg-transparent">
                       <TrendingUp className="size-4 text-profit" />
                     </span>
                     <p className="text-[11px] font-bold uppercase text-profit lg:text-[12px] lg:font-semibold">
                       {t('productPdp.margin.title')}
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 lg:gap-3">
-                    <div className="col-span-2 rounded-lg border border-profit-border bg-profit-soft p-3 lg:col-span-1 lg:order-2 lg:border-0 lg:bg-transparent lg:p-0">
-                      <p className="mb-1 text-[12px] font-medium text-profit-foreground">{t('productPdp.margin.profitPerUnit')}</p>
-                      <div className="flex items-end justify-between gap-3 lg:block">
-                        <p className="text-2xl font-bold leading-none text-foreground lg:text-sm lg:leading-5 lg:text-profit">
+                  <div className="grid grid-cols-3 gap-1.5 lg:gap-3">
+                    <div className="order-2 rounded-md border border-profit-border bg-profit-soft p-1.5 lg:rounded-lg lg:order-2 lg:border-0 lg:bg-transparent lg:p-0">
+                      <p className="mb-0.5 text-[10px] font-medium leading-3 text-profit-foreground lg:text-[12px]">{t('productPdp.margin.profitPerUnit')}</p>
+                      <div className="flex flex-col gap-0.5 lg:block">
+                        <p className="text-sm font-bold leading-none text-profit lg:text-sm lg:leading-5 lg:text-profit">
                           ${businessSummary.profitPerUnit.toFixed(2)}
                         </p>
-                        <span className="shrink-0 rounded-full bg-profit px-2.5 py-1 text-[12px] font-bold leading-none text-primary-foreground lg:ml-1 lg:bg-transparent lg:p-0 lg:font-medium lg:text-profit">
+                        <span className="self-start shrink-0 rounded-full bg-profit px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground lg:ml-1 lg:bg-transparent lg:p-0 lg:font-medium lg:text-profit">
                           +{businessSummary.profitPercentage}%
                         </span>
                       </div>
                     </div>
-                    <div className="rounded-lg border border-border bg-muted/40 p-3 lg:order-1 lg:border-0 lg:bg-transparent lg:p-0">
-                      <p className="mb-1 text-[11px] font-medium leading-4 text-muted-foreground lg:text-[12px]">{t('productPdp.margin.b2bPrice')}</p>
-                      <p className="text-base font-bold leading-5 text-foreground lg:text-sm">${costB2B.toFixed(2)}</p>
+                    <div className="order-1 rounded-md border border-border bg-muted/40 p-1.5 lg:rounded-lg lg:order-1 lg:border-0 lg:bg-transparent lg:p-0">
+                      <p className="mb-0.5 text-[10px] font-medium leading-3 text-muted-foreground lg:text-[12px]">{t('productPdp.margin.b2bPrice')}</p>
+                      <p className="text-sm font-bold leading-4 text-foreground">${costB2B.toFixed(2)}</p>
                     </div>
-                    <div className="rounded-lg border border-border bg-muted/40 p-3 lg:order-3 lg:border-0 lg:bg-transparent lg:p-0">
-                      <p className="mb-1 text-[11px] font-medium leading-4 text-muted-foreground lg:text-[12px]">{t('productPdp.margin.suggestedPvp')}</p>
-                      <p className="text-base font-bold leading-5 text-foreground lg:text-sm">${pvp.toFixed(2)}</p>
+                    <div className="order-3 rounded-md border border-border bg-muted/40 p-1.5 lg:rounded-lg lg:order-3 lg:border-0 lg:bg-transparent lg:p-0">
+                      <p className="mb-0.5 text-[10px] font-medium leading-3 text-muted-foreground lg:text-[12px]">{t('productPdp.margin.suggestedPvp')}</p>
+                      <p className="text-sm font-bold leading-4 text-foreground">${pvp.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>}
@@ -1320,7 +1320,7 @@ const ProductPage = () => {
             </div>
 
               {/* Variant Selector - Uses database variants */}
-              <div className="mt-3" ref={buySection}>
+              <div className={isMobile ? 'hidden' : 'mt-3'} ref={buySection}>
                 {/* Open VariantDrawer for both mobile and desktop */}
                 <div className="py-1">
                   <div className="flex items-center gap-2.5">
@@ -1370,11 +1370,11 @@ const ProductPage = () => {
 
             {/* Description */}
             {isMobile ?
-            <div id="section-desc" ref={descRef} className="mt-2 scroll-mt-20 border-t border-border">
+            <div id="section-desc" ref={descRef} className="mt-1 scroll-mt-20 border-t border-border">
                 <button
                 type="button"
                 onClick={() => setIsDescriptionDrawerOpen(true)}
-                className="w-full flex items-center justify-between py-3 text-sm font-semibold text-foreground">
+                className="w-full flex items-center justify-between py-2 text-sm font-semibold text-foreground">
                   {t('productPage.productDescription')}
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -1483,10 +1483,10 @@ const ProductPage = () => {
             <>
                 {/* Sección del Vendedor - Mobile */}
                 {realStore &&
-              <div className="bg-card rounded-xl p-3 mt-1 border border-border">
-                    <h2 className="text-sm font-bold text-gray-700 mb-3">{t('otherSellers.soldBy')}</h2>
+              <div className="bg-card rounded-xl p-2 mt-1 border border-border">
+                    <h2 className="text-xs font-bold text-muted-foreground mb-1.5">{t('otherSellers.soldBy')}</h2>
                     <div className="flex items-center gap-3">
-                      <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
+                      <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
                         {realStore.logo ? <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" /> : <span className="text-base font-bold text-[#071d7f]">{realStore.name.substring(0, 2).toUpperCase()}</span>}
                       </button>
                       <div className="flex-1 min-w-0">
@@ -1505,7 +1505,7 @@ const ProductPage = () => {
                     </div>
                   </div>
               }
-                <div id="section-reviews" ref={reviewsRef} className="mt-2 scroll-mt-20">
+                <div id="section-reviews" ref={reviewsRef} className="mt-1.5 scroll-mt-20">
                   <Accordion
                     type="single"
                     collapsible
@@ -1513,7 +1513,7 @@ const ProductPage = () => {
                     onValueChange={(v) => setMobileReviewsOpen(v === 'valoraciones-movil')}
                     className="w-full">
                     <AccordionItem value="valoraciones-movil" className="border border-gray-200 rounded-lg overflow-hidden">
-                      <AccordionTrigger className="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between text-base">
+                      <AccordionTrigger className="px-3 py-2 bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gray-100 text-left font-semibold text-gray-900 flex items-center justify-between text-sm">
                         <span>{t('productPage.productReviews')}</span>
                       </AccordionTrigger>
                       <AccordionContent className="px-4 py-4 bg-white border-t border-gray-200">
@@ -1526,9 +1526,9 @@ const ProductPage = () => {
             }
 
             {/* Trust Badges */}
-            <div className={`grid grid-cols-2 ${isMobile ? 'gap-2 pt-1' : 'gap-3 pt-4'}`}>
-              <div className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-transparent">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <div className={`grid grid-cols-2 ${isMobile ? 'gap-1.5 pt-0.5' : 'gap-3 pt-4'}`}>
+              <div className="flex items-center gap-2 p-2 lg:gap-3 lg:p-3 rounded-xl lg:rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-transparent">
+                <span className="flex size-7 lg:size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
                   <Truck className="w-5 h-5 text-primary" />
                 </span>
                 <div className="text-xs">
@@ -1536,8 +1536,8 @@ const ProductPage = () => {
                   <p className="text-muted-foreground">24-48h</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-2xl border border-profit-border bg-gradient-to-br from-profit-soft to-transparent">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-profit/10">
+              <div className="flex items-center gap-2 p-2 lg:gap-3 lg:p-3 rounded-xl lg:rounded-2xl border border-profit-border bg-gradient-to-br from-profit-soft to-transparent">
+                <span className="flex size-7 lg:size-9 shrink-0 items-center justify-center rounded-full bg-profit/10">
                   <Shield className="w-5 h-5 text-profit" />
                 </span>
                 <div className="text-xs">
@@ -1550,7 +1550,7 @@ const ProductPage = () => {
         </div>
 
           {/* Related Products */}
-        {relatedProducts.length > 0 && <div className={isMobile ? 'mt-3' : 'mt-12'}>
+        {relatedProducts.length > 0 && <div className={isMobile ? 'mt-2' : 'mt-12'}>
             <h2 className="text-lg md:text-[18px] font-semibold text-gray-900 mb-6">{t('products.seeMore')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {relatedProducts.map((p) => <Link key={p.id} to={`/producto/${p.sku}`} className="group">
@@ -1580,7 +1580,7 @@ const ProductPage = () => {
           </div>}
 
         {/* Recomendados - Full Width */}
-        <div id="section-recs" ref={recsRef} className={`${isMobile ? 'mt-3 pt-3' : 'mt-12 pt-8'} border-t border-border scroll-mt-20`}>
+        <div id="section-recs" ref={recsRef} className={`${isMobile ? 'mt-2 pt-2' : 'mt-12 pt-8'} border-t border-border scroll-mt-20`}>
           <h2 className={`text-lg md:text-[18px] font-semibold text-foreground ${isMobile ? 'mb-2' : 'mb-4'}`}>{t('products.seeMore')}</h2>
           <OtherSellersSection
             sourceProductId={(product as any)?.source_product?.id || (product as any)?.source_product_id || null}
