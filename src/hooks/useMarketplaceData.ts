@@ -62,7 +62,9 @@ const transformProduct = (item: any): MarketplaceProduct => {
 
   return {
     id: item.id,
-    name: item.nombre,
+    // Prefer the base product name: some catalog rows were saved with the
+    // variant label (e.g. "Blanco / M") as nombre.
+    name: item.source_product?.nombre || item.nombre,
     price: item.precio_venta,
     originalPrice: item.precio_costo > item.precio_venta ? item.precio_costo : undefined,
     image: mainImage,
