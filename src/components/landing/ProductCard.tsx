@@ -292,7 +292,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
                 storeWhatsapp: product.storeWhatsapp,
               });
             }}
-            className="p-1.5 rounded-lg transition shadow-sm flex items-center justify-center bg-green-500 hover:bg-green-600 text-white"
+            className="h-8 w-8 shrink-0 rounded-lg transition shadow-sm flex items-center justify-center bg-green-500 hover:bg-green-600 text-white"
             title={t('whatsappShare.button')}
             aria-label={t('whatsappShare.button')}
           >
@@ -302,7 +302,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
           {/* Cart Button */}
           <button 
             onClick={handleAddToCart}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition shadow-sm flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-white`}
+            className={`flex-1 h-8 px-2.5 rounded-lg text-xs font-medium transition shadow-sm flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-white`}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
             {isB2BUser ? "B2B" : t('catalogExtra.productCard.cart')}
