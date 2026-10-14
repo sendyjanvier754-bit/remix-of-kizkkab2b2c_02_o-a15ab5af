@@ -25,6 +25,7 @@ import { Package, ShoppingBag, Truck, CheckCircle, XCircle, Clock, ExternalLink,
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { PaymentProofUpload } from "@/components/payments/PaymentProofUpload";
+import { RetryPaymentCTA } from "@/components/payments/RetryPaymentCTA";
 const refundStatusConfig: Record<RefundStatus, {
   label: string;
   color: string;
@@ -511,6 +512,16 @@ const OrderDetailDialog = ({
               </CardContent>
             </Card>
           )}
+
+          <RetryPaymentCTA
+            orderId={order.id}
+            orderType={isB2B ? 'b2b' : 'b2c'}
+            amount={Number(order.total_amount || 0)}
+            currency={(order as any).currency}
+            paymentStatus={order.payment_status as string}
+            paymentMethod={order.payment_method}
+            orderStatus={order.status}
+          />
 
           {/* Payment Proof Upload - for B2C pending_validation orders */}
           {!isB2B && ['pending', 'pending_validation', 'placed'].includes(order.payment_status as string) && order.status !== 'cancelled' && order.payment_method !== 'stripe' && (

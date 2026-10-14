@@ -21,6 +21,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { generateInvoicePDF } from '@/services/pdfGenerators';
 import { PaymentProofUpload } from '@/components/payments/PaymentProofUpload';
+import { RetryPaymentCTA } from '@/components/payments/RetryPaymentCTA';
 import { useCreateReturnRequest } from '@/hooks/useOrderReturnRequests';
 import { 
   Package, 
@@ -510,6 +511,16 @@ const SellerMisComprasPage = () => {
                       </div>
                       
                       <div className="flex items-center gap-2 shrink-0">
+                        <RetryPaymentCTA
+                          compact
+                          orderId={order.id}
+                          orderType="b2b"
+                          amount={Number(order.total_amount || 0)}
+                          currency={order.currency}
+                          paymentStatus={order.payment_status as string}
+                          paymentMethod={order.payment_method}
+                          orderStatus={order.status}
+                        />
                         <div className="text-right hidden md:block">
                           <p className="font-bold text-lg">${order.total_amount.toLocaleString()}</p>
                           <p className="text-xs text-muted-foreground">{order.currency}</p>
@@ -851,6 +862,16 @@ const SellerMisComprasPage = () => {
                     </div>
                   );
                 })()}
+
+                <RetryPaymentCTA
+                  orderId={selectedOrder.id}
+                  orderType="b2b"
+                  amount={Number(selectedOrder.total_amount || 0)}
+                  currency={selectedOrder.currency}
+                  paymentStatus={selectedOrder.payment_status as string}
+                  paymentMethod={selectedOrder.payment_method}
+                  orderStatus={selectedOrder.status}
+                />
 
                 {/* Comprobante de Pago — for manual payment methods awaiting validation */}
                 {selectedOrder.payment_method !== 'stripe' &&

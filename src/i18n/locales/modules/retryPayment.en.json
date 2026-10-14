@@ -1,0 +1,18 @@
+{
+  "retryPayment": {
+    "button": "Retry payment",
+    "failedNotice": "The charge could not be completed. You can try another card or choose a different payment method.",
+    "title": "Complete payment",
+    "subtitle": "Choose how you want to pay for this order",
+    "card": "Credit or debit card",
+    "cardDesc": "Instant, secure payment with Stripe",
+    "bank": "Bank transfer",
+    "manualDesc": "Pay and upload your receipt",
+    "changeMethod": "Change method",
+    "paidTitle": "Payment confirmed!",
+    "paidDesc": "Your order is paid and being processed.",
+    "proofTitle": "Receipt received",
+    "proofDesc": "We will verify your payment shortly.",
+    "close": "Close"
+  }
+}
