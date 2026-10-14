@@ -972,7 +972,7 @@ const ProductPage = () => {
       image: images[selectedImage] || images[0],
       sourceProductId: product.source_product?.id,
       storeId: product.store?.id || sellerParam || undefined,
-      storeWhatsapp: (product as any).store?.whatsapp || undefined
+      storeWhatsapp: (product as any).store?.whatsapp || (storeData as any)?.whatsapp || undefined
     });
   };
 
