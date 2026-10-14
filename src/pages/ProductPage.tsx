@@ -1620,27 +1620,6 @@ const ProductPage = () => {
             <WhatsAppIcon className="w-5 h-5" />
           </button>
           <Button
-            variant="outline"
-            onClick={() => {
-              useVariantDrawerStore.getState().open({
-                id: product.id,
-                sku: product.sku,
-                nombre: product.nombre,
-                images: images,
-                price: product.precio_venta,
-                costB2B: costB2B,
-                moq: moq,
-                stock: isB2BUser ? stockB2B : product.stock,
-                source_product_id: product.source_product?.id,
-                sellerCatalogId: (product as any).type === 'seller_catalog' ? product.id : undefined,
-                storeId: product.store?.id || sellerParam || undefined
-              }, undefined, pdpSelectedAttributes, pdpSelectedQuantities);
-            }}
-            className="flex-1 h-11 text-sm font-semibold gap-2">
-            <ShoppingCart className="w-4 h-4" />
-            {t('products.addToCart')}
-          </Button>
-          <Button
             onClick={() => {
               useVariantDrawerStore.getState().open({
                 id: product.id,
