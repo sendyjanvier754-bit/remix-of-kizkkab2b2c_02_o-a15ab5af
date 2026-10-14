@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePublicCategories, Category } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
@@ -12,326 +13,163 @@ import { useSEO } from "@/hooks/useSEO";
 import { useBranding } from "@/hooks/useBranding";
 import { useTranslation } from "react-i18next";
 
+const CategoryTile = ({ cat, label, onClick, size = "md" }: { cat: Category; label: string; onClick: () => void; size?: "md" | "lg" }) => (
+  <button onClick={onClick} className="group flex flex-col items-center gap-2 text-center">
+    <div
+      className={cn(
+        "rounded-full bg-muted flex items-center justify-center overflow-hidden ring-1 ring-border transition-all group-hover:ring-primary group-hover:shadow-md",
+        size === "lg" ? "w-24 h-24" : "w-16 h-16"
+      )}
+    >
+      {cat.icon ? (
+        <img src={cat.icon} alt={label} loading="lazy" className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-xl font-semibold text-muted-foreground">{label.charAt(0).toUpperCase()}</span>
+      )}
+    </div>
+    <span className="text-[11px] md:text-sm leading-tight line-clamp-2 font-medium text-foreground">{label}</span>
+  </button>
+);
+
 const CategoriesPage = () => {
   const { t } = useTranslation();
   const { getValue } = useBranding();
   useSEO({
-    title: 'Categorías · Explora el catálogo Kizkka',
-    description:
-      'Navega todas las categorías y subcategorías del marketplace Kizkka: encuentra productos por familia, segmento y especialidad en un solo lugar.',
-    type: 'website',
-    image: getValue('share_image_url') || getValue('logo_url') || getValue('favicon_url'),
-    url: typeof window !== 'undefined' ? window.location.href : undefined,
+    title: t("pagesExtra.categories.categoriesLabel") + " · Kizkka",
+    description: t("categoriesNav.explore"),
+    type: "website",
+    image: getValue("share_image_url") || getValue("logo_url") || getValue("favicon_url"),
+    url: typeof window !== "undefined" ? window.location.href : undefined,
   });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories = [], isLoading } = usePublicCategories();
   const isMobile = useIsMobile();
-  const { getTranslated } = useTranslatedList(
-    'category',
-    categories,
-    (cat) => ({ name: cat.name })
+  const [query, setQuery] = useState("");
+  const { getTranslated } = useTranslatedList("category", categories, (cat) => ({ name: cat.name }));
+  const tName = (cat?: Category | null) => (cat ? getTranslated(cat).name || cat.name : "");
+
+  const roots = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
+  const childrenOf = (id: string) => categories.filter((c) => c.parent_id === id);
+  const selectedRoot = roots.find((c) => c.id === searchParams.get("cat")) || roots[0];
+  const children = selectedRoot ? childrenOf(selectedRoot.id) : [];
+  const go = (c: Category) => navigate(`/categoria/${c.slug}`);
+
+  const q = query.trim().toLowerCase();
+  const matches = q ? categories.filter((c) => tName(c).toLowerCase().includes(q) || c.name.toLowerCase().includes(q)) : [];
+
+  const selectRoot = (id: string) => setSearchParams({ cat: id }, { replace: true });
+
+  const searchBox = (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("categoriesNav.search")} className="pl-9 h-10 rounded-full bg-muted border-0" />
+    </div>
   );
-  const tName = (cat: Category | undefined | null) =>
-    cat ? (getTranslated(cat).name || cat.name) : '';
-  
-  // Read selected root from URL params
-  const selectedRootId = searchParams.get('cat');
-  // Level 2: Selected secondary category (shown in right sidebar)
-  const [selectedSecondaryId, setSelectedSecondaryId] = useState<string | null>(null);
-  
-  // Function to update selected root via URL
-  const setSelectedRootId = (id: string | null) => {
-    if (id) {
-      setSearchParams({ cat: id });
-    } else {
-      setSearchParams({});
-    }
-  };
 
-  // Filter root categories (those without a parent)
-  const rootCategories = categories.filter(c => !c.parent_id);
-  
-  // Secondary categories (children of selected root)
-  const secondaryCategories = selectedRootId 
-    ? categories.filter(c => c.parent_id === selectedRootId)
-    : [];
-  
-  // Final subcategories (children of selected secondary)
-  const finalSubcategories = selectedSecondaryId
-    ? categories.filter(c => c.parent_id === selectedSecondaryId)
-    : [];
+  const searchResults = (
+    <div className="grid grid-cols-3 md:grid-cols-6 gap-x-3 gap-y-5">
+      {matches.length ? matches.map((c) => <CategoryTile key={c.id} cat={c} label={tName(c)} onClick={() => go(c)} />) : (
+        <p className="col-span-full text-center text-sm text-muted-foreground py-10">{t("categoriesNav.noResults")}</p>
+      )}
+    </div>
+  );
 
-  // Get selected category objects
-  const selectedRoot = categories.find(c => c.id === selectedRootId);
-  const selectedSecondary = categories.find(c => c.id === selectedSecondaryId);
-
-  // Auto-select first secondary when root changes
-  useEffect(() => {
-    if (selectedRootId && secondaryCategories.length > 0) {
-      setSelectedSecondaryId(secondaryCategories[0].id);
-    } else {
-      setSelectedSecondaryId(null);
-    }
-  }, [selectedRootId, categories]);
+  const content = selectedRoot && (
+    <div className="space-y-5">
+      <button onClick={() => go(selectedRoot)} className="w-full flex items-center justify-between rounded-xl bg-primary/10 px-4 py-3 text-left">
+        <span className="font-semibold text-sm md:text-base text-foreground">{t("categoriesNav.shopAll", { name: tName(selectedRoot) })}</span>
+        <ChevronRight className="w-4 h-4 text-primary" />
+      </button>
+      {children.length > 0 ? (
+        <div className={cn("grid gap-x-3 gap-y-5", isMobile ? "grid-cols-3" : "grid-cols-4 lg:grid-cols-6")}>
+          {children.map((c) => <CategoryTile key={c.id} cat={c} label={tName(c)} onClick={() => go(c)} size={isMobile ? "md" : "lg"} />)}
+        </div>
+      ) : (
+        <div className="text-center py-10 text-sm text-muted-foreground">
+          <p>{t("pagesExtra.categories.noSubcategoriesInCategory")}</p>
+          <button onClick={() => go(selectedRoot)} className="mt-3 text-primary font-medium">
+            {t("pagesExtra.categories.viewProductsIn", { name: tName(selectedRoot) })}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         {!isMobile && <GlobalHeader />}
-        <main className="container mx-auto px-4 pb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
-          </div>
-        </main>
-        {!isMobile && <Footer />}
+        <div className="flex gap-3 p-4">
+          <div className="w-24 space-y-2">{Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
+          <div className="flex-1 grid grid-cols-3 gap-4">{Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-full" />)}</div>
+        </div>
       </div>
     );
   }
 
-  // Mobile Layout
+  const rail = (
+    <nav aria-label={t("categoriesNav.departments")}>
+      {roots.map((c) => {
+        const active = c.id === selectedRoot?.id;
+        return (
+          <button
+            key={c.id}
+            onClick={() => selectRoot(c.id)}
+            className={cn(
+              "w-full border-l-4 px-2 md:px-4 py-3 text-xs md:text-sm text-left transition-colors min-h-[52px]",
+              active ? "bg-background border-primary font-semibold text-foreground" : "border-transparent text-muted-foreground hover:bg-background/60"
+            )}
+          >
+            {tName(c)}
+            {!isMobile && <span className="block text-[11px] font-normal text-muted-foreground">{t("categoriesNav.subcount", { count: childrenOf(c.id).length })}</span>}
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   if (isMobile) {
     return (
-      <div className="flex flex-col min-h-screen bg-white overflow-x-hidden">
-        
-        {/* Main Content Area */}
-        <div className="flex flex-1 overflow-hidden min-h-0">
-          {/* Right Sidebar - Secondary Categories */}
-          <aside className="w-[100px] flex-shrink-0 bg-gray-50 overflow-y-auto overflow-x-hidden border-r border-gray-100 scrollbar-hide">
-            {secondaryCategories.length > 0 ? (
-              secondaryCategories.map(cat => (
-                <div
-                  key={cat.id}
-                  className={cn(
-                    "px-2 py-3 text-xs text-center cursor-pointer border-l-4 transition-all duration-200 flex items-center justify-center min-h-[56px] break-words",
-                    selectedSecondaryId === cat.id
-                      ? "bg-white border-black font-bold text-black"
-                      : "border-transparent text-gray-500 hover:bg-gray-100"
-                  )}
-                  onClick={() => setSelectedSecondaryId(cat.id)}
-                >
-                  {tName(cat)}
-                </div>
-              ))
-            ) : (
-              <div className="px-2 py-4 text-xs text-center text-gray-400">
-                t('pagesExtra.categories.noSubcategories')
-              </div>
-            )}
-          </aside>
-
-          {/* Content Area - Final Subcategories */}
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-24 bg-white scrollbar-hide">
-            {selectedSecondary && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-gray-900 text-sm">{tName(selectedSecondary)}</h3>
-                  <button
-                    onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
-                    className="text-xs text-gray-500 flex items-center hover:text-black"
-                  >
-                    {t('pagesExtra.categories.viewAll')} <ChevronRight className="w-3 h-3 ml-1" />
-                  </button>
-                </div>
-
-                {finalSubcategories.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-x-4 gap-y-6">
-                    {finalSubcategories.map(sub => (
-                      <div
-                        key={sub.id}
-                        className="flex flex-col items-center gap-2 group cursor-pointer"
-                        onClick={() => navigate(`/categoria/${sub.slug}`)}
-                      >
-                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-all">
-                          {sub.icon ? (
-                            <img src={sub.icon} alt={sub.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-2xl text-gray-300">{sub.name.charAt(0)}</span>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-center text-gray-600 leading-tight line-clamp-2 font-medium">
-                          {tName(sub)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                    <p className="text-sm">{t('pagesExtra.categories.noMoreSubcategories')}</p>
-                    <button
-                      onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
-                      className="mt-4 text-xs text-blue-600 font-medium"
-                    >
-                      {t('pagesExtra.categories.viewProductsIn', { name: tName(selectedSecondary) })}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!selectedSecondary && secondaryCategories.length === 0 && selectedRoot && (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                <p className="text-sm">{t('pagesExtra.categories.noSubcategoriesMobile')}</p>
-                <button
-                  onClick={() => navigate(`/categoria/${selectedRoot.slug}`)}
-                  className="mt-4 text-xs text-blue-600 font-medium"
-                >
-                  {t('pagesExtra.categories.viewProductsIn', { name: tName(selectedRoot) })}
-                </button>
-              </div>
-            )}
-          </main>
-        </div>
+      <div className="flex flex-col h-[calc(100dvh-110px)] bg-background overflow-hidden">
+        <div className="px-3 py-2 border-b border-border">{searchBox}</div>
+        {q ? (
+          <main className="flex-1 overflow-y-auto p-4 pb-24">{searchResults}</main>
+        ) : (
+          <div className="flex flex-1 min-h-0">
+            <aside className="w-[104px] shrink-0 bg-muted overflow-y-auto scrollbar-hide">{rail}</aside>
+            <main className="flex-1 overflow-y-auto p-3 pb-24 scrollbar-hide">{content}</main>
+          </div>
+        )}
       </div>
     );
   }
 
-  // Desktop Layout
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/40">
       <GlobalHeader />
-
-      <main className="container mx-auto px-4 pb-8">
-        {/* Breadcrumb */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <button onClick={() => navigate("/")} className="hover:text-blue-600">{t('pagesExtra.categories.home')}</button>
-            <ChevronRight className="w-4 h-4" />
-            <span>{t('pagesExtra.categories.categoriesLabel')}</span>
-            {selectedRoot && (
-              <>
-                <ChevronRight className="w-4 h-4" />
-                <span>{tName(selectedRoot)}</span>
-              </>
-            )}
-            {selectedSecondary && (
-              <>
-                <ChevronRight className="w-4 h-4" />
-                <span>{tName(selectedSecondary)}</span>
-              </>
-            )}
-          </div>
+      <main className="container mx-auto px-4 pb-10">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+          <button onClick={() => navigate("/")} className="hover:text-primary">{t("pagesExtra.categories.home")}</button>
+          <ChevronRight className="w-4 h-4" />
+          <span>{t("pagesExtra.categories.categoriesLabel")}</span>
+          {selectedRoot && !q && (<><ChevronRight className="w-4 h-4" /><span className="text-foreground">{tName(selectedRoot)}</span></>)}
         </div>
-
-        {/* Header Tabs - Root Categories */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="overflow-x-auto scrollbar-hide">
-            <div className="flex px-4 py-3 gap-2 min-w-max border-b">
-              {rootCategories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedRootId(cat.id)}
-                  className={cn(
-                    "px-4 py-2 text-sm rounded-lg whitespace-nowrap transition-all",
-                    selectedRootId === cat.id
-                      ? "bg-black text-white font-medium"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  )}
-                >
-                  {tName(cat)}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <h1 className="text-2xl font-bold text-foreground">{t("categoriesNav.explore")}</h1>
+          <div className="w-80">{searchBox}</div>
         </div>
-
-        {/* Main Content */}
-        <div className="flex gap-6">
-          {/* Sidebar - Secondary Categories */}
-          <aside className="w-64 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">{t('pagesExtra.categories.subcategoriesTitle')}</h3>
-              {secondaryCategories.length > 0 ? (
-                <div className="space-y-1">
-                  {secondaryCategories.map(cat => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedSecondaryId(cat.id)}
-                      className={cn(
-                        "w-full text-left px-3 py-2 text-sm rounded-lg transition-all",
-                        selectedSecondaryId === cat.id
-                          ? "bg-black text-white font-medium"
-                          : "text-gray-600 hover:bg-gray-100"
-                      )}
-                    >
-                      {tName(cat)}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400">{t('pagesExtra.categories.noSubcategories')}</p>
-              )}
-            </div>
-          </aside>
-
-          {/* Content - Final Subcategories */}
-          <div className="flex-1">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              {selectedSecondary && (
-                <>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">{tName(selectedSecondary)}</h2>
-                    <button
-                      onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
-                      className="text-sm text-blue-600 flex items-center hover:underline"
-                    >
-                      {t('pagesExtra.categories.viewAllProducts')} <ChevronRight className="w-4 h-4 ml-1" />
-                    </button>
-                  </div>
-
-                  {finalSubcategories.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                      {finalSubcategories.map(sub => (
-                        <div
-                          key={sub.id}
-                          className="flex flex-col items-center gap-3 group cursor-pointer"
-                          onClick={() => navigate(`/categoria/${sub.slug}`)}
-                        >
-                          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-lg transition-all">
-                            {sub.icon ? (
-                              <img src={sub.icon} alt={sub.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-3xl text-gray-300">{sub.name.charAt(0)}</span>
-                            )}
-                          </div>
-                          <span className="text-sm text-center text-gray-700 leading-tight line-clamp-2 font-medium group-hover:text-black">
-                            {tName(sub)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-                      <p className="text-base">{t('pagesExtra.categories.noMoreSubcategoriesLevel')}</p>
-                      <button
-                        onClick={() => navigate(`/categoria/${selectedSecondary.slug}`)}
-                        className="mt-4 text-sm text-blue-600 font-medium hover:underline"
-                      >
-                        {t('pagesExtra.categories.viewProductsIn', { name: tName(selectedSecondary) })}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {!selectedSecondary && secondaryCategories.length === 0 && selectedRoot && (
-                <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-                  <p className="text-base">{t('pagesExtra.categories.noSubcategoriesInCategory')}</p>
-                  <button
-                    onClick={() => navigate(`/categoria/${selectedRoot.slug}`)}
-                    className="mt-4 text-sm text-blue-600 font-medium hover:underline"
-                  >
-                    {t('pagesExtra.categories.viewProductsIn', { name: tName(selectedRoot) })}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+        <div className="flex gap-6 bg-card rounded-2xl shadow-sm overflow-hidden min-h-[560px]">
+          {q ? (
+            <div className="flex-1 p-6">{searchResults}</div>
+          ) : (
+            <>
+              <aside className="w-60 shrink-0 bg-muted py-2">{rail}</aside>
+              <section className="flex-1 p-6">{content}</section>
+            </>
+          )}
         </div>
       </main>
-
       <Footer />
     </div>
   );

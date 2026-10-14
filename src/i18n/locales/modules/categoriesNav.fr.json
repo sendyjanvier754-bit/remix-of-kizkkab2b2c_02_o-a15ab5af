@@ -1,0 +1,11 @@
+{
+  "categoriesNav": {
+    "search": "Rechercher une catégorie",
+    "departments": "Rayons",
+    "shopAll": "Tout voir dans {{name}}",
+    "explore": "Explorer par catégorie",
+    "noResults": "Aucune catégorie trouvée",
+    "subcount": "{{count}} sous-catégories",
+    "subcount_one": "{{count}} sous-catégorie"
+  }
+}

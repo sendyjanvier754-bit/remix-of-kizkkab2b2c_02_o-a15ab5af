@@ -1,0 +1,11 @@
+{
+  "categoriesNav": {
+    "search": "Chèche kategori",
+    "departments": "Depatman",
+    "shopAll": "Wè tout nan {{name}}",
+    "explore": "Eksplore pa kategori",
+    "noResults": "Pa gen kategori",
+    "subcount": "{{count}} sou-kategori",
+    "subcount_one": "{{count}} sou-kategori"
+  }
+}
