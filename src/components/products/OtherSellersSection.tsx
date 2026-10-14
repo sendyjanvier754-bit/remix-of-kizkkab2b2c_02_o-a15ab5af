@@ -109,7 +109,7 @@ const OtherSellersSection = ({
                 </div>
 
                 <div className={cn("space-y-1", compact ? "p-2" : "p-2.5")}>
-                  <p className="line-clamp-2 min-h-9 text-xs font-medium leading-4 text-foreground">
+                  <p className="line-clamp-2 min-h-8 text-xs font-medium leading-4 text-foreground">
                     {offer.productName || t("otherSellers.unnamedStore")}
                   </p>
                   <div className="flex items-center gap-1.5">
