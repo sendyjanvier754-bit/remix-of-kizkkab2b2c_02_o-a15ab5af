@@ -305,6 +305,8 @@ const ProductPage = () => {
     touchDeltaX.current = 0;
     if (Math.abs(delta) >= SWIPE_THRESHOLD) {
       goToImage(delta < 0 ? 'next' : 'prev');
+    } else if (Math.abs(delta) < 8) {
+      setZoomOpen(true);
     }
   };
 
