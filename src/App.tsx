@@ -187,6 +187,7 @@ const AppContent = () => {
   return (
     <>
       <NavigationLoader />
+      <AffiliateRefCapture />
       <CartAddedConfirmation />
       <PendingProofReminder />
       <GlobalMobileHeader />

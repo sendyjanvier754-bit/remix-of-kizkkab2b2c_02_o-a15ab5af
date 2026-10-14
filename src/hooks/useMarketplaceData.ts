@@ -416,7 +416,7 @@ export const useRecommendedProducts = (
       }
 
       if (sourceProductId) {
-        query = query.neq("source_product_id", sourceProductId);
+        query = query.or(`source_product_id.is.null,source_product_id.neq.${sourceProductId}`);
       }
 
       const { data, error } = await query;
