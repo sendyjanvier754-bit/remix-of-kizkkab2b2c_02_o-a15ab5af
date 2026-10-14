@@ -30,3 +30,6 @@ verify_jwt = false
 
 [functions.email-campaigns]
 verify_jwt = false
+
+[functions.marketing-automation]
+verify_jwt = false

@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import Stripe from 'npm:stripe@17';
 import { sendOrderEmail } from '../_shared/transactional-email.ts';
 import { sendOrderWhatsApp } from '../_shared/transactional-whatsapp.ts';
+import { sendSellerSaleAlert } from '../_shared/automation.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -70,6 +71,7 @@ Deno.serve(async (req) => {
       for (const id of ids) {
         try { await sendOrderEmail(admin, table as 'orders_b2b' | 'orders_b2c', id, 'paid'); } catch (e) { console.error('paid email failed', id, e); }
         await sendOrderWhatsApp(admin, table as 'orders_b2b' | 'orders_b2c', id, 'paid');
+        if (table === 'orders_b2c') { try { await sendSellerSaleAlert(admin, id); } catch (e) { console.error('seller alert failed', id, e); } }
       }
       console.log(`✅ Orders ${ids.join(',')} (${table}) marked as paid`);
     } else if (event.type === 'payment_intent.payment_failed') {
