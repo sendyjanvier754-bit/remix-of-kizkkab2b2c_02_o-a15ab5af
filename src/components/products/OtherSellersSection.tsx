@@ -6,6 +6,7 @@ import { Store as StoreIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useOtherSellerOffers } from "@/hooks/useOtherSellerOffers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface OtherSellersSectionProps {
   sourceProductId?: string | null;
@@ -27,9 +28,9 @@ const OtherSellersSection = ({
 
   if (isLoading) {
     return (
-      <div className="mt-4 space-y-3">
+      <div className={compact ? "mt-1 space-y-2" : "mt-4 space-y-3"}>
         <Skeleton className="h-4 w-40" />
-        <div className="flex gap-3 overflow-hidden">
+        <div className={cn("flex overflow-hidden", compact ? "gap-2" : "gap-3")}>
           {[0, 1, 2, 3, 4].map((item) => (
             <Skeleton key={item} className="h-64 w-40 flex-none" />
           ))}
@@ -51,8 +52,8 @@ const OtherSellersSection = ({
   };
 
   return (
-    <section className={compact ? "mt-4" : "mt-6"}>
-      <div className="mb-3 flex items-baseline justify-between gap-3 border-t border-border pt-4">
+    <section className={compact ? "mt-1" : "mt-6"}>
+      <div className={cn("flex items-baseline justify-between gap-3", compact ? "mb-1.5" : "mb-3 border-t border-border pt-4")}>
         <h2 className={`font-bold text-foreground ${compact ? "text-sm" : "text-lg"}`}>
           {t("otherSellers.title")}
         </h2>
@@ -75,7 +76,7 @@ const OtherSellersSection = ({
 
         <div
           ref={carouselRef}
-          className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className={cn("flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", compact ? "gap-2 pb-1" : "gap-3 pb-2")}
         >
           {offers.map((offer) => (
             <article
@@ -107,8 +108,8 @@ const OtherSellersSection = ({
                   )}
                 </div>
 
-                <div className="space-y-1 p-2.5">
-                  <p className="line-clamp-2 min-h-9 text-xs font-medium leading-4 text-foreground">
+                <div className={cn("space-y-1", compact ? "p-2" : "p-2.5")}>
+                  <p className="line-clamp-2 min-h-8 text-xs font-medium leading-4 text-foreground">
                     {offer.productName || t("otherSellers.unnamedStore")}
                   </p>
                   <div className="flex items-center gap-1.5">
