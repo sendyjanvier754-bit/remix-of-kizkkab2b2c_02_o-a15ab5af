@@ -1047,7 +1047,7 @@ const ProductPage = () => {
       {/* Sticky Nav Tabs: reemplaza la barra de categorÃ­as */}
       {/* REMOVED: Desktop sticky nav replaced with Accordion component */}
 
-      <main className={`container mx-auto ${isMobile ? 'px-0 pb-32' : 'px-4 pb-12'} py-4`}>
+      <main className={`container mx-auto ${isMobile ? 'px-0 pb-32 pt-0' : 'px-4 pb-12 py-4'}`}>
         {/* Breadcrumb / Retorno Button - Desktop */}
         {!isMobile &&
         <button
@@ -1059,7 +1059,7 @@ const ProductPage = () => {
           </button>
         }
 
-        <div className={`${isMobile ? 'grid grid-cols-1 gap-2 mb-3 -mx-4' : 'grid grid-cols-2 gap-8 mb-8'}`}>
+        <div className={`${isMobile ? 'grid grid-cols-1 gap-2 mb-3' : 'grid grid-cols-2 gap-8 mb-8'}`}>
           {/* Image Gallery */}
           <div ref={imageRef} className={`${isMobile ? 'w-full space-y-2' : 'space-y-4 sticky top-0 h-fit'}`}>
             <div
