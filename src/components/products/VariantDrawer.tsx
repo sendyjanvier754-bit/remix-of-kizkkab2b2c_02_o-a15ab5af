@@ -194,6 +194,10 @@ const VariantDrawer: React.FC = () => {
       setSelectedVariantId(null);
       setIsVariantValid(false);
       setValidationErrors([]);
+      if (successTimer.current) window.clearTimeout(successTimer.current);
+      successTimer.current = null;
+      setSuccessInfo(null);
+      setSuccessLeaving(false);
     }
   }, [isOpen]);
 

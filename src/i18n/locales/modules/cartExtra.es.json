@@ -52,7 +52,7 @@
     "sharedCartExpiredMessage": "Este carrito compartido ha expirado (7 días).",
     "sharedCart": "Carrito compartido",
     "sharedCartSummary": "{{count}} productos · ${{total}} total estimado",
-    "estimatedTotal": "Total estimado",
+    "estimatedTotal": "Total Estimado",
     "productsAdded": "Productos agregados",
     "viewMyCart": "Ver mi carrito",
     "addAllToCart": "Agregar todo a mi carrito",
@@ -138,7 +138,7 @@
     "reviewBeforeCheckout": "Revisa el total antes de proceder al checkout. Puedes modificar cantidades.",
     "totalLogistics": "Logística Total",
     "shippingIncludedFor": "Costo de envío incluido para {{count}} unidades",
-    "deliveryTime": "Tiempo Entrega",
+    "deliveryTime": "Tiempo de Entrega",
     "totalInvestment": "Total Inversión",
     "salesValue": "Valor de Venta (PVP)",
     "potentialProfit": "Beneficio Potencial",
@@ -148,15 +148,11 @@
     "updatingLogistics": "Actualizando costos de logística...",
     "includedLogisticsCost": "Costo de logística incluido:",
     "includeShippingCost": "Incluir Costo de Envío",
-    "deliveryTime": "Tiempo de Entrega",
     "days": "días",
-    "estimatedTotal": "Total Estimado",
     "calculating": "Calculando...",
-    "updatingLogistics": "Actualizando costos de logística...",
     "productsAndLogistics": "Productos + Logística ({{count}} items)",
     "productsOnly": "Solo productos ({{count}} items)",
     "suggestedSalesPrices": "Ver Precios de Venta Sugeridos",
-    "includedLogisticsCost": "Costo de logística incluido:",
     "netProfit": "Tu ganancia neta:",
     "acceptPayments": "Aceptamos:",
     "shareCartButton": "Compartir",
@@ -164,6 +160,7 @@
     "buyB2B": "Comprar B2B ({{count}})",
     "selectProducts": "Selecciona productos",
     "redirectingToCheckout": "Redireccionando al checkout...",
-    "digitalWallet": "Billetera digital"
+    "digitalWallet": "Billetera digital",
+    "moqNotMet": "Algunos productos no alcanzan el mínimo de pedido:"
   }
 }

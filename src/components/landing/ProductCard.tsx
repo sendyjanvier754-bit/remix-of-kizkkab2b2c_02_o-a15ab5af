@@ -181,7 +181,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
 
           {/* B2B profit - revealed only on hover/tap */}
           {isB2BUser && profit > 0 && (
-            <Badge className="absolute bottom-2 left-2 bg-green-600 hover:bg-green-700 text-white gap-1 z-10 shadow-sm border-0 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 group-active:opacity-100 transition-all duration-200">
+            <Badge className="absolute bottom-2 left-2 bg-green-600 hover:bg-green-700 text-white gap-1 z-10 shadow-sm border-0 transition-all duration-200 lg:opacity-0 lg:translate-y-1 lg:group-hover:opacity-100 lg:group-hover:translate-y-0">
               <TrendingUp className="h-3 w-3" />
               {t('catalogExtra.productCard.gain')}: ${profit.toFixed(2)}
             </Badge>

@@ -942,7 +942,7 @@ const SellerCartPage = () => {
                   <Alert variant="destructive" className="bg-amber-50 border-amber-200">
                     <AlertTriangle className="h-4 w-4 text-amber-600" />
                     <AlertDescription className="text-amber-800">
-                      <p className="font-semibold mb-2">{t('cartExtra.selectAllOptions')}</p>
+                      <p className="font-semibold mb-2">{t('cartExtra.moqNotMet', 'Algunos productos no alcanzan el mínimo de pedido:')}</p>
                       <ul className="space-y-1 text-sm">
                         {productsNotMeetingMOQ.map(product => (
                           <li key={product.productId} className="flex items-center gap-2">
