@@ -96,13 +96,24 @@ export async function sendMail(admin: any, to: string, subject: string, html: st
   const { data: s } = await admin.from("email_senders").select("sender_email,sender_name").eq("purpose", type).is("destination_country_id", null).eq("is_active", true).limit(1).maybeSingle();
   if (s?.sender_email?.includes("@")) { from = s.sender_email; fromName = s.sender_name || fromName; }
   if (/siver/i.test(fromName)) fromName = "Kizkka";
-  const r = await fetch("https://api.mailjet.com/v3.1/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Basic ${btoa(`${cfg.api_key.trim()}:${cfg.api_secret.trim()}`)}` },
-    body: JSON.stringify({ Messages: [{ From: { Email: from, Name: fromName }, To: [{ Email: to }], Subject: subject, HTMLPart: html, CustomID: `kizkka-${type}-${Date.now()}` }] }),
-  });
-  if (!r.ok) { const e = await r.text(); console.error("Mailjet error", r.status, e); return { ok: false, error: e }; }
-  return { ok: true };
+  const auth = `Basic ${btoa(`${cfg.api_key.trim()}:${cfg.api_secret.trim()}`)}`;
+  const attempt = async (fromEmail: string, name: string) => {
+    const r = await fetch("https://api.mailjet.com/v3.1/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: auth },
+      body: JSON.stringify({ Messages: [{ From: { Email: fromEmail, Name: name }, To: [{ Email: to }], Subject: subject, HTMLPart: html, CustomID: `kizkka-${type}-${Date.now()}` }] }),
+    });
+    const txt = await r.text();
+    let j: any = null; try { j = JSON.parse(txt); } catch { /* */ }
+    const m = j?.Messages?.[0];
+    if (r.ok && m?.Status === "success") return { ok: true, message_id: m?.To?.[0]?.MessageID ? String(m.To[0].MessageID) : undefined };
+    const err = m?.Errors?.map((e: any) => `${e.ErrorCode || ""} ${e.ErrorMessage || ""}`.trim()).join("; ") || j?.ErrorMessage || txt || `HTTP ${r.status}`;
+    console.error("Mailjet error", r.status, fromEmail, err);
+    return { ok: false, error: String(err).slice(0, 500) };
+  };
+  let res: any = await attempt(from, fromName);
+  if (!res.ok && from !== cfg.sender_email && cfg.sender_email) res = await attempt(cfg.sender_email, cfg.sender_name || "Kizkka");
+  return res;
 }
 
 async function userInfo(admin: any, userId: string) {

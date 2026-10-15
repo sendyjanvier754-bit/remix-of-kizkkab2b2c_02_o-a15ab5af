@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useMemo } from 'react';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import { BulkPriceUpdateDialog } from '@/components/seller/catalog/BulkPriceUpda
 import { useNavigate } from 'react-router-dom';
 
 export default function SellerMiCatalogoPage() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'imported' | 'inventory'>('imported');
@@ -98,7 +100,7 @@ export default function SellerMiCatalogoPage() {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
-            <p className="text-muted-foreground text-sm">Autenticando...</p>
+            <p className="text-muted-foreground text-sm">{t('sellerCatalog.authenticating')}</p>
           </div>
         </div>
       </SellerLayout>
@@ -109,7 +111,7 @@ export default function SellerMiCatalogoPage() {
     return (
       <SellerLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <p className="text-muted-foreground">Por favor inicia sesión</p>
+          <p className="text-muted-foreground">{t('sellerCatalog.pleaseLogin')}</p>
         </div>
       </SellerLayout>
     );
@@ -122,9 +124,9 @@ export default function SellerMiCatalogoPage() {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Tu tienda se está configurando. Si el problema persiste, 
+              {t('sellerCatalog.storeSetup')} 
               <a href="/seller/onboarding" className="underline font-semibold ml-1">
-                completa tu configuración
+                {t('sellerCatalog.completeSetup')}
               </a>
             </AlertDescription>
           </Alert>
@@ -138,9 +140,9 @@ export default function SellerMiCatalogoPage() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Mi Catálogo</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t('sellerCatalog.title')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Gestiona tu catálogo e inventario de vendedor
+              {t('sellerCatalog.subtitle')}
             </p>
           </div>
         </div>
@@ -150,8 +152,7 @@ export default function SellerMiCatalogoPage() {
             <Globe className="h-4 w-4 text-amber-600" />
             <AlertDescription className="flex items-center justify-between gap-4">
               <span className="text-amber-800">
-                <strong>Configura tu mercado de envío</strong> para ver los costos de logística
-                en la columna &quot;Logística&quot;. Sin esta configuración los costos no se calcularán.
+                <strong>{t('sellerCatalog.shipTitle')}</strong> {t('sellerCatalog.shipBody')}
               </span>
               <Button
                 size="sm"
@@ -159,7 +160,7 @@ export default function SellerMiCatalogoPage() {
                 className="shrink-0 border-amber-400 text-amber-800 hover:bg-amber-100"
                 onClick={() => navigate('/seller/cuenta?tab=informacion&section=mercado')}
               >
-                Configurar ahora
+                {t('sellerCatalog.configureNow')}
               </Button>
             </AlertDescription>
           </Alert>
@@ -171,11 +172,11 @@ export default function SellerMiCatalogoPage() {
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="imported" className="gap-2">
               <Download className="h-4 w-4" />
-              Productos Importados
+              {t('sellerCatalog.tabImported')}
             </TabsTrigger>
             <TabsTrigger value="inventory" className="gap-2">
               <Package className="h-4 w-4" />
-              De Mi Inventario B2B
+              {t('sellerCatalog.tabInventory')}
             </TabsTrigger>
           </TabsList>
 
@@ -186,22 +187,22 @@ export default function SellerMiCatalogoPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por nombre de producto o SKU..."
+                      placeholder={t('sellerCatalog.search')}
                       className="pl-10"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                   <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Actualizar datos">
+                   <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title={t('sellerCatalog.refresh')}>
                     <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                   </Button>
                   <Button variant="secondary" onClick={() => setBulkPriceDialogOpen(true)} className="gap-2" disabled={!storeId || productos.length === 0}>
                     <DollarSign className="h-4 w-4" />
-                    <span className="hidden sm:inline">Precios Masivos</span>
+                    <span className="hidden sm:inline">{t('sellerCatalog.bulkPrices')}</span>
                   </Button>
                   <Button onClick={() => setImportDialogOpen(true)} className="gap-2" disabled={!storeId || isRefreshing}>
                     <Download className="h-4 w-4" />
-                    <span>Importar</span>
+                    <span>{t('sellerCatalog.import')}</span>
                   </Button>
                 </div>
               </CardContent>
@@ -210,7 +211,7 @@ export default function SellerMiCatalogoPage() {
             <Card className="bg-card border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">
-                  {catalogImported.isLoading ? 'Cargando catálogo...' : `Productos Importados (${productosAgrupados.length})`}
+                  {catalogImported.isLoading ? t('sellerCatalog.loadingCatalog') : t('sellerCatalog.importedCount', { count: productosAgrupados.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -218,7 +219,7 @@ export default function SellerMiCatalogoPage() {
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">Cargando productos importados...</p>
+                      <p className="text-sm text-muted-foreground">{t('sellerCatalog.loadingImported')}</p>
                     </div>
                   </div>
                 ) : (
@@ -240,18 +241,18 @@ export default function SellerMiCatalogoPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por nombre de producto o SKU..."
+                      placeholder={t('sellerCatalog.search')}
                       className="pl-10"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Actualizar datos">
+                  <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title={t('sellerCatalog.refresh')}>
                     <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                   </Button>
                   <Button variant="secondary" onClick={() => setBulkPriceDialogOpen(true)} className="gap-2" disabled={!storeId || productos.length === 0}>
                     <DollarSign className="h-4 w-4" />
-                    <span className="hidden sm:inline">Precios Masivos</span>
+                    <span className="hidden sm:inline">{t('sellerCatalog.bulkPrices')}</span>
                   </Button>
                 </div>
               </CardContent>
@@ -260,7 +261,7 @@ export default function SellerMiCatalogoPage() {
             <Card className="bg-card border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">
-                  {catalogInventory.isLoading ? 'Cargando inventario...' : `Productos de Inventario B2B (${productosAgrupados.length})`}
+                  {catalogInventory.isLoading ? t('sellerCatalog.loadingInventory') : t('sellerCatalog.inventoryCount', { count: productosAgrupados.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -268,15 +269,15 @@ export default function SellerMiCatalogoPage() {
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">Cargando productos de inventario...</p>
+                      <p className="text-sm text-muted-foreground">{t('sellerCatalog.loadingInventoryProducts')}</p>
                     </div>
                   </div>
                 ) : productosAgrupados.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <ShoppingBag className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No hay productos del inventario B2B</h3>
+                    <h3 className="text-lg font-semibold mb-2">{t('sellerCatalog.noInventory')}</h3>
                     <p className="text-sm text-muted-foreground max-w-md">
-                      Los productos que publiques desde tu <strong>Inventario B2C</strong> aparecerán aquí automáticamente
+                      {t('sellerCatalog.noInventoryHint')}
                     </p>
                   </div>
                 ) : (
