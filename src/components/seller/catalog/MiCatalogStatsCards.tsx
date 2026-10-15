@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Package, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
 import { SellerCatalogStats } from '@/hooks/useSellerCatalog';
@@ -7,6 +8,7 @@ interface MiCatalogStatsCardsProps {
 }
 
 export function MiCatalogStatsCards({ stats }: MiCatalogStatsCardsProps) {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       {/* Productos - Total SKUs */}
@@ -14,9 +16,9 @@ export function MiCatalogStatsCards({ stats }: MiCatalogStatsCardsProps) {
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Productos</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t('sellerCatalog.statProducts')}</p>
               <div className="text-3xl font-bold text-blue-600">{stats.totalProducts}</div>
-              <p className="text-xs text-muted-foreground mt-2">SKUs en catálogo</p>
+              <p className="text-xs text-muted-foreground mt-2">{t('sellerCatalog.statSkus')}</p>
             </div>
             <Package className="h-8 w-8 text-blue-600 opacity-20" />
           </div>
@@ -28,11 +30,11 @@ export function MiCatalogStatsCards({ stats }: MiCatalogStatsCardsProps) {
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Valor</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t('sellerCatalog.statValue')}</p>
               <div className="text-3xl font-bold text-green-600">
                 ${stats.totalValue.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Inventario total</p>
+              <p className="text-xs text-muted-foreground mt-2">{t('sellerCatalog.statTotalInv')}</p>
             </div>
             <DollarSign className="h-8 w-8 text-green-600 opacity-20" />
           </div>
@@ -44,9 +46,9 @@ export function MiCatalogStatsCards({ stats }: MiCatalogStatsCardsProps) {
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Stock</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t('sellerCatalog.statStock')}</p>
               <div className="text-3xl font-bold text-cyan-600">{stats.totalStock.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-2">Unidades disponibles</p>
+              <p className="text-xs text-muted-foreground mt-2">{t('sellerCatalog.statUnits')}</p>
             </div>
             <Package className="h-8 w-8 text-cyan-600 opacity-20" />
           </div>
@@ -58,11 +60,11 @@ export function MiCatalogStatsCards({ stats }: MiCatalogStatsCardsProps) {
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Margen Promedio</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t('sellerCatalog.statMargin')}</p>
               <div className="text-3xl font-bold text-amber-600">
                 {stats.avgMargin.toFixed(1)}%
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Ganancia promedio</p>
+              <p className="text-xs text-muted-foreground mt-2">{t('sellerCatalog.statProfit')}</p>
             </div>
             <TrendingUp className="h-8 w-8 text-amber-600 opacity-20" />
           </div>

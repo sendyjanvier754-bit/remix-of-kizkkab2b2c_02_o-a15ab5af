@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Edit2, Plus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ export function MiCatalogTable({
   onEditProduct,
   onImportVariants,
 }: MiCatalogTableProps) {
+  const { t } = useTranslation();
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (productId: string) => {
@@ -77,16 +79,16 @@ export function MiCatalogTable({
   };
 
   const getMarginLabel = (margin: number) => {
-    if (margin >= 30) return '✓ Bueno';
-    if (margin >= 15) return '◐ Normal';
-    return '✗ Bajo';
+    if (margin >= 30) return t('sellerCatalog.good');
+    if (margin >= 15) return t('sellerCatalog.normal');
+    return t('sellerCatalog.low');
   };
 
   const getStockBadge = (stock: number) => {
     if (stock === 0) {
-      return <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Sin Stock</Badge>;
+      return <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">{t('sellerCatalog.outOfStock')}</Badge>;
     }
-    return <Badge variant="secondary" className="bg-gray-100 text-gray-800 border-gray-200">{stock.toLocaleString()} unid.</Badge>;
+    return <Badge variant="secondary" className="bg-gray-100 text-gray-800 border-gray-200">{t('sellerCatalog.units', { count: stock.toLocaleString() as any })}</Badge>;
   };
 
   if (isLoading) {
@@ -101,12 +103,12 @@ export function MiCatalogTable({
     return (
       <div className="text-center py-12 border border-border rounded-lg bg-muted/30">
         <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-        <h3 className="font-semibold text-lg mb-2">Sin productos en tu catálogo</h3>
+        <h3 className="font-semibold text-lg mb-2">{t('sellerCatalog.emptyTitle')}</h3>
         <p className="text-muted-foreground mb-4">
-          Compra lotes mayoristas en el catálogo B2B para agregar productos a tu tienda.
+          {t('sellerCatalog.emptyHint')}
         </p>
         <Button asChild variant="default">
-          <a href="/seller/adquisicion-lotes">Comprar Lotes</a>
+          <a href="/seller/adquisicion-lotes">{t('sellerCatalog.buyLots')}</a>
         </Button>
       </div>
     );
@@ -117,14 +119,14 @@ export function MiCatalogTable({
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow className="border-b">
-            <TableHead className="w-10 text-center">Expandir</TableHead>
-            <TableHead className="min-w-[250px]">Producto</TableHead>
-            <TableHead className="text-right min-w-[120px]">Precio Compra</TableHead>
-            <TableHead className="text-center min-w-[100px]">Logística</TableHead>
-            <TableHead className="text-right min-w-[120px]">Precio Venta</TableHead>
-            <TableHead className="text-center min-w-[100px]">Margen</TableHead>
-            <TableHead className="text-center min-w-[120px]">Stock</TableHead>
-            <TableHead className="text-center w-20">Acción</TableHead>
+            <TableHead className="w-10 text-center">{t('sellerCatalog.colExpand')}</TableHead>
+            <TableHead className="min-w-[250px]">{t('sellerCatalog.colProduct')}</TableHead>
+            <TableHead className="text-right min-w-[120px]">{t('sellerCatalog.colCost')}</TableHead>
+            <TableHead className="text-center min-w-[100px]">{t('sellerCatalog.colLogistics')}</TableHead>
+            <TableHead className="text-right min-w-[120px]">{t('sellerCatalog.colSale')}</TableHead>
+            <TableHead className="text-center min-w-[100px]">{t('sellerCatalog.colMargin')}</TableHead>
+            <TableHead className="text-center min-w-[120px]">{t('sellerCatalog.statStock')}</TableHead>
+            <TableHead className="text-center w-20">{t('sellerCatalog.colAction')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -168,7 +170,7 @@ export function MiCatalogTable({
                   <TableCell className="text-right">
                     <div>
                       <p className="font-medium">${producto.costoMinimo.toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground">promedio</p>
+                      <p className="text-xs text-muted-foreground">{t('sellerCatalog.average')}</p>
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
@@ -180,7 +182,7 @@ export function MiCatalogTable({
                   <TableCell className="text-right">
                     <div>
                       <p className="font-medium text-green-600">${producto.precioMaximo.toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground">máximo</p>
+                      <p className="text-xs text-muted-foreground">{t('sellerCatalog.max')}</p>
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
@@ -247,7 +249,7 @@ export function MiCatalogTable({
                       <button
                         onClick={() => onEditProduct(variante)}
                         className="inline-flex items-center justify-center h-8 w-8 rounded hover:bg-muted transition-colors"
-                        title="Editar"
+                        title={t('sellerCatalog.edit')}
                       >
                         <Edit2 className="h-4 w-4 text-muted-foreground" />
                       </button>
@@ -261,7 +263,7 @@ export function MiCatalogTable({
                     <TableCell colSpan={8}>
                       <div className="flex items-center gap-2 py-2 px-4">
                         <Plus className="h-4 w-4 text-green-600" />
-                        <p className="font-medium text-green-700 text-sm">Variantes disponibles en Catálogo Admin</p>
+                        <p className="font-medium text-green-700 text-sm">{t('sellerCatalog.availableVariants')}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -281,7 +283,7 @@ export function MiCatalogTable({
                           <div className="min-w-0 flex-1">
                             <p className="font-medium truncate text-sm">{variant.nombre}</p>
                             <p className="text-xs text-muted-foreground">
-                              No importado • Peso: {variant.weight_kg ? `${variant.weight_kg}kg` : 'N/A'}
+                              {t('sellerCatalog.notImported', { w: variant.weight_kg ? `${variant.weight_kg}kg` : 'N/A' })}
                             </p>
                           </div>
                         </div>
@@ -295,7 +297,7 @@ export function MiCatalogTable({
                         <button
                           onClick={() => onImportVariants(producto.productId, producto.variantes_disponibles || [])}
                           className="inline-flex items-center justify-center h-8 w-8 rounded hover:bg-green-200 transition-colors text-green-600"
-                          title="Importar"
+                          title={t('sellerCatalog.import')}
                         >
                           <Plus className="h-4 w-4" />
                         </button>
