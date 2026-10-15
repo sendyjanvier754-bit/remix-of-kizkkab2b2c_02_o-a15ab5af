@@ -163,7 +163,13 @@ function SendDialog({ open, onClose, subject, html }: { open: boolean; onClose: 
     if (!total) return toast.error("Elige al menos un destinatario");
     if (!confirm(`¿Enviar "${subject}" a ${total} destinatario(s)?`)) return;
     setBusy(true);
-    try { const r = await fn("send_direct", { subject, html, ...(mode === "users" ? { user_ids: ids } : { segment }) }); toast.success(`Enviados: ${r.sent} · Fallidos: ${r.failed}`); onClose(); setPicked({}); }
+    try {
+      const r = await fn("send_direct", { subject, html, ...(mode === "users" ? { user_ids: ids } : { segment }) });
+      if (r.failed && !r.sent) toast.error(`No se entregó ningún correo. Motivo: ${r.errors?.[0] || "desconocido"}`, { duration: 12000 });
+      else if (r.failed) toast.warning(`Enviados: ${r.sent} · Fallidos: ${r.failed}. ${r.errors?.[0] || ""}`, { duration: 10000 });
+      else toast.success(`Enviados: ${r.sent}`);
+      onClose(); setPicked({});
+    }
     catch (e: any) { toast.error("No se pudo enviar: " + e.message); } finally { setBusy(false); }
   };
   return <Dialog open={open} onOpenChange={(o) => !o && onClose()}><DialogContent className="max-w-xl">
@@ -187,6 +193,37 @@ function SendDialog({ open, onClose, subject, html }: { open: boolean; onClose: 
       <p className="text-sm text-muted-foreground">{count === null ? "Calculando destinatarios..." : `${count} destinatario(s)`}. Las personas dadas de baja se excluyen.</p>
     </div>}
     <Button onClick={send} disabled={busy || !total}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}Enviar a {total}</Button>
+  </DialogContent></Dialog>;
+}
+
+const STATUS: Record<string, string> = { sent: "Enviado", failed: "Fallido", sending: "Enviando", draft: "Borrador" };
+const SEG: Record<string, string> = { direct: "Usuarios específicos", all: "Todos", buyers: "Compradores", sellers: "Vendedores", subscribers: "Suscriptores" };
+
+export function SendHistoryDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [data, setData] = useState<{ campaigns: any[]; sends: any[] } | null>(null);
+  const [exp, setExp] = useState<string | null>(null);
+  const load = () => { setData(null); fn("history").then(setData).catch((e) => { toast.error(e.message); setData({ campaigns: [], sends: [] }); }); };
+  useEffect(() => { if (open) load(); }, [open]);
+  return <Dialog open={open} onOpenChange={(o) => !o && onClose()}><DialogContent className="max-w-3xl">
+    <DialogHeader><DialogTitle>Historial de envíos</DialogTitle></DialogHeader>
+    <div className="flex justify-end"><Button size="sm" variant="outline" onClick={load}>Actualizar</Button></div>
+    <div className="max-h-[65vh] space-y-2 overflow-y-auto">
+      {!data ? <p className="text-sm text-muted-foreground">Cargando...</p> : data.campaigns.length === 0 ? <p className="text-sm text-muted-foreground">Todavía no hay envíos.</p> : data.campaigns.map((c) => {
+        const rows = data.sends.filter((s) => s.campaign_id === c.id);
+        return <div key={c.id} className="rounded-md border">
+          <button className="flex w-full flex-wrap items-center justify-between gap-2 p-3 text-left text-sm hover:bg-muted" onClick={() => setExp(exp === c.id ? null : c.id)}>
+            <span className="min-w-0 flex-1"><span className="font-medium">{c.subject}</span><span className="block text-xs text-muted-foreground">{new Date(c.sent_at || c.created_at).toLocaleString()} · {SEG[c.segment] || c.segment}</span></span>
+            <span className="flex gap-1"><Badge variant="secondary">{STATUS[c.status] || c.status}</Badge><Badge variant="outline">✓ {c.sent_count}</Badge>{c.failed_count > 0 && <Badge variant="destructive">✗ {c.failed_count}</Badge>}</span>
+          </button>
+          {exp === c.id && <div className="space-y-1 border-t p-2">
+            {rows.length === 0 ? <p className="text-xs text-muted-foreground">Sin detalle por destinatario.</p> : rows.map((s) => <div key={s.email} className="rounded px-2 py-1 text-xs">
+              <div className="flex justify-between gap-2"><span className="truncate">{s.email}</span><Badge variant={s.status === "sent" ? "secondary" : "destructive"}>{STATUS[s.status] || s.status}</Badge></div>
+              {s.error && <p className="mt-1 break-words text-destructive">{s.error}</p>}
+            </div>)}
+          </div>}
+        </div>;
+      })}
+    </div>
   </DialogContent></Dialog>;
 }
 
