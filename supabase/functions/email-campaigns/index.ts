@@ -87,6 +87,15 @@ Deno.serve(async (req) => {
     return json({ count: list.length });
   }
 
+  if (action === "history") {
+    const { data: camps } = await admin.from("email_campaigns").select("id,name,subject,segment,status,recipients_count,sent_count,failed_count,sent_at,created_at").neq("status", "draft").order("created_at", { ascending: false }).limit(50);
+    const ids = (camps || []).map((c: any) => c.id);
+    const { data: sends } = ids.length ? await admin.from("email_campaign_sends").select("campaign_id,email,status,error,created_at").in("campaign_id", ids).order("created_at", { ascending: false }).limit(2000) : { data: [] };
+    return json({ campaigns: camps || [], sends: sends || [] });
+  }
+
+
+
   // ---- Designer helpers ----
   if (action === "search_users") {
     const q = String(body.q || "").replace(/[%,()]/g, "").slice(0, 60);
@@ -130,16 +139,19 @@ Deno.serve(async (req) => {
     await admin.from("email_subscribers").upsert(list.map((r) => ({ email: r.email, full_name: r.name || null, user_id: r.user_id || null, language: normLang(r.lang), source: r.user_id ? "account" : "newsletter" })), { onConflict: "email", ignoreDuplicates: true });
     const { data: toks } = await admin.from("email_subscribers").select("email,unsubscribe_token").in("email", list.map((r) => r.email));
     const tok = new Map((toks || []).map((t: any) => [t.email.toLowerCase(), t.unsubscribe_token]));
-    let sent = 0, failed = 0;
+    const { data: camp } = await admin.from("email_campaigns").insert({ name: String(body.name || subject).slice(0, 200), subject, html_content: "", segment: Array.isArray(body.user_ids) && body.user_ids.length ? "direct" : String(body.segment || "all"), language: "all", status: "sending", recipients_count: list.length, created_by: u.user.id }).select("id").single();
+    let sent = 0, failed = 0; const errors: string[] = [];
     for (let i = 0; i < list.length; i += 10) {
       const res = await Promise.all(list.slice(i, i + 10).map(async (r) => {
         const fill = (s: string) => s.replace(/\{nombre\}|\{name\}/g, esc(r.name)).replace(/\{unsubscribe_url\}/g, `${SITE}/unsubscribe?token=${tok.get(r.email.toLowerCase()) || ""}`);
         const out: any = await sendMail(admin, r.email, fill(subject).replace(/&amp;/g, "&"), fill(html), "marketing").catch((e) => ({ ok: false, error: String(e) }));
-        return !!out?.ok;
+        return { campaign_id: camp?.id, email: r.email, status: out?.ok ? "sent" : "failed", error: out?.ok ? null : String(out?.error || "unknown").slice(0, 500) };
       }));
-      res.forEach((ok) => (ok ? sent++ : failed++));
+      res.forEach((x) => { if (x.status === "sent") sent++; else { failed++; if (x.error && errors.length < 3) errors.push(x.error); } });
+      if (camp?.id) await admin.from("email_campaign_sends").upsert(res, { onConflict: "campaign_id,email" });
     }
-    return json({ recipients: list.length, sent, failed });
+    if (camp?.id) await admin.from("email_campaigns").update({ status: failed && !sent ? "failed" : "sent", sent_at: new Date().toISOString(), sent_count: sent, failed_count: failed }).eq("id", camp.id);
+    return json({ recipients: list.length, sent, failed, errors });
   }
 
 
