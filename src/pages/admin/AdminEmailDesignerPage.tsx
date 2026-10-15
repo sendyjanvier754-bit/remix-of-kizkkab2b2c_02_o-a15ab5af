@@ -242,6 +242,7 @@ export default function AdminEmailDesignerPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pickerFor, setPickerFor] = useState<number | null>(null);
   const [sendOpen, setSendOpen] = useState(false);
+  const [histOpen, setHistOpen] = useState(false);
   const html = useMemo(() => renderEmail(blocks), [blocks]);
 
   const loadTemplates = async () => {
@@ -299,6 +300,7 @@ export default function AdminEmailDesignerPage() {
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={copyHtml}><Copy className="mr-1 h-4 w-4" />Copiar HTML</Button>
               <Button size="sm" variant="outline" onClick={save}><Save className="mr-1 h-4 w-4" />Guardar</Button>
+              <Button size="sm" variant="outline" onClick={() => setHistOpen(true)}>Historial</Button>
               <Button size="sm" onClick={() => setSendOpen(true)}><Send className="mr-1 h-4 w-4" />Enviar correo</Button>
             </div>
           </CardHeader>
@@ -361,6 +363,7 @@ export default function AdminEmailDesignerPage() {
       </div>
       <ProductPicker open={pickerFor !== null} onClose={() => setPickerFor(null)} onPick={(p) => { if (current && pickerFor !== null) update(current.id, { items: current.data.items.map((x: any, j: number) => (j === pickerFor ? p : x)) }); }} />
       <SendDialog open={sendOpen} onClose={() => setSendOpen(false)} subject={subject} html={html} />
+      <SendHistoryDialog open={histOpen} onClose={() => setHistOpen(false)} />
     </AdminLayout>
   );
 }
