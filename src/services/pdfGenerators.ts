@@ -1686,8 +1686,9 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
       pdf.setFontSize(6.5);
       const urlColumn = showCosts ? 6 : 4;
       const urlLines = pdf.splitTextToSize(url, columns[urlColumn + 1] - columns[urlColumn] - 4).slice(0, 4);
-      pdf.textWithLink(urlLines.join('\n'), columns[urlColumn] + 2, y + 5, { url });
-      pdf.link(columns[urlColumn], y, columns[urlColumn + 1] - columns[urlColumn], rowHeight, { url });
+      urlLines.forEach((line: string, idx: number) => {
+        pdf.textWithLink(line, columns[urlColumn] + 2, y + 5 + idx * 3, { url });
+      });
     }
     y += rowHeight;
   }
@@ -1717,23 +1718,7 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
     pdf.text('ZleTI Mexico - Purchasing and international logistics', margin, pageHeight - 5);
     pdf.text(`Page ${page} / ${pages}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
   }
-  // jsPDF writes URI annotations without /NewWindow, so most PDF viewers open
-  // links in the same window. Patch every external link to force a new tab.
-  const bytes = new Uint8Array(pdf.output('arraybuffer'));
-  let binary = '';
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
-  }
-  const patched = binary.replace(
-    /\/A\s*<<\s*\/S\s*\/URI\s*\/URI\s*\(((?:\\.|[^\\)])*)\)\s*>>/g,
-    '/A <</S /URI /URI ($1) /NewWindow true >>',
-  );
-  const patchedBytes = new Uint8Array(patched.length);
-  for (let i = 0; i < patched.length; i += 1) {
-    patchedBytes[i] = patched.charCodeAt(i) & 0xff;
-  }
-  const blob = new Blob([patchedBytes], { type: 'application/pdf' });
+  const blob = pdf.output('blob');
   const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = objectUrl;
