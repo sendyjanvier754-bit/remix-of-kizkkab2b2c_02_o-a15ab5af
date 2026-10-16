@@ -1686,7 +1686,7 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
       const cellWidth = columns[urlColumn + 1] - columns[urlColumn] - 4;
 
       // 1) Clickable button (only this area carries the link annotation)
-      const label = 'ABRIR ENLACE DEL PROVEEDOR';
+      const label = 'Open Link';
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(7);
       const labelWidth = pdf.getTextWidth(label) + 6;
