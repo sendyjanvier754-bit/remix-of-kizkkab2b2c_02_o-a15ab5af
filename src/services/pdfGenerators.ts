@@ -1718,6 +1718,17 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
     pdf.text('ZleTI Mexico - Purchasing and international logistics', margin, pageHeight - 5);
     pdf.text(`Page ${page} / ${pages}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
   }
+  // jsPDF writes link /Rect with lly > ury, which many viewers treat as invalid
+  // and ignore. Normalize every link annotation so links are clickable.
+  for (let page = 1; page <= pages; page += 1) {
+    const annotations = (pdf.internal as any).getPageInfo(page)?.pageContext?.annotations || [];
+    for (const anno of annotations) {
+      const b = anno?.finalBounds;
+      if (!b) continue;
+      if (parseFloat(b.y) > parseFloat(b.h)) [b.y, b.h] = [b.h, b.y];
+      if (parseFloat(b.x) > parseFloat(b.w)) [b.x, b.w] = [b.w, b.x];
+    }
+  }
   const blob = pdf.output('blob');
   const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
