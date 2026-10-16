@@ -1681,14 +1681,28 @@ export const downloadPOBuyingListPDF = async (data: POBuyingListData) => {
 
     const url = safeExternalUrl(item.url_origen);
     if (url) {
+      const urlColumn = showCosts ? 6 : 4;
+      const cellX = columns[urlColumn] + 2;
+      const cellWidth = columns[urlColumn + 1] - columns[urlColumn] - 4;
+
+      // 1) Clickable button (only this area carries the link annotation)
+      const label = 'ABRIR ENLACE DEL PROVEEDOR';
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
+      const labelWidth = pdf.getTextWidth(label) + 6;
+      pdf.setFillColor(219, 234, 254);
+      pdf.setDrawColor(29, 78, 216);
+      pdf.roundedRect(cellX, y + 2, labelWidth, 5.5, 1, 1, 'FD');
       pdf.setTextColor(29, 78, 216);
+      pdf.text(label, cellX + 3, y + 5.8);
+      pdf.link(cellX, y + 2, labelWidth, 5.5, { url });
+
+      // 2) Plain, selectable URL text (no link on top, so it can be highlighted and copied)
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(6.5);
-      const urlColumn = showCosts ? 6 : 4;
-      const urlLines = pdf.splitTextToSize(url, columns[urlColumn + 1] - columns[urlColumn] - 4).slice(0, 4);
-      urlLines.forEach((line: string, idx: number) => {
-        pdf.textWithLink(line, columns[urlColumn] + 2, y + 5 + idx * 3, { url });
-      });
+      pdf.setTextColor(51, 65, 85);
+      const urlLines = pdf.splitTextToSize(url, cellWidth).slice(0, 5);
+      pdf.text(urlLines, cellX, y + 11.5, { lineHeightFactor: 1.3 });
     }
     y += rowHeight;
   }
