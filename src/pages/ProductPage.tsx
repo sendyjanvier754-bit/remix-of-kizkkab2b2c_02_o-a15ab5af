@@ -735,7 +735,9 @@ const ProductPage = () => {
 
     const imgs = product.images as any;
     // Filter out empty strings and invalid URLs
-    const validImages = Array.isArray(imgs) ? imgs.filter((img: string) => img && img.trim() !== '') : [];
+    const validImages = Array.isArray(imgs)
+      ? imgs.filter((img: unknown) => typeof img === 'string' && img.trim() !== '' && img.trim() !== 'null')
+      : [];
     return validImages.length > 0 ? validImages : [];
   }, [product, isB2BUser, sellerCatalogVariants]);
 
