@@ -7,7 +7,7 @@
   {"name": "export-import-batch", "classification": "backend-secret dependency", "signal": "needs service role key only in the external Supabase project", "outcome": "left"},
   {"name": "marketing-automation", "classification": "cron target", "signal": "runs hourly (cart recovery / seller alerts) via a dashboard schedule", "outcome": "left"},
   {"name": "normalize-products", "classification": "backend-secret dependency", "signal": "needs service role key only in the external Supabase project", "outcome": "left"},
-  {"name": "process-1688-import", "classification": "internal-only", "signal": "called from src/components/catalog/Import1688Dialog.tsx; uses only the AI key", "outcome": "left"},
+  {"name": "process-1688-import", "classification": "internal-only", "signal": "called from src/components/catalog/Import1688Dialog.tsx; its AI key lives in the external Supabase project, so it stays there until the key is confirmed in the app runtime", "outcome": "left"},
   {"name": "process-product-images", "classification": "backend-secret dependency", "signal": "needs service role key only in the external Supabase project", "outcome": "left"},
   {"name": "send-agent-otp", "classification": "backend-secret dependency", "signal": "needs service role key only in the external Supabase project", "outcome": "left"},
   {"name": "send-email", "classification": "backend-secret dependency", "signal": "Mailjet + service role key only in the external Supabase project", "outcome": "left"},

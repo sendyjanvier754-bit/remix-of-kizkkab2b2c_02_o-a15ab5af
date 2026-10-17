@@ -10,7 +10,7 @@ interface Draft {
   target_user_id: string;
   created_at: string;
   updated_at: string;
-  target_profile?: { full_name: string; email: string };
+  target_profile?: { full_name: string | null; email: string | null };
   [key: string]: any;
 }
 

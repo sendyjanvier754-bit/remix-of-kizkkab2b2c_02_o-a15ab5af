@@ -725,7 +725,7 @@ const ProductPage = () => {
     if (!isB2BUser && (product as any).type === 'seller_catalog' && sellerCatalogVariants.length > 0) {
       const variantImages = sellerCatalogVariants.
       map((v) => Array.isArray(v.images) ? v.images[0] : null).
-      filter((img): img is string => typeof img === 'string' && img.trim() !== '');
+      filter((img): img is string => typeof img === 'string' && img.trim() !== '' && img.trim() !== 'null');
 
       const uniqueVariantImages = Array.from(new Set(variantImages));
       if (uniqueVariantImages.length > 0) {
@@ -735,7 +735,9 @@ const ProductPage = () => {
 
     const imgs = product.images as any;
     // Filter out empty strings and invalid URLs
-    const validImages = Array.isArray(imgs) ? imgs.filter((img: string) => img && img.trim() !== '') : [];
+    const validImages = Array.isArray(imgs)
+      ? imgs.filter((img: unknown) => typeof img === 'string' && img.trim() !== '' && img.trim() !== 'null')
+      : [];
     return validImages.length > 0 ? validImages : [];
   }, [product, isB2BUser, sellerCatalogVariants]);
 
