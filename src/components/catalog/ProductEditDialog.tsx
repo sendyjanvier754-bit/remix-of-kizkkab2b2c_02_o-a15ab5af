@@ -407,7 +407,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                     <FormItem>
                       <FormLabel>Descripción Corta</FormLabel>
                       <FormControl>
-                        <Textarea rows={2} {...field} value={(field.value as string | number | null | undefined) || ''} />
+                        <Textarea rows={2} {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -421,7 +421,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                     <FormItem>
                       <FormLabel>Descripción Larga</FormLabel>
                       <FormControl>
-                        <Textarea rows={4} {...field} value={(field.value as string | number | null | undefined) || ''} />
+                        <Textarea rows={4} {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -452,7 +452,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Proveedor</FormLabel>
-                        <Select onValueChange={field.onChange} value={(field.value as string | number | null | undefined) || ''}>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Seleccionar proveedor" />
@@ -477,7 +477,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                     <FormItem>
                       <FormLabel>URL Origen</FormLabel>
                       <FormControl>
-                        <Input type="url" placeholder="https://..." {...field} value={(field.value as string | number | null | undefined) || ''} />
+                        <Input type="url" placeholder="https://..." {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -538,7 +538,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                           <FormItem>
                             <FormLabel>Precio Sugerido Venta</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" min="0" {...field} value={(field.value as string | number | null | undefined) || ''} />
+                              <Input type="number" step="0.01" min="0" {...field} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -630,7 +630,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                         <FormItem>
                           <FormLabel>Peso (gramos) *</FormLabel>
                           <FormControl>
-                            <Input type="number" step="1" min="1" placeholder="500" {...field} value={(field.value as string | number | null | undefined) || ''} />
+                            <Input type="number" step="1" min="1" placeholder="500" {...field} value={(field.value as number | null | undefined) || ''} />
                           </FormControl>
                           <p className="text-xs text-muted-foreground">Requerido para cálculo de envío B2B</p>
                           <FormMessage />
@@ -646,7 +646,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                           <FormItem>
                             <FormLabel>Largo (cm)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.1" min="0" {...field} value={(field.value as string | number | null | undefined) || ''} />
+                              <Input type="number" step="0.1" min="0" {...field} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -659,7 +659,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                           <FormItem>
                             <FormLabel>Ancho (cm)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.1" min="0" {...field} value={(field.value as string | number | null | undefined) || ''} />
+                              <Input type="number" step="0.1" min="0" {...field} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -672,7 +672,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                           <FormItem>
                             <FormLabel>Alto (cm)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.1" min="0" {...field} value={(field.value as string | number | null | undefined) || ''} />
+                              <Input type="number" step="0.1" min="0" {...field} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
