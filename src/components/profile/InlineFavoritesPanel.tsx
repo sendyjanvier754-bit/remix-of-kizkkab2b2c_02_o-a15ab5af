@@ -1,4 +1,4 @@
-import { useNavigate } from "@/lib/router-compat";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { Heart, ShoppingCart, Loader2, ExternalLink } from "lucide-react";
@@ -68,7 +68,7 @@ export function InlineFavoritesPanel() {
                     toggle({ sellerCatalogId: item.seller_catalog_id ?? undefined, productId: item.product_id ?? undefined });
                   }}
                   disabled={isRemoving}
-                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 flex items-center justify-center shadow-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
                 >
                   <Heart className="w-3 h-3 fill-red-500 text-red-500" />
                 </button>

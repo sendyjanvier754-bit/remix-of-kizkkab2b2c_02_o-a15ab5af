@@ -38,7 +38,7 @@ export const FeaturedTrendingStorePanel = ({ canEdit }: FeaturedTrendingStorePan
   }
 
   return (
-    <section className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 via-white to-purple-50 p-5 shadow-xs">
+    <section className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 via-white to-purple-50 p-5 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <div className="flex items-center gap-2">

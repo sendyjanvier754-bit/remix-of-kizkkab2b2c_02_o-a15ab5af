@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "@/lib/router-compat";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, Upload, ShoppingBag, Wallet, Store, User, LifeBuoy, LogOut,
 } from "lucide-react";

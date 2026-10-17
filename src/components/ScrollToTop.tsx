@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "@/lib/router-compat";
+import { useLocation } from "react-router-dom";
 
 /**
  * Resets the scroll position to the top of the page on every route change.

@@ -27,7 +27,7 @@ import {
   ChevronRight,
   Store,
 } from 'lucide-react';
-import { Link } from '@/lib/router-compat';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SellerRegistrationModal } from '@/components/profile/SellerRegistrationModal';
 

@@ -6,7 +6,7 @@ import {
   Globe, Store, Headset, Bell, MessageCircle, ShieldCheck, Mail, UsersRound, TrendingUp, Warehouse,
   ChevronDown
 } from "lucide-react";
-import { useLocation } from "@/lib/router-compat";
+import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";

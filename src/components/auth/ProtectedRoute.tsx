@@ -7,7 +7,7 @@
  * </ProtectedRoute>
  */
 
-import { Navigate } from "@/lib/router-compat";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole, ProtectedRouteProps } from "@/types/auth";
 import { PageLoader } from "@/components/ui/PageLoader";

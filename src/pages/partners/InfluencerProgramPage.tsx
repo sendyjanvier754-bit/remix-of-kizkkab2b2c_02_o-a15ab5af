@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "@/lib/router-compat";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Megaphone, Gift, DollarSign, Link2, Copy, Check, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";

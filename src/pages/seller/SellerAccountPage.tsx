@@ -36,7 +36,7 @@ import { useBuyerB2BOrders, useCancelBuyerOrder, BuyerOrder, BuyerOrderStatus, R
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Link, useSearchParams } from "@/lib/router-compat";
+import { Link, useSearchParams } from "react-router-dom";
 import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
 
 const SellerAccountPage = () => {
@@ -2128,7 +2128,7 @@ const SellerAccountPage = () => {
                       <button 
                         onClick={() => setShowPaymentMethods(true)}
                         className="flex flex-col items-start p-4 bg-white rounded-xl shadow-md hover:shadow-xl border border-transparent hover:border-blue-100 transition-all duration-300 group text-left">
-                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-xs">
+                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-sm">
                           <CreditCard className="h-5 w-5" />
                         </div>
                         <h4 className="font-bold text-base text-gray-900 group-hover:text-[#071d7f] transition-colors">Métodos de Pago</h4>
@@ -2141,7 +2141,7 @@ const SellerAccountPage = () => {
                       <button 
                         onClick={() => setShowNotifications(true)}
                         className="flex flex-col items-start p-4 bg-white rounded-xl shadow-md hover:shadow-xl border border-transparent hover:border-blue-100 transition-all duration-300 group text-left">
-                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-xs">
+                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-sm">
                           <Bell className="h-5 w-5" />
                         </div>
                         <h4 className="font-bold text-base text-gray-900 group-hover:text-[#071d7f] transition-colors">Notificaciones</h4>
@@ -2154,7 +2154,7 @@ const SellerAccountPage = () => {
                       <button 
                         onClick={() => setShowChangePassword(true)}
                         className="flex flex-col items-start p-4 bg-white rounded-xl shadow-md hover:shadow-xl border border-transparent hover:border-blue-100 transition-all duration-300 group text-left">
-                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-xs">
+                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-sm">
                           <Shield className="h-5 w-5" />
                         </div>
                         <h4 className="font-bold text-base text-gray-900 group-hover:text-[#071d7f] transition-colors">Seguridad</h4>

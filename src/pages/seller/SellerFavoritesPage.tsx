@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, Trash2, Loader2, Package, LayoutGrid } from "lucide-react";
 import { useB2BFavorites } from "@/hooks/useB2BFavorites";
 import { useAuth } from "@/hooks/useAuth";
-import { Link, useNavigate } from "@/lib/router-compat";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
 
 const SellerFavoritesPage = () => {

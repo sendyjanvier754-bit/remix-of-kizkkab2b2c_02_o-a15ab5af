@@ -1,6 +1,6 @@
 import { ArrowRight, Store, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/lib/router-compat";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 const CTASection = () => {

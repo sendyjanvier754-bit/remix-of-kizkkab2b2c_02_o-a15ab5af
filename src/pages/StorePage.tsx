@@ -1,5 +1,5 @@
-﻿import { useParams } from "@/lib/router-compat";
-import { useNavigate } from "@/lib/router-compat";
+﻿import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useStore, useStoreProducts } from "@/hooks/useStore";
@@ -98,7 +98,7 @@ const StorePage = () => {
                         </AvatarFallback>
                     </Avatar>
                     {store.is_active && (
-                        <div className="absolute bottom-0 right-0 bg-green-500 text-white p-1 md:p-1.5 rounded-full border-2 md:border-4 border-white shadow-xs" title="Verificado">
+                        <div className="absolute bottom-0 right-0 bg-green-500 text-white p-1 md:p-1.5 rounded-full border-2 md:border-4 border-white shadow-sm" title="Verificado">
                             <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                         </div>
                     )}

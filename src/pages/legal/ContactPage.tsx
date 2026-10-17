@@ -4,7 +4,7 @@ import Footer from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Mail, MessageCircle, HelpCircle, MessagesSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "@/lib/router-compat";
+import { Link, useNavigate } from "react-router-dom";
 import { useBranding } from '@/hooks/useBranding';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';

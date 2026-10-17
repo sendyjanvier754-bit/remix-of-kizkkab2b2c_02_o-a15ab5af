@@ -1,4 +1,4 @@
-import { useNavigate } from "@/lib/router-compat";
+import { useNavigate } from "react-router-dom";
 import PartnerLayout from "@/components/partners/PartnerLayout";
 import { useAvailableRoutes, useAcceptRoute, useMyDriverProfile } from "@/hooks/useDriverPortal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

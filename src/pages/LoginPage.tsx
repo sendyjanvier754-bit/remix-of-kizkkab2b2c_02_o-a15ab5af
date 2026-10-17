@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "@/lib/router-compat";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -261,7 +261,7 @@ const LoginPage = () => {
             <p className="text-sm text-muted-foreground">{getValue('platform_slogan')}</p>
           </div>
 
-          <Card className="border-0 shadow-none lg:border lg:shadow-xs bg-transparent lg:bg-card">
+          <Card className="border-0 shadow-none lg:border lg:shadow-sm bg-transparent lg:bg-card">
             <CardHeader className="space-y-1 px-0 lg:px-6 pb-4">
               <CardTitle className="text-xl lg:text-2xl text-center">{t('loginPage.access')}</CardTitle>
               <CardDescription className="text-center text-sm">

@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "@/lib/router-compat";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, LayoutGrid, Sparkles, ShoppingBag, Package, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";

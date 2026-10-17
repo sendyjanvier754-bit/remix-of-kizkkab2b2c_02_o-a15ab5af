@@ -864,7 +864,7 @@ const VariantSelector = ({
                 <img 
                   src={matchingVariant.images[0]} 
                   alt={matchingVariant.name}
-                  className="w-12 h-12 object-cover rounded-full border-2 border-primary/30 shadow-xs"
+                  className="w-12 h-12 object-cover rounded-full border-2 border-primary/30 shadow-sm"
                 />
               )}
               

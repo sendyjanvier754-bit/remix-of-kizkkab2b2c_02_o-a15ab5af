@@ -13,7 +13,7 @@ export function QuantitySelectorDemo() {
   return (
     <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="bg-white p-6 rounded-lg shadow-xs border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-2xl font-bold mb-6 text-gray-900">
             Selector de cantidad - Ejemplos
           </h2>

@@ -1,4 +1,4 @@
-import { Link } from "@/lib/router-compat";
+import { Link } from "react-router-dom";
 import PartnerLayout from "@/components/partners/PartnerLayout";
 import { useMyRoutes } from "@/hooks/useDriverPortal";
 import { Card, CardContent } from "@/components/ui/card";

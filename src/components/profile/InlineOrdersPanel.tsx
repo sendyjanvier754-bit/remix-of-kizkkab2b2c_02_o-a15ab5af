@@ -14,7 +14,7 @@
  */
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "@/lib/router-compat";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import {

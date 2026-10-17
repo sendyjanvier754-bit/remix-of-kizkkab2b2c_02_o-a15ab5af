@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type MouseEvent } from "react";
-import { Link, useNavigate } from "@/lib/router-compat";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, X, Flame, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useCategories } from "@/hooks/useCategories";
@@ -213,7 +213,7 @@ const SellerDesktopHeader = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
-                  className="pl-4 pr-28 py-2.5 border border-gray-300 rounded-full focus:outline-hidden focus:ring-2 focus:ring-[#071d7f] bg-gray-50 hover:bg-white transition-colors"
+                  className="pl-4 pr-28 py-2.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#071d7f] bg-gray-50 hover:bg-white transition-colors"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                   {searchQuery && (
@@ -384,7 +384,7 @@ const SellerDesktopHeader = ({
                   onClick={() => scrollHeader(-1)}
                   className="absolute left-2 top-1/2 -translate-y-1/2 z-50"
                 >
-                  <div className="w-6 h-6 bg-gray-200 border-2 border-black rounded flex items-center justify-center shadow-xs">
+                  <div className="w-6 h-6 bg-gray-200 border-2 border-black rounded flex items-center justify-center shadow-sm">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-black">
                       <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -395,7 +395,7 @@ const SellerDesktopHeader = ({
                   onClick={() => scrollHeader(1)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 z-50"
                 >
-                  <div className="w-6 h-6 bg-gray-200 border-2 border-black rounded flex items-center justify-center shadow-xs">
+                  <div className="w-6 h-6 bg-gray-200 border-2 border-black rounded flex items-center justify-center shadow-sm">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-black">
                       <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>

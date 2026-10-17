@@ -364,7 +364,7 @@ const SellerWalletPage = () => {
                     <select
                       value={transactionFilter}
                       onChange={(e) => setTransactionFilter(e.target.value)}
-                      className="text-sm md:text-base w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#071d7f]"
+                      className="text-sm md:text-base w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#071d7f]"
                     >
                       <option value="all">Todos los movimientos</option>
                       <option value="sale">Ventas</option>
@@ -511,7 +511,7 @@ const SellerWalletPage = () => {
                 id="method"
                 value={withdrawalForm.method}
                 onChange={(e) => setWithdrawalForm({ ...withdrawalForm, method: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base focus:outline-hidden focus:ring-2 focus:ring-[#071d7f]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#071d7f]"
               >
                 <option value="transfer">Transferencia Bancaria</option>
                 <option value="check">Cheque</option>

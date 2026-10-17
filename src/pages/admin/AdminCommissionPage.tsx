@@ -433,7 +433,7 @@ const AdminCommissionPage = () => {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value as any)}
-                  className="text-sm md:text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-purple-600"
+                  className="text-sm md:text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
                 >
                   <option value="all">Todos</option>
                   <option value="active">Activos</option>
@@ -681,7 +681,7 @@ const AdminCommissionPage = () => {
                     placeholder="¿Por qué se aplica este override a estos vendedores?"
                     value={bulkForm.reason}
                     onChange={(e) => setBulkForm({ ...bulkForm, reason: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base focus:outline-hidden focus:ring-2 focus:ring-blue-600 min-h-20 resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-20 resize-none"
                   />
                 </div>
 
@@ -873,7 +873,7 @@ const AdminCommissionPage = () => {
                 placeholder="¿Por qué se aplica este override? (opcional)"
                 value={form.reason}
                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base focus:outline-hidden focus:ring-2 focus:ring-purple-600 min-h-20 resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-purple-600 min-h-20 resize-none"
               />
             </div>
           </div>

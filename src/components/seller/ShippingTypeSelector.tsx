@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from '@/lib/router-compat';
+import { Link } from 'react-router-dom';
 import { useShippingTypes, ShippingType } from '@/hooks/useShippingTypes';
 import { useCartShippingCost, CartItem, CartShippingSummary } from '@/hooks/useCartShippingCost';
 import { useCartShippingCostView } from '@/hooks/useCartShippingCostView';

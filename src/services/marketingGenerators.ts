@@ -725,7 +725,7 @@ export const generateWhatsAppStatusImage = async (options: WhatsAppStatusOptions
   ctx.shadowOffsetY = 4;
   ctx.fillText(formatPrice(product.precio_venta), width / 2, priceY);
   
-  // Reset shadow-sm
+  // Reset shadow
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ShoppingCart, X, Trash2, AlertCircle, Package, MessageCircle, Loader2, TrendingUp, ArrowUpRight, Truck, Clock } from 'lucide-react';
 import { CartB2B, CartItemB2B } from '@/types/b2b';
-import { Link } from '@/lib/router-compat';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@/lib/router-compat";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle, Users, Shield, TrendingUp, Loader2, LinkIcon, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

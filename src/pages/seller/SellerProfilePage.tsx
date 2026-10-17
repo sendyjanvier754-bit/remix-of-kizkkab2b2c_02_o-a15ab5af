@@ -14,7 +14,7 @@ import {
   User, MapPin, Calendar, Shield, Mail, Phone, 
   CheckCircle, Edit, ArrowLeft, FileText, CreditCard
 } from "lucide-react";
-import { useNavigate } from "@/lib/router-compat";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 const SellerProfilePage = () => {

@@ -21,7 +21,7 @@ const SearchFilterB2B = ({ filters, onFiltersChange, categories }: SearchFilterB
     });
   };
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4 shadow-xs">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-blue-600" />

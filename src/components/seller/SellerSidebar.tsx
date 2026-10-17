@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from "@/lib/router-compat";
+import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Home, LogOut, ShoppingBag, ChevronLeft, Package, Heart, User, Store, LayoutGrid, ClipboardList, Shield, Wallet, LayoutDashboard, Ticket, Users, Share2, BarChart3, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -128,7 +128,7 @@ export function SellerSidebar() {
 
       <SidebarFooter className="p-2 pb-20 lg:pb-4 flex-shrink-0 mt-auto">
         <div className={`flex items-center gap-2 p-2 rounded-xl bg-muted/30 border border-border/50 transition-all duration-300 ${isCollapsed ? "justify-center p-2 bg-transparent border-0" : ""}`}>
-          <Avatar className="h-9 w-9 border-2 border-background shadow-xs">
+          <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} />
             <AvatarFallback className="bg-blue-100 text-blue-700 font-bold">
               {user?.name?.substring(0, 2).toUpperCase() || "SV"}

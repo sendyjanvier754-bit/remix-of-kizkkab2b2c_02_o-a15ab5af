@@ -68,7 +68,7 @@ const ProductCarousel = ({
     return (
       <section className="w-full px-0 md:px-0">
         {/* Box Container */}
-        <div className="bg-white border border-gray-200 shadow-xs rounded-lg overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
           {/* Header / Section Separator */}
           <div className="hidden md:block bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between gap-3">
@@ -118,7 +118,7 @@ const ProductCarousel = ({
   return (
     <section className="w-full px-4 md:px-4 overflow-hidden">
       {/* Box Container - Unified on Desktop */}
-      <div className="w-full bg-white border border-gray-200 shadow-xs rounded-lg overflow-hidden">
+      <div className="w-full bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
         {/* Desktop Header - Integrated */}
         <div className="hidden md:block bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between gap-3">

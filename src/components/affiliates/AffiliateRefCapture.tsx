@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "@/lib/router-compat";
+import { useLocation } from "react-router-dom";
 import { AFFILIATE_REF_KEY, registerAffiliateClick } from "@/hooks/useAffiliates";
 
 /**

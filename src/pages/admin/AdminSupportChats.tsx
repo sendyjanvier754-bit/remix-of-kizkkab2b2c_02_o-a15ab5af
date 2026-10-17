@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from '@/lib/router-compat';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { RoleAwareLayout } from '@/components/layout/RoleAwareLayout';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatWindow } from '@/components/chat/ChatWindow';

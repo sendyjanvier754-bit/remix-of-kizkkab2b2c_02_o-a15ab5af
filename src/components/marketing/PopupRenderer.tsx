@@ -3,7 +3,7 @@ import { X, Gift, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useActivePopups, usePopupDismissal, MarketingPopup } from '@/hooks/useMarketingPopups';
 import { toast } from 'sonner';
-import { useLocation } from '@/lib/router-compat';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const CART_IDLE_MS = 120_000; // 2 minutes of inactivity on cart page

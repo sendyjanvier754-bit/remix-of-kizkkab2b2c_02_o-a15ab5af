@@ -120,7 +120,7 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
           className={cn(
             config.displayClass,
             'text-center font-bold border rounded-md px-1',
-            'focus:outline-hidden focus:ring-2 focus:ring-primary',
+            'focus:outline-none focus:ring-2 focus:ring-primary',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         />

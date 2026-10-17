@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate, Link } from "@/lib/router-compat";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, Package, Eye, EyeOff, User, Home, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
@@ -276,7 +276,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onFocus={() => searchQuery.length >= 1 && setShowResults(true)}
-              className="flex-1 bg-transparent text-sm sm:text-base text-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 outline-hidden min-w-0"
+              className="flex-1 bg-transparent text-sm sm:text-base text-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 outline-none min-w-0"
               placeholder={t('header.searchProducts')}
             />
             {searchQuery && (

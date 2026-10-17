@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "@/lib/router-compat";
+import { useParams, useNavigate } from "react-router-dom";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -255,7 +255,7 @@ const CategoryProductsPage = () => {
                   <select
                     value={filters.sortBy}
                     onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as FilterOptions["sortBy"] })}
-                    className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-gray-300 rounded-full text-xs font-medium text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-gray-300 rounded-full text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="newest">{sortLabels.newest}</option>
                     <option value="price_asc">{sortLabels.price_asc}</option>
@@ -274,7 +274,7 @@ const CategoryProductsPage = () => {
                     placeholder={t('pagesExtra.categoryProducts.min')}
                     value={priceMin ?? ""}
                     onChange={(e) => { setPriceMin(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
-                    className="w-12 px-1 py-0.5 text-xs text-center bg-gray-50 border border-gray-200 rounded-full focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                    className="w-12 px-1 py-0.5 text-xs text-center bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   <span className="text-gray-400 text-xs">–</span>
                   <input
@@ -283,7 +283,7 @@ const CategoryProductsPage = () => {
                     placeholder={t('pagesExtra.categoryProducts.max')}
                     value={priceMax ?? ""}
                     onChange={(e) => { setPriceMax(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
-                    className="w-12 px-1 py-0.5 text-xs text-center bg-gray-50 border border-gray-200 rounded-full focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                    className="w-12 px-1 py-0.5 text-xs text-center bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
 
@@ -325,7 +325,7 @@ const CategoryProductsPage = () => {
                     <select
                       value={selectedSubcategory ?? ""}
                       onChange={(e) => { setSelectedSubcategory(e.target.value || null); setCurrentPage(1); }}
-                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-full text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">{t('pagesExtra.categoryProducts.all')}</option>
                       {subcategories.map((s: any) => (
@@ -338,7 +338,7 @@ const CategoryProductsPage = () => {
                   <select
                     value={minRating ?? ""}
                     onChange={(e) => { setMinRating(e.target.value ? Number(e.target.value) : undefined); setCurrentPage(1); }}
-                    className="px-3 py-1.5 bg-white border border-gray-300 rounded-full text-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-1.5 bg-white border border-gray-300 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">{t('pagesExtra.categoryProducts.ratingLabel')}</option>
                     <option value="4">⭐ 4+</option>
