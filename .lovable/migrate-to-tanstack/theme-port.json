@@ -1,0 +1,24 @@
+{
+  "customizations": [
+    { "token": "brand color palette (--primary, --secondary, --accent, etc. HSL values)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--price / text-price", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--gold / --gold-light", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--teal / --teal-light", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--navy / --navy-dark", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--profit / --profit-foreground / --profit-soft / --profit-border", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--gradient-hero / --gradient-gold / --gradient-card", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "brand shadows (renamed --brand-shadow-*)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "dark theme palette", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "Plus Jakarta Sans font (font-sans)", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "breakpoints sm/md/lg = 1024px", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "container (full width, centered, 1rem padding)", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "text-gradient-gold", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "bg-hero-gradient", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "shadow-card / shadow-glow-gold", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "animate-float / animate-fade-up / animate-scale-in", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "scrollbar-hide", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "cart confirmation animations", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "brand page loader animations", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "animate-cart-shake / heart-shake / float-horizontal / blink / accordion", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" }
+  ]
+}
