@@ -128,6 +128,7 @@ export function AdminSidebar() {
     { title: "WhatsApp Automático", url: "/admin/whatsapp-automation", icon: MessageCircle },
     { title: "Campañas Email", url: "/admin/email-campaigns", icon: Mail },
     { title: "Diseñador de Correos", url: "/admin/disenador-email", icon: Mail },
+    { title: "Noticias", url: "/admin/noticias", icon: Megaphone },
     { title: "Automatizaciones", url: "/admin/automatizaciones", icon: MessageCircle },
     { title: "Programas Afiliados", url: "/admin/affiliates", icon: Award },
     { title: "Estadísticas Afiliados", url: "/admin/afiliados-estadisticas", icon: TrendingUp },
