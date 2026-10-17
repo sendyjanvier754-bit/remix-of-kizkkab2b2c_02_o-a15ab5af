@@ -69,6 +69,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminLogisticsRouteImport } from './routes/admin/logistics'
 import { Route as AdminMarketplaceSectionsRouteImport } from './routes/admin/marketplace-sections'
 import { Route as AdminMarketsRouteImport } from './routes/admin/markets'
+import { Route as AdminNoticiasRouteImport } from './routes/admin/noticias'
 import { Route as AdminNotificacionesRouteImport } from './routes/admin/notificaciones'
 import { Route as AdminPartnerApplicationsRouteImport } from './routes/admin/partner-applications'
 import { Route as AdminPaymentKeysRouteImport } from './routes/admin/payment-keys'
@@ -100,6 +101,8 @@ import { Route as GrossistePedidosRouteImport } from './routes/grossiste/pedidos
 import { Route as GrossistePerfilRouteImport } from './routes/grossiste/perfil'
 import { Route as GrossisteProductosRouteImport } from './routes/grossiste/productos'
 import { Route as GrossisteTiendaB2cRouteImport } from './routes/grossiste/tienda-b2c'
+import { Route as NoticiasIndexRouteImport } from './routes/noticias/index'
+import { Route as NoticiasSlugRouteImport } from './routes/noticias/$slug'
 import { Route as ProductoSkuRouteImport } from './routes/producto/$sku'
 import { Route as RastreoIndexRouteImport } from './routes/rastreo/index'
 import { Route as RastreoTrackingIdRouteImport } from './routes/rastreo/$trackingId'
@@ -449,6 +452,11 @@ const AdminMarketsRoute = AdminMarketsRouteImport.update({
   path: '/admin/markets',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminNoticiasRoute = AdminNoticiasRouteImport.update({
+  id: '/admin/noticias',
+  path: '/admin/noticias',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminNotificacionesRoute = AdminNotificacionesRouteImport.update({
   id: '/admin/notificaciones',
   path: '/admin/notificaciones',
@@ -603,6 +611,16 @@ const GrossisteProductosRoute = GrossisteProductosRouteImport.update({
 const GrossisteTiendaB2cRoute = GrossisteTiendaB2cRouteImport.update({
   id: '/grossiste/tienda-b2c',
   path: '/grossiste/tienda-b2c',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoticiasIndexRoute = NoticiasIndexRouteImport.update({
+  id: '/noticias/',
+  path: '/noticias/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoticiasSlugRoute = NoticiasSlugRouteImport.update({
+  id: '/noticias/$slug',
+  path: '/noticias/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductoSkuRoute = ProductoSkuRouteImport.update({
@@ -900,6 +918,7 @@ export interface FileRoutesByFullPath {
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/marketplace-sections': typeof AdminMarketplaceSectionsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/noticias': typeof AdminNoticiasRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/partner-applications': typeof AdminPartnerApplicationsRoute
   '/admin/payment-keys': typeof AdminPaymentKeysRoute
@@ -929,6 +948,7 @@ export interface FileRoutesByFullPath {
   '/grossiste/perfil': typeof GrossistePerfilRoute
   '/grossiste/productos': typeof GrossisteProductosRoute
   '/grossiste/tienda-b2c': typeof GrossisteTiendaB2cRoute
+  '/noticias/$slug': typeof NoticiasSlugRoute
   '/producto/$sku': typeof ProductoSkuRoute
   '/rastreo/$trackingId': typeof RastreoTrackingIdRoute
   '/seller/adquisicion-lotes': typeof SellerAdquisicionLotesRoute
@@ -957,6 +977,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/agente-compra/': typeof AgenteCompraIndexRoute
   '/carrito/': typeof CarritoIndexRoute
+  '/noticias/': typeof NoticiasIndexRoute
   '/rastreo/': typeof RastreoIndexRoute
   '/siver-match/': typeof SiverMatchIndexRoute
   '/socios/': typeof SociosIndexRoute
@@ -1038,6 +1059,7 @@ export interface FileRoutesByTo {
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/marketplace-sections': typeof AdminMarketplaceSectionsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/noticias': typeof AdminNoticiasRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/partner-applications': typeof AdminPartnerApplicationsRoute
   '/admin/payment-keys': typeof AdminPaymentKeysRoute
@@ -1067,6 +1089,7 @@ export interface FileRoutesByTo {
   '/grossiste/perfil': typeof GrossistePerfilRoute
   '/grossiste/productos': typeof GrossisteProductosRoute
   '/grossiste/tienda-b2c': typeof GrossisteTiendaB2cRoute
+  '/noticias/$slug': typeof NoticiasSlugRoute
   '/producto/$sku': typeof ProductoSkuRoute
   '/rastreo/$trackingId': typeof RastreoTrackingIdRoute
   '/seller/adquisicion-lotes': typeof SellerAdquisicionLotesRoute
@@ -1095,6 +1118,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/agente-compra': typeof AgenteCompraIndexRoute
   '/carrito': typeof CarritoIndexRoute
+  '/noticias': typeof NoticiasIndexRoute
   '/rastreo': typeof RastreoIndexRoute
   '/siver-match': typeof SiverMatchIndexRoute
   '/socios': typeof SociosIndexRoute
@@ -1177,6 +1201,7 @@ export interface FileRoutesById {
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/marketplace-sections': typeof AdminMarketplaceSectionsRoute
   '/admin/markets': typeof AdminMarketsRoute
+  '/admin/noticias': typeof AdminNoticiasRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/partner-applications': typeof AdminPartnerApplicationsRoute
   '/admin/payment-keys': typeof AdminPaymentKeysRoute
@@ -1206,6 +1231,7 @@ export interface FileRoutesById {
   '/grossiste/perfil': typeof GrossistePerfilRoute
   '/grossiste/productos': typeof GrossisteProductosRoute
   '/grossiste/tienda-b2c': typeof GrossisteTiendaB2cRoute
+  '/noticias/$slug': typeof NoticiasSlugRoute
   '/producto/$sku': typeof ProductoSkuRoute
   '/rastreo/$trackingId': typeof RastreoTrackingIdRoute
   '/seller/adquisicion-lotes': typeof SellerAdquisicionLotesRoute
@@ -1234,6 +1260,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/agente-compra/': typeof AgenteCompraIndexRoute
   '/carrito/': typeof CarritoIndexRoute
+  '/noticias/': typeof NoticiasIndexRoute
   '/rastreo/': typeof RastreoIndexRoute
   '/siver-match/': typeof SiverMatchIndexRoute
   '/socios/': typeof SociosIndexRoute
@@ -1317,6 +1344,7 @@ export interface FileRouteTypes {
     | '/admin/logistics'
     | '/admin/marketplace-sections'
     | '/admin/markets'
+    | '/admin/noticias'
     | '/admin/notificaciones'
     | '/admin/partner-applications'
     | '/admin/payment-keys'
@@ -1346,6 +1374,7 @@ export interface FileRouteTypes {
     | '/grossiste/perfil'
     | '/grossiste/productos'
     | '/grossiste/tienda-b2c'
+    | '/noticias/$slug'
     | '/producto/$sku'
     | '/rastreo/$trackingId'
     | '/seller/adquisicion-lotes'
@@ -1374,6 +1403,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/agente-compra/'
     | '/carrito/'
+    | '/noticias/'
     | '/rastreo/'
     | '/siver-match/'
     | '/socios/'
@@ -1455,6 +1485,7 @@ export interface FileRouteTypes {
     | '/admin/logistics'
     | '/admin/marketplace-sections'
     | '/admin/markets'
+    | '/admin/noticias'
     | '/admin/notificaciones'
     | '/admin/partner-applications'
     | '/admin/payment-keys'
@@ -1484,6 +1515,7 @@ export interface FileRouteTypes {
     | '/grossiste/perfil'
     | '/grossiste/productos'
     | '/grossiste/tienda-b2c'
+    | '/noticias/$slug'
     | '/producto/$sku'
     | '/rastreo/$trackingId'
     | '/seller/adquisicion-lotes'
@@ -1512,6 +1544,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agente-compra'
     | '/carrito'
+    | '/noticias'
     | '/rastreo'
     | '/siver-match'
     | '/socios'
@@ -1593,6 +1626,7 @@ export interface FileRouteTypes {
     | '/admin/logistics'
     | '/admin/marketplace-sections'
     | '/admin/markets'
+    | '/admin/noticias'
     | '/admin/notificaciones'
     | '/admin/partner-applications'
     | '/admin/payment-keys'
@@ -1622,6 +1656,7 @@ export interface FileRouteTypes {
     | '/grossiste/perfil'
     | '/grossiste/productos'
     | '/grossiste/tienda-b2c'
+    | '/noticias/$slug'
     | '/producto/$sku'
     | '/rastreo/$trackingId'
     | '/seller/adquisicion-lotes'
@@ -1650,6 +1685,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/agente-compra/'
     | '/carrito/'
+    | '/noticias/'
     | '/rastreo/'
     | '/siver-match/'
     | '/socios/'
@@ -1732,6 +1768,7 @@ export interface RootRouteChildren {
   AdminLogisticsRoute: typeof AdminLogisticsRoute
   AdminMarketplaceSectionsRoute: typeof AdminMarketplaceSectionsRoute
   AdminMarketsRoute: typeof AdminMarketsRoute
+  AdminNoticiasRoute: typeof AdminNoticiasRoute
   AdminNotificacionesRoute: typeof AdminNotificacionesRoute
   AdminPartnerApplicationsRoute: typeof AdminPartnerApplicationsRoute
   AdminPaymentKeysRoute: typeof AdminPaymentKeysRoute
@@ -1761,6 +1798,7 @@ export interface RootRouteChildren {
   GrossistePerfilRoute: typeof GrossistePerfilRoute
   GrossisteProductosRoute: typeof GrossisteProductosRoute
   GrossisteTiendaB2cRoute: typeof GrossisteTiendaB2cRoute
+  NoticiasSlugRoute: typeof NoticiasSlugRoute
   ProductoSkuRoute: typeof ProductoSkuRoute
   RastreoTrackingIdRoute: typeof RastreoTrackingIdRoute
   SellerAdquisicionLotesRoute: typeof SellerAdquisicionLotesRoute
@@ -1789,6 +1827,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AgenteCompraIndexRoute: typeof AgenteCompraIndexRoute
   CarritoIndexRoute: typeof CarritoIndexRoute
+  NoticiasIndexRoute: typeof NoticiasIndexRoute
   RastreoIndexRoute: typeof RastreoIndexRoute
   SiverMatchIndexRoute: typeof SiverMatchIndexRoute
   SociosIndexRoute: typeof SociosIndexRoute
@@ -2233,6 +2272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMarketsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/noticias': {
+      id: '/admin/noticias'
+      path: '/admin/noticias'
+      fullPath: '/admin/noticias'
+      preLoaderRoute: typeof AdminNoticiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/notificaciones': {
       id: '/admin/notificaciones'
       path: '/admin/notificaciones'
@@ -2448,6 +2494,20 @@ declare module '@tanstack/react-router' {
       path: '/grossiste/tienda-b2c'
       fullPath: '/grossiste/tienda-b2c'
       preLoaderRoute: typeof GrossisteTiendaB2cRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/noticias/': {
+      id: '/noticias/'
+      path: '/noticias'
+      fullPath: '/noticias/'
+      preLoaderRoute: typeof NoticiasIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/noticias/$slug': {
+      id: '/noticias/$slug'
+      path: '/noticias/$slug'
+      fullPath: '/noticias/$slug'
+      preLoaderRoute: typeof NoticiasSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/producto/$sku': {
@@ -2828,6 +2888,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminLogisticsRoute: AdminLogisticsRoute,
   AdminMarketplaceSectionsRoute: AdminMarketplaceSectionsRoute,
   AdminMarketsRoute: AdminMarketsRoute,
+  AdminNoticiasRoute: AdminNoticiasRoute,
   AdminNotificacionesRoute: AdminNotificacionesRoute,
   AdminPartnerApplicationsRoute: AdminPartnerApplicationsRoute,
   AdminPaymentKeysRoute: AdminPaymentKeysRoute,
@@ -2857,6 +2918,7 @@ const rootRouteChildren: RootRouteChildren = {
   GrossistePerfilRoute: GrossistePerfilRoute,
   GrossisteProductosRoute: GrossisteProductosRoute,
   GrossisteTiendaB2cRoute: GrossisteTiendaB2cRoute,
+  NoticiasSlugRoute: NoticiasSlugRoute,
   ProductoSkuRoute: ProductoSkuRoute,
   RastreoTrackingIdRoute: RastreoTrackingIdRoute,
   SellerAdquisicionLotesRoute: SellerAdquisicionLotesRoute,
@@ -2885,6 +2947,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AgenteCompraIndexRoute: AgenteCompraIndexRoute,
   CarritoIndexRoute: CarritoIndexRoute,
+  NoticiasIndexRoute: NoticiasIndexRoute,
   RastreoIndexRoute: RastreoIndexRoute,
   SiverMatchIndexRoute: SiverMatchIndexRoute,
   SociosIndexRoute: SociosIndexRoute,
