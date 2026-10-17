@@ -28,10 +28,9 @@
   --radius-sm: calc(var(--app-radius) - 4px);
   --radius-md: calc(var(--app-radius) - 2px);
   --radius-lg: var(--app-radius);
-  --radius-xl: calc(var(--app-radius) + 4px);
-  --radius-2xl: calc(var(--app-radius) + 8px);
-  --radius-3xl: calc(var(--app-radius) + 12px);
-  --radius-4xl: calc(var(--app-radius) + 16px);
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
 
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
