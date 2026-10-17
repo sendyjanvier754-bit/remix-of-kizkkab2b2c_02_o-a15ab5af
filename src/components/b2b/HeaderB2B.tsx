@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type MouseEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, Package, Clock, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { usePublicCategories } from "@/hooks/useCategories";

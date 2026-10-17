@@ -2,7 +2,7 @@
  * Cart Lock Banner Component
  */
 
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Lock, Clock, ArrowRight } from 'lucide-react';

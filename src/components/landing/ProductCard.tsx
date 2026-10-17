@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Heart, Store, TrendingUp, ShoppingCart, MessageCircle, ShieldCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";

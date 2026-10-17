@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { useSellerOnboarding, getStepLabel } from "@/hooks/useSellerOnboarding";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";

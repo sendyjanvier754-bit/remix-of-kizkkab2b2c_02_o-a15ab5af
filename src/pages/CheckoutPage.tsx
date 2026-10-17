@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { resolveAffiliateOffer, AffiliateOffer } from '@/hooks/useAffiliates';
 import { getStoredAffiliateCode } from '@/components/affiliates/AffiliateRefCapture';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from '@/lib/router-compat';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';

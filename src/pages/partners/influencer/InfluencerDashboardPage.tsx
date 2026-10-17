@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "@/lib/router-compat";
 import { Copy, Check, DollarSign, MousePointerClick, ShoppingBag, Percent } from "lucide-react";
 import PartnerLayout from "@/components/partners/PartnerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,5 +1,5 @@
-﻿import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+﻿import { useParams } from "@/lib/router-compat";
+import { useNavigate } from "@/lib/router-compat";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useStore, useStoreProducts } from "@/hooks/useStore";
