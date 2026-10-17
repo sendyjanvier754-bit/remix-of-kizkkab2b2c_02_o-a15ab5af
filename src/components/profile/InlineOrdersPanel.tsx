@@ -138,13 +138,14 @@ const OrderCard = ({
   const itemCount = order.order_items_b2b?.length || 0;
   const firstItem = order.order_items_b2b?.[0];
   const isB2B = order.metadata?.order_type === 'b2b';
-  const borderColor = {
+  const borderColors: Partial<Record<BuyerOrderStatus, string>> = {
     shipped: 'border-l-purple-500',
     delivered: 'border-l-green-500',
     paid: 'border-l-amber-500',
     placed: 'border-l-blue-500',
     cancelled: 'border-l-red-500',
-  }[order.status] || 'border-l-gray-300';
+  };
+  const borderColor = borderColors[order.status] || 'border-l-gray-300';
 
   const returnCfg = returnStatus ? RETURN_STATUS_CONFIG[returnStatus as keyof typeof RETURN_STATUS_CONFIG] : null;
 

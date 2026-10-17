@@ -3,12 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface ItemForLogistics {
   productId: string;
-  variantId?: string;
+  variantId?: string | null;
 }
 
 export interface LogisticsItemResult {
   productId: string;
-  variantId?: string;
+  variantId?: string | null;
   weight_kg: number;
   shippingCost: number;
 }

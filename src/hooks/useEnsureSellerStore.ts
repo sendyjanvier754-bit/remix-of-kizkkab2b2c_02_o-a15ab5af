@@ -118,6 +118,8 @@ export const useEnsureSellerStore = () => {
           }
         }
 
+        if (!store) return;
+
         // Store exists - check if it's configured
         const isConfigured = store.name !== null && store.name !== '';
         const isActive = store.is_active === true;

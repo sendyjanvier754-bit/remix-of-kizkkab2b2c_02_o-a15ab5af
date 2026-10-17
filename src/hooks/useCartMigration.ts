@@ -68,11 +68,11 @@ export const useCartMigration = () => {
                 await supabase.from('b2b_cart_items').upsert({
                   cart_id: cartId,
                   product_id: productData.id,
-                  sku: productData.sku_interno,
-                  nombre: productData.nombre,
-                  unit_price: productData.precio_b2b, // ← Precio con márgenes
+                  sku: productData.sku_interno ?? '',
+                  nombre: productData.nombre ?? '',
+                  unit_price: productData.precio_b2b ?? 0, // ← Precio con márgenes
                   quantity: quantity,
-                  total_price: quantity * productData.precio_b2b,
+                  total_price: quantity * (productData.precio_b2b ?? 0),
                   moq: moq,
                   stock_disponible: productData.stock_fisico
                 }, { onConflict: 'cart_id, product_id' });

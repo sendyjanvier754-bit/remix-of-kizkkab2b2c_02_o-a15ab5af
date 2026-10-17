@@ -26,6 +26,7 @@ export function GrossisteUpgradeProvider({ children }: { children: ReactNode }) 
       const timer = setTimeout(() => setShowModal(true), 500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [user?.id, user?.role]);
 
   const handleClose = (open: boolean) => {

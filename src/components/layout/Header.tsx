@@ -79,7 +79,7 @@ const Header = ({
   const { canToggle, toggleViewMode, isClientPreview } = useViewMode();
   const { getValue: getBranding } = useBranding();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openMobileCategory, setOpenMobileCategory] = useState(null);
+  const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
   const {
     searchQuery, setSearchQuery, submitSearch: submitSearchBase,
     startVoiceSearch, isListening, voiceSupported,
@@ -123,9 +123,9 @@ const Header = ({
   const cartCount = cartItems.reduce((sum, item) => sum + ('quantity' in item ? item.quantity : item.cantidad), 0);
   const cartLink = showB2B ? "/seller/carrito" : "/carrito";
 
-  const catBarRef = useRef(null);
+  const catBarRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
-  const headerRef = useRef(null);
+  const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
 
@@ -181,7 +181,7 @@ const Header = ({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const scrollHeader = (dir) => {
+  const scrollHeader = (dir: number) => {
     const el = catBarRef.current;
     if (!el) return;
     const amount = Math.max(el.clientWidth * 0.5, 240);
@@ -191,7 +191,7 @@ const Header = ({
   // Root categories (no parent)
   const rootCategories = categories.filter((c) => !c.parent_id);
 
-  const getSubcategories = (parentId) =>
+  const getSubcategories = (parentId: string) =>
     categories.filter((c) => c.parent_id === parentId);
 
   // Translate all category names + descriptions in one batch

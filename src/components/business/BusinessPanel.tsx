@@ -70,11 +70,11 @@ export const BusinessPanel: React.FC<BusinessPanelProps> = ({
   
   const profitPerUnit = businessPanelData
     ? businessPanelData.profit_1unit
-    : (pvpPerUnit - costPerUnit);
+    : ((pvpPerUnit ?? 0) - costPerUnit);
   
   const marginPercentage = businessPanelData
     ? businessPanelData.margin_percentage
-    : (costPerUnit > 0 ? ((pvpPerUnit - costPerUnit) / costPerUnit * 100) : 0);
+    : (costPerUnit > 0 ? (((pvpPerUnit ?? 0) - costPerUnit) / costPerUnit * 100) : 0);
   
   const shippingPerUnit = businessPanelData?.shipping_cost_per_unit ?? 0;
 

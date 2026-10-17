@@ -30,10 +30,11 @@ const normalizeCategoryId = (value: unknown): string | null => {
 
 const SellerAcquisicionLotes = () => {
   const location = useLocation();
+  const navigationState = location.state as { selectedCategory?: unknown } | null;
 
   const [filters, setFiltersState] = useState<B2BFilters>({
     searchQuery: "",
-    category: normalizeCategoryId(location.state?.selectedCategory),
+    category: normalizeCategoryId(navigationState?.selectedCategory),
     stockStatus: "all",
     sortBy: "newest"
   });
@@ -41,8 +42,8 @@ const SellerAcquisicionLotes = () => {
   useEffect(() => {
     // Only update filters from navigation state when the value actually changes.
     // This prevents wiping the already-loaded product list due to unnecessary state updates.
-    if (location.state?.selectedCategory !== undefined) {
-      const nextCategory = normalizeCategoryId(location.state.selectedCategory);
+    if (navigationState?.selectedCategory !== undefined) {
+      const nextCategory = normalizeCategoryId(navigationState.selectedCategory);
       setFiltersState(prev => {
         if (prev.category === nextCategory) return prev;
         return {

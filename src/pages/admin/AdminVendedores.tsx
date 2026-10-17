@@ -48,14 +48,14 @@ import { useCommissionOverrides } from "@/hooks/useCommissionOverrides";
 
 interface Seller {
   id: string;
-  user_id: string;
+  user_id: string | null;
   store_id: string | null;
   business_name: string | null;
   business_type: string | null;
-  is_verified: boolean;
-  verification_status: string;
+  is_verified: boolean | null;
+  verification_status: string | null;
   commission_rate: number | null;
-  is_active: boolean;
+  is_active: boolean | null;
   created_at: string;
   // Datos de profiles
   full_name: string | null;
@@ -101,7 +101,7 @@ const AdminVendedores = () => {
       const sellersWithCodes = await Promise.all(
         (sellersData || []).map(async (seller) => {
           // Obtener datos del usuario de profiles
-          let profileData = { user_code: null, full_name: null, email: null, phone: null };
+          let profileData: Pick<Seller, 'user_code' | 'full_name' | 'email' | 'phone'> = { user_code: null, full_name: null, email: null, phone: null };
           if (seller.user_id) {
             const { data } = await supabase
               .from("profiles")

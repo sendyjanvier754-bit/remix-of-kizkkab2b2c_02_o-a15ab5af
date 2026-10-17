@@ -60,6 +60,7 @@ const SellerMobileHeader = ({
       return () => clearTimeout(timer);
     }
     prevCartCountRef.current = cartCount;
+    return undefined;
   }, [cartCount]);
 
   // Close search results when clicking outside
@@ -92,7 +93,7 @@ const SellerMobileHeader = ({
           .limit(8);
 
         if (error) throw error;
-        setSearchResults(data || []);
+        setSearchResults((data || []).map(row => ({ ...row, id: row.id ?? '', nombre: row.nombre ?? '', sku_interno: row.sku_interno ?? '', precio_b2b: row.precio_b2b ?? 0, descripcion_corta: row.descripcion_corta ?? undefined })));
         setShowResults(true);
       } catch (error) {
         console.error("Search error:", error);
