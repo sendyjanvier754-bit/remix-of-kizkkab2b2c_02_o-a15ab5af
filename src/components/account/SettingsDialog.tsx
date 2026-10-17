@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Settings, Lock, Bell, Shield, Loader2, Eye, EyeOff, FileText, Info } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { LegalPagesModal } from '@/components/legal/LegalPagesModal';
 import { AboutModal } from '@/components/legal/AboutModal';
 import { useTranslation } from 'react-i18next';

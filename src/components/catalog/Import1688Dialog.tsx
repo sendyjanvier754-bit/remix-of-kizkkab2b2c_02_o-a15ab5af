@@ -1457,7 +1457,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                       value={manualUrlProducto}
                       onChange={(e) => setManualUrlProducto(e.target.value)}
                       placeholder="O ingresar URL manualmente..."
-                      className="w-full text-sm border rounded-md px-3 py-2 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="w-full text-sm border rounded-md px-3 py-2 bg-background text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
                     />
                   )}
                   {field.key === "imagen_principal" && !columnMapping.imagen_principal && (
@@ -1812,7 +1812,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                 return (
                   <div
                     key={group.productId}
-                    className="border rounded-xl overflow-hidden bg-card shadow-sm"
+                    className="border rounded-xl overflow-hidden bg-card shadow-xs"
                   >
                     {/* Product header row */}
                     <div className="flex gap-4 p-4 border-b bg-muted/20">
@@ -1943,7 +1943,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                                     <input
                                       type="url"
                                       placeholder="Pegar URL imagen"
-                                      className="w-full text-[9px] px-1.5 py-1 rounded border border-amber-400/60 bg-white dark:bg-zinc-900 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                      className="w-full text-[9px] px-1.5 py-1 rounded border border-amber-400/60 bg-white dark:bg-zinc-900 text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-amber-400"
                                       onBlur={(e) => {
                                         const v = e.target.value.trim();
                                         if (v) updateProcessedVariant(row.sku_interno, "url_imagen", v);
@@ -1997,7 +1997,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                                   type="text"
                                   defaultValue=""
                                   placeholder="Nombre variante"
-                                  className="w-full pr-4 text-xs px-1.5 py-1 rounded border border-destructive/60 bg-destructive/5 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-destructive font-semibold"
+                                  className="w-full pr-4 text-xs px-1.5 py-1 rounded border border-destructive/60 bg-destructive/5 text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-destructive font-semibold"
                                   onBlur={(e) => {
                                     const v = e.target.value.trim();
                                     if (v) updateProcessedVariant(row.sku_interno, "nombre", v);
@@ -2034,7 +2034,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                                     min="0"
                                     step="0.01"
                                     placeholder="0.00"
-                                    className="w-full text-xs px-1.5 py-1 rounded border border-destructive/60 bg-destructive/5 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-destructive font-bold"
+                                    className="w-full text-xs px-1.5 py-1 rounded border border-destructive/60 bg-destructive/5 text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-destructive font-bold"
                                     onBlur={(e) => {
                                       const v = e.target.value.trim();
                                       if (v && parseFloat(v) > 0)
@@ -2503,7 +2503,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     type="url"
                     value={editDraft.url_imagen || ""}
                     placeholder="https://..."
-                    className="w-full text-xs px-2 py-1.5 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full text-xs px-2 py-1.5 rounded-md border bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                     onChange={(e) => setEditDraft((d) => ({ ...d, url_imagen: e.target.value }))}
                   />
                   {/* Upload from local PC */}
@@ -2543,7 +2543,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     type="text"
                     value={editDraft.nombre || ""}
                     placeholder="Nombre..."
-                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                     onChange={(e) => setEditDraft((d) => ({ ...d, nombre: e.target.value }))}
                   />
                 </div>
@@ -2553,7 +2553,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     type="text"
                     value={editDraft.variante_1_color || ""}
                     placeholder="Color..."
-                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                     onChange={(e) => setEditDraft((d) => ({ ...d, variante_1_color: e.target.value }))}
                   />
                 </div>
@@ -2563,7 +2563,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     type="text"
                     value={editDraft.variante_2_talla || ""}
                     placeholder="Talla..."
-                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                     onChange={(e) => setEditDraft((d) => ({ ...d, variante_2_talla: e.target.value }))}
                   />
                 </div>
@@ -2575,7 +2575,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     step="0.01"
                     value={editDraft.costo || ""}
                     placeholder="0.00"
-                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                     onChange={(e) => setEditDraft((d) => ({ ...d, costo: e.target.value }))}
                   />
                 </div>
@@ -2586,7 +2586,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     min="0"
                     value={editDraft.stock || ""}
                     placeholder="0"
-                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                     onChange={(e) => setEditDraft((d) => ({ ...d, stock: e.target.value }))}
                   />
                 </div>
@@ -2596,7 +2596,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
                     type="url"
                     value={editDraft.url_producto || ""}
                     placeholder="https://detail.1688.com/..."
-                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full text-sm px-3 py-2 rounded-md border bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                     onChange={(e) => setEditDraft((d) => ({ ...d, url_producto: e.target.value }))}
                   />
                 </div>

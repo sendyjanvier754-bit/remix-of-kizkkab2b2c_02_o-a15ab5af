@@ -237,7 +237,7 @@ export const AttributeConfigCard = ({
                     <img
                       src={imageUrl}
                       alt={value}
-                      className="w-8 h-8 rounded object-cover border shadow-sm flex-shrink-0"
+                      className="w-8 h-8 rounded object-cover border shadow-xs flex-shrink-0"
                       loading="lazy"
                       decoding="async"
                       referrerPolicy="no-referrer"

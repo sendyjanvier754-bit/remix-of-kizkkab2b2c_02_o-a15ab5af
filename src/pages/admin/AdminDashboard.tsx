@@ -14,7 +14,7 @@ import {
   ShoppingCart,
   Globe
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { usePayments, useSellers } from "@/hooks/usePayments";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,13 +46,13 @@ const getMethodLabel = (method: string, t: any) => {
 };
 
 const StatCard = ({ icon: Icon, label, value, color, bgColor, isLoading, trend }: any) => (
-  <div className="group relative bg-gradient-to-br from-card to-card/80 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-4 border border-border/30 hover:border-primary/20 overflow-hidden">
+  <div className="group relative bg-gradient-to-br from-card to-card/80 rounded-xl shadow-xs hover:shadow-lg transition-all duration-300 p-4 border border-border/30 hover:border-primary/20 overflow-hidden">
     {/* Subtle gradient overlay on hover */}
     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     
     <div className="relative z-10">
       <div className="flex items-center justify-between mb-3">
-        <div className={`${bgColor} p-2.5 rounded-xl shadow-sm`}>
+        <div className={`${bgColor} p-2.5 rounded-xl shadow-xs`}>
           <Icon className={`w-4 h-4 ${color}`} />
         </div>
         {trend && (
@@ -273,7 +273,7 @@ const AdminDashboard = () => {
       subtitle={t('adminDashboard.subtitle')}
     >
       {/* Sticky Stats Header */}
-      <div className="sticky top-0 z-40 bg-gradient-to-b from-background via-background/98 to-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 border-b border-border/20 shadow-sm -mx-6 px-6 py-5 mb-8">
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-background via-background/98 to-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 border-b border-border/20 shadow-xs -mx-6 px-6 py-5 mb-8">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {stickyStatsData.map((stat) => (
             <StatCard
@@ -304,7 +304,7 @@ const AdminDashboard = () => {
                     <p className="text-3xl font-bold text-foreground tracking-tight">{stat.value}</p>
                     <p className="text-xs text-muted-foreground/80">{stat.description}</p>
                   </div>
-                  <div className={`p-3.5 rounded-2xl ${stat.bgColor} shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all duration-300`}>
+                  <div className={`p-3.5 rounded-2xl ${stat.bgColor} shadow-xs group-hover:scale-110 group-hover:shadow-md transition-all duration-300`}>
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
                   </div>
                 </div>

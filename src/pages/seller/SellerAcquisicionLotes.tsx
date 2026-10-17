@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@/lib/router-compat";
 import { useAuth } from "@/hooks/useAuth";
 import { useB2BCartSupabase } from "@/hooks/useB2BCartSupabase";
 import { SellerLayout } from "@/components/seller/SellerLayout";

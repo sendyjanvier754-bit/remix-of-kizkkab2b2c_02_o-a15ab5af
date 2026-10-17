@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from "@/lib/router-compat";
 import PartnerLayout from "@/components/partners/PartnerLayout";
 import { useRouteDetail, useCompleteStop } from "@/hooks/useDriverPortal";
 import { usePartnerChat } from "@/hooks/usePartnerChat";

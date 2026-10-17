@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useViewMode } from "@/contexts/ViewModeContext";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@/lib/router-compat";
 import Header from "./Header";
 import HeaderB2B from "@/components/b2b/HeaderB2B";
 

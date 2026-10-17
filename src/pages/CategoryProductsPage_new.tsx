@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "@/lib/router-compat";
 import GlobalHeader from "@/components/layout/GlobalHeader";
 import Footer from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -142,13 +142,13 @@ const CategoryProductsPage = () => {
         </div>
 
         {/* Compact Filters Bar */}
-        <div className="bg-white rounded-lg shadow-sm p-3 mb-6">
+        <div className="bg-white rounded-lg shadow-xs p-3 mb-6">
           <div className="flex flex-wrap items-center gap-2">
             {/* Sort Dropdown */}
             <select 
               value={filters.sortBy} 
               onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as FilterOptions["sortBy"] })}
-              className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             >
               <option value="newest">Más Nuevo</option>
               <option value="price_asc">Precio: Menor a Mayor</option>
@@ -181,7 +181,7 @@ const CategoryProductsPage = () => {
               <select 
                 value={selectedSubcategory ?? ""} 
                 onChange={(e) => { setSelectedSubcategory(e.target.value || null); setCurrentPage(1); }}
-                className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Todas las subcategorías</option>
                 {subcategories.map((s: any) => (

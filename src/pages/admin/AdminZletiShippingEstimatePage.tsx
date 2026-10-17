@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from '@/lib/router-compat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Calculator, ChevronDown, ChevronUp, Copy, Plus, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';

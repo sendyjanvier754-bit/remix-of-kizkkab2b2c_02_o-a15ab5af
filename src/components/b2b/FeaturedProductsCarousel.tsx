@@ -4,7 +4,7 @@ import Autoplay from 'embla-carousel-autoplay';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslatedList } from '@/hooks/useTranslatedContent';
 
@@ -41,7 +41,7 @@ const FeaturedProductsCarousel = ({
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex gap-4">
               {products.map(product => <div className="flex-[0_0_28%] min-w-[100px] max-w-[120px] cursor-pointer" key={product.id} onClick={() => navigate(`/producto/${product.sku}`)}>
-                  <Card className="h-full border-none shadow-sm hover:shadow-md transition-shadow bg-white">
+                  <Card className="h-full border-none shadow-xs hover:shadow-md transition-shadow bg-white">
                     <CardContent className={isMobile ? "p-2" : "p-2"}>
                       <div className="relative aspect-square mb-2 rounded-md overflow-hidden bg-gray-100">
                         <img src={product.imagen_principal} alt={getTranslated(product).name || product.nombre} className="w-full h-full object-cover" loading="lazy" />

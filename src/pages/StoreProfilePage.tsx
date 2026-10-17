@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "@/lib/router-compat";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -607,7 +607,7 @@ const StoreProfilePage = () => {
 
           {/* Search & Filter */}
           <div className="mb-6">
-            <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm overflow-hidden">
+            <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-xs overflow-hidden">
               {/* Search icon */}
               <Search className="w-4 h-4 text-gray-400 ml-3 flex-shrink-0" />
 
@@ -617,7 +617,7 @@ const StoreProfilePage = () => {
                 placeholder="Buscar en esta tienda..."
                 value={searchQuery.trim()}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 min-w-0 text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400 px-2 py-2.5"
+                className="flex-1 min-w-0 text-sm bg-transparent outline-hidden text-gray-700 placeholder-gray-400 px-2 py-2.5"
               />
 
               {/* Category Filter — compact inside the pill, hidden if no categories */}
@@ -627,7 +627,7 @@ const StoreProfilePage = () => {
                   <select
                     value={selectedCategory || ""}
                     onChange={(e) => setSelectedCategory(e.target.value || null)}
-                    className="text-xs text-gray-600 bg-transparent outline-none cursor-pointer pl-2 pr-6 py-2.5 appearance-none max-w-[110px] truncate"
+                    className="text-xs text-gray-600 bg-transparent outline-hidden cursor-pointer pl-2 pr-6 py-2.5 appearance-none max-w-[110px] truncate"
                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}
                   >
                     <option value="">Todas</option>
@@ -685,7 +685,7 @@ const StoreProfilePage = () => {
         </div>
 
         {/* Store Footer / Social Links */}
-        <div className="bg-white border-t border-gray-200 py-12 mt-12 rounded-lg shadow-sm">
+        <div className="bg-white border-t border-gray-200 py-12 mt-12 rounded-lg shadow-xs">
             <div className="container mx-auto px-4 text-center">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">Sigue a {store.name}</h3>
                 <div className="flex justify-center gap-8 mb-8">

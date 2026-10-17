@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Lock, ArrowRight, ChevronDown, ChevronUp, Upload } from 'lucide-react';

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import VariantSelector from './VariantSelector';
 import useVariantDrawerStore from '@/stores/useVariantDrawerStore';

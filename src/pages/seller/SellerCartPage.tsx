@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { ShoppingCart, Trash2, Package, AlertCircle, MessageCircle, X, Banknote, Wallet, DollarSign, AlertTriangle, Info, CheckSquare, Square, TrendingUp, Loader2, ShoppingBag, Truck, Clock, Share2, Copy, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useB2BCartProductTotals } from "@/hooks/useB2BCartProductTotals";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -932,7 +932,7 @@ const SellerCartPage = () => {
             </div>
           ) : !isMobile ? (
             // PC LAYOUT - Two columns inside a shared container
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mt-1">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-xs mt-1">
               <div className="pt-6 px-6 pb-6">
                 <div className="grid grid-cols-3 gap-6">
                   {/* Left Column - Items (2/3) */}

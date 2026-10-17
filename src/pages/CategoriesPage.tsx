@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { usePublicCategories, Category } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -159,7 +159,7 @@ const CategoriesPage = () => {
           <h1 className="text-2xl font-bold text-foreground">{t("categoriesNav.explore")}</h1>
           <div className="w-80">{searchBox}</div>
         </div>
-        <div className="flex gap-6 bg-card rounded-2xl shadow-sm overflow-hidden min-h-[560px]">
+        <div className="flex gap-6 bg-card rounded-2xl shadow-xs overflow-hidden min-h-[560px]">
           {q ? (
             <div className="flex-1 p-6">{searchResults}</div>
           ) : (

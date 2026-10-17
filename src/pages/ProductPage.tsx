@@ -2,7 +2,7 @@
 import { notifyCartAdded } from "@/lib/cartFeedback";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams, useLocation } from "@/lib/router-compat";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -1006,7 +1006,7 @@ const ProductPage = () => {
               type="text"
               placeholder={product?.nombre || "Buscar..."}
               defaultValue={product?.nombre || ""}
-              className="flex-1 bg-transparent text-sm text-white placeholder-white/60 outline-none"
+              className="flex-1 bg-transparent text-sm text-white placeholder-white/60 outline-hidden"
               readOnly />
             
             </div>
@@ -1028,12 +1028,12 @@ const ProductPage = () => {
           </div>
 
           {/* Sticky Tabs */}
-          <div role="tablist" aria-label="Product sections mobile" className="bg-white border-b py-2 shadow-sm animate-fade-in px-4 flex gap-1 flex-wrap justify-center">
+          <div role="tablist" aria-label="Product sections mobile" className="bg-white border-b py-2 shadow-xs animate-fade-in px-4 flex gap-1 flex-wrap justify-center">
             <div className="w-auto rounded-md border border-[#071d7f] bg-white px-2 py-1 flex gap-1 flex-nowrap items-center justify-start">
               <button id="tab-desc-mobile" role="tab" aria-selected={activeTab === 'desc'} aria-controls="section-desc" tabIndex={activeTab === 'desc' ? 0 : -1} onClick={() => {
               setActiveTab('desc');
               scrollToSection(descRef);
-            }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'desc' ? 'bg-[#071d7f] text-white rounded-full shadow-sm' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
+            }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'desc' ? 'bg-[#071d7f] text-white rounded-full shadow-xs' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
                 {t('common.description')}
               </button>
 
@@ -1041,14 +1041,14 @@ const ProductPage = () => {
               setActiveTab('reviews');
               setMobileReviewsOpen(true);
               scrollToSection(reviewsRef);
-            }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'reviews' ? 'bg-[#071d7f] text-white rounded-full shadow-sm' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
+            }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'reviews' ? 'bg-[#071d7f] text-white rounded-full shadow-xs' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
                 {t('productPage.productReviews')}
               </button>
 
               <button id="tab-recs-mobile" role="tab" aria-selected={activeTab === 'recs'} aria-controls="section-recs" tabIndex={activeTab === 'recs' ? 0 : -1} onClick={() => {
               setActiveTab('recs');
               scrollToSection(recsRef);
-            }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'recs' ? 'bg-[#071d7f] text-white rounded-full shadow-sm' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
+            }} onKeyDown={handleTabKeyDown} className={`px-2 py-0.5 text-xs font-semibold ${activeTab === 'recs' ? 'bg-[#071d7f] text-white rounded-full shadow-xs' : 'bg-white border border-blue-100 text-[#071d7f] rounded-md'}`}>
                 {t('products.seeMore')}
               </button>
             </div>
@@ -1077,7 +1077,7 @@ const ProductPage = () => {
             <div
               ref={galleryScrollRef}
               onClick={() => !isMobile && setZoomOpen(true)}
-              className={`relative bg-white overflow-hidden shadow-sm border-gray-100 cursor-zoom-in ${isMobile ? 'w-full aspect-[4/5] rounded-none border-y' : 'rounded-2xl aspect-square border'}`}
+              className={`relative bg-white overflow-hidden shadow-xs border-gray-100 cursor-zoom-in ${isMobile ? 'w-full aspect-[4/5] rounded-none border-y' : 'rounded-2xl aspect-square border'}`}
               style={{ touchAction: 'pan-y' }}
               onMouseDown={handleGalleryMouseDown}
               onMouseMove={handleGalleryMouseMove}
@@ -1155,7 +1155,7 @@ const ProductPage = () => {
               
               <button
                 onClick={() => toggleFavorite()}
-                className="absolute top-4 right-4 bg-white/80 hover:bg-white rounded-full p-2 shadow-sm transition">
+                className="absolute top-4 right-4 bg-white/80 hover:bg-white rounded-full p-2 shadow-xs transition">
                 
                 <Heart
                   className={`w-5 h-5 transition-colors ${
@@ -1192,7 +1192,7 @@ const ProductPage = () => {
                   </Badge> : <Badge className="rounded-full bg-price text-price-foreground hover:bg-price border-0 font-bold">
                     {t('products.new')}
                   </Badge>}
-                {product.store && <Link to={`/tienda/${product.store.slug || product.store.id}`} className="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border border-border bg-card text-xs font-semibold text-foreground shadow-sm hover:border-primary/40 transition-colors">
+                {product.store && <Link to={`/tienda/${product.store.slug || product.store.id}`} className="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border border-border bg-card text-xs font-semibold text-foreground shadow-xs hover:border-primary/40 transition-colors">
                     <span className="flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
                       <StoreIcon className="w-3 h-3" />
                     </span>
@@ -1257,20 +1257,20 @@ const ProductPage = () => {
                       </span>
                       {hasPromo && originalPriceNum != null && promoPriceNum != null && <div className="flex items-center gap-1.5 mb-1">
                           <span className="text-sm text-muted-foreground line-through">${originalPriceNum.toFixed(2)}</span>
-                          <span className="inline-flex items-center rounded-full bg-price px-2 py-0.5 text-xs font-bold text-price-foreground shadow-sm animate-pulse">
+                          <span className="inline-flex items-center rounded-full bg-price px-2 py-0.5 text-xs font-bold text-price-foreground shadow-xs animate-pulse">
                             -{Math.round((originalPriceNum - promoPriceNum) / originalPriceNum * 100)}%
                           </span>
                         </div>}
                     </div>;
                 })()}
-                {isB2BUser && <span className="rounded-full bg-gradient-to-r from-primary to-primary/80 px-3 py-1 text-[11px] font-bold tracking-wide text-primary-foreground shadow-sm">
+                {isB2BUser && <span className="rounded-full bg-gradient-to-r from-primary to-primary/80 px-3 py-1 text-[11px] font-bold tracking-wide text-primary-foreground shadow-xs">
                     B2B
                   </span>}
               </div>
 
               {/* B2B margin card */}
               {isB2BUser && businessSummary &&
-              <div className="mt-2 rounded-lg border border-profit-border bg-card p-2 shadow-sm lg:mt-3 lg:bg-profit-soft lg:p-3 lg:shadow-none">
+              <div className="mt-2 rounded-lg border border-profit-border bg-card p-2 shadow-xs lg:mt-3 lg:bg-profit-soft lg:p-3 lg:shadow-none">
                   <div className="mb-1.5 flex items-center gap-1.5 lg:mb-2.5">
                     <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-profit-soft lg:size-auto lg:bg-transparent">
                       <TrendingUp className="size-4 text-profit" />
@@ -1336,7 +1336,7 @@ const ProductPage = () => {
                 {/* Open VariantDrawer for both mobile and desktop */}
                 <div className="py-1">
                   <div className="flex items-center gap-2.5">
-                    <button onClick={() => toggleFavorite()} aria-label="Favorite" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-sm hover:border-price/40 transition-all duration-300 active:scale-90">
+                    <button onClick={() => toggleFavorite()} aria-label="Favorite" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-xs hover:border-price/40 transition-all duration-300 active:scale-90">
                       <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite() ? 'fill-price text-price animate-heart-shake' : 'text-muted-foreground'}`} />
                     </button>
                     <button
@@ -1395,10 +1395,10 @@ const ProductPage = () => {
             <>
               {/* Sección del Vendedor - Desktop (visible siempre, encima de los accordions) */}
               {realStore &&
-              <div className="bg-white rounded-xl p-5 mt-6 mb-4 border border-gray-200 shadow-sm">
+              <div className="bg-white rounded-xl p-5 mt-6 mb-4 border border-gray-200 shadow-xs">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('otherSellers.soldBy')}</p>
                   <div className="flex items-center gap-4">
-                    <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center hover:opacity-90 transition">
+                    <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 shadow-xs bg-gray-50 flex items-center justify-center hover:opacity-90 transition">
                       {realStore.logo ?
                     <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" /> :
                     <span className="text-lg font-bold text-[#071d7f]">{realStore.name.substring(0, 2).toUpperCase()}</span>}
@@ -1498,7 +1498,7 @@ const ProductPage = () => {
               <div className="bg-card rounded-xl p-2 mt-1 border border-border">
                     <h2 className="text-xs font-bold text-muted-foreground mb-1.5">{t('otherSellers.soldBy')}</h2>
                     <div className="flex items-center gap-3">
-                      <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
+                      <button type="button" onClick={() => navigate(`/tienda/${realStore.slug || realStore.id}`)} className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-gray-100 shadow-xs bg-white flex items-center justify-center">
                         {realStore.logo ? <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" /> : <span className="text-base font-bold text-[#071d7f]">{realStore.name.substring(0, 2).toUpperCase()}</span>}
                       </button>
                       <div className="flex-1 min-w-0">

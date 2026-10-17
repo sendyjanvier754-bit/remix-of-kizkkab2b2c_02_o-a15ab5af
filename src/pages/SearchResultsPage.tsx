@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams, Link } from "@/lib/router-compat";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -144,7 +144,7 @@ const SearchResultsPage = () => {
         </div>
 
         {imageState.imageUrl && (
-          <div className="mb-8 flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <div className="mb-8 flex items-center gap-4 p-4 bg-white rounded-lg shadow-xs border border-gray-100">
             <div className="w-20 h-20 rounded overflow-hidden border border-gray-200 bg-gray-50">
               <img src={imageState.imageUrl} alt="Búsqueda" className="w-full h-full object-contain" />
             </div>

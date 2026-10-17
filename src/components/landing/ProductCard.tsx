@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Heart, Store, TrendingUp, ShoppingCart, MessageCircle, ShieldCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
@@ -183,7 +183,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
 
           {/* B2B profit - revealed only on hover/tap */}
           {isB2BUser && profit > 0 && (
-            <Badge className="absolute bottom-2 left-2 bg-green-600 hover:bg-green-700 text-white gap-1 z-10 shadow-sm border-0 transition-all duration-200 lg:opacity-0 lg:translate-y-1 lg:group-hover:opacity-100 lg:group-hover:translate-y-0">
+            <Badge className="absolute bottom-2 left-2 bg-green-600 hover:bg-green-700 text-white gap-1 z-10 shadow-xs border-0 transition-all duration-200 lg:opacity-0 lg:translate-y-1 lg:group-hover:opacity-100 lg:group-hover:translate-y-0">
               <TrendingUp className="h-3 w-3" />
               {t('catalogExtra.productCard.gain')}: ${profit.toFixed(2)}
             </Badge>
@@ -292,7 +292,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
                 storeWhatsapp: product.storeWhatsapp,
               });
             }}
-            className="h-8 w-8 shrink-0 rounded-lg transition shadow-sm flex items-center justify-center bg-green-500 hover:bg-green-600 text-white"
+            className="h-8 w-8 shrink-0 rounded-lg transition shadow-xs flex items-center justify-center bg-green-500 hover:bg-green-600 text-white"
             title={t('whatsappShare.button')}
             aria-label={t('whatsappShare.button')}
           >
@@ -302,7 +302,7 @@ const ProductCard = ({ product, b2bData }: ProductCardProps) => {
           {/* Cart Button */}
           <button 
             onClick={handleAddToCart}
-            className={`flex-1 h-8 px-2.5 rounded-lg text-xs font-medium transition shadow-sm flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-white`}
+            className={`flex-1 h-8 px-2.5 rounded-lg text-xs font-medium transition shadow-xs flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-white`}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
             {isB2BUser ? "B2B" : t('catalogExtra.productCard.cart')}

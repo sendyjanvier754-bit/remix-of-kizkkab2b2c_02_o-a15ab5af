@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "@/lib/router-compat";
 import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, User, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/useCategories";
@@ -162,7 +162,7 @@ const SellerMobileHeader = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
-              className="flex-1 bg-transparent text-sm text-gray-700 px-3 py-2 outline-none min-w-0"
+              className="flex-1 bg-transparent text-sm text-gray-700 px-3 py-2 outline-hidden min-w-0"
             />
             {searchQuery && (
               <button type="button" onClick={clearSearch} className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0">

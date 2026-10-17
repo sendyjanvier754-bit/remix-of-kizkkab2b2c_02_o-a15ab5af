@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -739,7 +739,7 @@ export default function AdminZletiLogisticsPage() {
                               key={`${product.id}-variant-${variant.id || index}`}
                               src={variantImage}
                               alt={variant.label || product.nombre}
-                              className="h-8 w-8 rounded-md border border-slate-200 bg-muted object-cover shadow-sm"
+                              className="h-8 w-8 rounded-md border border-slate-200 bg-muted object-cover shadow-xs"
                               title={variant.label || variant.sku}
                             />
                           );
@@ -795,7 +795,7 @@ export default function AdminZletiLogisticsPage() {
               ) : (
                 <div className="space-y-3">
                   {cart.items.map(item => (
-                    <div key={item.id} className="grid gap-4 rounded-xl border bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:grid-cols-[auto_minmax(0,1fr)_120px_110px_auto] sm:items-center sm:p-4">
+                    <div key={item.id} className="grid gap-4 rounded-xl border bg-white p-3 shadow-xs transition-shadow hover:shadow-md sm:grid-cols-[auto_minmax(0,1fr)_120px_110px_auto] sm:items-center sm:p-4">
                       <div className="h-16 w-16 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200">
                         <img src={item.imagen || '/placeholder.svg'} alt={item.nombre} className="h-full w-full object-cover" />
                       </div>

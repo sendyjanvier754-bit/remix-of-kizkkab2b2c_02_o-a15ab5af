@@ -138,7 +138,7 @@ export const PaymentMethodsDisplay = ({
   }
 
   return (
-    <Card className="shadow-sm border-gray-200">
+    <Card className="shadow-xs border-gray-200">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
