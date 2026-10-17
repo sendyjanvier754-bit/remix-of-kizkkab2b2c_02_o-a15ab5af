@@ -149,7 +149,7 @@ export const MarketSelector = ({
                   aria-label={isSelected ? `Quitar ${market.name}` : `Agregar ${market.name}`}
                   className={cn(
                     "h-4 w-4 shrink-0 rounded-sm border border-input bg-background",
-                    "text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    "text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     "pointer-events-none",
                   )}
                 />

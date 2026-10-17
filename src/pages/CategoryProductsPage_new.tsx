@@ -148,7 +148,7 @@ const CategoryProductsPage = () => {
             <select 
               value={filters.sortBy} 
               onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as FilterOptions["sortBy"] })}
-              className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             >
               <option value="newest">Más Nuevo</option>
               <option value="price_asc">Precio: Menor a Mayor</option>
@@ -181,7 +181,7 @@ const CategoryProductsPage = () => {
               <select 
                 value={selectedSubcategory ?? ""} 
                 onChange={(e) => { setSelectedSubcategory(e.target.value || null); setCurrentPage(1); }}
-                className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Todas las subcategorías</option>
                 {subcategories.map((s: any) => (

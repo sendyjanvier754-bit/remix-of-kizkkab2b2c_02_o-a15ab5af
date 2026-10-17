@@ -538,7 +538,7 @@ const ProductPage = () => {
                   type="number"
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-16 text-center border-none outline-none"
+                  className="w-16 text-center border-none outline-hidden"
                 />
                 <button
                   onClick={() => setQuantity(quantity + 1)}
@@ -782,7 +782,7 @@ const ProductPage = () => {
                 placeholder="Título (opcional)"
                 value={reviewTitle}
                 onChange={e => setReviewTitle(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               />
               <Textarea
                 placeholder="Cuéntanos tu experiencia con este producto..."

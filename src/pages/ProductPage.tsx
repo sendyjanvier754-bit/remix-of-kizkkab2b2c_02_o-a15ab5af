@@ -1006,7 +1006,7 @@ const ProductPage = () => {
               type="text"
               placeholder={product?.nombre || "Buscar..."}
               defaultValue={product?.nombre || ""}
-              className="flex-1 bg-transparent text-sm text-white placeholder-white/60 outline-none"
+              className="flex-1 bg-transparent text-sm text-white placeholder-white/60 outline-hidden"
               readOnly />
             
             </div>
