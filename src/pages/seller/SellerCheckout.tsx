@@ -965,9 +965,9 @@ const SellerCheckout = () => {
       if (order?.id) {
         fetchOrderEmailData(order.id, 'b2b').then(emailData => {
           if (!emailData) return;
-          sendOrderConfirmationEmail(emailData);
-          sendPaymentDetailsEmail(emailData);
-          sendSellerNewOrderEmail(emailData);
+          sendOrderConfirmationEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined });
+          sendPaymentDetailsEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined });
+          sendSellerNewOrderEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined });
         });
       }
       

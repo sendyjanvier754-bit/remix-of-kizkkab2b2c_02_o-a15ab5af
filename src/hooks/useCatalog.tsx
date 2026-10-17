@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { syncBatchEntityTranslations, syncEntityTranslations } from '@/lib/translationSync';
+import type { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { useTranslation } from 'react-i18next';
 
 export interface Product {
@@ -155,7 +156,7 @@ export const useCatalog = () => {
 
         const activeProducts = products?.filter(p => p.is_active) || [];
         const totalStock = activeProducts.reduce((sum, p) => sum + (p.stock_fisico || 0), 0);
-        const lowMoqAlerts = activeProducts.filter(p => p.stock_fisico < p.moq).length;
+        const lowMoqAlerts = activeProducts.filter(p => (p.stock_fisico ?? 0) < (p.moq ?? 0)).length;
         const outOfStock = activeProducts.filter(p => p.stock_status === 'out_of_stock').length;
 
         return {
@@ -229,13 +230,13 @@ export const useCatalog = () => {
 
       // Insert history if any changes
       if (historyEntries.length > 0) {
-        await supabase.from('product_price_history').insert(historyEntries);
+        await supabase.from('product_price_history').insert(historyEntries as unknown as TablesInsert<"product_price_history">[]);
       }
 
       // Update product
       const { data, error } = await supabase
         .from('products')
-        .update({ ...updates, dimensiones_cm: updates.dimensiones_cm as any })
+        .update({ ...updates, dimensiones_cm: updates.dimensiones_cm } as unknown as TablesUpdate<"products">)
         .eq('id', id)
         .select()
         .single();
@@ -265,7 +266,7 @@ export const useCatalog = () => {
     mutationFn: async (products: Array<{ sku_interno: string; nombre: string; [key: string]: unknown }>) => {
       const { data, error } = await supabase
         .from('products')
-        .insert(products)
+        .insert(products as TablesInsert<"products">[])
         .select();
       if (error) throw error;
 

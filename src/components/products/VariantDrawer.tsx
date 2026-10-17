@@ -333,7 +333,7 @@ const VariantDrawer: React.FC = () => {
             priceB2B: matchedVariant?.price ?? product.costB2B ?? product.price ?? 0,
             quantity: qty,
             image: variantImage || matchedVariant?.images?.[0] || product.images?.[0] || undefined,
-            variant: { variantId: sel.variantId, color, size, variantAttributes: attrs },
+            variant: { variantId: sel.variantId, color: color ?? undefined, size: size ?? undefined, variantAttributes: attrs },
           };
           if (isZletiManualPO) {
             window.dispatchEvent(new CustomEvent(ZLETI_MANUAL_CART_EVENT, {
@@ -365,8 +365,8 @@ const VariantDrawer: React.FC = () => {
             sellerCatalogId: product.sellerCatalogId || null,
             variant: {
               variantId: sel.variantId,
-              color,
-              size,
+              color: color ?? undefined,
+              size: size ?? undefined,
               variantAttributes: attrs,
             },
           });
@@ -633,7 +633,7 @@ const VariantDrawer: React.FC = () => {
               investment={businessSummary.investment}
               suggestedPricePerUnit={businessSummary.suggestedPvpPerUnit}
               quantity={businessSummary.quantity}
-              businessPanelData={businessPanelData ?? undefined}
+              businessPanelData={businessPanelData ? { ...businessPanelData, product_id: businessPanelData.product_id ?? undefined } : undefined}
             />
           )}
         </div>

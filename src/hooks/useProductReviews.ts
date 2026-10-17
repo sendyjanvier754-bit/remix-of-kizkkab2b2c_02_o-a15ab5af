@@ -120,7 +120,7 @@ export const useAddReview = () => {
         .insert({
           product_id: review.product_id,
           user_id: user.id,
-          rating: review.rating || null,
+          rating: review.rating,
           title: review.title || null,
           comment: review.comment || null,
           is_anonymous: review.is_anonymous || false,

@@ -64,7 +64,7 @@ export function CheckoutPage() {
               {checkout.checkoutItems.map((item) => (
                 <CheckoutItemRow
                   key={item.product.product_id}
-                  item={item}
+                  item={item as unknown as CheckoutLineItem}
                   onUpdateQuantity={(qty) =>
                     checkout.updateQuantity(item.product.product_id, qty)
                   }

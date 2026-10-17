@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { TablesInsert } from '@/integrations/supabase/types';
 import { supabase } from "@/integrations/supabase/client";
 import { generateUniqueStoreSlug } from '@/utils/storeSlugGenerator';
 import { toast } from "sonner";
@@ -121,7 +122,7 @@ export const useAdminAccounts = () => {
             email: userEmail || '',
             name: userName || 'Vendedor',
             is_verified: false,
-          });
+          } as unknown as TablesInsert<"sellers">);
         }
 
         // Create onboarding progress
