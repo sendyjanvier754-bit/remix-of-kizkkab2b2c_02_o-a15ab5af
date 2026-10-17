@@ -40,7 +40,7 @@ export function UpgradeToGrossisteModal({ open, onOpenChange }: Props) {
     try {
       const { error } = await supabase.rpc('upgrade_to_grossiste', {
         p_business_name: businessName.trim(),
-        p_description: description.trim() || null,
+        p_description: (description.trim() || null) as unknown as string,
       });
 
       if (error) throw error;

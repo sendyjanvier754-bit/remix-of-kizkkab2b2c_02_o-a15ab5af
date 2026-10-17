@@ -781,7 +781,7 @@ const MyPurchasesPage = () => {
         store_logo: o.store?.logo_url,
         store_id: o.store_id,
         payment_reference: o.payment_reference,
-        tracking_number: o.tracking_number,
+        tracking_number: o.tracking_number ?? undefined,
         ...(o.metadata || {}),
       },
       created_at: o.created_at,

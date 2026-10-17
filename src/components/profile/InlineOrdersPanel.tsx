@@ -762,7 +762,7 @@ export const InlineOrdersPanel = () => {
         order_type: 'b2c',
         store_name: o.store?.name,
         payment_reference: o.payment_reference,
-        tracking_number: o.tracking_number,
+        tracking_number: o.tracking_number ?? undefined,
         ...(o.metadata || {}),
       },
       created_at: o.created_at,

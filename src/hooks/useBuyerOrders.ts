@@ -270,7 +270,7 @@ export const useCancelBuyerOrder = () => {
       if (fetchError) throw fetchError;
 
       // Only allow cancellation for certain statuses
-      if (!['placed', 'paid'].includes(currentOrder.status)) {
+      if (!['placed', 'paid'].includes(currentOrder.status ?? '')) {
         throw new Error('Este pedido no puede ser cancelado en su estado actual');
       }
 
@@ -386,7 +386,7 @@ export const useCancelBuyerOrder = () => {
       });
       // Send cancellation email async
       fetchOrderEmailData(variables.orderId, 'b2b').then(emailData => {
-        if (emailData) sendOrderCancelledEmail({ ...emailData, reason: variables.reason, cancelledBy: 'buyer' });
+        if (emailData) sendOrderCancelledEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined, reason: variables.reason, cancelledBy: 'buyer' });
       });
     },
     onError: (error: Error) => {

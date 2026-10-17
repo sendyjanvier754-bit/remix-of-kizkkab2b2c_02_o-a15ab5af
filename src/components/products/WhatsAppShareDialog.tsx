@@ -93,10 +93,9 @@ const WhatsAppShareDialog = () => {
   const variantText = Object.entries(selected).map(([k, v]) => `${k}: ${v}`).join(' | ');
 
   const buildMessage = () => {
-    // Image link goes first: WhatsApp builds the preview from the first URL,
-    // so the chat shows the selected variant / product photo instead of the site logo.
+    // The product link is the only URL: the server renders that page with the
+    // selected variant / product photo, so WhatsApp shows it in the preview card.
     const lines: string[] = [];
-    if (image && /^https?:\/\//.test(image)) lines.push(image, '');
     lines.push(t(`whatsappShare.greeting.${intent}`), '', `*${product.name}*`);
     if (product.sku) lines.push(`SKU: ${product.sku}`);
     if (variantText) lines.push(`${t('whatsappShare.variant')}: ${variantText}`);

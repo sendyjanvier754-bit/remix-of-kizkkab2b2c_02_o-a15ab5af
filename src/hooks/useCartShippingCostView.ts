@@ -71,7 +71,7 @@ export const useCartShippingCostView = (
       const { data, error } = await supabase
         .rpc('calculate_shipping_cost_for_selected_items', {
           p_item_ids: itemIdsArray,
-          p_shipping_type_id: shippingTypeId || null
+          p_shipping_type_id: (shippingTypeId || null) as unknown as string
         });
 
       if (error) {
