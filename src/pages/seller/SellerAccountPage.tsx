@@ -36,7 +36,7 @@ import { useBuyerB2BOrders, useCancelBuyerOrder, BuyerOrder, BuyerOrderStatus, R
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "@/lib/router-compat";
 import RecommendedProductsSection from "@/components/products/RecommendedProductsSection";
 
 const SellerAccountPage = () => {

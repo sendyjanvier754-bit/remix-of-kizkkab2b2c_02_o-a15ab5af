@@ -4,7 +4,7 @@ import Autoplay from 'embla-carousel-autoplay';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslatedList } from '@/hooks/useTranslatedContent';
 

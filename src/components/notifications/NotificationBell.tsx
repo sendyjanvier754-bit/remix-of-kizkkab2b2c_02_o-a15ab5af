@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/auth';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import { useTranslatedContent } from '@/hooks/useTranslatedContent';
 import { usePendingPaymentProofs } from '@/hooks/usePendingPaymentProofs';

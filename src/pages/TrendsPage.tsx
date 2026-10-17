@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { Filter, X } from "lucide-react";
 import { usePublicCategories } from "@/hooks/useCategories";
 import { useTrendingProducts } from "@/hooks/useTrendingProducts";

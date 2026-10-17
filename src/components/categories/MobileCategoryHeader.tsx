@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import { Mail, Camera, Search, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Category } from "@/hooks/useCategories";

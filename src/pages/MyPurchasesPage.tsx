@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { OpenChatButton } from "@/components/chat/OpenChatButton";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/hooks/useAuth";

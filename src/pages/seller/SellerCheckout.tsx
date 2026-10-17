@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { resolveAffiliateOffer, AffiliateOffer } from '@/hooks/useAffiliates';
 import { getStoredAffiliateCode } from '@/components/affiliates/AffiliateRefCapture';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from '@/lib/router-compat';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2BCartItems } from '@/hooks/useB2BCartItems';
 import { useCartSelectionStore } from '@/stores/useCartSelectionStore';

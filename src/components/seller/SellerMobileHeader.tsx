@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "@/lib/router-compat";
 import { Mail, Search, Heart, X, Loader2, Mic, MicOff, Camera, ShoppingBag, User, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/useCategories";

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "@/lib/router-compat";
 import { ShoppingCart, Home, LogOut, ShoppingBag, ChevronLeft, Package, Heart, User, Store, LayoutGrid, ClipboardList, Shield, Wallet, LayoutDashboard, Ticket, Users, Share2, BarChart3, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";

@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600',

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { ShoppingCart, Trash2, Package, AlertCircle, MessageCircle, X, Banknote, Wallet, DollarSign, AlertTriangle, Info, CheckSquare, Square, TrendingUp, Loader2, ShoppingBag, Truck, Clock, Share2, Copy, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useB2BCartProductTotals } from "@/hooks/useB2BCartProductTotals";
 import { useIsMobile } from "@/hooks/use-mobile";
