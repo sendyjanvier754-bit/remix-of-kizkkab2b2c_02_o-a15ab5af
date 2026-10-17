@@ -92,6 +92,7 @@ const GlobalMobileHeader = ({ forceShow = false }: GlobalMobileHeaderProps) => {
       return () => clearTimeout(timer);
     }
     prevCartCountRef.current = cartCount;
+    return undefined;
   }, [cartCount]);
 
   const isAdminRoute = location.pathname.startsWith('/admin');

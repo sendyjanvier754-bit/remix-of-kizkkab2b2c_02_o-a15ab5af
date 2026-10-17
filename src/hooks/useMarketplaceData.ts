@@ -320,7 +320,7 @@ export const useTopStores = (defaultLimit = 6) => {
             name: store.name,
             logo: store.logo,
             banner: store.banner,
-            slug: store.slug,
+            slug: store.slug ?? "",
             description: store.description,
             productCount: count || 0,
             salesCount: 0, // Can be updated when we have sales data

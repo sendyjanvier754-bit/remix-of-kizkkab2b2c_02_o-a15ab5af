@@ -63,6 +63,7 @@ export default function AdminEmailCampaignsPage() {
     const { error } = id ? await db.from("email_campaigns").update(row).eq("id", id) : await db.from("email_campaigns").insert(row);
     if (error) return toast.error(error.message);
     toast.success("Campaña guardada"); setEdit(null); load();
+    return undefined;
   };
 
   const act = async (c: Campaign, action: "test" | "send") => {
@@ -82,6 +83,7 @@ export default function AdminEmailCampaignsPage() {
     const { error } = await db.from("email_subscribers").upsert({ ...newSub, email: newSub.email.trim().toLowerCase(), source: "manual", status: "subscribed", unsubscribed_at: null }, { onConflict: "email" });
     if (error) return toast.error(error.message);
     setNewSub({ email: "", full_name: "", language: "es" }); load();
+    return undefined;
   };
   const importBulk = async () => {
     const rows = bulk.split(/[\n,;]+/).map((e) => e.trim().toLowerCase()).filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))

@@ -124,7 +124,7 @@ export const useB2BCartItems = () => {
 
           return {
             id: item.id,
-            productId: item.product_id,
+            productId: item.product_id ?? "",
             sku: item.sku,
             name: item.nombre,
             precioB2B: freshPrice,

@@ -30,7 +30,7 @@ export const useCoverageAlerts = () => {
           severity: 'error',
           count: marketsWithoutPayment.length,
           message: `${marketsWithoutPayment.length} mercado(s) sin métodos de pago`,
-          items: marketsWithoutPayment.map(m => ({ id: m.id, name: m.name })),
+          items: marketsWithoutPayment.map(m => ({ id: m.id ?? "", name: m.name ?? "" })),
         });
       }
 
@@ -43,7 +43,7 @@ export const useCoverageAlerts = () => {
           severity: 'warning',
           count: marketsWithoutRoute.length,
           message: `${marketsWithoutRoute.length} mercado(s) sin ruta logística`,
-          items: marketsWithoutRoute.map(m => ({ id: m.id, name: m.name })),
+          items: marketsWithoutRoute.map(m => ({ id: m.id ?? "", name: m.name ?? "" })),
         });
       }
 

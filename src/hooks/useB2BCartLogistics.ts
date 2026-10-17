@@ -140,7 +140,7 @@ export function useB2BCartLogistics(
   const itemsForLogistics = useMemo(() => 
     items.map(item => ({
       productId: item.productId,
-      variantId: item.variantId
+      variantId: item.variantId ?? undefined
     })),
     [items]
   );
@@ -235,7 +235,7 @@ export function useB2BCartLogistics(
     const hasShippingCost = itemCosts && itemCosts.length === items.length;
     
     for (const item of items) {
-      const product = products.find(p => p.id === item.productId);
+      const product = products.find((p: { id: string; precio_b2b?: number | null }) => p.id === item.productId);
       const variant = item.variantId ? variants.find((v: any) => v.id === item.variantId) : null;
       
       // PRIORITY: variant price > product price > item.precioB2B
@@ -304,8 +304,8 @@ export function useB2BCartLogistics(
       
       // Use ETAs from selected tier if available, otherwise defaults
       if (selectedTier) {
-        maxDeliveryMin = selectedTier.tramo_a_eta_min + selectedTier.tramo_b_eta_min;
-        maxDeliveryMax = selectedTier.tramo_a_eta_max + selectedTier.tramo_b_eta_max;
+        maxDeliveryMin = (selectedTier.tramo_a_eta_min ?? 0) + (selectedTier.tramo_b_eta_min ?? 0);
+        maxDeliveryMax = (selectedTier.tramo_a_eta_max ?? 0) + (selectedTier.tramo_b_eta_max ?? 0);
         routeName = selectedTier.custom_tier_name || selectedTier.tier_name || 'Envío Estándar';
       } else {
         maxDeliveryMin = 7;

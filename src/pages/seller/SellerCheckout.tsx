@@ -896,7 +896,7 @@ const SellerCheckout = () => {
           notes: selectedAddress.notes || undefined,
         } : undefined,
         deliveryMethod,
-        deliveryMethod === 'pickup' ? selectedPickupPoint : undefined,
+        deliveryMethod === 'pickup' ? selectedPickupPoint ?? undefined : undefined,
         // Shipping snapshot (TICKET #15)
         {
           shippingTierId: selectedShippingTypeId,
@@ -938,7 +938,7 @@ const SellerCheckout = () => {
               user_id: user.id,
               movement_type: 'purchase',
               amount: creditAmount,
-              balance_before: currentCredit.balance_debt,
+              balance_before: currentCredit.balance_debt ?? 0,
               balance_after: newDebt,
               reference_id: order.id,
               description: `Crédito aplicado - Pedido ${order.id.slice(0, 8).toUpperCase()} (Pago combinado)`,
@@ -2041,7 +2041,7 @@ const SellerCheckout = () => {
                         
                         if (isEditing) {
                           const updated = await updateAddress.mutateAsync({ 
-                            id: editingAddressId, 
+                            id: editingAddressId as string, 
                             ...newAddress,
                             department_id: selectedDept || null,
                             commune_id: selectedComm || null,

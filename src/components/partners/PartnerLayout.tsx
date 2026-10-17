@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { NavLink, useNavigate } from "@/lib/router-compat";
+import { NavLink, useNavigate, useLocation } from "@/lib/router-compat";
 import { Truck, MapPin, DollarSign, LogOut, Package, Clock, Megaphone, ReceiptText, BarChart3, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
@@ -31,6 +31,7 @@ export default function PartnerLayout({ children, variant, title }: PartnerLayou
   const canSeePOs = roles?.some((item) => item === UserRole.ADMIN || item === UserRole.ZLETI_ADMIN);
   const posNav: NavItem = { to: "/socio/pos", label: "Mis PO", icon: FileText };
   const navigate = useNavigate();
+  const location = useLocation();
   const affiliateNav: NavItem = {
     to: "/socio/afiliado",
     label: role === UserRole.ADMIN ? "Gestionar afiliados" : "Afiliados",
@@ -78,10 +79,10 @@ export default function PartnerLayout({ children, variant, title }: PartnerLayou
               key={item.to}
               to={item.to}
               end={item.end}
-              className={({ isActive }) =>
+              className={
                 cn(
                   "flex items-center gap-1.5 px-3 py-2 text-sm border-b-2 whitespace-nowrap transition-colors",
-                  isActive
+                  (item.end ? location.pathname === item.to : location.pathname.startsWith(item.to))
                     ? "border-primary text-primary font-medium"
                     : "border-transparent text-muted-foreground hover:text-foreground",
                 )

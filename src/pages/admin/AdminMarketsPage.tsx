@@ -134,7 +134,7 @@ export default function AdminMarketsPage() {
       const routeMap: Record<string, string[]> = {};
       for (const r of assignedRoutes ?? []) {
         const cid = r.destination_country_id;
-        routeMap[cid] = [...(routeMap[cid] ?? []), r.id];
+        routeMap[cid ?? "null"] = [...(routeMap[cid ?? "null"] ?? []), r.id];
       }
       setSelectedRouteIds(routeMap);
     } else {

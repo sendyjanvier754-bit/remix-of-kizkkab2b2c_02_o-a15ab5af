@@ -21,7 +21,7 @@ export default function AgentUserSearch({ onSelectUser, isLoading }: AgentUserSe
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<UserResult | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-search on typing (debounced)

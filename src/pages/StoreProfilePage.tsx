@@ -666,7 +666,7 @@ const StoreProfilePage = () => {
                 sku: product.sku,
                 storeId: storeData?.id,
                 storeName: storeData?.name,
-                storeWhatsapp: storeData?.whatsapp,
+                storeWhatsapp: storeData?.whatsapp ?? undefined,
                 isSellerVerified: storeData?.is_active || false,
                 source_product_id: product.source_product_id,
                 badge: availabilityBadge,

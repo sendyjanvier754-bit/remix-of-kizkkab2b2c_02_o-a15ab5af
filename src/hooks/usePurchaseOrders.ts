@@ -334,7 +334,7 @@ export const usePurchaseOrders = () => {
         .from('siver_match_profiles')
         .select('user_id, display_name')
         .in('user_id', gestorIds);
-      gestors?.forEach(g => { gestorNames[g.user_id] = g.display_name; });
+      gestors?.forEach(g => { gestorNames[g.user_id] = g.display_name ?? ""; });
     }
     
     if (investorIds.length > 0) {
@@ -342,7 +342,7 @@ export const usePurchaseOrders = () => {
         .from('siver_match_profiles')
         .select('user_id, display_name')
         .in('user_id', investorIds);
-      investors?.forEach(i => { investorNames[i.user_id] = i.display_name; });
+      investors?.forEach(i => { investorNames[i.user_id] = i.display_name ?? ""; });
     }
 
     // Group items by customer

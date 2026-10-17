@@ -32,7 +32,7 @@ export function useSellerStatuses(storeId: string | null) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setStatuses(data || []);
+      setStatuses((data || []) as SellerStatus[]);
     } catch (error) {
       console.error('Error fetching statuses:', error);
     } finally {

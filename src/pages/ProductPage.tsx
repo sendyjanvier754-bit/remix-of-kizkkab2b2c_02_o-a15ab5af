@@ -360,7 +360,7 @@ const ProductPage = () => {
   }, [isMobile]);
 
   // Scroll to section
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
     if (ref.current) {
       const offset = isMobile ? 72 : 64;
       const top = ref.current.getBoundingClientRect().top + window.scrollY - offset;
