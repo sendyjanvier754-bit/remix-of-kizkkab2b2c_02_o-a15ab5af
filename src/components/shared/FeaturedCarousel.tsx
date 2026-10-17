@@ -56,7 +56,7 @@ const FeaturedCarousel = ({ products, showMoq = false }: FeaturedCarouselProps) 
                 key={product.id}
                 onClick={() => handleProductClick(product)}
               >
-                <Card className="h-full border-none shadow-sm hover:shadow-md transition-shadow bg-white">
+                <Card className="h-full border-none shadow-xs hover:shadow-md transition-shadow bg-white">
                   <CardContent className="p-2">
                     <div className="relative aspect-square mb-2 rounded-md overflow-hidden bg-gray-100">
                       <img 

@@ -250,11 +250,11 @@ const useCartAnalytics = (timeRange: TimeRange) => {
 };
 
 const StatCard = ({ icon: Icon, label, value, subValue, color, bgColor, isLoading }: any) => (
-  <div className="group relative bg-gradient-to-br from-card to-card/80 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-5 border border-border/30 hover:border-primary/20 overflow-hidden">
+  <div className="group relative bg-gradient-to-br from-card to-card/80 rounded-xl shadow-xs hover:shadow-lg transition-all duration-300 p-5 border border-border/30 hover:border-primary/20 overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     <div className="relative z-10">
       <div className="flex items-center justify-between mb-3">
-        <div className={`${bgColor} p-2.5 rounded-xl shadow-sm`}>
+        <div className={`${bgColor} p-2.5 rounded-xl shadow-xs`}>
           <Icon className={`w-5 h-5 ${color}`} />
         </div>
       </div>

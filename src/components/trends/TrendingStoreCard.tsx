@@ -108,7 +108,7 @@ const TrendingStoreCard = ({ store, onFollowChange }: TrendingStoreCardProps) =>
             </div>
             {/* Trends Badge - Orange/Purple like reference */}
             <Badge 
-              className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-purple-600 text-white text-[9px] px-1.5 py-0 font-medium border-0 shadow-sm"
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-purple-600 text-white text-[9px] px-1.5 py-0 font-medium border-0 shadow-xs"
             >
               Trends
             </Badge>

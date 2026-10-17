@@ -262,7 +262,7 @@ export function StoreEditDialog({ store }: StoreEditDialogProps) {
         {/* Preview Section */}
         <div className="bg-gray-100 rounded-lg p-4 mb-4">
           <p className="text-sm font-medium text-gray-600 mb-3">Vista Previa</p>
-          <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+          <div className="bg-white rounded-lg overflow-hidden shadow-xs">
             {/* Mini Banner Preview */}
             <div className="relative h-20 bg-gradient-to-r from-blue-900 to-blue-600">
               {banner && (

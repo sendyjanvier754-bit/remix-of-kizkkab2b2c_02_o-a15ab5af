@@ -19,7 +19,7 @@ export default function UnsubscribePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted p-6">
-      <div className="max-w-md w-full bg-card rounded-2xl shadow p-8 text-center space-y-4">
+      <div className="max-w-md w-full bg-card rounded-2xl shadow-sm p-8 text-center space-y-4">
         {state === "loading" && <Loader2 className="w-10 h-10 mx-auto animate-spin text-primary" />}
         {state === "ok" && (<>
           <CheckCircle2 className="w-12 h-12 mx-auto text-primary" />

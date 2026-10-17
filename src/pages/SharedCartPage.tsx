@@ -155,7 +155,7 @@ const SharedCartPage = () => {
       {!isMobile && <GlobalHeader />}
 
       <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl">
-        <div className="bg-card border rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-card border rounded-xl overflow-hidden shadow-xs">
           {/* Header */}
           <div className="p-4 border-b bg-muted/30">
             <div className="flex items-center gap-2 mb-1">

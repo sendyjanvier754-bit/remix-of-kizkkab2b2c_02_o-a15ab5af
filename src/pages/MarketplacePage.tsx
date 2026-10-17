@@ -148,7 +148,7 @@ const MarketplacePage = () => {
         </div>
 
         {/* Compact Filter Bar */}
-        <div className="mb-4 bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+        <div className="mb-4 bg-white border border-gray-200 rounded-lg p-3 shadow-xs">
           <div className="flex flex-col md:flex-row gap-2 items-center">
             {/* Search */}
             <div className="relative flex-1 min-w-0">

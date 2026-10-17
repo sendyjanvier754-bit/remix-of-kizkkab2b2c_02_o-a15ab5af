@@ -538,7 +538,7 @@ const ProductPage = () => {
                   type="number"
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-16 text-center border-none outline-none"
+                  className="w-16 text-center border-none outline-hidden"
                 />
                 <button
                   onClick={() => setQuantity(quantity + 1)}
@@ -643,14 +643,14 @@ const ProductPage = () => {
 
         {/* ===== SECCIÓN DEL VENDEDOR ===== */}
         {realStore && (
-          <div className="bg-white rounded-xl p-5 mb-6 border border-gray-100 shadow-sm">
+          <div className="bg-white rounded-xl p-5 mb-6 border border-gray-100 shadow-xs">
             <h2 className="text-base font-bold text-gray-800 mb-4">Vendido por</h2>
             <div className="flex items-center gap-4">
               {/* Store logo / avatar */}
               <button
                 type="button"
                 onClick={() => navigate(`/tienda/${realStore.sku || realStore.id}`)}
-                className="flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-100 shadow bg-white flex items-center justify-center hover:opacity-90 transition"
+                className="flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm bg-white flex items-center justify-center hover:opacity-90 transition"
               >
                 {realStore.logo ? (
                   <img src={realStore.logo} alt={realStore.name} className="w-full h-full object-cover" />
@@ -782,7 +782,7 @@ const ProductPage = () => {
                 placeholder="Título (opcional)"
                 value={reviewTitle}
                 onChange={e => setReviewTitle(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               />
               <Textarea
                 placeholder="Cuéntanos tu experiencia con este producto..."

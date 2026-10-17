@@ -180,7 +180,7 @@ const TrendsPage = () => {
 
       <div className={`container mx-auto px-3 py-3 md:py-6 ${isMobile ? 'pb-20' : ''} ${isSeller && !isMobile ? 'pt-4' : ''}`}>
         {/* Filters Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 bg-white p-2.5 md:p-4 rounded-lg shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 bg-white p-2.5 md:p-4 rounded-lg shadow-xs">
           {/* Desktop Filters */}
           <div className="hidden md:flex items-center gap-4 flex-1">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>

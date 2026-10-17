@@ -838,7 +838,7 @@ const CartPage = () => {
           </>
         ) : (
           // ========== LAYOUT PC (DOS COLUMNAS) ==========
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mt-1">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-xs mt-1">
             <div className="pt-6 px-6 pb-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20">
             {/* COLUMNA IZQUIERDA - Items */}
@@ -1391,7 +1391,7 @@ const CartPage = () => {
                   <img
                     src={activePreviewImage || selectedItemForVariants.image!}
                     alt={selectedItemForVariants.name}
-                    className="w-16 h-16 rounded-xl object-cover border border-border/50 shadow-sm transition-all duration-300"
+                    className="w-16 h-16 rounded-xl object-cover border border-border/50 shadow-xs transition-all duration-300"
                   />
                 ) : (
                   <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center">
@@ -1508,7 +1508,7 @@ const CartPage = () => {
                                   className={cn(
                                     "px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium min-w-[44px]",
                                     isSelected
-                                      ? "border-primary bg-primary/10 text-primary shadow-sm"
+                                      ? "border-primary bg-primary/10 text-primary shadow-xs"
                                       : "border-border bg-background hover:border-primary/60",
                                     outOfStock && "opacity-30 cursor-not-allowed line-through"
                                   )}

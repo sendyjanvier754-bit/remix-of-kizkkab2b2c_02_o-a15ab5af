@@ -80,7 +80,7 @@ export function PartnerLogoUpload({
               <button
                 type="button"
                 onClick={() => onChange('')}
-                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
+                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center shadow-xs"
                 aria-label="Quitar logo"
               >
                 <X className="w-3 h-3" />

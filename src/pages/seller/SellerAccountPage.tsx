@@ -2128,7 +2128,7 @@ const SellerAccountPage = () => {
                       <button 
                         onClick={() => setShowPaymentMethods(true)}
                         className="flex flex-col items-start p-4 bg-white rounded-xl shadow-md hover:shadow-xl border border-transparent hover:border-blue-100 transition-all duration-300 group text-left">
-                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-sm">
+                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-xs">
                           <CreditCard className="h-5 w-5" />
                         </div>
                         <h4 className="font-bold text-base text-gray-900 group-hover:text-[#071d7f] transition-colors">Métodos de Pago</h4>
@@ -2141,7 +2141,7 @@ const SellerAccountPage = () => {
                       <button 
                         onClick={() => setShowNotifications(true)}
                         className="flex flex-col items-start p-4 bg-white rounded-xl shadow-md hover:shadow-xl border border-transparent hover:border-blue-100 transition-all duration-300 group text-left">
-                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-sm">
+                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-xs">
                           <Bell className="h-5 w-5" />
                         </div>
                         <h4 className="font-bold text-base text-gray-900 group-hover:text-[#071d7f] transition-colors">Notificaciones</h4>
@@ -2154,7 +2154,7 @@ const SellerAccountPage = () => {
                       <button 
                         onClick={() => setShowChangePassword(true)}
                         className="flex flex-col items-start p-4 bg-white rounded-xl shadow-md hover:shadow-xl border border-transparent hover:border-blue-100 transition-all duration-300 group text-left">
-                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-sm">
+                        <div className="p-2 rounded-xl bg-blue-50 text-[#071d7f] group-hover:bg-[#071d7f] group-hover:text-white transition-colors mb-3 shadow-xs">
                           <Shield className="h-5 w-5" />
                         </div>
                         <h4 className="font-bold text-base text-gray-900 group-hover:text-[#071d7f] transition-colors">Seguridad</h4>

@@ -76,7 +76,7 @@ export function PurchasingAgentAssignments({ agentProfile, selectedPOId, onSelec
                       key={assignment.id}
                       className={`w-full text-left p-4 rounded-lg border transition-all ${
                         selectedPOId === assignment.po_id
-                          ? 'border-primary bg-primary/5 shadow-sm'
+                          ? 'border-primary bg-primary/5 shadow-xs'
                           : 'border-border hover:bg-muted/50'
                       }`}
                       onClick={() => onSelectPO(assignment.po_id)}

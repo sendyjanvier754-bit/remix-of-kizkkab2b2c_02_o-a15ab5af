@@ -25,7 +25,7 @@ const CartModeTabs = ({ b2cCount = 0, b2bCount = 0 }: CartModeTabsProps) => {
         onClick={() => !isB2C && navigate('/carrito')}
         className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
           isB2C
-            ? 'bg-background text-foreground shadow-sm'
+            ? 'bg-background text-foreground shadow-xs'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -43,7 +43,7 @@ const CartModeTabs = ({ b2cCount = 0, b2bCount = 0 }: CartModeTabsProps) => {
         onClick={() => !isB2B && navigate('/seller/carrito')}
         className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
           isB2B
-            ? 'bg-background text-foreground shadow-sm'
+            ? 'bg-background text-foreground shadow-xs'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >

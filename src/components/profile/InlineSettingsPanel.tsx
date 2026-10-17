@@ -151,7 +151,7 @@ export function InlineSettingsPanel() {
                   onChange={() => toast.info(t('settingsPanel.prefsSaved'))}
                 />
                 <div className="w-9 h-5 bg-muted rounded-full peer-checked:bg-primary transition-colors cursor-pointer" />
-                <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+                <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4" />
               </div>
             </label>
           ))}
