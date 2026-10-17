@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 /**
  * Hook for Purchasing Agent Portal
  * Manages agent assignments, purchases, QC, and shipments
@@ -346,7 +347,7 @@ export function usePurchasingAgent() {
       qcNotes?: string;
       rejectionReason?: string;
     }) => {
-      const updateData: Record<string, any> = {
+      const updateData: Database["public"]["Tables"]["po_purchase_items"]["Update"] = {
         qc_status: qcStatus,
         qc_reviewed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

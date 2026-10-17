@@ -166,9 +166,9 @@ export const useDeliveryValidation = () => {
         .single();
 
       return {
-        customer_qr_code: data.customer_qr_code,
-        security_pin: data.security_pin,
-        hybrid_tracking_id: tracking?.hybrid_tracking_id
+        customer_qr_code: data.customer_qr_code ?? "",
+        security_pin: data.security_pin ?? "",
+        hybrid_tracking_id: tracking?.hybrid_tracking_id ?? undefined
       };
     } catch (error: any) {
       console.error('Error getting security codes:', error);

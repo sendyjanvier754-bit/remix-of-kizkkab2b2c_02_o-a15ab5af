@@ -71,7 +71,7 @@ export const useSellerWallet = (sellerId?: string) => {
 
       if (walletError && walletError.code !== 'PGRST116') throw walletError;
       
-      setWallet(walletData);
+      setWallet(walletData as SellerWallet | null);
 
       if (walletData) {
         const { data: txData } = await supabase

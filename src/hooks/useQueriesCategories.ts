@@ -5,6 +5,7 @@ export const useCategories = () => {
   return useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
+      if (!slug) throw new Error("Category slug is required");
       const { data, error } = await supabase
         .from("categories")
         .select("*")
@@ -21,6 +22,7 @@ export const useCategoryBySlug = (slug: string | undefined) => {
   return useQuery({
     queryKey: ["category", slug],
     queryFn: async () => {
+      if (!slug) throw new Error("Category slug is required");
       const { data, error } = await supabase
         .from("categories")
         .select("*")

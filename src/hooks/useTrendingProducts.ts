@@ -39,7 +39,7 @@ export const useTrendingProducts = (daysBack: number = 7, limit: number = 20) =>
           .limit(limit);
 
         if (fallbackError) throw fallbackError;
-        return (fallbackData || []).map((p) => ({ ...p, view_count: 0 }));
+        return (fallbackData || []).map((p) => ({ ...p, view_count: 0 } as TrendingProduct));
       }
 
       const rpcData = data as unknown as TrendingRpcRow[];
@@ -54,7 +54,7 @@ export const useTrendingProducts = (daysBack: number = 7, limit: number = 20) =>
           .limit(limit);
 
         if (fallbackError) throw fallbackError;
-        return (fallbackData || []).map((p) => ({ ...p, view_count: 0 }));
+        return (fallbackData || []).map((p) => ({ ...p, view_count: 0 } as TrendingProduct));
       }
 
       return rpcData.map((item) => {

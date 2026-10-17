@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -106,7 +107,7 @@ export const useCommissionOverrides = () => {
       const { error } = await supabase
         .from('seller_commission_overrides')
         .update({
-          ...updates,
+          ...(updates as Database["public"]["Tables"]["seller_commission_overrides"]["Update"]),
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);

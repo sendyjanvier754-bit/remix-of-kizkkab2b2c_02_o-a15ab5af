@@ -70,7 +70,7 @@ export interface CartItem {
   product_id: UUID;
   quantity: number;
   product?: Product;
-  priceBreakdown?: PriceBreakdown;
+  priceBreakdown?: PriceBreakdown | null;
 }
 
 export interface POCheckoutSummary {

@@ -111,7 +111,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
     enabled: !!productId,
   });
 
-  const form = useForm<ProductFormData>({
+  const form = useForm<z.input<typeof productSchema>, unknown, ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       sku_interno: '',

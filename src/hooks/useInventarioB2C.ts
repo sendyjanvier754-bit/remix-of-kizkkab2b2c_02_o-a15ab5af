@@ -80,8 +80,8 @@ export const useInventarioB2C = (options: UseInventarioB2COptions = {}) => {
       const { data: inventarioData, error: inventarioError } = await supabase.rpc(
         'get_inventario_b2c_agrupado',
         {
-          p_user_id: null, // null = usuario actual
-          p_availability_status: options.availability_status || null,
+          p_user_id: null as unknown as string, // null = usuario actual
+          p_availability_status: (options.availability_status || null) as unknown as string,
           p_limit: options.limit || 100,
         }
       );
@@ -94,7 +94,7 @@ export const useInventarioB2C = (options: UseInventarioB2COptions = {}) => {
       // Llamar a la función get_inventario_b2c_resumen
       const { data: resumenData, error: resumenError } = await supabase.rpc(
         'get_inventario_b2c_resumen',
-        { p_user_id: null }
+        { p_user_id: null as unknown as string }
       );
 
       if (resumenError) {
@@ -128,6 +128,7 @@ export const useInventarioB2C = (options: UseInventarioB2COptions = {}) => {
       const interval = setInterval(fetchInventario, 30000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [options.autoRefresh, user?.id, fetchInventario]);
 
   // Función para refrescar manualmente
@@ -189,7 +190,7 @@ export const useInventarioB2CResumen = () => {
       try {
         const { data, error } = await supabase.rpc(
           'get_inventario_b2c_resumen',
-          { p_user_id: null }
+          { p_user_id: null as unknown as string }
         );
 
         if (error) throw error;

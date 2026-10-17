@@ -2193,7 +2193,7 @@ const SellerAccountPage = () => {
           onDelete={deleteStatus}
           isOwner={true}
           storeName={store?.name}
-          storeLogo={store?.logo}
+          storeLogo={store?.logo ?? undefined}
         />
       )}
 

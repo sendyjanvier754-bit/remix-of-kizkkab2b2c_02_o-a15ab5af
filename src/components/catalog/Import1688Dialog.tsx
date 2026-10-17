@@ -856,7 +856,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
       const entry: ApprovalEntry = {
         title: false,
         description: false,
-        ...forSku[lang],
+        ...(forSku[lang] as ApprovalEntry | undefined),
         [field]: value,
       };
       // Update trace metadata only when at least one field is approved
@@ -882,7 +882,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
     // Editing invalidates approval for that field
     setApprovals((prev) => {
       const forSku = { ...(prev[sku] ?? {}) };
-      const entry = { title: false, description: false, ...forSku[lang] };
+      const entry = { title: false, description: false, ...(forSku[lang] as ApprovalEntry | undefined) };
       entry[field === "nombre" ? "title" : "description"] = false;
       forSku[lang] = entry;
       return { ...prev, [sku]: forSku };
@@ -912,7 +912,7 @@ const Import1688Dialog = ({ open, onOpenChange, onConfirmImport }: Import1688Dia
         const s = row.sku_interno;
         if (s === sku) continue;
         const forSku = { ...(next[s] ?? {}) };
-        forSku[lang] = { title: false, ...forSku[lang], description: false };
+        forSku[lang] = { title: false, ...(forSku[lang] as ApprovalEntry | undefined), description: false };
         next[s] = forSku;
       }
       return next;

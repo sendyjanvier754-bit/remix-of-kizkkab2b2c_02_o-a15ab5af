@@ -326,7 +326,7 @@ const AdminCatalogo = () => {
                                 variant="ghost"
                                 size="sm"
                                 className="h-6 w-6 p-0"
-                                onClick={() => window.open(product.url_origen, '_blank')}
+                                onClick={() => window.open(product.url_origen ?? undefined, '_blank')}
                                 title="Ver en proveedor"
                               >
                                 <ExternalLink className="h-3 w-3 text-primary" />

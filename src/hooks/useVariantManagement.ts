@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -64,7 +65,7 @@ export const useVariantManagement = (productId: string) => {
       const { data: variant, error } = await supabase
         .from("product_variants")
         .update({
-          ...updates,
+          ...(updates as Database["public"]["Tables"]["product_variants"]["Update"]),
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)

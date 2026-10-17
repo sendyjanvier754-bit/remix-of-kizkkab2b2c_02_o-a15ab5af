@@ -6,8 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 export interface DeliveryRating {
   id: string;
   order_delivery_id: string | null;
-  order_id: string;
-  order_type: string;
+  order_id: string | null;
+  order_type: string | null;
   customer_user_id: string;
   product_rating: number | null;
   product_comment: string | null;

@@ -15,7 +15,7 @@ const TEXT: Record<string, { title: string; qty: string; keep: string; view: str
 export const CartAddedConfirmation = () => {
   const [item, setItem] = useState<CartAddedDetail | null>(null);
   const [key, setKey] = useState(0);
-  const timer = useRef<number>();
+  const timer = useRef<number | undefined>(undefined);
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const tx = TEXT[(i18n.language || "es").slice(0, 2)] || TEXT.es;

@@ -167,7 +167,7 @@ export const checkExistingSkus = async (baseSkus: string[]): Promise<Record<stri
   
   // Mark those that exist
   data?.forEach(product => {
-    result[product.sku_interno] = { 
+    result[product.sku_interno as unknown as string] = { 
       exists: true, 
       productId: product.id 
     };

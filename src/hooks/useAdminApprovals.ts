@@ -166,7 +166,7 @@ export const useAdminApprovals = () => {
               user_id: request.requester_id,
               movement_type: 'referral_bonus',
               amount: -Number(request.amount),
-              balance_before: credit.balance_debt,
+              balance_before: credit.balance_debt ?? 0,
               balance_after: newDebt,
               reference_id: requestId,
               description: 'Bono por referido aprobado',

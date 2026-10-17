@@ -407,7 +407,7 @@ export const useB2BCartSupabase = () => {
         const { data: weightData, error: weightError } = await supabase
           .rpc('get_product_weight', {
             p_product_id: item.productId,
-            p_variant_id: item.variantId || null
+            p_variant_id: item.variantId || undefined
           });
 
         if (weightError) {

@@ -15,7 +15,7 @@ type RangeKey = "7" | "30" | "90" | "all";
 
 interface AffiliateRow {
   id: string;
-  display_name: string;
+  display_name: string | null;
   affiliate_code: string;
   status: string;
   clicks: number;

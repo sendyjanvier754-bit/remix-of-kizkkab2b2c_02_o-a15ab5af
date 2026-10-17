@@ -120,7 +120,7 @@ const SellerDesktopHeader = ({
           .limit(8);
 
         if (error) throw error;
-        setSearchResults(data || []);
+        setSearchResults((data || []) as SearchResult[]);
         setShowResults(true);
       } catch (error) {
         console.error("Search error:", error);

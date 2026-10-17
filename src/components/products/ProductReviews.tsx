@@ -122,7 +122,7 @@ const ReviewCard = ({
               <span>Útil ({review.helpful_count})</span>
             </button>
             <button 
-              onClick={() => onReply(review.id, displayName)}
+              onClick={() => onReply(review.id, displayName ?? '')}
               className="flex items-center gap-1 text-xs text-gray-600 hover:text-foreground transition-colors"
             >
               <MessageSquare className="h-4 w-4" />

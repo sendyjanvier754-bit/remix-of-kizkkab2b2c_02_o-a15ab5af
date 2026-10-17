@@ -128,8 +128,8 @@ export const useCompleteStop = () => {
     mutationFn: async (vars: { stopId: string; proofUrl?: string; notes?: string }) => {
       const { error } = await supabase.rpc("complete_route_stop", {
         p_stop_id: vars.stopId,
-        p_proof_url: vars.proofUrl ?? null,
-        p_notes: vars.notes ?? null,
+        p_proof_url: vars.proofUrl ?? undefined,
+        p_notes: vars.notes ?? undefined,
       });
       if (error) throw error;
     },

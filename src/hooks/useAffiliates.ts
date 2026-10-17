@@ -102,7 +102,7 @@ export async function registerAffiliateClick(code: string, landingPath?: string)
     await supabase.rpc("register_affiliate_click", {
       _code: code.trim().toUpperCase(),
       _landing_path: landingPath ?? window.location.pathname,
-      _referrer: document.referrer || null,
+      _referrer: document.referrer || undefined,
       _visitor_id: visitorId,
     });
   } catch (e) {

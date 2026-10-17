@@ -295,10 +295,10 @@ const GestorDashboard = () => {
                           <span className="text-sm text-muted-foreground">
                             {lot.investor?.display_name}
                           </span>
-                          {lot.investor?.average_rating > 0 && (
+                          {(lot.investor?.average_rating ?? 0) > 0 && (
                             <span className="flex items-center gap-1 text-xs">
                               <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-                              {lot.investor.average_rating.toFixed(1)}
+                              {lot.investor?.average_rating?.toFixed(1)}
                             </span>
                           )}
                         </div>
