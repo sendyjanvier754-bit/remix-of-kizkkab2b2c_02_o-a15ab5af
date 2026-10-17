@@ -1144,7 +1144,7 @@ const AdminInventoryPage = () => {
                 <div className="space-y-2">
                   <Label>Modo de Consolidación</Label>
                   <Select 
-                    defaultValue={consolidationSettings.consolidation_mode}
+                    defaultValue={consolidationSettings.consolidation_mode ?? undefined}
                     onValueChange={(value) => updateSettings.mutate({ mode: value as ConsolidationMode })}
                   >
                     <SelectTrigger>
@@ -1181,7 +1181,7 @@ const AdminInventoryPage = () => {
                       type="number"
                       min={1}
                       max={168}
-                      defaultValue={consolidationSettings.time_interval_hours}
+                      defaultValue={consolidationSettings.time_interval_hours ?? undefined}
                       onBlur={(e) => {
                         const value = parseInt(e.target.value);
                         if (value > 0) {
@@ -1205,7 +1205,7 @@ const AdminInventoryPage = () => {
                     type="number"
                     min={1}
                     max={1000}
-                    defaultValue={consolidationSettings.order_quantity_threshold}
+                    defaultValue={consolidationSettings.order_quantity_threshold ?? undefined}
                     onBlur={(e) => {
                       const value = parseInt(e.target.value);
                       if (value > 0) {
@@ -1227,7 +1227,7 @@ const AdminInventoryPage = () => {
                     </p>
                   </div>
                   <Switch
-                    checked={consolidationSettings.is_active}
+                    checked={consolidationSettings.is_active ?? undefined}
                     onCheckedChange={(checked) => updateSettings.mutate({ is_active: checked })}
                   />
                 </div>

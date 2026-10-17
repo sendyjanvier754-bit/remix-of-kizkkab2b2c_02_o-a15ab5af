@@ -1,0 +1,21 @@
+{
+  "customizations": [
+    { "token": "screens sm/md/lg=1024px, xl=1280px, 2xl=1536px", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "container (center, 1rem padding, full width)", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "font-sans Plus Jakarta Sans + @fontsource imports", "source": "tailwind.config.ts / src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "brand color tokens (primary #071d7f, secondary, accent, muted, destructive, border, ring, light+dark)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "price / price-foreground", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "gold / gold-light", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "teal / teal-light", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "navy / navy-dark", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "profit / profit-foreground / profit-soft / profit-border", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "sidebar tokens", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "radius 0.75rem (sm/md/lg) + v3 xl/2xl/3xl", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "gradients (hero, gold, card)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "card shadows + glow", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "animations accordion/cart-shake/heart-shake/float-horizontal/blink", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "utilities text-gradient-gold, bg-hero-gradient, shadow-card, shadow-glow-gold, animate-float, animate-fade-up, animate-scale-in, scrollbar-hide", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "cart confirmation + page loader keyframes/classes", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "v3 shadow-sm / blur-sm scale", "source": "tailwind v3 defaults", "reappliedIn": "src/styles.css" }
+  ]
+}

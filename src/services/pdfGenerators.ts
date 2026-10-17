@@ -1768,6 +1768,7 @@ export const generatePOBuyingListPDF = (
 
   // Legacy/manual mode: keep the interactive HTML preview available for other callers.
   openPrintWindow(html, `Purchase List - ${data.po_number}`, false);
+  return undefined;
 };
 
 // Excel: Buying list for a PO (Artículos a Comprar)

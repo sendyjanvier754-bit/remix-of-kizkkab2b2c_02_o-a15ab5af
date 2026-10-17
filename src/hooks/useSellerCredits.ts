@@ -273,7 +273,7 @@ export const useAdminCredits = () => {
           user_id: userId,
           movement_type: 'payment',
           amount: -amount,
-          balance_before: credit.balance_debt,
+          balance_before: credit.balance_debt ?? 0,
           balance_after: newDebt,
           description,
         });

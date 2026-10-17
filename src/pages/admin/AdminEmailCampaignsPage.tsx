@@ -63,6 +63,7 @@ export default function AdminEmailCampaignsPage() {
     const { error } = id ? await db.from("email_campaigns").update(row).eq("id", id) : await db.from("email_campaigns").insert(row);
     if (error) return toast.error(error.message);
     toast.success("Campaña guardada"); setEdit(null); load();
+    return undefined;
   };
 
   const act = async (c: Campaign, action: "test" | "send") => {
@@ -73,6 +74,7 @@ export default function AdminEmailCampaignsPage() {
     if (error || data?.error) return toast.error(data?.error === "not_configured" ? "Configura Mailjet primero" : (data?.error || error?.message));
     toast.success(action === "test" ? "Correo de prueba enviado" : `Envío iniciado a ${data.recipients} destinatarios`);
     load();
+    return undefined;
   };
 
   const remove = async (id: string) => { if (!confirm("¿Eliminar campaña?")) return; await db.from("email_campaigns").delete().eq("id", id); load(); };
@@ -82,6 +84,7 @@ export default function AdminEmailCampaignsPage() {
     const { error } = await db.from("email_subscribers").upsert({ ...newSub, email: newSub.email.trim().toLowerCase(), source: "manual", status: "subscribed", unsubscribed_at: null }, { onConflict: "email" });
     if (error) return toast.error(error.message);
     setNewSub({ email: "", full_name: "", language: "es" }); load();
+    return undefined;
   };
   const importBulk = async () => {
     const rows = bulk.split(/[\n,;]+/).map((e) => e.trim().toLowerCase()).filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))
@@ -90,11 +93,13 @@ export default function AdminEmailCampaignsPage() {
     const { error } = await db.from("email_subscribers").upsert(rows, { onConflict: "email", ignoreDuplicates: true });
     if (error) return toast.error(error.message);
     toast.success(`${rows.length} emails importados`); setBulk(""); load();
+    return undefined;
   };
   const toggleSub = async (s: Subscriber) => {
     const unsub = s.status === "subscribed";
     await db.from("email_subscribers").update({ status: unsub ? "unsubscribed" : "subscribed", unsubscribed_at: unsub ? new Date().toISOString() : null }).eq("id", s.id);
     load();
+    return undefined;
   };
 
   const active = subs?.filter((s) => s.status === "subscribed").length ?? 0;

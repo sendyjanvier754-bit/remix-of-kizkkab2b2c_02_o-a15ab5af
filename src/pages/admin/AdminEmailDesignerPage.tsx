@@ -67,7 +67,7 @@ const fn = async (action: string, extra: Record<string, unknown> = {}) => {
 
 function ImageField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   const [busy, setBusy] = useState(false);
-  const pick = async (file?: File) => {
+  const pick = async (file?: File): Promise<string | number | void> => {
     if (!file) return;
     if (!file.type.startsWith("image/")) return toast.error("El archivo debe ser una imagen");
     if (file.size > 5 * 1024 * 1024) return toast.error("Máximo 5 MB");
@@ -159,7 +159,7 @@ function SendDialog({ open, onClose, subject, html }: { open: boolean; onClose: 
   useEffect(() => { if (!open || mode !== "segment") return; setCount(null); fn("count", { segment, language: "all" }).then((d) => setCount(d.count)).catch(() => {}); }, [segment, mode, open]);
   const ids = Object.keys(picked);
   const total = mode === "users" ? ids.length : count ?? 0;
-  const send = async () => {
+  const send = async (): Promise<string | number | void> => {
     if (!total) return toast.error("Elige al menos un destinatario");
     if (!confirm(`¿Enviar "${subject}" a ${total} destinatario(s)?`)) return;
     setBusy(true);
@@ -255,7 +255,7 @@ export default function AdminEmailDesignerPage() {
   const move = (i: number, dir: -1 | 1) => setBlocks((bs) => { const n = [...bs]; const j = i + dir; if (j < 0 || j >= n.length) return bs; [n[i], n[j]] = [n[j], n[i]]; return n; });
   const current = blocks.find((b) => b.id === sel);
 
-  const save = async () => {
+  const save = async (): Promise<string | number | void> => {
     const payload: any = { name, subject, purpose, html_content: html, design_blocks: blocks, is_active: true, variables: ["nombre", "unsubscribe_url"] };
     const q = editingId ? supabase.from("email_templates").update(payload).eq("id", editingId).select("id").single() : supabase.from("email_templates").insert(payload).select("id").single();
     const { data, error } = await q;

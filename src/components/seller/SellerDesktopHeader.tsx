@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type MouseEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, X, Flame, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useCategories } from "@/hooks/useCategories";
@@ -120,7 +120,7 @@ const SellerDesktopHeader = ({
           .limit(8);
 
         if (error) throw error;
-        setSearchResults(data || []);
+        setSearchResults((data || []) as SearchResult[]);
         setShowResults(true);
       } catch (error) {
         console.error("Search error:", error);
@@ -213,7 +213,7 @@ const SellerDesktopHeader = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
-                  className="pl-4 pr-28 py-2.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#071d7f] bg-gray-50 hover:bg-white transition-colors"
+                  className="pl-4 pr-28 py-2.5 border border-gray-300 rounded-full focus:outline-hidden focus:ring-2 focus:ring-[#071d7f] bg-gray-50 hover:bg-white transition-colors"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                   {searchQuery && (

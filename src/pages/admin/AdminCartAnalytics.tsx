@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useMemo } from "react";
 import { format, subDays, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 
 type TimeRange = "7d" | "30d" | "90d" | "all";
 

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
 
 // Types
 export interface Department {
@@ -383,7 +384,7 @@ export const useLogisticsEngine = () => {
     mutationFn: async (tracking: Omit<ShipmentTracking, 'id' | 'created_at'>) => {
       const { data, error } = await supabase
         .from('shipment_tracking')
-        .insert(tracking)
+        .insert(tracking as unknown as Database['public']['Tables']['shipment_tracking']['Insert'])
         .select()
         .single();
       if (error) throw error;
@@ -400,7 +401,7 @@ export const useLogisticsEngine = () => {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
         .from('shipment_tracking')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update({ status, updated_at: new Date().toISOString() } as Database['public']['Tables']['shipment_tracking']['Update'])
         .eq('id', id);
       if (error) throw error;
     },

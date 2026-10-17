@@ -89,7 +89,7 @@ export function useAdminBanners(targetAudience?: string) {
 
       if (error) throw error;
 
-      setBanners(prev => [...prev, data]);
+      if (data) setBanners(prev => [...prev, data]);
       toast({ title: 'Banner creado', description: 'El banner ha sido creado correctamente' });
       return data;
     } catch (error) {

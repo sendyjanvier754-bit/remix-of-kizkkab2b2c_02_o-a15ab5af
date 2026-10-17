@@ -88,7 +88,7 @@ export const useTemplatesForCategory = (categoryId: string | null) => {
       // Reverse so child templates override parent templates
       [...(data || [])].reverse().forEach(template => {
         if (!templateMap.has(template.attribute_name)) {
-          templateMap.set(template.attribute_name, template);
+          templateMap.set(template.attribute_name, template as CategoryAttributeTemplate);
         }
       });
 

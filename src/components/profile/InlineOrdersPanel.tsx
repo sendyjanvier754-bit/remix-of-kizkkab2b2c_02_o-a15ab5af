@@ -14,7 +14,7 @@
  */
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -138,13 +138,14 @@ const OrderCard = ({
   const itemCount = order.order_items_b2b?.length || 0;
   const firstItem = order.order_items_b2b?.[0];
   const isB2B = order.metadata?.order_type === 'b2b';
-  const borderColor = {
+  const borderColors: Partial<Record<BuyerOrderStatus, string>> = {
     shipped: 'border-l-purple-500',
     delivered: 'border-l-green-500',
     paid: 'border-l-amber-500',
     placed: 'border-l-blue-500',
     cancelled: 'border-l-red-500',
-  }[order.status] || 'border-l-gray-300';
+  };
+  const borderColor = borderColors[order.status] || 'border-l-gray-300';
 
   const returnCfg = returnStatus ? RETURN_STATUS_CONFIG[returnStatus as keyof typeof RETURN_STATUS_CONFIG] : null;
 
@@ -761,7 +762,7 @@ export const InlineOrdersPanel = () => {
         order_type: 'b2c',
         store_name: o.store?.name,
         payment_reference: o.payment_reference,
-        tracking_number: o.tracking_number,
+        tracking_number: o.tracking_number ?? undefined,
         ...(o.metadata || {}),
       },
       created_at: o.created_at,

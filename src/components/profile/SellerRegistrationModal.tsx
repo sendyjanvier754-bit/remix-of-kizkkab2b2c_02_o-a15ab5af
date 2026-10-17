@@ -129,7 +129,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
         const stepMap: Record<string, number> = {
           store_info: 0, location: 1, profile: 2, payment: 3, verification: 4
         };
-        setCurrentStep(stepMap[progress.current_step] ?? 0);
+        setCurrentStep(stepMap[progress.current_step ?? ""] ?? 0);
       }
 
       // ── Auto-execute step 1 if store name came from LoginPage registration ──
@@ -435,7 +435,7 @@ export function SellerRegistrationModal({ open, onOpenChange, initialStep }: Pro
     }
 
     const { error: storeError } = await supabase.from("stores").update({
-      name: storeName.trim() || null,
+      name: (storeName.trim() || null) as unknown as string,
       description: storeDescription.trim() || null,
       department_id: departmentId || null,
       commune_id: communeId || null,

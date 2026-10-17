@@ -73,7 +73,7 @@ export const useApplyDiscount = () => {
       }
 
       // Check max uses total
-      if (discountCode.max_uses && discountCode.used_count >= discountCode.max_uses) {
+      if (discountCode.max_uses && (discountCode.used_count ?? 0) >= discountCode.max_uses) {
         return { valid: false, error: 'Este código ha alcanzado su límite de uso' };
       }
 

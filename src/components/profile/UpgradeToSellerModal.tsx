@@ -31,7 +31,7 @@ export function UpgradeToSellerModal({ open, onOpenChange }: Props) {
       // Call the SECURITY DEFINER RPC function that handles the full upgrade atomically
       const { data, error } = await supabase.rpc('upgrade_to_seller', {
         p_store_name: storeName.trim(),
-        p_store_description: storeDescription.trim() || null,
+        p_store_description: storeDescription.trim() || undefined,
       });
 
       if (error) throw error;

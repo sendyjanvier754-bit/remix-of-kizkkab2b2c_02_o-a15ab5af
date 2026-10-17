@@ -66,11 +66,11 @@ export const useTrendingCategories = (limit = 6) => {
             description: cat.description,
             productCount: count || 0,
             products: (products || []).map((p) => ({
-              id: p.id,
-              sku: p.sku_interno,
-              nombre: p.nombre,
+              id: p.id ?? '',
+              sku: p.sku_interno ?? '',
+              nombre: p.nombre ?? '',
               imagen: p.imagen_principal,
-              precio: p.precio_sugerido_venta || p.precio_b2b,
+              precio: p.precio_sugerido_venta || p.precio_b2b || 0,
             })),
           };
         })

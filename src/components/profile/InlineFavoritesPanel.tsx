@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import { useB2CFavorites } from "@/hooks/useB2CFavorites";
 import { Heart, ShoppingCart, Loader2, ExternalLink } from "lucide-react";

@@ -136,7 +136,7 @@ export const usePaymentMethods = (ownerType: 'admin' | 'seller' | 'store', owner
         // Sync snapshot copies stored in market_payment_methods
         // These rows have metadata->>'source_payment_method_id' pointing back to the master record
         if (ownerType === 'admin') {
-          const syncData: Record<string, unknown> = {
+          const syncData = {
             name: input.display_name ?? data.name,
             account_number: input.account_number || input.phone_number || null,
             account_holder: input.account_holder || input.holder_name || null,

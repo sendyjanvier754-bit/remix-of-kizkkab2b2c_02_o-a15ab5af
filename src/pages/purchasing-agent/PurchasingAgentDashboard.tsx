@@ -50,14 +50,16 @@ export default function PurchasingAgentDashboard() {
     );
   }
 
+  const displayProfile = { ...agentProfile, country_name: agentProfile.country_name ?? undefined };
+
   const renderContent = () => {
     switch (currentView) {
       case 'overview':
-        return <PurchasingAgentOverview agentProfile={agentProfile} onNavigate={setCurrentView} />;
+        return <PurchasingAgentOverview agentProfile={displayProfile} onNavigate={setCurrentView} />;
       case 'assignments':
         return (
           <PurchasingAgentAssignments 
-            agentProfile={agentProfile}
+            agentProfile={displayProfile}
             selectedPOId={selectedPOId}
             onSelectPO={setSelectedPOId}
           />
@@ -65,7 +67,7 @@ export default function PurchasingAgentDashboard() {
       case 'purchases':
         return (
           <PurchasingAgentPurchases 
-            agentProfile={agentProfile}
+            agentProfile={displayProfile}
             selectedPOId={selectedPOId}
             onSelectPO={setSelectedPOId}
           />
@@ -73,7 +75,7 @@ export default function PurchasingAgentDashboard() {
       case 'qc':
         return (
           <PurchasingAgentQC 
-            agentProfile={agentProfile}
+            agentProfile={displayProfile}
             selectedPOId={selectedPOId}
             onSelectPO={setSelectedPOId}
           />
@@ -81,15 +83,15 @@ export default function PurchasingAgentDashboard() {
       case 'shipments':
         return (
           <PurchasingAgentShipments 
-            agentProfile={agentProfile}
+            agentProfile={displayProfile}
             selectedPOId={selectedPOId}
             onSelectPO={setSelectedPOId}
           />
         );
       case 'settings':
-        return <PurchasingAgentSettings agentProfile={agentProfile} />;
+        return <PurchasingAgentSettings agentProfile={displayProfile} />;
       default:
-        return <PurchasingAgentOverview agentProfile={agentProfile} onNavigate={setCurrentView} />;
+        return <PurchasingAgentOverview agentProfile={displayProfile} onNavigate={setCurrentView} />;
     }
   };
 
@@ -97,7 +99,7 @@ export default function PurchasingAgentDashboard() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <PurchasingAgentSidebar 
-          agentProfile={agentProfile}
+          agentProfile={displayProfile}
           currentView={currentView}
           onNavigate={setCurrentView}
         />

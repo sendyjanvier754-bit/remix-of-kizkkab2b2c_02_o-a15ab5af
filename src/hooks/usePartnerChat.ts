@@ -31,9 +31,9 @@ export function usePartnerChat(params: {
     try {
       const { data, error } = await supabase.rpc("get_or_create_partner_chat", {
         p_context: context,
-        p_order_id: orderId ?? null,
-        p_route_id: routeId ?? null,
-        p_title: title ?? null,
+        p_order_id: (orderId ?? null) as unknown as string,
+        p_route_id: (routeId ?? null) as unknown as string,
+        p_title: (title ?? null) as unknown as string,
       });
       if (error) throw error;
       const id = (data as string) ?? null;

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { MapPin, Phone, Mail, Facebook, Instagram } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useBranding } from "@/hooks/useBranding";

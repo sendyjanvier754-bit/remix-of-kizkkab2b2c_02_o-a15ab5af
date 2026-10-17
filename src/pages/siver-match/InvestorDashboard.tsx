@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600',
@@ -414,7 +414,7 @@ const InvestorDashboard = () => {
                             <div>
                               <p className="font-medium">{assignment.gestor?.display_name}</p>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                {assignment.gestor?.average_rating > 0 && (
+                                {assignment.gestor?.average_rating !== undefined && assignment.gestor.average_rating > 0 && (
                                   <span className="flex items-center gap-1">
                                     <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
                                     {assignment.gestor.average_rating.toFixed(1)}

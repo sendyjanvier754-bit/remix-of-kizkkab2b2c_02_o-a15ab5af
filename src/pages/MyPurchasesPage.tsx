@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { OpenChatButton } from "@/components/chat/OpenChatButton";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/hooks/useAuth";
@@ -781,7 +781,7 @@ const MyPurchasesPage = () => {
         store_logo: o.store?.logo_url,
         store_id: o.store_id,
         payment_reference: o.payment_reference,
-        tracking_number: o.tracking_number,
+        tracking_number: o.tracking_number ?? undefined,
         ...(o.metadata || {}),
       },
       created_at: o.created_at,

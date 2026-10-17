@@ -166,7 +166,7 @@ const AdminPedidos = () => {
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
       // Send payment confirmed email async
       fetchOrderEmailData(variables.orderId, 'b2c').then(emailData => {
-        if (emailData) sendPaymentConfirmedEmail(emailData);
+        if (emailData) sendPaymentConfirmedEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined });
       });
       setSelectedB2COrder(null);
       setB2cPaymentNotes('');
@@ -196,7 +196,7 @@ const AdminPedidos = () => {
       queryClient.invalidateQueries({ queryKey: ['buyer-b2c-orders'] });
       // Send payment rejected email async
       fetchOrderEmailData(variables.orderId, 'b2c').then(emailData => {
-        if (emailData) sendPaymentRejectedEmail({ ...emailData, reason: variables.reason });
+        if (emailData) sendPaymentRejectedEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined, reason: variables.reason });
       });
       setSelectedB2COrder(null);
       setB2cRejectionReason('');

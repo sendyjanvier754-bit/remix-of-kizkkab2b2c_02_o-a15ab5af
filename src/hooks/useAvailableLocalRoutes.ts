@@ -77,7 +77,7 @@ export const useAvailableLocalRoutes = (pesoFacturableLb?: number) => {
     queryKey: ['communes-by-dept', selectedDepartmentId],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_communes_by_department', {
-        p_department_id: selectedDepartmentId,
+        p_department_id: selectedDepartmentId ?? undefined,
       });
       if (error) throw error;
       return (data ?? []) as CommuneWithHub[];
@@ -100,8 +100,8 @@ export const useAvailableLocalRoutes = (pesoFacturableLb?: number) => {
     queryKey: ['local-logistics-cost', selectedCommuneId, pesoFacturableLb],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('calculate_local_logistics_cost', {
-        p_commune_id: selectedCommuneId,
-        p_peso_facturable_lb: pesoFacturableLb,
+        p_commune_id: selectedCommuneId!,
+        p_peso_facturable_lb: pesoFacturableLb!,
       });
       if (error) throw error;
       const row = (data as LocalLogisticsCostResult[])?.[0];

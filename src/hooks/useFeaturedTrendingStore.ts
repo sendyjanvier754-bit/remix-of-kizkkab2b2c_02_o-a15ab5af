@@ -90,7 +90,7 @@ export const useFeaturedTrendingStore = () => {
       if (ordersResult.error) throw ordersResult.error;
 
       const completedOrders = (ordersResult.data || []).filter((order) =>
-        COMPLETED_STATUSES.has(order.status) || COMPLETED_STATUSES.has(order.payment_status),
+        (order.status !== null && COMPLETED_STATUSES.has(order.status)) || (order.payment_status !== null && COMPLETED_STATUSES.has(order.payment_status)),
       );
       const totalsByCurrency = completedOrders.reduce<Record<string, number>>((totals, order) => {
         const currency = order.currency || "USD";

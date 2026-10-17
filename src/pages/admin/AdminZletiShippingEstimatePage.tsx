@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from '@/lib/router-compat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Calculator, ChevronDown, ChevronUp, Copy, Plus, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -146,7 +146,7 @@ export default function AdminZletiShippingEstimatePage() {
         variantsById = new Map((variants || []).map((variant: any) => [variant.id, variant]));
       }
 
-      const normalizedItems = (items || []).map((item: any) => ({
+      const normalizedItems: { product_id: string; variant_id: string | null; quantity: number; unit_cost: number; weight_kg: number }[] = (items || []).map((item: any) => ({
         ...item,
         weight_kg: Number(
           variantsById.get(item.variant_id)?.weight_kg ||
@@ -280,7 +280,7 @@ export default function AdminZletiShippingEstimatePage() {
     const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const allocationBase = totalWeight > 0 ? totalWeight : totalQuantity;
 
-    return items.map((item: any) => {
+    return items.map((item) => {
       const quantity = Math.max(0, Number(item.quantity || 0));
       const unitWeightKg = Math.max(0, Number(item.weight_kg || 0));
       const itemWeightKg = unitWeightKg * quantity;

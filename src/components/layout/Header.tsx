@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "@/lib/router-compat";
 import { Menu, X, ShoppingBag, Search, Heart, User, Mail, Camera, Loader2, TrendingUp, Flame, Mic, MicOff, Eye, EyeOff, MessageCircle } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { Input } from "@/components/ui/input";
@@ -79,7 +79,7 @@ const Header = ({
   const { canToggle, toggleViewMode, isClientPreview } = useViewMode();
   const { getValue: getBranding } = useBranding();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openMobileCategory, setOpenMobileCategory] = useState(null);
+  const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
   const {
     searchQuery, setSearchQuery, submitSearch: submitSearchBase,
     startVoiceSearch, isListening, voiceSupported,
@@ -123,9 +123,9 @@ const Header = ({
   const cartCount = cartItems.reduce((sum, item) => sum + ('quantity' in item ? item.quantity : item.cantidad), 0);
   const cartLink = showB2B ? "/seller/carrito" : "/carrito";
 
-  const catBarRef = useRef(null);
+  const catBarRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
-  const headerRef = useRef(null);
+  const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
 
@@ -181,7 +181,7 @@ const Header = ({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const scrollHeader = (dir) => {
+  const scrollHeader = (dir: number) => {
     const el = catBarRef.current;
     if (!el) return;
     const amount = Math.max(el.clientWidth * 0.5, 240);
@@ -191,7 +191,7 @@ const Header = ({
   // Root categories (no parent)
   const rootCategories = categories.filter((c) => !c.parent_id);
 
-  const getSubcategories = (parentId) =>
+  const getSubcategories = (parentId: string) =>
     categories.filter((c) => c.parent_id === parentId);
 
   // Translate all category names + descriptions in one batch
@@ -286,7 +286,7 @@ const Header = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitSearch(); } }}
-                className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-500 px-4 py-2 outline-none"
+                className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-500 px-4 py-2 outline-hidden"
               />
               {/* Camera icon for image search - Mobile */}
               <button
@@ -489,7 +489,7 @@ const Header = ({
                 onChange={(e) => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
                 onFocus={openSuggestions}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitSearch(); } }}
-                className="pl-4 pr-20 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#071d7f]"
+                className="pl-4 pr-20 py-2 border border-gray-300 rounded-full focus:outline-hidden focus:ring-2 focus:ring-[#071d7f]"
               />
               {showSuggestions && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 max-h-[70vh] overflow-y-auto">

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Json } from '@/integrations/supabase/types';
+import { Database, Json } from '@/integrations/supabase/types';
 
 export interface PickupPoint {
   id: string;
@@ -98,7 +98,7 @@ export const usePickupPoints = () => {
     try {
       const { error } = await supabase
         .from('pickup_points')
-        .update(updates)
+        .update(updates as Database['public']['Tables']['pickup_points']['Update'])
         .eq('id', id);
 
       if (error) throw error;

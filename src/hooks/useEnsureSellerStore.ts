@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { generateUniqueStoreSlug } from '@/utils/storeSlugGenerator';
 
 interface StoreStatus {
@@ -117,6 +117,8 @@ export const useEnsureSellerStore = () => {
             return;
           }
         }
+
+        if (!store) return;
 
         // Store exists - check if it's configured
         const isConfigured = store.name !== null && store.name !== '';

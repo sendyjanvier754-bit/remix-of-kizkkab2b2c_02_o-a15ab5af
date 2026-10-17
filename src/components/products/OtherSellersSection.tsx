@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import { Store as StoreIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useOtherSellerOffers } from "@/hooks/useOtherSellerOffers";

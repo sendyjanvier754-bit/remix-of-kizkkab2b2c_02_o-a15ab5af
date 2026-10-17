@@ -63,8 +63,8 @@ const AdminCatalogo = () => {
           .select('id, precio_b2b');
 
         if (!error && data) {
-          const priceMap = data.reduce((acc: Record<string, number>, item: { id: string; precio_b2b: number }) => {
-            acc[item.id] = item.precio_b2b;
+          const priceMap = data.reduce((acc: Record<string, number>, item) => {
+            acc[item.id!] = item.precio_b2b!;
             return acc;
           }, {});
           setDynamicPrices(priceMap);
@@ -326,7 +326,7 @@ const AdminCatalogo = () => {
                                 variant="ghost"
                                 size="sm"
                                 className="h-6 w-6 p-0"
-                                onClick={() => window.open(product.url_origen, '_blank')}
+                                onClick={() => window.open(product.url_origen ?? undefined, '_blank')}
                                 title="Ver en proveedor"
                               >
                                 <ExternalLink className="h-3 w-3 text-primary" />

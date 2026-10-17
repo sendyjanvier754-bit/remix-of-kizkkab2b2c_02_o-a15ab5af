@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { resolveAffiliateOffer, AffiliateOffer } from '@/hooks/useAffiliates';
 import { getStoredAffiliateCode } from '@/components/affiliates/AffiliateRefCapture';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from '@/lib/router-compat';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
@@ -527,10 +527,10 @@ const CheckoutPage = () => {
         cantidad: item.quantity,
         precio_unitario: item.price,
         subtotal: item.price * item.quantity,
-        image: item.image,
-        store_id: item.storeId,
-        store_name: item.storeName,
-        seller_catalog_id: item.sellerCatalogId,
+        image: item.image ?? undefined,
+        store_id: item.storeId ?? undefined,
+        store_name: item.storeName ?? undefined,
+        seller_catalog_id: item.sellerCatalogId ?? undefined,
       }));
 
       // Prepare shipping address (for address delivery)
@@ -558,7 +558,7 @@ const CheckoutPage = () => {
         store_shipping_costs: storeShippingCosts,
         shipping_address: shippingAddress,
         delivery_method: deliveryMethod,
-        pickup_point_id: deliveryMethod === 'pickup' ? selectedPickupPoint : undefined,
+        pickup_point_id: deliveryMethod === 'pickup' ? selectedPickupPoint ?? undefined : undefined,
         affiliate_id: affiliateOffer?.affiliate_id ?? null,
         affiliate_code: affiliateOffer?.affiliate_code ?? null,
         affiliate_discount_amount: affiliateDiscount,

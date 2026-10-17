@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useCheckoutCalculator, CheckoutSummary } from '@/hooks/useCheckoutCalculator';
+import { useCheckoutCalculator, CheckoutSummary, CheckoutLineItem } from '@/hooks/useCheckoutCalculator';
 import { useB2BPricingEngine, ProductBasePrice } from '@/hooks/useB2BPricingEngine';
 import { useLogisticsEngine, ShippingRoute } from '@/hooks/useLogisticsEngineSeparated';
 
@@ -64,7 +64,7 @@ export function CheckoutPage() {
               {checkout.checkoutItems.map((item) => (
                 <CheckoutItemRow
                   key={item.product.product_id}
-                  item={item}
+                  item={item as unknown as CheckoutLineItem}
                   onUpdateQuantity={(qty) =>
                     checkout.updateQuantity(item.product.product_id, qty)
                   }
@@ -150,7 +150,7 @@ export function CheckoutPage() {
 /**
  * Fila individual en el checkout
  */
-function CheckoutItemRow({ item, onUpdateQuantity, onRemove }) {
+function CheckoutItemRow({ item, onUpdateQuantity, onRemove }: { item: CheckoutLineItem; onUpdateQuantity: (qty: number) => void; onRemove: () => void }) {
   return (
     <div className="checkout-item-row">
       <div className="item-info">
@@ -193,7 +193,7 @@ function CheckoutItemRow({ item, onUpdateQuantity, onRemove }) {
 /**
  * Opción de ruta de envío
  */
-function RouteOption({ route, isSelected, onSelect }) {
+function RouteOption({ route, isSelected, onSelect }: { route: ShippingRoute; isSelected: boolean; onSelect: () => void }) {
   return (
     <div
       className={`route-option ${isSelected ? 'selected' : ''}`}
@@ -255,7 +255,7 @@ function RouteOption({ route, isSelected, onSelect }) {
 /**
  * Resumen del checkout
  */
-function CheckoutSummaryDisplay({ summary, loading }) {
+function CheckoutSummaryDisplay({ summary, loading }: { summary: CheckoutSummary; loading: boolean }) {
   return (
     <div className="summary-display">
       <div className="summary-items">

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type MouseEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import { ShoppingBag, Search, Heart, User, Camera, Loader2, Mic, MicOff, Package, Clock, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { usePublicCategories } from "@/hooks/useCategories";
@@ -319,7 +319,7 @@ const HeaderB2B = ({
                 <button type="button" onClick={voiceSupported ? startVoiceSearch : undefined} disabled={!voiceSupported} className={cn("p-1 transition-colors", !voiceSupported && "opacity-50 cursor-not-allowed", isListening ? "text-red-500 animate-pulse" : "text-gray-500 hover:text-blue-600")}>
                   {isListening ? <MicOff className="w-5 h-5" strokeWidth={1.5} /> : <Mic className="w-5 h-5" strokeWidth={1.5} />}
                 </button>
-                <input type="text" placeholder="" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setShowHistory(true)} className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder-gray-500 px-1 py-0.5 outline-none" />
+                <input type="text" placeholder="" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setShowHistory(true)} className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder-gray-500 px-1 py-0.5 outline-hidden" />
                 {/* Hidden file input for image search */}
                 <input ref={imageInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSearch} />
                 {/* Camera icon for image search */}
@@ -425,7 +425,7 @@ const HeaderB2B = ({
             <div ref={searchContainerRef} className="mx-auto max-w-[150px] relative">
               <form onSubmit={handleSearch}>
                 <div className="relative w-full flex items-center">
-                  <Input type="text" placeholder="" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setShowHistory(true)} className="pl-4 pr-28 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <Input type="text" placeholder="" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setShowHistory(true)} className="pl-4 pr-28 py-2 border border-gray-300 rounded-full focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
                   {/* Hidden file input for image search */}
                   <input ref={imageInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSearch} />
                   <div className="absolute right-12 top-1/2 transform -translate-y-1/2 flex items-center gap-2">

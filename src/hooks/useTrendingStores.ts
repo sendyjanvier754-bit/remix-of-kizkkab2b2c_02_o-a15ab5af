@@ -188,7 +188,7 @@ export const useTrendingStores = (limit = 5) => {
 
           const formattedProducts: TrendingStoreProduct[] = (products || []).map(p => ({
             id: p.id,
-            sku: p.sku,
+            sku: p.sku ?? "",
             nombre: p.nombre,
             precio_venta: p.precio_venta,
             imagen: p.images && typeof p.images === 'object' && Array.isArray(p.images) 

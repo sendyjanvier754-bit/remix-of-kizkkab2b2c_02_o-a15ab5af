@@ -61,7 +61,7 @@ export const useApprovePartnerApplication = () => {
       const { data, error } = await supabase.rpc("approve_partner_application", {
         p_application_id: vars.application_id,
         p_approved_user_id: vars.approved_user_id,
-        p_pickup_point_id: vars.pickup_point_id ?? null,
+        p_pickup_point_id: vars.pickup_point_id ?? undefined,
       });
       if (error) throw error;
       return data;

@@ -59,8 +59,8 @@ export const useB2BCartProductTotals = (externalItems?: B2BCartItem[]) => {
         sku: item.sku,
         name: item.name,
         quantity: item.cantidad,
-        color: item.color,
-        size: item.size,
+        color: item.color ?? undefined,
+        size: item.size ?? undefined,
       });
     });
 

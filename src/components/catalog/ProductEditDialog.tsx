@@ -111,7 +111,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
     enabled: !!productId,
   });
 
-  const form = useForm<ProductFormData>({
+  const form = useForm<z.input<typeof productSchema>, unknown, ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       sku_interno: '',
@@ -630,7 +630,7 @@ const ProductEditDialog = ({ productId, open, onOpenChange }: ProductEditDialogP
                         <FormItem>
                           <FormLabel>Peso (gramos) *</FormLabel>
                           <FormControl>
-                            <Input type="number" step="1" min="1" placeholder="500" {...field} value={field.value || ''} />
+                            <Input type="number" step="1" min="1" placeholder="500" {...field} value={(field.value as number | null | undefined) || ''} />
                           </FormControl>
                           <p className="text-xs text-muted-foreground">Requerido para cálculo de envío B2B</p>
                           <FormMessage />

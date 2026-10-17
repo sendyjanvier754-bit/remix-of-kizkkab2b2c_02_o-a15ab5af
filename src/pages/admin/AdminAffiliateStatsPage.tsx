@@ -15,7 +15,7 @@ type RangeKey = "7" | "30" | "90" | "all";
 
 interface AffiliateRow {
   id: string;
-  display_name: string;
+  display_name: string | null;
   affiliate_code: string;
   status: string;
   clicks: number;
@@ -93,7 +93,7 @@ export default function AdminAffiliateStatsPage() {
     const list = (data ?? []).filter(
       (row) =>
         !term ||
-        row.display_name.toLowerCase().includes(term) ||
+        (row.display_name ?? '').toLowerCase().includes(term) ||
         row.affiliate_code.toLowerCase().includes(term),
     );
     return [...list].sort((a, b) => b.orders - a.orders || b.clicks - a.clicks);

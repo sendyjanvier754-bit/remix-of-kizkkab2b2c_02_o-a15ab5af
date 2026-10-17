@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -71,7 +72,7 @@ export const useSellerWallet = (sellerId?: string) => {
 
       if (walletError && walletError.code !== 'PGRST116') throw walletError;
       
-      setWallet(walletData);
+      setWallet(walletData as SellerWallet | null);
 
       if (walletData) {
         const { data: txData } = await supabase
@@ -129,14 +130,14 @@ export const useSellerWallet = (sellerId?: string) => {
         .from('withdrawal_requests')
         .insert({
           wallet_id: wallet.id,
-          seller_id: sellerId,
+          seller_id: sellerId!,
           amount,
           fee_amount: 0,
           net_amount: amount,
           payment_method: paymentMethod,
           bank_details: bankDetails || null,
           status: 'pending',
-        });
+        } as Database["public"]["Tables"]["withdrawal_requests"]["Insert"]);
 
       if (error) throw error;
 

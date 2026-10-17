@@ -2,7 +2,7 @@
 import { notifyCartAdded } from "@/lib/cartFeedback";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams, useLocation } from "@/lib/router-compat";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -360,7 +360,7 @@ const ProductPage = () => {
   }, [isMobile]);
 
   // Scroll to section
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
     if (ref.current) {
       const offset = isMobile ? 72 : 64;
       const top = ref.current.getBoundingClientRect().top + window.scrollY - offset;
@@ -1006,7 +1006,7 @@ const ProductPage = () => {
               type="text"
               placeholder={product?.nombre || "Buscar..."}
               defaultValue={product?.nombre || ""}
-              className="flex-1 bg-transparent text-sm text-white placeholder-white/60 outline-none"
+              className="flex-1 bg-transparent text-sm text-white placeholder-white/60 outline-hidden"
               readOnly />
             
             </div>

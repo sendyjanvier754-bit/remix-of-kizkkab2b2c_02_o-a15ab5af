@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -84,7 +85,7 @@ export function B2BCatalogImportDialog({
           };
         });
 
-        setProducts(mergedProducts);
+        setProducts(mergedProducts as B2BProduct[]);
       } else {
         setProducts([]);
       }
@@ -167,7 +168,7 @@ export function B2BCatalogImportDialog({
             price_source: customPrices[product.id] ? 'manual' : 'suggested'
           },
         };
-      }).filter(Boolean); // Remove nulls
+      }).filter((item) => item !== null); // Remove nulls
 
       if (catalogItems.length === 0) {
         toast.error(t('toasts.noValidProductsToImport'));
@@ -188,7 +189,7 @@ export function B2BCatalogImportDialog({
 
       // Now create default variants in seller_catalog_variants for each inserted product
       // Get product_variants for these products
-      const sourceProductIds = insertedCatalog.map(c => c.source_product_id);
+      const sourceProductIds = insertedCatalog.map(c => c.source_product_id).filter((id): id is string => id !== null);
       const { data: productVariantsRaw, error: variantsError } = await supabase
         .from('product_variants')
         .select('id, product_id, sku, price')
@@ -246,7 +247,7 @@ export function B2BCatalogImportDialog({
       if (catalogVariants.length > 0) {
         const { error: variantsInsertError } = await supabase
           .from('seller_catalog_variants')
-          .insert(catalogVariants);
+          .insert(catalogVariants as Database["public"]["Tables"]["seller_catalog_variants"]["Insert"][]);
 
         if (variantsInsertError) {
           console.error('Error inserting variants:', variantsInsertError);

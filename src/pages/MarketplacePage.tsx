@@ -6,7 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useSmartCart } from "@/hooks/useSmartCart";
 import { useViewMode } from "@/contexts/ViewModeContext";
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,7 +108,7 @@ const MarketplacePage = () => {
       }
     });
   }, [products, searchQuery, selectedStore, selectedCategory, sortBy, categories, minPrice, maxPrice, showOnlyStock, showOnlyPromos, minRating]);
-  const handleAddToCart = (product: typeof products[0]) => {
+  const handleAddToCart = (product: NonNullable<typeof products>[number]) => {
     const mainImage = Array.isArray(product.images) ? product.images[0] : (product.images || '');
     useVariantDrawerStore.getState().open({
       id: product.id,

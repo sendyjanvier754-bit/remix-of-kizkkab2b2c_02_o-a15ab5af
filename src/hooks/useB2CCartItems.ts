@@ -95,8 +95,8 @@ export const useB2CCartItems = () => {
       }
 
       // Fetch seller prices separately to avoid PostgREST FK join dependency
-      const variantIds = (cartItems || []).map(i => i.variant_id).filter(Boolean);
-      const catalogIds = (cartItems || []).map(i => i.seller_catalog_id).filter(Boolean);
+      const variantIds = (cartItems || []).map(i => i.variant_id).filter((id): id is string => Boolean(id));
+      const catalogIds = (cartItems || []).map(i => i.seller_catalog_id).filter((id): id is string => Boolean(id));
 
       const [variantPricesResult, catalogPricesResult] = await Promise.all([
         variantIds.length > 0

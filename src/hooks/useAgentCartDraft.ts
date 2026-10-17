@@ -34,7 +34,7 @@ interface Draft {
   created_at: string;
   updated_at: string;
   items?: DraftItem[];
-  target_profile?: { full_name: string; email: string };
+  target_profile?: { full_name: string | null; email: string | null };
 }
 
 export function useAgentCartDraft() {

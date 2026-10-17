@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { resolveAffiliateOffer, AffiliateOffer } from '@/hooks/useAffiliates';
 import { getStoredAffiliateCode } from '@/components/affiliates/AffiliateRefCapture';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from '@/lib/router-compat';
 import { useAuth } from '@/hooks/useAuth';
 import { useB2BCartItems } from '@/hooks/useB2BCartItems';
 import { useCartSelectionStore } from '@/stores/useCartSelectionStore';
@@ -896,7 +896,7 @@ const SellerCheckout = () => {
           notes: selectedAddress.notes || undefined,
         } : undefined,
         deliveryMethod,
-        deliveryMethod === 'pickup' ? selectedPickupPoint : undefined,
+        deliveryMethod === 'pickup' ? selectedPickupPoint ?? undefined : undefined,
         // Shipping snapshot (TICKET #15)
         {
           shippingTierId: selectedShippingTypeId,
@@ -938,7 +938,7 @@ const SellerCheckout = () => {
               user_id: user.id,
               movement_type: 'purchase',
               amount: creditAmount,
-              balance_before: currentCredit.balance_debt,
+              balance_before: currentCredit.balance_debt ?? 0,
               balance_after: newDebt,
               reference_id: order.id,
               description: `Crédito aplicado - Pedido ${order.id.slice(0, 8).toUpperCase()} (Pago combinado)`,
@@ -965,9 +965,9 @@ const SellerCheckout = () => {
       if (order?.id) {
         fetchOrderEmailData(order.id, 'b2b').then(emailData => {
           if (!emailData) return;
-          sendOrderConfirmationEmail(emailData);
-          sendPaymentDetailsEmail(emailData);
-          sendSellerNewOrderEmail(emailData);
+          sendOrderConfirmationEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined });
+          sendPaymentDetailsEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined });
+          sendSellerNewOrderEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined });
         });
       }
       
@@ -2041,7 +2041,7 @@ const SellerCheckout = () => {
                         
                         if (isEditing) {
                           const updated = await updateAddress.mutateAsync({ 
-                            id: editingAddressId, 
+                            id: editingAddressId as string, 
                             ...newAddress,
                             department_id: selectedDept || null,
                             commune_id: selectedComm || null,

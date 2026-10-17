@@ -1,3 +1,6 @@
+import type { Database } from "@/integrations/supabase/types";
+type ProductViewRow = Database["public"]["Views"]["v_productos_con_precio_b2b"]["Row"];
+type IdentifiedProduct = ProductViewRow & { id: string; sku_interno: string; nombre: string };
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductB2BCard, B2BFilters, ProductVariantInfo, AttributeCombination, ProductVariantEAV, B2BLogisticsInfo } from "@/types/b2b";
@@ -110,13 +113,14 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit: number | nu
           query = query.order("created_at", { ascending: false });
       }
 
-      const { data: parentProducts, error } = await query;
+      const { data: parentProductRows, error } = await query;
 
       if (error) {
         console.error("Error fetching B2B products:", error);
         throw new Error(error.message);
       }
 
+      const parentProducts = parentProductRows as IdentifiedProduct[] | null;
       if (!parentProducts || parentProducts.length === 0) {
         return { products: [], total: 0 };
       }
@@ -202,7 +206,8 @@ export const useProductsB2B = (filters: B2BFilters, page = 0, limit: number | nu
 
       // Group variants by product_id
       const variantsByProduct = new Map<string, ProductVariantEAV[]>();
-      (variantsResult.data || []).forEach(v => {
+      (variantsResult.data || []).forEach(row => {
+        const v = row as typeof row & { id: string; sku: string; name: string; product_id: string; precio_b2b_final: number | undefined; is_active: boolean | undefined };
         if (!variantsByProduct.has(v.product_id)) {
           variantsByProduct.set(v.product_id, []);
         }
@@ -444,7 +449,7 @@ export const useFeaturedProductsB2B = (limit = 6) => {
     staleTime: 1000 * 60 * 5,
     queryFn: async () => {
       // Query only parent products from B2B pricing view
-      const { data: parentProducts, error } = await supabase
+      const { data: parentProductRows, error } = await supabase
         .from("v_productos_con_precio_b2b")
         .select("*")
         .eq("is_active", true)
@@ -453,6 +458,7 @@ export const useFeaturedProductsB2B = (limit = 6) => {
         .limit(limit * 2); // Get more to filter
 
       if (error) throw new Error(error.message);
+      const parentProducts = parentProductRows as IdentifiedProduct[] | null;
       if (!parentProducts || parentProducts.length === 0) return [];
 
       // Fetch variants from B2B pricing view

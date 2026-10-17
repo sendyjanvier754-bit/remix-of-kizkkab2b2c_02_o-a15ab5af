@@ -519,7 +519,7 @@ const VariantSelector = ({
 
         const hasCompleteCombination = requiredAttributeTypes.every(type => Boolean(newAttrs[type]));
         const matchingVariantForSelection = hasCompleteCombination
-          ? variants.find(variant => {
+          ? variants?.find(variant => {
               const combo = variant.attribute_combination;
               return combo && requiredAttributeTypes.every(key => combo[key] === newAttrs[key]);
             })

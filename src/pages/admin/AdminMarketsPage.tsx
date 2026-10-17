@@ -38,7 +38,7 @@ import {
   Link2,
   Users,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
@@ -134,7 +134,7 @@ export default function AdminMarketsPage() {
       const routeMap: Record<string, string[]> = {};
       for (const r of assignedRoutes ?? []) {
         const cid = r.destination_country_id;
-        routeMap[cid] = [...(routeMap[cid] ?? []), r.id];
+        routeMap[cid ?? "null"] = [...(routeMap[cid ?? "null"] ?? []), r.id];
       }
       setSelectedRouteIds(routeMap);
     } else {

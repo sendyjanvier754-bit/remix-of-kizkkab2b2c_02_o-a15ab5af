@@ -14,7 +14,7 @@ import {
   ShoppingCart,
   Globe
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { usePayments, useSellers } from "@/hooks/usePayments";
 import { Skeleton } from "@/components/ui/skeleton";
