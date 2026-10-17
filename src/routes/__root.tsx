@@ -47,8 +47,6 @@ import { WhatsAppFloatingButton } from "@/components/support/WhatsAppFloatingBut
 import { CompleteProfilePrompt } from "@/components/profile/CompleteProfilePrompt";
 import NotFound from "@/pages/NotFound";
 
-const SHARE_IMAGE =
-  "https://fonvunyiaxcjkodrnpox.supabase.co/storage/v1/object/public/branding-assets/dialog_share_image_url-1773679883600.png";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -110,7 +108,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: RootErrorComponent,
 });
 
-export { SHARE_IMAGE };
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
