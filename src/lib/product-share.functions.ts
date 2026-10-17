@@ -15,7 +15,7 @@ const isHttpUrl = (u: unknown): u is string => typeof u === "string" && /^https?
  * tags for WhatsApp/Facebook/Google. Returns null when nothing is found.
  */
 export const getProductShareMeta = createServerFn({ method: "GET" })
-  .inputValidator((input: { sku: string }) => ({ sku: String(input.sku ?? "").slice(0, 120) }))
+  .validator((input: { sku: string }) => ({ sku: String(input.sku ?? "").slice(0, 120) }))
   .handler(async ({ data }): Promise<ProductShareMeta | null> => {
     const sku = data.sku.trim();
     if (!sku) return null;

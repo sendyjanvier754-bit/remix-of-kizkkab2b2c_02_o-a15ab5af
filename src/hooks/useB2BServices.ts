@@ -386,7 +386,7 @@ export function useB2BCheckout() {
     // Calcular ETA range
     const etaValues = cart
       .map((item) => item.priceBreakdown)
-      .filter((pb) => pb !== undefined);
+      .filter((pb): pb is PriceBreakdown => pb != null);
     const minEta = Math.min(...etaValues.map((pb) => pb.eta_dias_min));
     const maxEta = Math.max(...etaValues.map((pb) => pb.eta_dias_max));
 
