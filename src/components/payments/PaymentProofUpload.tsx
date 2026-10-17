@@ -1,4 +1,4 @@
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -84,7 +84,7 @@ export const PaymentProofUpload = ({
 
       const existingMeta = (orderRow?.metadata as Record<string, Json | undefined>) ?? {};
 
-      const updateData: Database["public"]["Tables"]["orders_b2b"]["Update"] & { payment_reference?: string } = {
+      const updateData: { metadata?: Json; payment_reference?: string } = {
         metadata: { ...existingMeta, payment_proof_url: publicUrl },
       };
 
@@ -95,7 +95,7 @@ export const PaymentProofUpload = ({
 
       const { error: updateError } = await supabase
         .from(orderTable)
-        .update(updateData)
+        .update(updateData as { metadata?: Json })
         .eq('id', orderId);
 
       if (updateError) throw updateError;
@@ -118,7 +118,7 @@ export const PaymentProofUpload = ({
     try {
       const { error } = await supabase
         .from(orderTable)
-        .update({ payment_reference: referenceValue.trim() } as Database["public"]["Tables"]["orders_b2b"]["Update"])
+        .update({ payment_reference: referenceValue.trim() } as { metadata?: Json })
         .eq('id', orderId);
       if (error) throw error;
       toast.success(t('toasts.paymentRefSaved'));

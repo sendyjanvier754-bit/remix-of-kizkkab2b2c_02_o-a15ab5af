@@ -1,3 +1,4 @@
+import type { TablesInsert } from '@/integrations/supabase/types';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -120,12 +121,12 @@ export const useAddReview = () => {
         .insert({
           product_id: review.product_id,
           user_id: user.id,
-          rating: review.rating,
+          rating: review.rating || null,
           title: review.title || null,
           comment: review.comment || null,
           is_anonymous: review.is_anonymous || false,
           parent_review_id: review.parent_review_id || null,
-        })
+        } as unknown as TablesInsert<"product_reviews">)
         .select()
         .single();
 

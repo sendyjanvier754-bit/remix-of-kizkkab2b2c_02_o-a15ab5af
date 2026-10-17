@@ -79,7 +79,7 @@ const SellerCustomerDiscounts = () => {
         .limit(10);
 
       if (error) throw error;
-      setSearchResults(data || []);
+      setSearchResults((data || []) as UserProfile[]);
     } catch (error) {
       console.error('Error searching users:', error);
       toast.error('Error al buscar usuarios');

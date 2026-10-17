@@ -78,7 +78,6 @@ export default function PartnerLayout({ children, variant, title }: PartnerLayou
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.end}
               className={
                 cn(
                   "flex items-center gap-1.5 px-3 py-2 text-sm border-b-2 whitespace-nowrap transition-colors",
