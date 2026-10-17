@@ -1,6 +1,5 @@
 # Roadmap
-- [x] Diseñador: subir imágenes desde PC (logo, banner, productos)
-- [x] Diseñador: elegir producto del catálogo con imagen principal
-- [x] Diseñador: crear/elegir códigos de descuento
-- [x] Diseñador: enviar a uno, varios, grupos o todos
-- [x] Automatizaciones: elegir diseño para carritos abandonados
+
+- [ ] Finish TanStack Start upgrade (per-product link previews for WhatsApp/social)
+- [ ] Per-product share preview (product/variant image in og tags)
+- [ ] Growth plan: analyze audience and recommend where to start (reuse saved marketing research/plan)
