@@ -1793,7 +1793,7 @@ const SellerCartPage = () => {
       <SuggestedPricesDetailModal
         isOpen={showSuggestedPricesModal}
         onClose={() => setShowSuggestedPricesModal(false)}
-        items={modalData.items}
+        items={modalData.items.map(item => ({ ...item, variantId: item.variantId ?? undefined }))}
       />
 
       {/* Order Summary Bottom Sheet for Mobile - Pure CSS, no Vaul */}

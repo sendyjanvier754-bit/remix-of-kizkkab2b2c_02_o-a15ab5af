@@ -40,7 +40,7 @@ const SellerRegistrationPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [existingUserData, setExistingUserData] = useState<{ id: string; email: string; full_name: string | null } | null>(null);
+  const [existingUserData, setExistingUserData] = useState<{ id: string; email: string | null; full_name: string | null } | null>(null);
   const [showLinkOption, setShowLinkOption] = useState(false);
   const [formData, setFormData] = useState({
     storeName: "",
@@ -261,7 +261,7 @@ const SellerRegistrationPage = () => {
         business_name: formData.storeName,
         phone: formData.phone,
         is_verified: false,
-      });
+      } as unknown as { user_id: string; business_name: string | null; is_verified: boolean });
 
       if (sellerError) {
         console.error("Seller creation error:", sellerError);

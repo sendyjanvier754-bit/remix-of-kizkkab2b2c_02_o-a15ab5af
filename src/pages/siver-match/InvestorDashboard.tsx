@@ -414,7 +414,7 @@ const InvestorDashboard = () => {
                             <div>
                               <p className="font-medium">{assignment.gestor?.display_name}</p>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                {assignment.gestor?.average_rating > 0 && (
+                                {assignment.gestor?.average_rating !== undefined && assignment.gestor.average_rating > 0 && (
                                   <span className="flex items-center gap-1">
                                     <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
                                     {assignment.gestor.average_rating.toFixed(1)}

@@ -290,7 +290,7 @@ export const useAdminApprovals = () => {
             business_name: metadata?.store_name || null,
             phone: metadata?.phone || null,
             is_verified: false,
-          });
+          } as unknown as { user_id: string; business_name: string | null; is_verified: boolean });
         }
       }
 

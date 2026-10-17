@@ -327,7 +327,7 @@ export const useOrders = () => {
       toast({ title: 'Estado del pedido actualizado' });
       // Send status change email async
       fetchOrderEmailData(variables.orderId, 'b2b').then(emailData => {
-        if (emailData) sendOrderStatusChangeEmail({ ...emailData, newStatus: variables.status });
+        if (emailData) sendOrderStatusChangeEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined, newStatus: variables.status });
       });
     },
     onError: (error: Error) => {
@@ -377,7 +377,7 @@ export const useOrders = () => {
       // Send shipped email async
       fetchOrderEmailData(variables.orderId, 'b2b').then(emailData => {
         if (emailData) sendOrderStatusChangeEmail({
-          ...emailData,
+          ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined,
           newStatus: 'shipped',
           trackingNumber: variables.trackingNumber,
           carrier: variables.carrier,
@@ -408,7 +408,7 @@ export const useOrders = () => {
       toast({ title: 'Pedido cancelado' });
       // Send cancellation email async
       fetchOrderEmailData(variables as string, 'b2b').then(emailData => {
-        if (emailData) sendOrderCancelledEmail({ ...emailData, cancelledBy: 'seller' });
+        if (emailData) sendOrderCancelledEmail({ ...emailData, totalAmount: emailData.totalAmount ?? 0, paymentMethod: emailData.paymentMethod ?? undefined, cancelledBy: 'seller' });
       });
     },
     onError: (error: Error) => {
@@ -421,8 +421,8 @@ export const useOrders = () => {
     mutationFn: async ({ orderId, paymentNotes }: { orderId: string; paymentNotes?: string }) => {
       const payload = {
         p_order_id: orderId,
-        p_admin_user_id: user?.id,
-        p_payment_notes: paymentNotes || null,
+        p_admin_user_id: user!.id,
+        p_payment_notes: paymentNotes || undefined,
       };
 
       let { data, error } = await supabase.rpc('admin_confirm_payment', payload);
@@ -431,7 +431,7 @@ export const useOrders = () => {
       if (error && /admin_confirm_payment/i.test(error.message || '')) {
         const { data: fallbackData, error: fallbackError } = await (supabase as any).rpc('admin_confirm_payment', {
           p_order_id: orderId,
-          p_admin_user_id: user?.id,
+          p_admin_user_id: user!.id,
           p_notes: paymentNotes || null,
         });
         data = fallbackData;
@@ -475,7 +475,7 @@ export const useOrders = () => {
     mutationFn: async ({ orderId, rejectionReason }: { orderId: string; rejectionReason?: string }) => {
       const { data, error } = await (supabase as any).rpc('admin_reject_payment', {
         p_order_id: orderId,
-        p_admin_user_id: user?.id,
+        p_admin_user_id: user!.id,
         p_rejection_reason: rejectionReason || 'Pago no verificado',
       });
       

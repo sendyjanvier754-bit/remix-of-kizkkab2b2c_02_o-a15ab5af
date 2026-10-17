@@ -63,8 +63,8 @@ const AdminCatalogo = () => {
           .select('id, precio_b2b');
 
         if (!error && data) {
-          const priceMap = data.reduce((acc: Record<string, number>, item: { id: string; precio_b2b: number }) => {
-            acc[item.id] = item.precio_b2b;
+          const priceMap = data.reduce((acc: Record<string, number>, item) => {
+            acc[item.id!] = item.precio_b2b!;
             return acc;
           }, {});
           setDynamicPrices(priceMap);

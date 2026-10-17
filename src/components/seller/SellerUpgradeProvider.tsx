@@ -32,6 +32,7 @@ export function SellerUpgradeProvider({ children }: { children: ReactNode }) {
       const timer = setTimeout(() => setShowModal(true), 500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [user?.id, user?.role]);
 
   // ── For SELLER role: check if onboarding is incomplete → show modal every 30 min ──

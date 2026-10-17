@@ -129,7 +129,7 @@ export const useSellerWallet = (sellerId?: string) => {
         .from('withdrawal_requests')
         .insert({
           wallet_id: wallet.id,
-          seller_id: sellerId,
+          seller_id: sellerId!,
           amount,
           fee_amount: 0,
           net_amount: amount,

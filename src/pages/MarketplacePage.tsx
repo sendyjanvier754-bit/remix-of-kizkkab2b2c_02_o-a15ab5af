@@ -108,7 +108,7 @@ const MarketplacePage = () => {
       }
     });
   }, [products, searchQuery, selectedStore, selectedCategory, sortBy, categories, minPrice, maxPrice, showOnlyStock, showOnlyPromos, minRating]);
-  const handleAddToCart = (product: typeof products[0]) => {
+  const handleAddToCart = (product: NonNullable<typeof products>[number]) => {
     const mainImage = Array.isArray(product.images) ? product.images[0] : (product.images || '');
     useVariantDrawerStore.getState().open({
       id: product.id,

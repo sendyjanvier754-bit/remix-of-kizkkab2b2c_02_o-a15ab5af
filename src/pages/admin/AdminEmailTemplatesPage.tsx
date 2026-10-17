@@ -44,7 +44,7 @@ interface DestinationCountry {
   id: string;
   name: string;
   code: string;
-  is_active: boolean;
+  is_active: boolean | null;
 }
 
 const PURPOSE_OPTIONS = [

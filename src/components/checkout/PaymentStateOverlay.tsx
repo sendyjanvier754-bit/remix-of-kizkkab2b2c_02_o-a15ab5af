@@ -33,6 +33,7 @@ export const PaymentStateOverlay = ({ onContinue, onCancel }: PaymentStateOverla
       const timer = setTimeout(() => setShowConfetti(false), 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [activeOrder?.payment_status]);
 
   if (isLoading) {

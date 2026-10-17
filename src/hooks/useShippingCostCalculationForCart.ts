@@ -188,7 +188,7 @@ export const useShippingCostCalculationForCart = (items: CartItem[]) => {
             .single();
 
           if (zoneData) {
-            zoneSurcharge = zoneData.final_delivery_surcharge;
+            zoneSurcharge = zoneData.final_delivery_surcharge ?? 0;
           }
         } catch (err) {
           console.warn('Error fetching shipping rates from DB, using defaults:', err);

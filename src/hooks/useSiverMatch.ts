@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 /**
  * Siver Match Hook - B2B2C Ecosystem
  * Connects Investors with Gestors via Siver Market
@@ -707,7 +708,7 @@ export const useSiverMatch = () => {
           status: 'payment_confirmed',
           pickup_qr_code: `SIVER-PICKUP-${saleId}`,
           pickup_qr_generated_at: new Date().toISOString(),
-        })
+        } as Database["public"]["Tables"]["siver_match_sales"]["Update"])
         .eq('id', saleId);
       
       if (error) throw error;
@@ -742,7 +743,7 @@ export const useSiverMatch = () => {
           status: 'picked_up',
           picked_up_at: new Date().toISOString(),
           picked_up_by: user?.id,
-        })
+        } as Database["public"]["Tables"]["siver_match_sales"]["Update"])
         .eq('id', saleId);
       
       if (error) throw error;
