@@ -725,7 +725,7 @@ const ProductPage = () => {
     if (!isB2BUser && (product as any).type === 'seller_catalog' && sellerCatalogVariants.length > 0) {
       const variantImages = sellerCatalogVariants.
       map((v) => Array.isArray(v.images) ? v.images[0] : null).
-      filter((img): img is string => typeof img === 'string' && img.trim() !== '');
+      filter((img): img is string => typeof img === 'string' && img.trim() !== '' && img.trim() !== 'null');
 
       const uniqueVariantImages = Array.from(new Set(variantImages));
       if (uniqueVariantImages.length > 0) {
