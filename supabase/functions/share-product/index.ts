@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SITE = "https://kizkka.com";
+const ok = (u: unknown) => typeof u === "string" && /^https?:\/\//.test(u) ? u : "";
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -30,14 +31,14 @@ Deno.serve(async (req) => {
         .eq("sku", sku)
         .maybeSingle();
       let productId = v?.product_id as string | undefined;
-      if (v?.images?.[0]) image = v.images[0];
+      image = ok(v?.images?.[0]);
       const pq = sb.from("products").select("nombre, imagen_principal, galeria_imagenes");
       const { data: p } = productId
         ? await pq.eq("id", productId).maybeSingle()
         : await pq.eq("sku_interno", sku.split("-")[0]).limit(1).maybeSingle();
       if (p) {
         title = p.nombre || title;
-        image = image || p.imagen_principal || p.galeria_imagenes?.[0] || "";
+        image = image || ok(p.imagen_principal) || ok(p.galeria_imagenes?.[0]);
       }
     } catch (e) {
       console.error("share-product lookup failed", e);
