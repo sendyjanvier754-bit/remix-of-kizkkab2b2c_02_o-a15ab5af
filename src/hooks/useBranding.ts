@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useHydrated } from '@tanstack/react-router';
 import { supabase } from '@/integrations/supabase/client';
 
 const BRANDING_CACHE_KEY = 'branding_settings_cache';
@@ -59,6 +60,9 @@ const DEFAULTS: Record<string, string> = {
  * matter how many components call this hook simultaneously.
  */
 export const useBranding = () => {
+  // The localStorage cache is only read after hydration so server and first
+  // client render match.
+  const hydrated = useHydrated();
   const { data: settings = [] } = useQuery({
     queryKey: ['branding-settings'],
     queryFn: async () => {
@@ -88,7 +92,7 @@ export const useBranding = () => {
     const found = settings.find((s) => s.key === key);
     if (found?.value) return found.value;
 
-    if (typeof window !== 'undefined') {
+    if (hydrated && typeof window !== 'undefined') {
       try {
         const cachedRaw = window.localStorage.getItem(BRANDING_CACHE_KEY);
         if (cachedRaw) {
