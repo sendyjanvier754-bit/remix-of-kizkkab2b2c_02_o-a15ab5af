@@ -11823,7 +11823,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_news_views: { Args: { _slug: string }; Returns: undefined }
       increment_popup_clicks: { Args: { popup_id: string }; Returns: undefined }
       increment_popup_views: { Args: { popup_id: string }; Returns: undefined }
       is_admin: { Args: { user_id: string }; Returns: boolean }
