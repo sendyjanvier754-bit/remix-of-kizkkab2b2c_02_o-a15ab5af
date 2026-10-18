@@ -57,7 +57,7 @@ export default function AdminNewsPage() {
   };
 
   const save = async (publish?: boolean) => {
-    if (!form.title.trim() || !form.content.trim()) return toast.error("Título y contenido son obligatorios");
+    if (!form.title.trim() || !form.content.trim()) { toast.error("Título y contenido son obligatorios"); return; }
     setSaving(true);
     const status = publish === undefined ? form.status : publish ? "published" : "draft";
     const payload = {
@@ -73,7 +73,7 @@ export default function AdminNewsPage() {
       ? await db.from("news_articles").update(payload).eq("id", editId)
       : await db.from("news_articles").insert({ ...payload, created_by: u.user?.id });
     setSaving(false);
-    if (res.error) return toast.error(res.error.code === "23505" ? "Ya existe una noticia con ese enlace (slug)" : res.error.message);
+    if (res.error) { toast.error(res.error.code === "23505" ? "Ya existe una noticia con ese enlace (slug)" : res.error.message); return; }
     toast.success(status === "published" ? "Noticia publicada" : "Borrador guardado");
     setOpen(false); load();
   };
@@ -81,7 +81,7 @@ export default function AdminNewsPage() {
   const remove = async (r: Row) => {
     if (!confirm(`¿Eliminar "${r.title}"?`)) return;
     const { error } = await db.from("news_articles").delete().eq("id", r.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Noticia eliminada"); load();
   };
 
