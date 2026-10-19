@@ -1,8 +1,6 @@
 import { ProductB2BCard } from '@/types/b2b';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useRef } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';

@@ -13,6 +13,7 @@ import { useSellerProductsByCategory } from "@/hooks/useSellerProducts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProductCard from "@/components/landing/ProductCard";
 import FeaturedProductsCarousel from "@/components/b2b/FeaturedProductsCarousel";
+import { usePromotedProducts } from "@/hooks/usePromotedProducts";
 import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
 import { useTranslation } from "react-i18next";
 
@@ -176,18 +177,7 @@ const CategoryProductsPage = () => {
         return list;
     }
   }, [products, filters.sortBy, selectedSubcategory, priceMin, priceMax, isB2BUser, minRating, onlyPromo, inStockOnly, currentPage]);
-  const featuredProducts = useMemo(() => products
-    .filter((p: any) => (p.imagen_principal || p.imagen) && (p.stock_fisico ?? 1) > 0)
-    .slice(0, 12)
-    .map((p: any) => ({
-      id: p.id,
-      sku: p.sku_interno ?? p.sku ?? p.id,
-      nombre: p.nombre ?? '',
-      imagen_principal: p.imagen_principal ?? p.imagen,
-      precio_b2b: Number(p.precio ?? 0),
-      moq: p.moq ?? 1,
-      stock_fisico: p.stock_fisico ?? 1,
-    })) as any[], [products]);
+  const { data: featuredProducts = [] } = usePromotedProducts(categoryId, isB2BUser);
   const handleViewStore = (sellerId: string) => navigate(`/tienda/${sellerId}`);
 
   const getSku = (p: AnyProduct) => p.sku_interno ?? p.sku ?? p.id;
@@ -217,10 +207,10 @@ const CategoryProductsPage = () => {
     <div className="min-h-screen bg-gray-50">
       {!isMobile && <GlobalHeader />}
 
-      <main className={`container mx-auto px-4 ${isMobile ? 'pb-20' : 'pb-8'}`}>
+      <main className={`${isMobile ? 'w-full px-1.5 pb-20' : 'container mx-auto px-4 pb-8'}`}>
         {featuredProducts.length > 0 && (
-          <div className="-mx-4 mb-2">
-            <FeaturedProductsCarousel products={featuredProducts} />
+          <div className={`${isMobile ? '-mx-1.5' : '-mx-4'} mb-2`}>
+            <FeaturedProductsCarousel products={featuredProducts} showSponsoredLabel sponsoredLabel="Kizkka" />
           </div>
         )}
 
@@ -247,7 +237,7 @@ const CategoryProductsPage = () => {
             rating: t('pagesExtra.categoryProducts.sortRating'),
           };
           return (
-            <div className={`${isMobile ? 'sticky top-0 z-30 -mx-4 px-4 py-2 bg-gray-50/95 backdrop-blur-sm' : 'bg-white rounded-lg border border-gray-200 px-3 py-2'} mb-3`}>
+            <div className={`${isMobile ? 'sticky top-0 z-30 -mx-1.5 px-1.5 py-2 bg-gray-50/95 backdrop-blur-sm' : 'bg-white rounded-lg border border-gray-200 px-3 py-2'} mb-3`}>
               {/* Row 1: horizontal scrollable pills */}
               <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
                 {/* Sort pill */}
@@ -370,7 +360,7 @@ const CategoryProductsPage = () => {
         })()}
 
         {/* Products Grid - Updated with additional filters */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 md:gap-4">
           {filteredProducts.map((p) => {
             const sku = getSku(p);
             const name = getName(p);
