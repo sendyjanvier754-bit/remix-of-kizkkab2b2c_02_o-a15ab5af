@@ -9530,6 +9530,127 @@ export type Database = {
           },
         ]
       }
+      sponsored_placements: {
+        Row: {
+          amount_paid: number | null
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          placement: string
+          priority: number
+          product_id: string | null
+          seller_catalog_id: string | null
+          starts_at: string
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          placement?: string
+          priority?: number
+          product_id?: string | null
+          seller_catalog_id?: string | null
+          starts_at?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          placement?: string
+          priority?: number
+          product_id?: string | null
+          seller_catalog_id?: string | null
+          starts_at?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_placements_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_con_precio_b2b"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_productos_precio_base"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products_without_weight"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "seller_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "v_seller_catalog_with_variants"
+            referencedColumns: ["catalog_id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_seller_catalog_id_fkey"
+            columns: ["seller_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "v_seller_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_reservations: {
         Row: {
           confirmed_at: string | null

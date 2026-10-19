@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchSponsoredItems, type SponsoredPlacementType } from "@/hooks/useSponsoredPlacements";
 
 export interface PromotedProduct {
   id: string;
@@ -9,18 +10,32 @@ export interface PromotedProduct {
   precio_b2b: number;
   moq: number;
   stock_fisico: number;
+  sponsored?: boolean;
+  storeName?: string | null;
 }
 
 /**
- * Products for the top promo strip on category pages.
- * Never repeats the current category. Until sponsored placements exist,
- * falls back to official Kizkka catalog products from other categories.
+ * Products for promo strips. Sponsored placements (Kizkka Ads) come first;
+ * the rest is filled with official Kizkka catalog products, never from the
+ * current category so it does not repeat the grid below.
  */
-export const usePromotedProducts = (excludeCategoryId: string | null, isB2B: boolean) =>
+export const usePromotedProducts = (
+  excludeCategoryId: string | null,
+  isB2B: boolean,
+  placement: SponsoredPlacementType = "category",
+  max = 16,
+) =>
   useQuery({
-    queryKey: ["promoted-products", excludeCategoryId, isB2B],
+    queryKey: ["promoted-products", placement, excludeCategoryId, isB2B, max],
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<PromotedProduct[]> => {
+      const sponsored = await fetchSponsoredItems(placement, excludeCategoryId, isB2B);
+      const out: PromotedProduct[] = sponsored.map((s) => ({
+        id: s.id, sku: s.sku, nombre: s.nombre, imagen_principal: s.imagen_principal,
+        precio_b2b: s.precio_b2b, moq: 1, stock_fisico: 1, sponsored: true, storeName: s.storeName,
+      }));
+      if (out.length >= max) return out.slice(0, max);
+
       let q = supabase
         .from("products")
         .select("id, sku_interno, nombre, imagen_principal, precio_mayorista_base, precio_sugerido_venta, moq, stock_fisico, categoria_id")
@@ -28,25 +43,31 @@ export const usePromotedProducts = (excludeCategoryId: string | null, isB2B: boo
         .not("imagen_principal", "is", null)
         .order("updated_at", { ascending: false })
         .limit(60);
-      if (excludeCategoryId) q = q.neq("categoria_id", excludeCategoryId);
-      const { data, error } = await q;
-      if (error) throw error;
+      if (excludeCategoryId && placement === "category") q = q.neq("categoria_id", excludeCategoryId);
+      const { data } = await q;
       const rows = ((data || []) as any[]).filter(
         (p) => p.imagen_principal && p.imagen_principal !== "null" && (p.stock_fisico ?? 1) > 0,
       );
-      // Light shuffle so the strip varies between visits
       for (let i = rows.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [rows[i], rows[j]] = [rows[j], rows[i]];
       }
-      return rows.slice(0, 16).map((p) => ({
-        id: p.id,
-        sku: p.sku_interno,
-        nombre: p.nombre ?? "",
-        imagen_principal: p.imagen_principal,
-        precio_b2b: Number((isB2B ? p.precio_mayorista_base : p.precio_sugerido_venta ?? p.precio_mayorista_base) ?? 0),
-        moq: p.moq ?? 1,
-        stock_fisico: p.stock_fisico ?? 1,
-      }));
+      const seen = new Set(out.map((o) => o.sku));
+      for (const p of rows) {
+        if (out.length >= max) break;
+        if (seen.has(p.sku_interno)) continue;
+        out.push({
+          id: p.id,
+          sku: p.sku_interno,
+          nombre: p.nombre ?? "",
+          imagen_principal: p.imagen_principal,
+          precio_b2b: Number((isB2B ? p.precio_mayorista_base : p.precio_sugerido_venta ?? p.precio_mayorista_base) ?? 0),
+          moq: p.moq ?? 1,
+          stock_fisico: p.stock_fisico ?? 1,
+          sponsored: false,
+          storeName: "Kizkka",
+        });
+      }
+      return out;
     },
   });
