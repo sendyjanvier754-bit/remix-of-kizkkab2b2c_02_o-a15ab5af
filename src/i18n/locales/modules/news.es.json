@@ -1,0 +1,35 @@
+{
+  "news": {
+    "brand": "Kizkka Noticias",
+    "headline": "Negocios para Haití y la diáspora",
+    "tagline": "Comercio, importación, logística y oportunidades para emprendedores haitianos.",
+    "all": "Todas",
+    "latest": "Últimas noticias",
+    "mostRead": "Más leídas",
+    "empty": "Pronto publicaremos noticias en esta sección.",
+    "notFound": "Esta noticia no existe o fue retirada.",
+    "seeAll": "Ver todas las noticias",
+    "back": "Noticias",
+    "sponsored": "Patrocinado",
+    "sponsoredTitle": "Productos destacados",
+    "shopNow": "Ver producto",
+    "promoTitle": "Compra al por mayor directo de fábrica",
+    "promoText": "Abre tu tienda y recibe tus pedidos en Haití.",
+    "promoCta": "Ver catálogo",
+    "ctaTitle": "Haz crecer tu negocio con Kizkka",
+    "ctaText": "Compra al por mayor directo de fábrica, vende en tu propia tienda en línea y recibe tus pedidos en Haití.",
+    "catalog": "Ver catálogo",
+    "openStore": "Abrir mi tienda",
+    "more": "Más noticias",
+    "share": "Compartir en WhatsApp",
+    "by": "Por",
+    "cats": {
+      "negocios": "Negocios",
+      "comercio": "Comercio internacional",
+      "logistica": "Logística Haití",
+      "oportunidades": "Oportunidades mayoristas",
+      "emprendimiento": "Emprendimiento",
+      "diaspora": "Diáspora"
+    }
+  }
+}

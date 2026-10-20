@@ -1,0 +1,35 @@
+{
+  "news": {
+    "brand": "Kizkka News",
+    "headline": "Business for Haiti and the diaspora",
+    "tagline": "Trade, importing, logistics and opportunities for Haitian entrepreneurs.",
+    "all": "All",
+    "latest": "Latest news",
+    "mostRead": "Most read",
+    "empty": "News will be published here soon.",
+    "notFound": "This article does not exist or was removed.",
+    "seeAll": "See all news",
+    "back": "News",
+    "sponsored": "Sponsored",
+    "sponsoredTitle": "Featured products",
+    "shopNow": "View product",
+    "promoTitle": "Buy wholesale direct from the factory",
+    "promoText": "Open your store and receive your orders in Haiti.",
+    "promoCta": "Browse catalog",
+    "ctaTitle": "Grow your business with Kizkka",
+    "ctaText": "Buy wholesale direct from the factory, sell in your own online store and receive your orders in Haiti.",
+    "catalog": "Browse catalog",
+    "openStore": "Open my store",
+    "more": "More news",
+    "share": "Share on WhatsApp",
+    "by": "By",
+    "cats": {
+      "negocios": "Business",
+      "comercio": "International trade",
+      "logistica": "Haiti logistics",
+      "oportunidades": "Wholesale opportunities",
+      "emprendimiento": "Entrepreneurship",
+      "diaspora": "Diaspora"
+    }
+  }
+}

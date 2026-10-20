@@ -1,0 +1,35 @@
+{
+  "news": {
+    "brand": "Kizkka Nouvèl",
+    "headline": "Biznis pou Ayiti ak dyaspora a",
+    "tagline": "Komès, enpòtasyon, lojistik ak opòtinite pou antreprenè ayisyen.",
+    "all": "Tout",
+    "latest": "Dènye nouvèl",
+    "mostRead": "Pi li",
+    "empty": "Byento n ap pibliye nouvèl isit la.",
+    "notFound": "Nouvèl sa a pa egziste oswa yo retire l.",
+    "seeAll": "Wè tout nouvèl yo",
+    "back": "Nouvèl",
+    "sponsored": "Patwone",
+    "sponsoredTitle": "Pwodwi an vedèt",
+    "shopNow": "Wè pwodwi a",
+    "promoTitle": "Achte an gwo dirèk nan faktori",
+    "promoText": "Louvri boutik ou epi resevwa kòmand ou an Ayiti.",
+    "promoCta": "Wè katalòg la",
+    "ctaTitle": "Fè biznis ou grandi ak Kizkka",
+    "ctaText": "Achte an gwo dirèk nan faktori, vann nan pwòp boutik an liy ou epi resevwa kòmand ou an Ayiti.",
+    "catalog": "Wè katalòg la",
+    "openStore": "Louvri boutik mwen",
+    "more": "Plis nouvèl",
+    "share": "Pataje sou WhatsApp",
+    "by": "Pa",
+    "cats": {
+      "negocios": "Biznis",
+      "comercio": "Komès entènasyonal",
+      "logistica": "Lojistik Ayiti",
+      "oportunidades": "Opòtinite an gwo",
+      "emprendimiento": "Antreprenarya",
+      "diaspora": "Dyaspora"
+    }
+  }
+}
