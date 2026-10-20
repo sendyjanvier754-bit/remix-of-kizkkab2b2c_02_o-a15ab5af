@@ -12,9 +12,10 @@ export function NewsShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function formatNewsDate(d: string | null) {
+export function formatNewsDate(d: string | null, lang = "es") {
   if (!d) return "";
-  return new Date(d).toLocaleDateString("es", { day: "numeric", month: "long", year: "numeric" });
+  const loc = lang === "ht" ? "fr" : lang;
+  return new Date(d).toLocaleDateString(loc, { day: "numeric", month: "long", year: "numeric" });
 }
 
 export const LANG_LABEL: Record<string, string> = { fr: "Français", ht: "Kreyòl", es: "Español", en: "English" };

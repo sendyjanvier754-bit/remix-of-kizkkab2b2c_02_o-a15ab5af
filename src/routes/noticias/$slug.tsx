@@ -2,6 +2,8 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getNewsBySlug, NEWS_CATEGORIES } from "@/lib/news.functions";
 import { NewsShell, formatNewsDate, LANG_LABEL } from "@/components/news/NewsShell";
+import { useTranslation } from "react-i18next";
+import { NewsSponsored } from "@/components/news/NewsSponsored";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingBag, Store } from "lucide-react";
@@ -55,17 +57,23 @@ export const Route = createFileRoute("/noticias/$slug")({
   },
   component: ArticlePage,
   errorComponent: ({ error }) => <NewsShell><p className="p-8 text-center">{error instanceof Error ? error.message : "Error"}</p></NewsShell>,
-  notFoundComponent: () => (
-    <NewsShell>
-      <div className="p-12 text-center space-y-4">
-        <p>Esta noticia no existe o fue retirada.</p>
-        <Link to="/noticias" search={{ cat: "" }} className="text-primary underline">Ver todas las noticias</Link>
-      </div>
-    </NewsShell>
-  ),
+  notFoundComponent: NotFoundNews,
 });
 
+function NotFoundNews() {
+  const { t } = useTranslation();
+  return (
+    <NewsShell>
+      <div className="p-12 text-center space-y-4">
+        <p>{t("news.notFound")}</p>
+        <Link to="/noticias" search={{ cat: "" }} className="text-primary underline">{t("news.seeAll")}</Link>
+      </div>
+    </NewsShell>
+  );
+}
+
 function ArticlePage() {
+  const { t, i18n } = useTranslation();
   const { slug } = Route.useParams();
   const { data } = useSuspenseQuery(articleQuery(slug));
   const { article: a, related } = data;
@@ -74,32 +82,34 @@ function ArticlePage() {
     <NewsShell>
       <article className="container mx-auto px-4 py-8 max-w-3xl">
         <Link to="/noticias" search={{ cat: "" }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
-          <ArrowLeft className="h-4 w-4" /> Noticias
+          <ArrowLeft className="h-4 w-4" /> {t("news.back")}
         </Link>
         <div className="flex items-center gap-2 text-xs mb-3">
-          <Badge variant="secondary">{NEWS_CATEGORIES[a.category] ?? a.category}</Badge>
+          <Badge variant="secondary">{t(`news.cats.${a.category}`, NEWS_CATEGORIES[a.category] ?? a.category)}</Badge>
           <span className="text-muted-foreground">{LANG_LABEL[a.language] ?? a.language}</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-bold leading-tight">{a.title}</h1>
-        <p className="text-sm text-muted-foreground mt-3">{a.author_name || "Kizkka"} · {formatNewsDate(a.published_at)}</p>
+        <p className="text-sm text-muted-foreground mt-3">{a.author_name || "Kizkka"} · {formatNewsDate(a.published_at, i18n.language)}</p>
         {a.excerpt && <p className="text-lg text-muted-foreground mt-6 font-medium">{a.excerpt}</p>}
         {a.cover_image && <img src={a.cover_image} alt={a.title} className="w-full rounded-xl mt-6 aspect-[16/9] object-cover" />}
         <div className="mt-8 space-y-4 text-base leading-relaxed">
           {a.content.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
         </div>
 
+        <div className="mt-10"><NewsSponsored layout="row" max={4} /></div>
+
         <aside className="mt-12 rounded-2xl border bg-muted/40 p-6 space-y-3">
-          <h2 className="text-xl font-bold">Haz crecer tu negocio con Kizkka</h2>
-          <p className="text-muted-foreground text-sm">Compra al por mayor directo de fábrica, vende en tu propia tienda en línea y recibe tus pedidos en Haití.</p>
+          <h2 className="text-xl font-bold">{t("news.ctaTitle")}</h2>
+          <p className="text-muted-foreground text-sm">{t("news.ctaText")}</p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild><Link to="/marketplace"><ShoppingBag className="h-4 w-4 mr-2" />Ver catálogo</Link></Button>
-            <Button asChild variant="outline"><Link to="/registro-vendedor"><Store className="h-4 w-4 mr-2" />Abrir mi tienda</Link></Button>
+            <Button asChild><Link to="/marketplace"><ShoppingBag className="h-4 w-4 mr-2" />{t("news.catalog")}</Link></Button>
+            <Button asChild variant="outline"><Link to="/registro-vendedor"><Store className="h-4 w-4 mr-2" />{t("news.openStore")}</Link></Button>
           </div>
         </aside>
 
         {related.length > 0 && (
           <section className="mt-12">
-            <h2 className="text-xl font-bold mb-4">Más noticias</h2>
+            <h2 className="text-xl font-bold mb-4">{t("news.more")}</h2>
             <div className="grid gap-4 sm:grid-cols-3">
               {related.map((r) => (
                 <Link key={r.id} to="/noticias/$slug" params={{ slug: r.slug }} className="block rounded-lg border overflow-hidden hover:shadow">

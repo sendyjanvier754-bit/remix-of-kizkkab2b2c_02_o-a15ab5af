@@ -1,0 +1,35 @@
+{
+  "news": {
+    "brand": "Kizkka Actualités",
+    "headline": "Les affaires pour Haïti et la diaspora",
+    "tagline": "Commerce, importation, logistique et opportunités pour les entrepreneurs haïtiens.",
+    "all": "Toutes",
+    "latest": "Dernières nouvelles",
+    "mostRead": "Les plus lus",
+    "empty": "Des actualités seront bientôt publiées ici.",
+    "notFound": "Cet article n'existe pas ou a été retiré.",
+    "seeAll": "Voir toutes les actualités",
+    "back": "Actualités",
+    "sponsored": "Sponsorisé",
+    "sponsoredTitle": "Produits en vedette",
+    "shopNow": "Voir le produit",
+    "promoTitle": "Achetez en gros directement à l'usine",
+    "promoText": "Ouvrez votre boutique et recevez vos commandes en Haïti.",
+    "promoCta": "Voir le catalogue",
+    "ctaTitle": "Développez votre entreprise avec Kizkka",
+    "ctaText": "Achetez en gros directement à l'usine, vendez dans votre propre boutique en ligne et recevez vos commandes en Haïti.",
+    "catalog": "Voir le catalogue",
+    "openStore": "Ouvrir ma boutique",
+    "more": "Plus d'actualités",
+    "share": "Partager sur WhatsApp",
+    "by": "Par",
+    "cats": {
+      "negocios": "Affaires",
+      "comercio": "Commerce international",
+      "logistica": "Logistique Haïti",
+      "oportunidades": "Opportunités de gros",
+      "emprendimiento": "Entrepreneuriat",
+      "diaspora": "Diaspora"
+    }
+  }
+}
