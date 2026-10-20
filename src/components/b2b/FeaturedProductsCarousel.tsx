@@ -7,7 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslatedList } from '@/hooks/useTranslatedContent';
 
 interface FeaturedProductsCarouselProps {
-  products: Pick<ProductB2BCard, 'id' | 'sku' | 'nombre' | 'imagen_principal' | 'precio_b2b'>[];
+  products: (Pick<ProductB2BCard, 'id' | 'sku' | 'nombre' | 'imagen_principal' | 'precio_b2b'> & { sponsored?: boolean })[];
   showSponsoredLabel?: boolean;
   sponsoredLabel?: string;
 }
@@ -44,7 +44,7 @@ const FeaturedProductsCarousel = ({
             {products.map(product => <div className="flex-[0_0_23%] min-w-[84px] max-w-[130px] cursor-pointer" key={product.id} onClick={() => navigate(`/producto/${product.sku}`)}>
                 <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
                   <img src={product.imagen_principal} alt={getTranslated(product).name || product.nombre} className="h-full w-full object-cover" loading="lazy" />
-                  {showSponsoredLabel && <span className="absolute left-1 top-1 rounded bg-background/85 px-1 text-[9px] font-medium text-muted-foreground">{sponsoredLabel}</span>}
+                  {showSponsoredLabel && <span className="absolute left-1 top-1 rounded bg-background/85 px-1 text-[9px] font-medium text-muted-foreground">{product.sponsored ? 'Ad' : sponsoredLabel}</span>}
                 </div>
                 <p className="mt-1 line-clamp-1 text-[11px] leading-tight text-foreground">
                   {getTranslated(product).name || product.nombre}
