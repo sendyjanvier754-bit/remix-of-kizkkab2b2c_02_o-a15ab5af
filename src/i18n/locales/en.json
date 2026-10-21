@@ -1601,7 +1601,12 @@
     "cart": "Cart",
     "trends": "Trends",
     "account": "Account",
-    "login": "Login"
+    "login": "Login",
+    "more": "More",
+    "news": "News",
+    "support": "Support",
+    "returns": "Returns",
+    "contact": "Contact"
   },
   "search": {
     "sortBy": "Sort by",

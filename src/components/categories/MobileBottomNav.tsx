@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@/lib/router-compat";
-import { Home, LayoutGrid, Sparkles, ShoppingBag, Package, User } from "lucide-react";
+import { Home, LayoutGrid, Sparkles, ShoppingBag, Package, User, Menu, Newspaper, Heart, Receipt, Info, Mail, LifeBuoy, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
@@ -8,6 +8,7 @@ import { useB2BCartItems } from "@/hooks/useB2BCartItems";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 const MobileBottomNav = () => {
   const { t } = useTranslation();
@@ -17,6 +18,16 @@ const MobileBottomNav = () => {
   const { items: b2cItems } = useB2CCartItems();
   const { items: b2bItems } = useB2BCartItems();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreItems = [
+    { href: "/noticias", icon: Newspaper, label: t("bottomNav.news", { defaultValue: "Noticias" }) },
+    { href: "/favoritos", icon: Heart, label: t("footer.favorites") },
+    { href: "/mis-compras", icon: Receipt, label: t("footer.myOrders") },
+    { href: "/soporte", icon: LifeBuoy, label: t("bottomNav.support", { defaultValue: "Soporte" }) },
+    { href: "/devoluciones", icon: RotateCcw, label: t("bottomNav.returns", { defaultValue: "Devoluciones" }) },
+    { href: "/contacto", icon: Mail, label: t("bottomNav.contact", { defaultValue: "Contacto" }) },
+    { href: "/sobre-nosotros", icon: Info, label: t("footerExtra.aboutUs") },
+  ];
   
   // Hide on admin routes (except support chat)
   const isAdminRoute = location.pathname.startsWith("/admin") && !location.pathname.startsWith("/admin/soporte-chat");
@@ -112,8 +123,41 @@ const MobileBottomNav = () => {
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={() => setMoreOpen(true)}
+          aria-label={t("bottomNav.more", { defaultValue: "Más" })}
+          className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] h-full bg-transparent border-0"
+        >
+          <Menu className="w-5 h-5 text-gray-500" strokeWidth={1.5} />
+          <span className="text-[10px] text-gray-500">{t("bottomNav.more", { defaultValue: "Más" })}</span>
+        </button>
       </div>
     </nav>
+
+    <Drawer open={moreOpen} onOpenChange={setMoreOpen}>
+      <DrawerContent className="z-[10000]">
+        <DrawerHeader>
+          <DrawerTitle>{t("bottomNav.more", { defaultValue: "Más" })}</DrawerTitle>
+        </DrawerHeader>
+        <div className="grid grid-cols-3 gap-3 px-4 pb-8">
+          {moreItems.map((m) => {
+            const Icon = m.icon;
+            return (
+              <Link
+                key={m.href}
+                to={m.href}
+                onClick={() => setMoreOpen(false)}
+                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center"
+              >
+                <Icon className="w-6 h-6 text-primary" />
+                <span className="text-xs text-foreground leading-tight">{m.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </DrawerContent>
+    </Drawer>
 
     {/* Login required dialog — shown when guest clicks cart */}
     <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>

@@ -1601,7 +1601,12 @@
     "cart": "Panye",
     "trends": "Tandans",
     "account": "Kont",
-    "login": "Konekte"
+    "login": "Konekte",
+    "more": "Plis",
+    "news": "Nouvèl",
+    "support": "Sipò",
+    "returns": "Retou",
+    "contact": "Kontak"
   },
   "search": {
     "sortBy": "Triye pa",
