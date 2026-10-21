@@ -1601,7 +1601,12 @@
     "cart": "Carrito",
     "trends": "Tendencias",
     "account": "Cuenta",
-    "login": "Login"
+    "login": "Login",
+    "more": "Más",
+    "news": "Noticias",
+    "support": "Soporte",
+    "returns": "Devoluciones",
+    "contact": "Contacto"
   },
   "search": {
     "sortBy": "Ordenar por",

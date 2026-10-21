@@ -1601,7 +1601,12 @@
     "cart": "Panier",
     "trends": "Tendances",
     "account": "Compte",
-    "login": "Connexion"
+    "login": "Connexion",
+    "more": "Plus",
+    "news": "Actualités",
+    "support": "Support",
+    "returns": "Retours",
+    "contact": "Contact"
   },
   "search": {
     "sortBy": "Trier par",
