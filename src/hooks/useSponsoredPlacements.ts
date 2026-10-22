@@ -166,7 +166,20 @@ export const useAdminSponsoredPlacements = () => {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  return { rows: list.data || [], isLoading: list.isLoading, create, toggle, remove };
+  /** Extend an ad by N days from its current end (or from now if already expired). */
+  const extend = useMutation({
+    mutationFn: async ({ id, endsAt, days }: { id: string; endsAt: string | null; days: number }) => {
+      const base = endsAt && new Date(endsAt) > new Date() ? new Date(endsAt).getTime() : Date.now();
+      const { error } = await db.from("sponsored_placements")
+        .update({ ends_at: new Date(base + days * 86_400_000).toISOString(), is_active: true })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Anuncio extendido"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return { rows: list.data || [], isLoading: list.isLoading, create, toggle, remove, extend };
 };
 
 export interface SearchResult {
