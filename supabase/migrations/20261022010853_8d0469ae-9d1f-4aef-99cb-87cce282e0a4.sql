@@ -1,0 +1,5 @@
+CREATE OR REPLACE FUNCTION public.news_touch_updated_at() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$;
+DROP TRIGGER IF EXISTS news_articles_updated_at ON public.news_articles;
+CREATE TRIGGER news_articles_updated_at BEFORE UPDATE ON public.news_articles FOR EACH ROW EXECUTE FUNCTION public.news_touch_updated_at();
+UPDATE public.news_articles SET cover_image='https://kizkka.com/__l5e/assets-v1/c8d2ef9a-2712-4770-8954-eae5494e6b6a/comprar-en-linea-haiti.jpg' WHERE slug IN ('como-comprar-en-linea-en-haiti-guia-negocio-trabajo-online','kijan-pou-achte-sou-entenet-ann-ayiti-biznis-travay-anliy');
+UPDATE public.news_articles SET cover_image='https://kizkka.com/__l5e/assets-v1/28ba7956-21ce-41ae-a352-446de36e6a02/lanzamiento-kizkka-haiti.jpg' WHERE slug='lanzamiento-oficial-kizkka-haiti';
