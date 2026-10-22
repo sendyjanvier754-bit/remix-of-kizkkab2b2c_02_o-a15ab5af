@@ -93,7 +93,11 @@ function ArticlePage() {
         {a.excerpt && <p className="text-lg text-muted-foreground mt-6 font-medium">{a.excerpt}</p>}
         {a.cover_image && <img src={a.cover_image} alt={a.title} className="w-full rounded-xl mt-6 aspect-[16/9] object-cover" />}
         <div className="mt-8 space-y-4 text-base leading-relaxed">
-          {a.content.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
+          {a.content.split(/\n{2,}/).map((p, i) =>
+            p.startsWith("## ")
+              ? <h2 key={i} className="text-2xl font-bold pt-4">{p.slice(3)}</h2>
+              : <p key={i} className="whitespace-pre-line">{p}</p>
+          )}
         </div>
 
         <div className="mt-10"><NewsSponsored layout="row" max={4} /></div>
