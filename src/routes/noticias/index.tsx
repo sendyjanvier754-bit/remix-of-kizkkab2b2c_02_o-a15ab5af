@@ -84,17 +84,7 @@ function NewsIndex() {
         </div>
       </div>
 
-      <div className="container mx-auto px-3 lg:px-4 py-4">
-        <div className="rounded-xl bg-primary text-primary-foreground px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="font-bold">{t("news.promoTitle")}</p>
-            <p className="text-sm opacity-90">{t("news.promoText")}</p>
-          </div>
-          <Button asChild size="sm" variant="secondary"><Link to="/marketplace"><ShoppingBag className="h-4 w-4 mr-1" />{t("news.promoCta")}</Link></Button>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-3 lg:px-4 pb-10 grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="container mx-auto px-3 lg:px-4 pt-4 pb-10 grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0">
           {!featured ? (
             <div className="text-center py-20 text-muted-foreground border rounded-xl">
