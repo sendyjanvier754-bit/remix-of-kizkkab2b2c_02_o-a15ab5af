@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 import { listPublishedNews, NEWS_CATEGORIES, type NewsArticle } from "@/lib/news.functions";
 import { NewsShell, formatNewsDate, LANG_LABEL } from "@/components/news/NewsShell";
 import { NewsSponsored } from "@/components/news/NewsSponsored";
-import { Button } from "@/components/ui/button";
-import { Newspaper, ShoppingBag } from "lucide-react";
+import { Newspaper } from "lucide-react";
 
 const newsListQuery = (category: string) =>
   queryOptions({ queryKey: ["news", "list", category], queryFn: () => listPublishedNews({ data: { category } }) });
