@@ -87,7 +87,7 @@ export function AdminSidebar() {
     { title: t('adminSidebar.priceConfig'), url: "/admin/precios", icon: Calculator },
     { title: t('adminSidebar.sellers'), url: "/admin/vendedores", icon: Users },
     { title: "Sync B2B → B2C", url: "/admin/b2b-sync", icon: RefreshCw },
-    { title: "Tienda destacada", url: "/admin/tendencias", icon: TrendingUp },
+    { title: "Kizkka Ads", url: "/admin/tendencias", icon: TrendingUp },
     { title: t('adminSidebar.banners'), url: "/admin/banners", icon: ImageIcon },
     { title: t('adminSidebar.agentOrders'), url: "/admin/agente-pedidos", icon: Headset },
     { title: t('adminSidebar.liveChat'), url: "/admin/soporte-chat", icon: MessageCircle },
@@ -225,7 +225,7 @@ export function AdminSidebar() {
         )}
 
         {isMarketing && renderGroup("marketing", "Marketing", [
-          { title: "Tienda destacada", url: "/admin/tendencias", icon: TrendingUp },
+          { title: "Kizkka Ads", url: "/admin/tendencias", icon: TrendingUp },
         ])}
 
         {isZletiAdmin && renderGroup("zleti", "ZleTI", [
