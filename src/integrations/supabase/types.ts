@@ -7488,6 +7488,7 @@ export type Database = {
           banner_url: string | null
           carrier_company_id: string | null
           created_at: string
+          deleted_at: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -7506,6 +7507,7 @@ export type Database = {
           banner_url?: string | null
           carrier_company_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -7524,6 +7526,7 @@ export type Database = {
           banner_url?: string | null
           carrier_company_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -9962,6 +9965,13 @@ export type Database = {
             referencedRelation: "markets_dashboard"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "stores_owner_profile_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       stripe_settings: {
@@ -11791,6 +11801,10 @@ export type Database = {
         Returns: string
       }
       generate_user_code: { Args: never; Returns: string }
+      get_account_deletion_blockers: {
+        Args: { _user_id: string }
+        Returns: Json
+      }
       get_active_stripe_publishable_key: {
         Args: never
         Returns: {
