@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Settings, Lock, Bell, Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { CloseAccountCard } from "./CloseAccountCard";
 
 export function InlineSettingsPanel() {
   const { t } = useTranslation();
@@ -157,6 +158,8 @@ export function InlineSettingsPanel() {
           ))}
         </div>
       </div>
+
+      <CloseAccountCard />
     </div>
   );
 }
