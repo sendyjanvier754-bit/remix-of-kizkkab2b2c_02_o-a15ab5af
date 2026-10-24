@@ -11772,6 +11772,10 @@ export type Database = {
         Returns: Json
       }
       cleanup_deleted_product_images: { Args: never; Returns: Json }
+      close_account: {
+        Args: { _force?: boolean; _user_id: string }
+        Returns: Json
+      }
       close_market_po_and_open_next: {
         Args: { p_close_reason?: string; p_po_id: string }
         Returns: Json
