@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, AlertTriangle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const ROLES = [
   { value: 'user', label: 'Usuario', color: 'bg-muted text-muted-foreground' },
@@ -48,6 +51,31 @@ export default function AdminAccountsPage() {
     userEmail: string | null;
     currentRoles: string[];
   } | null>(null);
+
+  const queryClient = useQueryClient();
+  const closeAccount = async (userId: string, name: string) => {
+    if (!window.confirm(`¿Cerrar la cuenta de ${name}? Se desactivará su tienda y productos y se anonimizará su perfil. El historial de pedidos se conserva.`)) return;
+    const run = async (force: boolean) => {
+      const { data, error } = await supabase.rpc('close_account' as any, { _user_id: userId, _force: force });
+      if (error) throw error;
+      return data as { ok: boolean; blockers?: { open_purchases?: number; open_store_sales?: number } };
+    };
+    try {
+      let res = await run(false);
+      if (!res.ok) {
+        const p = res.blockers?.open_purchases || 0;
+        const s = res.blockers?.open_store_sales || 0;
+        if (!window.confirm(`Esta cuenta tiene ${p} compra(s) y ${s} venta(s) en curso. ¿Forzar el cierre de todos modos?`)) return;
+        res = await run(true);
+      }
+      if (res.ok) {
+        toast.success('Cuenta cerrada');
+        queryClient.invalidateQueries({ queryKey: ['admin-accounts'] });
+      }
+    } catch (e: any) {
+      toast.error('Error: ' + e.message);
+    }
+  };
 
   const filtered = accounts.filter(a => {
     const matchesSearch = !search ||
@@ -154,6 +182,7 @@ export default function AdminAccountsPage() {
                     {format(new Date(account.created_at), 'dd/MM/yyyy')}
                   </TableCell>
                   <TableCell>
+                    <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -162,6 +191,15 @@ export default function AdminAccountsPage() {
                     >
                        Gestionar roles
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs text-destructive"
+                      onClick={() => closeAccount(account.id, account.full_name || account.email || '')}
+                    >
+                      Cerrar cuenta
+                    </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
