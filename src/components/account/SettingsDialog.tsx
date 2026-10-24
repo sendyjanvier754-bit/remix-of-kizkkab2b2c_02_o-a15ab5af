@@ -142,12 +142,24 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
 
     setIsDeleting(true);
     try {
-      // Note: Full account deletion requires a backend function
-      // For now, we just sign out and show a message
+      if (!user?.id) throw new Error('Sin sesión');
+      const { data, error } = await supabase.rpc('close_account' as any, { _user_id: user.id });
+      if (error) throw error;
+      const res = data as { ok: boolean; blockers?: { open_purchases?: number; open_store_sales?: number } };
+      if (!res?.ok) {
+        const p = res?.blockers?.open_purchases || 0;
+        const s = res?.blockers?.open_store_sales || 0;
+        toast({
+          title: 'No se puede eliminar todavía',
+          description: `Tienes ${p} compra(s) y ${s} venta(s) en curso. Finalízalas o cancélalas primero.`,
+          variant: 'destructive',
+        });
+        return;
+      }
       await signOut();
       toast({
-        title: t('toasts.sessionClosed'),
-        description: 'Para eliminar tu cuenta completamente, por favor contacta a soporte.',
+        title: 'Cuenta eliminada',
+        description: 'Tu cuenta, perfil y tienda fueron cerrados. Tu historial de pedidos se conserva.',
       });
       onOpenChange(false);
     } catch (error: any) {

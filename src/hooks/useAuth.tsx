@@ -86,6 +86,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!data) return null;
 
+      // Closed accounts cannot sign in again
+      if ((data as any).deleted_at) {
+        await supabase.auth.signOut();
+        return null;
+      }
+
       return {
         id: data.id,
         email: data.email || '',
