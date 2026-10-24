@@ -5,3 +5,4 @@
 - Product share metadata is read server-side by `src/lib/product-share.functions.ts` (variant image first, then product image).
 - Backend services stay as Supabase Edge Functions in the external Supabase project because their secrets live there.
 - Browser-only storage (localStorage) must not be read during the first render; gate it behind `useHydrated()` to avoid hydration mismatches.
+- Account deletion is a soft close via the `close_account` DB function (anonymize profile, deactivate store, drop roles) because the server has no service-role key and order history must stay intact.
