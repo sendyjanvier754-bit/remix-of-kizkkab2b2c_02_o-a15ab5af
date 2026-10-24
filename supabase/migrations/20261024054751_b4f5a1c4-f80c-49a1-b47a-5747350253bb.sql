@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.get_account_deletion_blockers(uuid) FROM PUBLIC, anon;
