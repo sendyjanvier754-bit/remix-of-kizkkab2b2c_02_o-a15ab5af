@@ -806,7 +806,7 @@ export const InlineOrdersPanel = () => {
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase
-      .channel('profile-orders-realtime')
+      .channel(`profile-orders-${user.id}-${Math.random().toString(36).slice(2, 10)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders_b2b', filter: `buyer_id=eq.${user.id}` }, (payload) => {
         queryClient.invalidateQueries({ queryKey: ['buyer-orders'] });
         if (selectedOrder && payload.new && (payload.new as any).id === selectedOrder.id) {
