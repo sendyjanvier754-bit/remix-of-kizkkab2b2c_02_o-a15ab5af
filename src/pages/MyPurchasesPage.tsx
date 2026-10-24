@@ -843,7 +843,7 @@ const MyPurchasesPage = () => {
     if (!user?.id) return;
 
     const channel = supabase
-      .channel('buyer-orders-realtime')
+      .channel(`buyer-orders-${Math.random().toString(36).slice(2, 10)}`)
       .on(
         'postgres_changes',
         {

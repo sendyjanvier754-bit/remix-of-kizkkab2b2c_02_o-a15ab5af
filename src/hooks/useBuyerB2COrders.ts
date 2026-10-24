@@ -80,7 +80,7 @@ export const useBuyerB2COrders = () => {
     if (!user?.id) return;
 
     const channel = supabase
-      .channel('buyer-b2c-orders-realtime')
+      .channel(`buyer-b2c-orders-${user.id}-${Math.random().toString(36).slice(2, 10)}`)
       .on(
         'postgres_changes',
         {
