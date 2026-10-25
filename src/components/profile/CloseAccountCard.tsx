@@ -12,10 +12,10 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 const COPY: Record<string, Record<string, string>> = {
-  es: { title: "Cerrar mi cuenta", desc: "Cierra tu cuenta, perfil y tienda (si tienes). Tu historial de pedidos se conserva. Esta acción no se puede deshacer.", btn: "Cerrar mi cuenta", confirmTitle: "¿Cerrar tu cuenta definitivamente?", confirmDesc: "Se desactivará tu tienda, se borrarán tus datos personales del perfil y no podrás volver a entrar. Escribe ELIMINAR para confirmar.", cancel: "Cancelar", confirm: "Cerrar cuenta", blocked: "Tienes {p} compra(s) y {s} venta(s) en curso. Finalízalas o cancélalas primero.", done: "Tu cuenta fue cerrada." },
-  en: { title: "Close my account", desc: "Close your account, profile and store (if any). Your order history is kept. This cannot be undone.", btn: "Close my account", confirmTitle: "Permanently close your account?", confirmDesc: "Your store will be deactivated, your personal profile data removed, and you won't be able to sign in again. Type ELIMINAR to confirm.", cancel: "Cancel", confirm: "Close account", blocked: "You have {p} purchase(s) and {s} sale(s) in progress. Finish or cancel them first.", done: "Your account was closed." },
-  fr: { title: "Fermer mon compte", desc: "Fermez votre compte, profil et boutique (le cas échéant). L'historique des commandes est conservé. Action irréversible.", btn: "Fermer mon compte", confirmTitle: "Fermer définitivement votre compte ?", confirmDesc: "Votre boutique sera désactivée, vos données personnelles supprimées et vous ne pourrez plus vous connecter. Tapez ELIMINAR pour confirmer.", cancel: "Annuler", confirm: "Fermer le compte", blocked: "Vous avez {p} achat(s) et {s} vente(s) en cours. Terminez-les ou annulez-les d'abord.", done: "Votre compte a été fermé." },
-  ht: { title: "Fèmen kont mwen", desc: "Fèmen kont ou, pwofil ou ak boutik ou (si ou genyen). Istwa kòmand yo rete. Ou pa ka defèt sa.", btn: "Fèmen kont mwen", confirmTitle: "Fèmen kont ou nèt?", confirmDesc: "Boutik ou ap dezaktive, done pèsonèl ou ap efase epi ou p ap ka konekte ankò. Ekri ELIMINAR pou konfime.", cancel: "Anile", confirm: "Fèmen kont", blocked: "Ou gen {p} acha ak {s} vant k ap fèt. Fini yo oswa anile yo anvan.", done: "Kont ou fèmen." },
+  es: { title: "Cerrar mi cuenta", desc: "Cierra tu cuenta, perfil y tienda (si tienes). Tu historial de pedidos se conserva. Esta acción no se puede deshacer.", btn: "Cerrar mi cuenta", confirmTitle: "¿Cerrar tu cuenta definitivamente?", confirmDesc: "Se desactivará tu tienda, se borrarán tus datos personales del perfil y no podrás volver a entrar. Escribe DELETE para confirmar.", cancel: "Cancelar", confirm: "Cerrar cuenta", blocked: "Tienes {p} compra(s) y {s} venta(s) en curso. Finalízalas o cancélalas primero.", done: "Tu cuenta fue cerrada." },
+  en: { title: "Close my account", desc: "Close your account, profile and store (if any). Your order history is kept. This cannot be undone.", btn: "Close my account", confirmTitle: "Permanently close your account?", confirmDesc: "Your store will be deactivated, your personal profile data removed, and you won't be able to sign in again. Type DELETE to confirm.", cancel: "Cancel", confirm: "Close account", blocked: "You have {p} purchase(s) and {s} sale(s) in progress. Finish or cancel them first.", done: "Your account was closed." },
+  fr: { title: "Fermer mon compte", desc: "Fermez votre compte, profil et boutique (le cas échéant). L'historique des commandes est conservé. Action irréversible.", btn: "Fermer mon compte", confirmTitle: "Fermer définitivement votre compte ?", confirmDesc: "Votre boutique sera désactivée, vos données personnelles supprimées et vous ne pourrez plus vous connecter. Tapez DELETE pour confirmer.", cancel: "Annuler", confirm: "Fermer le compte", blocked: "Vous avez {p} achat(s) et {s} vente(s) en cours. Terminez-les ou annulez-les d'abord.", done: "Votre compte a été fermé." },
+  ht: { title: "Fèmen kont mwen", desc: "Fèmen kont ou, pwofil ou ak boutik ou (si ou genyen). Istwa kòmand yo rete. Ou pa ka defèt sa.", btn: "Fèmen kont mwen", confirmTitle: "Fèmen kont ou nèt?", confirmDesc: "Boutik ou ap dezaktive, done pèsonèl ou ap efase epi ou p ap ka konekte ankò. Ekri DELETE pou konfime.", cancel: "Anile", confirm: "Fèmen kont", blocked: "Ou gen {p} acha ak {s} vant k ap fèt. Fini yo oswa anile yo anvan.", done: "Kont ou fèmen." },
 };
 
 export function CloseAccountCard() {
@@ -27,7 +27,7 @@ export function CloseAccountCard() {
   const [busy, setBusy] = useState(false);
 
   const handleClose = async () => {
-    if (text !== "ELIMINAR" || !user?.id) return;
+    if (text !== "DELETE" || !user?.id) return;
     setBusy(true);
     try {
       const { data, error } = await supabase.rpc("close_account" as any, { _user_id: user.id });
@@ -66,10 +66,10 @@ export function CloseAccountCard() {
             <AlertDialogTitle>{c.confirmTitle}</AlertDialogTitle>
             <AlertDialogDescription>{c.confirmDesc}</AlertDialogDescription>
           </AlertDialogHeader>
-          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="ELIMINAR" />
+          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="DELETE" />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>{c.cancel}</AlertDialogCancel>
-            <Button variant="destructive" disabled={busy || text !== "ELIMINAR"} onClick={handleClose}>
+            <Button variant="destructive" disabled={busy || text !== "DELETE"} onClick={handleClose}>
               {busy && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}{c.confirm}
             </Button>
           </AlertDialogFooter>

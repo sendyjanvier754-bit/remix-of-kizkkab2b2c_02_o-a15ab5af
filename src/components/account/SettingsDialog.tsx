@@ -131,10 +131,10 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'ELIMINAR') {
+    if (deleteConfirmText !== 'DELETE') {
       toast({
         title: 'Error',
-        description: 'Por favor escribe ELIMINAR para confirmar.',
+        description: 'Por favor escribe DELETE para confirmar.',
         variant: 'destructive',
       });
       return;
@@ -367,11 +367,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 <li>Direcciones guardadas</li>
                 <li>Preferencias y configuración</li>
               </ul>
-              <p className="pt-2">Escribe <strong>ELIMINAR</strong> para confirmar:</p>
+              <p className="pt-2">Escribe <strong>DELETE</strong> para confirmar:</p>
               <Input
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                placeholder="ELIMINAR"
+                placeholder="DELETE"
                 className="mt-2"
               />
             </AlertDialogDescription>
@@ -380,7 +380,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             <AlertDialogCancel onClick={() => setDeleteConfirmText('')}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
-              disabled={deleteConfirmText !== 'ELIMINAR' || isDeleting}
+              disabled={deleteConfirmText !== 'DELETE' || isDeleting}
               className="bg-destructive hover:bg-destructive/90"
             >
               {isDeleting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
