@@ -21,6 +21,9 @@ import BulkPriceUpdateDialog from '@/components/catalog/BulkPriceUpdateDialog';
 import { ProductNormalizationTool } from '@/components/admin/ProductNormalizationTool';
 import ProductsWithoutWeightAlert from '@/components/admin/ProductsWithoutWeightAlert';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Clock, CheckCircle2 } from 'lucide-react';
+import { needsReview, daysSinceReview, REVIEW_STALE_DAYS } from '@/lib/productFreshness';
 
 const AdminCatalogo = () => {
   const { t } = useTranslation();
@@ -39,12 +42,35 @@ const AdminCatalogo = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 9;
 
-  const { data: products, isLoading: loadingProducts } = useProducts({ ...filters, search: searchTerm });
+  const { data: allProducts, isLoading: loadingProducts } = useProducts({ ...filters, search: searchTerm });
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'stale' | 'fresh'>('all');
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
+  const staleCount = allProducts?.filter((p) => needsReview(p as any)).length ?? 0;
+  const products = allProducts?.filter((p) =>
+    reviewFilter === 'all' ? true : reviewFilter === 'stale' ? needsReview(p as any) : !needsReview(p as any)
+  );
+
+  const markVerified = async (id: string) => {
+    setVerifyingId(id);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from('products')
+      .update({ reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null })
+      .eq('id', id);
+    setVerifyingId(null);
+    if (error) {
+      toast.error('No se pudo marcar como verificado');
+      return;
+    }
+    toast.success('Producto marcado como verificado hoy');
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+  };
 
   // Reset to first page when filters/search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filters.category, filters.supplier, filters.stockStatus]);
+  }, [searchTerm, filters.category, filters.supplier, filters.stockStatus, reviewFilter]);
 
   const totalPages = Math.max(1, Math.ceil((products?.length || 0) / PAGE_SIZE));
   const paginatedProducts = products?.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -156,6 +182,18 @@ const AdminCatalogo = () => {
           </div>
         </div>
 
+        {staleCount > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-destructive" />
+              <p className="text-sm text-foreground">
+                <strong>{staleCount}</strong> productos sin verificar disponibilidad en más de {REVIEW_STALE_DAYS} días.
+              </p>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setReviewFilter('stale')}>Ver productos</Button>
+          </div>
+        )}
+
         {/* KPIs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-card border-border">
@@ -259,6 +297,16 @@ const AdminCatalogo = () => {
                   <SelectItem value="out_of_stock">{t('adminCatalog.outOfStock')}</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={reviewFilter} onValueChange={(v) => setReviewFilter(v as typeof reviewFilter)}>
+                <SelectTrigger className="w-full md:w-[220px]">
+                  <SelectValue placeholder="Revisión" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Revisión: todos</SelectItem>
+                  <SelectItem value="stale">Requieren revisión (+{REVIEW_STALE_DAYS} días)</SelectItem>
+                  <SelectItem value="fresh">Al día</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -309,6 +357,12 @@ const AdminCatalogo = () => {
                             <div>
                               <p className="font-medium text-foreground">{product.nombre}</p>
                               <p className="text-xs text-muted-foreground">{product.categories?.name}</p>
+                              {needsReview(product as any) && (
+                                <Badge variant="outline" className="mt-1 gap-1 border-destructive/40 text-destructive text-[10px]">
+                                  <Clock className="h-3 w-3" />
+                                  {(product as any).reviewed_at ? `Sin verificar hace ${daysSinceReview(product as any)} días` : `Nunca verificado (${daysSinceReview(product as any)} días)`}
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </TableCell>
@@ -335,6 +389,17 @@ const AdminCatalogo = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
+                          {needsReview(product as any) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              title="Marcar como verificado hoy"
+                              disabled={verifyingId === product.id}
+                              onClick={() => markVerified(product.id)}
+                            >
+                              {verifyingId === product.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 text-primary" />}
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
